@@ -1,38 +1,11 @@
-Plugin Builder Results
-
-Your plugin RIPT was created in:
-    C:/Users/Matt/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins\ript_plugin
-
-Your QGIS plugin directory is located at:
-    C:/Users/Matt/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
-
-What's Next:
-
-  * Copy the entire directory containing your new plugin to the QGIS plugin
-    directory
-
-  * Compile the resources file using pyrcc5
-
-  * Run the tests (``make test``)
-
-  * Test the plugin by enabling it in the QGIS plugin manager
-
-  * Customize it by editing the implementation file: ``ript_plugin.py``
-
-  * Create your own custom icon, replacing the default icon.png
-
-  * Modify your user interface by opening RIPT_dockwidget_base.ui in Qt Designer
-
-  * You can use the Makefile to compile your Ui and resource files when
-    you make changes. This requires GNU make (gmake)
-
-For more information, see the PyQGIS Developer Cookbook at:
-http://www.qgis.org/pyqgis-cookbook/index.html
-
-(C) 2011-2018 GeoApt LLC - geoapt.com
+# Riverscapes Integrated Planning Tool (RIPT)
 
 
+## Development resources
 
+* [PyQGIS Developer Cookbook](https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/index.html) - This should be the go-to for all your basic plugin development needs
+* [QGIS API Documentation](https://qgis.org/api/) - Here you'll find Qgis-specific information for the API, endpoints, signals, slots etc.
+* [Qt for Python¶](https://doc.qt.io/qtforpython-5/) - Qt is a C++ library so you need to specify the Python docs. This is where you find help with things like QtGui and QtWidgets
 
 ## Developing on windows
 
