@@ -24,8 +24,11 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.core import QgsApplication
+from .processing_provider.provider import Provider
+
 # Initialize Qt resources from file resources.py
-from .resources import *
+from . import resources
 
 # Import the code for the DockWidget
 from .ript_dockwidget import RIPTDockWidget
@@ -162,8 +165,15 @@ class RIPTToolbar:
 
         return action
 
+    def initProcessing(self):
+        self.provider = Provider()
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
+
+        # Initialize the processing framework
+        self.initProcessing()
 
         icon_path = ':/plugins/ript_plugin/icon.png'
         self.add_action(
@@ -193,7 +203,8 @@ class RIPTToolbar:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        # print "** UNLOAD RIPT"
+        # Need to de-initialize the processing framework
+        QgsApplication.processingRegistry().removeProvider(self.provider)
 
         for action in self.actions:
             self.iface.removePluginMenu(
