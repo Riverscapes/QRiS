@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		// FROM: https://gist.github.com/NicolaiMogensen/acfd8723720c4761aefef3cdfc2aa55a
+		// I like changing colors for my projects. QGIS projects are usually green. 
+		"workbench.colorCustomizations": {
+			"titleBar.activeForeground": "#000000",
+			"titleBar.activeBackground": "#ffae00",
+			// "editor.background": "#1c2c2a"
+		},
+		"python.pythonPath": "${env:OSGEO4W_ROOT}/apps/Python37/python.exe",
+	},
+	"launch": {
+		"configurations": [],
+		"compounds": []
+	}
+}
