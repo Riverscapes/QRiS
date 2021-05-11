@@ -1,18 +1,23 @@
 # Riverscapes Integrated Planning Tool (RIPT)
 
+***NB: Be sure to develop in VSCode by opening the relevant Workspace***
+
+* `Workspaces\RIPTOSXDev copy.code-workspace`
+* `Workspaces\RIPTWindowsDev.code-workspace`
 
 ## Development resources
 
 * [PyQGIS Developer Cookbook](https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/index.html) - This should be the go-to for all your basic plugin development needs
 * [QGIS API Documentation](https://qgis.org/api/) - Here you'll find Qgis-specific information for the API, endpoints, signals, slots etc.
-* [Qt for Python¶](https://doc.qt.io/qtforpython-5/) - Qt is a C++ library so you need to specify the Python docs. This is where you find help with things like QtGui and QtWidgets
+* [Qt for Python](https://doc.qt.io/qtforpython-5/) - Qt is a C++ library so you need to specify the Python docs. This is where you find help with things like QtGui and QtWidgets
 
-## Developing on windows
+## Developing on Windows
 
+You will need to launch VSCode with a number of environment variables set so that the right versions of python and its modules can be located.
 
-1. Make a batch file on your desktop to launch VSCode with the QGIS development paths and environment
+Make a batch file on your desktop to launch VSCode with the QGIS development paths and environment
 
-fill in paths where appropriate
+fill in paths where appropriate (any of the `C:\` paths below will need to match what's on your system)
 
 ```batch
 @echo off
@@ -46,16 +51,19 @@ pushd %~dp0
 call "C:\Users\Matt\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd"
 ```
 
-2. Download the following plugins in QGIS:
+## Windows AND OSX: Download the following plugins in QGIS:
 
-* [Plugin Reloader](https://github.com/borysiasty/plugin_reloader) -- Handy tool to reload all the code for a given plugin so you don't need to close QGIS.
+* [Plugin Reloader](https://github.com/borysiasty/plugin_reloader) -- Handy tool to reload all the code for a given plugin so you don't need to close QGIS when you make code changes.
 * [First Aid](https://github.com/wonder-sk/qgis-first-aid-plugin) -- Provides Python debugger and replaces the default Python error handling in QGIS. This one is optional but highly recommended. It gives error traces you might not get otherwise and makes QGIS a lot less black-box.
-* [Plugin Builder 3](http://g-sherman.github.io/Qgis-Plugin-Builder) -- Creates a QGIS plugin template for use as a starting point in plugin development. Not totally necessary but good to have if you want to build plugins.
+* [debugvs](https://github.com/lmotta/debug_vs_plugin/wiki) -- This plugin is for debugging in Visual Studio ( tested in Visual Studio Code).
+For use, run this plugin and enable the Debug (Python:Attach) in Visual Studio. Need install the ptvsd's module(pip3 install ptvsd).
+* [Plugin Builder 3](http://g-sherman.github.io/Qgis-Plugin-Builder) -- Creates a QGIS plugin template for use as a starting point in plugin development. Not totally necessary but good to have if you want to build plugins. (this one is optional but it's really handy)
 
 
 
+### Useful stuff
 
-Useful stuff
+This part of the cookbook about logging is really useful:
 
 https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/communicating.html
 
