@@ -11,6 +11,13 @@
 * [QGIS API Documentation](https://qgis.org/api/) - Here you'll find Qgis-specific information for the API, endpoints, signals, slots etc.
 * [Qt for Python](https://doc.qt.io/qtforpython-5/) - Qt is a C++ library so you need to specify the Python docs. This is where you find help with things like QtGui and QtWidgets
 
+## Both windows and OSX:
+
+In order to develop this module live in QGIS you need to clone this repo to the folder where QGIS Stores its plugins. 
+
+* On windows it's something like: `C:\Users\USERNAME\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins`
+* On OSX it's something like: `/Users/USERNAME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins`
+
 ## Developing on Windows
 
 You will need to launch VSCode with a number of environment variables set so that the right versions of python and its modules can be located.
