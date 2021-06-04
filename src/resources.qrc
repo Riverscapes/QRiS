@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/qrave_toolbar">
+    <qresource prefix="/plugins/ript_toolbar">
 
         <file alias="BrowseFolder.png">../Images/BrowseFolder.png</file>
         <file alias="Help.png">../Images/Help.png</file>
@@ -9,6 +9,7 @@
         <file alias="RaveAddIn.png">../Images/RaveAddIn.png</file>
         <file alias="RaveAddIn_16px.png">../Images/RaveAddIn_16px.png</file>
         <file alias="ucProjectExplorer.png">../Images/ucProjectExplorer.png</file>
+        <file alias="icon.png">../icon.png</file>
         
         
         <file alias="refresh.png">../Images/refresh.png</file>

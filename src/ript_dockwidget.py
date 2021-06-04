@@ -25,10 +25,14 @@
 import os
 
 from qgis.PyQt import QtGui, QtWidgets, uic
-from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtWidgets import QAbstractItemView
+from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_dockwidget_base.ui'))
+
+data_code = {'path': Qt.UserRole + 1}
 
 
 class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -45,6 +49,50 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
+        self.current_project = None
+
+        self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        # self.treeView.customContextMenuRequested.connect(self.open_menu)
+        # self.treeView.doubleClicked.connect(self.default_tree_action)
+        # self.treeView.clicked.connect(self.item_change)
+
+        # self.treeView.expanded.connect(self.expand_tree_item)
+
+        self.model = QStandardItemModel()
+        self.treeView.setModel(self.model)
+
+    def openProject(self, ript_project):
+
+        self.current_project = ript_project
+
+        self.model.clear()
+        rootNode = self.model.invisibleRootItem()
+
+        ript_name = QStandardItem(ript_project.project_name)
+        ript_name.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
+        rootNode.appendRow(ript_name)
+
+        detrended_rasters = QStandardItem("Detrended Rasters")
+        detrended_rasters.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        ript_name.appendRow(detrended_rasters)
+
+        for raster in ript_project.detrended_rasters:
+            detrended_raster = QStandardItem(raster.name)
+            detrended_raster.setIcon(QIcon(':/plugins/ript_toolbar/layers/Raster16.png'))
+            detrended_raster.setData(raster.path, data_code['path'])
+            detrended_rasters.appendRow(detrended_raster)
+
+        project_layers = QStandardItem("Project Layers")
+        project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        ript_name.appendRow(project_layers)
+
+        for project_layer in ript_project.project_layers:
+            layer = QStandardItem(project_layer.name)
+            layer.setData(project_layer.path, data_code['path'])
+            layer.appendRow(project_layers)
+
     def closeEvent(self, event):
+        self.current_project = None
         self.closingPlugin.emit()
         event.accept()
