@@ -195,10 +195,10 @@ class RIPTToolbar:
         self.openProjectAction.triggered.connect(self.projectBrowserDlg)
         self.toolbar.addAction(self.openProjectAction)
 
-        self.addLayerAction = QAction(QIcon(':/plugins/ript_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
-        self.addLayerAction.triggered.connect(self.addLayerDlg)
-        self.addLayerAction.setEnabled(False)
-        self.toolbar.addAction(self.addLayerAction)
+        # self.addLayerAction = QAction(QIcon(':/plugins/ript_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
+        # self.addLayerAction.triggered.connect(self.addLayerDlg)
+        # self.addLayerAction.setEnabled(False)
+        # self.toolbar.addAction(self.addLayerAction)
 
     # --------------------------------------------------------------------------
 
@@ -330,7 +330,7 @@ class RIPTToolbar:
     def openProject(self, project):
         self.toggle_widget()
         self.dockwidget.openProject(project)
-        self.addLayerAction.setEnabled(True)
+        # self.addLayerAction.setEnabled(True)
 
     def addLayerDlg(self):
 

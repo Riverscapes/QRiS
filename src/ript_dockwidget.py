@@ -25,14 +25,18 @@
 import os
 
 from qgis.PyQt import QtGui, QtWidgets, uic
-from qgis.PyQt.QtWidgets import QAbstractItemView
+from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
+
+from .classes.context_menu import ContextMenu
+from .add_detrended_dialog import AddDetrendedRasterDlg
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_dockwidget_base.ui'))
 
-data_code = {'path': Qt.UserRole + 1}
+data_code = {'path': Qt.UserRole + 1,
+             'item_type': Qt.UserRole + 2}
 
 
 class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -50,10 +54,11 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.setupUi(self)
 
         self.current_project = None
+        self.menu = ContextMenu()
 
         self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        # self.treeView.customContextMenuRequested.connect(self.open_menu)
+        self.treeView.customContextMenuRequested.connect(self.open_menu)
         # self.treeView.doubleClicked.connect(self.default_tree_action)
         # self.treeView.clicked.connect(self.item_change)
 
@@ -96,3 +101,82 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.current_project = None
         self.closingPlugin.emit()
         event.accept()
+
+    def open_menu(self, position):
+
+        self.menu.clear()
+
+        indexes = self.treeView.selectedIndexes()
+        if len(indexes) < 1:
+            return
+
+        # No multiselect so there is only ever one item
+        idx = indexes[0]
+
+        if not idx.isValid():
+            return
+
+        item = self.model.itemFromIndex(indexes[0])
+        # item_type = item.data(data_code['item_type'])
+        # project_tree_data = item.data(Qt.UserRole)  # ProjectTreeData object
+        # data = project_tree_data.data  # Could be a QRaveBaseMap, a QRaveMapLayer or just some random data
+
+        if item.text() == "Detrended Rasters":
+            self.menu.clear()
+            self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.addDetrendedRasterToProject())
+        # TODO add raster to project context if item is detrended folder
+
+        # This is the layer context menu
+        # if isinstance(data, QRaveMapLayer):
+        #     if data.layer_type == QRaveMapLayer.LayerTypes.WEBTILE:
+        #         self.basemap_context_menu(idx, item, project_tree_data)
+        #     elif data.layer_type in [QRaveMapLayer.LayerTypes.FILE, QRaveMapLayer.LayerTypes.REPORT]:
+        #         self.file_layer_context_menu(idx, item, project_tree_data)
+        #     else:
+        #         self.map_layer_context_menu(idx, item, project_tree_data)
+
+        # elif isinstance(data, QRaveBaseMap):
+        #     # A WMS QARaveBaseMap is just a container for layers
+        #     if data.tile_type == 'wms':
+        #         self.folder_dumb_context_menu(idx, item, project_tree_data)
+        #     # Every other kind of basemap is an add-able layer
+        #     else:
+        #         self.basemap_context_menu(idx, item, project_tree_data)
+
+        # elif project_tree_data.type == QRaveTreeTypes.PROJECT_ROOT:
+        #     self.project_context_menu(idx, item, project_tree_data)
+
+        # elif project_tree_data.type in [
+        #     QRaveTreeTypes.PROJECT_VIEW_FOLDER,
+        #     QRaveTreeTypes.BASEMAP_ROOT,
+        #     QRaveTreeTypes.BASEMAP_SUPER_FOLDER
+        # ]:
+        #     self.folder_dumb_context_menu(idx, item, project_tree_data)
+
+        # elif project_tree_data.type in [
+        #     QRaveTreeTypes.PROJECT_FOLDER,
+        #     QRaveTreeTypes.PROJECT_REPEATER_FOLDER,
+        #     QRaveTreeTypes.BASEMAP_SUB_FOLDER
+        # ]:
+        #     self.folder_context_menu(idx, item, project_tree_data)
+
+        # elif project_tree_data.type == QRaveTreeTypes.PROJECT_VIEW:
+        #     self.view_context_menu(idx, item, project_tree_data)
+
+        self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
+
+    def addDetrendedRasterToProject(self):
+
+        #last_browse_path = self.settings.getValue('lastBrowsePath')
+        #last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
+
+        dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to RIPT project", None, self.tr("Raster Data Sources (*.tif)"))
+        if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
+            self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.current_project)
+            self.addDetrendedDlg.dataChange.connect(self.openProject)
+            self.addDetrendedDlg.exec()
+
+            #
+    def updateProject(self, project):
+
+        self.current_project = project

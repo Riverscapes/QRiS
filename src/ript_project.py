@@ -54,15 +54,15 @@ class RiptProject():
         if detrended is not None:
             for raster_elem in detrended.iter('Raster'):
                 self.detrended_rasters.append(Layer(raster_elem.find('Name').text,
-                                                    raster_elem.find('Path').text),
-                                              'Raster')
+                                                    raster_elem.find('Path').text,
+                                                    'Raster'))
 
         layers = root.find('ProjectLayers')
         if layers is not None:
             for layer_elem in layers.iter('Layer'):
                 self.project_layers.append(Layer(layer_elem.find('Name').text,
-                                                 layer_elem.find('Path').text),
-                                           'Layer')
+                                                 layer_elem.find('Path').text,
+                                                 'Layer'))
 
         return
 
@@ -103,7 +103,7 @@ class RiptProject():
 
         output = prettify(root)
 
-        with open(filename, 'w') as outfile:
+        with open(self.filename, 'w') as outfile:
             outfile.write(output)
 
 
