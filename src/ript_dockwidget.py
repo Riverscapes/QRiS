@@ -24,19 +24,23 @@
 
 import os
 
+from qgis.core import QgsRasterLayer, QgsProject, QgsColorRampShader, QgsRasterShader, QgsSingleBandPseudoColorRenderer
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QColor
 
 from .classes.context_menu import ContextMenu
+from .ript_elevation_dockwidget import RIPTElevationDockWidget
 from .add_detrended_dialog import AddDetrendedRasterDlg
+from .classes.settings import Settings
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_dockwidget_base.ui'))
 
-data_code = {'path': Qt.UserRole + 1,
-             'item_type': Qt.UserRole + 2}
+item_code = {'path': Qt.UserRole + 1,
+             'item_type': Qt.UserRole + 2,
+             'RASTER': Qt.UserRole + 3}
 
 
 class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -52,6 +56,8 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+        self.settings = Settings()
 
         self.current_project = None
         self.menu = ContextMenu()
@@ -80,13 +86,18 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         detrended_rasters = QStandardItem("Detrended Rasters")
         detrended_rasters.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        detrended_rasters.setData("DetrendedRasters", item_code['item_type'])
         ript_name.appendRow(detrended_rasters)
 
         for raster in ript_project.detrended_rasters:
             detrended_raster = QStandardItem(raster.name)
             detrended_raster.setIcon(QIcon(':/plugins/ript_toolbar/layers/Raster16.png'))
-            detrended_raster.setData(raster.path, data_code['path'])
+            detrended_raster.setData(raster.path, item_code['path'])
+            detrended_raster.setData('DetrendedRaster', item_code['item_type'])
+            detrended_raster.setData(raster, item_code['RASTER'])
             detrended_rasters.appendRow(detrended_raster)
+
+            # for surface in raster
 
         project_layers = QStandardItem("Project Layers")
         project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
@@ -94,7 +105,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         for project_layer in ript_project.project_layers:
             layer = QStandardItem(project_layer.name)
-            layer.setData(project_layer.path, data_code['path'])
+            layer.setData(project_layer.path, item_code['path'])
             layer.appendRow(project_layers)
 
     def closeEvent(self, event):
@@ -124,7 +135,9 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if item.text() == "Detrended Rasters":
             self.menu.clear()
             self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.addDetrendedRasterToProject())
-        # TODO add raster to project context if item is detrended folder
+        elif item.data(item_code['item_type'] == "Detrended Raster"):
+            self.menu.clear()
+            self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.exploreElevations(item))
 
         # This is the layer context menu
         # if isinstance(data, QRaveMapLayer):
@@ -167,8 +180,8 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def addDetrendedRasterToProject(self):
 
-        #last_browse_path = self.settings.getValue('lastBrowsePath')
-        #last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
+        # last_browse_path = self.settings.getValue('lastBrowsePath')
+        # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
 
         dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to RIPT project", None, self.tr("Raster Data Sources (*.tif)"))
         if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
@@ -176,7 +189,12 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addDetrendedDlg.dataChange.connect(self.openProject)
             self.addDetrendedDlg.exec()
 
-            #
-    def updateProject(self, project):
+    def exploreElevations(self, selected_item):
 
-        self.current_project = project
+        raster = selected_item.data(item_code['RASTER'])
+
+        self.elevation_widget = RIPTElevationDockWidget(raster, self.current_project)
+        self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
+        self.elevation_widget.show()
+
+        return

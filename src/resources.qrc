@@ -10,6 +10,8 @@
         <file alias="RaveAddIn_16px.png">../Images/RaveAddIn_16px.png</file>
         <file alias="ucProjectExplorer.png">../Images/ucProjectExplorer.png</file>
         <file alias="icon.png">../icon.png</file>
+
+        <file alias="elevations.svg">../Images/elevations.svg</file>
         
         
         <file alias="refresh.png">../Images/refresh.png</file>

@@ -248,6 +248,7 @@ class RIPTToolbar:
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = RIPTDockWidget()
+                self.dockwidget.iface = self.iface
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)

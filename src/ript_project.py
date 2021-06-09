@@ -13,6 +13,18 @@ class Layer():
         self.type = type
 
 
+class Raster(Layer):
+
+    def __init__(self, name, path) -> None:
+        super().__init__(name, path, type=Raster)
+
+        self.surfaces = []
+
+    def add_surface(self, surface_name, surface_path):
+
+        self.surfaces.append(Layer(surface_name, surface_path, "Surface"))
+
+
 class RiptProject():
 
     version = "0.0.1"
@@ -53,9 +65,15 @@ class RiptProject():
         detrended = root.find('DetrendedRasters')
         if detrended is not None:
             for raster_elem in detrended.iter('Raster'):
-                self.detrended_rasters.append(Layer(raster_elem.find('Name').text,
-                                                    raster_elem.find('Path').text,
-                                                    'Raster'))
+                raster = Raster(raster_elem.find('Name').text,
+                                raster_elem.find('Path').text)
+                surfaces = raster_elem.find('Surfaces')
+                if surfaces is not None:
+                    for surface in surfaces.iter('Surface'):
+                        raster.surfaces.append(Layer(surface.find('Name').text,
+                                                     surface.find('Path').text,
+                                                     surface.find('SurfaceType').text))
+                self.detrended_rasters.append(raster)
 
         layers = root.find('ProjectLayers')
         if layers is not None:
@@ -92,6 +110,17 @@ class RiptProject():
             name.text = raster.name
             path = SubElement(r, "Path")
             path.text = raster.path
+            # Add Surfaces if exists
+            if len(raster.surfaces) > 0:
+                surfaces = SubElement(r, "Surfaces")
+                for surface in raster.surfaces:
+                    s = SubElement(surfaces, "Surface")
+                    name = SubElement(s, "Name")
+                    name.text = surface.name
+                    path = SubElement(s, "Path")
+                    path.text = surface.path
+                    stype = SubElement(s, 'SurfaceType')
+                    stype.text = surface.type
 
         project_layers = SubElement(root, "ProjectLayers")
         for layer in self.project_layers:
