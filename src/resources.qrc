@@ -11,8 +11,7 @@
         <file alias="ucProjectExplorer.png">../Images/ucProjectExplorer.png</file>
         <file alias="icon.png">../icon.png</file>
 
-        <file alias="elevations.svg">../Images/elevations.svg</file>
-        
+        <file alias="Detrend.png">../Images/Detrend.png</file>
         
         <file alias="refresh.png">../Images/refresh.png</file>
         <file alias="project_view.png">../Images/project_view.png</file>

@@ -11,7 +11,9 @@
         "--ignore=E501"
     ],
     "python.formatting.autopep8Args": [
-        "--ignore=E501"
+        "--ignore=E501",
+        "--ignore=E402",
+        "--max-line-length=300"
     ],
     "python.terminal.activateEnvironment": true,
     "python.autoComplete.showAdvancedMembers": false,

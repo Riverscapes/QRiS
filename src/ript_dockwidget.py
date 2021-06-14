@@ -24,11 +24,14 @@
 
 import os
 
-from qgis.core import QgsRasterLayer, QgsProject, QgsColorRampShader, QgsRasterShader, QgsSingleBandPseudoColorRenderer
+from qgis.core import (
+    QgsRasterLayer,
+    QgsVectorLayer,
+    QgsProject)
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QColor
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 
 from .classes.context_menu import ContextMenu
 from .ript_elevation_dockwidget import RIPTElevationDockWidget
@@ -40,7 +43,9 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 item_code = {'path': Qt.UserRole + 1,
              'item_type': Qt.UserRole + 2,
-             'RASTER': Qt.UserRole + 3}
+             'LAYER': Qt.UserRole + 3,
+             'map_layer': Qt.UserRole + 4,
+             'layer_symbology': Qt.UserRole + 5}
 
 
 class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -73,7 +78,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
-    def openProject(self, ript_project):
+    def openProject(self, ript_project, add_to_map=None):
 
         self.current_project = ript_project
 
@@ -82,31 +87,53 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         ript_name = QStandardItem(ript_project.project_name)
         ript_name.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
+        ript_name.setData('project_root', item_code['item_type'])
+        ript_name.setData('group', item_code['map_layer'])
         rootNode.appendRow(ript_name)
 
         detrended_rasters = QStandardItem("Detrended Rasters")
         detrended_rasters.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
-        detrended_rasters.setData("DetrendedRasters", item_code['item_type'])
+        detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
+        detrended_rasters.setData('group', item_code['map_layer'])
         ript_name.appendRow(detrended_rasters)
 
-        for raster in ript_project.detrended_rasters:
+        for raster in ript_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
-            detrended_raster.setIcon(QIcon(':/plugins/ript_toolbar/layers/Raster16.png'))
+            detrended_raster.setIcon(QIcon(':/plugins/ript_toolbar/layers/Raster.png'))
             detrended_raster.setData(raster.path, item_code['path'])
             detrended_raster.setData('DetrendedRaster', item_code['item_type'])
-            detrended_raster.setData(raster, item_code['RASTER'])
+            detrended_raster.setData(raster, item_code['LAYER'])
+            detrended_raster.setData('raster_layer', item_code['map_layer'])
+            detrended_raster.setData(os.path.join(os.path.dirname(__file__), "..", 'resources', 'symbology', 'hand.qml'), item_code['layer_symbology'])
             detrended_rasters.appendRow(detrended_raster)
 
-            # for surface in raster
+            if len(raster.surfaces.values()) > 0:
+                item_surfaces = QStandardItem("Surfaces")
+                item_surfaces.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+                item_surfaces.setData('group', item_code['map_layer'])
+                detrended_raster.appendRow(item_surfaces)
+                for surface in raster.surfaces.values():
+                    item_surface = QStandardItem(surface.name)
+                    item_surface.setIcon(QIcon(':/plugins/ript_toolbar/layers/Polygon.png'))
+                    item_surface.setData(surface.path, item_code['path'])
+                    item_surface.setData('DetrendedRasterSurface', item_code['item_type'])
+                    item_surface.setData('surface_layer', item_code['map_layer'])
+                    item_surface.setData(surface, item_code['LAYER'])
+                    item_surfaces.appendRow(item_surface)
 
         project_layers = QStandardItem("Project Layers")
         project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         ript_name.appendRow(project_layers)
 
-        for project_layer in ript_project.project_layers:
+        for project_layer in ript_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
             layer.setData(project_layer.path, item_code['path'])
             layer.appendRow(project_layers)
+
+        if add_to_map is not None:
+            selected_item = self._findItemInModel(add_to_map)
+            if selected_item is not None:
+                self.addToMap(selected_item)
 
     def closeEvent(self, event):
         self.current_project = None
@@ -128,53 +155,22 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return
 
         item = self.model.itemFromIndex(indexes[0])
-        # item_type = item.data(data_code['item_type'])
+
         # project_tree_data = item.data(Qt.UserRole)  # ProjectTreeData object
         # data = project_tree_data.data  # Could be a QRaveBaseMap, a QRaveMapLayer or just some random data
 
-        if item.text() == "Detrended Rasters":
-            self.menu.clear()
+        item_type = item.data(item_code['item_type'])
+        if item_type == 'project_root':
+            self.menu.addAction('EXPAND_ALL', lambda: self.expandAll())
+        elif item_type == "DetrendedRastersFolder":
             self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.addDetrendedRasterToProject())
-        elif item.data(item_code['item_type'] == "Detrended Raster"):
-            self.menu.clear()
+        elif item_type == "DetrendedRaster":
             self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.exploreElevations(item))
-
-        # This is the layer context menu
-        # if isinstance(data, QRaveMapLayer):
-        #     if data.layer_type == QRaveMapLayer.LayerTypes.WEBTILE:
-        #         self.basemap_context_menu(idx, item, project_tree_data)
-        #     elif data.layer_type in [QRaveMapLayer.LayerTypes.FILE, QRaveMapLayer.LayerTypes.REPORT]:
-        #         self.file_layer_context_menu(idx, item, project_tree_data)
-        #     else:
-        #         self.map_layer_context_menu(idx, item, project_tree_data)
-
-        # elif isinstance(data, QRaveBaseMap):
-        #     # A WMS QARaveBaseMap is just a container for layers
-        #     if data.tile_type == 'wms':
-        #         self.folder_dumb_context_menu(idx, item, project_tree_data)
-        #     # Every other kind of basemap is an add-able layer
-        #     else:
-        #         self.basemap_context_menu(idx, item, project_tree_data)
-
-        # elif project_tree_data.type == QRaveTreeTypes.PROJECT_ROOT:
-        #     self.project_context_menu(idx, item, project_tree_data)
-
-        # elif project_tree_data.type in [
-        #     QRaveTreeTypes.PROJECT_VIEW_FOLDER,
-        #     QRaveTreeTypes.BASEMAP_ROOT,
-        #     QRaveTreeTypes.BASEMAP_SUPER_FOLDER
-        # ]:
-        #     self.folder_dumb_context_menu(idx, item, project_tree_data)
-
-        # elif project_tree_data.type in [
-        #     QRaveTreeTypes.PROJECT_FOLDER,
-        #     QRaveTreeTypes.PROJECT_REPEATER_FOLDER,
-        #     QRaveTreeTypes.BASEMAP_SUB_FOLDER
-        # ]:
-        #     self.folder_context_menu(idx, item, project_tree_data)
-
-        # elif project_tree_data.type == QRaveTreeTypes.PROJECT_VIEW:
-        #     self.view_context_menu(idx, item, project_tree_data)
+            self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
+        elif item_type == "DetrendedRasterSurface":
+            self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
+        else:
+            self.menu.clear()
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -191,10 +187,59 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def exploreElevations(self, selected_item):
 
-        raster = selected_item.data(item_code['RASTER'])
+        raster = selected_item.data(item_code['LAYER'])
 
         self.elevation_widget = RIPTElevationDockWidget(raster, self.current_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
+        self.elevation_widget.dataChange.connect(self.openProject)
         self.elevation_widget.show()
 
         return
+
+    def addToMap(self, selected_item):
+
+        node = QgsProject.instance().layerTreeRoot()
+        tree = self._get_parents(selected_item)
+        tree.append(selected_item)
+        for item in tree:
+            if item.data(item_code['map_layer']) == 'group':
+                if any([c.name() == item.text() for c in node.children()]):
+                    node = next(n for n in node.children() if n.name() == item.text())
+                else:
+                    new_node = node.addGroup(item.text())
+                    node = new_node
+            elif item.data(item_code['map_layer']) == 'raster_layer':
+                if not any([c.name() == item.text() for c in node.children()]):
+                    layer = QgsRasterLayer(os.path.join(self.current_project.project_path, item.data(item_code['LAYER']).path), item.text())
+                    layer.loadNamedStyle(item.data(item_code['layer_symbology']))
+                    QgsProject.instance().addMapLayer(layer, False)
+                    node.addLayer(layer)
+            elif item.data(item_code['map_layer']) == 'surface_layer':
+                if not any([c.name() == item.text() for c in node.children()]):
+                    layer = QgsVectorLayer(f"{os.path.join(self.current_project.project_path, os.path.dirname(item.data(item_code['LAYER']).path))}|layername={os.path.basename(item.data(item_code['LAYER']).path)}",
+                                           item.text(), 'ogr')
+                    QgsProject.instance().addMapLayer(layer, False)
+                    node.addLayer(layer)
+            else:
+                pass
+
+    def expandAll(self):
+        self.treeView.expandAll()
+        return
+
+    def _get_parents(self, start_item: QStandardItem):
+        stack = []
+        placeholder = start_item.parent()
+        while placeholder is not None and placeholder != self.model.invisibleRootItem():
+            stack.append(placeholder)
+            placeholder = placeholder.parent()
+
+        stack.reverse()
+
+        return stack
+
+    def _findItemInModel(self, name):
+
+        selected_item = self.model.findItems(name, Qt.MatchRecursive)[0]
+
+        return selected_item

@@ -7,6 +7,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QColor
 
 from .export_elev_surface_dialog import ExportElevationSurfaceDlg
+from .ript_project import RiptProject
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_dockwidget_elevation.ui'))
@@ -15,6 +16,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
+    dataChange = pyqtSignal(RiptProject, str)
 
     def __init__(self, raster, ript_project, parent=None):
         """Constructor."""
@@ -72,13 +74,18 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.export_dlg.dataChange.connect(self.exportPolgyon)
         self.export_dlg.show()
 
-    def exportPolgyon(self, updated_project):
+    def exportPolgyon(self, updated_project, surface_name):
 
         self.ript_project = updated_project
-
+        self.dataChange.emit(self.ript_project, surface_name)
         self.closeWidget()
         return
 
     def closeWidget(self):
+
+        QgsProject.instance().removeMapLayer(self.base_raster_layer.id())
+        QgsProject.instance().removeMapLayer(self.raster_layer.id())
+        self.close()
+        self.destroy()
 
         return

@@ -18,7 +18,7 @@ DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
 class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject)
+    dataChange = pyqtSignal(RiptProject, str)
 
     def __init__(self, parent=None, raster_path=None, ript_project=None):  # , raster_path, ript_project: RiptProject = None):
         """Constructor."""
@@ -61,6 +61,6 @@ class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
         self.project.add_detrended(self.raster_name, out_raster)
         self.project.export_project_file()
 
-        self.dataChange.emit(self.project)
+        self.dataChange.emit(self.project, self.raster_name)
 
         return out_raster

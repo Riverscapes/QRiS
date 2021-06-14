@@ -66,7 +66,7 @@ class ContextMenu(QMenu):
             ':/plugins/ript_toolbar/OpenProject.png'),
         'EXPLORE_ELEVATIONS': (
             'Explore Elevations...',
-            ':/plugins/ript_toolbar/elevations.svg'
+            ':/plugins/ript_toolbar/Detrend.png'
         )
     }
 

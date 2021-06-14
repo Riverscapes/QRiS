@@ -7,7 +7,7 @@ from xml.dom import minidom
 
 
 class Layer():
-    def __init__(self, name, path, type=None) -> None:
+    def __init__(self, name, path, type='Layer') -> None:
         self.name = name
         self.path = path
         self.type = type
@@ -16,13 +16,13 @@ class Layer():
 class Raster(Layer):
 
     def __init__(self, name, path) -> None:
-        super().__init__(name, path, type=Raster)
+        super().__init__(name, path, type='Raster')
 
-        self.surfaces = []
+        self.surfaces = {}
 
-    def add_surface(self, surface_name, surface_path):
+    def add_surface(self, surface_name, surface_path, surface_type):
 
-        self.surfaces.append(Layer(surface_name, surface_path, "Surface"))
+        self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
 
 
 class RiptProject():
@@ -37,18 +37,18 @@ class RiptProject():
         self.filename = None
         self.project_path = None
 
-        self.detrended_rasters = []
-        self.project_layers = []
+        self.detrended_rasters = {}
+        self.project_layers = {}
 
     def add_layer(self, layer_name, layer_path, parent=None, meta=None):
 
         relpath = os.path.relpath(layer_path, self.project_path)
-        self.project_layers.append(Layer(layer_name, relpath, "Layer"))
+        self.project_layers[layer_name] = Layer(layer_name, relpath, "Layer")
 
     def add_detrended(self, detrended_name, path, parent=None, meta=None):
 
         relpath = os.path.relpath(path, self.project_path)
-        self.detrended_rasters.append(Layer(detrended_name, relpath, "Raster"))
+        self.detrended_rasters[detrended_name] = Raster(detrended_name, relpath)
 
     def load_from_project_file(self, filename=None):
         self.filename = filename if filename is not None else self.filename
@@ -70,17 +70,17 @@ class RiptProject():
                 surfaces = raster_elem.find('Surfaces')
                 if surfaces is not None:
                     for surface in surfaces.iter('Surface'):
-                        raster.surfaces.append(Layer(surface.find('Name').text,
-                                                     surface.find('Path').text,
-                                                     surface.find('SurfaceType').text))
-                self.detrended_rasters.append(raster)
+                        raster.surfaces[surface.find('Name').text] = Layer(surface.find('Name').text,
+                                                                           surface.find('Path').text,
+                                                                           surface.find('SurfaceType').text)
+                self.detrended_rasters[raster_elem.find('Name').text] = raster
 
         layers = root.find('ProjectLayers')
         if layers is not None:
             for layer_elem in layers.iter('Layer'):
-                self.project_layers.append(Layer(layer_elem.find('Name').text,
-                                                 layer_elem.find('Path').text,
-                                                 'Layer'))
+                self.project_layers[layer_elem.find('Name').text] = Layer(layer_elem.find('Name').text,
+                                                                          layer_elem.find('Path').text,
+                                                                          'Layer')
 
         return
 
@@ -104,7 +104,7 @@ class RiptProject():
 
         # Add gis layers and rasters
         detrended_rasters = SubElement(root, "DetrendedRasters")
-        for raster in self.detrended_rasters:
+        for raster in self.detrended_rasters.values():
             r = SubElement(detrended_rasters, "Raster")
             name = SubElement(r, "Name")
             name.text = raster.name
@@ -113,7 +113,7 @@ class RiptProject():
             # Add Surfaces if exists
             if len(raster.surfaces) > 0:
                 surfaces = SubElement(r, "Surfaces")
-                for surface in raster.surfaces:
+                for surface in raster.surfaces.values():
                     s = SubElement(surfaces, "Surface")
                     name = SubElement(s, "Name")
                     name.text = surface.name
@@ -123,7 +123,7 @@ class RiptProject():
                     stype.text = surface.type
 
         project_layers = SubElement(root, "ProjectLayers")
-        for layer in self.project_layers:
+        for layer in self.project_layers.values():
             lyr = SubElement(project_layers, "Layer")
             name = SubElement(lyr, "Name")
             name.text = layer.name
