@@ -1,7 +1,7 @@
 import os
 import json
 
-import gdal
+from osgeo import gdal
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox
