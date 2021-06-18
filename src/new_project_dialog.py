@@ -68,6 +68,7 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
         os.makedirs(self.project_folder)
 
         project = RiptProject(self.project_name)
+        project.project_path = self.project_folder
 
         # Create .ript
         ript_project_file = os.path.join(self.project_folder, "project.ript")
