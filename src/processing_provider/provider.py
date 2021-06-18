@@ -2,14 +2,14 @@
 from qgis.core import QgsProcessingProvider
 
 from .example_processing_algorithm import ExampleProcessingAlgorithm
-from .vectorize_raster import VectorizeRaster
+#from .vectorize_raster import VectorizeRaster
 
 
 class Provider(QgsProcessingProvider):
 
     def loadAlgorithms(self, *args, **kwargs):
         self.addAlgorithm(ExampleProcessingAlgorithm())
-        self.addAlgorithm(VectorizeRaster())
+        # self.addAlgorithm(VectorizeRaster())
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 
