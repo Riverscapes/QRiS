@@ -20,7 +20,7 @@ class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
     closingPlugin = pyqtSignal()
     dataChange = pyqtSignal(RiptProject, str)
 
-    def __init__(self, parent=None, raster_path=None, ript_project=None):  # , raster_path, ript_project: RiptProject = None):
+    def __init__(self, parent=None, raster_path=None, ript_project=None):
         """Constructor."""
         QDialog.__init__(self, parent)  # raster_path, ript_project)
         self.setupUi(self)

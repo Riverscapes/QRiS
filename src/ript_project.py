@@ -12,6 +12,10 @@ class Layer():
         self.path = path
         self.type = type
 
+    def full_path(self, project_path):
+
+        return os.path.join(project_path, self.path)
+
 
 class Raster(Layer):
 
@@ -80,9 +84,7 @@ class RiptProject():
             for layer_elem in layers.iter('Layer'):
                 self.project_layers[layer_elem.find('Name').text] = Layer(layer_elem.find('Name').text,
                                                                           layer_elem.find('Path').text,
-                                                                          'Layer')
-
-        return
+                                                                          layer_elem.find('LayerType').text if layer_elem.find('LayerType').text is not None else 'Layer')
 
     def export_project_file(self, filename=None):
 
@@ -129,6 +131,8 @@ class RiptProject():
             name.text = layer.name
             path = SubElement(lyr, "Path")
             path.text = layer.path
+            ltype = SubElement(lyr, "LayerType")
+            ltype.text = layer.type
 
         output = prettify(root)
 
