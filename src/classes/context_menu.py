@@ -64,6 +64,10 @@ class ContextMenu(QMenu):
         'ADD_DETRENDED_RASTER': (
             'Add Detrended Raster to Project',
             ':/plugins/ript_toolbar/OpenProject.png'),
+        'ADD_PROJECT_LAYER': (
+            'Add layer to the RIPT Project',
+            ':/plugins/ript_toolbar/OpenProject.png'
+        ),
         'EXPLORE_ELEVATIONS': (
             'Explore Elevations...',
             ':/plugins/ript_toolbar/Detrend.png'

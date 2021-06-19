@@ -28,6 +28,8 @@ from qgis.core import (
     QgsRasterLayer,
     QgsVectorLayer,
     QgsProject)
+from qgis.gui import QgsDataSourceSelectDialog
+
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt
@@ -36,6 +38,7 @@ from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 from .classes.context_menu import ContextMenu
 from .ript_elevation_dockwidget import RIPTElevationDockWidget
 from .add_detrended_dialog import AddDetrendedRasterDlg
+from .add_layer_dialog import AddLayerDlg
 from .classes.settings import Settings
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -100,7 +103,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for raster in ript_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
             detrended_raster.setIcon(QIcon(':/plugins/ript_toolbar/layers/Raster.png'))
-            detrended_raster.setData(raster.path, item_code['path'])
+            #detrended_raster.setData(raster.path, item_code['path'])
             detrended_raster.setData('DetrendedRaster', item_code['item_type'])
             detrended_raster.setData(raster, item_code['LAYER'])
             detrended_raster.setData('raster_layer', item_code['map_layer'])
@@ -115,7 +118,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 for surface in raster.surfaces.values():
                     item_surface = QStandardItem(surface.name)
                     item_surface.setIcon(QIcon(':/plugins/ript_toolbar/layers/Polygon.png'))
-                    item_surface.setData(surface.path, item_code['path'])
+                    #item_surface.setData(surface.path, item_code['path'])
                     item_surface.setData('DetrendedRasterSurface', item_code['item_type'])
                     item_surface.setData('surface_layer', item_code['map_layer'])
                     item_surface.setData(surface, item_code['LAYER'])
@@ -123,12 +126,16 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         project_layers = QStandardItem("Project Layers")
         project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        project_layers.setData('ProjectLayersFolder', item_code['item_type'])
         ript_name.appendRow(project_layers)
 
         for project_layer in ript_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
-            layer.setData(project_layer.path, item_code['path'])
-            layer.appendRow(project_layers)
+            #layer.setData(project_layer.path, item_code['path'])
+            layer.setData(project_layer.type, item_code['item_type'])
+            layer.setData('project_layer', item_code['map_layer'])
+            layer.setData(project_layer, item_code['LAYER'])
+            project_layers.appendRow(layer)
 
         if add_to_map is not None:
             selected_item = self._findItemInModel(add_to_map)
@@ -167,8 +174,10 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "DetrendedRaster":
             self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.exploreElevations(item))
             self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
-        elif item_type == "DetrendedRasterSurface":
+        elif item_type in ["DetrendedRasterSurface", 'project_layer', "Project_Extent"]:
             self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
+        elif item_type == "ProjectLayersFolder":
+            self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.addLayerToProject())
         else:
             self.menu.clear()
 
@@ -185,16 +194,23 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addDetrendedDlg.dataChange.connect(self.openProject)
             self.addDetrendedDlg.exec()
 
+    def addLayerToProject(self):
+
+        select_layer = QgsDataSourceSelectDialog()
+        select_layer.exec()
+        uri = select_layer.uri()
+        if uri is not None and uri.isValid():  # check for polygon
+            self.addProjectLayerDlg = AddLayerDlg(uri, self.current_project)
+            self.addProjectLayerDlg.dataChange.connect(self.openProject)
+            self.addProjectLayerDlg.exec_()
+
     def exploreElevations(self, selected_item):
 
         raster = selected_item.data(item_code['LAYER'])
-
         self.elevation_widget = RIPTElevationDockWidget(raster, self.current_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
         self.elevation_widget.dataChange.connect(self.openProject)
         self.elevation_widget.show()
-
-        return
 
     def addToMap(self, selected_item):
 
@@ -214,7 +230,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     layer.loadNamedStyle(item.data(item_code['layer_symbology']))
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
-            elif item.data(item_code['map_layer']) == 'surface_layer':
+            elif item.data(item_code['map_layer']) in ['surface_layer', 'project_layer']:
                 if not any([c.name() == item.text() for c in node.children()]):
                     layer = QgsVectorLayer(f"{os.path.join(self.current_project.project_path, os.path.dirname(item.data(item_code['LAYER']).path))}|layername={os.path.basename(item.data(item_code['LAYER']).path)}",
                                            item.text(), 'ogr')
