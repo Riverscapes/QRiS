@@ -36,4 +36,7 @@
         // Relative paths have a problem in pylint. We'll try not to use them but.....
         "--disable=E0402"
     ],
+    "python.analysis.extraPaths": [
+        "${workspaceRoot}"
+    ],
 }
