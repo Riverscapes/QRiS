@@ -106,7 +106,7 @@ CREATE UNIQUE INDEX idx_assessment_line_id ON assessment_lines(assessment_line_i
 
 CREATE TABLE  assessment_polygons (
     assessment_polygon_id       SERIAL            PRIMARY KEY,
-    assessment_id               SMALLINT            NOT NULL REFERENCES assessments(assessment_id),
+    assessment_id               SMALLINT          NOT NULL REFERENCES assessments(assessment_id),
     assessment_polygon_desc     TEXT,
     metadata                    JSON,
     geom                        Geography(MultiPolygon)
