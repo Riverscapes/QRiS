@@ -6,47 +6,56 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>459</width>
+    <height>234</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Detrended Elevation Explorer</string>
+   <string>QRiS Elevation Slider</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QFormLayout" name="formLayout">
-      <property name="rowWrapPolicy">
-       <enum>QFormLayout::DontWrapRows</enum>
+   <layout class="QFormLayout" name="formLayout">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Detrended Raster</string>
       </property>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Elevation above drainage</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="txtRasterName">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Detrended Raster</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="numElevation"/>
-      </item>
-     </layout>
+     </widget>
     </item>
-    <item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="txtRasterName">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Elevation above drainage</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QSpinBox" name="numElevation">
+      <property name="suffix">
+       <string> m</string>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="stepType">
+       <enum>QAbstractSpinBox::DefaultStepType</enum>
+      </property>
+      <property name="value">
+       <number>1</number>
+      </property>
+      <property name="displayIntegerBase">
+       <number>10</number>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
      <widget class="QSlider" name="elevationSlider">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
@@ -59,25 +68,12 @@
       </property>
      </widget>
     </item>
-    <item>
+    <item row="3" column="1">
      <widget class="QPushButton" name="btnExport">
       <property name="text">
        <string>Export Elevation Polygon</string>
       </property>
      </widget>
-    </item>
-    <item>
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
     </item>
    </layout>
   </widget>

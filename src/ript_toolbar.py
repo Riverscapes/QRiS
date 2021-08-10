@@ -183,15 +183,15 @@ class RIPTToolbar:
         icon_path = ':/plugins/ript_toolbar/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'RIPT'),
+            text=self.tr(u'QRiS'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/ript_toolbar/NewProject.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
+        self.newProjectAction = QAction(QIcon(':/plugins/ript_toolbar/NewProject.png'), self.tr(u'new QRiS Project'), self.iface.mainWindow())
         self.newProjectAction.triggered.connect(self.newProjectDlg)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.openProjectAction = QAction(QIcon(':/plugins/ript_toolbar/OpenProject.png'), self.tr(u'Open RIPT Project'), self.iface.mainWindow())
+        self.openProjectAction = QAction(QIcon(':/plugins/ript_toolbar/OpenProject.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
         self.openProjectAction.triggered.connect(self.projectBrowserDlg)
         self.toolbar.addAction(self.openProjectAction)
 

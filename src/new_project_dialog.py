@@ -78,4 +78,4 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
         self.dataChange.emit(project)
 
         # Create riverscapes.rs.xml
-        #ript_rs_project_file = os.path.join(self.project_folder, "project.rs.xml")
+        # ript_rs_project_file = os.path.join(self.project_folder, "project.rs.xml")
