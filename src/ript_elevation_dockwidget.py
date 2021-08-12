@@ -29,7 +29,7 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.setupUi(self)
         self.ript_project = ript_project
         self.raster = raster
-        self.elevation_value = 0
+        self.elevation_value = 0.0
 
         self.txtRasterName.setText(self.raster.name)
 
@@ -46,12 +46,12 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # TODO Get min max of raster and apply to slider tools
 
-        self.elevationSlider.valueChanged.connect(self.elevationChange, self.elevationSlider.value())
-        self.numElevation.valueChanged.connect(self.elevationChange, self.numElevation.value())
+        self.elevationSlider.valueChanged.connect(self.sliderElevationChange)
+        self.numElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.btnExport.clicked.connect(self.exportPolygonDlg)
         self.closingPlugin.connect(self.closeWidget)
 
-    def updateElevationLayer(self, value=0):
+    def updateElevationLayer(self, value=0.0):
         fcn = QgsColorRampShader()
         fcn.setColorRampType(QgsColorRampShader.Discrete)
         fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(value, QColor(255, 20, 225), f'Elevation {value}')])
@@ -61,12 +61,15 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.raster_layer.setRenderer(renderer)
         self.raster_layer.triggerRepaint()
 
-    def elevationChange(self, value):
+    def sliderElevationChange(self, value):
+        self.elevation_value = value / 10
+        self.updateElevationLayer(value / 10)
+        self.numElevation.setValue(value / 10)
 
+    def spinBoxElevationChange(self, value):
         self.elevation_value = value
         self.updateElevationLayer(value)
-        self.numElevation.setValue(value)
-        self.elevationSlider.setValue(value)
+        self.elevationSlider.setValue(int(value * 10))
 
     def exportPolygonDlg(self):
 
@@ -75,14 +78,12 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.export_dlg.show()
 
     def exportPolgyon(self, updated_project, surface_name):
-
         self.ript_project = updated_project
         self.dataChange.emit(self.ript_project, surface_name)
         self.closeWidget()
         return
 
     def closeWidget(self):
-
         QgsProject.instance().removeMapLayer(self.base_raster_layer.id())
         QgsProject.instance().removeMapLayer(self.raster_layer.id())
         self.close()
