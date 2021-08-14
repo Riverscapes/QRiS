@@ -3,6 +3,7 @@ import sys
 import tempfile
 
 from qgis.core import (
+    QgsProject,
     QgsApplication,
     QgsRasterLayer,
     QgsVectorLayer,
@@ -17,8 +18,10 @@ from PyQt5.QtGui import *
 from qgis.PyQt.QtCore import QVariant
 from qgis.analysis import QgsNativeAlgorithms
 
+
 # Initialize QGIS Application
-import processing
+from qgis import processing
+# TODO figure out processing imports
 from processing.core.Processing import Processing
 Processing.initialize()
 QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
@@ -27,11 +30,11 @@ QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 # simplify tolerance
 # use 0.00008 for most 1m LiDAR
 # try 0.0001 for 10 m elevation data
-simplify_tolerance = 0.00005
+simplify_tolerance = 0.00008
 
 # smoothing parameter
 # use from 0.25 to 0.5. Use higher value for 10 m DEM
-smoothing_offset = 0.1
+smoothing_offset = 0.25
 
 # small polygon removal area in meters
 # generally been using 9 meters as a cutoff to remove small islands
@@ -40,7 +43,7 @@ polygon_min_size = 9
 
 def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surface_name='valley bottom'):
 
-    #raster_layer = QgsRasterLayer(raster_path, 'in_raster')
+    # raster_layer = QgsRasterLayer(raster_path, 'in_raster')
     out_polygon_path = os.path.join(out_gpkg, out_layer_name)
 
     # --------- PROCESSING -------------
@@ -54,41 +57,44 @@ def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surfa
                                                        'FORMULA': f'(A <= {raster_value})',
                                                        'OUTPUT': temp_raster})  # 'raster'})
 
-    #raster_lessthan = gp_calc['OUTPUT']
+    # raster_less_than = gp_calc['OUTPUT']
 
-    raster_lessthan = QgsRasterLayer(gp_calc['OUTPUT'])
+    raster_less_than = QgsRasterLayer(gp_calc['OUTPUT'])
+
     # -- DEM to VECTOR --
+    gp_raw = processing.run("gdal:polygonize",
+                            {'INPUT': raster_less_than,
+                             'BAND': 1,
+                             'FIELD': 'DN',
+                             'EIGHT_CONNECTEDNESS': False,
+                             'EXTRA': '',
+                             'OUTPUT': 'TEMPORARY_OUTPUT'})
 
-    gp_polygonize = processing.run("gdal:polygonize",
-                                   {'INPUT': raster_lessthan,
-                                    'BAND': 1,
-                                    'FIELD': 'DN',
-                                    'EIGHT_CONNECTEDNESS': False,
-                                    'EXTRA': '',
-                                    'OUTPUT': 'TEMPORARY_OUTPUT'})
+    raw_vector = QgsVectorLayer(
+        gp_raw['OUTPUT'], "raw_vectors", "ogr")
 
-    raw_vector_layer = QgsVectorLayer(
-        gp_polygonize['OUTPUT'], "raw_polygons", "ogr")
+    # TODO remove when done
+    # QgsProject.instance().addMapLayer(raw_vector)
+
     # -- CALCULATE AREA --
-
     # create a provider
-    pv = raw_vector_layer.dataProvider()
+    pv = raw_vector.dataProvider()
 
     # add the attribute and update
     pv.addAttributes([QgsField('raw_area_m', QVariant.Int), QgsField(
         'max_elev_m', QVariant.Double), QgsField('surface_name', QVariant.String)])
-    raw_vector_layer.updateFields()
+    raw_vector.updateFields()
 
     # Create a context and scope
     context = QgsExpressionContext()
     context.appendScopes(
-        QgsExpressionContextUtils.globalProjectLayerScopes(raw_vector_layer))
+        QgsExpressionContextUtils.globalProjectLayerScopes(raw_vector))
 
     # Loop through and add the areas
     delete_features = []
-    with edit(raw_vector_layer):
+    with edit(raw_vector):
         # loop them
-        for feature in raw_vector_layer.getFeatures():
+        for feature in raw_vector.getFeatures():
             if feature['DN'] != 1:
                 delete_features.append(feature.id())
             else:
@@ -96,87 +102,92 @@ def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surfa
                 feature['raw_area_m'] = QgsExpression('$area').evaluate(context)
                 feature['max_elev_m'] = raster_value
                 feature['surface_name'] = surface_name
-                raw_vector_layer.updateFeature(feature)
-        result = raw_vector_layer.dataProvider().deleteFeatures(delete_features)
+                raw_vector.updateFeature(feature)
+        raw_vector.dataProvider().deleteFeatures(delete_features)
 
-    # -- Simplify Polygons --
-    gp_simplify = processing.run("native:simplifygeometries",
-                                 {'INPUT': raw_vector_layer,
-                                  'METHOD': 0,
-                                  'TOLERANCE': simplify_tolerance,
+    # -- BUFFER POLYGONS --
+    gp_buffered = processing.run("native:buffer",
+                                 {'INPUT': raw_vector,
+                                  'DISTANCE': 0.000001,
+                                  'SEGMENTS': 5,
+                                  'END_CAP_STYLE': 0,
+                                  'JOIN_STYLE': 0,
+                                  'MITER_LIMIT': 2,
+                                  'DISSOLVE': False,
                                   'OUTPUT': 'TEMPORARY_OUTPUT'})
 
-    simp_vector_layer = gp_simplify['OUTPUT']  # QgsVectorLayer(
+    buffered_vector = gp_buffered['OUTPUT']
+
+    # TODO remove when final
+    # QgsProject.instance().addMapLayer(buffered_vector)
+
+    # -- Simplify Polygons --
+    gp_simple = processing.run("native:simplifygeometries",
+                               {'INPUT': buffered_vector,
+                                'METHOD': 0,
+                                'TOLERANCE': simplify_tolerance,
+                                'OUTPUT': 'TEMPORARY_OUTPUT'})
+
+    simple_vector = gp_simple['OUTPUT']  # QgsVectorLayer(
     # gp_simplify['OUTPUT'], "simplified_polygons", 'ogr')
 
     # -- Smooth the polygons --
     gp_smooth = processing.run("native:smoothgeometry",
-                               {'INPUT': simp_vector_layer,
+                               {'INPUT': simple_vector,
                                 'ITERATIONS': 1,
                                 'OFFSET': smoothing_offset,
                                 'MAX_ANGLE': 180,
                                 'OUTPUT': 'TEMPORARY_OUTPUT'})
 
-    smooth_vector_layer = gp_smooth['OUTPUT']  # QgsVectorLayer(
+    smooth_vector = gp_smooth['OUTPUT']  # QgsVectorLayer(
     # , "smoothed_polygons", 'ogr')
+
+    gp_multi = processing.run("native:multiparttosingleparts",
+                              {'INPUT': smooth_vector,
+                               'OUTPUT': 'TEMPORARY_OUTPUT'})
+
+    multi_vector = gp_multi['OUTPUT']
+
+    # Fix any crossed geometry as final vector
+    gp_fix = processing.run("native:fixgeometries",
+                            {'INPUT': multi_vector,
+                             'OUTPUT': 'TEMPORARY_OUTPUT'})
+
+    final_vector = gp_fix['OUTPUT']
 
     # Create a context and scope
     # Understand WTF this is??
     context = QgsExpressionContext()
     context.appendScopes(
-        QgsExpressionContextUtils.globalProjectLayerScopes(smooth_vector_layer))
+        QgsExpressionContextUtils.globalProjectLayerScopes(final_vector))
 
     # add an area attribute
     # create a provider
-    pv = smooth_vector_layer.dataProvider()
+    pv = final_vector.dataProvider()
 
     # add the attribute and update
     pv.addAttributes([QgsField('area_m', QVariant.Int)])
-    smooth_vector_layer.updateFields()
+    final_vector.updateFields()
 
     # Loop through and add the areas
-    with edit(smooth_vector_layer):
+    with edit(final_vector):
         # loop them
-        for feature in smooth_vector_layer.getFeatures():
+        for feature in final_vector.getFeatures():
             context.setFeature(feature)
             feature['area_m'] = QgsExpression('$area').evaluate(context)
-            smooth_vector_layer.updateFeature(feature)
-
-    # -- Do a quick geometry fix for twisted polygons --
-
-    gp_fix = processing.run("native:fixgeometries",
-                            {'INPUT': smooth_vector_layer,
-                             'OUTPUT': 'TEMPORARY_OUTPUT'})
-
-    fixed_vector_layer = gp_fix['OUTPUT']  # QgsVectorLayer(
-    # gp_fix['OUTPUT'], "fixed_polygons", 'ogr')
-
-    # Open the fixed vector
-
-    # -- Copy the vector to outputs directory
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.layerName = out_layer_name
-    options.driverName = 'GPKG'
-    if os.path.exists(out_gpkg):
-        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-    QgsVectorFileWriter.writeAsVectorFormat(
-        fixed_vector_layer, out_gpkg, options)
-
-    # open the output layer
-    output_vector_layer = QgsVectorLayer(
-        out_polygon_path, out_layer_name, 'ogr')
+            final_vector.updateFeature(feature)
 
     # -- Delete Unneeded Fields --
-    pv = output_vector_layer.dataProvider()
+    pv = final_vector.dataProvider()
     pv.deleteAttributes([1, 2])
-    output_vector_layer.updateFields()
+    final_vector.updateFields()
 
     # -- Delete small polygons --
     # data provider capabilities
-    caps = output_vector_layer.dataProvider().capabilities()
+    caps = final_vector.dataProvider().capabilities()
 
     # features and empty list of features to delete
-    features = output_vector_layer.getFeatures()
+    features = final_vector.getFeatures()
     delete_features = []
 
     # if the layer can have deleted features
@@ -184,5 +195,16 @@ def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surfa
         for feature in features:
             if feature['area_m'] <= polygon_min_size:
                 delete_features.append(feature.id())
-        result = output_vector_layer.dataProvider().deleteFeatures(delete_features)
-        # output_vector_layer.triggerRepaint()
+        final_vector.dataProvider().deleteFeatures(delete_features)
+
+    # TODO fix final data export
+    options = QgsVectorFileWriter.SaveVectorOptions()
+    options.layerName = out_layer_name
+    options.driverName = 'GPKG'
+    if os.path.exists(out_gpkg):
+        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+    QgsVectorFileWriter.writeAsVectorFormat(
+        final_vector, out_gpkg, options)
+
+    # open the output layer
+    QgsVectorLayer(out_polygon_path, out_layer_name, 'ogr')

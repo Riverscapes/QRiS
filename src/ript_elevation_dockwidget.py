@@ -29,7 +29,7 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.setupUi(self)
         self.ript_project = ript_project
         self.raster = raster
-        self.elevation_value = 0.0
+        self.elevation_value = 1.0
 
         self.txtRasterName.setText(self.raster.name)
 
@@ -51,7 +51,7 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.btnExport.clicked.connect(self.exportPolygonDlg)
         self.closingPlugin.connect(self.closeWidget)
 
-    def updateElevationLayer(self, value=0.0):
+    def updateElevationLayer(self, value=1.0):
         fcn = QgsColorRampShader()
         fcn.setColorRampType(QgsColorRampShader.Discrete)
         fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(value, QColor(255, 20, 225), f'Elevation {value}')])
@@ -72,7 +72,6 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.elevationSlider.setValue(int(value * 10))
 
     def exportPolygonDlg(self):
-
         self.export_dlg = ExportElevationSurfaceDlg(self.raster, self.elevation_value, self.ript_project)
         self.export_dlg.dataChange.connect(self.exportPolgyon)
         self.export_dlg.show()
@@ -88,5 +87,4 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         QgsProject.instance().removeMapLayer(self.raster_layer.id())
         self.close()
         self.destroy()
-
         return
