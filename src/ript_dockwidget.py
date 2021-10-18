@@ -29,6 +29,7 @@ from qgis.core import (
     QgsRasterLayer,
     QgsVectorLayer,
     QgsProject,
+    QgsField,
     QgsVectorFileWriter)
 
 from qgis.gui import QgsDataSourceSelectDialog
@@ -42,6 +43,7 @@ from .classes.context_menu import ContextMenu
 from .ript_elevation_dockwidget import RIPTElevationDockWidget
 from .add_detrended_dialog import AddDetrendedRasterDlg
 from .add_layer_dialog import AddLayerDlg
+from .assessment_dialog import AssessmentDlg
 from .classes.settings import Settings
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -91,18 +93,18 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model.clear()
         rootNode = self.model.invisibleRootItem()
 
-        ript_name = QStandardItem(ript_project.project_name)
-        ript_name.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
-        ript_name.setData('project_root', item_code['item_type'])
-        ript_name.setData('group', item_code['map_layer'])
-        rootNode.appendRow(ript_name)
+        qris_name = QStandardItem(ript_project.project_name)
+        qris_name.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
+        qris_name.setData('project_root', item_code['item_type'])
+        qris_name.setData('group', item_code['map_layer'])
+        rootNode.appendRow(qris_name)
 
         # Add detrended rasters to tree
         detrended_rasters = QStandardItem("Detrended Rasters")
         detrended_rasters.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
         detrended_rasters.setData('group', item_code['map_layer'])
-        ript_name.appendRow(detrended_rasters)
+        qris_name.appendRow(detrended_rasters)
 
         for raster in ript_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
@@ -132,7 +134,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_layers = QStandardItem("Project Layers")
         project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         project_layers.setData('ProjectLayersFolder', item_code['item_type'])
-        ript_name.appendRow(project_layers)
+        qris_name.appendRow(project_layers)
 
         for project_layer in ript_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
@@ -145,8 +147,14 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Add assessments to tree
         assessment_layers = QStandardItem("Riverscape Assessments")
         assessment_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
-        assessment_layers.setData('AssessmentLayersFolder', item_code['item_type'])
-        ript_name.appendRow(assessment_layers)
+        assessment_layers.setData('AssessmentsFolder', item_code['item_type'])
+        qris_name.appendRow(assessment_layers)
+
+        # Add designs to tree
+        design_layers = QStandardItem("Low-Tech Designs")
+        design_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        design_layers.setData('DesignsFolder', item_code['item_type'])
+        qris_name.appendRow(design_layers)
 
         if add_to_map is not None:
             selected_item = self._findItemInModel(add_to_map)
@@ -190,59 +198,31 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
         elif item_type == "ProjectLayersFolder":
             self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.addLayerToProject())
-        elif item_type == "AssessmentLayersFolder":
-            self.menu.addAction('BEGIN_NEW_ASSESSMENT', lambda: self.addAssessments())
+        elif item_type == "AssessmentsFolder":
+            self.menu.addAction('ADD_ASSESSMENT', lambda: self.addAssessment())
+        elif item_type == "DesignsFolder":
+            self.menu.addAction('ADD_DESIGN', lambda: self.addDesign())
         else:
             self.menu.clear()
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
-    def addAssessments(self):
-        # TODO someday integrate with a remote PostGIS DB.
-        # create a geopackage
-        assessment_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
-        if not os.path.exists(assessment_path):
-            # TODO this should not be a point layer, refactor to a table without geometry
-            assessments_layer = QgsVectorLayer("point", "assessments_layer", "memory")
-            # write to disk
-            QgsVectorFileWriter.writeAsVectorFormat(assessments_layer, assessment_path, 'utf-8', driverName='GPKG', onlySelected=False)
+    def addDesign(self):
+        pass
 
-            # Add JAM layer
-            # TODO flesh out attribute data model
-            jam_layer_uri = "point?crs=EPSG:4326&field=type:string&wood_count:string&index=yes"
-            # create the layer in memory from the uri
-            jam_layer_memory = QgsVectorLayer(jam_layer_uri, "jams", "memory")
+    def addAssessment(self):
+        # create a geopackage with an assessments parent non-spatial table
+        # TODO consider bringing all this over to the class - yeah
 
-            # setup the addition to the assessment geopackage
-            options = QgsVectorFileWriter.SaveVectorOptions()
-            options.layerName = "jams"
-            options.driverName = 'GPKG'
-            if os.path.exists(assessment_path):
-                options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(
-                jam_layer_memory, assessment_path, options)
+        # TODO add layer for geomorphic survey
 
-            # Add DAM layer
-            # TODO flesh out attribute data model
-            dam_layer_uri = "point?crs=EPSG:4326&field=type:string&dam_count:string&index=yes"
-            # create the layer in memory from the uri
-            dam_layer_memory = QgsVectorLayer(dam_layer_uri, "dams", "memory")
-
-            # setup the addition to the assessment geopackage
-            options = QgsVectorFileWriter.SaveVectorOptions()
-            options.layerName = "dams"
-            options.driverName = 'GPKG'
-            if os.path.exists(assessment_path):
-                options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(
-                dam_layer_memory, assessment_path, options)
-
-            # TODO add layer for geomorphic survey
-
-            # TODO add layers to QRiS tree view
+        # Finally, open a assessment dialog
+        # TODO get consistency among current_project, ript_project, and qris_project
+        self.assessment_dialog = AssessmentDlg(self.current_project)
+        # self.assessment_dialog.dataChange.connect(self.openProject)
+        self.assessment_dialog.show()
 
     def addDetrendedRasterToProject(self):
-
         # last_browse_path = self.settings.getValue('lastBrowsePath')
         # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
 
@@ -271,7 +251,6 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.elevation_widget.show()
 
     def addToMap(self, selected_item):
-
         node = QgsProject.instance().layerTreeRoot()
         tree = self._get_parents(selected_item)
         tree.append(selected_item)

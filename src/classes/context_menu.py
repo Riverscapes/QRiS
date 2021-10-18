@@ -72,8 +72,12 @@ class ContextMenu(QMenu):
             'Explore Elevations...',
             ':/plugins/ript_toolbar/Detrend.png'
         ),
-        'BEGIN_NEW_ASSESSMENT': (
+        'ADD_ASSESSMENT': (
             'New Riverscape Assessment',
+            ':/plugins/ript_toolbar/Detrend.png'
+        ),
+        'ADD_DESIGN': (
+            'New Low-Tech Design',
             ':/plugins/ript_toolbar/Detrend.png'
         )
     }
