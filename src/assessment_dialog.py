@@ -55,7 +55,6 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         """Checks if the assessments.gpkg exists, and creates it if it doesn't."""
         self.assessments_path = os.path.join(self.current_project.project_path, "assessments.gpkg")
         if not os.path.exists(self.assessments_path):
-            # TODO this should not be a point layer, refactor to a table without geometry
             memory_assessments = QgsVectorLayer("NoGeometry", "assessments", "memory")
             # write to disk
             QgsVectorFileWriter.writeAsVectorFormat(memory_assessments, self.assessments_path, 'utf-8', driverName='GPKG', onlySelected=False)
@@ -100,10 +99,14 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
     def saveAssessment(self):
         """Creates and saves a new assessment record to the db from the assessment dialog"""
         # set an index for the new deployment_id
+        # TODO get rid of this reference to assessments_layer here? It should be created above
         self.assessments_layer = QgsVectorLayer(self.assessments_path + "|layername=assessments", "assessments", "ogr")
         index_assessment_fid = self.assessments_layer.fields().indexOf("fid")
-        # QMessageBox.information(None, "Runs when loaded", "stuff " + index_assessment_fid)
-        new_assessment_fid = self.assessments_layer.maximumValue(index_assessment_fid) + 1
+        # does not like a max value of 0
+        if index_assessment_fid == 0:
+            new_assessment_fid = 1
+        else:
+            new_assessment_fid = self.assessments_layer.maximumValue(index_assessment_fid) + 1
         # # grab the form values
         new_assessment_date = self.dateEdit_assessment_date.date()
         new_assessment_description = self.plainTextEdit_assessment_description.toPlainText()
@@ -115,13 +118,8 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         new_assessment_feature.setAttribute("assessment_description", new_assessment_description)
         # # TODO add ability to manually enter lat long?
         pr = self.assessments_layer.dataProvider()
-        pr.addFeatures([new_assessment_feature])
 
-        # # TODO: Set the combo box based on the index of the site name
-        # # set_to_index = self.comboBox_select_site.findText(new_site_name)
-        # # self.comboBox_select_site.setCurrentIndex(set_to_index)
-        # # close the dialog and clear the dialog object
-        self.close()
+        pr.addFeatures([new_assessment_feature])
 
         # out_name = self.txtLayerName.text()
         # out_gpkg = os.path.join(self.project.project_path, "ProjectLayers.gpkg")
@@ -133,14 +131,21 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         # options.driverName = 'GPKG'
         # if os.path.exists(out_gpkg):
         #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-
         # _out = QgsVectorFileWriter.writeAsVectorFormat(original_layer, out_gpkg, options)
 
-        # self.project.project_layers[out_name] = Layer(out_name, self.txtProjectLayerPath.text(), self.cboLayerType.currentText())
-        # self.project.export_project_file()
-
-        # self.dataChange.emit(self.project, out_name)
-        pass
+        # TODO format an assessment name based on the entered date value
+        out_name = new_assessment_date.toString('yyyy-MM-dd')
+        path_name = os.path.join("assessments.gpkg", out_name)
+        # create a ript_project.Layer constructor
+        # TODO double check what the path looks like for other layers?
+        self.current_project.assessments[out_name] = Layer(out_name, path_name, "assessment")
+        # TODO call export file to write that shit to the xml
+        self.current_project.export_project_file()
+        # potentially run this data change shit? But I'm not sure if that's totally necessary
+        # TODO add the assessments to the open file dialog stuff....
+        # TODO update the open file
+        self.dataChange.emit(self.current_project, out_name)
+        self.close()
 
     def cancel_assessment(self):
         self.close()

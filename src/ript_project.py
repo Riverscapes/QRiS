@@ -28,6 +28,8 @@ class Raster(Layer):
 
         self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
 
+# TODO consider hashing out an Assessment class here
+
 
 class RiptProject():
 
@@ -43,16 +45,18 @@ class RiptProject():
 
         self.detrended_rasters = {}
         self.project_layers = {}
+        self.assessments = {}
 
     def add_layer(self, layer_name, layer_path, parent=None, meta=None):
-
         relpath = os.path.relpath(layer_path, self.project_path)
         self.project_layers[layer_name] = Layer(layer_name, relpath, "Layer")
 
     def add_detrended(self, detrended_name, path, parent=None, meta=None):
-
         relpath = os.path.relpath(path, self.project_path)
         self.detrended_rasters[detrended_name] = Raster(detrended_name, relpath)
+
+    def add_assessments(self):
+        pass
 
     def load_from_project_file(self, filename=None):
         self.filename = filename if filename is not None else self.filename
@@ -66,6 +70,7 @@ class RiptProject():
         self.time_created = [elem.text for elem in root if elem.tag == 'DateTimeCreated'][0]
         self.description = [elem.text for elem in root if elem.tag == 'Description'][0]
 
+        # populate detrended rasters dictionary
         detrended = root.find('DetrendedRasters')
         if detrended is not None:
             for raster_elem in detrended.iter('Raster'):
@@ -79,6 +84,7 @@ class RiptProject():
                                                                            surface.find('SurfaceType').text)
                 self.detrended_rasters[raster_elem.find('Name').text] = raster
 
+        # populate project layers dictionary
         layers = root.find('ProjectLayers')
         if layers is not None:
             for layer_elem in layers.iter('Layer'):
@@ -86,8 +92,17 @@ class RiptProject():
                                                                           layer_elem.find('Path').text,
                                                                           layer_elem.find('LayerType').text if layer_elem.find('LayerType').text is not None else 'Layer')
 
-    def export_project_file(self, filename=None):
+        # populate the project assessments dictionary
+        assessments = root.find('Assessments')
+        if assessments is not None:
+            for assessment_elem in assessments.iter('Assessment'):
+                # create the dictionary
+                self.assessments[assessment_elem.find('AssessmentDate').text] = Layer(assessment_elem.find('AssessmentDate').text,
+                                                                                      assessment_elem.find('Path').text,
+                                                                                      assessment_elem.find('AssessmentType').text)
 
+    def export_project_file(self, filename=None):
+        """writes the project xml given """
         self.filename = filename if filename is not None else self.filename
 
         root = Element('Project')
@@ -133,6 +148,18 @@ class RiptProject():
             path.text = layer.path
             ltype = SubElement(lyr, "LayerType")
             ltype.text = layer.type
+
+        # Write out assessments stuff to the .xml file
+        # TODO consider using a unique class to hold the assessment stuff
+        assessments = SubElement(root, "Assessments")
+        for feature in self.assessments.values():
+            assessment = SubElement(assessments, "Assessment")
+            assessment_event = SubElement(assessment, "AssessmentDate")
+            assessment_event.text = feature.name
+            path = SubElement(assessment, "Path")
+            path.text = feature.path
+            assessment_type = SubElement(assessment, "AssessmentType")
+            assessment_type.text = feature.type
 
         output = prettify(root)
 
