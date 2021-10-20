@@ -34,14 +34,8 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         self.setupUi(self)
 
         self.current_project = current_project
-        # self.txtLayerName.setText(layer_uri.name)
-        # self.txtLayerSource.setText(layer_uri.uri)
-        # self.cboLayerType.addItems(PROJECT_LAYER_TYPES)
-        # self.text_validate()
-        # self.txtLayerName.textChanged.connect(self.text_validate)
-        # Checks whether the geopackage exists and creates it if not
         self.loadAssessmentDb()
-        # add some button
+        # add signals to buttons
         self.pushButton_save_assessment.clicked.connect(self.saveAssessment)
         self.pushButton_cancel_assessment.clicked.connect(self.cancel_assessment)
 
@@ -121,24 +115,12 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
 
         pr.addFeatures([new_assessment_feature])
 
-        # out_name = self.txtLayerName.text()
-        # out_gpkg = os.path.join(self.project.project_path, "ProjectLayers.gpkg")
-        # original_layer = QgsVectorLayer(self.txtLayerSource.text())
-        # if not os.path.exists(os.path.dirname(out_gpkg)):
-        #     os.makedirs(os.path.dirname(os.path.dirname(out_gpkg)))
-        # options = QgsVectorFileWriter.SaveVectorOptions()
-        # options.layerName = self.layer_path_name
-        # options.driverName = 'GPKG'
-        # if os.path.exists(out_gpkg):
-        #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        # _out = QgsVectorFileWriter.writeAsVectorFormat(original_layer, out_gpkg, options)
-
         # TODO format an assessment name based on the entered date value
         out_name = new_assessment_date.toString('yyyy-MM-dd')
         path_name = os.path.join("assessments.gpkg", out_name)
         # create a ript_project.Layer constructor
         # TODO double check what the path looks like for other layers?
-        self.current_project.assessments[out_name] = Layer(out_name, path_name, "assessment")
+        self.current_project.assessments[out_name] = Layer(out_name, path_name, "Assessment")
         # TODO call export file to write that shit to the xml
         self.current_project.export_project_file()
         # potentially run this data change shit? But I'm not sure if that's totally necessary

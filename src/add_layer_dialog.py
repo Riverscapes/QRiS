@@ -48,7 +48,6 @@ class AddLayerDlg(QDialog, DIALOG_CLASS):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
     def save_layer(self):
-
         out_name = self.txtLayerName.text()
         out_gpkg = os.path.join(self.project.project_path, "ProjectLayers.gpkg")
         original_layer = QgsVectorLayer(self.txtLayerSource.text())

@@ -149,10 +149,10 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         assessment_layers.setData('AssessmentsFolder', item_code['item_type'])
         qris_name.appendRow(assessment_layers)
 
-        for assessment in ript_project.assessments.values():
-            assessment = QStandardItem(assessment.name)
+        for assessment_feature in ript_project.assessments.values():
+            assessment = QStandardItem(assessment_feature.name)
             assessment.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
-            assessment.setData(assessment.type, item_code['item_type'])
+            assessment.setData(assessment_feature.type, item_code['item_type'])
             assessment_layers.appendRow(assessment)
 
         # Add designs to tree
@@ -205,6 +205,8 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.addLayerToProject())
         elif item_type == "AssessmentsFolder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.addAssessment())
+        elif item_type == "Assessment":
+            self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
         elif item_type == "DesignsFolder":
             self.menu.addAction('ADD_DESIGN', lambda: self.addDesign())
         else:
@@ -219,36 +221,31 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         """Initiates adding a new assessment"""
         # TODO get consistency among current_project, ript_project, and qris_project
         self.assessment_dialog = AssessmentDlg(self.current_project)
+        self.assessment_dialog.dataChange.connect(self.openProject)
         self.assessment_dialog.show()
 
     def addDetrendedRasterToProject(self):
         # last_browse_path = self.settings.getValue('lastBrowsePath')
         # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
-
         dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to QRiS project", None, self.tr("Raster Data Sources (*.tif)"))
         if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
             self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.current_project)
-            # TODO probably remove the dataChange slot
             self.addDetrendedDlg.dataChange.connect(self.openProject)
             self.addDetrendedDlg.exec()
 
     def addLayerToProject(self):
-
         select_layer = QgsDataSourceSelectDialog()
         select_layer.exec()
         uri = select_layer.uri()
         if uri is not None and uri.isValid():  # check for polygon
             self.addProjectLayerDlg = AddLayerDlg(uri, self.current_project)
-            # TODO probably remove the dataChange slot
             self.addProjectLayerDlg.dataChange.connect(self.openProject)
             self.addProjectLayerDlg.exec_()
 
     def exploreElevations(self, selected_item):
-
         raster = selected_item.data(item_code['LAYER'])
         self.elevation_widget = RIPTElevationDockWidget(raster, self.current_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
-        # TODO probably remove the dataChange slot
         self.elevation_widget.dataChange.connect(self.openProject)
         self.elevation_widget.show()
 
@@ -275,6 +272,11 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                                            item.text(), 'ogr')
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
+            # add an assessment to the map
+            elif item.data(item_code['item_type'] == 'Assessment'):
+                # TODO Send to the map
+                # TODO Use the path from the standard item
+                # TODO
             else:
                 pass
 
