@@ -93,6 +93,7 @@ class RiptProject():
                                                                           layer_elem.find('LayerType').text if layer_elem.find('LayerType').text is not None else 'Layer')
 
         # populate the project assessments dictionary
+        # TODO update this along with the new schema and loading project layers
         assessments = root.find('Assessments')
         if assessments is not None:
             for assessment_elem in assessments.iter('Assessment'):

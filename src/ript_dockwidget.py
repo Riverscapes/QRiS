@@ -36,7 +36,7 @@ from qgis.gui import QgsDataSourceSelectDialog
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
-from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 
 from .classes.context_menu import ContextMenu
@@ -221,6 +221,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         """Initiates adding a new assessment"""
         # TODO get consistency among current_project, ript_project, and qris_project
         self.assessment_dialog = AssessmentDlg(self.current_project)
+        self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         self.assessment_dialog.dataChange.connect(self.openProject)
         self.assessment_dialog.show()
 
@@ -274,9 +275,9 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     node.addLayer(layer)
             # add an assessment to the map
             elif item.data(item_code['item_type'] == 'Assessment'):
-                # TODO Send to the map
-                # TODO Use the path from the standard item
+                # TODO Send to the map with an assessment id for subsetting
                 # TODO
+                pass
             else:
                 pass
 
