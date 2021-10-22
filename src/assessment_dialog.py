@@ -92,15 +92,15 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
 
     def save_assessment(self):
         """Creates and saves a new assessment record to the db from the assessment dialog"""
-        # set an index for the new deployment_id
+        # set an index for the new deployment_idThird o
         # TODO get rid of this reference to assessments_layer here? It should be created above
         self.assessments_layer = QgsVectorLayer(self.assessments_path + "|layername=assessments", "assessments", "ogr")
         index_assessment_fid = self.assessments_layer.fields().indexOf("fid")
-        # does not like a max value of 0
-        if index_assessment_fid == 0:
-            new_assessment_fid = 1
-        else:
+        # use try because does not like a max value of 0
+        try:
             new_assessment_fid = self.assessments_layer.maximumValue(index_assessment_fid) + 1
+        except TypeError:
+            new_assessment_fid = 1
         # # grab the form values
         new_assessment_date = self.dateEdit_assessment_date.date()
         new_assessment_description = self.plainTextEdit_assessment_description.toPlainText()
@@ -112,21 +112,17 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         new_assessment_feature.setAttribute("assessment_description", new_assessment_description)
         # # TODO add ability to manually enter lat long?
         pr = self.assessments_layer.dataProvider()
-
         pr.addFeatures([new_assessment_feature])
 
-        # TODO format an assessment name based on the entered date value
-        out_name = new_assessment_date.toString('yyyy-MM-dd')
-        path_name = os.path.join("assessments.gpkg", out_name)
+        # get an assessment name
+        new_assessment_name = new_assessment_date.toString('yyyy-MM-dd')
         # create a ript_project.Layer constructor
         # TODO double check what the path looks like for other layers?
-        self.current_project.assessments[out_name] = Layer(out_name, path_name, "Assessment")
+        self.current_project.project_assessments = True
         # TODO call export file to write that shit to the xml
         self.current_project.export_project_file()
-        # potentially run this data change shit? But I'm not sure if that's totally necessary
-        # TODO add the assessments to the open file dialog stuff....
-        # TODO update the open file
-        self.dataChange.emit(self.current_project, out_name)
+        # TODO pass in the name of the new node here for the add to map function
+        self.dataChange.emit(self.current_project, "Riverscape Assessments")
         self.close()
 
     def cancel_assessment(self):

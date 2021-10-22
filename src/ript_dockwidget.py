@@ -53,7 +53,8 @@ item_code = {'path': Qt.UserRole + 1,
              'item_type': Qt.UserRole + 2,
              'LAYER': Qt.UserRole + 3,
              'map_layer': Qt.UserRole + 4,
-             'layer_symbology': Qt.UserRole + 5}
+             'layer_symbology': Qt.UserRole + 5,
+             'feature_id': Qt.UserRole + 6}
 
 
 class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -85,25 +86,27 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
-    def openProject(self, ript_project, add_to_map=None):
-
+    def openProject(self, ript_project, new_item=None):
+        """Builds items in the tree view based on dictionary values that are part of the project"""
+        # TODO resolve this naming - it is stupid and inconsistent throughout
         self.current_project = ript_project
 
         self.model.clear()
         rootNode = self.model.invisibleRootItem()
 
-        qris_name = QStandardItem(ript_project.project_name)
-        qris_name.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
-        qris_name.setData('project_root', item_code['item_type'])
-        qris_name.setData('group', item_code['map_layer'])
-        rootNode.appendRow(qris_name)
+        project_node = QStandardItem(ript_project.project_name)
+        project_node.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
+        project_node.setData('project_root', item_code['item_type'])
+        project_node.setData('group', item_code['map_layer'])
+        rootNode.appendRow(project_node)
 
         # Add detrended rasters to tree
+        # TODO refactor using node naming scheme for clarity
         detrended_rasters = QStandardItem("Detrended Rasters")
         detrended_rasters.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
         detrended_rasters.setData('group', item_code['map_layer'])
-        qris_name.appendRow(detrended_rasters)
+        project_node.appendRow(detrended_rasters)
 
         for raster in ript_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
@@ -133,7 +136,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_layers = QStandardItem("Project Layers")
         project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         project_layers.setData('ProjectLayersFolder', item_code['item_type'])
-        qris_name.appendRow(project_layers)
+        project_node.appendRow(project_layers)
 
         for project_layer in ript_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
@@ -144,25 +147,31 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             project_layers.appendRow(layer)
 
         # Add assessments to tree
-        assessment_layers = QStandardItem("Riverscape Assessments")
-        assessment_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
-        assessment_layers.setData('AssessmentsFolder', item_code['item_type'])
-        qris_name.appendRow(assessment_layers)
+        assessments_parent_node = QStandardItem("Riverscape Assessments")
+        assessments_parent_node.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        assessments_parent_node.setData('AssessmentsFolder', item_code['item_type'])
+        project_node.appendRow(assessments_parent_node)
 
-        for assessment_feature in ript_project.assessments.values():
-            assessment = QStandardItem(assessment_feature.name)
-            assessment.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
-            assessment.setData(assessment_feature.type, item_code['item_type'])
-            assessment_layers.appendRow(assessment)
+        # TODO Loading the tree straight from the layer here
+        # TODO make sure to add the FID for each assessment
+        if self.current_project.project_assessments:
+            assessments_table = QgsVectorLayer(self.current_project.project_assessments_path + "|layername=assessments", "assessments", "ogr")
+            for assessment_feature in assessments_table.getFeatures():
+                assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
+                assessment_node.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+                assessment_node.setData('Assessment', item_code['item_type'])
+                assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
+                assessments_parent_node.appendRow(assessment_node)
 
-        # Add designs to tree
+            # Add designs to tree
         design_layers = QStandardItem("Low-Tech Designs")
         design_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         design_layers.setData('DesignsFolder', item_code['item_type'])
-        qris_name.appendRow(design_layers)
+        project_node.appendRow(design_layers)
 
-        if add_to_map is not None:
-            selected_item = self._findItemInModel(add_to_map)
+        # Check if new item is in the tree, if it is pass it to the new_item function
+        if new_item is not None:
+            selected_item = self._find_item_in_model(new_item)
             if selected_item is not None:
                 self.addToMap(selected_item)
 
@@ -172,25 +181,21 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         event.accept()
 
     def open_menu(self, position):
-
+        """Connects signals as context menus to items in the tree"""
         self.menu.clear()
-
         indexes = self.treeView.selectedIndexes()
         if len(indexes) < 1:
             return
 
         # No multiselect so there is only ever one item
         idx = indexes[0]
-
         if not idx.isValid():
             return
 
         item = self.model.itemFromIndex(indexes[0])
-
         # project_tree_data = item.data(Qt.UserRole)  # ProjectTreeData object
         # data = project_tree_data.data  # Could be a QRaveBaseMap, a QRaveMapLayer or just some random data
-
-        # connect signals to treeView menu items
+        # connect signals to treeView menu itemsHmmmm
         item_type = item.data(item_code['item_type'])
         if item_type == 'project_root':
             self.menu.addAction('EXPAND_ALL', lambda: self.expandAll())
@@ -204,7 +209,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "ProjectLayersFolder":
             self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.addLayerToProject())
         elif item_type == "AssessmentsFolder":
-            self.menu.addAction('ADD_ASSESSMENT', lambda: self.addAssessment())
+            self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
         elif item_type == "Assessment":
             self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
         elif item_type == "DesignsFolder":
@@ -217,7 +222,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def addDesign(self):
         pass
 
-    def addAssessment(self):
+    def add_assessment(self):
         """Initiates adding a new assessment"""
         # TODO get consistency among current_project, ript_project, and qris_project
         self.assessment_dialog = AssessmentDlg(self.current_project)
@@ -251,6 +256,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.elevation_widget.show()
 
     def addToMap(self, selected_item):
+        """Constructs the layer tree and adds layers to the map"""
         node = QgsProject.instance().layerTreeRoot()
         tree = self._get_parents(selected_item)
         tree.append(selected_item)
@@ -294,6 +300,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         stack.reverse()
         return stack
 
-    def _findItemInModel(self, name):
+    def _find_item_in_model(self, name):
+        """Looks in the tree for an item name passed from the dataChange method."""
         selected_item = self.model.findItems(name, Qt.MatchRecursive)[0]
         return selected_item

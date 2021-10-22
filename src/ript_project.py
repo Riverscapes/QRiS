@@ -7,13 +7,14 @@ from xml.dom import minidom
 
 
 class Layer():
+    """Used to construct a list of reference layers within the project"""
+
     def __init__(self, name, path, type='Layer') -> None:
         self.name = name
         self.path = path
         self.type = type
 
     def full_path(self, project_path):
-
         return os.path.join(project_path, self.path)
 
 
@@ -21,14 +22,10 @@ class Raster(Layer):
 
     def __init__(self, name, path) -> None:
         super().__init__(name, path, type='Raster')
-
         self.surfaces = {}
 
     def add_surface(self, surface_name, surface_path, surface_type):
-
         self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
-
-# TODO consider hashing out an Assessment class here
 
 
 class RiptProject():
@@ -36,16 +33,15 @@ class RiptProject():
     version = "0.0.1"
 
     def __init__(self, name=None) -> None:
-
         self.project_name = name
         self.time_created = datetime.now(timezone.utc).astimezone().isoformat()
         self.description = ""
         self.filename = None
         self.project_path = None
-
         self.detrended_rasters = {}
         self.project_layers = {}
-        self.assessments = {}
+        # eventually will hold assessment types like jam, dam, etc...
+        self.project_assessments = False
 
     def add_layer(self, layer_name, layer_path, parent=None, meta=None):
         relpath = os.path.relpath(layer_path, self.project_path)
@@ -58,7 +54,8 @@ class RiptProject():
     def add_assessments(self):
         pass
 
-    def load_from_project_file(self, filename=None):
+    def load_project_file(self, filename=None):
+        """uses the .qris project file to reference data structures within the project"""
         self.filename = filename if filename is not None else self.filename
 
         self.project_path = os.path.dirname(filename)
@@ -94,13 +91,11 @@ class RiptProject():
 
         # populate the project assessments dictionary
         # TODO update this along with the new schema and loading project layers
-        assessments = root.find('Assessments')
-        if assessments is not None:
-            for assessment_elem in assessments.iter('Assessment'):
-                # create the dictionary
-                self.assessments[assessment_elem.find('AssessmentDate').text] = Layer(assessment_elem.find('AssessmentDate').text,
-                                                                                      assessment_elem.find('Path').text,
-                                                                                      assessment_elem.find('AssessmentType').text)
+        # TODO someday this may do more, right now keeping it simple Weird way to assemble the path to the assessments geopackage
+        assessments_tag = root.find('Assessments')
+        if assessments_tag is not None:
+            self.project_assessments = True
+            self.project_assessments_path = os.path.join(self.project_path, assessments_tag.find('Path').text)
 
     def export_project_file(self, filename=None):
         """writes the project xml given """
@@ -152,15 +147,11 @@ class RiptProject():
 
         # Write out assessments stuff to the .xml file
         # TODO consider using a unique class to hold the assessment stuff
-        assessments = SubElement(root, "Assessments")
-        for feature in self.assessments.values():
-            assessment = SubElement(assessments, "Assessment")
-            assessment_event = SubElement(assessment, "AssessmentDate")
-            assessment_event.text = feature.name
-            path = SubElement(assessment, "Path")
-            path.text = feature.path
-            assessment_type = SubElement(assessment, "AssessmentType")
-            assessment_type.text = feature.type
+        # TODO may need to consider assessment types, at this point just the assessments geopackage is it
+        if self.project_assessments:
+            assessments_elem = SubElement(root, "Assessments")
+            assessment_path_elem = SubElement(assessments_elem, "Path")
+            assessment_path_elem.text = "Assessments.gpkg"
 
         output = prettify(root)
 
@@ -169,8 +160,7 @@ class RiptProject():
 
 
 def prettify(elem):
-    """Return a pretty-printed XML string for the Element.
-    """
+    """Return a pretty-printed XML string for the Element"""
     rough_string = tostring(elem, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")

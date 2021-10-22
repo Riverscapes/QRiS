@@ -272,7 +272,7 @@ class RIPTToolbar:
             if self.dockwidget is None or self.dockwidget.isHidden() is True:
                 # self.toggle_widget(forceOn=True)
                 project = RiptProject()
-                project.load_from_project_file(dialog_return[0])
+                project.load_project_file(dialog_return[0])
                 self.openProject(project)
 
     def newProjectDlg(self):
