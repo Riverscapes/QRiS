@@ -30,6 +30,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsProject,
     QgsField,
+    QgsExpressionContextUtils,
     QgsVectorFileWriter)
 
 from qgis.gui import QgsDataSourceSelectDialog
@@ -86,7 +87,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
-    def openProject(self, ript_project, new_item=None):
+    def open_project(self, ript_project, new_item=None):
         """Builds items in the tree view based on dictionary values that are part of the project"""
         # TODO resolve this naming - it is stupid and inconsistent throughout
         self.current_project = ript_project
@@ -115,7 +116,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             detrended_raster.setData('DetrendedRaster', item_code['item_type'])
             detrended_raster.setData(raster, item_code['LAYER'])
             detrended_raster.setData('raster_layer', item_code['map_layer'])
-            detrended_raster.setData(os.path.join(os.path.dirname(__file__), "..", 'resources', 'symbology', 'hand.qml'), item_code['layer_symbology'])
+            # detrended_raster.setData(os.path.join(os.path.dirname(__file__), "..", 'resources', 'symbology', 'hand.qml'), item_code['layer_symbology'])
             detrended_rasters.appendRow(detrended_raster)
 
             if len(raster.surfaces.values()) > 0:
@@ -136,6 +137,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_layers = QStandardItem("Project Layers")
         project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         project_layers.setData('ProjectLayersFolder', item_code['item_type'])
+        project_layers.setData('group', item_code['map_layer'])
         project_node.appendRow(project_layers)
 
         for project_layer in ript_project.project_layers.values():
@@ -146,10 +148,14 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             layer.setData(project_layer, item_code['LAYER'])
             project_layers.appendRow(layer)
 
+        # TODO soft the assessments
+        # project_layers.sortChildren(QtAscendingOrder)
+
         # Add assessments to tree
         assessments_parent_node = QStandardItem("Riverscape Assessments")
         assessments_parent_node.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
         assessments_parent_node.setData('AssessmentsFolder', item_code['item_type'])
+        assessments_parent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(assessments_parent_node)
 
         # TODO Loading the tree straight from the layer here
@@ -159,7 +165,8 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             for assessment_feature in assessments_table.getFeatures():
                 assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
                 assessment_node.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
-                assessment_node.setData('Assessment', item_code['item_type'])
+                assessment_node.setData('dam_assessment', item_code['item_type'])
+                assessment_node.setData('assessment_layer', item_code['map_layer'])
                 assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
                 assessments_parent_node.appendRow(assessment_node)
 
@@ -210,7 +217,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.addLayerToProject())
         elif item_type == "AssessmentsFolder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
-        elif item_type == "Assessment":
+        elif item_type == "dam_assessment":
             self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
         elif item_type == "DesignsFolder":
             self.menu.addAction('ADD_DESIGN', lambda: self.addDesign())
@@ -227,7 +234,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # TODO get consistency among current_project, ript_project, and qris_project
         self.assessment_dialog = AssessmentDlg(self.current_project)
         self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
-        self.assessment_dialog.dataChange.connect(self.openProject)
+        self.assessment_dialog.dataChange.connect(self.open_project)
         self.assessment_dialog.show()
 
     def addDetrendedRasterToProject(self):
@@ -236,7 +243,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to QRiS project", None, self.tr("Raster Data Sources (*.tif)"))
         if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
             self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.current_project)
-            self.addDetrendedDlg.dataChange.connect(self.openProject)
+            self.addDetrendedDlg.dataChange.connect(self.open_project)
             self.addDetrendedDlg.exec()
 
     def addLayerToProject(self):
@@ -245,31 +252,41 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         uri = select_layer.uri()
         if uri is not None and uri.isValid():  # check for polygon
             self.addProjectLayerDlg = AddLayerDlg(uri, self.current_project)
-            self.addProjectLayerDlg.dataChange.connect(self.openProject)
+            self.addProjectLayerDlg.dataChange.connect(self.open_project)
             self.addProjectLayerDlg.exec_()
 
     def exploreElevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])
         self.elevation_widget = RIPTElevationDockWidget(raster, self.current_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
-        self.elevation_widget.dataChange.connect(self.openProject)
+        self.elevation_widget.dataChange.connect(self.open_project)
         self.elevation_widget.show()
 
     def addToMap(self, selected_item):
-        """Constructs the layer tree and adds layers to the map"""
+        """Adds selected items from the QRiS tree to the QGIS layer tree and also to the map"""
+        # TODO consider giving node a more explicit name
         node = QgsProject.instance().layerTreeRoot()
-        tree = self._get_parents(selected_item)
-        tree.append(selected_item)
-        for item in tree:
+        parents = self._get_parents(selected_item)
+        parents.append(selected_item)
+        # for each parent node
+        for item in parents:
+            # if has the code group
             if item.data(item_code['map_layer']) == 'group':
+                # check if the group is in the qgis layer tree
                 if any([c.name() == item.text() for c in node.children()]):
+                    # if is set it to the active node
                     node = next(n for n in node.children() if n.name() == item.text())
                 else:
+                    # if not add the group as a node
                     new_node = node.addGroup(item.text())
                     node = new_node
+            # if it's not a group map_layer, but is a raster layer
             elif item.data(item_code['map_layer']) == 'raster_layer':
+                # check if the layer text is in the layer tree already
                 if not any([c.name() == item.text() for c in node.children()]):
+                    # if not start set the raster as a layer
                     layer = QgsRasterLayer(os.path.join(self.current_project.project_path, item.data(item_code['LAYER']).path), item.text())
+                    # load a qml for style
                     layer.loadNamedStyle(item.data(item_code['layer_symbology']))
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
@@ -279,26 +296,36 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                                            item.text(), 'ogr')
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
-            # add an assessment to the map
-            elif item.data(item_code['item_type'] == 'Assessment'):
+            # for assessment and design layers
+            elif item.data(item_code['map_layer'] == 'assessment_layer'):
                 # TODO Send to the map with an assessment id for subsetting
-                # TODO
-                pass
-            else:
-                pass
+                # TODO for now just send the jam layer
+                layer = QgsVectorLayer(self.current_project.project_assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
+                # TODO add a filter with the parent id
+                assessment_id = item.data(item_code['feature_id'])
+                layer.setSubsetString("assessment_id = " + str(assessment_id))
+                QgsExpressionContextUtils.setLayerVariable(layer, 'parent_id', assessment_id)
+                # TODO dial in referencing and updating of .qml files
+                symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'assessments_dams.qml')
+                layer.loadNamedStyle(symbology_path)
+                # TODO set the variable property for the parent_id
+                # TODO connect a .qml with formatting and form properties
+                QgsProject.instance().addMapLayer(layer, False)
+                node.addLayer(layer)
 
     def expandAll(self):
         self.treeView.expandAll()
         return
 
     def _get_parents(self, start_item: QStandardItem):
-        stack = []
+        """This gets a """
+        parents = []
         placeholder = start_item.parent()
         while placeholder is not None and placeholder != self.model.invisibleRootItem():
-            stack.append(placeholder)
+            parents.append(placeholder)
             placeholder = placeholder.parent()
-        stack.reverse()
-        return stack
+        parents.reverse()
+        return parents
 
     def _find_item_in_model(self, name):
         """Looks in the tree for an item name passed from the dataChange method."""

@@ -191,9 +191,9 @@ class RIPTToolbar:
         self.newProjectAction.triggered.connect(self.newProjectDlg)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.openProjectAction = QAction(QIcon(':/plugins/ript_toolbar/OpenProject.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
-        self.openProjectAction.triggered.connect(self.projectBrowserDlg)
-        self.toolbar.addAction(self.openProjectAction)
+        self.open_projectAction = QAction(QIcon(':/plugins/ript_toolbar/OpenProject.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
+        self.open_projectAction.triggered.connect(self.projectBrowserDlg)
+        self.toolbar.addAction(self.open_projectAction)
 
         # self.addLayerAction = QAction(QIcon(':/plugins/ript_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
         # self.addLayerAction.triggered.connect(self.addLayerDlg)
@@ -273,12 +273,12 @@ class RIPTToolbar:
                 # self.toggle_widget(forceOn=True)
                 project = RiptProject()
                 project.load_project_file(dialog_return[0])
-                self.openProject(project)
+                self.open_project(project)
 
     def newProjectDlg(self):
 
         self.new_project_dlg = NewProjectDialog()
-        self.new_project_dlg.dataChange.connect(self.openProject)
+        self.new_project_dlg.dataChange.connect(self.open_project)
 
         # if ript_project is not None:
         #     # We set the proect path in the project settings. This way it will be saved with the QgsProject file
@@ -328,9 +328,9 @@ class RIPTToolbar:
         # else:
         #     self.qproject.removeEntry(CONSTANTS['settingsCategory'], 'enabled')
 
-    def openProject(self, project):
+    def open_project(self, project):
         self.toggle_widget()
-        self.dockwidget.openProject(project)
+        self.dockwidget.open_project(project)
         # self.addLayerAction.setEnabled(True)
 
     def addLayerDlg(self):
