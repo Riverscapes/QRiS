@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/ript_toolbar">
+    <qresource prefix="/plugins/qris_toolbar">
 
         <file alias="BrowseFolder.png">../Images/BrowseFolder.png</file>
         <file alias="Help.png">../Images/Help.png</file>
@@ -20,7 +20,7 @@
         <file alias="AddToMap.png">../Images/AddToMap.png</file>
         <file alias="metadata.png">../Images/metadata.png</file>
         <file alias="close.png">../Images/close.png</file>
-
+        <file alias="test.png">../Images/test.png</file>
 
         <!-- Layer icons -->
         <file alias="layers/Dot.png">../Images/layers/Dot16.png</file>

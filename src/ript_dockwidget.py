@@ -96,7 +96,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         rootNode = self.model.invisibleRootItem()
 
         project_node = QStandardItem(ript_project.project_name)
-        project_node.setIcon(QIcon(':/plugins/ript_toolbar/RaveAddIn_16px.png'))
+        project_node.setIcon(QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'))
         project_node.setData('project_root', item_code['item_type'])
         project_node.setData('group', item_code['map_layer'])
         rootNode.appendRow(project_node)
@@ -104,14 +104,14 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Add detrended rasters to tree
         # TODO refactor using node naming scheme for clarity
         detrended_rasters = QStandardItem("Detrended Rasters")
-        detrended_rasters.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
         detrended_rasters.setData('group', item_code['map_layer'])
         project_node.appendRow(detrended_rasters)
 
         for raster in ript_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
-            detrended_raster.setIcon(QIcon(':/plugins/ript_toolbar/layers/Raster.png'))
+            detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/layers/Raster.png'))
             # detrended_raster.setData(raster.path, item_code['path'])
             detrended_raster.setData('DetrendedRaster', item_code['item_type'])
             detrended_raster.setData(raster, item_code['LAYER'])
@@ -121,12 +121,12 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
             if len(raster.surfaces.values()) > 0:
                 item_surfaces = QStandardItem("Surfaces")
-                item_surfaces.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+                item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
                 item_surfaces.setData('group', item_code['map_layer'])
                 detrended_raster.appendRow(item_surfaces)
                 for surface in raster.surfaces.values():
                     item_surface = QStandardItem(surface.name)
-                    item_surface.setIcon(QIcon(':/plugins/ript_toolbar/layers/Polygon.png'))
+                    item_surface.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polygon.png'))
                     # item_surface.setData(surface.path, item_code['path'])
                     item_surface.setData('DetrendedRasterSurface', item_code['item_type'])
                     item_surface.setData('surface_layer', item_code['map_layer'])
@@ -135,7 +135,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add project layers to tree
         project_layers = QStandardItem("Project Layers")
-        project_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        project_layers.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         project_layers.setData('ProjectLayersFolder', item_code['item_type'])
         project_layers.setData('group', item_code['map_layer'])
         project_node.appendRow(project_layers)
@@ -153,7 +153,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add assessments to tree
         assessments_parent_node = QStandardItem("Riverscape Assessments")
-        assessments_parent_node.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         assessments_parent_node.setData('AssessmentsFolder', item_code['item_type'])
         assessments_parent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(assessments_parent_node)
@@ -164,7 +164,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             assessments_table = QgsVectorLayer(self.current_project.project_assessments_path + "|layername=assessments", "assessments", "ogr")
             for assessment_feature in assessments_table.getFeatures():
                 assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
-                assessment_node.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+                assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
                 assessment_node.setData('dam_assessment', item_code['item_type'])
                 assessment_node.setData('assessment_layer', item_code['map_layer'])
                 assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
@@ -172,7 +172,7 @@ class RIPTDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
             # Add designs to tree
         design_layers = QStandardItem("Low-Tech Designs")
-        design_layers.setIcon(QIcon(':/plugins/ript_toolbar/BrowseFolder.png'))
+        design_layers.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         design_layers.setData('DesignsFolder', item_code['item_type'])
         project_node.appendRow(design_layers)
 

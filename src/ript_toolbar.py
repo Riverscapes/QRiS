@@ -180,22 +180,22 @@ class RIPTToolbar:
         # Initialize the processing framework
         self.initProcessing()
 
-        icon_path = ':/plugins/ript_toolbar/icon.png'
+        icon_path = ':/plugins/qris_toolbar/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'QRiS'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/ript_toolbar/NewProject.png'), self.tr(u'new QRiS Project'), self.iface.mainWindow())
+        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/NewProject.png'), self.tr(u'new QRiS Project'), self.iface.mainWindow())
         self.newProjectAction.triggered.connect(self.newProjectDlg)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.open_projectAction = QAction(QIcon(':/plugins/ript_toolbar/OpenProject.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
+        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/OpenProject.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
         self.open_projectAction.triggered.connect(self.projectBrowserDlg)
         self.toolbar.addAction(self.open_projectAction)
 
-        # self.addLayerAction = QAction(QIcon(':/plugins/ript_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
+        # self.addLayerAction = QAction(QIcon(':/plugins/qris_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
         # self.addLayerAction.triggered.connect(self.addLayerDlg)
         # self.addLayerAction.setEnabled(False)
         # self.toolbar.addAction(self.addLayerAction)
