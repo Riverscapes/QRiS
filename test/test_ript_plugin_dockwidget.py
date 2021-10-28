@@ -16,19 +16,19 @@ import unittest
 
 from qgis.PyQt.QtGui import QDockWidget
 
-from ript_plugin_dockwidget import RIPTDockWidget
+from from .qris_dockwidget import QRiSDockWidget
 
 from utilities import get_qgis_app
 
 QGIS_APP = get_qgis_app()
 
 
-class RIPTDockWidgetTest(unittest.TestCase):
+class QRiSDockWidgetTest(unittest.TestCase):
     """Test dockwidget works."""
 
     def setUp(self):
         """Runs before each test."""
-        self.dockwidget = RIPTDockWidget(None)
+        self.dockwidget = QRiSDockWidget(None)
 
     def tearDown(self):
         """Runs after each test."""
@@ -38,8 +38,8 @@ class RIPTDockWidgetTest(unittest.TestCase):
         """Test we can click OK."""
         pass
 
+
 if __name__ == "__main__":
-    suite = unittest.makeSuite(RIPTDialogTest)
+    suite = unittest.makeSuite(QRiSDialogTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
-

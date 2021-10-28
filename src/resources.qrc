@@ -21,6 +21,14 @@
         <file alias="metadata.png">../Images/metadata.png</file>
         <file alias="close.png">../Images/close.png</file>
         <file alias="test.png">../Images/test.png</file>
+        <file alias="raster_test.png">../Images/raster_test.png</file>
+        <file alias="map_test.png">../Images/map_test.png</file>
+
+
+        <file alias="project_qris.png">../Images/project_qris.png</file>
+        <file alias="project_new_qris.png">../Images/project_new_qris.png</file>
+        <file alias="project_open_qris.png">../Images/project_open_qris.png</file>
+
 
         <!-- Layer icons -->
         <file alias="layers/Dot.png">../Images/layers/Dot16.png</file>
