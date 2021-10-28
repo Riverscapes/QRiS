@@ -95,7 +95,6 @@ class RiptProject():
         assessments_tag = root.find('Assessments')
         if assessments_tag is not None:
             self.project_assessments = True
-            self.project_assessments_path = os.path.join(self.project_path, assessments_tag.find('Path').text)
 
     def export_project_file(self, filename=None):
         """writes the project xml given """

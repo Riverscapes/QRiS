@@ -162,8 +162,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # TODO Loading the tree straight from the layer here
         # TODO make sure to add the FID for each assessment
         if self.current_project.project_assessments:
-            assessments_table = QgsVectorLayer(self.current_project.project_assessments_path + "|layername=assessments", "assessments", "ogr")
-            for assessment_feature in assessments_table.getFeatures():
+            assessments_layer = QgsVectorLayer(os.path.join(self.current_project.project_path, "Assessments.gpkg|layername=assessments"), "assessments", "ogr")
+            for assessment_feature in assessments_layer.getFeatures():
                 assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
                 assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
                 assessment_node.setData('dam_assessment', item_code['item_type'])
@@ -301,7 +301,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             elif item.data(item_code['map_layer'] == 'assessment_layer'):
                 # TODO Send to the map with an assessment id for subsetting
                 # TODO for now just send the jam layer
-                layer = QgsVectorLayer(self.current_project.project_assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
+                layer = QgsVectorLayer(os.path.join(self.current_project.project_path, "Assessments.gpkg|layername=dams"), "Dams-" + item.text(), "ogr")
                 # TODO add a filter with the parent id
                 assessment_id = item.data(item_code['feature_id'])
                 layer.setSubsetString("assessment_id = " + str(assessment_id))

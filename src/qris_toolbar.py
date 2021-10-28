@@ -38,7 +38,7 @@ from .ript_project import RiptProject
 import os.path
 
 
-class RIPTToolbar:
+class QRiSToolbar:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
