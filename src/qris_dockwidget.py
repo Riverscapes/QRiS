@@ -96,7 +96,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         rootNode = self.model.invisibleRootItem()
 
         project_node = QStandardItem(ript_project.project_name)
-        project_node.setIcon(QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'))
+        project_node.setIcon(QIcon(':/plugins/qris_toolbar/test_Riverscapes.png'))
         project_node.setData('project_root', item_code['item_type'])
         project_node.setData('group', item_code['map_layer'])
         rootNode.appendRow(project_node)
@@ -104,14 +104,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Add detrended rasters to tree
         # TODO refactor using node naming scheme for clarity
         detrended_rasters = QStandardItem("Detrended Rasters")
-        detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
+        detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
         detrended_rasters.setData('group', item_code['map_layer'])
         project_node.appendRow(detrended_rasters)
 
         for raster in ript_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
-            detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/raster_test.png'))
+            detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/raster_folder.png'))
             # detrended_raster.setData(raster.path, item_code['path'])
             detrended_raster.setData('DetrendedRaster', item_code['item_type'])
             detrended_raster.setData(raster, item_code['LAYER'])
@@ -121,7 +121,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
             if len(raster.surfaces.values()) > 0:
                 item_surfaces = QStandardItem("Surfaces")
-                item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
+                item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
                 item_surfaces.setData('group', item_code['map_layer'])
                 detrended_raster.appendRow(item_surfaces)
                 for surface in raster.surfaces.values():
@@ -135,11 +135,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add project layers to tree
         project_layers = QStandardItem("Project Layers")
-        project_layers.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
+        project_layers.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         project_layers.setData('ProjectLayersFolder', item_code['item_type'])
         project_layers.setData('group', item_code['map_layer'])
         project_node.appendRow(project_layers)
 
+        # TODO remedy this ript_project, current_project, project thing
         for project_layer in ript_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
             layer.setIcon(QIcon(':/plugins/qris_toolbar/map_test.png'))
@@ -154,7 +155,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add assessments to tree
         assessments_parent_node = QStandardItem("Riverscape Assessments")
-        assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
+        assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         assessments_parent_node.setData('AssessmentsFolder', item_code['item_type'])
         assessments_parent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(assessments_parent_node)
@@ -162,10 +163,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # TODO Loading the tree straight from the layer here
         # TODO make sure to add the FID for each assessment
         if self.current_project.project_assessments:
-            assessments_layer = QgsVectorLayer(os.path.join(self.current_project.project_path, "Assessments.gpkg|layername=assessments"), "assessments", "ogr")
+            assessments_layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=assessments", "assessments", "ogr")
             for assessment_feature in assessments_layer.getFeatures():
                 assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
-                assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
+                assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
                 assessment_node.setData('dam_assessment', item_code['item_type'])
                 assessment_node.setData('assessment_layer', item_code['map_layer'])
                 assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
@@ -173,7 +174,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
             # Add designs to tree
         design_layers = QStandardItem("Low-Tech Designs")
-        design_layers.setIcon(QIcon(':/plugins/qris_toolbar/test.png'))
+        design_layers.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         design_layers.setData('DesignsFolder', item_code['item_type'])
         project_node.appendRow(design_layers)
 
@@ -227,7 +228,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
-    def addDesign(self):
+    def add_design(self):
         pass
 
     def add_assessment(self):
@@ -298,10 +299,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
             # for assessment and design layers
+            # TODO make this work when adding a new assessment
             elif item.data(item_code['map_layer'] == 'assessment_layer'):
                 # TODO Send to the map with an assessment id for subsetting
                 # TODO for now just send the jam layer
-                layer = QgsVectorLayer(os.path.join(self.current_project.project_path, "Assessments.gpkg|layername=dams"), "Dams-" + item.text(), "ogr")
+                layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
                 # TODO add a filter with the parent id
                 assessment_id = item.data(item_code['feature_id'])
                 layer.setSubsetString("assessment_id = " + str(assessment_id))
@@ -309,9 +311,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 # TODO dial in referencing and updating of .qml files
                 symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'assessments_dams.qml')
                 layer.loadNamedStyle(symbology_path)
-                # TODO set the variable property for the parent_id
-                # TODO connect a .qml with formatting and form properties
                 QgsProject.instance().addMapLayer(layer, False)
+                # TODO may need to dial in the adding of filtered layers
                 node.addLayer(layer)
 
     def expandAll(self):

@@ -180,18 +180,18 @@ class QRiSToolbar:
         # Initialize the processing framework
         self.initProcessing()
 
-        icon_path = ':/plugins/qris_toolbar/project_qris.png'
+        icon_path = ':/plugins/qris_toolbar/test_Riverscapes.png'
         self.add_action(
             icon_path,
             text=self.tr(u'QRiS'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/project_new_qris.png'), self.tr(u'new QRiS Project'), self.iface.mainWindow())
-        self.newProjectAction.triggered.connect(self.newProjectDlg)
+        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/new_folder.png'), self.tr(u'new QRiS Project'), self.iface.mainWindow())
+        self.newProjectAction.triggered.connect(self.open_new_project_dialog)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/project_open_qris.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
+        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/open_folder.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
         self.open_projectAction.triggered.connect(self.projectBrowserDlg)
         self.toolbar.addAction(self.open_projectAction)
 
@@ -275,7 +275,7 @@ class QRiSToolbar:
                 project.load_project_file(dialog_return[0])
                 self.open_project(project)
 
-    def newProjectDlg(self):
+    def open_new_project_dialog(self):
 
         self.new_project_dlg = NewProjectDialog()
         self.new_project_dlg.dataChange.connect(self.open_project)

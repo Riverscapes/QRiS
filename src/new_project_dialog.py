@@ -61,21 +61,13 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
             self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     def save_new_project(self):
-
+        """Saves the new project from the dialog"""
         # TODO refactor this into seperate classes
-
         # Create new dir
         os.makedirs(self.project_folder)
-
         project = RiptProject(self.project_name)
         project.project_path = self.project_folder
-
-        # Create .ript
+        # Create .qris
         ript_project_file = os.path.join(self.project_folder, "project.qris")
-
         project.export_project_file(ript_project_file)
-
         self.dataChange.emit(project)
-
-        # Create riverscapes.rs.xml
-        # ript_rs_project_file = os.path.join(self.project_folder, "project.rs.xml")

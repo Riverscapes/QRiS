@@ -23,7 +23,11 @@
         <file alias="test.png">../Images/test.png</file>
         <file alias="raster_test.png">../Images/raster_test.png</file>
         <file alias="map_test.png">../Images/map_test.png</file>
+        <file alias="test_Riverscapes.png">../Images/test_Riverscapes.png</file>
 
+        <file alias="new_folder.png">../Images/new_folder.png</file>
+        <file alias="open_folder.png">../Images/open_folder.png</file>
+        <file alias="folder.png">../Images/folder.png</file>
 
         <file alias="project_qris.png">../Images/project_qris.png</file>
         <file alias="project_new_qris.png">../Images/project_new_qris.png</file>

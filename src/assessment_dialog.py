@@ -34,9 +34,9 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         self.setupUi(self)
 
         self.current_project = current_project
-        self.assessments_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
+        self.current_project.assessments_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
         # create the db if it isn't there?
-        if not os.path.exists(self.assessments_path):
+        if not os.path.exists(self.current_project.assessments_path):
             self.load_assessment_gpkg()
         # add signals to buttons
         self.pushButton_save_assessment.clicked.connect(self.save_assessment)
@@ -53,7 +53,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         # layer for creating the geopackage
         memory_create = QgsVectorLayer("NoGeometry", "memory_create", "memory")
         # write to disk
-        QgsVectorFileWriter.writeAsVectorFormat(memory_create, self.assessments_path, 'utf-8', driverName='GPKG', onlySelected=False)
+        QgsVectorFileWriter.writeAsVectorFormat(memory_create, self.current_project.assessments_path, 'utf-8', driverName='GPKG', onlySelected=False)
 
         # create assessments table and write to geopackage
         memory_assessments = QgsVectorLayer("NoGeometry", "memory_assessments", "memory")
@@ -61,10 +61,10 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         options = QgsVectorFileWriter.SaveVectorOptions()
         options.layerName = "assessments"
         options.driverName = 'GPKG'
-        if os.path.exists(self.assessments_path):
+        if os.path.exists(self.current_project.assessments_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_assessments, self.assessments_path, options)
-            self.assessments_layer = QgsVectorLayer(self.assessments_path + "|layername=assessments", "assessments", "ogr")
+            QgsVectorFileWriter.writeAsVectorFormat(memory_assessments, self.current_project.assessments_path, options)
+            self.assessments_layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=assessments", "assessments", "ogr")
             # the data model and add fields
             assessment_date_field = QgsField("assessment_date", QVariant.Date)
             assessment_description_field = QgsField("assessment_description", QVariant.String)
@@ -78,10 +78,10 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         options = QgsVectorFileWriter.SaveVectorOptions()
         options.layerName = "dams"
         options.driverName = 'GPKG'
-        if os.path.exists(self.assessments_path):
+        if os.path.exists(self.current_project.assessments_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_dams, self.assessments_path, options)
-            self.dams_layer = QgsVectorLayer(self.assessments_path + "|layername=dams", "dams", "ogr")
+            QgsVectorFileWriter.writeAsVectorFormat(memory_dams, self.current_project.assessments_path, options)
+            self.dams_layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=dams", "dams", "ogr")
             # the data model and add fields to the layer
             assessment_id = QgsField("assessment_id", QVariant.Int)
             dam_type_field = QgsField("dam_type", QVariant.String)
@@ -94,7 +94,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         """Creates and saves a new assessment record to the db from the assessment dialog"""
         # set an index for the new deployment_idThird o
         # TODO get rid of this reference to assessments_layer here? It should be created above
-        self.assessments_layer = QgsVectorLayer(self.assessments_path + "|layername=assessments", "assessments", "ogr")
+        self.assessments_layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=assessments", "assessments", "ogr")
         index_assessment_fid = self.assessments_layer.fields().indexOf("fid")
         # use try because does not like a max value of 0
         try:
