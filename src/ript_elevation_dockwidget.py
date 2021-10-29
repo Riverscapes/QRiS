@@ -18,7 +18,7 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     closingPlugin = pyqtSignal()
     dataChange = pyqtSignal(QRiSProject, str)
 
-    def __init__(self, raster, ript_project, parent=None):
+    def __init__(self, raster, qris_project, parent=None):
         """Constructor."""
         super(RIPTElevationDockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -27,13 +27,13 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        self.ript_project = ript_project
+        self.qris_project = qris_project
         self.raster = raster
         self.elevation_value = 1.0
 
         self.txtRasterName.setText(self.raster.name)
 
-        self.raster_path = os.path.join(self.ript_project.project_path, raster.path)
+        self.raster_path = os.path.join(self.qris_project.project_path, raster.path)
         self.group_layer = None
         self.raster_layer = QgsRasterLayer(self.raster_path, 'Elevation Explorer')
         self.base_raster_layer = QgsRasterLayer(self.raster_path, self.raster.name)
@@ -72,13 +72,13 @@ class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.elevationSlider.setValue(int(value * 10))
 
     def exportPolygonDlg(self):
-        self.export_dlg = ExportElevationSurfaceDlg(self.raster, self.elevation_value, self.ript_project)
+        self.export_dlg = ExportElevationSurfaceDlg(self.raster, self.elevation_value, self.qris_project)
         self.export_dlg.dataChange.connect(self.exportPolgyon)
         self.export_dlg.show()
 
     def exportPolgyon(self, updated_project, surface_name):
-        self.ript_project = updated_project
-        self.dataChange.emit(self.ript_project, surface_name)
+        self.qris_project = updated_project
+        self.dataChange.emit(self.qris_project, surface_name)
         self.closeWidget()
         return
 

@@ -280,7 +280,7 @@ class QRiSToolbar:
         self.new_project_dlg = NewProjectDialog()
         self.new_project_dlg.dataChange.connect(self.open_project)
 
-        # if ript_project is not None:
+        # if qris_project is not None:
         #     # We set the proect path in the project settings. This way it will be saved with the QgsProject file
         #     if self.dockwidget is None or self.dockwidget.isHidden() is True:
         #         self.toggle_widget(forceOn=True)
@@ -336,7 +336,7 @@ class QRiSToolbar:
     def addLayerDlg(self):
 
         if self.dockwidget is not None:
-            if self.dockwidget.current_project is not None:
+            if self.dockwidget.qris_project is not None:
                 last_browse_path = self.settings.getValue('lastBrowsePath')
                 last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
 

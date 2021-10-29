@@ -74,7 +74,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         self.settings = Settings()
 
-        self.current_project = None
+        self.qris_project = None
         self.menu = ContextMenu()
 
         self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -87,15 +87,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
-    def open_project(self, ript_project, new_item=None):
+    def open_project(self, qris_project, new_item=None):
         """Builds items in the tree view based on dictionary values that are part of the project"""
         # TODO resolve this naming - it is stupid and inconsistent throughout
-        self.current_project = ript_project
+        self.qris_project = qris_project
 
         self.model.clear()
         rootNode = self.model.invisibleRootItem()
 
-        project_node = QStandardItem(ript_project.project_name)
+        project_node = QStandardItem(self.qris_project.project_name)
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/test_Riverscapes.png'))
         project_node.setData('project_root', item_code['item_type'])
         project_node.setData('group', item_code['map_layer'])
@@ -109,7 +109,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         detrended_rasters.setData('group', item_code['map_layer'])
         project_node.appendRow(detrended_rasters)
 
-        for raster in ript_project.detrended_rasters.values():
+        for raster in self.qris_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
             detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/raster_folder.png'))
             # detrended_raster.setData(raster.path, item_code['path'])
@@ -141,7 +141,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_node.appendRow(project_layers)
 
         # TODO remedy this ript_project, current_project, project thing
-        for project_layer in ript_project.project_layers.values():
+        for project_layer in self.qris_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
             layer.setIcon(QIcon(':/plugins/qris_toolbar/map_test.png'))
             # layer.setData(project_layer.path, item_code['path'])
@@ -161,8 +161,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_node.appendRow(assessments_parent_node)
 
         # TODO sort these bitches
-        if self.current_project.project_assessments:
-            assessments_layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=assessments", "assessments", "ogr")
+        if self.qris_project.project_assessments:
+            self.qris_project.assessments_path = os.path.join(self.qris_project.project_path, "Assessments.gpkg")
+            assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
             for assessment_feature in assessments_layer.getFeatures():
                 assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
                 assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
@@ -184,7 +185,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 self.addToMap(selected_item)
 
     def closeEvent(self, event):
-        self.current_project = None
+        self.qris_project = None
         self.closingPlugin.emit()
         event.accept()
 
@@ -233,7 +234,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def add_assessment(self):
         """Initiates adding a new assessment"""
         # TODO get consistency among current_project, ript_project, and qris_project
-        self.assessment_dialog = AssessmentDlg(self.current_project)
+        self.assessment_dialog = AssessmentDlg(self.qris_project)
         self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         self.assessment_dialog.dataChange.connect(self.open_project)
         self.assessment_dialog.show()
@@ -243,7 +244,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
         dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to QRiS project", None, self.tr("Raster Data Sources (*.tif)"))
         if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-            self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.current_project)
+            self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.qris_project)
             self.addDetrendedDlg.dataChange.connect(self.open_project)
             self.addDetrendedDlg.exec()
 
@@ -252,13 +253,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         select_layer.exec()
         uri = select_layer.uri()
         if uri is not None and uri.isValid():  # check for polygon
-            self.addProjectLayerDlg = AddLayerDlg(uri, self.current_project)
+            self.addProjectLayerDlg = AddLayerDlg(uri, self.qris_project)
             self.addProjectLayerDlg.dataChange.connect(self.open_project)
             self.addProjectLayerDlg.exec_()
 
     def exploreElevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])
-        self.elevation_widget = RIPTElevationDockWidget(raster, self.current_project)
+        self.elevation_widget = RIPTElevationDockWidget(raster, self.qris_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
         self.elevation_widget.dataChange.connect(self.open_project)
         self.elevation_widget.show()
@@ -286,14 +287,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 # check if the layer text is in the layer tree already
                 if not any([c.name() == item.text() for c in node.children()]):
                     # if not start set the raster as a layer
-                    layer = QgsRasterLayer(os.path.join(self.current_project.project_path, item.data(item_code['LAYER']).path), item.text())
+                    layer = QgsRasterLayer(os.path.join(self.qris_project.project_path, item.data(item_code['LAYER']).path), item.text())
                     # load a qml for style
                     layer.loadNamedStyle(item.data(item_code['layer_symbology']))
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
             elif item.data(item_code['map_layer']) in ['surface_layer', 'project_layer']:
                 if not any([c.name() == item.text() for c in node.children()]):
-                    layer = QgsVectorLayer(f"{os.path.join(self.current_project.project_path, os.path.dirname(item.data(item_code['LAYER']).path))}|layername={os.path.basename(item.data(item_code['LAYER']).path)}",
+                    layer = QgsVectorLayer(f"{os.path.join(self.qris_project.project_path, os.path.dirname(item.data(item_code['LAYER']).path))}|layername={os.path.basename(item.data(item_code['LAYER']).path)}",
                                            item.text(), 'ogr')
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
@@ -302,7 +303,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             elif item.data(item_code['map_layer'] == 'assessment_layer'):
                 # TODO Send to the map with an assessment id for subsetting
                 # TODO for now just send the jam layer
-                layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
+                layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
                 # TODO add a filter with the parent id
                 assessment_id = item.data(item_code['feature_id'])
                 layer.setSubsetString("assessment_id = " + str(assessment_id))

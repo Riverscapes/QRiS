@@ -65,9 +65,9 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
         # TODO refactor this into seperate classes
         # Create new dir
         os.makedirs(self.project_folder)
-        project = QRiSProject(self.project_name)
-        project.project_path = self.project_folder
+        qris_project = QRiSProject(self.project_name)
+        qris_project.project_path = self.project_folder
         # Create .qris
-        ript_project_file = os.path.join(self.project_folder, "project.qris")
-        project.export_project_file(ript_project_file)
-        self.dataChange.emit(project)
+        qris_project_file = os.path.join(self.project_folder, "project.qris")
+        qris_project.export_project_file(qris_project_file)
+        self.dataChange.emit(qris_project)

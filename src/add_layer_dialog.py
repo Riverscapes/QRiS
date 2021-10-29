@@ -23,12 +23,12 @@ class AddLayerDlg(QDialog, DIALOG_CLASS):
     closingPlugin = pyqtSignal()
     dataChange = pyqtSignal(QRiSProject, str)
 
-    def __init__(self, layer_uri, ript_project):
+    def __init__(self, layer_uri, qris_project):
         """Constructor."""
         QDialog.__init__(self, None)
         self.setupUi(self)
 
-        self.project = ript_project
+        self.qris_project = qris_project
 
         self.txtLayerName.setText(layer_uri.name)
         self.txtLayerSource.setText(layer_uri.uri)
@@ -49,7 +49,7 @@ class AddLayerDlg(QDialog, DIALOG_CLASS):
 
     def save_layer(self):
         out_name = self.txtLayerName.text()
-        out_gpkg = os.path.join(self.project.project_path, "ProjectLayers.gpkg")
+        out_gpkg = os.path.join(self.qris_project.project_path, "ProjectLayers.gpkg")
         original_layer = QgsVectorLayer(self.txtLayerSource.text())
         if not os.path.exists(os.path.dirname(out_gpkg)):
             os.makedirs(os.path.dirname(os.path.dirname(out_gpkg)))
@@ -61,7 +61,7 @@ class AddLayerDlg(QDialog, DIALOG_CLASS):
 
         _out = QgsVectorFileWriter.writeAsVectorFormat(original_layer, out_gpkg, options)
 
-        self.project.project_layers[out_name] = Layer(out_name, self.txtProjectLayerPath.text(), self.cboLayerType.currentText())
-        self.project.export_project_file()
+        self.qris_project.project_layers[out_name] = Layer(out_name, self.txtProjectLayerPath.text(), self.cboLayerType.currentText())
+        self.qris_project.export_project_file()
 
-        self.dataChange.emit(self.project, out_name)
+        self.dataChange.emit(self.qris_project, out_name)

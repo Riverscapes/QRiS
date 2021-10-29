@@ -20,12 +20,12 @@ class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
     closingPlugin = pyqtSignal()
     dataChange = pyqtSignal(QRiSProject, str)
 
-    def __init__(self, parent=None, raster_path=None, ript_project=None):
+    def __init__(self, parent=None, raster_path=None, qris_project=None):
         """Constructor."""
-        QDialog.__init__(self, parent)  # raster_path, ript_project)
+        QDialog.__init__(self, parent)  # raster_path, qris_project)
         self.setupUi(self)
 
-        self.project = ript_project
+        self.qris_project = qris_project
         self.raster = raster_path
         self.raster_name = os.path.basename(self.raster).rstrip('.tif')
 
@@ -43,12 +43,12 @@ class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
 
         text = self.txtRasterName.text()
         out_text = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_") + ".tif"
-        self.txtProjectRasterPath.setText(os.path.join(f"DET{str(len(self.project.detrended_rasters) + 1).zfill(4)}", out_text))
+        self.txtProjectRasterPath.setText(os.path.join(f"DET{str(len(self.qris_project.detrended_rasters) + 1).zfill(4)}", out_text))
         self.raster_name = self.txtRasterName.text()
 
     def save_raster(self):
 
-        out_raster = os.path.join(self.project.project_path, "DetrendedRasters", self.txtProjectRasterPath.text())
+        out_raster = os.path.join(self.qris_project.project_path, "DetrendedRasters", self.txtProjectRasterPath.text())
 
         if not os.path.exists(os.path.dirname(out_raster)):
             os.makedirs(os.path.dirname(out_raster))
@@ -58,9 +58,9 @@ class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
         out_ds = driver.CreateCopy(out_raster, ds, strict=True)
         out_ds = None
 
-        self.project.add_detrended(self.raster_name, out_raster)
-        self.project.export_project_file()
+        self.qris_project.add_detrended(self.raster_name, out_raster)
+        self.qris_project.export_project_file()
 
-        self.dataChange.emit(self.project, self.raster_name)
+        self.dataChange.emit(self.qris_project, self.raster_name)
 
         return out_raster
