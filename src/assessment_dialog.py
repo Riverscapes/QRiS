@@ -15,7 +15,7 @@ from qgis.core import (
     QgsVectorFileWriter
 )
 
-from .ript_project import RiptProject, Layer
+from .qris_project import QRiSProject, Layer
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'assessment_dialog.ui'))
@@ -26,7 +26,7 @@ DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
 class AssessmentDlg(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject, str)
+    dataChange = pyqtSignal(QRiSProject, str)
 
     def __init__(self, current_project):
         """Constructor."""
@@ -34,7 +34,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         self.setupUi(self)
 
         self.current_project = current_project
-        self.current_project.assessments_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
+        # self.current_project.assessments_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
         # create the db if it isn't there?
         if not os.path.exists(self.current_project.assessments_path):
             self.load_assessment_gpkg()

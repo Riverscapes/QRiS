@@ -8,7 +8,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis
 
-from .ript_project import RiptProject
+from .qris_project import QRiSProject
 from .gp.vectorize import raster_to_polygon
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
@@ -20,7 +20,7 @@ surface_types = ['valley bottom', 'active floodplain', 'inactive floodplain', 'z
 class ExportElevationSurfaceDlg(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject, str)
+    dataChange = pyqtSignal(QRiSProject, str)
 
     def __init__(self, raster, elevation_value, ript_project, parent=None):
         """Constructor."""

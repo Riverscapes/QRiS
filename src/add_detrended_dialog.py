@@ -9,7 +9,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis
 
-from .ript_project import RiptProject
+from .qris_project import QRiSProject
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_add_detrended.ui'))
@@ -18,7 +18,7 @@ DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
 class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject, str)
+    dataChange = pyqtSignal(QRiSProject, str)
 
     def __init__(self, parent=None, raster_path=None, ript_project=None):
         """Constructor."""

@@ -10,7 +10,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsVectorFileWriter)
 
-from .ript_project import RiptProject, Layer
+from .qris_project import QRiSProject, Layer
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_add_layer_dlg.ui'))
@@ -21,7 +21,7 @@ PROJECT_LAYER_TYPES = ['Project_Extent']
 class AddLayerDlg(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject, str)
+    dataChange = pyqtSignal(QRiSProject, str)
 
     def __init__(self, layer_uri, ript_project):
         """Constructor."""

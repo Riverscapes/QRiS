@@ -34,7 +34,7 @@ from . import resources
 # Import the code for the DockWidget
 from .qris_dockwidget import QRiSDockWidget
 from .new_project_dialog import NewProjectDialog
-from .ript_project import RiptProject
+from .qris_project import QRiSProject
 import os.path
 
 
@@ -271,7 +271,7 @@ class QRiSToolbar:
             # We set the proect path in the project settings. This way it will be saved with the QgsProject file
             if self.dockwidget is None or self.dockwidget.isHidden() is True:
                 # self.toggle_widget(forceOn=True)
-                project = RiptProject()
+                project = QRiSProject()
                 project.load_project_file(dialog_return[0])
                 self.open_project(project)
 

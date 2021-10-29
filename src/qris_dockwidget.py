@@ -160,8 +160,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         assessments_parent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(assessments_parent_node)
 
-        # TODO Loading the tree straight from the layer here
-        # TODO make sure to add the FID for each assessment
+        # TODO sort these bitches
         if self.current_project.project_assessments:
             assessments_layer = QgsVectorLayer(self.current_project.assessments_path + "|layername=assessments", "assessments", "ogr")
             for assessment_feature in assessments_layer.getFeatures():

@@ -28,7 +28,7 @@ class Raster(Layer):
         self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
 
 
-class RiptProject():
+class QRiSProject():
 
     version = "0.0.1"
 
@@ -59,6 +59,7 @@ class RiptProject():
         self.filename = filename if filename is not None else self.filename
 
         self.project_path = os.path.dirname(filename)
+        self.assessments_path = os.path.join(self.project_path, "Assessments.gpkg")
 
         tree = ET.parse(filename)
         root = tree.getroot()
@@ -93,6 +94,7 @@ class RiptProject():
         # TODO update this along with the new schema and loading project layers
         # TODO someday this may do more, right now keeping it simple Weird way to assemble the path to the assessments geopackage
         assessments_tag = root.find('Assessments')
+        # TODO change this to the stored path from the .qris file
         if assessments_tag is not None:
             self.project_assessments = True
 

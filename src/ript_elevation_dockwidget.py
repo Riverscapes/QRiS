@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QColor
 
 from .export_elev_surface_dialog import ExportElevationSurfaceDlg
-from .ript_project import RiptProject
+from .qris_project import QRiSProject
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_dockwidget_elevation.ui'))
@@ -16,7 +16,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject, str)
+    dataChange = pyqtSignal(QRiSProject, str)
 
     def __init__(self, raster, ript_project, parent=None):
         """Constructor."""

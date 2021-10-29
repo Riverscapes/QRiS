@@ -6,7 +6,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis
 
-from .ript_project import RiptProject
+from .qris_project import QRiSProject
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ui', 'ript_new_project.ui'))
@@ -15,7 +15,7 @@ DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
 class NewProjectDialog(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(RiptProject)
+    dataChange = pyqtSignal(QRiSProject)
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -65,7 +65,7 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
         # TODO refactor this into seperate classes
         # Create new dir
         os.makedirs(self.project_folder)
-        project = RiptProject(self.project_name)
+        project = QRiSProject(self.project_name)
         project.project_path = self.project_folder
         # Create .qris
         ript_project_file = os.path.join(self.project_folder, "project.qris")
