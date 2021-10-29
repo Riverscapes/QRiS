@@ -34,7 +34,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         self.setupUi(self)
 
         self.current_project = current_project
-        # self.current_project.assessments_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
+        self.current_project.assessments_path = os.path.join(self.current_project.project_path, "Assessments.gpkg")
         # create the db if it isn't there?
         if not os.path.exists(self.current_project.assessments_path):
             self.load_assessment_gpkg()

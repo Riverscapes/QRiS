@@ -59,7 +59,6 @@ class QRiSProject():
         self.filename = filename if filename is not None else self.filename
 
         self.project_path = os.path.dirname(filename)
-        self.assessments_path = os.path.join(self.project_path, "Assessments.gpkg")
 
         tree = ET.parse(filename)
         root = tree.getroot()
