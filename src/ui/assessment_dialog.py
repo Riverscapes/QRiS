@@ -15,10 +15,10 @@ from qgis.core import (
     QgsVectorFileWriter
 )
 
-from .qris_project import QRiSProject, Layer
+from ..qris_project import QRiSProject
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'assessment_dialog.ui'))
+    os.path.dirname(__file__), 'assessment_dialog.ui'))
 
 # PROJECT_LAYER_TYPES = ['Project_Extent']
 
@@ -29,7 +29,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
     dataChange = pyqtSignal(QRiSProject, str)
 
     def __init__(self, qris_project):
-        """Constructor."""
+        """Used to construct the new assessment dialog"""
         QDialog.__init__(self, None)
         self.setupUi(self)
 

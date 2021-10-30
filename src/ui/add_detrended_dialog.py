@@ -9,10 +9,10 @@ from qgis.PyQt.QtCore import pyqtSignal, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis
 
-from .qris_project import QRiSProject
+from ..qris_project import QRiSProject
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'ript_add_detrended.ui'))
+    os.path.dirname(__file__), 'add_detrended_dialog.ui'))
 
 
 class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):

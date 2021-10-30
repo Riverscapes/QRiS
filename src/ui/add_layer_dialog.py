@@ -10,10 +10,10 @@ from qgis.core import (
     QgsVectorLayer,
     QgsVectorFileWriter)
 
-from .qris_project import QRiSProject, Layer
+from ..qris_project import QRiSProject, Layer
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'ript_add_layer_dlg.ui'))
+    os.path.dirname(__file__), 'add_layer_dialog.ui'))
 
 PROJECT_LAYER_TYPES = ['Project_Extent']
 

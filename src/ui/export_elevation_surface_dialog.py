@@ -8,11 +8,11 @@ from qgis.PyQt.QtCore import pyqtSignal, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis
 
-from .qris_project import QRiSProject
-from .gp.vectorize import raster_to_polygon
+from ..qris_project import QRiSProject
+from ..gp.vectorize import raster_to_polygon
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'ript_export_elevation_surface.ui'))
+    os.path.dirname(__file__), 'export_elevation_surface_dialog.ui'))
 
 surface_types = ['valley bottom', 'active floodplain', 'inactive floodplain', 'zone of influence', 'other']
 

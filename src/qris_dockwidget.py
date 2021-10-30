@@ -41,14 +41,15 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 
 from .classes.context_menu import ContextMenu
-from .ript_elevation_dockwidget import RIPTElevationDockWidget
-from .add_detrended_dialog import AddDetrendedRasterDlg
-from .add_layer_dialog import AddLayerDlg
-from .assessment_dialog import AssessmentDlg
 from .classes.settings import Settings
 
+from .ui.elevation_dockwidget import RIPTElevationDockWidget
+from .ui.add_layer_dialog import AddLayerDlg
+from .ui.add_detrended_dialog import AddDetrendedRasterDlg
+from .ui.assessment_dialog import AssessmentDlg
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'ript_dockwidget_base.ui'))
+    os.path.dirname(__file__), 'qris_dockwidget.ui'))
 
 item_code = {'path': Qt.UserRole + 1,
              'item_type': Qt.UserRole + 2,
@@ -150,7 +151,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             layer.setData(project_layer, item_code['LAYER'])
             project_layers.appendRow(layer)
 
-        # TODO soft the assessments
+        # TODO sort the assessments
         # project_layers.sortChildren(QtAscendingOrder)
 
         # Add assessments to tree
@@ -172,7 +173,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
                 assessments_parent_node.appendRow(assessment_node)
 
-            # Add designs to tree
+        # Add designs to tree
         design_layers = QStandardItem("Low-Tech Designs")
         design_layers.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         design_layers.setData('DesignsFolder', item_code['item_type'])

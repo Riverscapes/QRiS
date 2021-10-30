@@ -6,10 +6,10 @@ from qgis.PyQt.QtCore import pyqtSignal, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis
 
-from .qris_project import QRiSProject
+from ..qris_project import QRiSProject
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'ript_new_project.ui'))
+    os.path.dirname(__file__), 'new_project_dialog.ui'))
 
 
 class NewProjectDialog(QDialog, DIALOG_CLASS):

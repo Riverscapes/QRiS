@@ -33,8 +33,10 @@ from . import resources
 
 # Import the code for the DockWidget
 from .qris_dockwidget import QRiSDockWidget
-from .new_project_dialog import NewProjectDialog
 from .qris_project import QRiSProject
+
+from .ui.new_project_dialog import NewProjectDialog
+
 import os.path
 
 

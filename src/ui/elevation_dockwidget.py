@@ -6,11 +6,11 @@ from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QColor
 
-from .export_elev_surface_dialog import ExportElevationSurfaceDlg
-from .qris_project import QRiSProject
+from .export_elevation_surface_dialog import ExportElevationSurfaceDlg
+from ..qris_project import QRiSProject
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui', 'ript_dockwidget_elevation.ui'))
+    os.path.dirname(__file__), 'elevation_dockwidget.ui'))
 
 
 class RIPTElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
