@@ -43,10 +43,12 @@ from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 from .classes.context_menu import ContextMenu
 from .classes.settings import Settings
 
-from .ui.elevation_dockwidget import RIPTElevationDockWidget
+from .ui.elevation_dockwidget import ElevationDockWidget
 from .ui.add_layer_dialog import AddLayerDlg
 from .ui.add_detrended_dialog import AddDetrendedRasterDlg
 from .ui.assessment_dialog import AssessmentDlg
+from .ui.design_dialog import DesignDlg
+
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
@@ -141,7 +143,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_layers.setData('group', item_code['map_layer'])
         project_node.appendRow(project_layers)
 
-        # TODO remedy this ript_project, current_project, project thing
         for project_layer in self.qris_project.project_layers.values():
             layer = QStandardItem(project_layer.name)
             layer.setIcon(QIcon(':/plugins/qris_toolbar/map_test.png'))
@@ -183,7 +184,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if new_item is not None:
             selected_item = self._find_item_in_model(new_item)
             if selected_item is not None:
-                self.addToMap(selected_item)
+                self.add_to_map(selected_item)
 
     def closeEvent(self, event):
         self.qris_project = None
@@ -208,39 +209,42 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # connect signals to treeView menu itemsHmmmm
         item_type = item.data(item_code['item_type'])
         if item_type == 'project_root':
-            self.menu.addAction('EXPAND_ALL', lambda: self.expandAll())
+            self.menu.addAction('EXPAND_ALL', lambda: self.expand_all())
         elif item_type == "DetrendedRastersFolder":
-            self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.addDetrendedRasterToProject())
+            self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.add_detrended_raster())
         elif item_type == "DetrendedRaster":
-            self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.exploreElevations(item))
-            self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
+            self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.explore_elevations(item))
+            self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type in ["DetrendedRasterSurface", 'project_layer', "Project_Extent"]:
-            self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
+            self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "ProjectLayersFolder":
-            self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.addLayerToProject())
+            self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.add_layer())
         elif item_type == "AssessmentsFolder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
         elif item_type == "dam_assessment":
-            self.menu.addAction('ADD_TO_MAP', lambda: self.addToMap(item))
+            self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "DesignsFolder":
-            self.menu.addAction('ADD_DESIGN', lambda: self.addDesign())
+            self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
         else:
             self.menu.clear()
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
-    def add_design(self):
-        pass
-
     def add_assessment(self):
         """Initiates adding a new assessment"""
-        # TODO get consistency among current_project, ript_project, and qris_project
         self.assessment_dialog = AssessmentDlg(self.qris_project)
         self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         self.assessment_dialog.dataChange.connect(self.open_project)
         self.assessment_dialog.show()
 
-    def addDetrendedRasterToProject(self):
+    def add_design(self):
+        """Initiates adding a new design"""
+        self.design_dialog = DesignDlg(self.qris_project)
+        # TODO remove this stuff about date
+        self.design_dialog.dataChange.connect(self.open_project)
+        self.design_dialog.show()
+
+    def add_detrended_raster(self):
         # last_browse_path = self.settings.getValue('lastBrowsePath')
         # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
         dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to QRiS project", None, self.tr("Raster Data Sources (*.tif)"))
@@ -249,7 +253,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addDetrendedDlg.dataChange.connect(self.open_project)
             self.addDetrendedDlg.exec()
 
-    def addLayerToProject(self):
+    def add_layer(self):
         select_layer = QgsDataSourceSelectDialog()
         select_layer.exec()
         uri = select_layer.uri()
@@ -258,14 +262,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addProjectLayerDlg.dataChange.connect(self.open_project)
             self.addProjectLayerDlg.exec_()
 
-    def exploreElevations(self, selected_item):
+    def explore_elevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])
-        self.elevation_widget = RIPTElevationDockWidget(raster, self.qris_project)
+        self.elevation_widget = ElevationDockWidget(raster, self.qris_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
         self.elevation_widget.dataChange.connect(self.open_project)
         self.elevation_widget.show()
 
-    def addToMap(self, selected_item):
+    def add_to_map(self, selected_item):
         """Adds selected items from the QRiS tree to the QGIS layer tree and also to the map"""
         # TODO consider giving node a more explicit name
         node = QgsProject.instance().layerTreeRoot()
@@ -289,7 +293,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 if not any([c.name() == item.text() for c in node.children()]):
                     # if not start set the raster as a layer
                     layer = QgsRasterLayer(os.path.join(self.qris_project.project_path, item.data(item_code['LAYER']).path), item.text())
-                    # load a qml for style
+                    # TODO load a qml for raster style
                     layer.loadNamedStyle(item.data(item_code['layer_symbology']))
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
@@ -300,7 +304,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
             # for assessment and design layers
-            # TODO make this work when adding a new assessment
+            # TODO make this work when adding a new designs
             elif item.data(item_code['map_layer'] == 'assessment_layer'):
                 # TODO Send to the map with an assessment id for subsetting
                 # TODO for now just send the jam layer
@@ -316,8 +320,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 # TODO may need to dial in the adding of filtered layers
                 node.addLayer(layer)
 
-    def expandAll(self):
-        self.treeView.expandAll()
+    def expand_all(self):
+        self.treeView.expand_all()
         return
 
     def _get_parents(self, start_item: QStandardItem):

@@ -30,7 +30,7 @@ import json
 
 
 def classFactory(iface):  # pylint: disable=invalid-name
-    """Load RIPT class from file RIPT.
+    """Load QRiS class from file QRiS.
 
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface

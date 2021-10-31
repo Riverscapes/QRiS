@@ -11,15 +11,15 @@
         "basemapRegion": "United States"
     },
     "constants": {
-        "logCategory": "RIPT",
-        "settingsCategory": "RIPT",
+        "logCategory": "QRiS",
+        "settingsCategory": "QRiS",
         "businessLogicDir": "blXML",
         "symbologyDir": "symbology",
         "digestSyncFreqHours": 24,
         "warehouseUrl": "https://data.riverscapes.xyz/#",
         "webUrl": "https://rave.riverscapes.xyz",
-        "issueUrl": "https://github.com/Riverscapes/QRAVEPlugin/issues",
-        "changelogUrl": "https://github.com/Riverscapes/QRAVEPlugin/releases",
+        "issueUrl": "https://github.com/Riverscapes/QRiS/issues",
+        "changelogUrl": "https://github.com/Riverscapes/QRiS/releases",
         "resourcesUrl": "https://xml.riverscapes.xyz/"
     }
 }

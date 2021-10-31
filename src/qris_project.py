@@ -42,6 +42,7 @@ class QRiSProject():
         self.project_layers = {}
         # eventually will hold assessment types like jam, dam, etc...
         self.project_assessments = False
+        self.project_designs = False
 
     def add_layer(self, layer_name, layer_path, parent=None, meta=None):
         relpath = os.path.relpath(layer_path, self.project_path)
@@ -50,9 +51,6 @@ class QRiSProject():
     def add_detrended(self, detrended_name, path, parent=None, meta=None):
         relpath = os.path.relpath(path, self.project_path)
         self.detrended_rasters[detrended_name] = Raster(detrended_name, relpath)
-
-    def add_assessments(self):
-        pass
 
     def load_project_file(self, filename=None):
         """uses the .qris project file to reference data structures within the project"""
@@ -97,6 +95,10 @@ class QRiSProject():
         if assessments_tag is not None:
             self.project_assessments = True
 
+        designs_tag = root.find('Designs')
+        if designs_tag is not None:
+            self.project_designs = True
+
     def export_project_file(self, filename=None):
         """writes the project xml given """
         self.filename = filename if filename is not None else self.filename
@@ -109,7 +111,7 @@ class QRiSProject():
         timestamp = SubElement(root, "DateTimeCreated")
         timestamp.text = self.time_created
 
-        version = SubElement(root, "RIPTVersion")
+        version = SubElement(root, "QRiSVersion")
         version.text = self.version
 
         description = SubElement(root, "Description")
@@ -152,6 +154,11 @@ class QRiSProject():
             assessments_elem = SubElement(root, "Assessments")
             assessment_path_elem = SubElement(assessments_elem, "Path")
             assessment_path_elem.text = "Assessments.gpkg"
+
+        if self.project_designs:
+            designs_elem = SubElement(root, "Assessments")
+            design_path_elem = SubElement(designs_elem, "Path")
+            design_path_elem.text = "Assessments.gpkg"
 
         output = prettify(root)
 

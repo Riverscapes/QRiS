@@ -1,4 +1,4 @@
-# Riverscapes Integrated Planning Tool (RIPT)
+# QGIS Riverscapes Studio (QRiS)
 
 ***NB: Be sure to develop in VSCode by opening the relevant Workspace***
 

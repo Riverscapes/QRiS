@@ -65,7 +65,7 @@ class ContextMenu(QMenu):
             'Add Detrended Raster to Project',
             ':/plugins/qris_toolbar/OpenProject.png'),
         'ADD_PROJECT_LAYER': (
-            'Add layer to the RIPT Project',
+            'Add layer to the QRiS Project',
             ':/plugins/qris_toolbar/OpenProject.png'
         ),
         'EXPLORE_ELEVATIONS': (
