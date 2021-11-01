@@ -55,8 +55,10 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 item_code = {'path': Qt.UserRole + 1,
              'item_type': Qt.UserRole + 2,
+             # TODO consider removing the LAYER item code from the model
              'LAYER': Qt.UserRole + 3,
              'map_layer': Qt.UserRole + 4,
+             # TODO also not sure that the layer_symbology code is being used
              'layer_symbology': Qt.UserRole + 5,
              'feature_id': Qt.UserRole + 6}
 
@@ -166,7 +168,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
                 assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
                 assessment_node.setData('dam_assessment', item_code['item_type'])
-                assessment_node.setData('assessment_layer', item_code['map_layer'])
+                assessment_node.setData('group', item_code['map_layer'])
                 assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
                 assessments_parent_node.appendRow(assessment_node)
 
@@ -218,7 +220,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         item = self.model.itemFromIndex(indexes[0])
         # project_tree_data = item.data(Qt.UserRole)  # ProjectTreeData object
         # data = project_tree_data.data  # Could be a QRaveBaseMap, a QRaveMapLayer or just some random data
-        # connect signals to treeView menu itemsHmmmm
+        # connect signals to treeView menu items
         item_type = item.data(item_code['item_type'])
         if item_type == 'project_root':
             self.menu.addAction('EXPAND_ALL', lambda: self.expand_all())
@@ -300,6 +302,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     # Check the type and launch an add to map function
                     if (item.data(item_code['item_type']) == 'design'):
                         self.add_design_to_map(item, node)
+                    elif (item.data(item_code['item_type']) == 'dam_assessment'):
+                        self.add_assessment_to_map(item, node)
+            # TODO refactor these into their own functions - someday
             # if it's not a group map_layer, but is a raster layer
             elif item.data(item_code['map_layer']) == 'raster_layer':
                 # check if the layer text is in the layer tree already
@@ -317,15 +322,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
             # add filtered assessment layer
-            elif item.data(item_code['map_layer']) == 'assessment_layer':
-                layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
-                assessment_id = item.data(item_code['feature_id'])
-                layer.setSubsetString("assessment_id = " + str(assessment_id))
-                QgsExpressionContextUtils.setLayerVariable(layer, 'parent_id', assessment_id)
-                symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'assessments_dams.qml')
-                layer.loadNamedStyle(symbology_path)
-                QgsProject.instance().addMapLayer(layer, False)
-                node.addLayer(layer)
+
+    def add_assessment_to_map(self, item, node):
+        """adds assessments to the map"""
+        assessment_id = item.data(item_code['feature_id'])
+        layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
+        layer.setSubsetString("assessment_id = " + str(assessment_id))
+        QgsExpressionContextUtils.setLayerVariable(layer, 'parent_id', assessment_id)
+        symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'assessments_dams.qml')
+        layer.loadNamedStyle(symbology_path)
+        QgsProject.instance().addMapLayer(layer, False)
+        node.addLayer(layer)
 
     def add_design_to_map(self, item, node):
         """adds designs to the map"""

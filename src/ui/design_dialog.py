@@ -132,7 +132,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # TODO call export file to write that shit to the xml
         self.qris_project.export_project_file()
         # TODO pass in the name of the new node here for the add to map function
-        self.dataChange.emit(self.qris_project, "Riverscape Assessments")
+        self.dataChange.emit(self.qris_project, new_design_name)
         self.close()
 
     def cancel_design(self):

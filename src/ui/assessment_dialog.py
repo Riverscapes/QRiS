@@ -121,8 +121,8 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         self.qris_project.project_assessments = True
         # TODO call export file to write that shit to the xml
         self.qris_project.export_project_file()
-        # TODO pass in the name of the new node here for the add to map function
-        self.dataChange.emit(self.qris_project, "Riverscape Assessments")
+        # Send information used in the tree so it can be added to the map.
+        self.dataChange.emit(self.qris_project, new_assessment_name)
         self.close()
 
     def cancel_assessment(self):
