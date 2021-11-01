@@ -103,7 +103,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
             structure_description_field = QgsField("structure_description", QVariant.String)
             structure_phase_field = QgsField("structure_phase", QVariant.String)
             pr = self.structures_layer.dataProvider()
-            pr.addAttributes([design_id, structure_type_field, structure_description_field])
+            pr.addAttributes([design_id, structure_type_field, structure_description_field, structure_phase_field])
             self.structures_layer.updateFields()
 
     def save_design(self):

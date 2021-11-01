@@ -156,9 +156,9 @@ class QRiSProject():
             assessment_path_elem.text = "Assessments.gpkg"
 
         if self.project_designs:
-            designs_elem = SubElement(root, "Assessments")
+            designs_elem = SubElement(root, "Designs")
             design_path_elem = SubElement(designs_elem, "Path")
-            design_path_elem.text = "Assessments.gpkg"
+            design_path_elem.text = "Designs.gpkg"
 
         output = prettify(root)
 

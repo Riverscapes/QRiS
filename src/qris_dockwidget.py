@@ -152,9 +152,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             layer.setData(project_layer, item_code['LAYER'])
             project_layers.appendRow(layer)
 
-        # TODO sort the assessments
-        # project_layers.sortChildren(QtAscendingOrder)
-
         # Add assessments to tree
         assessments_parent_node = QStandardItem("Riverscape Assessments")
         assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
@@ -162,7 +159,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         assessments_parent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(assessments_parent_node)
 
-        # TODO sort these bitches
         if self.qris_project.project_assessments:
             self.qris_project.assessments_path = os.path.join(self.qris_project.project_path, "Assessments.gpkg")
             assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
@@ -174,11 +170,27 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
                 assessments_parent_node.appendRow(assessment_node)
 
+        assessments_parent_node.sortChildren(Qt.AscendingOrder)
+
         # Add designs to tree
-        design_layers = QStandardItem("Low-Tech Designs")
-        design_layers.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        design_layers.setData('DesignsFolder', item_code['item_type'])
-        project_node.appendRow(design_layers)
+        designs_parent_node = QStandardItem("Low-Tech Designs")
+        designs_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        designs_parent_node.setData('DesignsFolder', item_code['item_type'])
+        designs_parent_node.setData('group', item_code['map_layer'])
+        project_node.appendRow(designs_parent_node)
+
+        if self.qris_project.project_designs:
+            self.qris_project.designs_path = os.path.join(self.qris_project.project_path, "Designs.gpkg")
+            designs_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")
+            for design_feature in designs_layer.getFeatures():
+                design_node = QStandardItem(design_feature.attribute('design_name'))
+                design_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+                design_node.setData('design', item_code['item_type'])
+                design_node.setData('group', item_code['map_layer'])
+                design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
+                designs_parent_node.appendRow(design_node)
+
+        designs_parent_node.sortChildren(Qt.AscendingOrder)
 
         # Check if new item is in the tree, if it is pass it to the new_item function
         if new_item is not None:
@@ -215,14 +227,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "DetrendedRaster":
             self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.explore_elevations(item))
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
-        elif item_type in ["DetrendedRasterSurface", 'project_layer', "Project_Extent"]:
+        elif item_type in ["DetrendedRasterSurface", 'project_layer', "Project_Extent", "dam_assessment", "design"]:
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "ProjectLayersFolder":
             self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.add_layer())
         elif item_type == "AssessmentsFolder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
-        elif item_type == "dam_assessment":
-            self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "DesignsFolder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
         else:
@@ -287,6 +297,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     # if not add the group as a node
                     new_node = node.addGroup(item.text())
                     node = new_node
+                    # Check the type and launch an add to map function
+                    if (item.data(item_code['item_type']) == 'design'):
+                        self.add_design_to_map(item, node)
             # if it's not a group map_layer, but is a raster layer
             elif item.data(item_code['map_layer']) == 'raster_layer':
                 # check if the layer text is in the layer tree already
@@ -303,22 +316,35 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                                            item.text(), 'ogr')
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
-            # for assessment and design layers
-            # TODO make this work when adding a new designs
-            elif item.data(item_code['map_layer'] == 'assessment_layer'):
-                # TODO Send to the map with an assessment id for subsetting
-                # TODO for now just send the jam layer
+            # add filtered assessment layer
+            elif item.data(item_code['map_layer']) == 'assessment_layer':
                 layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
-                # TODO add a filter with the parent id
                 assessment_id = item.data(item_code['feature_id'])
                 layer.setSubsetString("assessment_id = " + str(assessment_id))
                 QgsExpressionContextUtils.setLayerVariable(layer, 'parent_id', assessment_id)
-                # TODO dial in referencing and updating of .qml files
                 symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'assessments_dams.qml')
                 layer.loadNamedStyle(symbology_path)
                 QgsProject.instance().addMapLayer(layer, False)
-                # TODO may need to dial in the adding of filtered layers
                 node.addLayer(layer)
+
+    def add_design_to_map(self, item, node):
+        """adds designs to the map"""
+        design_id = item.data(item_code['feature_id'])
+        design_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")
+        structure_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=structures", "Structures-" + str(design_id), "ogr")
+        complex_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=complexes", "Complexes-" + str(design_id), "ogr")
+        structure_layer.setSubsetString("design_id = " + str(design_id))
+        complex_layer.setSubsetString("design_id = " + str(design_id))
+        structure_symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_structures.qml')
+        complex_symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_complexes.qml')
+        structure_layer.loadNamedStyle(structure_symbology_path)
+        complex_layer.loadNamedStyle(complex_symbology_path)
+        QgsExpressionContextUtils.setLayerVariable(structure_layer, 'parent_id', design_id)
+        QgsExpressionContextUtils.setLayerVariable(complex_layer, 'parent_id', design_id)
+        QgsProject.instance().addMapLayer(structure_layer, False)
+        QgsProject.instance().addMapLayer(complex_layer, False)
+        node.addLayer(structure_layer)
+        node.addLayer(complex_layer)
 
     def expand_all(self):
         self.treeView.expand_all()
