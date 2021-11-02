@@ -32,7 +32,10 @@
         <file alias="project_qris.png">../Images/project_qris.png</file>
         <file alias="project_new_qris.png">../Images/project_new_qris.png</file>
         <file alias="project_open_qris.png">../Images/project_open_qris.png</file>
-
+        <file alias="qris_raster.png">../Images/qris_raster.png</file>
+        <file alias="qris_raster_new.png">../Images/qris_raster_new.png</file>
+        <file alias="qris_design.png">../Images/qris_design.png</file>
+        <file alias="qris_design_new.png">../Images/qris_design_new.png</file>
 
         <!-- Layer icons -->
         <file alias="layers/Dot.png">../Images/layers/Dot16.png</file>

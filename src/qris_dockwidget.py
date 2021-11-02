@@ -116,7 +116,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         for raster in self.qris_project.detrended_rasters.values():
             detrended_raster = QStandardItem(raster.name)
-            detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/raster_folder.png'))
+            detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/qris_raster.png'))
             # detrended_raster.setData(raster.path, item_code['path'])
             detrended_raster.setData('DetrendedRaster', item_code['item_type'])
             detrended_raster.setData(raster, item_code['LAYER'])
@@ -186,7 +186,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             designs_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")
             for design_feature in designs_layer.getFeatures():
                 design_node = QStandardItem(design_feature.attribute('design_name'))
-                design_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+                design_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData('group', item_code['map_layer'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])

@@ -63,7 +63,7 @@ class ContextMenu(QMenu):
         ),
         'ADD_DETRENDED_RASTER': (
             'Add Detrended Raster to Project',
-            ':/plugins/qris_toolbar/OpenProject.png'),
+            ':/plugins/qris_toolbar/qris_raster_new.png'),
         'ADD_PROJECT_LAYER': (
             'Add layer to the QRiS Project',
             ':/plugins/qris_toolbar/OpenProject.png'
@@ -78,7 +78,7 @@ class ContextMenu(QMenu):
         ),
         'ADD_DESIGN': (
             'New Low-Tech Design',
-            ':/plugins/qris_toolbar/Detrend.png'
+            ':/plugins/qris_toolbar/qris_design_new.png'
         )
     }
 
