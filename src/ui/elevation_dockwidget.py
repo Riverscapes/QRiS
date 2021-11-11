@@ -1,6 +1,7 @@
 import os
 
 from qgis.core import QgsRasterLayer, QgsProject, QgsColorRampShader, QgsRasterShader, QgsSingleBandPseudoColorRenderer
+from qgis.utils import iface
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt
@@ -8,6 +9,7 @@ from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QColor
 
 from .export_elevation_surface_dialog import ExportElevationSurfaceDlg
 from ..qris_project import QRiSProject
+
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'elevation_dockwidget.ui'))
@@ -49,7 +51,14 @@ class ElevationDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.elevationSlider.valueChanged.connect(self.sliderElevationChange)
         self.numElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.btnExport.clicked.connect(self.exportPolygonDlg)
-        self.closingPlugin.connect(self.closeWidget)
+        # self.closingPlugin.connect(self.closeWidget)
+
+    def closeEvent(self, event):
+        QgsProject.instance().removeMapLayer(self.base_raster_layer.id())
+        QgsProject.instance().removeMapLayer(self.raster_layer.id())
+        iface.mapCanvas().refresh()
+        self.close()
+        self.destroy()
 
     def updateElevationLayer(self, value=1.0):
         fcn = QgsColorRampShader()

@@ -36,13 +36,6 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
-     <widget class="QPushButton" name="btnExport">
-      <property name="text">
-       <string>Export Elevation Polygon</string>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="1">
      <widget class="QDoubleSpinBox" name="numElevation">
       <property name="frame">
@@ -81,6 +74,13 @@
       </property>
       <property name="tickInterval">
        <number>100</number>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="btnExport">
+      <property name="text">
+       <string>Export Elevation Polygon</string>
       </property>
      </widget>
     </item>

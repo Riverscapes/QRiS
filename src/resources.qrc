@@ -36,6 +36,11 @@
         <file alias="qris_raster_new.png">../Images/qris_raster_new.png</file>
         <file alias="qris_design.png">../Images/qris_design.png</file>
         <file alias="qris_design_new.png">../Images/qris_design_new.png</file>
+        <file alias="qris_detrend.png">../Images/qris_detrend.png</file>
+
+        <file alias="extent_polygon.png">../Images/extent_polygon.png</file>
+        <file alias="extent_polygon_new.png">../Images/extent_polygon_new.png</file>
+
 
         <!-- Layer icons -->
         <file alias="layers/Dot.png">../Images/layers/Dot16.png</file>

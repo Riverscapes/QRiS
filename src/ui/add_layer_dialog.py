@@ -61,7 +61,7 @@ class AddLayerDlg(QDialog, DIALOG_CLASS):
 
         _out = QgsVectorFileWriter.writeAsVectorFormat(original_layer, out_gpkg, options)
 
-        self.qris_project.project_layers[out_name] = Layer(out_name, self.txtProjectLayerPath.text(), self.cboLayerType.currentText())
+        self.qris_project.project_extents[out_name] = Layer(out_name, self.txtProjectLayerPath.text(), self.cboLayerType.currentText())
         self.qris_project.export_project_file()
 
         self.dataChange.emit(self.qris_project, out_name)

@@ -54,12 +54,15 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
 
 item_code = {'path': Qt.UserRole + 1,
+             # specific for each type within the QRiS tree and determines which context menus are displayed
              'item_type': Qt.UserRole + 2,
-             # TODO consider removing the LAYER item code from the model
+             # LAYER - not too sure ideally this is redundent
              'LAYER': Qt.UserRole + 3,
+             # map_layer usually refers to display within the QGIS layer tree often for groups
              'map_layer': Qt.UserRole + 4,
-             # TODO also not sure that the layer_symbology code is being used
+             # may be used to refer to a QML file
              'layer_symbology': Qt.UserRole + 5,
+             # stores id within databases
              'feature_id': Qt.UserRole + 6}
 
 
@@ -100,14 +103,29 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model.clear()
         rootNode = self.model.invisibleRootItem()
 
+        # set the projecr root
         project_node = QStandardItem(self.qris_project.project_name)
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/test_Riverscapes.png'))
         project_node.setData('project_root', item_code['item_type'])
         project_node.setData('group', item_code['map_layer'])
         rootNode.appendRow(project_node)
 
+        # Add project extent layers to tree
+        project_extent_node = QStandardItem("Project Extents")
+        project_extent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        project_extent_node.setData('project_extent_folder', item_code['item_type'])
+        project_extent_node.setData('group', item_code['map_layer'])
+        project_node.appendRow(project_extent_node)
+
+        for layer in self.qris_project.project_extents.values():
+            extent_node = QStandardItem(layer.name)
+            extent_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
+            extent_node.setData(layer.type, item_code['item_type'])
+            extent_node.setData('project_extent', item_code['map_layer'])
+            extent_node.setData(layer, item_code['LAYER'])
+            project_extent_node.appendRow(extent_node)
+
         # Add detrended rasters to tree
-        # TODO refactor using node naming scheme for clarity
         detrended_rasters = QStandardItem("Detrended Rasters")
         detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
@@ -138,26 +156,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     item_surface.setData(surface, item_code['LAYER'])
                     item_surfaces.appendRow(item_surface)
 
-        # Add project layers to tree
-        project_layers = QStandardItem("Project Layers")
-        project_layers.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        project_layers.setData('ProjectLayersFolder', item_code['item_type'])
-        project_layers.setData('group', item_code['map_layer'])
-        project_node.appendRow(project_layers)
-
-        for project_layer in self.qris_project.project_layers.values():
-            layer = QStandardItem(project_layer.name)
-            layer.setIcon(QIcon(':/plugins/qris_toolbar/map_test.png'))
-            # layer.setData(project_layer.path, item_code['path'])
-            layer.setData(project_layer.type, item_code['item_type'])
-            layer.setData('project_layer', item_code['map_layer'])
-            layer.setData(project_layer, item_code['LAYER'])
-            project_layers.appendRow(layer)
-
         # Add assessments to tree
         assessments_parent_node = QStandardItem("Riverscape Assessments")
         assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        assessments_parent_node.setData('AssessmentsFolder', item_code['item_type'])
+        assessments_parent_node.setData('assessments_folder', item_code['item_type'])
         assessments_parent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(assessments_parent_node)
 
@@ -224,22 +226,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         item_type = item.data(item_code['item_type'])
         if item_type == 'project_root':
             self.menu.addAction('EXPAND_ALL', lambda: self.expand_all())
+        elif item_type == "project_extent_folder":
+            self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
+            self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create__blank_extent_layer())
         elif item_type == "DetrendedRastersFolder":
             self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.add_detrended_raster())
         elif item_type == "DetrendedRaster":
             self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.explore_elevations(item))
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
-        elif item_type in ["DetrendedRasterSurface", 'project_layer', "Project_Extent", "dam_assessment", "design"]:
+        elif item_type in ["DetrendedRasterSurface", 'project_extent', 'Project_Extent', "dam_assessment", "design"]:
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
-        elif item_type == "ProjectLayersFolder":
-            self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.add_layer())
-        elif item_type == "AssessmentsFolder":
+        elif item_type == "assessments_folder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
         elif item_type == "DesignsFolder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
         else:
             self.menu.clear()
-
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
     def add_assessment(self):
@@ -265,14 +267,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addDetrendedDlg.dataChange.connect(self.open_project)
             self.addDetrendedDlg.exec()
 
-    def add_layer(self):
+    def import_project_extent_layer(self):
+        """launches the dialog that supports import of project layers"""
         select_layer = QgsDataSourceSelectDialog()
         select_layer.exec()
         uri = select_layer.uri()
-        if uri is not None and uri.isValid():  # check for polygon
+        if uri is not None and uri.isValid() and uri.wkbType == 3:
             self.addProjectLayerDlg = AddLayerDlg(uri, self.qris_project)
             self.addProjectLayerDlg.dataChange.connect(self.open_project)
             self.addProjectLayerDlg.exec_()
+        else:
+            QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
+
+    def create_blank_project_extent():
+        """Adds a blank project extent to be defined by the user"""
+        pass
 
     def explore_elevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])
@@ -315,7 +324,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     layer.loadNamedStyle(item.data(item_code['layer_symbology']))
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
-            elif item.data(item_code['map_layer']) in ['surface_layer', 'project_layer']:
+            elif item.data(item_code['map_layer']) in ['surface_layer', 'project_extent']:
                 if not any([c.name() == item.text() for c in node.children()]):
                     layer = QgsVectorLayer(f"{os.path.join(self.qris_project.project_path, os.path.dirname(item.data(item_code['LAYER']).path))}|layername={os.path.basename(item.data(item_code['LAYER']).path)}",
                                            item.text(), 'ogr')

@@ -39,14 +39,14 @@ class QRiSProject():
         self.filename = None
         self.project_path = None
         self.detrended_rasters = {}
-        self.project_layers = {}
+        self.project_extents = {}
         # eventually will hold assessment types like jam, dam, etc...
         self.project_assessments = False
         self.project_designs = False
 
     def add_layer(self, layer_name, layer_path, parent=None, meta=None):
         relpath = os.path.relpath(layer_path, self.project_path)
-        self.project_layers[layer_name] = Layer(layer_name, relpath, "Layer")
+        self.project_extents[layer_name] = Layer(layer_name, relpath, "Layer")
 
     def add_detrended(self, detrended_name, path, parent=None, meta=None):
         relpath = os.path.relpath(path, self.project_path)
@@ -83,9 +83,9 @@ class QRiSProject():
         layers = root.find('ProjectLayers')
         if layers is not None:
             for layer_elem in layers.iter('Layer'):
-                self.project_layers[layer_elem.find('Name').text] = Layer(layer_elem.find('Name').text,
-                                                                          layer_elem.find('Path').text,
-                                                                          layer_elem.find('LayerType').text if layer_elem.find('LayerType').text is not None else 'Layer')
+                self.project_extents[layer_elem.find('Name').text] = Layer(layer_elem.find('Name').text,
+                                                                           layer_elem.find('Path').text,
+                                                                           layer_elem.find('LayerType').text if layer_elem.find('LayerType').text is not None else 'Layer')
 
         # populate the project assessments dictionary
         # TODO update this along with the new schema and loading project layers
@@ -137,9 +137,9 @@ class QRiSProject():
                     stype = SubElement(s, 'SurfaceType')
                     stype.text = surface.type
 
-        project_layers = SubElement(root, "ProjectLayers")
-        for layer in self.project_layers.values():
-            lyr = SubElement(project_layers, "Layer")
+        project_extents = SubElement(root, "ProjectLayers")
+        for layer in self.project_extents.values():
+            lyr = SubElement(project_extents, "Layer")
             name = SubElement(lyr, "Name")
             name.text = layer.name
             path = SubElement(lyr, "Path")

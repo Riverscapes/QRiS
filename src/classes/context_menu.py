@@ -62,15 +62,19 @@ class ContextMenu(QMenu):
             ':/plugins/qris_toolbar/RaveAddIn_16px.png'
         ),
         'ADD_DETRENDED_RASTER': (
-            'Add Detrended Raster to Project',
+            'Add Detrended',
             ':/plugins/qris_toolbar/qris_raster_new.png'),
-        'ADD_PROJECT_LAYER': (
-            'Add layer to the QRiS Project',
-            ':/plugins/qris_toolbar/OpenProject.png'
+        'ADD_PROJECT_EXTENT_LAYER': (
+            'Import a project extent polygon',
+            ':/plugins/qris_toolbar/extent_polygon_new.png'
+        ),
+        'CREATE_BLANK_PROJECT_EXTENT_LAYER': (
+            'Create a blank project extent layer and draw a polygon',
+            ':/plugins/qris_toolbar/extent_polygon_new.png'
         ),
         'EXPLORE_ELEVATIONS': (
-            'Explore Elevations...',
-            ':/plugins/qris_toolbar/Detrend.png'
+            'Explore Elevations',
+            ':/plugins/qris_toolbar/qris_detrend.png'
         ),
         'ADD_ASSESSMENT': (
             'New Riverscape Assessment',
