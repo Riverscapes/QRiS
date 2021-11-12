@@ -228,7 +228,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('EXPAND_ALL', lambda: self.expand_all())
         elif item_type == "project_extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
-            self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create__blank_extent_layer())
+            self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
         elif item_type == "DetrendedRastersFolder":
             self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.add_detrended_raster())
         elif item_type == "DetrendedRaster":
@@ -279,9 +279,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         else:
             QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
 
-    def create_blank_project_extent():
-        """Adds a blank project extent to be defined by the user"""
-        pass
+    def create_blank_project_extent(self):
+        """Adds a blank project extent that will be edited by the user"""
+        self.addProjectLayerDlg = AddLayerDlg(None, self.qris_project)
+        self.addProjectLayerDlg.dataChange.connect(self.open_project)
+        self.addProjectLayerDlg.exec_()
 
     def explore_elevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])
@@ -330,7 +332,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                                            item.text(), 'ogr')
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
-            # add filtered assessment layer
 
     def add_assessment_to_map(self, item, node):
         """adds assessments to the map"""
