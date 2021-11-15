@@ -23,6 +23,9 @@
 """
 
 import os
+
+from osgeo import gdal
+
 from PyQt5.QtWidgets import QMessageBox
 
 from qgis.core import (
@@ -34,6 +37,7 @@ from qgis.core import (
     QgsVectorFileWriter)
 
 from qgis.gui import QgsDataSourceSelectDialog
+from qgis.utils import iface
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
@@ -229,12 +233,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "project_extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
+        elif item_type in ['project_extent', 'Project_Extent']:
+            self.menu.addAction('RENAME_PROJECT_EXTENT', lambda: self.rename_project_extent(item))
+            self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(item))
+            self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "DetrendedRastersFolder":
             self.menu.addAction('ADD_DETRENDED_RASTER', lambda: self.add_detrended_raster())
         elif item_type == "DetrendedRaster":
             self.menu.addAction('EXPLORE_ELEVATIONS', lambda: self.explore_elevations(item))
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
-        elif item_type in ["DetrendedRasterSurface", 'project_extent', 'Project_Extent', "dam_assessment", "design"]:
+        elif item_type in ["DetrendedRasterSurface", "dam_assessment", "design"]:
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "assessments_folder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
@@ -284,6 +292,43 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.addProjectLayerDlg = AddLayerDlg(None, self.qris_project)
         self.addProjectLayerDlg.dataChange.connect(self.open_project)
         self.addProjectLayerDlg.exec_()
+
+    def rename_project_extent(self):
+        """Renames the project extent layer"""
+        pass
+
+    def delete_project_extent(self, selected_item):
+        """Deletes a project extent layer from the project"""
+        layer_name = selected_item.data(item_code['LAYER']).name
+        answer = QMessageBox.question(self, f"Delete extent", f"Are you fucking sure you wanna delete the extent layer: {layer_name}")
+        if answer == QMessageBox.Yes:
+            # remove from the map if it's there
+            # TODO consider doing this based on the path
+            for layer in QgsProject.instance().mapLayers().values():
+                if layer.name() == layer_name:
+                    QgsProject.instance().removeMapLayers([layer.id()])
+                    # TODO refresh map canvas
+                    iface.mapCanvas().refresh()
+            # TODO Delete from the actual data
+            # TODO Make the path dynamic
+            # TODO Make this work better throughout, store the path differently
+            delete_project = self.qris_project.project_path
+            delete_gpkg = os.path.dirname(selected_item.data(item_code['LAYER']).path)
+            delete_path = os.path.join(delete_project, delete_gpkg)
+            delete_layer = os.path.basename(selected_item.data(item_code['LAYER']).path)
+            gpkg = gdal.OpenEx(delete_path, gdal.OF_UPDATE, allowed_drivers=['GPKG'])
+            # TODO be sure to test whether the table exists first
+            error = gpkg.DeleteLayer(delete_layer)
+            gpkg.ExecuteSQL('VACUUM')
+            # TODO remove this from the Extents dictionary that will also remove from promect xml
+            del(self.qris_project.project_extents[layer_name])
+            # refresh the project xml
+            self.qris_project.export_project_file()
+            # refresh the tree
+            self.open_project(self.qris_project, None)
+        else:
+            QMessageBox.information(self, "Delete extent", "No layers were deleted")
+            pass
 
     def explore_elevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])

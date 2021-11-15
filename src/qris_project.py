@@ -19,6 +19,7 @@ class Layer():
 
 
 class Raster(Layer):
+    """Extends layer to include additional functionality for handling detrended rasters"""
 
     def __init__(self, name, path) -> None:
         super().__init__(name, path, type='Raster')
