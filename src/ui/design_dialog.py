@@ -130,7 +130,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # tell the project that there are now designs
         self.qris_project.project_designs = True
         # TODO call export file to write that shit to the xml
-        self.qris_project.export_project_file()
+        self.qris_project.write_project_xml()
         # TODO pass in the name of the new node here for the add to map function
         self.dataChange.emit(self.qris_project, new_design_name)
         self.close()

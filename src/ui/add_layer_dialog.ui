@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>159</height>
+    <width>678</width>
+    <height>368</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,12 +21,12 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Import Layer:</string>
+      <string>Import Layer Path:</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="txtLayerSource">
+    <widget class="QLineEdit" name="lineEdit_import_layer_path">
      <property name="readOnly">
       <bool>true</bool>
      </property>
@@ -35,44 +35,54 @@
    <item row="1" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Layer Name:</string>
+      <string>Display Name</string>
      </property>
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QLineEdit" name="txtLayerName"/>
+    <widget class="QLineEdit" name="lineEdit_display_name"/>
    </item>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
       <string>Layer Type:</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QComboBox" name="cboLayerType"/>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Project Layer:</string>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="1">
-    <widget class="QLineEdit" name="txtProjectLayerPath">
-     <property name="readOnly">
-      <bool>true</bool>
+    <widget class="QComboBox" name="comboBox_layer_type"/>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Layer Description</string>
      </property>
     </widget>
    </item>
    <item row="4" column="1">
+    <widget class="QPlainTextEdit" name="plainTextEdit_layer_description"/>
+   </item>
+   <item row="6" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLineEdit" name="lineEdit_feature_name">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Feature Name</string>
      </property>
     </widget>
    </item>

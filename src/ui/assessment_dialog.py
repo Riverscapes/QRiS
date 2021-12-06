@@ -120,7 +120,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         # TODO double check what the path looks like for other layers?
         self.qris_project.project_assessments = True
         # TODO call export file to write that shit to the xml
-        self.qris_project.export_project_file()
+        self.qris_project.write_project_xml()
         # Send information used in the tree so it can be added to the map.
         self.dataChange.emit(self.qris_project, new_assessment_name)
         self.close()

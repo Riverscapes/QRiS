@@ -54,5 +54,5 @@ class ExportElevationSurfaceDlg(QDialog, DIALOG_CLASS):
         raster_to_polygon(os.path.join(self.qris_project.project_path, self.raster.path), self.gpkg, self.surface_name_short, self.elevation_value, surface_name=str(self.cboSurfaceType.currentText()))
         self.raster.add_surface(self.surface_name, self.txtSurfacePath.text(), str(self.cboSurfaceType.currentText()))
         self.qris_project.detrended_rasters[self.raster.name] = self.raster
-        self.qris_project.export_project_file()
+        self.qris_project.write_project_xml()
         self.dataChange.emit(self.qris_project, self.surface_name)

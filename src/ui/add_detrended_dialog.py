@@ -59,7 +59,7 @@ class AddDetrendedRasterDlg(QDialog, DIALOG_CLASS):
         out_ds = None
 
         self.qris_project.add_detrended(self.raster_name, out_raster)
-        self.qris_project.export_project_file()
+        self.qris_project.write_project_xml()
 
         self.dataChange.emit(self.qris_project, self.raster_name)
 

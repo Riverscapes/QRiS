@@ -57,16 +57,23 @@ from .ui.design_dialog import DesignDlg
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
 
+# TODO Get this list down. Store everything else in the classes: I think just:
+# CLASS
+# INSTANCE
+# FID
 item_code = {'path': Qt.UserRole + 1,
              # specific for each type within the QRiS tree and determines which context menus are displayed
+             # TODO Change this to CLASS
              'item_type': Qt.UserRole + 2,
-             # LAYER - not too sure ideally this is redundent
+             # LAYER - Stores the class instance, the whole thing.
+             # Change this to INSTANCE
              'LAYER': Qt.UserRole + 3,
              # map_layer usually refers to display within the QGIS layer tree often for groups
              'map_layer': Qt.UserRole + 4,
              # may be used to refer to a QML file
              'layer_symbology': Qt.UserRole + 5,
              # stores id within databases
+             # Change to FID
              'feature_id': Qt.UserRole + 6}
 
 
@@ -107,7 +114,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model.clear()
         rootNode = self.model.invisibleRootItem()
 
-        # set the projecr root
+        # set the project root
         project_node = QStandardItem(self.qris_project.project_name)
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/test_Riverscapes.png'))
         project_node.setData('project_root', item_code['item_type'])
@@ -121,13 +128,37 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_extent_node.setData('group', item_code['map_layer'])
         project_node.appendRow(project_extent_node)
 
-        for layer in self.qris_project.project_extents.values():
-            extent_node = QStandardItem(layer.name)
+        for extent in self.qris_project.project_extents.values():
+            extent_node = QStandardItem(extent.display_name)
             extent_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
-            extent_node.setData(layer.type, item_code['item_type'])
+            extent_node.setData('Project_Extent', item_code['item_type'])
             extent_node.setData('project_extent', item_code['map_layer'])
-            extent_node.setData(layer, item_code['LAYER'])
+            extent_node.setData(extent, item_code['LAYER'])
             project_extent_node.appendRow(extent_node)
+
+        # Add project layers node
+        # TODO go through and add layers to the tree
+        project_layers_node = QStandardItem("Project Layers")
+        project_layers_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        project_layers_node.setData('project_layers_folder', item_code['item_type'])
+        project_layers_node.setData('group', item_code['map_layer'])
+        project_node.appendRow(project_layers_node)
+
+        # Add riverscape surfaces node
+        # TODO go through and add layers to the tree
+        riverscape_surfaces_node = QStandardItem("Riverscape Surfaces")
+        riverscape_surfaces_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        riverscape_surfaces_node.setData('riverscape_surfaces_folder', item_code['item_type'])
+        riverscape_surfaces_node.setData('group', item_code['map_layer'])
+        project_node.appendRow(riverscape_surfaces_node)
+
+        # Add riverscape segments node
+        # TODO go through and add layers to the tree
+        riverscape_segments_node = QStandardItem("Riverscape Segments")
+        riverscape_segments_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        riverscape_segments_node.setData('riverscape_segments_folder', item_code['item_type'])
+        riverscape_segments_node.setData('group', item_code['map_layer'])
+        project_node.appendRow(riverscape_segments_node)
 
         # Add detrended rasters to tree
         detrended_rasters = QStandardItem("Detrended Rasters")
@@ -233,6 +264,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "project_extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
+        elif item_type == "project_layers_folder":
+            self.menu.addAction('ADD_PROJECT_LAYER', lambda: self.import_project_layer())
         elif item_type in ['project_extent', 'Project_Extent']:
             self.menu.addAction('RENAME_PROJECT_EXTENT', lambda: self.rename_project_extent(item))
             self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(item))
@@ -285,7 +318,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addProjectLayerDlg.dataChange.connect(self.open_project)
             self.addProjectLayerDlg.exec_()
         else:
-            QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
+            QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon layer")
 
     def create_blank_project_extent(self):
         """Adds a blank project extent that will be edited by the user"""
@@ -299,36 +332,44 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def delete_project_extent(self, selected_item):
         """Deletes a project extent layer from the project"""
-        layer_name = selected_item.data(item_code['LAYER']).name
-        answer = QMessageBox.question(self, f"Delete extent", f"Are you fucking sure you wanna delete the extent layer: {layer_name}")
-        if answer == QMessageBox.Yes:
+        display_name = selected_item.data(item_code['LAYER']).display_name
+        feature_name = selected_item.data(item_code['LAYER']).feature_name
+        geopackage_path = selected_item.data(item_code['LAYER']).geopackage_path(self.qris_project.project_path)
+
+        delete_ok = QMessageBox.question(self, f"Delete extent", f"Are you fucking sure you wanna delete the extent layer: {display_name}")
+        if delete_ok == QMessageBox.Yes:
             # remove from the map if it's there
             # TODO consider doing this based on the path
             for layer in QgsProject.instance().mapLayers().values():
-                if layer.name() == layer_name:
+                if layer.name() == display_name:
                     QgsProject.instance().removeMapLayers([layer.id()])
-                    # TODO refresh map canvas
                     iface.mapCanvas().refresh()
-            # TODO Delete from the actual data
-            # TODO Make the path dynamic
-            # TODO Make this work better throughout, store the path differently
-            delete_project = self.qris_project.project_path
-            delete_gpkg = os.path.dirname(selected_item.data(item_code['LAYER']).path)
-            delete_path = os.path.join(delete_project, delete_gpkg)
-            delete_layer = os.path.basename(selected_item.data(item_code['LAYER']).path)
-            gpkg = gdal.OpenEx(delete_path, gdal.OF_UPDATE, allowed_drivers=['GPKG'])
+
             # TODO be sure to test whether the table exists first
-            error = gpkg.DeleteLayer(delete_layer)
-            gpkg.ExecuteSQL('VACUUM')
+            gdal_delete = gdal.OpenEx(geopackage_path, gdal.OF_UPDATE, allowed_drivers=['GPKG'])
+            error = gdal_delete.DeleteLayer(feature_name)
+            gdal_delete.ExecuteSQL('VACUUM')
             # TODO remove this from the Extents dictionary that will also remove from promect xml
-            del(self.qris_project.project_extents[layer_name])
+            del(self.qris_project.project_extents[feature_name])
             # refresh the project xml
-            self.qris_project.export_project_file()
+            self.qris_project.write_project_xml()
             # refresh the tree
             self.open_project(self.qris_project, None)
         else:
             QMessageBox.information(self, "Delete extent", "No layers were deleted")
-            pass
+
+    def import_project_layer(self):
+        """launches the dialog that supports import of project layers"""
+        # select_layer = QgsDataSourceSelectDialog()
+        # select_layer.exec()
+        # uri = select_layer.uri()
+        # if uri is not None and uri.isValid() and uri.wkbType == 3:
+        #     self.addProjectLayerDlg = AddLayerDlg(uri, self.qris_project)
+        #     self.addProjectLayerDlg.dataChange.connect(self.open_project)
+        #     self.addProjectLayerDlg.exec_()
+        # else:
+        #     QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
+        pass
 
     def explore_elevations(self, selected_item):
         raster = selected_item.data(item_code['LAYER'])
@@ -373,8 +414,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     node.addLayer(layer)
             elif item.data(item_code['map_layer']) in ['surface_layer', 'project_extent']:
                 if not any([c.name() == item.text() for c in node.children()]):
-                    layer = QgsVectorLayer(f"{os.path.join(self.qris_project.project_path, os.path.dirname(item.data(item_code['LAYER']).path))}|layername={os.path.basename(item.data(item_code['LAYER']).path)}",
-                                           item.text(), 'ogr')
+                    layer = QgsVectorLayer(item.data(item_code['LAYER']).full_path(self.qris_project.project_path), item.text(), 'ogr')
                     QgsProject.instance().addMapLayer(layer, False)
                     node.addLayer(layer)
 

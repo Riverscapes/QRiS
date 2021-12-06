@@ -69,5 +69,5 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
         qris_project.project_path = self.project_folder
         # Create .qris
         qris_project_file = os.path.join(self.project_folder, "project.qris")
-        qris_project.export_project_file(qris_project_file)
+        qris_project.write_project_xml()(qris_project_file)
         self.dataChange.emit(qris_project)

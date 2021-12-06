@@ -6,27 +6,69 @@ from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
 
-class Layer():
-    """Used to construct a list of reference layers within the project"""
+# These are classes to define our primary layer types and storing data about them
+class ProjectExtent():
+    """
+    Constructs and stores project extent layer attributes. Used to populate the tree and write out to the project xml file.
 
-    def __init__(self, name, path, type='Layer') -> None:
+    display_name (str): layer name used to display the layer in QGIS.
+    table_name (str): GIS friendly name of the feature or table which will never change.
+    description (str): Any comments or notes giving context to the layer.
+    directory (str): Directory in which the input layer is stored
+    geopackage (str): Name of the geopackage storing the layer
+    """
+
+    def __init__(self, display_name, feature_name, description, directory="projec_extents", geopackage="project_extents.gpkg") -> None:
+        self.display_name = display_name
+        self.feature_name = feature_name
+        self.description = description
+        self.directory = directory
+        self.geopackage = geopackage
+
+    def directory_path(self, project_path):
+        return os.path.join(project_path, self.directory)
+
+    def geopackage_path(self, project_path):
+        return os.path.join(project_path, self.directory, self.geopackage)
+
+    def full_path(self, project_path):
+        return os.path.join(project_path, self.directory, self.geopackage + f"|layername={self.feature_name}")
+
+
+class ProjectVector():
+    pass
+
+
+class ProjectRaster():
+    pass
+
+# class Raster(Layer):
+#     """Extends layer to include additional functionality for handling detrended rasters"""
+
+#     def __init__(self, name, description, path) -> None:
+#         super().__init__(name, path, description, type='Raster')
+#         self.surfaces = {}
+
+#     def add_surface(self, surface_name, surface_path, surface_type):
+#         self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
+
+# TODO this will be renamed more explicitely to a
+
+
+class Raster():
+    """Used to construct a list of reference raster layers within the project"""
+
+    def __init__(self, name, path, type="Raster") -> None:
         self.name = name
         self.path = path
         self.type = type
+        self.surfaces = {}
 
     def full_path(self, project_path):
         return os.path.join(project_path, self.path)
 
-
-class Raster(Layer):
-    """Extends layer to include additional functionality for handling detrended rasters"""
-
-    def __init__(self, name, path) -> None:
-        super().__init__(name, path, type='Raster')
-        self.surfaces = {}
-
-    def add_surface(self, surface_name, surface_path, surface_type):
-        self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
+    # def add_surface(self, surface_name, surface_path, surface_type):
+    #     self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
 
 
 class QRiSProject():
@@ -45,9 +87,9 @@ class QRiSProject():
         self.project_assessments = False
         self.project_designs = False
 
-    def add_layer(self, layer_name, layer_path, parent=None, meta=None):
-        relpath = os.path.relpath(layer_path, self.project_path)
-        self.project_extents[layer_name] = Layer(layer_name, relpath, "Layer")
+    # def add_layer(self, layer_name, layer_path, parent=None, meta=None):
+    #     relpath = os.path.relpath(layer_path, self.project_path)
+    #     self.project_extents[layer_name] = Layer(layer_name, relpath, "Layer")
 
     def add_detrended(self, detrended_name, path, parent=None, meta=None):
         relpath = os.path.relpath(path, self.project_path)
@@ -66,27 +108,29 @@ class QRiSProject():
         self.time_created = [elem.text for elem in root if elem.tag == 'DateTimeCreated'][0]
         self.description = [elem.text for elem in root if elem.tag == 'Description'][0]
 
+        # populate project layers dictionary
+        layers = root.find('ProjectExtents')
+        if layers is not None:
+            for layer_elem in layers.iter('Extent'):
+                self.project_extents[layer_elem.find('FeatureName').text] = ProjectExtent(layer_elem.find('DisplayName').text,
+                                                                                          layer_elem.find('FeatureName').text,
+                                                                                          layer_elem.find('Description').text,
+                                                                                          layer_elem.find('Directory').text,
+                                                                                          layer_elem.find('Geopackage').text)
+
         # populate detrended rasters dictionary
         detrended = root.find('DetrendedRasters')
-        if detrended is not None:
-            for raster_elem in detrended.iter('Raster'):
-                raster = Raster(raster_elem.find('Name').text,
-                                raster_elem.find('Path').text)
-                surfaces = raster_elem.find('Surfaces')
-                if surfaces is not None:
-                    for surface in surfaces.iter('Surface'):
-                        raster.surfaces[surface.find('Name').text] = Layer(surface.find('Name').text,
-                                                                           surface.find('Path').text,
-                                                                           surface.find('SurfaceType').text)
-                self.detrended_rasters[raster_elem.find('Name').text] = raster
-
-        # populate project layers dictionary
-        layers = root.find('ProjectLayers')
-        if layers is not None:
-            for layer_elem in layers.iter('Layer'):
-                self.project_extents[layer_elem.find('Name').text] = Layer(layer_elem.find('Name').text,
-                                                                           layer_elem.find('Path').text,
-                                                                           layer_elem.find('LayerType').text if layer_elem.find('LayerType').text is not None else 'Layer')
+        # if detrended is not None:
+        #     for raster_elem in detrended.iter('Raster'):
+        #         raster = Raster(raster_elem.find('Name').text,
+        #                         raster_elem.find('Path').text)
+        #         surfaces = raster_elem.find('Surfaces')
+        #         if surfaces is not None:
+        #             for surface in surfaces.iter('Surface'):
+        #                 raster.surfaces[surface.find('Name').text] = Layer(surface.find('Name').text,
+        #                                                                    surface.find('Path').text,
+        #                                                                    surface.find('SurfaceType').text)
+        #         self.detrended_rasters[raster_elem.find('Name').text] = raster
 
         # populate the project assessments dictionary
         # TODO update this along with the new schema and loading project layers
@@ -100,7 +144,7 @@ class QRiSProject():
         if designs_tag is not None:
             self.project_designs = True
 
-    def export_project_file(self, filename=None):
+    def write_project_xml(self, filename=None):
         """writes the project xml given """
         self.filename = filename if filename is not None else self.filename
 
@@ -138,15 +182,20 @@ class QRiSProject():
                     stype = SubElement(s, 'SurfaceType')
                     stype.text = surface.type
 
-        project_extents = SubElement(root, "ProjectLayers")
+        # PROJECT EXTENTS
+        project_extents = SubElement(root, "ProjectExtents")
         for layer in self.project_extents.values():
-            lyr = SubElement(project_extents, "Layer")
-            name = SubElement(lyr, "Name")
-            name.text = layer.name
-            path = SubElement(lyr, "Path")
-            path.text = layer.path
-            ltype = SubElement(lyr, "LayerType")
-            ltype.text = layer.type
+            Extent = SubElement(project_extents, "Extent")
+            FeatureName = SubElement(Extent, "FeatureName")
+            FeatureName.text = layer.feature_name
+            DisplayName = SubElement(Extent, "DisplayName")
+            DisplayName.text = layer.display_name
+            Description = SubElement(Extent, "Description")
+            Description.text = layer.description
+            Directory = SubElement(Extent, "Directory")
+            Directory.text = layer.directory
+            Geopackage = SubElement(Extent, "Geopackage")
+            Geopackage.text = layer.geopackage
 
         # Write out assessments stuff to the .xml file
         # TODO consider using a unique class to hold the assessment stuff
