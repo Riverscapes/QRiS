@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>dlgProjectExtent</class>
- <widget class="QDialog" name="dlgProjectExtent">
+ <class>dlgAddLayer</class>
+ <widget class="QDialog" name="dlgAddLayer">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>416</width>
-    <height>360</height>
+    <width>428</width>
+    <height>355</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Project Extent</string>
+   <string>Add Layer to Project</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -51,12 +51,6 @@
    </item>
    <item row="2" column="1">
     <widget class="QLineEdit" name="lineEdit_feature_name">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
      <property name="readOnly">
       <bool>true</bool>
      </property>
@@ -89,7 +83,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>dlgProjectExtent</receiver>
+   <receiver>dlgAddLayer</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -105,7 +99,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>dlgProjectExtent</receiver>
+   <receiver>dlgAddLayer</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

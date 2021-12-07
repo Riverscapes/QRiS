@@ -72,7 +72,7 @@ class ContextMenu(QMenu):
             'Create a blank project extent layer and draw a polygon',
             ':/plugins/qris_toolbar/extent_polygon_new.png'
         ),
-        'RENAME_PROJECT_EXTENT': (
+        'UPDATE_PROJECT_EXTENT': (
             'Rename the project extent layer',
             ':/plugins/qris_toolbar/extent_polygon_new.png'
         ),

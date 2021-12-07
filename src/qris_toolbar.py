@@ -332,7 +332,7 @@ class QRiSToolbar:
 
     def open_project(self, project):
         self.toggle_widget()
-        self.dockwidget.open_project(project)
+        self.dockwidget.build_tree_view(project)
         # self.addLayerAction.setEnabled(True)
 
     def addLayerDlg(self):
