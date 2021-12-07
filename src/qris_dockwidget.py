@@ -57,21 +57,11 @@ from .ui.design_dialog import DesignDlg
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
 
-# TODO largely do away with path - store in the instance for each data class
-item_code = {'path': Qt.UserRole + 1,
-             # specific for each type within the QRiS tree and determines which context menus are displayed
-             # TODO Change this to CLASS
-             'item_type': Qt.UserRole + 2,
-             # LAYER - Stores the class instance, the whole thing.
-             # Change this to INSTANCE
-             'LAYER': Qt.UserRole + 3,
+item_code = {'item_type': Qt.UserRole + 1,
+             # INSTANCE - Stores the class instance, the whole thing.
+             'INSTANCE': Qt.UserRole + 2,
              # item_layer usually refers to display within the QGIS layer tree often for groups
-             'item_layer': Qt.UserRole + 4,
-             # either "layer" or "group".
-             'layer_symbology': Qt.UserRole + 5,
-             # stores id within databases
-             # Change to FID
-             'feature_id': Qt.UserRole + 6}
+             'feature_id': Qt.UserRole + 3}
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -115,104 +105,96 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_node = QStandardItem(self.qris_project.project_name)
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/test_Riverscapes.png'))
         project_node.setData('project_root', item_code['item_type'])
-        project_node.setData('group', item_code['item_layer'])
         rootNode.appendRow(project_node)
 
         # Add project extent layers to tree
         project_extent_node = QStandardItem("Project Extents")
         project_extent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
         project_extent_node.setData('project_extent_folder', item_code['item_type'])
-        project_extent_node.setData('group', item_code['item_layer'])
         project_node.appendRow(project_extent_node)
 
         for extent in self.qris_project.project_extents.values():
             extent_node = QStandardItem(extent.display_name)
             extent_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
             extent_node.setData('project_extent', item_code['item_type'])
-            extent_node.setData('layer', item_code['item_layer'])
-            extent_node.setData(extent, item_code['LAYER'])
+            extent_node.setData(extent, item_code['INSTANCE'])
             project_extent_node.appendRow(extent_node)
 
+        # TODO these will get changed to the clippy layers
         # Add project layers node
-        # TODO go through and add layers to the tree
-        project_layers_node = QStandardItem("Project Layers")
-        project_layers_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        project_layers_node.setData('project_layers_folder', item_code['item_type'])
-        project_layers_node.setData('group', item_code['item_layer'])
-        project_node.appendRow(project_layers_node)
+        # project_layers_node = QStandardItem("Project Layers")
+        # project_layers_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # project_layers_node.setData('project_layers_folder', item_code['item_type'])
+        # project_node.appendRow(project_layers_node)
 
-        # Add riverscape surfaces node
-        # TODO go through and add layers to the tree
-        riverscape_surfaces_node = QStandardItem("Riverscape Surfaces")
-        riverscape_surfaces_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        riverscape_surfaces_node.setData('riverscape_surfaces_folder', item_code['item_type'])
-        riverscape_surfaces_node.setData('group', item_code['item_layer'])
-        project_node.appendRow(riverscape_surfaces_node)
+        # # Add riverscape surfaces node
+        # # TODO go through and add layers to the tree
+        # riverscape_surfaces_node = QStandardItem("Riverscape Surfaces")
+        # riverscape_surfaces_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # riverscape_surfaces_node.setData('riverscape_surfaces_folder', item_code['item_type'])
+        # riverscape_surfaces_node.setData('group', item_code['item_layer'])
+        # project_node.appendRow(riverscape_surfaces_node)
 
-        # Add riverscape segments node
-        # TODO go through and add layers to the tree
-        riverscape_segments_node = QStandardItem("Riverscape Segments")
-        riverscape_segments_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        riverscape_segments_node.setData('riverscape_segments_folder', item_code['item_type'])
-        riverscape_segments_node.setData('group', item_code['item_layer'])
-        project_node.appendRow(riverscape_segments_node)
+        # # Add riverscape segments node
+        # # TODO go through and add layers to the tree
+        # riverscape_segments_node = QStandardItem("Riverscape Segments")
+        # riverscape_segments_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # riverscape_segments_node.setData('riverscape_segments_folder', item_code['item_type'])
+        # riverscape_segments_node.setData('group', item_code['item_layer'])
+        # project_node.appendRow(riverscape_segments_node)
 
-        # Add detrended rasters to tree
-        detrended_rasters = QStandardItem("Detrended Rasters")
-        detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
-        detrended_rasters.setData('group', item_code['item_layer'])
-        project_node.appendRow(detrended_rasters)
+        # # Add detrended rasters to tree
+        # detrended_rasters = QStandardItem("Detrended Rasters")
+        # detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
+        # detrended_rasters.setData('group', item_code['item_layer'])
+        # project_node.appendRow(detrended_rasters)
 
-        for raster in self.qris_project.detrended_rasters.values():
-            detrended_raster = QStandardItem(raster.name)
-            detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/qris_raster.png'))
-            # detrended_raster.setData(raster.path, item_code['path'])
-            detrended_raster.setData('DetrendedRaster', item_code['item_type'])
-            detrended_raster.setData(raster, item_code['LAYER'])
-            detrended_raster.setData('raster_layer', item_code['item_layer'])
-            # detrended_raster.setData(os.path.join(os.path.dirname(__file__), "..", 'resources', 'symbology', 'hand.qml'), item_code['layer_symbology'])
-            detrended_rasters.appendRow(detrended_raster)
+        # for raster in self.qris_project.detrended_rasters.values():
+        #     detrended_raster = QStandardItem(raster.name)
+        #     detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/qris_raster.png'))
+        #     detrended_raster.setData('DetrendedRaster', item_code['item_type'])
+        #     detrended_raster.setData(raster, item_code['INSTANCE'])
+        #     detrended_raster.setData('raster_layer', item_code['item_layer'])
+        #     detrended_rasters.appendRow(detrended_raster)
 
-            if len(raster.surfaces.values()) > 0:
-                item_surfaces = QStandardItem("Surfaces")
-                item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-                item_surfaces.setData('group', item_code['item_layer'])
-                detrended_raster.appendRow(item_surfaces)
-                for surface in raster.surfaces.values():
-                    item_surface = QStandardItem(surface.name)
-                    item_surface.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polygon.png'))
-                    # item_surface.setData(surface.path, item_code['path'])
-                    item_surface.setData('DetrendedRasterSurface', item_code['item_type'])
-                    item_surface.setData('surface_layer', item_code['item_layer'])
-                    item_surface.setData(surface, item_code['LAYER'])
-                    item_surfaces.appendRow(item_surface)
+        #     if len(raster.surfaces.values()) > 0:
+        #         item_surfaces = QStandardItem("Surfaces")
+        #         item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        #         item_surfaces.setData('group', item_code['item_layer'])
+        #         detrended_raster.appendRow(item_surfaces)
+        #         for surface in raster.surfaces.values():
+        #             item_surface = QStandardItem(surface.name)
+        #             item_surface.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polygon.png'))
+        #             item_surface.setData('DetrendedRasterSurface', item_code['item_type'])
+        #             item_surface.setData('surface_layer', item_code['item_layer'])
+        #             item_surface.setData(surface, item_code['INSTANCE'])
+        #             item_surfaces.appendRow(item_surface)
 
-        # Add assessments to tree
-        assessments_parent_node = QStandardItem("Riverscape Assessments")
-        assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        assessments_parent_node.setData('assessments_folder', item_code['item_type'])
-        assessments_parent_node.setData('group', item_code['item_layer'])
-        project_node.appendRow(assessments_parent_node)
+        # # Add assessments to tree
+        # assessments_parent_node = QStandardItem("Riverscape Assessments")
+        # assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # assessments_parent_node.setData('assessments_folder', item_code['item_type'])
+        # assessments_parent_node.setData('group', item_code['item_layer'])
+        # project_node.appendRow(assessments_parent_node)
 
-        if self.qris_project.project_assessments:
-            self.qris_project.assessments_path = os.path.join(self.qris_project.project_path, "Assessments.gpkg")
-            assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
-            for assessment_feature in assessments_layer.getFeatures():
-                assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
-                assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-                assessment_node.setData('dam_assessment', item_code['item_type'])
-                assessment_node.setData('group', item_code['item_layer'])
-                assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
-                assessments_parent_node.appendRow(assessment_node)
+        # if self.qris_project.project_assessments:
+        #     self.qris_project.assessments_path = os.path.join(self.qris_project.project_path, "Assessments.gpkg")
+        #     assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
+        #     for assessment_feature in assessments_layer.getFeatures():
+        #         assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
+        #         assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        #         assessment_node.setData('dam_assessment', item_code['item_type'])
+        #         assessment_node.setData('group', item_code['item_layer'])
+        #         assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
+        #         assessments_parent_node.appendRow(assessment_node)
 
-        assessments_parent_node.sortChildren(Qt.AscendingOrder)
+        # assessments_parent_node.sortChildren(Qt.AscendingOrder)
 
         # Add designs to tree
         designs_parent_node = QStandardItem("Low-Tech Designs")
         designs_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        designs_parent_node.setData('DesignsFolder', item_code['item_type'])
-        designs_parent_node.setData('group', item_code['item_layer'])
+        designs_parent_node.setData('designs_folder', item_code['item_type'])
         project_node.appendRow(designs_parent_node)
 
         if self.qris_project.project_designs:
@@ -222,7 +204,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 design_node = QStandardItem(design_feature.attribute('design_name'))
                 design_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
                 design_node.setData('design', item_code['item_type'])
-                design_node.setData('group', item_code['item_layer'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 designs_parent_node.appendRow(design_node)
 
@@ -276,7 +257,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_TO_MAP', lambda: self.add_to_map(item))
         elif item_type == "assessments_folder":
             self.menu.addAction('ADD_ASSESSMENT', lambda: self.add_assessment())
-        elif item_type == "DesignsFolder":
+        elif item_type == "designs_folder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
         else:
             self.menu.clear()
@@ -329,9 +310,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def delete_project_extent(self, selected_item):
         """Deletes a project extent layer"""
-        display_name = selected_item.data(item_code['LAYER']).display_name
-        feature_name = selected_item.data(item_code['LAYER']).feature_name
-        geopackage_path = selected_item.data(item_code['LAYER']).geopackage_path(self.qris_project.project_path)
+        display_name = selected_item.data(item_code['INSTANCE']).display_name
+        feature_name = selected_item.data(item_code['INSTANCE']).feature_name
+        geopackage_path = selected_item.data(item_code['INSTANCE']).geopackage_path(self.qris_project.project_path)
 
         delete_ok = QMessageBox.question(self, f"Delete extent", f"Are you fucking sure you wanna delete the extent layer: {display_name}")
         if delete_ok == QMessageBox.Yes:
@@ -369,7 +350,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         pass
 
     def explore_elevations(self, selected_item):
-        raster = selected_item.data(item_code['LAYER'])
+        raster = selected_item.data(item_code['INSTANCE'])
         self.elevation_widget = ElevationDockWidget(raster, self.qris_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
         self.elevation_widget.dataChange.connect(self.build_tree_view)
@@ -384,41 +365,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for item in parents:
             # TODO I don't think we will need item_layer. just item_type
             item_type = item.data(item_code['item_type'])
-            # check if the node is already there
-            if any([c.name() == item.text() for c in node.children()]):
-                # if is set it to the next active node
+            # Check the item_type and launch specific add to map function
+            if item_type == 'project_extent':
+                self.add_project_extent_to_map(item, node)
+            elif item_type == 'design':
+                self.add_design_to_map(item, node)
+            elif item_type == 'dam_assessment':
+                self.add_assessment_to_map(item, node)
+            # Check if it is a node that is already there
+            elif any([c.name() == item.text() for c in node.children()]):
+                # if is there set it to the next active node and search the next item
                 node = next(n for n in node.children() if n.name() == item.text())
             else:
-                # if not add the group as a node
+                # if not add the node as a group
                 new_node = node.addGroup(item.text())
-                # then set it as next active search node
+                # and set it as next active search node
                 node = new_node
-
-            # Check the item_type and launch specific add to map function
-            if (item.data(item_code['item_type']) == 'project_extent'):
-                self.add_project_extent_to_map(item, node)
-            elif (item.data(item_code['item_type']) == 'design'):
-                self.add_design_to_map(item, node)
-            elif (item.data(item_code['item_type']) == 'dam_assessment'):
-                self.add_assessment_to_map(item, node)
-
-            # # TODO refactor these into their own functions - someday
-            # # if it's not a group item_layer, but is a raster layer
-            # elif item.data(item_code['item_layer']) == 'raster_layer':
-            #     # check if the layer text is in the layer tree already
-            #     if not any([c.name() == item.text() for c in node.children()]):
-            #         # if not start set the raster as a layer
-            #         layer = QgsRasterLayer(os.path.join(self.qris_project.project_path, item.data(item_code['LAYER']).path), item.text())
-            #         # TODO load a qml for raster style
-            #         layer.loadNamedStyle(item.data(item_code['layer_symbology']))
-            #         QgsProject.instance().addMapLayer(layer, False)
-            #         node.addLayer(layer)
-            # # TODO Pretty certain all of this below can be removed
-            # elif item.data(item_code['item_layer']) in ['surface_layer', 'project_extent']:
-            #     if not any([c.name() == item.text() for c in node.children()]):
-            #         layer = QgsVectorLayer(item.data(item_code['LAYER']).full_path(self.qris_project.project_path), item.text(), 'ogr')
-            #         QgsProject.instance().addMapLayer(layer, False)
-            #         node.addLayer(layer)
 
     def _get_parents(self, start_item: QStandardItem):
         """This gets all the parent folder items of a selected item in the QRiS tree and passess them back to the add_to_map function"""
@@ -436,11 +398,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         return selected_item
 
     def add_project_extent_to_map(self, item, node):
-        """adds a project extent to the map"""
-        # check if it's already a child of the project_extent node
+        """adds a project extent to the project extent node"""
+        # check if it's already a child of the parent node and add it if not
         if not any([c.name() == item.text() for c in node.children()]):
             # if not just crate the path and then add it
-            full_path = item.data(item_code['LAYER']).full_path(self.qris_project.project_path)
+            full_path = item.data(item_code['INSTANCE']).full_path(self.qris_project.project_path)
             layer = QgsVectorLayer(full_path, item.text(), 'ogr')
             QgsProject.instance().addMapLayer(layer, False)
             # TODO add symbology
@@ -458,6 +420,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         node.addLayer(layer)
 
     def add_design_to_map(self, item, node):
+        # TODO be sure to add the appropriate
+        # TODO be sure that you are not adding things twice. i.e., check if each layer exists before adding.
         """adds designs to the map"""
         design_id = item.data(item_code['feature_id'])
         design_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")

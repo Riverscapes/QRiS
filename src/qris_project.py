@@ -119,7 +119,7 @@ class QRiSProject():
                                                                                           layer_elem.find('Geopackage').text)
 
         # populate detrended rasters dictionary
-        detrended = root.find('DetrendedRasters')
+        # detrended = root.find('DetrendedRasters')
         # if detrended is not None:
         #     for raster_elem in detrended.iter('Raster'):
         #         raster = Raster(raster_elem.find('Name').text,
