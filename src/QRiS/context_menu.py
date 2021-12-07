@@ -80,10 +80,6 @@ class ContextMenu(QMenu):
             'Delete the project extent layer',
             ':/plugins/qris_toolbar/extent_polygon_new.png'
         ),
-        'ADD_PROJECT_EXTENT_LAYER': (
-            'Import a project layer',
-            ':/plugins/qris_toolbar/extent_polygon_new.png'
-        ),
         'EXPLORE_ELEVATIONS': (
             'Explore Elevations',
             ':/plugins/qris_toolbar/qris_detrend.png'

@@ -25,9 +25,11 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
 from qgis.core import QgsApplication
-from .processing_provider.provider import Provider
-from .classes.settings import Settings, CONSTANTS
 
+from .processing_provider.provider import Provider
+from .QRiS.settings import Settings, CONSTANTS
+
+# TODO determine if this is needed
 # Initialize Qt resources from file resources.py
 from . import resources
 
@@ -270,7 +272,7 @@ class QRiSToolbar:
 
         dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Open a QRiS project", last_dir, self.tr("QRiS Project files (project.qris)"))
         if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-            # We set the proect path in the project settings. This way it will be saved with the QgsProject file
+            # We set the project path in the project settings. This way it will be saved with the QgsProject file
             if self.dockwidget is None or self.dockwidget.isHidden() is True:
                 # self.toggle_widget(forceOn=True)
                 project = QRiSProject()

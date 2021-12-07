@@ -83,7 +83,6 @@ class QRiSProject():
         self.project_path = None
         self.detrended_rasters = {}
         self.project_extents = {}
-        # eventually will hold assessment types like jam, dam, etc...
         self.project_assessments = False
         self.project_designs = False
 
