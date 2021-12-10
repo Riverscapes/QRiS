@@ -53,6 +53,7 @@ class ProjectExtentDlg(QDialog, DIALOG_CLASS):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
     def save_layer(self):
+        # TODO move these up to the init method
         # Get form values
         new_display_name = self.lineEdit_display_name.text()
         new_feature_name = self.lineEdit_feature_name.text()
@@ -64,7 +65,6 @@ class ProjectExtentDlg(QDialog, DIALOG_CLASS):
         # Create paths
         extent_directory_path = new_extent_instance.directory_path(self.qris_project.project_path)
         extent_geopackage_path = new_extent_instance.geopackage_path(self.qris_project.project_path)
-        extent_full_path = new_extent_instance.full_path(self.qris_project.project_path)
 
         # import or create the layer
         if self.layer_uri is not None:

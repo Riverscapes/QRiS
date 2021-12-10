@@ -103,17 +103,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         rootNode.appendRow(project_node)
 
         # Add project extent layers to tree
-        project_extent_node = QStandardItem("Project Extents")
-        project_extent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        project_extent_node.setData('project_extent_folder', item_code['item_type'])
-        project_node.appendRow(project_extent_node)
+        extent_folder = QStandardItem("Project Extents")
+        extent_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        extent_folder.setData('extent_folder', item_code['item_type'])
+        project_node.appendRow(extent_folder)
 
         for extent in self.qris_project.project_extents.values():
             extent_node = QStandardItem(extent.display_name)
             extent_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
-            extent_node.setData('project_extent', item_code['item_type'])
+            extent_node.setData('extent_node', item_code['item_type'])
             extent_node.setData(extent, item_code['INSTANCE'])
-            project_extent_node.appendRow(extent_node)
+            extent_folder.appendRow(extent_node)
 
         # TODO these will get changed to the clippy layers
         # Add project layers node
@@ -187,22 +187,29 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # assessments_parent_node.sortChildren(Qt.AscendingOrder)
 
         # Add designs to tree
-        designs_parent_node = QStandardItem("Low-Tech Designs")
-        designs_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        designs_parent_node.setData('designs_folder', item_code['item_type'])
-        project_node.appendRow(designs_parent_node)
+        design_folder = QStandardItem("Low-Tech Designs")
+        design_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        design_folder.setData('design_folder', item_code['item_type'])
+        project_node.appendRow(design_folder)
 
-        if self.qris_project.project_designs:
-            self.qris_project.designs_path = os.path.join(self.qris_project.project_path, "Designs.gpkg")
-            designs_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")
+        geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+        designs_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'designs')
+        if os.path.exists(geopackage_path):
+            designs_layer = QgsVectorLayer(designs_path, "designs", "ogr")
             for design_feature in designs_layer.getFeatures():
                 design_node = QStandardItem(design_feature.attribute('design_name'))
                 design_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
-                designs_parent_node.appendRow(design_node)
+                design_folder.appendRow(design_node)
 
-        designs_parent_node.sortChildren(Qt.AscendingOrder)
+        # TODO I don't think this is working on text types
+        design_folder.sortChildren(Qt.AscendingOrder)
+
+        structure_type_folder = QStandardItem("Structure Types")
+        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        structure_type_folder.setData('structure_type_folder', item_code['item_type'])
+        design_folder.appendRow(structure_type_folder)
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
         if new_item is not None:
@@ -212,6 +219,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _find_item_in_model(self, name):
         """Looks in the tree for an item name passed from the dataChange method."""
+        # TODO may want to pass this is a try except block and give an informative error message
         selected_item = self.model.findItems(name, Qt.MatchRecursive)[0]
         return selected_item
 
@@ -237,14 +245,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         if item_type == 'project_root':
             self.menu.addAction('EXPAND_ALL', lambda: self.expand_all())
-        elif item_type == "project_extent_folder":
+        elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
-        elif item_type in ['project_extent', 'Project_Extent']:
+        elif item_type in ['extent_node', 'Project_Extent']:
             self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
             self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
-        elif item_type == "designs_folder":
+        elif item_type == "design_folder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
         elif item_type in ["design"]:
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
@@ -336,6 +344,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         #     self.addProjectLayerDlg.exec_()
         # else:
         #     QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
+        pass
+
+    def add_structure_type(self):
+        """Adds a new structure type to the project"""
         pass
 
     def explore_elevations(self, selected_item):

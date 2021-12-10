@@ -17,6 +17,8 @@ from qgis.core import (
 
 from ..qris_project import QRiSProject
 
+from ..QRiS.functions import create_geopackage_table
+
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'design_dialog.ui'))
 
@@ -30,108 +32,109 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         """Used to construct the design dialog"""
         QDialog.__init__(self, None)
         self.setupUi(self)
-
         self.qris_project = qris_project
-        self.qris_project.designs_path = os.path.join(self.qris_project.project_path, "Designs.gpkg")
-        # create the db if it isn't there?
-        if not os.path.exists(self.qris_project.designs_path):
-            self.load_design_gpkg()
+        # paths to directory geopackage and tables
+        self.directory_path = self.qris_project.project_designs.directory_path(self.qris_project.project_path)
+        self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+        self.designs_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'designs')
+        self.structure_types_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'structure_types')
+        self.zoi_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'zoi')
+        self.structures_field_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'structures_field')
+        self.structures_desktop_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'structures_desktop')
+
+        # population combo boxes
+        list_of_design_sources = ['desktop', 'field']
+        list_of_design_types = ['as-built', 'design']
+        self.comboBox_design_source.addItems(list_of_design_sources)
+        self.comboBox_design_type.addItems(list_of_design_types)
+
         # add signals to buttons
-        self.lineEdit_design_name.textChanged.connect(self.text_validate)
-        self.pushButton_save_design.clicked.connect(self.save_design)
-        self.pushButton_cancel_design.clicked.connect(self.cancel_design)
+        self.buttonBox.accepted.connect(self.save_design)
+        self.buttonBox.rejected.connect(self.cancel_design)
 
-    # TODO add a function for formating design names
-    def text_validate(self):
-        text = self.lineEdit_design_name.text()
-        formatted_text = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
-        self.label_formatted_name.setText(formatted_text)
-        self.clean_name = formatted_text
-        return self.clean_name
+        # create the db if it isn't there?
+        if not os.path.exists(self.geopackage_path):
+            self.create_design_geopackage()
 
-    def load_design_gpkg(self):
-        """Creates it if it ain't."""
-        # layer for creating the geopackage
-        memory_create = QgsVectorLayer("NoGeometry", "memory_create", "memory")
-        # write to disk
-        QgsVectorFileWriter.writeAsVectorFormat(memory_create, self.qris_project.designs_path, 'utf-8', driverName='GPKG', onlySelected=False)
+    def create_design_geopackage(self):
+        """Creates design directory, geopackage, and tables"""
+        # check if the directory exists
+        if not os.path.exists(self.directory_path):
+            os.makedirs(self.directory_path)
 
-        # create designs table and write to geopackage
-        memory_designs = QgsVectorLayer("NoGeometry", "memory_designs", "memory")
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.layerName = "designs"
-        options.driverName = 'GPKG'
-        if os.path.exists(self.qris_project.designs_path):
-            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_designs, self.qris_project.designs_path, options)
-            self.designs_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")
-            design_name_field = QgsField("design_name", QVariant.String)
-            design_description_field = QgsField("design_description", QVariant.String)
-            pr = self.designs_layer.dataProvider()
-            pr.addAttributes([design_name_field, design_description_field])
-            self.designs_layer.updateFields()
+        # Create the geopackage and design table
+        # memory_designs = QgsVectorLayer("NoGeometry", "memory_designs", "memory")
+        # options = QgsVectorFileWriter.SaveVectorOptions()
+        # options.layerName = "designs"
+        # options.driverName = 'GPKG'
+        # if os.path.exists(self.geopackage_path):
+        #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+        # QgsVectorFileWriter.writeAsVectorFormat(memory_designs, self.geopackage_path, options)
+        # self.designs_layer = QgsVectorLayer(self.designs_path, "designs", "ogr")
+        # design_name = QgsField("design_name", QVariant.String)
+        # # TODO need to add an as-built date
+        # design_source = QgsField("design_source", QVariant.String)
+        # design_type = QgsField("design_type", QVariant.String)
+        # design_description = QgsField("design_description", QVariant.String)
+        # pr = self.designs_layer.dataProvider()
+        # pr.addAttributes([design_name, design_source, design_type, design_description])
+        # self.designs_layer.updateFields()
 
-        # add complexes layer
-        memory_complexes = QgsVectorLayer("Polygon", "memory_complexs", "memory")
-        # copy the memory layer to the geopackage with a parent
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.layerName = "complexes"
-        options.driverName = 'GPKG'
-        if os.path.exists(self.qris_project.designs_path):
-            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_complexes, self.qris_project.designs_path, options)
-            self.complexes_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=complexes", "complexes", "ogr")
-            design_id = QgsField("design_id", QVariant.Int)
-            complex_description_field = QgsField("complex_description", QVariant.String)
-            pr = self.complexes_layer.dataProvider()
-            pr.addAttributes([design_id, complex_description_field])
-            self.complexes_layer.updateFields()
+        create_geopackage_table('NoGeometry', 'designs', self.geopackage_path, self.designs_path,
+                                [
+                                    ('design_name', QVariant.String),
+                                    ('design_source', QVariant.String),
+                                    ('design_type', QVariant.String),
+                                    ('design_description', QVariant.String),
+                                ])
 
-        # add structures layer
-        memory_structures = QgsVectorLayer("LineString", "memory_structures", "memory")
-        # copy the memory layer to the geopackage with a parent
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.layerName = "structures"
-        options.driverName = 'GPKG'
-        if os.path.exists(self.qris_project.designs_path):
-            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_structures, self.qris_project.designs_path, options)
-            self.structures_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=structures", "structures", "ogr")
-            # the data model and add fields to the layer
-            design_id = QgsField("design_id", QVariant.Int)
-            structure_type_field = QgsField("structure_type", QVariant.String)
-            structure_description_field = QgsField("structure_description", QVariant.String)
-            structure_phase_field = QgsField("structure_phase", QVariant.String)
-            pr = self.structures_layer.dataProvider()
-            pr.addAttributes([design_id, structure_type_field, structure_description_field, structure_phase_field])
-            self.structures_layer.updateFields()
+        create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
+                                [
+                                    ('structure_type_name', QVariant.String),
+                                    ('structure_type_description', QVariant.String),
+                                    ('average_length', QVariant.Double),
+                                    ('average_width', QVariant.Double),
+                                    ('average_height', QVariant.Double)
+                                ])
+
+        create_geopackage_table('Point', 'structures_field', self.geopackage_path, self.structures_field_path,
+                                [
+                                         ('structure_type_id', QVariant.Int),
+                                         ('structure_description', QVariant.String),
+                                         ('structure_photo', QVariant.String)
+                                ])
+
+        create_geopackage_table('Linestring', 'structures_desktop', self.geopackage_path, self.structures_desktop_path,
+                                [
+                                    ('structure_type_id', QVariant.Int),
+                                    ('structure_description', QVariant.String),
+                                    ('structure_photo', QVariant.String)
+                                ])
 
     def save_design(self):
         """Creates and saves a new design record to the db from the design dialog"""
-        self.designs_layer = QgsVectorLayer(self.qris_project.designs_path + "|layername=designs", "designs", "ogr")
+        self.designs_layer = QgsVectorLayer(self.designs_path, "designs", "ogr")
         index_design_fid = self.designs_layer.fields().indexOf("fid")
         # use try because does not like a max value of 0
-        try:
+        if self.designs_layer.featureCount() != 0:
             new_design_fid = self.designs_layer.maximumValue(index_design_fid) + 1
-        except TypeError:
+        else:
             new_design_fid = 1
         # # grab the form values
-        new_design_name = self.clean_name
+        new_design_name = self.lineEdit_design_name.text()
+        new_design_source = self.comboBox_design_source.currentText()
+        new_design_type = self.comboBox_design_type.currentText()
         new_design_description = self.plainTextEdit_design_description.toPlainText()
         # create a blank QgsFeature that copies the deployemnt table
         new_design_feature = QgsFeature(self.designs_layer.fields())
         # # set the form values to the feature
         new_design_feature.setAttribute("fid", new_design_fid)
         new_design_feature.setAttribute("design_name", new_design_name)
+        new_design_feature.setAttribute("design_source", new_design_source)
+        new_design_feature.setAttribute("design_type", new_design_type)
         new_design_feature.setAttribute("design_description", new_design_description)
-        # # TODO add ability to manually enter lat long?
         pr = self.designs_layer.dataProvider()
         pr.addFeatures([new_design_feature])
-        # tell the project that there are now designs
-        self.qris_project.project_designs = True
-        # TODO call export file to write that shit to the xml
-        self.qris_project.write_project_xml()
-        # TODO pass in the name of the new node here for the add to map function
         self.dataChange.emit(self.qris_project, new_design_name)
         self.close()
 

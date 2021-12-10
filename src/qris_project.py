@@ -42,17 +42,26 @@ class ProjectVector():
 class ProjectRaster():
     pass
 
-# class Raster(Layer):
-#     """Extends layer to include additional functionality for handling detrended rasters"""
 
-#     def __init__(self, name, description, path) -> None:
-#         super().__init__(name, path, description, type='Raster')
-#         self.surfaces = {}
+class Design():
+    """Describes basic attributes of Low-Tech designs"""
 
-#     def add_surface(self, surface_name, surface_path, surface_type):
-#         self.surfaces[surface_name] = Layer(surface_name, surface_path, surface_type)
+    def __init__(self, directory="designs", geopackage="designs.gpkg") -> None:
+        self.directory = directory
+        self.geopackage = geopackage
 
-# TODO this will be renamed more explicitely to a
+    def directory_path(self, project_path):
+        return os.path.join(project_path, self.directory)
+
+    def geopackage_path(self, project_path):
+        return os.path.join(project_path, self.directory, self.geopackage)
+
+    def full_path(self, project_path, layer_name):
+        """
+        returns a complete full path to design geopackage tables
+        layer_name (int): name of the geopackage layer
+        """
+        return os.path.join(project_path, self.directory, self.geopackage + f"|layername={layer_name}")
 
 
 class Raster():
@@ -78,22 +87,23 @@ class QRiSProject():
     def __init__(self, name=None) -> None:
         self.project_name = name
         self.time_created = datetime.now(timezone.utc).astimezone().isoformat()
+        # TODO add a project description dialog
         self.description = ""
         self.filename = None
         self.project_path = None
-        self.detrended_rasters = {}
+        # self.detrended_rasters = {}
         self.project_extents = {}
-        self.project_assessments = False
-        self.project_designs = False
+        self.project_designs = Design()
 
     # def add_layer(self, layer_name, layer_path, parent=None, meta=None):
     #     relpath = os.path.relpath(layer_path, self.project_path)
     #     self.project_extents[layer_name] = Layer(layer_name, relpath, "Layer")
 
-    def add_detrended(self, detrended_name, path, parent=None, meta=None):
-        relpath = os.path.relpath(path, self.project_path)
-        self.detrended_rasters[detrended_name] = Raster(detrended_name, relpath)
+    # def add_detrended(self, detrended_name, path, parent=None, meta=None):
+    #     relpath = os.path.relpath(path, self.project_path)
+    #     self.detrended_rasters[detrended_name] = Raster(detrended_name, relpath)
 
+    # TODO change to load_project_xml
     def load_project_file(self, filename=None):
         """uses the .qris project file to reference data structures within the project"""
         self.filename = filename if filename is not None else self.filename
@@ -131,18 +141,6 @@ class QRiSProject():
         #                                                                    surface.find('SurfaceType').text)
         #         self.detrended_rasters[raster_elem.find('Name').text] = raster
 
-        # populate the project assessments dictionary
-        # TODO update this along with the new schema and loading project layers
-        # TODO someday this may do more, right now keeping it simple Weird way to assemble the path to the assessments geopackage
-        assessments_tag = root.find('Assessments')
-        # TODO change this to the stored path from the .qris file
-        if assessments_tag is not None:
-            self.project_assessments = True
-
-        designs_tag = root.find('Designs')
-        if designs_tag is not None:
-            self.project_designs = True
-
     def write_project_xml(self, filename=None):
         """writes the project xml given """
         self.filename = filename if filename is not None else self.filename
@@ -161,25 +159,25 @@ class QRiSProject():
         description = SubElement(root, "Description")
         description.text = self.description
 
-        # Add gis layers and rasters
-        detrended_rasters = SubElement(root, "DetrendedRasters")
-        for raster in self.detrended_rasters.values():
-            r = SubElement(detrended_rasters, "Raster")
-            name = SubElement(r, "Name")
-            name.text = raster.name
-            path = SubElement(r, "Path")
-            path.text = raster.path
-            # Add Surfaces if exists
-            if len(raster.surfaces) > 0:
-                surfaces = SubElement(r, "Surfaces")
-                for surface in raster.surfaces.values():
-                    s = SubElement(surfaces, "Surface")
-                    name = SubElement(s, "Name")
-                    name.text = surface.name
-                    path = SubElement(s, "Path")
-                    path.text = surface.path
-                    stype = SubElement(s, 'SurfaceType')
-                    stype.text = surface.type
+        # # Add gis layers and rasters
+        # detrended_rasters = SubElement(root, "DetrendedRasters")
+        # for raster in self.detrended_rasters.values():
+        #     r = SubElement(detrended_rasters, "Raster")
+        #     name = SubElement(r, "Name")
+        #     name.text = raster.name
+        #     path = SubElement(r, "Path")
+        #     path.text = raster.path
+        #     # Add Surfaces if exists
+        #     if len(raster.surfaces) > 0:
+        #         surfaces = SubElement(r, "Surfaces")
+        #         for surface in raster.surfaces.values():
+        #             s = SubElement(surfaces, "Surface")
+        #             name = SubElement(s, "Name")
+        #             name.text = surface.name
+        #             path = SubElement(s, "Path")
+        #             path.text = surface.path
+        #             stype = SubElement(s, 'SurfaceType')
+        #             stype.text = surface.type
 
         # PROJECT EXTENTS
         project_extents = SubElement(root, "ProjectExtents")
@@ -195,19 +193,6 @@ class QRiSProject():
             Directory.text = layer.directory
             Geopackage = SubElement(Extent, "Geopackage")
             Geopackage.text = layer.geopackage
-
-        # Write out assessments stuff to the .xml file
-        # TODO consider using a unique class to hold the assessment stuff
-        # TODO may need to consider assessment types, at this point just the assessments geopackage is it
-        if self.project_assessments:
-            assessments_elem = SubElement(root, "Assessments")
-            assessment_path_elem = SubElement(assessments_elem, "Path")
-            assessment_path_elem.text = "Assessments.gpkg"
-
-        if self.project_designs:
-            designs_elem = SubElement(root, "Designs")
-            design_path_elem = SubElement(designs_elem, "Path")
-            design_path_elem.text = "Designs.gpkg"
 
         output = prettify(root)
 

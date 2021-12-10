@@ -26,6 +26,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
 from qgis.core import QgsApplication
 
+# TODO fix this
 from .processing_provider.provider import Provider
 from .QRiS.settings import Settings, CONSTANTS
 
