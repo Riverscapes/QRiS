@@ -18,16 +18,15 @@ def create_geopackage_table(geometry_type, table_name, geopackage_path, full_pat
         field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
         """
     memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
+    fields = []
+    for field_tuple in field_tuple_list:
+        field = QgsField(field_tuple[0], field_tuple[1])
+        fields.append(field)
+    memory_layer.dataProvider().addAttributes(fields)
+    memory_layer.updateFields()
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.layerName = table_name
     options.driverName = 'GPKG'
     if os.path.exists(geopackage_path):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
     QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
-    layer = QgsVectorLayer(full_path, table_name, "ogr")
-    fields = []
-    for field_tuple in field_tuple_list:
-        field = QgsField(field_tuple[0], field_tuple[1])
-        fields.append(field)
-    layer.dataProvider().addAttributes(fields)
-    layer.updateFields()

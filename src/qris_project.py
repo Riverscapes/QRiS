@@ -59,7 +59,8 @@ class Design():
     def full_path(self, project_path, layer_name):
         """
         returns a complete full path to design geopackage tables
-        layer_name (int): name of the geopackage layer
+        layer_name (string): name of the geopackage layer
+        zoi
         """
         return os.path.join(project_path, self.directory, self.geopackage + f"|layername={layer_name}")
 

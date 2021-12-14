@@ -36,11 +36,11 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # paths to directory geopackage and tables
         self.directory_path = self.qris_project.project_designs.directory_path(self.qris_project.project_path)
         self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
-        self.designs_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'designs')
-        self.structure_types_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'structure_types')
-        self.zoi_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'zoi')
-        self.structures_field_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'structures_field')
-        self.structures_desktop_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'structures_desktop')
+        self.designs_path = self.geopackage_path + '|layername=designs'
+        self.structure_types_path = self.geopackage_path + '|layername=structure_types'
+        self.structure_zoi_path = self.geopackage_path + '|layername=structure_zoi'
+        self.structures_field_path = self.geopackage_path + '|layername=structures_field'
+        self.structures_desktop_path = self.geopackage_path + '|layername=structures_desktop'
 
         # population combo boxes
         list_of_design_sources = ['desktop', 'field']
@@ -62,26 +62,26 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         if not os.path.exists(self.directory_path):
             os.makedirs(self.directory_path)
 
-        # Create the geopackage and design table
+        # # Create the geopackage and design table
         # memory_designs = QgsVectorLayer("NoGeometry", "memory_designs", "memory")
+        # design_name = QgsField("design_name", QVariant.String)
+        # design_source = QgsField("design_source", QVariant.String)
+        # design_type = QgsField("design_type", QVariant.String)
+        # design_description = QgsField("design_description", QVariant.String)
+        # pr = memory_designs.dataProvider()
+        # pr.addAttributes([design_name, design_source, design_type, design_description])
+        # memory_designs.updateFields()
+
         # options = QgsVectorFileWriter.SaveVectorOptions()
         # options.layerName = "designs"
         # options.driverName = 'GPKG'
         # if os.path.exists(self.geopackage_path):
         #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
         # QgsVectorFileWriter.writeAsVectorFormat(memory_designs, self.geopackage_path, options)
-        # self.designs_layer = QgsVectorLayer(self.designs_path, "designs", "ogr")
-        # design_name = QgsField("design_name", QVariant.String)
-        # # TODO need to add an as-built date
-        # design_source = QgsField("design_source", QVariant.String)
-        # design_type = QgsField("design_type", QVariant.String)
-        # design_description = QgsField("design_description", QVariant.String)
-        # pr = self.designs_layer.dataProvider()
-        # pr.addAttributes([design_name, design_source, design_type, design_description])
-        # self.designs_layer.updateFields()
 
         create_geopackage_table('NoGeometry', 'designs', self.geopackage_path, self.designs_path,
                                 [
+                                    ('design_id', QVariant.Int),
                                     ('design_name', QVariant.String),
                                     ('design_source', QVariant.String),
                                     ('design_type', QVariant.String),
@@ -90,22 +90,36 @@ class DesignDlg(QDialog, DIALOG_CLASS):
 
         create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
                                 [
+                                    ('design_id', QVariant.Int),
                                     ('structure_type_name', QVariant.String),
-                                    ('structure_type_description', QVariant.String),
+                                    ('structure_mimics', QVariant.String),
+                                    ('construction_description', QVariant.String),
+                                    ('function_description', QVariant.String),
                                     ('average_length', QVariant.Double),
                                     ('average_width', QVariant.Double),
-                                    ('average_height', QVariant.Double)
+                                    ('average_height', QVariant.Double),
+                                    ('post_spacing', QVariant.Double)
+                                ])
+
+        create_geopackage_table('Polygon', 'structure_zoi', self.geopackage_path, self.structure_zoi_path,
+                                [
+                                    ('design_id', QVariant.Int),
+                                    ('zoi_name', QVariant.String),
+                                    ('zoi_type', QVariant.String),
+                                    ('zoi_description', QVariant.String),
                                 ])
 
         create_geopackage_table('Point', 'structures_field', self.geopackage_path, self.structures_field_path,
                                 [
-                                         ('structure_type_id', QVariant.Int),
-                                         ('structure_description', QVariant.String),
-                                         ('structure_photo', QVariant.String)
+                                    ('design_id', QVariant.Int),
+                                    ('structure_type_id', QVariant.Int),
+                                    ('structure_description', QVariant.String),
+                                    ('structure_photo', QVariant.String)
                                 ])
 
         create_geopackage_table('Linestring', 'structures_desktop', self.geopackage_path, self.structures_desktop_path,
                                 [
+                                    ('design_id', QVariant.Int),
                                     ('structure_type_id', QVariant.Int),
                                     ('structure_description', QVariant.String),
                                     ('structure_photo', QVariant.String)
@@ -116,7 +130,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         self.designs_layer = QgsVectorLayer(self.designs_path, "designs", "ogr")
         index_design_fid = self.designs_layer.fields().indexOf("fid")
         # use try because does not like a max value of 0
-        if self.designs_layer.featureCount() != 0:
+        if self.designs_layer.featureCount() > 0:
             new_design_fid = self.designs_layer.maximumValue(index_design_fid) + 1
         else:
             new_design_fid = 1

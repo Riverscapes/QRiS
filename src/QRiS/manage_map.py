@@ -27,7 +27,7 @@ def add_to_map(qris_project, model, selected_item):
         # TODO I don't think we will need item_layer. just item_type
         item_type = item.data(item_code['item_type'])
         # Check the item_type and launch specific add to map function
-        if item_type == 'project_extent':
+        if item_type == 'extent_node':
             add_project_extent_to_map(qris_project, item, node)
         elif item_type == 'design':
             add_design_to_map(qris_project, item, node)
@@ -80,21 +80,47 @@ def add_project_extent_to_map(qris_project, item, node):
 
 
 def add_design_to_map(qris_project, item, node):
-    # TODO be sure to add the appropriate
-    # TODO be sure that you are not adding things twice. i.e., check if each layer exists before adding.
     """adds designs to the map"""
+    # TODO check the type of project design and add the project type field vs desktop
+    # Check if it's already added
+    if any([c.name() == item.text() for c in node.children()]):
+        # if is there set it to the design node
+        design_node = next(n for n in node.children() if n.name() == item.text())
+    else:
+        # if not add the node as a group
+        design_node = node.addGroup(item.text())
+
     design_id = item.data(item_code['feature_id'])
-    structure_layer = QgsVectorLayer(qris_project.designs_path + "|layername=structures", "Structures-" + str(design_id), "ogr")
-    complex_layer = QgsVectorLayer(qris_project.designs_path + "|layername=complexes", "Complexes-" + str(design_id), "ogr")
-    structure_layer.setSubsetString("design_id = " + str(design_id))
-    complex_layer.setSubsetString("design_id = " + str(design_id))
-    structure_symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_structures.qml')
-    complex_symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_complexes.qml')
-    structure_layer.loadNamedStyle(structure_symbology_path)
-    complex_layer.loadNamedStyle(complex_symbology_path)
-    QgsExpressionContextUtils.setLayerVariable(structure_layer, 'parent_id', design_id)
-    QgsExpressionContextUtils.setLayerVariable(complex_layer, 'parent_id', design_id)
-    QgsProject.instance().addMapLayer(structure_layer, False)
-    QgsProject.instance().addMapLayer(complex_layer, False)
-    node.addLayer(structure_layer)
-    node.addLayer(complex_layer)
+    design_name = item.text()
+    geopackage_path = qris_project.project_designs.geopackage_path(qris_project.project_path)
+
+    designs_layer = QgsVectorLayer(geopackage_path + "|layername=designs", "Designs", "ogr")
+    structure_types_layer = QgsVectorLayer(geopackage_path + "|layername=structure_types", "Structure Types", "ogr")
+    zoi_layer = QgsVectorLayer(geopackage_path + "|layername=structure_zoi", "ZOI", "ogr")
+    structures_field_layer = QgsVectorLayer(geopackage_path + "|layername=structures_field", "Field Structures", "ogr")
+    structures_desktop_layer = QgsVectorLayer(geopackage_path + "|layername=structures_desktop", "Desktop Structures", "ogr")
+
+    # TODO Consider only adding the field or design table to each design
+
+    zoi_qml = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_zoi.qml')
+    structures_field_qml = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_structures_field.qml')
+    structures_desktop_qml = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_structures_desktop.qml')
+    # zoi_layer.loadNamedStyle(zoi_qml)
+    structures_field_layer.loadNamedStyle(structures_field_qml)
+    # structures_field_layer.loadNamedStyle(structures_desktop_qml)
+
+    QgsExpressionContextUtils.setLayerVariable(structures_field_layer, 'parent_id', design_id)
+    QgsExpressionContextUtils.setLayerVariable(structures_desktop_layer, 'parent_id', design_id)
+    QgsExpressionContextUtils.setLayerVariable(zoi_layer, 'parent_id', design_id)
+
+    subset_string = ("design_id = " + str(design_id))
+    zoi_layer.setSubsetString(subset_string)
+    structures_field_layer.setSubsetString(subset_string)
+    structures_desktop_layer.setSubsetString(subset_string)
+
+    QgsProject.instance().addMapLayer(structures_field_layer, False)
+    QgsProject.instance().addMapLayer(structures_desktop_layer, False)
+    QgsProject.instance().addMapLayer(zoi_layer, False)
+    design_node.addLayer(structures_field_layer)
+    design_node.addLayer(structures_desktop_layer)
+    design_node.addLayer(zoi_layer)
