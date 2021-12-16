@@ -54,7 +54,7 @@ from .ui.project_extent_dialog import ProjectExtentDlg
 from .ui.add_detrended_dialog import AddDetrendedRasterDlg
 from .ui.assessment_dialog import AssessmentDlg
 from .ui.design_dialog import DesignDlg
-
+from .ui.structure_type_dialog import StructureTypeDlg
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
@@ -192,9 +192,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         design_folder.setData('design_folder', item_code['item_type'])
         project_node.appendRow(design_folder)
 
-        geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
-        designs_path = self.qris_project.project_designs.full_path(self.qris_project.project_path, 'designs')
-        if os.path.exists(geopackage_path):
+        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+        designs_path = design_geopackage_path + '|layername=designs'
+        if os.path.exists(design_geopackage_path):
             designs_layer = QgsVectorLayer(designs_path, "designs", "ogr")
             for design_feature in designs_layer.getFeatures():
                 design_node = QStandardItem(design_feature.attribute('design_name'))
@@ -203,13 +203,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 design_folder.appendRow(design_node)
 
-        # TODO I don't think this is working on text types
-        design_folder.sortChildren(Qt.AscendingOrder)
+           # TODO I don't think this is working on text types
+            design_folder.sortChildren(Qt.AscendingOrder)
 
-        structure_type_folder = QStandardItem("Structure Types")
-        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        structure_type_folder.setData('structure_type_folder', item_code['item_type'])
-        design_folder.appendRow(structure_type_folder)
+            structure_type_folder = QStandardItem("Structure Types")
+            structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+            structure_type_folder.setData('structure_type_folder', item_code['item_type'])
+            design_folder.appendRow(structure_type_folder)
+
+            structure_type_path = design_geopackage_path + '|layername=structure_types'
+            structure_type_layer = QgsVectorLayer(structure_type_path, "structure_types", "ogr")
+            for structure_type in structure_type_layer.getFeatures():
+                structure_type_node = QStandardItem(structure_type.attribute('structure_type_name'))
+                # TODO change the icon
+                structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
+                structure_type_node.setData('structure_type', item_code['item_type'])
+                structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
+                structure_type_folder.appendRow(structure_type_node)
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
         if new_item is not None:
@@ -254,8 +264,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "design_folder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
-        elif item_type in ["design"]:
+        elif item_type == "design":
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
+        elif item_type == "structure_type_folder":
+            self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
         else:
             self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
@@ -273,6 +285,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # TODO remove this stuff about date
         self.design_dialog.dataChange.connect(self.build_tree_view)
         self.design_dialog.show()
+
+    def add_structure_type(self):
+        """Initiates adding a structure type and the structure type dialog"""
+        # TODO First check if the path to the database exists
+        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+        if os.path.exists(design_geopackage_path):
+            self.structure_type_dialog = StructureTypeDlg(self.qris_project)
+            self.structure_type_dialog.dataChange.connect(self.build_tree_view)
+            self.structure_type_dialog.show()
+        else:
+            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")
 
     def add_detrended_raster(self):
         # last_browse_path = self.settings.getValue('lastBrowsePath')
@@ -344,10 +367,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         #     self.addProjectLayerDlg.exec_()
         # else:
         #     QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
-        pass
-
-    def add_structure_type(self):
-        """Adds a new structure type to the project"""
         pass
 
     def explore_elevations(self, selected_item):

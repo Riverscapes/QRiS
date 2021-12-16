@@ -90,7 +90,6 @@ class DesignDlg(QDialog, DIALOG_CLASS):
 
         create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
                                 [
-                                    ('design_id', QVariant.Int),
                                     ('structure_type_name', QVariant.String),
                                     ('structure_mimics', QVariant.String),
                                     ('construction_description', QVariant.String),

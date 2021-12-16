@@ -91,6 +91,10 @@ class ContextMenu(QMenu):
         'ADD_DESIGN': (
             'New Low-Tech Design',
             ':/plugins/qris_toolbar/qris_design_new.png'
+        ),
+        'ADD_STRUCTURE_TYPE': (
+            'Add a new structure type',
+            ':/plugins/qris_toolbar/qris_design_new.png'
         )
     }
 

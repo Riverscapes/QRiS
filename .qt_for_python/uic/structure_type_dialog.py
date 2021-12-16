@@ -1,0 +1,97 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file '/Users/nick/Library/Application Support/QGIS/QGIS3/profiles/test/python/plugins/RIPTPlugin/src/ui/structure_type_dialog.ui'
+#
+# Created by: PyQt5 UI code generator 5.14.1
+#
+# WARNING! All changes made in this file will be lost!
+
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_design_dialog(object):
+    def setupUi(self, design_dialog):
+        design_dialog.setObjectName("design_dialog")
+        design_dialog.resize(745, 569)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("/Users/nick/Library/Application Support/QGIS/QGIS3/profiles/test/python/plugins/RIPTPlugin/src/ui/../../icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        design_dialog.setWindowIcon(icon)
+        self.formLayout = QtWidgets.QFormLayout(design_dialog)
+        self.formLayout.setObjectName("formLayout")
+        self.label = QtWidgets.QLabel(design_dialog)
+        self.label.setObjectName("label")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
+        self.lineEdit_structure_type_name = QtWidgets.QLineEdit(design_dialog)
+        self.lineEdit_structure_type_name.setObjectName("lineEdit_structure_type_name")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.lineEdit_structure_type_name)
+        self.label_2 = QtWidgets.QLabel(design_dialog)
+        self.label_2.setObjectName("label_2")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
+        self.comboBox_structure_mimics = QtWidgets.QComboBox(design_dialog)
+        self.comboBox_structure_mimics.setObjectName("comboBox_structure_mimics")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.comboBox_structure_mimics)
+        self.label_5 = QtWidgets.QLabel(design_dialog)
+        self.label_5.setObjectName("label_5")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_5)
+        self.plainTextEdit_construction_description = QtWidgets.QPlainTextEdit(design_dialog)
+        self.plainTextEdit_construction_description.setObjectName("plainTextEdit_construction_description")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.plainTextEdit_construction_description)
+        self.label_7 = QtWidgets.QLabel(design_dialog)
+        self.label_7.setObjectName("label_7")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_7)
+        self.plainTextEdit_function_description = QtWidgets.QPlainTextEdit(design_dialog)
+        self.plainTextEdit_function_description.setObjectName("plainTextEdit_function_description")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.plainTextEdit_function_description)
+        self.label_9 = QtWidgets.QLabel(design_dialog)
+        self.label_9.setObjectName("label_9")
+        self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_9)
+        self.lineEdit_post_spacing = QtWidgets.QLineEdit(design_dialog)
+        self.lineEdit_post_spacing.setObjectName("lineEdit_post_spacing")
+        self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.lineEdit_post_spacing)
+        self.label_8 = QtWidgets.QLabel(design_dialog)
+        self.label_8.setObjectName("label_8")
+        self.formLayout.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.label_8)
+        self.lineEdit_average_length = QtWidgets.QLineEdit(design_dialog)
+        self.lineEdit_average_length.setObjectName("lineEdit_average_length")
+        self.formLayout.setWidget(7, QtWidgets.QFormLayout.FieldRole, self.lineEdit_average_length)
+        self.label_4 = QtWidgets.QLabel(design_dialog)
+        self.label_4.setObjectName("label_4")
+        self.formLayout.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_4)
+        self.lineEdit_average_width = QtWidgets.QLineEdit(design_dialog)
+        self.lineEdit_average_width.setObjectName("lineEdit_average_width")
+        self.formLayout.setWidget(8, QtWidgets.QFormLayout.FieldRole, self.lineEdit_average_width)
+        self.buttonBox = QtWidgets.QDialogButtonBox(design_dialog)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.formLayout.setWidget(11, QtWidgets.QFormLayout.FieldRole, self.buttonBox)
+        self.label_6 = QtWidgets.QLabel(design_dialog)
+        self.label_6.setObjectName("label_6")
+        self.formLayout.setWidget(9, QtWidgets.QFormLayout.LabelRole, self.label_6)
+        self.lineEdit_average_height = QtWidgets.QLineEdit(design_dialog)
+        self.lineEdit_average_height.setObjectName("lineEdit_average_height")
+        self.formLayout.setWidget(9, QtWidgets.QFormLayout.FieldRole, self.lineEdit_average_height)
+        self.label_10 = QtWidgets.QLabel(design_dialog)
+        self.label_10.setObjectName("label_10")
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_10)
+        self.label_total_posts = QtWidgets.QLabel(design_dialog)
+        self.label_total_posts.setObjectName("label_total_posts")
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.label_total_posts)
+
+        self.retranslateUi(design_dialog)
+        QtCore.QMetaObject.connectSlotsByName(design_dialog)
+
+    def retranslateUi(self, design_dialog):
+        _translate = QtCore.QCoreApplication.translate
+        design_dialog.setWindowTitle(_translate("design_dialog", "Structure Type"))
+        self.label.setText(_translate("design_dialog", "Structure Type Name"))
+        self.label_2.setText(_translate("design_dialog", "Structure Mimics"))
+        self.label_5.setText(_translate("design_dialog", "Construction Description"))
+        self.label_7.setText(_translate("design_dialog", "Function Description"))
+        self.label_9.setText(_translate("design_dialog", "Posts Density (posts / m)"))
+        self.label_8.setText(_translate("design_dialog", "Average Length"))
+        self.label_4.setText(_translate("design_dialog", "Average Width"))
+        self.label_6.setText(_translate("design_dialog", "Average Height"))
+        self.label_10.setText(_translate("design_dialog", "Total Posts:"))
+        self.label_total_posts.setText(_translate("design_dialog", "0"))
