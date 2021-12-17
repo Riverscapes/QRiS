@@ -222,6 +222,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 structure_type_folder.appendRow(structure_type_node)
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
+        # Adds a test comment
         if new_item is not None and new_item != '':
             selected_item = self._find_item_in_model(new_item)
             if selected_item is not None:
