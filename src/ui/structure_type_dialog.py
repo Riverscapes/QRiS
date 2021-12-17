@@ -42,13 +42,14 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
         list_of_structure_mimics = ['Beaver Dam', 'Woody Debris', 'Other']
         self.comboBox_structure_mimics.addItems(list_of_structure_mimics)
 
-        # add signals to buttons
+        # add signals
         self.buttonBox.accepted.connect(self.save_structure_type)
         self.buttonBox.rejected.connect(self.cancel_structure_type)
+        self.lineEdit_post_spacing.textChanged.connect(self.estimate_posts)
+        self.lineEdit_average_length.textChanged.connect(self.estimate_posts)
 
-        # create the db if it isn't there?
-        if not os.path.exists(self.geopackage_path):
-            self.create_design_geopackage()
+        # run the post estimate
+        self.estimate_posts()
 
     def save_structure_type(self):
         """Creates and saves a new design record to the db from the design dialog"""
@@ -89,8 +90,12 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
         self.dataChange.emit(self.qris_project, None)
         self.close()
 
-    def post_estimate(self):
-        pass
+    def estimate_posts(self):
+        """Validates text entered into the layer name to be GIS friendly"""
+        posts = float(self.lineEdit_post_spacing.text())
+        length = float(self.lineEdit_average_length.text())
+        post_estimate = posts * length
+        self.label_total_posts.setText(str(post_estimate))
 
     def cancel_structure_type(self):
         self.close()
