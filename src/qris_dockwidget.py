@@ -203,7 +203,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 design_folder.appendRow(design_node)
 
-           # TODO I don't think this is working on text types
+            # TODO I don't think this is working on text types
             design_folder.sortChildren(Qt.AscendingOrder)
 
             structure_type_folder = QStandardItem("Structure Types")
@@ -222,7 +222,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 structure_type_folder.appendRow(structure_type_node)
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
-        if new_item is not None:
+        if new_item is not None and new_item != '':
             selected_item = self._find_item_in_model(new_item)
             if selected_item is not None:
                 add_to_map(self.qris_project, self.model, selected_item)

@@ -81,15 +81,7 @@ def add_project_extent_to_map(qris_project, item, node):
 
 def add_design_to_map(qris_project, item, node):
     """adds designs to the map"""
-    # TODO check the type of project design and add the project type field vs desktop
-    # Check if it's already added
-    if any([c.name() == item.text() for c in node.children()]):
-        # if is there set it to the design node
-        design_node = next(n for n in node.children() if n.name() == item.text())
-    else:
-        # if not add the node as a group
-        design_node = node.addGroup(item.text())
-
+    # Establish paths to layers
     design_id = item.data(item_code['feature_id'])
     design_name = item.text()
     geopackage_path = qris_project.project_designs.geopackage_path(qris_project.project_path)
@@ -99,6 +91,20 @@ def add_design_to_map(qris_project, item, node):
     zoi_layer = QgsVectorLayer(geopackage_path + "|layername=structure_zoi", "ZOI", "ogr")
     structures_field_layer = QgsVectorLayer(geopackage_path + "|layername=structures_field", "Field Structures", "ogr")
     structures_desktop_layer = QgsVectorLayer(geopackage_path + "|layername=structures_desktop", "Desktop Structures", "ogr")
+
+    # TODO check if the structure types table has been added and if not add it.
+    if not any([c.name() == 'Structure Types' for c in node.children()]):
+        QgsProject.instance().addMapLayer(structure_types_layer, False)
+        # TODO consider making the types read only
+        node.addLayer(structure_types_layer)
+        # TODO check the type of project design and add the project type field vs desktop
+        # Check if the low tech design node is already added
+    if any([c.name() == item.text() for c in node.children()]):
+        # if is there set it to the design node
+        design_node = next(n for n in node.children() if n.name() == item.text())
+    else:
+        # if not add the node as a group
+        design_node = node.addGroup(item.text())
 
     # TODO Consider only adding the field or design table to each design
 

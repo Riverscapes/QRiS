@@ -83,10 +83,10 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
         new_structure_type_feature.setAttribute("average_length", float(new_average_length))
         new_structure_type_feature.setAttribute("average_width", float(new_average_width))
         new_structure_type_feature.setAttribute("average_height", float(new_average_height))
-
         pr = self.structure_type_layer.dataProvider()
         pr.addFeatures([new_structure_type_feature])
-        self.dataChange.emit(self.qris_project, new_structure_type_name)
+
+        self.dataChange.emit(self.qris_project, None)
         self.close()
 
     def post_estimate(self):
