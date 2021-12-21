@@ -1,9 +1,13 @@
 import os
 
+from random import randrange
+
+
 from PyQt5.QtWidgets import QMessageBox
 
 from qgis.core import (
     QgsVectorLayer,
+    QgsFeatureRequest,
     QgsProject,
     QgsExpressionContextUtils)
 
@@ -83,8 +87,10 @@ def add_design_to_map(qris_project, item, node):
     """adds designs to the map"""
     # Establish paths to layers
     design_id = item.data(item_code['feature_id'])
+    subset_string = ("design_id = " + str(design_id))
     design_name = item.text()
     geopackage_path = qris_project.project_designs.geopackage_path(qris_project.project_path)
+    symbology_path = os.path.dirname(os.path.dirname(__file__))
 
     designs_layer = QgsVectorLayer(geopackage_path + "|layername=designs", "Designs", "ogr")
     structure_types_layer = QgsVectorLayer(geopackage_path + "|layername=structure_types", "Structure Types", "ogr")
@@ -92,13 +98,26 @@ def add_design_to_map(qris_project, item, node):
     structures_field_layer = QgsVectorLayer(geopackage_path + "|layername=structures_field", "Field Structures", "ogr")
     structures_desktop_layer = QgsVectorLayer(geopackage_path + "|layername=structures_desktop", "Desktop Structures", "ogr")
 
-    # TODO check if the structure types table has been added and if not add it.
+    # Get the design source as field or desktop from the feature itself
+    design_iterator = designs_layer.getFeatures(QgsFeatureRequest().setFilterFid(design_id))
+    design_feature = next(design_iterator)
+    design_source = design_feature['design_source']
+
+    # Check if the designs table has been added and if not add it.
+    if not any([c.name() == 'Designs' for c in node.children()]):
+        QgsProject.instance().addMapLayer(designs_layer, False)
+        # TODO consider making the types read only
+        node.addLayer(designs_layer)
+        # Consider making this layer read only
+
+    # Check if the STRUCTURE TYPES table has been added and if not add it.
     if not any([c.name() == 'Structure Types' for c in node.children()]):
         QgsProject.instance().addMapLayer(structure_types_layer, False)
         # TODO consider making the types read only
         node.addLayer(structure_types_layer)
-        # TODO check the type of project design and add the project type field vs desktop
-        # Check if the low tech design node is already added
+        # Consider making this layer read only
+
+    # Check if the low tech design node is already added
     if any([c.name() == item.text() for c in node.children()]):
         # if is there set it to the design node
         design_node = next(n for n in node.children() if n.name() == item.text())
@@ -106,27 +125,32 @@ def add_design_to_map(qris_project, item, node):
         # if not add the node as a group
         design_node = node.addGroup(item.text())
 
-    # TODO Consider only adding the field or design table to each design
+    # TODO All layers consider adding symbology that randomizes some aspect of colors for differentiation
+    # TODO All layers consider adding a design identifier such as the fid to the filtered layer name
+    if design_source == 'field':
+        # Add field structures
+        if not any([c.name() == 'Field Structures' for c in design_node.children()]):
+            structures_field_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_field.qml')
+            structures_field_layer.loadNamedStyle(structures_field_qml)
+            QgsExpressionContextUtils.setLayerVariable(structures_field_layer, 'parent_id', design_id)
+            structures_desktop_layer.setSubsetString(subset_string)
+            QgsProject.instance().addMapLayer(structures_field_layer, False)
+            design_node.addLayer(structures_field_layer)
+    else:
+        # Add desktop structures
+        if not any([c.name() == 'Desktop Structures' for c in design_node.children()]):
+            structures_desktop_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_desktop.qml')
+            structures_desktop_layer.loadNamedStyle(structures_desktop_qml)
+            QgsExpressionContextUtils.setLayerVariable(structures_desktop_layer, 'parent_id', design_id)
+            structures_field_layer.setSubsetString(subset_string)
+            QgsProject.instance().addMapLayer(structures_desktop_layer, False)
+            design_node.addLayer(structures_desktop_layer)
 
-    zoi_qml = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_zoi.qml')
-    structures_field_qml = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_structures_field.qml')
-    structures_desktop_qml = os.path.join(os.path.dirname(__file__), 'symbology', 'designs_structures_desktop.qml')
-    # zoi_layer.loadNamedStyle(zoi_qml)
-    structures_field_layer.loadNamedStyle(structures_field_qml)
-    # structures_field_layer.loadNamedStyle(structures_desktop_qml)
-
-    QgsExpressionContextUtils.setLayerVariable(structures_field_layer, 'parent_id', design_id)
-    QgsExpressionContextUtils.setLayerVariable(structures_desktop_layer, 'parent_id', design_id)
-    QgsExpressionContextUtils.setLayerVariable(zoi_layer, 'parent_id', design_id)
-
-    subset_string = ("design_id = " + str(design_id))
-    zoi_layer.setSubsetString(subset_string)
-    structures_field_layer.setSubsetString(subset_string)
-    structures_desktop_layer.setSubsetString(subset_string)
-
-    QgsProject.instance().addMapLayer(structures_field_layer, False)
-    QgsProject.instance().addMapLayer(structures_desktop_layer, False)
-    QgsProject.instance().addMapLayer(zoi_layer, False)
-    design_node.addLayer(structures_field_layer)
-    design_node.addLayer(structures_desktop_layer)
-    design_node.addLayer(zoi_layer)
+    # Add zoi
+    if not any([c.name() == 'ZOI' for c in design_node.children()]):
+        zoi_qml = os.path.join(symbology_path, 'symbology', 'designs_zoi.qml')
+        zoi_layer.loadNamedStyle(zoi_qml)
+        QgsExpressionContextUtils.setLayerVariable(zoi_layer, 'parent_id', design_id)
+        zoi_layer.setSubsetString(subset_string)
+        QgsProject.instance().addMapLayer(zoi_layer, False)
+        design_node.addLayer(zoi_layer)
