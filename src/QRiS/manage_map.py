@@ -16,6 +16,9 @@ from qgis.PyQt.QtCore import Qt
 
 from ..QRiS.qt_user_role import item_code
 
+# path to symbology directory
+symbology_path = os.path.dirname(os.path.dirname(__file__))
+
 
 def add_to_map(qris_project, model, selected_item):
     """
@@ -33,6 +36,8 @@ def add_to_map(qris_project, model, selected_item):
         # Check the item_type and launch specific add to map function
         if item_type == 'extent_node':
             add_project_extent_to_map(qris_project, item, node)
+        if item_type == 'layer_node':
+            add_layer_to_map(qris_project, item, node)
         elif item_type == 'design':
             add_design_to_map(qris_project, item, node)
         # elif item_type == 'dam_assessment':
@@ -67,20 +72,10 @@ def add_project_extent_to_map(qris_project, item, node):
         full_path = item.data(item_code['INSTANCE']).full_path(qris_project.project_path)
         layer = QgsVectorLayer(full_path, item.text(), 'ogr')
         QgsProject.instance().addMapLayer(layer, False)
-        # TODO add symbology
+        extent_qml = os.path.join(symbology_path, 'symbology', 'project_extent.qml')
+        layer.loadNamedStyle(extent_qml)
+        # TODO randomize the symbology outline color on add
         node.addLayer(layer)
-
-
-# def add_assessment_to_map(item, node):
-#     """adds assessments to the map"""
-#     assessment_id = item.data(item_code['feature_id'])
-#     layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=dams", "Dams-" + item.text(), "ogr")
-#     layer.setSubsetString("assessment_id = " + str(assessment_id))
-#     QgsExpressionContextUtils.setLayerVariable(layer, 'parent_id', assessment_id)
-#     symbology_path = os.path.join(os.path.dirname(__file__), 'symbology', 'assessments_dams.qml')
-#     layer.loadNamedStyle(symbology_path)
-#     QgsProject.instance().addMapLayer(layer, False)
-#     node.addLayer(layer)
 
 
 def add_design_to_map(qris_project, item, node):
@@ -90,7 +85,6 @@ def add_design_to_map(qris_project, item, node):
     subset_string = ("design_id = " + str(design_id))
     design_name = item.text()
     geopackage_path = qris_project.project_designs.geopackage_path(qris_project.project_path)
-    symbology_path = os.path.dirname(os.path.dirname(__file__))
 
     designs_layer = QgsVectorLayer(geopackage_path + "|layername=designs", "Designs", "ogr")
     structure_types_layer = QgsVectorLayer(geopackage_path + "|layername=structure_types", "Structure Types", "ogr")
@@ -154,3 +148,15 @@ def add_design_to_map(qris_project, item, node):
         zoi_layer.setSubsetString(subset_string)
         QgsProject.instance().addMapLayer(zoi_layer, False)
         design_node.addLayer(zoi_layer)
+
+
+def add_layer_to_map(qris_project, item, node):
+    """adds a clipped project vector layer to the map"""
+    # check if it's already a child of the parent node and add it if not
+    if not any([c.name() == item.text() for c in node.children()]):
+        # if not just create the path and then add it
+        full_path = item.data(item_code['INSTANCE']).full_path(qris_project.project_path)
+        layer = QgsVectorLayer(full_path, item.text(), 'ogr')
+        QgsProject.instance().addMapLayer(layer, False)
+        # TODO add symbology probably based on geometry type
+        node.addLayer(layer)

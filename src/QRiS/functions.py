@@ -30,3 +30,9 @@ def create_geopackage_table(geometry_type, table_name, geopackage_path, full_pat
     if os.path.exists(geopackage_path):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
     QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
+
+
+def format_layer_name(input_text):
+    """Takes raw text from an input and field and returns a GIS friendly text string suitable for naming layers"""
+    valid_text = ''.join(e for e in input_text.replace(" ", "_") if e.isalnum() or e == "_")
+    return valid_text

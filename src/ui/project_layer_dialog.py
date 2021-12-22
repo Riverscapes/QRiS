@@ -1,4 +1,5 @@
 import os
+from PyQt5.QtWidgets import QMessageBox
 
 from osgeo import gdal
 
@@ -10,14 +11,16 @@ from qgis.core import (
     QgsVectorLayer,
     QgsVectorFileWriter)
 
-from ..qris_project import QRiSProject, ProjectExtent
+from ..qris_project import QRiSProject, ProjectVectorLayer, ProjectRasterLayer
+
 from ..QRiS.functions import format_layer_name
 
+
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'project_extent_dialog.ui'))
+    os.path.dirname(__file__), 'project_layer_dialog.ui'))
 
 
-class ProjectExtentDlg(QDialog, DIALOG_CLASS):
+class ProjectLayerDlg(QDialog, DIALOG_CLASS):
 
     closingPlugin = pyqtSignal()
     dataChange = pyqtSignal(QRiSProject, str)
@@ -31,20 +34,19 @@ class ProjectExtentDlg(QDialog, DIALOG_CLASS):
         self.qris_project = qris_project
 
         if self.layer_uri is not None:
-            self.lineEdit_import_layer_path.setText(self.layer_uri.uri)
+            self.lineEdit_import_layer.setText(self.layer_uri.uri)
             self.lineEdit_display_name.setText(self.layer_uri.name)
         else:
             self.lineEdit_feature_name.setText("Create New Layer")
 
-        self.set_valid_layername()
+        self.set_valid_layer_name()
 
-        # TODO consider forcing a extent suffix or prefix
-        self.lineEdit_display_name.textChanged.connect(self.set_valid_layername)
+        self.lineEdit_display_name.textChanged.connect(self.set_valid_layer_name)
         self.buttonBox.accepted.connect(self.save_layer)
 
     # TODO Probably move this somewhere and use it all over the place in layer naming
-    def set_valid_layername(self):
-        """Validates text entered into the layer name to be GIS friendly"""
+    def set_valid_layer_name(self):
+        """Sets GIS friendly layername"""
         text = self.lineEdit_display_name.text()
         self.validated_text = format_layer_name(text)
         # TODO Likely remove this and don't show the layer path
@@ -54,37 +56,39 @@ class ProjectExtentDlg(QDialog, DIALOG_CLASS):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
     def save_layer(self):
-        # TODO move these up to the init method
         # Get form values
         new_display_name = self.lineEdit_display_name.text()
         new_feature_name = self.lineEdit_feature_name.text()
         new_description = self.plainTextEdit_layer_description.toPlainText()
 
         # Create an instance of the ProjectExtent class
-        new_extent_instance = ProjectExtent(new_display_name, new_feature_name, new_description)
+        new_vector_instance = ProjectVectorLayer(new_display_name, new_feature_name, new_description)
 
         # Create paths
-        extent_directory_path = new_extent_instance.directory_path(self.qris_project.project_path)
-        extent_geopackage_path = new_extent_instance.geopackage_path(self.qris_project.project_path)
+        vector_directory_path = new_vector_instance.directory_path(self.qris_project.project_path)
+        vector_geopackage_path = new_vector_instance.geopackage_path(self.qris_project.project_path)
+        # TODO create rastor paths
 
         # import or create the layer
         if self.layer_uri is not None:
-            new_extent_layer = QgsVectorLayer(self.layer_uri.uri)
+            new_vector_layer = QgsVectorLayer(self.layer_uri.uri)
         else:
-            new_extent_layer = QgsVectorLayer("Polygon", new_feature_name, "memory")
+            # TODO hmmmm...this shouldn't be possible here. consider removing later
+            QMessageBox.information(None, "No Layer to Import", "Please select a valid layer to import")
+            return
 
-        # Create the geopackage and set write options
-        if not os.path.exists(extent_directory_path):
-            os.makedirs(extent_directory_path)
+            # Create the geopackage and set write options
+        if not os.path.exists(vector_directory_path):
+            os.makedirs(vector_directory_path)
         options = QgsVectorFileWriter.SaveVectorOptions()
         options.layerName = new_feature_name
         options.driverName = 'GPKG'
-        if os.path.exists(extent_geopackage_path):
+        if os.path.exists(vector_geopackage_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        QgsVectorFileWriter.writeAsVectorFormat(new_extent_layer, extent_geopackage_path, options)
+        QgsVectorFileWriter.writeAsVectorFormat(new_vector_layer, vector_geopackage_path, options)
 
-        # Add the new feature to the project
-        self.qris_project.project_extents[new_feature_name] = new_extent_instance
-        # TODO double check on whether you need to call that here? or if it gets tripped somewhere else?
+        # Add the new feature to the project vector dictionary
+        self.qris_project.project_vector_layers[new_feature_name] = new_vector_instance
+        # TODO double check on whether you need to call the write_project_xml here? or if it gets tripped somewhere else?
         self.qris_project.write_project_xml()
         self.dataChange.emit(self.qris_project, new_display_name)

@@ -51,6 +51,7 @@ from .QRiS.manage_map import add_to_map
 
 from .ui.elevation_dockwidget import ElevationDockWidget
 from .ui.project_extent_dialog import ProjectExtentDlg
+from .ui.project_layer_dialog import ProjectLayerDlg
 from .ui.add_detrended_dialog import AddDetrendedRasterDlg
 from .ui.assessment_dialog import AssessmentDlg
 from .ui.design_dialog import DesignDlg
@@ -115,12 +116,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             extent_node.setData(extent, item_code['INSTANCE'])
             extent_folder.appendRow(extent_node)
 
-        # TODO these will get changed to the clippy layers
         # Add project layers node
-        # project_layers_node = QStandardItem("Project Layers")
-        # project_layers_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-        # project_layers_node.setData('project_layers_folder', item_code['item_type'])
-        # project_node.appendRow(project_layers_node)
+        layers_folder = QStandardItem("Project Layers")
+        layers_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        layers_folder.setData('layers_folder', item_code['item_type'])
+        project_node.appendRow(layers_folder)
+
+        # TODO extend this for geometry types and raster layers
+        for layer in self.qris_project.project_vector_layers.values():
+            layer_node = QStandardItem(layer.display_name)
+            layer_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
+            layer_node.setData('layer_node', item_code['item_type'])
+            layer_node.setData(layer, item_code['INSTANCE'])
+            layers_folder.appendRow(layer_node)
 
         # # Add riverscape surfaces node
         # # TODO go through and add layers to the tree
@@ -259,6 +267,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
+        elif item_type == "layers_folder":
+            self.menu.addAction('IMPORT_PROJECT_LAYER', lambda: self.import_project_layer())
+        elif item_type == "layer_node":
+            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type in ['extent_node', 'Project_Extent']:
             self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
             self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
@@ -308,22 +320,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.addDetrendedDlg.exec()
 
     def import_project_extent_layer(self):
-        """launches the dialog that supports import of project layers"""
+        """launches the dialog that supports import of a project extent layer polygon"""
         select_layer = QgsDataSourceSelectDialog()
         select_layer.exec()
         uri = select_layer.uri()
         if uri is not None and uri.isValid() and uri.wkbType == 3:
-            self.addProjectLayerDlg = ProjectExtentDlg(uri, self.qris_project)
-            self.addProjectLayerDlg.dataChange.connect(self.build_tree_view)
-            self.addProjectLayerDlg.exec_()
+            self.project_extent_dialog = ProjectExtentDlg(uri, self.qris_project)
+            self.project_extent_dialog.dataChange.connect(self.build_tree_view)
+            self.project_extent_dialog.exec_()
         else:
             QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon layer")
 
     def create_blank_project_extent(self):
         """Adds a blank project extent that will be edited by the user"""
-        self.addProjectLayerDlg = ProjectExtentDlg(None, self.qris_project)
-        self.addProjectLayerDlg.dataChange.connect(self.build_tree_view)
-        self.addProjectLayerDlg.exec_()
+        self.project_extent_dialog = ProjectExtentDlg(None, self.qris_project)
+        self.project_extent_dialog.dataChange.connect(self.build_tree_view)
+        self.project_extent_dialog.exec_()
 
     def update_project_extent(self):
         """Renames the project extent layer"""
@@ -358,17 +370,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             QMessageBox.information(self, "Delete extent", "No layers were deleted")
 
     def import_project_layer(self):
-        """launches the dialog that supports import of project layers"""
-        # select_layer = QgsDataSourceSelectDialog()
-        # select_layer.exec()
-        # uri = select_layer.uri()
-        # if uri is not None and uri.isValid() and uri.wkbType == 3:
-        #     self.addProjectLayerDlg = ProjectExtentDlg(uri, self.qris_project)
-        #     self.addProjectLayerDlg.dataChange.connect(self.build_tree_view)
-        #     self.addProjectLayerDlg.exec_()
-        # else:
-        #     QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon spatial data layer")
-        pass
+        """launches a dialog that supports import of project layers that can be clipped to a project extent"""
+        select_layer = QgsDataSourceSelectDialog()
+        select_layer.exec()
+        uri = select_layer.uri()
+        if uri is not None and uri.isValid():  # and uri.wkbType == 3:
+            self.project_layer_dialog = ProjectLayerDlg(uri, self.qris_project)
+            self.project_layer_dialog.dataChange.connect(self.build_tree_view)
+            self.project_layer_dialog.exec_()
+        else:
+            QMessageBox.critical(self, "Invalid Layer", "Please select a valid gis layer")
 
     def explore_elevations(self, selected_item):
         raster = selected_item.data(item_code['INSTANCE'])

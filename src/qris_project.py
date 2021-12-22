@@ -14,11 +14,11 @@ class ProjectExtent():
     display_name (str): layer name used to display the layer in QGIS.
     table_name (str): GIS friendly name of the feature or table which will never change.
     description (str): Any comments or notes giving context to the layer.
-    directory (str): Directory in which the input layer is stored
+    directory (str): Directory in which the layer is stored
     geopackage (str): Name of the geopackage storing the layer
     """
 
-    def __init__(self, display_name, feature_name, description, directory="projec_extents", geopackage="project_extents.gpkg") -> None:
+    def __init__(self, display_name, feature_name, description, directory="project_extents", geopackage="project_extents.gpkg") -> None:
         self.display_name = display_name
         self.feature_name = feature_name
         self.description = description
@@ -35,11 +35,35 @@ class ProjectExtent():
         return os.path.join(project_path, self.directory, self.geopackage + f"|layername={self.feature_name}")
 
 
-class ProjectVector():
-    pass
+class ProjectVectorLayer():
+    """
+    Constructs and stores project layer attributes. Used to populate the tree and write out to the project xml file. Project layers are imported and clipped to ProjectExtent layers.
+
+    display_name (str): layer name used to display the layer in QGIS.
+    table_name (str): GIS friendly name of the feature or table which will never change.
+    description (str): Any comments or notes giving context to the layer.
+    directory (str): Directory in which the layer is stored
+    geopackage (str): Name of the geopackage storing the layer
+    """
+
+    def __init__(self, display_name, feature_name, description, directory="project_layers", geopackage="project_layers.gpkg") -> None:
+        self.display_name = display_name
+        self.feature_name = feature_name
+        self.description = description
+        self.directory = directory
+        self.geopackage = geopackage
+
+    def directory_path(self, project_path):
+        return os.path.join(project_path, self.directory)
+
+    def geopackage_path(self, project_path):
+        return os.path.join(project_path, self.directory, self.geopackage)
+
+    def full_path(self, project_path):
+        return os.path.join(project_path, self.directory, self.geopackage + f"|layername={self.feature_name}")
 
 
-class ProjectRaster():
+class ProjectRasterLayer():
     pass
 
 
@@ -94,6 +118,8 @@ class QRiSProject():
         self.project_path = None
         # self.detrended_rasters = {}
         self.project_extents = {}
+        self.project_vector_layers = {}
+        self.project_rastor_layers = {}
         self.project_designs = Design()
 
     # def add_layer(self, layer_name, layer_path, parent=None, meta=None):
@@ -119,14 +145,34 @@ class QRiSProject():
         self.description = [elem.text for elem in root if elem.tag == 'Description'][0]
 
         # populate project layers dictionary
-        layers = root.find('ProjectExtents')
-        if layers is not None:
-            for layer_elem in layers.iter('Extent'):
+        extent_layers = root.find('ProjectExtents')
+        if extent_layers is not None:
+            for layer_elem in extent_layers.iter('Extent'):
                 self.project_extents[layer_elem.find('FeatureName').text] = ProjectExtent(layer_elem.find('DisplayName').text,
                                                                                           layer_elem.find('FeatureName').text,
                                                                                           layer_elem.find('Description').text,
                                                                                           layer_elem.find('Directory').text,
                                                                                           layer_elem.find('Geopackage').text)
+
+        # populate project vector layers dictionary
+        vector_layers = root.find('ProjectVectorLayers')
+        if vector_layers is not None:
+            for layer_elem in vector_layers.iter('ProjectVector'):
+                self.project_vector_layers[layer_elem.find('FeatureName').text] = ProjectVectorLayer(layer_elem.find('DisplayName').text,
+                                                                                                     layer_elem.find('FeatureName').text,
+                                                                                                     layer_elem.find('Description').text,
+                                                                                                     layer_elem.find('Directory').text,
+                                                                                                     layer_elem.find('Geopackage').text)
+
+        # populate project rastor layers dictionary
+        # rastor_layers = root.find('ProjectRasterLayers')
+        # if rastor_layers is not None:
+        #     for layer_elem in rastor_layers.iter('RastorLayer'):
+        #         self.project_vector_layers[layer_elem.find('FeatureName').text] = ProjectVectorLayer(layer_elem.find('DisplayName').text,
+        #                                                                                              layer_elem.find('FeatureName').text,
+        #                                                                                              layer_elem.find('Description').text,
+        #                                                                                              layer_elem.find('Directory').text,
+        #                                                                                              layer_elem.find('Geopackage').text)
 
         # populate detrended rasters dictionary
         # detrended = root.find('DetrendedRasters')
@@ -195,6 +241,22 @@ class QRiSProject():
             Geopackage = SubElement(Extent, "Geopackage")
             Geopackage.text = layer.geopackage
 
+        # PROJECT VECTOR Layers
+        project_vectors = SubElement(root, "ProjectVectorLayers")
+        for layer in self.project_vector_layers.values():
+            Vector = SubElement(project_vectors, "ProjectVector")
+            FeatureName = SubElement(Vector, "FeatureName")
+            FeatureName.text = layer.feature_name
+            DisplayName = SubElement(Vector, "DisplayName")
+            DisplayName.text = layer.display_name
+            Description = SubElement(Vector, "Description")
+            Description.text = layer.description
+            Directory = SubElement(Vector, "Directory")
+            Directory.text = layer.directory
+            Geopackage = SubElement(Vector, "Geopackage")
+            Geopackage.text = layer.geopackage
+
+        # clean it up
         output = prettify(root)
 
         with open(self.filename, 'w') as outfile:
