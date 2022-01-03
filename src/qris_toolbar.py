@@ -175,6 +175,7 @@ class QRiSToolbar:
 
         return action
 
+    # TODO Remove this I don't think it is needed
     def initProcessing(self):
         self.provider = Provider()
         QgsApplication.processingRegistry().addProvider(self.provider)
@@ -350,6 +351,3 @@ class QRiSToolbar:
                     pass
             else:
                 self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
-
-    def addLayer(self, layer):
-        pass
