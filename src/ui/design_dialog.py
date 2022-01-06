@@ -81,7 +81,6 @@ class DesignDlg(QDialog, DIALOG_CLASS):
 
         create_geopackage_table('NoGeometry', 'designs', self.geopackage_path, self.designs_path,
                                 [
-                                    ('design_id', QVariant.Int),
                                     ('design_name', QVariant.String),
                                     ('design_source', QVariant.String),
                                     ('design_type', QVariant.String),
@@ -113,7 +112,6 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('design_id', QVariant.Int),
                                     ('structure_type_id', QVariant.Int),
                                     ('structure_description', QVariant.String),
-                                    ('structure_photo', QVariant.String)
                                 ])
 
         create_geopackage_table('Linestring', 'structures_desktop', self.geopackage_path, self.structures_desktop_path,
@@ -121,7 +119,6 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('design_id', QVariant.Int),
                                     ('structure_type_id', QVariant.Int),
                                     ('structure_description', QVariant.String),
-                                    ('structure_photo', QVariant.String)
                                 ])
 
     def save_design(self):

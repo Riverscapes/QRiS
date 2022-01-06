@@ -193,7 +193,7 @@ class QRiSToolbar:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/new_folder.png'), self.tr(u'new QRiS Project'), self.iface.mainWindow())
+        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/new_folder.png'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
         self.newProjectAction.triggered.connect(self.open_new_project_dialog)
         self.toolbar.addAction(self.newProjectAction)
 

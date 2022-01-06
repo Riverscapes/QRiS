@@ -214,20 +214,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             # TODO I don't think this is working on text types
             design_folder.sortChildren(Qt.AscendingOrder)
 
-            structure_type_folder = QStandardItem("Structure Types")
-            structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
-            structure_type_folder.setData('structure_type_folder', item_code['item_type'])
-            design_folder.appendRow(structure_type_folder)
+        structure_type_folder = QStandardItem("Structure Types")
+        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        structure_type_folder.setData('structure_type_folder', item_code['item_type'])
+        design_folder.appendRow(structure_type_folder)
 
-            structure_type_path = design_geopackage_path + '|layername=structure_types'
-            structure_type_layer = QgsVectorLayer(structure_type_path, "structure_types", "ogr")
-            for structure_type in structure_type_layer.getFeatures():
-                structure_type_node = QStandardItem(structure_type.attribute('structure_type_name'))
-                # TODO change the icon
-                structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
-                structure_type_node.setData('structure_type', item_code['item_type'])
-                structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
-                structure_type_folder.appendRow(structure_type_node)
+        structure_type_path = design_geopackage_path + '|layername=structure_types'
+        structure_type_layer = QgsVectorLayer(structure_type_path, "structure_types", "ogr")
+        for structure_type in structure_type_layer.getFeatures():
+            structure_type_node = QStandardItem(structure_type.attribute('structure_type_name'))
+            # TODO change the icon
+            structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
+            structure_type_node.setData('structure_type', item_code['item_type'])
+            structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
+            structure_type_folder.appendRow(structure_type_node)
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
         # Adds a test comment

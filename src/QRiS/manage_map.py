@@ -1,6 +1,6 @@
 import os
 
-from random import randrange
+from random import randint
 
 
 from PyQt5.QtWidgets import QMessageBox
@@ -11,7 +11,7 @@ from qgis.core import (
     QgsProject,
     QgsExpressionContextUtils)
 
-from qgis.PyQt.QtGui import QStandardItem
+from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt
 
 from ..QRiS.qt_user_role import item_code
@@ -74,7 +74,10 @@ def add_project_extent_to_map(qris_project, item, node):
         QgsProject.instance().addMapLayer(layer, False)
         extent_qml = os.path.join(symbology_path, 'symbology', 'project_extent.qml')
         layer.loadNamedStyle(extent_qml)
-        # TODO randomize the symbology outline color on add
+        # Randomize the symbology outline color on add
+        random_color = QColor(randint(1, 255), randint(1, 255), randint(1, 255))
+        layer.renderer().symbol().symbolLayer(0).setStrokeColor(random_color)
+        # Add the layer
         node.addLayer(layer)
 
 
@@ -127,7 +130,7 @@ def add_design_to_map(qris_project, item, node):
             structures_field_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_field.qml')
             structures_field_layer.loadNamedStyle(structures_field_qml)
             QgsExpressionContextUtils.setLayerVariable(structures_field_layer, 'parent_id', design_id)
-            structures_desktop_layer.setSubsetString(subset_string)
+            structures_field_layer.setSubsetString(subset_string)
             QgsProject.instance().addMapLayer(structures_field_layer, False)
             design_node.addLayer(structures_field_layer)
     else:
@@ -136,7 +139,7 @@ def add_design_to_map(qris_project, item, node):
             structures_desktop_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_desktop.qml')
             structures_desktop_layer.loadNamedStyle(structures_desktop_qml)
             QgsExpressionContextUtils.setLayerVariable(structures_desktop_layer, 'parent_id', design_id)
-            structures_field_layer.setSubsetString(subset_string)
+            structures_desktop_layer.setSubsetString(subset_string)
             QgsProject.instance().addMapLayer(structures_desktop_layer, False)
             design_node.addLayer(structures_desktop_layer)
 

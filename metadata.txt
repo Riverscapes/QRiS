@@ -3,10 +3,10 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=QGIS Riverscapes Studio (QRiS) DEV_COPY
+name=Riverscapes Studio (QRiS)
 qgisMinimumVersion=3.0
 description=QGIS Riverscapes Studio (QRiS)
-version=0.0.0dev
+version=0.0.1
 author=North Arrow Research
 email=info@northarrowresearch.com
 
