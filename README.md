@@ -1,4 +1,4 @@
-# Riverscapes Integrated Planning Tool (RIPT)
+# QGIS Riverscapes Studio (QRiS)
 
 ***NB: Be sure to develop in VSCode by opening the relevant Workspace***
 
@@ -17,6 +17,29 @@ In order to develop this module live in QGIS you need to clone this repo to the 
 
 * On windows it's something like: `C:\Users\USERNAME\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins`
 * On OSX it's something like: `/Users/USERNAME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins`
+
+## On OSX
+
+before you start you need to set an environment variable to tell VSCode where QGIS's version of python is. This will depend on which shell you're using (The default is bash but we tend to use zsh)
+
+1. You need to add the following line at the bottom of your `~/.bashrc` or `~/.zshrc` file:
+
+```bash
+export QGIS_PATH=/Applications/QGIS.app
+```
+
+***NOTE: This path must not end in a slash and must match what's on your system. If you're using the LTR version of QGIS this path might be something like `/Applications/QGIS-LTR.app`***
+
+After this is done you need to restart VSCode completely (not just relloading the window).
+
+2. You need this user setting to be on (it's in the user settings preferences)
+
+```
+"terminal.integrated.allowWorkspaceConfiguration": true
+```
+
+3. Open up the `Workspaces/OSXDev.code-workspace` using VSCode. This file contains all the right environment variables necessary to find and work with QGIS python libraries.
+
 
 ## Developing on Windows
 

@@ -1,0 +1,25 @@
+{
+    "defaultSettings": {
+        "initialized": false,
+        "loadDefaultView": true,
+        "basemapsInclude": true,
+        "autoUpdate": true,
+        "lastDigestSync": null,
+        "lastResourceSync": null,
+        "lastBrowsePath": null,
+        "pluginVersion": null,
+        "basemapRegion": "United States"
+    },
+    "constants": {
+        "logCategory": "QRiS",
+        "settingsCategory": "QRiS",
+        "businessLogicDir": "blXML",
+        "symbologyDir": "symbology",
+        "digestSyncFreqHours": 24,
+        "warehouseUrl": "https://data.riverscapes.xyz/#",
+        "webUrl": "https://rave.riverscapes.xyz",
+        "issueUrl": "https://github.com/Riverscapes/QRiS/issues",
+        "changelogUrl": "https://github.com/Riverscapes/QRiS/releases",
+        "resourcesUrl": "https://xml.riverscapes.xyz/"
+    }
+}

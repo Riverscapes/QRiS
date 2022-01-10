@@ -3,17 +3,17 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Riverscapes Integrated Planning Tool (RIPT) DEV_COPY
+name=Riverscapes Studio (QRiS)
 qgisMinimumVersion=3.0
-description=Riverscapes Integrated Planning Tool (RIPT)
-version=0.0.0dev
+description=QGIS Riverscapes Studio (QRiS)
+version=0.0.1
 author=North Arrow Research
 email=info@northarrowresearch.com
 
 about=Provide a brief description of the plugin and its purpose.
 
-tracker=https://github.com/Riverscapes/RIPTPlugin/issues
-repository=https://github.com/Riverscapes/RIPTPlugin
+tracker=https://github.com/Riverscapes/QRiS/issues
+repository=https://github.com/Riverscapes/QRiS
 # End of mandatory metadata
 
 # Recommended items:
@@ -25,7 +25,7 @@ hasProcessingProvider=yes
 # Tags are comma separated with spaces allowed
 tags=python,riverscapes,planning
 
-homepage=https://github.com/Riverscapes/RIPTPlugin
+homepage=https://github.com/Riverscapes/QRiS
 category=Plugins
 icon=icon.png
 

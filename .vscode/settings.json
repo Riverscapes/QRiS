@@ -11,7 +11,9 @@
         "--ignore=E501"
     ],
     "python.formatting.autopep8Args": [
-        "--ignore=E501"
+        "--ignore=E501",
+        "--ignore=E402",
+        "--max-line-length=300"
     ],
     "python.terminal.activateEnvironment": true,
     "python.autoComplete.showAdvancedMembers": false,
@@ -33,5 +35,8 @@
         "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
         // Relative paths have a problem in pylint. We'll try not to use them but.....
         "--disable=E0402"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceRoot}"
     ],
 }

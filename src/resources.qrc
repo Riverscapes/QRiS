@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/qrave_toolbar">
+    <qresource prefix="/plugins/qris_toolbar">
 
         <file alias="BrowseFolder.png">../Images/BrowseFolder.png</file>
         <file alias="Help.png">../Images/Help.png</file>
@@ -9,7 +9,9 @@
         <file alias="RaveAddIn.png">../Images/RaveAddIn.png</file>
         <file alias="RaveAddIn_16px.png">../Images/RaveAddIn_16px.png</file>
         <file alias="ucProjectExplorer.png">../Images/ucProjectExplorer.png</file>
-        
+        <file alias="icon.png">../icon.png</file>
+
+        <file alias="Detrend.png">../Images/Detrend.png</file>
         
         <file alias="refresh.png">../Images/refresh.png</file>
         <file alias="project_view.png">../Images/project_view.png</file>
@@ -18,6 +20,26 @@
         <file alias="AddToMap.png">../Images/AddToMap.png</file>
         <file alias="metadata.png">../Images/metadata.png</file>
         <file alias="close.png">../Images/close.png</file>
+        <file alias="test.png">../Images/test.png</file>
+        <file alias="raster_test.png">../Images/raster_test.png</file>
+        <file alias="map_test.png">../Images/map_test.png</file>
+        <file alias="test_Riverscapes.png">../Images/test_Riverscapes.png</file>
+
+        <file alias="new_folder.png">../Images/new_folder.png</file>
+        <file alias="open_folder.png">../Images/open_folder.png</file>
+        <file alias="folder.png">../Images/folder.png</file>
+
+        <file alias="project_qris.png">../Images/project_qris.png</file>
+        <file alias="project_new_qris.png">../Images/project_new_qris.png</file>
+        <file alias="project_open_qris.png">../Images/project_open_qris.png</file>
+        <file alias="qris_raster.png">../Images/qris_raster.png</file>
+        <file alias="qris_raster_new.png">../Images/qris_raster_new.png</file>
+        <file alias="qris_design.png">../Images/qris_design.png</file>
+        <file alias="qris_design_new.png">../Images/qris_design_new.png</file>
+        <file alias="qris_detrend.png">../Images/qris_detrend.png</file>
+
+        <file alias="extent_polygon.png">../Images/extent_polygon.png</file>
+        <file alias="extent_polygon_new.png">../Images/extent_polygon_new.png</file>
 
 
         <!-- Layer icons -->
