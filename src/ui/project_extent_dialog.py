@@ -30,11 +30,16 @@ class ProjectExtentDlg(QDialog, DIALOG_CLASS):
         self.layer_uri = layer_uri
         self.qris_project = qris_project
 
+        # Add any styling
+        background_color = 'background-color: silver;'
+        self.lineEdit_import_layer_path.setStyleSheet(background_color)
+        self.lineEdit_feature_name.setStyleSheet(background_color)
+
         if self.layer_uri is not None:
             self.lineEdit_import_layer_path.setText(self.layer_uri.uri)
             self.lineEdit_display_name.setText(self.layer_uri.name)
         else:
-            self.lineEdit_feature_name.setText("Create New Layer")
+            self.lineEdit_import_layer_path.setText("Create New Layer")
 
         self.set_valid_layername()
 

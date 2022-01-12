@@ -23,6 +23,7 @@ class Ui_dlgAddLayer(object):
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_2)
         self.lineEdit_import_layer_path = QtWidgets.QLineEdit(dlgAddLayer)
+        self.lineEdit_import_layer_path.setAutoFillBackground(False)
         self.lineEdit_import_layer_path.setReadOnly(True)
         self.lineEdit_import_layer_path.setObjectName("lineEdit_import_layer_path")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.lineEdit_import_layer_path)
