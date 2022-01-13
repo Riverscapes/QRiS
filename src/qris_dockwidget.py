@@ -105,7 +105,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add project extent layers to tree
         extent_folder = QStandardItem("Project Extents")
-        extent_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        extent_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         extent_folder.setData('extent_folder', item_code['item_type'])
         project_node.appendRow(extent_folder)
 
@@ -118,7 +118,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add project layers node
         layers_folder = QStandardItem("Project Layers")
-        layers_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        layers_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         layers_folder.setData('layers_folder', item_code['item_type'])
         project_node.appendRow(layers_folder)
 
@@ -133,7 +133,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # # Add riverscape surfaces node
         # # TODO go through and add layers to the tree
         # riverscape_surfaces_node = QStandardItem("Riverscape Surfaces")
-        # riverscape_surfaces_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # riverscape_surfaces_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         # riverscape_surfaces_node.setData('riverscape_surfaces_folder', item_code['item_type'])
         # riverscape_surfaces_node.setData('group', item_code['item_layer'])
         # project_node.appendRow(riverscape_surfaces_node)
@@ -141,14 +141,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # # Add riverscape segments node
         # # TODO go through and add layers to the tree
         # riverscape_segments_node = QStandardItem("Riverscape Segments")
-        # riverscape_segments_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # riverscape_segments_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         # riverscape_segments_node.setData('riverscape_segments_folder', item_code['item_type'])
         # riverscape_segments_node.setData('group', item_code['item_layer'])
         # project_node.appendRow(riverscape_segments_node)
 
         # # Add detrended rasters to tree
         # detrended_rasters = QStandardItem("Detrended Rasters")
-        # detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         # detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
         # detrended_rasters.setData('group', item_code['item_layer'])
         # project_node.appendRow(detrended_rasters)
@@ -163,7 +163,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         #     if len(raster.surfaces.values()) > 0:
         #         item_surfaces = QStandardItem("Surfaces")
-        #         item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        #         item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         #         item_surfaces.setData('group', item_code['item_layer'])
         #         detrended_raster.appendRow(item_surfaces)
         #         for surface in raster.surfaces.values():
@@ -176,7 +176,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # # Add assessments to tree
         # assessments_parent_node = QStandardItem("Riverscape Assessments")
-        # assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        # assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         # assessments_parent_node.setData('assessments_folder', item_code['item_type'])
         # assessments_parent_node.setData('group', item_code['item_layer'])
         # project_node.appendRow(assessments_parent_node)
@@ -186,7 +186,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         #     assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
         #     for assessment_feature in assessments_layer.getFeatures():
         #         assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
-        #         assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        #         assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         #         assessment_node.setData('dam_assessment', item_code['item_type'])
         #         assessment_node.setData('group', item_code['item_layer'])
         #         assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
@@ -196,7 +196,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add designs to tree
         design_folder = QStandardItem("Low-Tech Designs")
-        design_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        design_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         design_folder.setData('design_folder', item_code['item_type'])
         project_node.appendRow(design_folder)
 
@@ -215,7 +215,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             design_folder.sortChildren(Qt.AscendingOrder)
 
         structure_type_folder = QStandardItem("Structure Types")
-        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/folder.png'))
+        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
         structure_type_folder.setData('structure_type_folder', item_code['item_type'])
         design_folder.appendRow(structure_type_folder)
 
