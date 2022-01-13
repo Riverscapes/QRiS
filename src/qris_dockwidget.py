@@ -263,7 +263,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         item_type = model_item.data(item_code['item_type'])
 
         if item_type == 'project_root':
-            self.menu.addAction('EXPAND_ALL', lambda: self.expand_all())
+            self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
+            self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
@@ -284,6 +285,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         else:
             self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
+
+    def expand_tree(self):
+        self.treeView.expandAll()
+        return
+
+    def collapse_tree(self):
+        self.treeView.collapseAll()
+        return
 
     def add_assessment(self):
         """Initiates adding a new assessment"""
@@ -387,7 +396,3 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
         self.elevation_widget.dataChange.connect(self.build_tree_view)
         self.elevation_widget.show()
-
-    def expand_all(self):
-        self.treeView.expand_all()
-        return
