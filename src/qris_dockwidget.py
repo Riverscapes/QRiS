@@ -112,7 +112,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         for extent in self.qris_project.project_extents.values():
             extent_node = QStandardItem(extent.display_name)
-            extent_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
+            extent_node.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polygon.png'))
             extent_node.setData('extent_node', item_code['item_type'])
             extent_node.setData(extent, item_code['INSTANCE'])
             extent_folder.appendRow(extent_node)
@@ -126,7 +126,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # TODO extend this for geometry types and raster layers
         for layer in self.qris_project.project_vector_layers.values():
             layer_node = QStandardItem(layer.display_name)
-            layer_node.setIcon(QIcon(':/plugins/qris_toolbar/extent_polygon.png'))
+            # TODO change icon by type
+            layer_node.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polyline.png'))
             layer_node.setData('layer_node', item_code['item_type'])
             layer_node.setData(layer, item_code['INSTANCE'])
             layers_folder.appendRow(layer_node)
@@ -208,7 +209,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             for design_feature in designs_layer.getFeatures():
                 # If these data types stick this should be refactored into a create node function
                 design_node = QStandardItem(design_feature.attribute('design_name'))
-                design_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
+                design_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 design_folder.appendRow(design_node)
@@ -227,7 +228,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for structure_type in structure_type_layer.getFeatures():
             structure_type_node = QStandardItem(structure_type.attribute('structure_type_name'))
             # TODO change the icon
-            structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
+            structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
             structure_type_node.setData('structure_type', item_code['item_type'])
             structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
             structure_type_folder.appendRow(structure_type_node)
