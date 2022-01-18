@@ -63,7 +63,8 @@ class ContextMenu(QMenu):
         ),
         'ADD_DETRENDED_RASTER': (
             'Add Detrended',
-            ':/plugins/qris_toolbar/qris_raster_new.png'),
+            ':/plugins/qris_toolbar/qris_raster_new.png'
+        ),
         'ADD_PROJECT_EXTENT_LAYER': (
             'Import a project extent polygon',
             ':/plugins/qris_toolbar/extent_polygon_new.png'
@@ -98,6 +99,11 @@ class ContextMenu(QMenu):
         ),
         'ADD_STRUCTURE_TYPE': (
             'Add a new structure type',
+            ':/plugins/qris_toolbar/qris_design_new.png'
+        ),
+        # TODO needs new icon
+        'ADD_PHASE': (
+            'Add a new implementation phase',
             ':/plugins/qris_toolbar/qris_design_new.png'
         )
     }

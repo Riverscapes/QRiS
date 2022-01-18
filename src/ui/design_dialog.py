@@ -38,7 +38,10 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
         self.designs_path = self.geopackage_path + '|layername=designs'
         self.structure_types_path = self.geopackage_path + '|layername=structure_types'
+        self.phase_path = self.geopackage_path + '|layername=phases'
+        # TODO change name of this to simply zoi
         self.structure_zoi_path = self.geopackage_path + '|layername=structure_zoi'
+        # TODO change name of these to structures lines and structures points
         self.structures_field_path = self.geopackage_path + '|layername=structures_field'
         self.structures_desktop_path = self.geopackage_path + '|layername=structures_desktop'
 
@@ -87,6 +90,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('design_description', QVariant.String),
                                 ])
 
+        # TODO auto populate a handful of structure starting types
         create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
                                 [
                                     ('structure_type_name', QVariant.String),
@@ -99,6 +103,17 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('post_spacing', QVariant.Double)
                                 ])
 
+        # TODO  auto populate a handful of phases to start the design process
+        create_geopackage_table('NoGeometry', 'phases', self.geopackage_path, self.phase_path,
+                                [
+                                    ('phase_name', QVariant.String),
+                                    ('phase_type', QVariant.String),
+                                    ('dominate_action', QVariant.String),
+                                    ('implementation_date', QVariant.Date),
+                                    ('phase_description', QVariant.String)
+                                ])
+
+        # TODO change to simply zoi
         create_geopackage_table('Polygon', 'structure_zoi', self.geopackage_path, self.structure_zoi_path,
                                 [
                                     ('design_id', QVariant.Int),
@@ -120,6 +135,13 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('structure_type_id', QVariant.Int),
                                     ('structure_description', QVariant.String),
                                 ])
+
+    def populate_standard_phases(self):
+        list_of_phases = ['Pilot', 'Phase 1', 'Phase 2', 'Phase 3', 'Phase 4']
+        pass
+
+    def populate_standard_structure_types(self):
+        pass
 
     def save_design(self):
         """Creates and saves a new design record to the db from the design dialog"""

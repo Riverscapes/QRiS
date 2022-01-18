@@ -1,5 +1,4 @@
 import os
-# from typing_extensions import ParamSpecKwargs
 
 from qgis.core import (
     QgsField,

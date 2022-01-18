@@ -56,6 +56,7 @@ from .ui.add_detrended_dialog import AddDetrendedRasterDlg
 from .ui.assessment_dialog import AssessmentDlg
 from .ui.design_dialog import DesignDlg
 from .ui.structure_type_dialog import StructureTypeDlg
+from .ui.phase_dialog import PhaseDlg
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
@@ -205,6 +206,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if os.path.exists(design_geopackage_path):
             designs_layer = QgsVectorLayer(designs_path, "designs", "ogr")
             for design_feature in designs_layer.getFeatures():
+                # If these data types stick this should be refactored into a create node function
                 design_node = QStandardItem(design_feature.attribute('design_name'))
                 design_node.setIcon(QIcon(':/plugins/qris_toolbar/qris_design.png'))
                 design_node.setData('design', item_code['item_type'])
@@ -214,8 +216,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             # TODO I don't think this is working on text types
             design_folder.sortChildren(Qt.AscendingOrder)
 
+        # populate structure types
         structure_type_folder = QStandardItem("Structure Types")
-        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/Options.png'))
         structure_type_folder.setData('structure_type_folder', item_code['item_type'])
         design_folder.appendRow(structure_type_folder)
 
@@ -229,6 +232,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
             structure_type_folder.appendRow(structure_type_node)
 
+        # populate design phases types
+        phase_folder = QStandardItem("Implementation Phases")
+        # TODO change icon
+        phase_folder.setIcon(QIcon(':/plugins/qris_toolbar/Options.png'))
+        phase_folder.setData('phase_folder', item_code['item_type'])
+        design_folder.appendRow(phase_folder)
+
+        phase_path = design_geopackage_path + '|layername=phases'
+        phase_layer = QgsVectorLayer(phase_path, "phases", "ogr")
+        for phase in phase_layer.getFeatures():
+            phase_node = QStandardItem(phase.attribute('phase_name'))
+            # TODO change the icon
+            phase_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+            phase_node.setData('phase', item_code['item_type'])
+            phase_node.setData(phase.attribute('fid'), item_code['feature_id'])
+            phase_folder.appendRow(phase_node)
+
+        # TODO for now we are expanding the map however need to remember expanded state
+        self.treeView.expandAll()
+
         # Check if new item is in the tree, if it is pass it to the add_to_map function
         # Adds a test comment
         if new_item is not None and new_item != '':
@@ -241,6 +264,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # TODO may want to pass this is a try except block and give an informative error message
         selected_item = self.model.findItems(name, Qt.MatchRecursive)[0]
         return selected_item
+
+    def get_item_expanded_state(self):
+        """Recursively records a list of the expanded state for items in the tree"""
 
     def closeEvent(self, event):
         self.qris_project = None
@@ -282,6 +308,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "structure_type_folder":
             self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
+        elif item_type == "phase_folder":
+            self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
         else:
             self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
@@ -317,7 +345,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.structure_type_dialog.dataChange.connect(self.build_tree_view)
             self.structure_type_dialog.show()
         else:
+            # TODO move the creation of the design data model so that this isn't necessary
             QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")
+
+    def add_phase(self):
+        """Initiates adding a new phase within the phase dialog"""
+        # TODO First check if the path to the database exists
+        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+        if os.path.exists(design_geopackage_path):
+            self.phase_dialog = PhaseDlg(self.qris_project)
+            self.phase_dialog.dataChange.connect(self.build_tree_view)
+            self.phase_dialog.show()
+        else:
+            # TODO move the creation of the design data model so that this isn't necessary
+            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding phases")
 
     def add_detrended_raster(self):
         # last_browse_path = self.settings.getValue('lastBrowsePath')

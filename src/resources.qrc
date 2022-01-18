@@ -17,6 +17,7 @@
         <file alias="project_view.png">../Images/project_view.png</file>
         <file alias="tree.png">../Images/tree.png</file>
         <file alias="expand.png">../Images/expand.png</file>
+        <file alias="collapse.png">../Images/collapse.png</file>
         <file alias="AddToMap.png">../Images/AddToMap.png</file>
         <file alias="metadata.png">../Images/metadata.png</file>
         <file alias="close.png">../Images/close.png</file>

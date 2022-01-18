@@ -91,6 +91,7 @@ def add_design_to_map(qris_project, item, node):
 
     designs_layer = QgsVectorLayer(geopackage_path + "|layername=designs", "Designs", "ogr")
     structure_types_layer = QgsVectorLayer(geopackage_path + "|layername=structure_types", "Structure Types", "ogr")
+    phases_layer = QgsVectorLayer(geopackage_path + "|layername=phases", "Implementation Phases", "ogr")
     zoi_layer = QgsVectorLayer(geopackage_path + "|layername=structure_zoi", "ZOI", "ogr")
     structures_field_layer = QgsVectorLayer(geopackage_path + "|layername=structures_field", "Field Structures", "ogr")
     structures_desktop_layer = QgsVectorLayer(geopackage_path + "|layername=structures_desktop", "Desktop Structures", "ogr")
@@ -112,6 +113,14 @@ def add_design_to_map(qris_project, item, node):
         QgsProject.instance().addMapLayer(structure_types_layer, False)
         # TODO consider making the types read only
         node.addLayer(structure_types_layer)
+        # Consider making this layer read only
+
+    # Check if the Phases table has been added and if not add it.
+    if not any([c.name() == 'Implementation Phases' for c in node.children()]):
+        QgsProject.instance().addMapLayer(phases_layer, False)
+        # TODO add a .qml for basic field names and edit forms
+        # TODO consider making the types read only
+        node.addLayer(phases_layer)
         # Consider making this layer read only
 
     # Check if the low tech design node is already added
