@@ -1,6 +1,7 @@
+from optparse import Values
 import os
 
-from random import randint
+from random import randint, randrange
 
 
 from PyQt5.QtWidgets import QMessageBox
@@ -8,6 +9,11 @@ from PyQt5.QtWidgets import QMessageBox
 from qgis.core import (
     QgsVectorLayer,
     QgsFeatureRequest,
+    QgsSymbol,
+    QgsRendererCategory,
+    QgsMarkerSymbol,
+    QgsSimpleFillSymbolLayer,
+    QgsCategorizedSymbolRenderer,
     QgsProject,
     QgsExpressionContextUtils)
 
@@ -139,12 +145,41 @@ def add_design_to_map(qris_project, item, node):
         # Add point structures
         if not any([c.name() == 'Structures' for c in design_node.children()]):
             # Adding the type suffix as I could see adding qml that symbolizes on other attributes
-            structure_points_type_qml = os.path.join(symbology_path, 'symbology', 'structure_points_type.qml')
-            structure_points_layer.loadNamedStyle(structure_points_type_qml)
+            structure_points_qml = os.path.join(symbology_path, 'symbology', 'structure_points.qml')
+            structure_points_layer.loadNamedStyle(structure_points_qml)
             QgsExpressionContextUtils.setLayerVariable(structure_points_layer, 'parent_id', design_id)
             structure_points_layer.setSubsetString(subset_string)
             QgsProject.instance().addMapLayer(structure_points_layer, False)
+            # -------- Starts Here -----------
+            unique_values = []
+            for feature in structure_types_layer.getFeatures():
+                values = (feature["fid"], feature["structure_type_name"])
+                unique_values.append(values)
+
+            categories = []
+            for value in unique_values:
+                layer_style = {}
+                layer_style["color"] = '%d, %d, %d' % (randrange(0, 256), randrange(0, 256), randrange(0, 256))
+                layer_style['size'] = '3'
+                layer_style['outline_color'] = 'black'
+                symbol_layer = QgsMarkerSymbol.createSimple(layer_style)
+                # replace default symbol layer with the configured one
+                # symbol = QgsSymbol.defaultSymbol(structure_points_layer.geometryType())
+                # if symbol_layer is not None:
+                # symbol.changeSymbolLayer(0, symbol_layer)
+                # create renderer object
+                category = QgsRendererCategory(str(value[0]), symbol_layer, value[1])
+                # entry for the list of category items
+                categories.append(category)
+            # create renderer object
+            renderer = QgsCategorizedSymbolRenderer('structure_type_id', categories)
+            # assign the created renderer to the layer
+            if renderer is not None:
+                structure_points_layer.setRenderer(renderer)
+            structure_points_layer.triggerRepaint()
+            # Add the alyer
             design_node.addLayer(structure_points_layer)
+
     else:
         # Add line structures
         if not any([c.name() == 'Structures' for c in design_node.children()]):
