@@ -209,12 +209,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             for design_feature in designs_layer.getFeatures():
                 # If these data types stick this should be refactored into a create node function
                 design_node = QStandardItem(design_feature.attribute('design_name'))
-                design_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+                design_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 design_folder.appendRow(design_node)
 
-            # TODO I don't think this is working on text types
+                # TODO add the structure, footprint, and zoi to the tree under each design
+
+            # TODO This just doesn't work very well
             design_folder.sortChildren(Qt.AscendingOrder)
 
         # populate structure types

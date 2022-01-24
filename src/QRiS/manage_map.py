@@ -92,14 +92,15 @@ def add_design_to_map(qris_project, item, node):
     designs_layer = QgsVectorLayer(geopackage_path + "|layername=designs", "Designs", "ogr")
     structure_types_layer = QgsVectorLayer(geopackage_path + "|layername=structure_types", "Structure Types", "ogr")
     phases_layer = QgsVectorLayer(geopackage_path + "|layername=phases", "Implementation Phases", "ogr")
-    zoi_layer = QgsVectorLayer(geopackage_path + "|layername=structure_zoi", "ZOI", "ogr")
-    structures_field_layer = QgsVectorLayer(geopackage_path + "|layername=structures_field", "Field Structures", "ogr")
-    structures_desktop_layer = QgsVectorLayer(geopackage_path + "|layername=structures_desktop", "Desktop Structures", "ogr")
+    zoi_layer = QgsVectorLayer(geopackage_path + "|layername=zoi", "ZOI", "ogr")
+    footprints_layer = QgsVectorLayer(geopackage_path + "|layername=footprints", "Footprints", "ogr")
+    structure_points_layer = QgsVectorLayer(geopackage_path + "|layername=structure_points", "Structures", "ogr")
+    structure_lines_layer = QgsVectorLayer(geopackage_path + "|layername=structure_lines", "Structures", "ogr")
 
     # Get the design source as field or desktop from the feature itself
     design_iterator = designs_layer.getFeatures(QgsFeatureRequest().setFilterFid(design_id))
     design_feature = next(design_iterator)
-    design_source = design_feature['design_source']
+    design_geometry = design_feature['design_geometry']
 
     # Check if the designs table has been added and if not add it.
     if not any([c.name() == 'Designs' for c in node.children()]):
@@ -108,7 +109,7 @@ def add_design_to_map(qris_project, item, node):
         node.addLayer(designs_layer)
         # Consider making this layer read only
 
-    # Check if the STRUCTURE TYPES table has been added and if not add it.
+    # Check if the structure types table has been added and if not add it.
     if not any([c.name() == 'Structure Types' for c in node.children()]):
         QgsProject.instance().addMapLayer(structure_types_layer, False)
         # TODO consider making the types read only
@@ -118,8 +119,9 @@ def add_design_to_map(qris_project, item, node):
     # Check if the Phases table has been added and if not add it.
     if not any([c.name() == 'Implementation Phases' for c in node.children()]):
         QgsProject.instance().addMapLayer(phases_layer, False)
-        # TODO add a .qml for basic field names and edit forms
-        # TODO consider making the types read only
+        # Add the qml
+        phase_qml = os.path.join(symbology_path, 'symbology', 'phases.qml')
+        phases_layer.loadNamedStyle(phase_qml)
         node.addLayer(phases_layer)
         # Consider making this layer read only
 
@@ -133,24 +135,25 @@ def add_design_to_map(qris_project, item, node):
 
     # TODO All layers consider adding symbology that randomizes some aspect of colors for differentiation
     # TODO All layers consider adding a design identifier such as the fid to the filtered layer name
-    if design_source == 'field':
-        # Add field structures
-        if not any([c.name() == 'Field Structures' for c in design_node.children()]):
-            structures_field_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_field.qml')
-            structures_field_layer.loadNamedStyle(structures_field_qml)
-            QgsExpressionContextUtils.setLayerVariable(structures_field_layer, 'parent_id', design_id)
-            structures_field_layer.setSubsetString(subset_string)
-            QgsProject.instance().addMapLayer(structures_field_layer, False)
-            design_node.addLayer(structures_field_layer)
+    if design_geometry == 'Point':
+        # Add point structures
+        if not any([c.name() == 'Structures' for c in design_node.children()]):
+            # Adding the type suffix as I could see adding qml that symbolizes on other attributes
+            structure_points_type_qml = os.path.join(symbology_path, 'symbology', 'structure_points_type.qml')
+            structure_points_layer.loadNamedStyle(structure_points_type_qml)
+            QgsExpressionContextUtils.setLayerVariable(structure_points_layer, 'parent_id', design_id)
+            structure_points_layer.setSubsetString(subset_string)
+            QgsProject.instance().addMapLayer(structure_points_layer, False)
+            design_node.addLayer(structure_points_layer)
     else:
-        # Add desktop structures
-        if not any([c.name() == 'Desktop Structures' for c in design_node.children()]):
-            structures_desktop_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_desktop.qml')
-            structures_desktop_layer.loadNamedStyle(structures_desktop_qml)
-            QgsExpressionContextUtils.setLayerVariable(structures_desktop_layer, 'parent_id', design_id)
-            structures_desktop_layer.setSubsetString(subset_string)
-            QgsProject.instance().addMapLayer(structures_desktop_layer, False)
-            design_node.addLayer(structures_desktop_layer)
+        # Add line structures
+        if not any([c.name() == 'Structures' for c in design_node.children()]):
+            structures_desktop_qml = os.path.join(symbology_path, 'symbology', 'structure_lines.qml')
+            structure_lines_layer.loadNamedStyle(structures_desktop_qml)
+            QgsExpressionContextUtils.setLayerVariable(structure_lines_layer, 'parent_id', design_id)
+            structure_lines_layer.setSubsetString(subset_string)
+            QgsProject.instance().addMapLayer(structure_lines_layer, False)
+            design_node.addLayer(structure_lines_layer)
 
     # Add zoi
     if not any([c.name() == 'ZOI' for c in design_node.children()]):
@@ -160,6 +163,15 @@ def add_design_to_map(qris_project, item, node):
         zoi_layer.setSubsetString(subset_string)
         QgsProject.instance().addMapLayer(zoi_layer, False)
         design_node.addLayer(zoi_layer)
+
+    # Add footprints
+    if not any([c.name() == 'Footprints' for c in design_node.children()]):
+        # zoi_qml = os.path.join(symbology_path, 'symbology', 'designs_zoi.qml')
+        # zoi_layer.loadNamedStyle(zoi_qml)
+        QgsExpressionContextUtils.setLayerVariable(footprints_layer, 'parent_id', design_id)
+        footprints_layer.setSubsetString(subset_string)
+        QgsProject.instance().addMapLayer(footprints_layer, False)
+        design_node.addLayer(footprints_layer)
 
 
 def add_layer_to_map(qris_project, item, node):
