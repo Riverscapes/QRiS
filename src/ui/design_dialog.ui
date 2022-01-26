@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>578</width>
-    <height>362</height>
+    <width>624</width>
+    <height>383</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Low-Tech Design</string>
+   <string>New  Low-Tech. Design</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -21,7 +21,7 @@
    <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Design Name</string>
+      <string>Name</string>
      </property>
     </widget>
    </item>
@@ -31,7 +31,7 @@
    <item row="3" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Design Geometry</string>
+      <string>Structure Geometry</string>
      </property>
     </widget>
    </item>
@@ -41,7 +41,7 @@
    <item row="5" column="0">
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Design Description</string>
+      <string>Description</string>
      </property>
     </widget>
    </item>
@@ -59,12 +59,12 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QComboBox" name="comboBox_design_type"/>
+    <widget class="QComboBox" name="comboBox_design_status"/>
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Design Type</string>
+      <string>Status</string>
      </property>
     </widget>
    </item>

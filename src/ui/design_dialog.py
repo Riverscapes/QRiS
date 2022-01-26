@@ -46,9 +46,9 @@ class DesignDlg(QDialog, DIALOG_CLASS):
 
         # population combo boxes
         design_geometry = ['Point', 'Line']
-        list_of_design_types = ['As-Built', 'Design']
+        design_status = ['As-Built', 'Specification']
         self.comboBox_design_geometry.addItems(design_geometry)
-        self.comboBox_design_type.addItems(list_of_design_types)
+        self.comboBox_design_status.addItems(design_status)
 
         # add signals to buttons
         self.buttonBox.accepted.connect(self.save_design)
@@ -68,10 +68,10 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # memory_designs = QgsVectorLayer("NoGeometry", "memory_designs", "memory")
         # design_name = QgsField("design_name", QVariant.String)
         # design_geometry = QgsField("design_geometry", QVariant.String)
-        # design_type = QgsField("design_type", QVariant.String)
+        # design_status = QgsField("design_status", QVariant.String)
         # design_description = QgsField("design_description", QVariant.String)
         # pr = memory_designs.dataProvider()
-        # pr.addAttributes([design_name, design_geometry, design_type, design_description])
+        # pr.addAttributes([design_name, design_geometry, design_status, design_description])
         # memory_designs.updateFields()
 
         # options = QgsVectorFileWriter.SaveVectorOptions()
@@ -85,7 +85,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                 [
                                     ('design_name', QVariant.String),
                                     ('design_geometry', QVariant.String),
-                                    ('design_type', QVariant.String),
+                                    ('design_status', QVariant.String),
                                     ('design_description', QVariant.String),
                                 ])
 
@@ -198,7 +198,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # # grab the form values
         new_design_name = self.lineEdit_design_name.text()
         new_design_geometry = self.comboBox_design_geometry.currentText()
-        new_design_type = self.comboBox_design_type.currentText()
+        new_design_status = self.comboBox_design_status.currentText()
         new_design_description = self.plainTextEdit_design_description.toPlainText()
         # create a blank QgsFeature that copies the deployemnt table
         new_design_feature = QgsFeature(self.designs_layer.fields())
@@ -206,7 +206,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         new_design_feature.setAttribute("fid", new_design_fid)
         new_design_feature.setAttribute("design_name", new_design_name)
         new_design_feature.setAttribute("design_geometry", new_design_geometry)
-        new_design_feature.setAttribute("design_type", new_design_type)
+        new_design_feature.setAttribute("design_status", new_design_status)
         new_design_feature.setAttribute("design_description", new_design_description)
         pr = self.designs_layer.dataProvider()
         pr.addFeatures([new_design_feature])

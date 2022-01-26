@@ -112,9 +112,9 @@ def add_design_to_map(qris_project, item, node):
     # Check if the designs table has been added and if not add it.
     if not any([c.name() == 'Designs' for c in node.children()]):
         QgsProject.instance().addMapLayer(designs_layer, False)
-        # TODO consider making the types read only
+        designs_qml = os.path.join(symbology_path, 'symbology', 'designs.qml')
+        designs_layer.loadNamedStyle(designs_qml)
         node.addLayer(designs_layer)
-        # Consider making this layer read only
 
     # Check if the structure types table has been added and if not add it.
     if not any([c.name() == 'Structure Types' for c in node.children()]):

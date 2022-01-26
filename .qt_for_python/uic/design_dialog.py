@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_design_dialog(object):
     def setupUi(self, design_dialog):
         design_dialog.setObjectName("design_dialog")
-        design_dialog.resize(578, 362)
+        design_dialog.resize(624, 383)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("/Users/nick/Library/Application Support/QGIS/QGIS3/profiles/test/python/plugins/RIPTPlugin/src/ui/../../icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         design_dialog.setWindowIcon(icon)
@@ -42,9 +42,9 @@ class Ui_design_dialog(object):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.buttonBox)
-        self.comboBox_design_type = QtWidgets.QComboBox(design_dialog)
-        self.comboBox_design_type.setObjectName("comboBox_design_type")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.comboBox_design_type)
+        self.comboBox_design_status = QtWidgets.QComboBox(design_dialog)
+        self.comboBox_design_status.setObjectName("comboBox_design_status")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.comboBox_design_status)
         self.label_4 = QtWidgets.QLabel(design_dialog)
         self.label_4.setObjectName("label_4")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_4)
@@ -54,8 +54,8 @@ class Ui_design_dialog(object):
 
     def retranslateUi(self, design_dialog):
         _translate = QtCore.QCoreApplication.translate
-        design_dialog.setWindowTitle(_translate("design_dialog", "Low-Tech Design"))
-        self.label.setText(_translate("design_dialog", "Design Name"))
-        self.label_2.setText(_translate("design_dialog", "Design Geometry"))
-        self.label_5.setText(_translate("design_dialog", "Design Description"))
-        self.label_4.setText(_translate("design_dialog", "Design Type"))
+        design_dialog.setWindowTitle(_translate("design_dialog", "New  Low-Tech. Design"))
+        self.label.setText(_translate("design_dialog", "Name"))
+        self.label_2.setText(_translate("design_dialog", "Structure Geometry"))
+        self.label_5.setText(_translate("design_dialog", "Description"))
+        self.label_4.setText(_translate("design_dialog", "Status"))
