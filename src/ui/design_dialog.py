@@ -40,7 +40,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         self.structure_types_path = self.geopackage_path + '|layername=structure_types'
         self.phases_path = self.geopackage_path + '|layername=phases'
         self.zoi_path = self.geopackage_path + '|layername=zoi'
-        self.footprints_path = self.geopackage_path + '|layername=footprints'
+        self.complexes_path = self.geopackage_path + '|layername=complexes'
         self.structure_points_path = self.geopackage_path + '|layername=structure_points'
         self.structure_lines_path = self.geopackage_path + '|layername=structure_lines'
 
@@ -120,14 +120,17 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('design_id', QVariant.Int),
                                     ('zoi_name', QVariant.String),
                                     ('zoi_type', QVariant.String),
+                                    ('zoi_stage', QVariant.String),
+                                    ('zoi_influence', QVariant.String),
                                     ('zoi_description', QVariant.String),
                                 ])
-        create_geopackage_table('Polygon', 'footprints', self.geopackage_path, self.footprints_path,
+        create_geopackage_table('Polygon', 'complexes', self.geopackage_path, self.complexes_path,
                                 [
                                     ('design_id', QVariant.Int),
-                                    ('footprint_name', QVariant.String),
-                                    ('footprint_type', QVariant.String),
-                                    ('footprint_description', QVariant.String),
+                                    ('complex_name', QVariant.String),
+                                    ('complex_narrative', QVariant.String),
+                                    ('initial_condition', QVariant.String),
+                                    ('target_condition', QVariant.String),
                                 ])
 
         create_geopackage_table('Point', 'structure_points', self.geopackage_path, self.structure_points_path,
