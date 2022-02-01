@@ -1,5 +1,5 @@
 import os
-# from typing_extensions import ParamSpecKwargs
+import sqlite3
 
 from osgeo import gdal
 
@@ -147,6 +147,9 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('structure_description', QVariant.String),
                                 ])
 
+        # TODO figure out geopackages and database relationships
+        self.create_metric_tables()
+
     def populate_standard_phases(self):
         """Populates the phase table with a starting set of phases"""
         standard_phases = ['Pilot', 'Phase 1', 'Phase 2']
@@ -210,6 +213,22 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         pr.addFeatures([new_design_feature])
         self.dataChange.emit(self.qris_project, new_design_name)
         self.close()
+
+    def create_metric_tables(self):
+        conn = sqlite3.connect(self.geopackage_path)
+        conn.execute('PRAGMA foreign_keys = ON;')
+        curs = conn.cursor()
+
+        complex_metrics_qry_string = """
+            CREATE TABLE  complex_metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            complex_id INTEGER NOT NULL,
+            metric_value INTEGER,
+            FOREIGN KEY (complex_id) REFERENCES complexes(fid));
+        """
+        curs.execute(complex_metrics_qry_string)
+        conn.commit()
+        conn.close()
 
     def cancel_design(self):
         self.close()
