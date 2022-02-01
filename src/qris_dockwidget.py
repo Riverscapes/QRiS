@@ -209,7 +209,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             for design_feature in designs_layer.getFeatures():
                 # If these data types stick this should be refactored into a create node function
                 design_node = QStandardItem(design_feature.attribute('design_name'))
-                design_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+                design_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 design_folder.appendRow(design_node)

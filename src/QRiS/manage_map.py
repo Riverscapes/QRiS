@@ -119,9 +119,9 @@ def add_design_to_map(qris_project, item, node):
     # Check if the structure types table has been added and if not add it.
     if not any([c.name() == 'Structure Types' for c in node.children()]):
         QgsProject.instance().addMapLayer(structure_types_layer, False)
-        # TODO consider making the types read only
+        structure_types_qml = os.path.join(symbology_path, 'symbology', 'structure_types.qml')
+        structure_types_layer.loadNamedStyle(structure_types_qml)
         node.addLayer(structure_types_layer)
-        # Consider making this layer read only
 
     # Check if the Phases table has been added and if not add it.
     if not any([c.name() == 'Implementation Phases' for c in node.children()]):

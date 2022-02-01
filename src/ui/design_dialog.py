@@ -89,22 +89,20 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     ('design_description', QVariant.String),
                                 ])
 
-        # TODO auto populate a handful of structure starting types
         create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
                                 [
                                     ('structure_type_name', QVariant.String),
                                     ('structure_mimics', QVariant.String),
                                     ('construction_description', QVariant.String),
                                     ('function_description', QVariant.String),
-                                    ('average_length', QVariant.Double),
-                                    ('average_width', QVariant.Double),
-                                    ('average_height', QVariant.Double),
-                                    ('estimated_posts', QVariant.Int)
+                                    ('typical_posts', QVariant.Int),
+                                    ('typical_length', QVariant.Double),
+                                    ('typical_width', QVariant.Double),
+                                    ('typical_height', QVariant.Double),
                                 ])
 
         self.populate_standard_structure_types()
 
-        # TODO  auto populate a handful of phases to start the design process
         create_geopackage_table('NoGeometry', 'phases', self.geopackage_path, self.phases_path,
                                 [
                                     ('phase_name', QVariant.String),
