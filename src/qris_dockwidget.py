@@ -91,6 +91,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
+    # Take this out of init so that nodes can be added as new data is added and imported;
     def build_tree_view(self, qris_project, new_item=None):
         """Builds items in the tree view based on dictionary values that are part of the project"""
         self.qris_project = qris_project
@@ -252,7 +253,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             phase_node.setData(phase.attribute('fid'), item_code['feature_id'])
             phase_folder.appendRow(phase_node)
 
-        # TODO for now we are expanding the map however need to remember expanded state
+        # Add a placed for photos
+        photos_folder = QStandardItem("Project Photos")
+        photos_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+        photos_folder.setData('photos_folder', item_code['item_type'])
+        project_node.appendRow(photos_folder)
+
+        # TODO for now we are expanding the map however need to remember expanded state or add new nodes as we add data
         self.treeView.expandAll()
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
@@ -313,6 +320,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
         elif item_type == "phase_folder":
             self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
+        elif item_type == "photos_folder":
+            self.menu.addAction('IMPORT_PHOTOS', lambda: self.import_photos())
+            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         else:
             self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
@@ -362,6 +372,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         else:
             # TODO move the creation of the design data model so that this isn't necessary
             QMessageBox.information(self, "Structure Types", "Please create a new project design before adding phases")
+
+    # This will kick off importing photos
+    def import_photos(self):
+        pass
 
     def add_detrended_raster(self):
         # last_browse_path = self.settings.getValue('lastBrowsePath')

@@ -105,6 +105,10 @@ class ContextMenu(QMenu):
         'ADD_PHASE': (
             'Add a new implementation phase',
             ':/plugins/qris_toolbar/icon.png'
+        ),
+        'IMPORT_PHOTOS': (
+            'Import project photos',
+            ':/plugins/qris_toolbar/icon.png'
         )
     }
 

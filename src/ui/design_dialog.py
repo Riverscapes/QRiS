@@ -81,50 +81,49 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
         # QgsVectorFileWriter.writeAsVectorFormat(memory_designs, self.geopackage_path, options)
 
-        create_geopackage_table('NoGeometry', 'designs', self.geopackage_path, self.designs_path,
-                                [
-                                    ('design_name', QVariant.String),
-                                    ('design_geometry', QVariant.String),
-                                    ('design_status', QVariant.String),
-                                    ('design_description', QVariant.String),
-                                ])
+        # create_geopackage_table('NoGeometry', 'designs', self.geopackage_path, self.designs_path,
+        #                         [
+        #                             ('design_name', QVariant.String),
+        #                             ('design_geometry', QVariant.String),
+        #                             ('design_status', QVariant.String),
+        #                             ('design_description', QVariant.String),
+        #                         ])
 
-        create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
-                                [
-                                    ('structure_type_name', QVariant.String),
-                                    ('structure_mimics', QVariant.String),
-                                    ('construction_description', QVariant.String),
-                                    ('function_description', QVariant.String),
-                                    ('typical_posts', QVariant.Int),
-                                    ('typical_length', QVariant.Double),
-                                    ('typical_width', QVariant.Double),
-                                    ('typical_height', QVariant.Double),
-                                ])
+        # create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
+        #                         [
+        #                             ('structure_type_name', QVariant.String),
+        #                             ('structure_mimics', QVariant.String),
+        #                             ('construction_description', QVariant.String),
+        #                             ('function_description', QVariant.String),
+        #                             ('typical_posts', QVariant.Int),
+        #                             ('typical_length', QVariant.Double),
+        #                             ('typical_width', QVariant.Double),
+        #                             ('typical_height', QVariant.Double),
+        #                         ])
 
-        self.populate_standard_structure_types()
+        # self.populate_standard_structure_types()
 
-        create_geopackage_table('NoGeometry', 'phases', self.geopackage_path, self.phases_path,
-                                [
-                                    ('phase_name', QVariant.String),
-                                    ('dominate_action', QVariant.String),
-                                    ('implementation_date', QVariant.Date),
-                                    ('phase_description', QVariant.String)
-                                ])
+        # create_geopackage_table('NoGeometry', 'phases', self.geopackage_path, self.phases_path,
+        #                         [
+        #                             ('phase_name', QVariant.String),
+        #                             ('dominate_action', QVariant.String),
+        #                             ('implementation_date', QVariant.Date),
+        #                             ('phase_description', QVariant.String)
+        #                         ])
 
-        self.populate_standard_phases()
+        # self.populate_standard_phases()
 
         create_geopackage_table('Polygon', 'zoi', self.geopackage_path, self.zoi_path,
                                 [
-                                    ('design_id', QVariant.Int),
+                                    # ('design_id', QVariant.Int),
                                     ('zoi_name', QVariant.String),
                                     ('zoi_type', QVariant.String),
-                                    ('zoi_stage', QVariant.String),
                                     ('zoi_influence', QVariant.String),
                                     ('zoi_description', QVariant.String),
                                 ])
         create_geopackage_table('Polygon', 'complexes', self.geopackage_path, self.complexes_path,
                                 [
-                                    ('design_id', QVariant.Int),
+                                    # ('design_id', QVariant.Int),
                                     ('complex_name', QVariant.String),
                                     ('complex_narrative', QVariant.String),
                                     ('initial_condition', QVariant.String),
@@ -133,60 +132,61 @@ class DesignDlg(QDialog, DIALOG_CLASS):
 
         create_geopackage_table('Point', 'structure_points', self.geopackage_path, self.structure_points_path,
                                 [
-                                    ('design_id', QVariant.Int),
-                                    ('structure_type_id', QVariant.Int),
-                                    ('phase_id', QVariant.Int),
+                                    # ('design_id', QVariant.Int),
+                                    # ('structure_type_id', QVariant.Int),
+                                    # ('phase_id', QVariant.Int),
                                     ('structure_description', QVariant.String),
                                 ])
 
         create_geopackage_table('Linestring', 'structure_lines', self.geopackage_path, self.structure_lines_path,
                                 [
-                                    ('design_id', QVariant.Int),
-                                    ('structure_type_id', QVariant.Int),
-                                    ('phase_id', QVariant.Int),
+                                    # ('design_id', QVariant.Int),
+                                    # ('structure_type_id', QVariant.Int),
+                                    # ('phase_id', QVariant.Int),
                                     ('structure_description', QVariant.String),
                                 ])
 
-        # TODO figure out geopackages and database relationships
-        self.create_metric_tables()
+        # SQL for non spatial tables, triggers, and relationships
+        self.design_schema()
 
-    def populate_standard_phases(self):
-        """Populates the phase table with a starting set of phases"""
-        standard_phases = ['Pilot', 'Phase 1', 'Phase 2']
-        self.phases = QgsVectorLayer(self.phases_path, "phases", "ogr")
+    # These initial values are now implemented in SQL
+    # def populate_standard_phases(self):
+    #     """Populates the phase table with a starting set of phases"""
+    #     standard_phases = ['Pilot', 'Phase 1', 'Phase 2']
+    #     self.phases = QgsVectorLayer(self.phases_path, "phases", "ogr")
 
-        standard_fid = 1
-        for standard_name in standard_phases:
-            new_phase_feature = QgsFeature(self.phases.fields())
-            new_phase_feature.setAttribute("fid", standard_fid)
-            new_phase_feature.setAttribute("phase_name", standard_name)
-            new_phase_feature.setAttribute("dominate_action", "New Structure Additions")
-            self.phases.dataProvider().addFeatures([new_phase_feature])
-            standard_fid += 1
+    #     standard_fid = 1
+    #     for standard_name in standard_phases:
+    #         new_phase_feature = QgsFeature(self.phases.fields())
+    #         new_phase_feature.setAttribute("fid", standard_fid)
+    #         new_phase_feature.setAttribute("phase_name", standard_name)
+    #         new_phase_feature.setAttribute("dominate_action", "New Structure Additions")
+    #         self.phases.dataProvider().addFeatures([new_phase_feature])
+        # standard_fid += 1
 
-    def populate_standard_structure_types(self):
-        """Populates the structure types table with a starting set of structure types and attributes"""
-        # TODO turn these into a dictionary with all values for each type
-        standard_bda = ['BDA Large', 'BDA Small', 'BDA Postless']
-        standard_pals = ['PALS Bank Attached', 'PALS Mid-Channel', 'Wood Jam']
-        self.structure_types_layer = QgsVectorLayer(self.structure_types_path, "structure_types", "ogr")
+    # def populate_standard_structure_types(self):
+    #     """Populates the structure types table with a starting set of structure types and attributes"""
+    #     # TODO turn these into a dictionary with all values for each type
+    #     standard_bda = ['BDA Large', 'BDA Small', 'BDA Postless']
+    #     standard_pals = ['PALS Bank Attached', 'PALS Mid-Channel', 'Wood Jam']
+    #     self.structure_types_layer = QgsVectorLayer(self.structure_types_path, "structure_types", "ogr")
 
-        standard_fid = 1
-        for standard_name in standard_bda:
-            new_structure_feature = QgsFeature(self.structure_types_layer.fields())
-            new_structure_feature.setAttribute("fid", standard_fid)
-            new_structure_feature.setAttribute("structure_type_name", standard_name)
-            new_structure_feature.setAttribute("structure_mimics", "Beaver Dam")
-            self.structure_types_layer.dataProvider().addFeatures([new_structure_feature])
-            standard_fid += 1
+    #     standard_fid = 1
+    #     for standard_name in standard_bda:
+    #         new_structure_feature = QgsFeature(self.structure_types_layer.fields())
+    #         new_structure_feature.setAttribute("fid", standard_fid)
+    #         new_structure_feature.setAttribute("structure_type_name", standard_name)
+    #         new_structure_feature.setAttribute("structure_mimics", "Beaver Dam")
+    #         self.structure_types_layer.dataProvider().addFeatures([new_structure_feature])
+    #         standard_fid += 1
 
-        for standard_name in standard_pals:
-            new_structure_feature = QgsFeature(self.structure_types_layer.fields())
-            new_structure_feature.setAttribute("fid", standard_fid)
-            new_structure_feature.setAttribute("structure_type_name", standard_name)
-            new_structure_feature.setAttribute("structure_mimics", "Woody Debris")
-            self.structure_types_layer.dataProvider().addFeatures([new_structure_feature])
-            standard_fid += 1
+    #     for standard_name in standard_pals:
+    #         new_structure_feature = QgsFeature(self.structure_types_layer.fields())
+    #         new_structure_feature.setAttribute("fid", standard_fid)
+    #         new_structure_feature.setAttribute("structure_type_name", standard_name)
+    #         new_structure_feature.setAttribute("structure_mimics", "Woody Debris")
+    #         self.structure_types_layer.dataProvider().addFeatures([new_structure_feature])
+    #         standard_fid += 1
 
     def save_design(self):
         """Creates and saves a new design record to the db from the design dialog"""
@@ -214,19 +214,14 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         self.dataChange.emit(self.qris_project, new_design_name)
         self.close()
 
-    def create_metric_tables(self):
+    def design_schema(self):
         conn = sqlite3.connect(self.geopackage_path)
         conn.execute('PRAGMA foreign_keys = ON;')
         curs = conn.cursor()
-
-        complex_metrics_qry_string = """
-            CREATE TABLE  complex_metrics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            complex_id INTEGER NOT NULL,
-            metric_value INTEGER,
-            FOREIGN KEY (complex_id) REFERENCES complexes(fid));
-        """
-        curs.execute(complex_metrics_qry_string)
+        sql_path = os.path.dirname(os.path.dirname(__file__))
+        design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
+        design_qry_string = open(design_schema_path, 'r').read()
+        curs.executescript(design_qry_string)
         conn.commit()
         conn.close()
 
