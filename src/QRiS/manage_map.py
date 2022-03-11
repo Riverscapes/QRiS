@@ -130,20 +130,22 @@ def add_design_to_map(qris_project, item, node):
         phases_layer.loadNamedStyle(phase_qml)
         node.addLayer(phases_layer)
 
-    # Check if the low tech design node is already added
-    if any([c.name() == item.text() for c in node.children()]):
+    # Check if the design node is already added
+    design_group_name = str(design_id) + "-" + item.text()
+    if any([c.name() == design_group_name for c in node.children()]):
         # if is there set it to the design node
-        design_node = next(n for n in node.children() if n.name() == item.text())
+        design_node = next(n for n in node.children() if n.name() == design_group_name)
     else:
         # if not add the node as a group
-        design_node = node.addGroup(item.text())
+        design_node = node.addGroup(design_group_name)
 
     # TODO All layers consider adding symbology that randomizes some aspect of colors for differentiation
     # TODO All layers consider adding a design identifier such as the fid to the filtered layer name
     # Add structures
+    structure_layer_name = str(design_id) + "-Structures"
     if structure_geometry == 'Point':
         # Add point structures
-        if not any([c.name() == 'Structures' for c in design_node.children()]):
+        if not any([c.name() == structure_layer_name for c in design_node.children()]):
             # Adding the type suffix as I could see adding qml that symbolizes on other attributes
             structure_points_qml = os.path.join(symbology_path, 'symbology', 'structure_points.qml')
             structure_points_layer.loadNamedStyle(structure_points_qml)
@@ -171,11 +173,12 @@ def add_design_to_map(qris_project, item, node):
                 structure_points_layer.setRenderer(renderer)
             structure_points_layer.triggerRepaint()
             # end custom symbology
+            structure_points_layer.setName(structure_layer_name)
             design_node.addLayer(structure_points_layer)
 
     else:
         # Add line structures
-        if not any([c.name() == 'Structures' for c in design_node.children()]):
+        if not any([c.name() == structure_layer_name for c in design_node.children()]):
             structures_lines_qml = os.path.join(symbology_path, 'symbology', 'structure_lines.qml')
             structure_lines_layer.loadNamedStyle(structures_lines_qml)
             QgsExpressionContextUtils.setLayerVariable(structure_lines_layer, 'parent_id', design_id)
@@ -202,24 +205,29 @@ def add_design_to_map(qris_project, item, node):
                 structure_lines_layer.setRenderer(renderer)
             structure_points_layer.triggerRepaint()
             # end custom symbology
+            structure_lines_layer.setName(structure_layer_name)
             design_node.addLayer(structure_lines_layer)
 
     # Add zoi
-    if not any([c.name() == 'ZOI' for c in design_node.children()]):
+    zoi_layer_name = str(design_id) + "-ZOI"
+    if not any([c.name() == zoi_layer_name for c in design_node.children()]):
         zoi_qml = os.path.join(symbology_path, 'symbology', 'zoi_influence.qml')
         zoi_layer.loadNamedStyle(zoi_qml)
         QgsExpressionContextUtils.setLayerVariable(zoi_layer, 'parent_id', design_id)
         zoi_layer.setSubsetString(subset_string)
         QgsProject.instance().addMapLayer(zoi_layer, False)
+        zoi_layer.setName(zoi_layer_name)
         design_node.addLayer(zoi_layer)
 
     # Add complexes
-    if not any([c.name() == 'Complexes' for c in design_node.children()]):
+    complex_layer_name = str(design_id) + "-Complexes"
+    if not any([c.name() == complex_layer_name for c in design_node.children()]):
         complex_qml = os.path.join(symbology_path, 'symbology', 'complex.qml')
         complexes_layer.loadNamedStyle(complex_qml)
         QgsExpressionContextUtils.setLayerVariable(complexes_layer, 'parent_id', design_id)
         complexes_layer.setSubsetString(subset_string)
         QgsProject.instance().addMapLayer(complexes_layer, False)
+        complexes_layer.setName(complex_layer_name)
         design_node.addLayer(complexes_layer)
 
 
