@@ -209,7 +209,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             designs_layer = QgsVectorLayer(designs_path, "designs", "ogr")
             for design_feature in designs_layer.getFeatures():
                 # If these data types stick this should be refactored into a create node function
-                design_node = QStandardItem(design_feature.attribute('design_name'))
+                design_node = QStandardItem(design_feature.attribute('name'))
                 design_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
@@ -229,7 +229,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         structure_type_path = design_geopackage_path + '|layername=structure_types'
         structure_type_layer = QgsVectorLayer(structure_type_path, "structure_types", "ogr")
         for structure_type in structure_type_layer.getFeatures():
-            structure_type_node = QStandardItem(structure_type.attribute('structure_type_name'))
+            structure_type_node = QStandardItem(structure_type.attribute('name'))
             # TODO change the icon
             structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
             structure_type_node.setData('structure_type', item_code['item_type'])
@@ -246,7 +246,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         phase_path = design_geopackage_path + '|layername=phases'
         phase_layer = QgsVectorLayer(phase_path, "phases", "ogr")
         for phase in phase_layer.getFeatures():
-            phase_node = QStandardItem(phase.attribute('phase_name'))
+            phase_node = QStandardItem(phase.attribute('name'))
             # TODO change the icon
             phase_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
             phase_node.setData('phase', item_code['item_type'])

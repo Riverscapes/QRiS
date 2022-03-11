@@ -1,4 +1,6 @@
 import os
+import sqlite3
+
 # from typing_extensions import ParamSpecKwargs
 
 from osgeo import gdal
@@ -38,9 +40,14 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
         self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
         self.structure_types_path = self.geopackage_path + '|layername=structure_types'
 
-        # population combo boxes
-        list_of_structure_mimics = ['Beaver Dam', 'Wood Jam', 'Other Structure']
-        self.comboBox_structure_mimics.addItems(list_of_structure_mimics)
+        # population combo box
+        conn = sqlite3.connect(self.geopackage_path)
+        curs = conn.cursor()
+        curs.execute('SELECT * FROM structure_mimics')
+        mimics = curs.fetchall()
+        conn.close()
+        for mimic in mimics:
+            self.comboBox_structure_mimics.addItem(mimic[1], mimic[0])
 
         # add signals
         self.buttonBox.accepted.connect(self.save_structure_type)
@@ -56,7 +63,7 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
             new_fid = 1
         # grab the form values
         new_structure_type_name = self.lineEdit_structure_type_name.text()
-        new_structure_mimics = self.comboBox_structure_mimics.currentText()
+        new_structure_mimics = self.comboBox_structure_mimics.currentData()
         new_construction_description = self.plainTextEdit_construction_description.toPlainText()
         new_function_description = self.plainTextEdit_function_description.toPlainText()
 
@@ -67,8 +74,8 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
 
         new_structure_type_feature = QgsFeature(self.structure_type_layer.fields())
         new_structure_type_feature.setAttribute("fid", new_fid)
-        new_structure_type_feature.setAttribute("structure_type_name", new_structure_type_name)
-        new_structure_type_feature.setAttribute("structure_mimics", new_structure_mimics)
+        new_structure_type_feature.setAttribute("name", new_structure_type_name)
+        new_structure_type_feature.setAttribute("mimics_id", new_structure_mimics)
         new_structure_type_feature.setAttribute("construction_description", new_construction_description)
         new_structure_type_feature.setAttribute("function_description", new_function_description)
 

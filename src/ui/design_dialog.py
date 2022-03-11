@@ -5,7 +5,7 @@ from osgeo import gdal
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QDialogButtonBox, QMessageBox
-from qgis.PyQt.QtCore import pyqtSignal, QVariant, QDate
+from qgis.PyQt.QtCore import pyqtSignal, QVariant, QDateTime
 from qgis.core import (
     Qgis,
     QgsProject,
@@ -38,25 +38,30 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
         self.designs_path = self.geopackage_path + '|layername=designs'
         self.structure_types_path = self.geopackage_path + '|layername=structure_types'
+        self.status_path = self.geopackage_path + '|layername=design_status'
         self.phases_path = self.geopackage_path + '|layername=phases'
         self.zoi_path = self.geopackage_path + '|layername=zoi'
         self.complexes_path = self.geopackage_path + '|layername=complexes'
         self.structure_points_path = self.geopackage_path + '|layername=structure_points'
         self.structure_lines_path = self.geopackage_path + '|layername=structure_lines'
 
-        # population combo boxes
-        design_geometry = ['Point', 'Line']
-        design_status = ['As-Built', 'Specification']
-        self.comboBox_design_geometry.addItems(design_geometry)
-        self.comboBox_design_status.addItems(design_status)
+        # create the db if it isn't there?
+        if not os.path.exists(self.geopackage_path):
+            self.create_design_geopackage()
+
+        # populate combo boxes
+        conn = sqlite3.connect(self.geopackage_path)
+        curs = conn.cursor()
+        curs.execute('SELECT * FROM design_status')
+        statuses = curs.fetchall()
+        conn.close()
+        for status in statuses:
+            self.comboBox_design_status.addItem(status[1], status[0])
+        self.comboBox_design_geometry.addItems(['Point', 'Line'])
 
         # add signals to buttons
         self.buttonBox.accepted.connect(self.save_design)
         self.buttonBox.rejected.connect(self.cancel_design)
-
-        # create the db if it isn't there?
-        if not os.path.exists(self.geopackage_path):
-            self.create_design_geopackage()
 
     def create_design_geopackage(self):
         """Creates design directory, geopackage, and tables"""
@@ -81,51 +86,16 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
         # QgsVectorFileWriter.writeAsVectorFormat(memory_designs, self.geopackage_path, options)
 
-        # create_geopackage_table('NoGeometry', 'designs', self.geopackage_path, self.designs_path,
-        #                         [
-        #                             ('design_name', QVariant.String),
-        #                             ('design_geometry', QVariant.String),
-        #                             ('design_status', QVariant.String),
-        #                             ('design_description', QVariant.String),
-        #                         ])
-
-        # create_geopackage_table('NoGeometry', 'structure_types', self.geopackage_path, self.structure_types_path,
-        #                         [
-        #                             ('structure_type_name', QVariant.String),
-        #                             ('structure_mimics', QVariant.String),
-        #                             ('construction_description', QVariant.String),
-        #                             ('function_description', QVariant.String),
-        #                             ('typical_posts', QVariant.Int),
-        #                             ('typical_length', QVariant.Double),
-        #                             ('typical_width', QVariant.Double),
-        #                             ('typical_height', QVariant.Double),
-        #                         ])
-
-        # self.populate_standard_structure_types()
-
-        # create_geopackage_table('NoGeometry', 'phases', self.geopackage_path, self.phases_path,
-        #                         [
-        #                             ('phase_name', QVariant.String),
-        #                             ('dominate_action', QVariant.String),
-        #                             ('implementation_date', QVariant.Date),
-        #                             ('phase_description', QVariant.String)
-        #                         ])
-
-        # self.populate_standard_phases()
-
         create_geopackage_table('Polygon', 'zoi', self.geopackage_path, self.zoi_path,
                                 [
-                                    # ('design_id', QVariant.Int),
-                                    ('zoi_name', QVariant.String),
-                                    ('zoi_type', QVariant.String),
-                                    ('zoi_influence', QVariant.String),
-                                    ('zoi_description', QVariant.String),
+                                    ('influence', QVariant.String),
+                                    ('description', QVariant.String),
                                 ])
         create_geopackage_table('Polygon', 'complexes', self.geopackage_path, self.complexes_path,
                                 [
                                     # ('design_id', QVariant.Int),
-                                    ('complex_name', QVariant.String),
-                                    ('complex_narrative', QVariant.String),
+                                    ('name', QVariant.String),
+                                    ('description', QVariant.String),
                                     ('initial_condition', QVariant.String),
                                     ('target_condition', QVariant.String),
                                 ])
@@ -135,7 +105,8 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     # ('design_id', QVariant.Int),
                                     # ('structure_type_id', QVariant.Int),
                                     # ('phase_id', QVariant.Int),
-                                    ('structure_description', QVariant.String),
+                                    ('name', QVariant.String),
+                                    ('description', QVariant.String),
                                 ])
 
         create_geopackage_table('Linestring', 'structure_lines', self.geopackage_path, self.structure_lines_path,
@@ -143,11 +114,20 @@ class DesignDlg(QDialog, DIALOG_CLASS):
                                     # ('design_id', QVariant.Int),
                                     # ('structure_type_id', QVariant.Int),
                                     # ('phase_id', QVariant.Int),
-                                    ('structure_description', QVariant.String),
+                                    ('name', QVariant.String),
+                                    ('description', QVariant.String),
                                 ])
 
-        # SQL for non spatial tables, triggers, and relationships
-        self.design_schema()
+        # SQL for non spatial tables, initial values, and data relationships
+        conn = sqlite3.connect(self.geopackage_path)
+        conn.execute('PRAGMA foreign_keys = ON;')
+        curs = conn.cursor()
+        sql_path = os.path.dirname(os.path.dirname(__file__))
+        design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
+        design_qry_string = open(design_schema_path, 'r').read()
+        curs.executescript(design_qry_string)
+        conn.commit()
+        conn.close()
 
     # These initial values are now implemented in SQL
     # def populate_standard_phases(self):
@@ -188,6 +168,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
     #         self.structure_types_layer.dataProvider().addFeatures([new_structure_feature])
     #         standard_fid += 1
 
+    # TODO Refactor to be an sql insert statement
     def save_design(self):
         """Creates and saves a new design record to the db from the design dialog"""
         self.designs_layer = QgsVectorLayer(self.designs_path, "designs", "ogr")
@@ -199,31 +180,21 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # # grab the form values
         new_design_name = self.lineEdit_design_name.text()
         new_design_geometry = self.comboBox_design_geometry.currentText()
-        new_design_status = self.comboBox_design_status.currentText()
+        new_design_status = self.comboBox_design_status.currentData()
         new_design_description = self.plainTextEdit_design_description.toPlainText()
         # create a blank QgsFeature that copies the deployemnt table
         new_design_feature = QgsFeature(self.designs_layer.fields())
         # # set the form values to the feature
         new_design_feature.setAttribute("fid", new_design_fid)
-        new_design_feature.setAttribute("design_name", new_design_name)
-        new_design_feature.setAttribute("design_geometry", new_design_geometry)
-        new_design_feature.setAttribute("design_status", new_design_status)
-        new_design_feature.setAttribute("design_description", new_design_description)
+        new_design_feature.setAttribute("name", new_design_name)
+        new_design_feature.setAttribute("structure_geometry", new_design_geometry)
+        new_design_feature.setAttribute("status_id", new_design_status)
+        new_design_feature.setAttribute("description", new_design_description)
+        new_design_feature.setAttribute("created", QDateTime.currentDateTime())
         pr = self.designs_layer.dataProvider()
         pr.addFeatures([new_design_feature])
         self.dataChange.emit(self.qris_project, new_design_name)
         self.close()
-
-    def design_schema(self):
-        conn = sqlite3.connect(self.geopackage_path)
-        conn.execute('PRAGMA foreign_keys = ON;')
-        curs = conn.cursor()
-        sql_path = os.path.dirname(os.path.dirname(__file__))
-        design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
-        design_qry_string = open(design_schema_path, 'r').read()
-        curs.executescript(design_qry_string)
-        conn.commit()
-        conn.close()
 
     def cancel_design(self):
         self.close()

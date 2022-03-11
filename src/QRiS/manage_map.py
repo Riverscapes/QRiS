@@ -104,10 +104,10 @@ def add_design_to_map(qris_project, item, node):
     structure_points_layer = QgsVectorLayer(geopackage_path + "|layername=structure_points", "Structures", "ogr")
     structure_lines_layer = QgsVectorLayer(geopackage_path + "|layername=structure_lines", "Structures", "ogr")
 
-    # Get the design source as field or desktop from the feature itself
+    # Get the structure geometry type
     design_iterator = designs_layer.getFeatures(QgsFeatureRequest().setFilterFid(design_id))
     design_feature = next(design_iterator)
-    design_geometry = design_feature['design_geometry']
+    structure_geometry = design_feature['structure_geometry']
 
     # Check if the designs table has been added and if not add it.
     if not any([c.name() == 'Designs' for c in node.children()]):
@@ -126,11 +126,9 @@ def add_design_to_map(qris_project, item, node):
     # Check if the Phases table has been added and if not add it.
     if not any([c.name() == 'Implementation Phases' for c in node.children()]):
         QgsProject.instance().addMapLayer(phases_layer, False)
-        # Add the qml
         phase_qml = os.path.join(symbology_path, 'symbology', 'phases.qml')
         phases_layer.loadNamedStyle(phase_qml)
         node.addLayer(phases_layer)
-        # Consider making this layer read only
 
     # Check if the low tech design node is already added
     if any([c.name() == item.text() for c in node.children()]):
@@ -143,7 +141,7 @@ def add_design_to_map(qris_project, item, node):
     # TODO All layers consider adding symbology that randomizes some aspect of colors for differentiation
     # TODO All layers consider adding a design identifier such as the fid to the filtered layer name
     # Add structures
-    if design_geometry == 'Point':
+    if structure_geometry == 'Point':
         # Add point structures
         if not any([c.name() == 'Structures' for c in design_node.children()]):
             # Adding the type suffix as I could see adding qml that symbolizes on other attributes
@@ -156,7 +154,7 @@ def add_design_to_map(qris_project, item, node):
             # TODO Refactor into a function
             unique_values = []
             for feature in structure_types_layer.getFeatures():
-                values = (feature["fid"], feature["structure_type_name"])
+                values = (feature["fid"], feature["name"])
                 unique_values.append(values)
 
             categories = []
@@ -187,7 +185,7 @@ def add_design_to_map(qris_project, item, node):
             # TODO Refactor into a function
             unique_values = []
             for feature in structure_types_layer.getFeatures():
-                values = (feature["fid"], feature["structure_type_name"])
+                values = (feature["fid"], feature["name"])
                 unique_values.append(values)
 
             categories = []

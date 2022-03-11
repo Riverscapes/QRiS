@@ -1,4 +1,5 @@
 import os
+import sqlite3
 # from typing_extensions import ParamSpecKwargs
 
 from osgeo import gdal
@@ -37,12 +38,13 @@ class PhaseDlg(QDialog, DIALOG_CLASS):
         self.phase_path = self.geopackage_path + '|layername=phases'
 
         # populate combo boxes
-        dominate_phase_actions = [
-            'New Structure Additions',
-            'Existing Structure Enhancements',
-            'Other'
-        ]
-        self.comboBox_dominate_action.addItems(dominate_phase_actions)
+        conn = sqlite3.connect(self.geopackage_path)
+        curs = conn.cursor()
+        curs.execute('SELECT * FROM phase_action')
+        actions = curs.fetchall()
+        conn.close()
+        for action in actions:
+            self.comboBox_primary_action.addItem(action[1], action[0])
 
         # add signals to buttons
         self.buttonBox.accepted.connect(self.save_phase)
@@ -58,7 +60,7 @@ class PhaseDlg(QDialog, DIALOG_CLASS):
             new_fid = 1
         # grab the form values
         new_phase_name = self.lineEdit_phase_name.text()
-        new_dominate_action = self.comboBox_dominate_action.currentText()
+        new_primary_action = self.comboBox_primary_action.currentData()
         new_implementation_date = self.dateEdit_implementation_date.date()
         new_phase_description = self.plainTextEdit_phase_description.toPlainText()
 
@@ -66,10 +68,10 @@ class PhaseDlg(QDialog, DIALOG_CLASS):
         new_phase_feature = QgsFeature(self.phase_layer.fields())
         # set the form values to the feature
         new_phase_feature.setAttribute("fid", new_fid)
-        new_phase_feature.setAttribute("phase_name", new_phase_name)
-        new_phase_feature.setAttribute("dominate_action", new_dominate_action)
+        new_phase_feature.setAttribute("name", new_phase_name)
+        new_phase_feature.setAttribute("primary_action_id", new_primary_action)
         new_phase_feature.setAttribute("implementation_date", new_implementation_date)
-        new_phase_feature.setAttribute("phase_description", new_phase_description)
+        new_phase_feature.setAttribute("description", new_phase_description)
 
         pr = self.phase_layer.dataProvider()
         pr.addFeatures([new_phase_feature])
