@@ -56,6 +56,7 @@ from .ui.add_detrended_dialog import AddDetrendedRasterDlg
 from .ui.assessment_dialog import AssessmentDlg
 from .ui.design_dialog import DesignDlg
 from .ui.structure_type_dialog import StructureTypeDlg
+from .ui.zoi_type_dialog import ZoiTypeDlg
 from .ui.phase_dialog import PhaseDlg
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -253,11 +254,27 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             phase_node.setData(phase.attribute('fid'), item_code['feature_id'])
             phase_folder.appendRow(phase_node)
 
+        # populate zoi types
+        zoi_type_folder = QStandardItem("ZOI Types")
+        zoi_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/Options.png'))
+        zoi_type_folder.setData('zoi_type_folder', item_code['item_type'])
+        design_folder.appendRow(zoi_type_folder)
+
+        zoi_type_path = design_geopackage_path + '|layername=zoi_types'
+        zoi_type_layer = QgsVectorLayer(zoi_type_path, "zoi_types", "ogr")
+        for zoi_type in zoi_type_layer.getFeatures():
+            zoi_type_node = QStandardItem(zoi_type.attribute('name'))
+            # TODO change the icon
+            zoi_type_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+            zoi_type_node.setData('zoi_type', item_code['item_type'])
+            zoi_type_node.setData(zoi_type.attribute('fid'), item_code['feature_id'])
+            zoi_type_folder.appendRow(zoi_type_node)
+
         # Add a placed for photos
-        photos_folder = QStandardItem("Project Photos")
-        photos_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        photos_folder.setData('photos_folder', item_code['item_type'])
-        project_node.appendRow(photos_folder)
+        # photos_folder = QStandardItem("Project Photos")
+        # photos_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+        # photos_folder.setData('photos_folder', item_code['item_type'])
+        # project_node.appendRow(photos_folder)
 
         # TODO for now we are expanding the map however need to remember expanded state or add new nodes as we add data
         self.treeView.expandAll()
@@ -318,11 +335,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "structure_type_folder":
             self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
+        elif item_type == "zoi_type_folder":
+            self.menu.addAction('ADD_ZOI_TYPE', lambda: self.add_zoi_type())
+        elif item_type == "zoi_type":
+            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "phase_folder":
             self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
-        elif item_type == "photos_folder":
-            self.menu.addAction('IMPORT_PHOTOS', lambda: self.import_photos())
-            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
+        # elif item_type == "photos_folder":
+        #     self.menu.addAction('IMPORT_PHOTOS', lambda: self.import_photos())
+        #     self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         else:
             self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
@@ -357,6 +378,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.structure_type_dialog = StructureTypeDlg(self.qris_project)
             self.structure_type_dialog.dataChange.connect(self.build_tree_view)
             self.structure_type_dialog.show()
+        else:
+            # TODO move the creation of the design data model so that this isn't necessary
+            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")
+
+    def add_zoi_type(self):
+        """Initiates adding a zoi type and the zoi type dialog"""
+        # TODO First check if the path to the database exists
+        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+        if os.path.exists(design_geopackage_path):
+            self.zoi_type_dialog = ZoiTypeDlg(self.qris_project)
+            self.zoi_type_dialog.dataChange.connect(self.build_tree_view)
+            self.zoi_type_dialog.show()
         else:
             # TODO move the creation of the design data model so that this isn't necessary
             QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")

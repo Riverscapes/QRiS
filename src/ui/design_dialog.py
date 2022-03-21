@@ -38,7 +38,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
         self.designs_path = self.geopackage_path + '|layername=designs'
         self.structure_types_path = self.geopackage_path + '|layername=structure_types'
-        self.status_path = self.geopackage_path + '|layername=design_status'
+        self.status_path = self.geopackage_path + '|layername=lkp_design_status'
         self.phases_path = self.geopackage_path + '|layername=phases'
         self.zoi_path = self.geopackage_path + '|layername=zoi'
         self.complexes_path = self.geopackage_path + '|layername=complexes'
@@ -52,7 +52,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # populate combo boxes
         conn = sqlite3.connect(self.geopackage_path)
         curs = conn.cursor()
-        curs.execute('SELECT * FROM design_status')
+        curs.execute('SELECT * FROM lkp_design_status')
         statuses = curs.fetchall()
         conn.close()
         for status in statuses:
@@ -88,8 +88,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
 
         create_geopackage_table('Polygon', 'zoi', self.geopackage_path, self.zoi_path,
                                 [
-                                    ('influence', QVariant.String),
-                                    ('description', QVariant.String),
+                                    ('description', QVariant.String)
                                 ])
         create_geopackage_table('Polygon', 'complexes', self.geopackage_path, self.complexes_path,
                                 [
@@ -123,9 +122,15 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         conn.execute('PRAGMA foreign_keys = ON;')
         curs = conn.cursor()
         sql_path = os.path.dirname(os.path.dirname(__file__))
+
         design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
         design_qry_string = open(design_schema_path, 'r').read()
         curs.executescript(design_qry_string)
+
+        design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
+        design_qry_string = open(design_schema_path, 'r').read()
+        curs.executescript(design_qry_string)
+
         conn.commit()
         conn.close()
 

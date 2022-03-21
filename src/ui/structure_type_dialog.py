@@ -43,7 +43,7 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
         # population combo box
         conn = sqlite3.connect(self.geopackage_path)
         curs = conn.cursor()
-        curs.execute('SELECT * FROM structure_mimics')
+        curs.execute('SELECT * FROM lkp_structure_mimics')
         mimics = curs.fetchall()
         conn.close()
         for mimic in mimics:

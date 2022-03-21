@@ -1,71 +1,72 @@
 -- Create lookup tables these values should not change....EVER!!!!
-CREATE TABLE design_status (
+CREATE TABLE lkp_design_status (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO design_status (fid, name, description) VALUES (1, "Specification", "Design is a specification of structure locations and types that may be built in the future");
-INSERT INTO design_status (fid, name, description) VALUES (2, "As-Built", "Design is a representation of structure locations and types that have been built");
+INSERT INTO lkp_design_status (fid, name, description) VALUES (1, "Specification", "Design is a specification of structure locations and types that may be built in the future");
+INSERT INTO lkp_design_status (fid, name, description) VALUES (2, "As-Built", "Design is a representation of structure locations and types that have been built");
 
 
-CREATE TABLE structure_mimics (
+CREATE TABLE lkp_structure_mimics (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO structure_mimics (fid, name, description) VALUES (1, "Beaver Dam", "Structure has been designed to mimic the form and function of a beaver dam");
-INSERT INTO structure_mimics (fid, name, description) VALUES (2, "Wood Jam", "Structure has been designed to mimic the form and function of a wood jam or piece of woody debris");
-INSERT INTO structure_mimics (fid, name, description) VALUES (3, "Other", "Structure does not mimic a beaver dam, wood jam, or woody debris");
+INSERT INTO lkp_structure_mimics (fid, name, description) VALUES (1, "Beaver Dam", "Structure has been designed to mimic the form and function of a beaver dam");
+INSERT INTO lkp_structure_mimics (fid, name, description) VALUES (2, "Wood Jam", "Structure has been designed to mimic the form and function of a wood jam or piece of woody debris");
+INSERT INTO lkp_structure_mimics (fid, name, description) VALUES (3, "Other", "Structure does not mimic a beaver dam, wood jam, or woody debris");
 
 
-CREATE TABLE phase_action (
+CREATE TABLE lkp_phase_action (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO phase_action (fid, name, description) VALUES (1, "New Structure Additions", "Phase implementation primarily consists of new structure construction");
-INSERT INTO phase_action (fid, name, description) VALUES (2, "Existing Structure Enhancements", "Phase implementation primarily consists of enhancing the materials and dimensions of existing structures");
-INSERT INTO phase_action (fid, name, description) VALUES (3, "Other", "Phase implementation consists of other implementation actions");
+INSERT INTO lkp_phase_action (fid, name, description) VALUES (1, "New Structure Additions", "Phase implementation primarily consists of new structure construction");
+INSERT INTO lkp_phase_action (fid, name, description) VALUES (2, "Existing Structure Enhancements", "Phase implementation primarily consists of enhancing the materials and dimensions of existing structures");
+INSERT INTO lkp_phase_action (fid, name, description) VALUES (3, "Other", "Phase implementation consists of other implementation actions");
 
-CREATE TABLE zoi_stage (
+CREATE TABLE lkp_zoi_stage (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO zoi_stage (fid, name, description) VALUES (1, "Baseflow", "Extent is the expected influence during or in response to baseflow discharge");
-INSERT INTO zoi_stage (fid, name, description) VALUES (2, "Typical Flood", "Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)");
-INSERT INTO zoi_stage (fid, name, description) VALUES (3, "Large Flood", "Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)");
-INSERT INTO zoi_stage (fid, name, description) VALUES (4, "Other", "Extent is not related to flood event");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (1, "Baseflow", "Extent is the expected influence during or in response to baseflow discharge");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (2, "Typical Flood", "Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (3, "Large Flood", "Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (4, "Other", "Extent is not related to flood event");
 
 
-CREATE TABLE zoi_influence (
+CREATE TABLE lkp_zoi_influence (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO zoi_influence (fid, name, description) VALUES (1, "Depositional Zone", "Area of lateral (e.g., point bar development) and/or elevational (mid-channel bar formation) sediment deposition");
-INSERT INTO zoi_influence (fid, name, description) VALUES (2, "Erosional Zone", "Area of lateral (e.g., bank erosion) and/or elevational (e.g., pool formation) erosion");
-INSERT INTO zoi_influence (fid, name, description) VALUES (3, "Overbank Flow", "Area of overbank flow dispersal onto valley bottom surfaces (e.g., secondary channel formation, disconnected floodplain inundation)");
-INSERT INTO zoi_influence (fid, name, description) VALUES (4, "Pond Creation", "Area of pond formation behind a structural element (e.g., BDA, wood jam, BDA structure complex)");
-INSERT INTO zoi_influence (fid, name, description) VALUES (5, "Vegetation Response", "Area of vegetation response (e.g., upland vegetation reduction, riparian vegetation expansion, planting treatment footprint)");
-INSERT INTO zoi_influence (fid, name, description) VALUES (6, "Hydraulic Feature", "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (1, "Depositional Zone", "Area of lateral (e.g., point bar development) and/or elevational (mid-channel bar formation) sediment deposition");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (2, "Erosional Zone", "Area of lateral (e.g., bank erosion) and/or elevational (e.g., pool formation) erosion");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (3, "Overbank Flow", "Area of overbank flow dispersal onto valley bottom surfaces (e.g., secondary channel formation, disconnected floodplain inundation)");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (4, "Pond Extent", "Area of pond formation behind a structural element (e.g., BDA, wood jam, BDA structure complex)");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (5, "Vegetation Response", "Area of vegetation response (e.g., upland vegetation reduction, riparian vegetation expansion, planting treatment footprint)");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (6, "Hydraulic Response", "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
+INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (7, "Other", "A project specific response or influence");
 
 -- Create non-spatial tables
 CREATE TABLE designs (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     structure_geometry TEXT,
-    status_id INTEGER REFERENCES design_status(fid) ON DELETE CASCADE,
+    status_id INTEGER REFERENCES lkp_design_status(fid) ON DELETE CASCADE,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -73,7 +74,7 @@ CREATE TABLE designs (
 CREATE TABLE structure_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
-    mimics_id INTEGER REFERENCES structure_mimics(fid) ON DELETE CASCADE,
+    mimics_id INTEGER REFERENCES lkp_structure_mimics(fid) ON DELETE CASCADE,
     construction_description TEXT,
     function_description TEXT,
     typical_posts INTEGER,
@@ -91,10 +92,25 @@ INSERT INTO structure_types (fid, name, mimics_id) VALUES (4, "PALS Mid-Channel"
 INSERT INTO structure_types (fid, name, mimics_id) VALUES (5, "PALS Bank Attached", 2);
 INSERT INTO structure_types (fid, name, mimics_id) VALUES (6, "Wood Jam", 2);
 
+CREATE TABLE zoi_types (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    influence_id REFERENCES lkp_zoi_influence(fid) ON DELETE CASCADE,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (1, "Depositional Zone", 1, "Area of lateral (e.g., point bar development) and/or elevational (mid-channel bar formation) sediment deposition");
+INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (2, "Erosional Zone", 2, "Area of lateral (e.g., bank erosion) and/or elevational (e.g., pool formation) erosion");
+INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (3, "Overbank Flow", 3, "Area of overbank flow dispersal onto valley bottom surfaces (e.g., secondary channel formation, disconnected floodplain inundation)");
+INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (4, "Pond Extent", 4, "Area of pond formation behind a structural element (e.g., BDA, wood jam, BDA structure complex)");
+INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (5, "Vegetation Response", 5, "Area of vegetation response (e.g., upland vegetation reduction, riparian vegetation expansion, planting treatment footprint)");
+INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (6, "Hydraulic Response", 6, "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
+
 CREATE TABLE phases (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
-    primary_action_id INTEGER REFERENCES phase_action(fid) ON DELETE CASCADE,
+    primary_action_id INTEGER REFERENCES lkp_phase_action(fid) ON DELETE CASCADE,
     implementation_date DATE,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -107,8 +123,8 @@ INSERT INTO phases (fid, name, primary_action_id) VALUES (3, "Phase 2", 1);
 
 -- Add foriegn keys and relationships to existing spatial tables
 ALTER TABLE zoi ADD COLUMN design_id INTEGER REFERENCES designs(fid) ON DELETE CASCADE;
-ALTER TABLE zoi ADD COLUMN influence_id INTEGER REFERENCES zoi_influnece(fid) ON DELETE CASCADE;
-ALTER TABLE zoi ADD COLUMN stage_id INTEGER REFERENCES zoi_stage(fid) ON DELETE CASCADE;
+ALTER TABLE zoi ADD COLUMN influence_type_id INTEGER REFERENCES zoi_types(fid) ON DELETE CASCADE;
+ALTER TABLE zoi ADD COLUMN stage_id INTEGER REFERENCES lkp_zoi_stage(fid) ON DELETE CASCADE;
 ALTER TABLE complexes ADD COLUMN design_id INTEGER REFERENCES designs(fid) ON DELETE CASCADE;
 ALTER TABLE structure_lines ADD COLUMN design_id INTEGER REFERENCES designs(fid) ON DELETE CASCADE;
 ALTER TABLE structure_lines ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(fid) ON DELETE CASCADE;
@@ -125,13 +141,14 @@ ALTER TABLE structure_lines ADD COLUMN created DATETIME;
 
 
 -- Add table names to the geopackages contents table so they are revealed in QGIS
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("structure_mimics", "attributes", "structure_mimics", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("zoi_stage", "attributes", "zoi_stage", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("zoi_influence", "attributes", "zoi_influence", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("phase_action", "attributes", "phase_action", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("design_status", "attributes", "design_status", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_mimics", "attributes", "lkp_structure_mimics", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_zoi_stage", "attributes", "lkp_zoi_stage", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_zoi_influence", "attributes", "lkp_zoi_influence", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_phase_action", "attributes", "lkp_phase_action", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_design_status", "attributes", "lkp_design_status", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("designs", "attributes", "designs", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("structure_types", "attributes", "structure_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("zoi_types", "attributes", "zoi_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("phases", "attributes", "phases", 0);
 
 -- views

@@ -15,12 +15,9 @@
   <customproperties>
     <Option type="Map">
       <Option name="dualview/previewExpressions" type="List">
-        <Option type="QString" value="concat(to_string(&quot;fid&quot;), '-', &quot;name&quot;)"/>
-        <Option type="QString" value="&quot;design_name&quot;"/>
-        <Option type="QString" value="concat(&quot;fid&quot;, &quot;-&quot;, &quot;design_name&quot;)"/>
-        <Option type="QString" value="concat(to_string(&quot;fid&quot;), '-', &quot;name&quot;)"/>
+        <Option type="QString" value="&quot;name&quot;"/>
       </Option>
-      <Option name="embeddedWidgets/count" type="QString" value="0"/>
+      <Option name="embeddedWidgets/count" type="int" value="0"/>
       <Option name="variableNames"/>
       <Option name="variableValues"/>
     </Option>
@@ -52,23 +49,7 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="None" name="structure_geometry">
-      <editWidget type="ValueMap">
-        <config>
-          <Option type="Map">
-            <Option name="map" type="List">
-              <Option type="Map">
-                <Option name="Point" type="QString" value="Point"/>
-              </Option>
-              <Option type="Map">
-                <Option name="Line" type="QString" value="Line"/>
-              </Option>
-            </Option>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="None" name="status_id">
+    <field configurationFlags="None" name="influence_id">
       <editWidget type="ValueRelation">
         <config>
           <Option type="Map">
@@ -77,10 +58,10 @@
             <Option name="Description" type="QString" value="&quot;description&quot;"/>
             <Option name="FilterExpression" type="QString" value=""/>
             <Option name="Key" type="QString" value="fid"/>
-            <Option name="Layer" type="QString" value="Design_Status_6012f983_2137_4176_abaa_675a5477cf9d"/>
-            <Option name="LayerName" type="QString" value="Design Status"/>
+            <Option name="Layer" type="QString" value="ZOI_Influence_e976a113_eb9d_4f6f_a72e_7b64abdb0130"/>
+            <Option name="LayerName" type="QString" value="ZOI Influence"/>
             <Option name="LayerProviderName" type="QString" value="ogr"/>
-            <Option name="LayerSource" type="QString" value="/Users/nick/Desktop/ztest/designs/designs.gpkg|layername=design_status"/>
+            <Option name="LayerSource" type="QString" value="/Users/nick/Desktop/ztest/designs/designs.gpkg|layername=lkp_zoi_influence"/>
             <Option name="NofColumns" type="int" value="1"/>
             <Option name="OrderByValue" type="bool" value="false"/>
             <Option name="UseCompleter" type="bool" value="false"/>
@@ -100,48 +81,38 @@
       </editWidget>
     </field>
     <field configurationFlags="None" name="created">
-      <editWidget type="DateTime">
+      <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option name="allow_null" type="bool" value="true"/>
-            <Option name="calendar_popup" type="bool" value="true"/>
-            <Option name="display_format" type="QString" value="M/d/yy HH:mm:ss"/>
-            <Option name="field_format" type="QString" value="M/d/yy HH:mm:ss"/>
-            <Option name="field_iso_format" type="bool" value="false"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
   </fieldConfiguration>
   <aliases>
-    <alias index="0" name="Design ID" field="fid"/>
-    <alias index="1" name="Design Name" field="name"/>
-    <alias index="2" name="Structure Geometry" field="structure_geometry"/>
-    <alias index="3" name="Design Status" field="status_id"/>
-    <alias index="4" name="Design Description" field="description"/>
-    <alias index="5" name="" field="created"/>
+    <alias index="0" name="ZOI Type ID" field="fid"/>
+    <alias index="1" name="ZOI Type Name" field="name"/>
+    <alias index="2" name="Influence Type" field="influence_id"/>
+    <alias index="3" name="Description" field="description"/>
+    <alias index="4" name="" field="created"/>
   </aliases>
   <defaults>
     <default applyOnUpdate="0" expression="" field="fid"/>
     <default applyOnUpdate="0" expression="" field="name"/>
-    <default applyOnUpdate="0" expression="" field="structure_geometry"/>
-    <default applyOnUpdate="0" expression="" field="status_id"/>
+    <default applyOnUpdate="0" expression="" field="influence_id"/>
     <default applyOnUpdate="0" expression="" field="description"/>
     <default applyOnUpdate="0" expression="" field="created"/>
   </defaults>
   <constraints>
     <constraint constraints="3" notnull_strength="1" unique_strength="1" exp_strength="0" field="fid"/>
-    <constraint constraints="3" notnull_strength="1" unique_strength="1" exp_strength="0" field="name"/>
-    <constraint constraints="1" notnull_strength="1" unique_strength="0" exp_strength="0" field="structure_geometry"/>
-    <constraint constraints="1" notnull_strength="1" unique_strength="0" exp_strength="0" field="status_id"/>
+    <constraint constraints="1" notnull_strength="1" unique_strength="0" exp_strength="0" field="name"/>
+    <constraint constraints="1" notnull_strength="1" unique_strength="0" exp_strength="0" field="influence_id"/>
     <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="description"/>
     <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="created"/>
   </constraints>
   <constraintExpressions>
     <constraint exp="" desc="" field="fid"/>
     <constraint exp="" desc="" field="name"/>
-    <constraint exp="" desc="" field="structure_geometry"/>
-    <constraint exp="" desc="" field="status_id"/>
+    <constraint exp="" desc="" field="influence_id"/>
     <constraint exp="" desc="" field="description"/>
     <constraint exp="" desc="" field="created"/>
   </constraintExpressions>
@@ -152,11 +123,10 @@
   <attributetableconfig sortOrder="0" sortExpression="" actionWidgetStyle="dropDown">
     <columns>
       <column name="fid" type="field" width="-1" hidden="0"/>
-      <column name="name" type="field" width="170" hidden="0"/>
-      <column name="structure_geometry" type="field" width="149" hidden="0"/>
-      <column name="status_id" type="field" width="126" hidden="0"/>
-      <column name="description" type="field" width="114" hidden="0"/>
-      <column name="created" type="field" width="189" hidden="0"/>
+      <column name="name" type="field" width="-1" hidden="0"/>
+      <column name="influence_id" type="field" width="113" hidden="0"/>
+      <column name="description" type="field" width="202" hidden="0"/>
+      <column name="created" type="field" width="136" hidden="0"/>
       <column type="actions" width="-1" hidden="1"/>
     </columns>
   </attributetableconfig>
@@ -191,46 +161,34 @@ def my_form_open(dialog, layer, feature):
   <attributeEditorForm>
     <attributeEditorField showLabel="1" name="fid" index="0"/>
     <attributeEditorField showLabel="1" name="name" index="1"/>
-    <attributeEditorField showLabel="1" name="status_id" index="3"/>
-    <attributeEditorField showLabel="1" name="structure_geometry" index="2"/>
-    <attributeEditorField showLabel="1" name="description" index="4"/>
-    <attributeEditorField showLabel="1" name="created" index="5"/>
+    <attributeEditorField showLabel="1" name="influence_id" index="2"/>
+    <attributeEditorField showLabel="1" name="description" index="3"/>
+    <attributeEditorField showLabel="1" name="created" index="4"/>
   </attributeEditorForm>
   <editable>
     <field name="created" editable="1"/>
     <field name="description" editable="1"/>
-    <field name="design_description" editable="1"/>
-    <field name="design_geometry" editable="0"/>
-    <field name="design_name" editable="1"/>
-    <field name="design_status" editable="1"/>
-    <field name="fid" editable="0"/>
+    <field name="fid" editable="1"/>
+    <field name="influence_id" editable="1"/>
     <field name="name" editable="1"/>
-    <field name="status_id" editable="1"/>
-    <field name="structure_geometry" editable="1"/>
   </editable>
   <labelOnTop>
     <field name="created" labelOnTop="0"/>
-    <field name="description" labelOnTop="1"/>
-    <field name="design_description" labelOnTop="0"/>
-    <field name="design_geometry" labelOnTop="0"/>
-    <field name="design_name" labelOnTop="0"/>
-    <field name="design_status" labelOnTop="0"/>
+    <field name="description" labelOnTop="0"/>
     <field name="fid" labelOnTop="0"/>
+    <field name="influence_id" labelOnTop="0"/>
     <field name="name" labelOnTop="0"/>
-    <field name="status_id" labelOnTop="0"/>
-    <field name="structure_geometry" labelOnTop="0"/>
   </labelOnTop>
   <reuseLastValue>
     <field reuseLastValue="0" name="created"/>
     <field reuseLastValue="0" name="description"/>
     <field reuseLastValue="0" name="fid"/>
+    <field reuseLastValue="0" name="influence_id"/>
     <field reuseLastValue="0" name="name"/>
-    <field reuseLastValue="0" name="status_id"/>
-    <field reuseLastValue="0" name="structure_geometry"/>
   </reuseLastValue>
   <dataDefinedFieldProperties/>
   <widgets/>
-  <previewExpression>concat(to_string("fid"), '-', "name")</previewExpression>
+  <previewExpression>"name"</previewExpression>
   <mapTip></mapTip>
   <layerGeometryType>4</layerGeometryType>
 </qgis>

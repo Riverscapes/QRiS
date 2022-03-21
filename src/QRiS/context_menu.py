@@ -101,6 +101,10 @@ class ContextMenu(QMenu):
             'Add a new structure type',
             ':/plugins/qris_toolbar/icon.png'
         ),
+        'ADD_ZOI_TYPE': (
+            'Add a new ZOI type',
+            ':/plugins/qris_toolbar/icon.png'
+        ),
         # TODO needs new icon
         'ADD_PHASE': (
             'Add a new implementation phase',

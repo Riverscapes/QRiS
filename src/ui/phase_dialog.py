@@ -40,7 +40,7 @@ class PhaseDlg(QDialog, DIALOG_CLASS):
         # populate combo boxes
         conn = sqlite3.connect(self.geopackage_path)
         curs = conn.cursor()
-        curs.execute('SELECT * FROM phase_action')
+        curs.execute('SELECT * FROM lkp_phase_action')
         actions = curs.fetchall()
         conn.close()
         for action in actions:

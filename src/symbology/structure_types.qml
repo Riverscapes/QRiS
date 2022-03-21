@@ -1,65 +1,71 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis hasScaleBasedVisibilityFlag="0" version="3.18.2-Zürich" maxScale="0" readOnly="0" styleCategories="AllStyleCategories" minScale="1e+08">
+<qgis readOnly="0" version="3.22.3-Białowieża" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0" minScale="1e+08" maxScale="0">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
     <Private>0</Private>
   </flags>
-  <temporal endField="" startExpression="" startField="" durationField="" enabled="0" mode="0" endExpression="" durationUnit="min" accumulate="0" fixedDuration="0">
+  <temporal durationField="fid" startExpression="" fixedDuration="0" mode="0" accumulate="0" endExpression="" enabled="0" limitMode="0" endField="" durationUnit="min" startField="created">
     <fixedRange>
       <start></start>
       <end></end>
     </fixedRange>
   </temporal>
   <customproperties>
-    <property value="&quot;construction_description&quot;" key="dualview/previewExpressions"/>
-    <property value="0" key="embeddedWidgets/count"/>
-    <property key="variableNames"/>
-    <property key="variableValues"/>
+    <Option type="Map">
+      <Option name="dualview/previewExpressions" type="List">
+        <Option type="QString" value="&quot;name&quot;"/>
+      </Option>
+      <Option name="embeddedWidgets/count" type="QString" value="0"/>
+      <Option name="variableNames"/>
+      <Option name="variableValues"/>
+    </Option>
   </customproperties>
-  <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
+  <geometryOptions removeDuplicateNodes="0" geometryPrecision="0">
     <activeChecks/>
     <checkConfiguration/>
   </geometryOptions>
-  <legend type="default-vector"/>
+  <legend type="default-vector" showLabelLegend="0"/>
   <referencedLayers/>
   <fieldConfiguration>
     <field configurationFlags="None" name="fid">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="false" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="false"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="None" name="structure_type_name">
+    <field configurationFlags="None" name="name">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="false" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="false"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="None" name="structure_mimics">
-      <editWidget type="ValueMap">
+    <field configurationFlags="None" name="mimics_id">
+      <editWidget type="ValueRelation">
         <config>
           <Option type="Map">
-            <Option type="List" name="map">
-              <Option type="Map">
-                <Option value="Beaver Dam" type="QString" name="Beaver Dam"/>
-              </Option>
-              <Option type="Map">
-                <Option value="Wood Jam" type="QString" name="Wood Jam"/>
-              </Option>
-              <Option type="Map">
-                <Option value="Other Structure" type="QString" name="Other Structure"/>
-              </Option>
-            </Option>
+            <Option name="AllowMulti" type="bool" value="false"/>
+            <Option name="AllowNull" type="bool" value="false"/>
+            <Option name="Description" type="QString" value="&quot;description&quot;"/>
+            <Option name="FilterExpression" type="QString" value=""/>
+            <Option name="Key" type="QString" value="fid"/>
+            <Option name="Layer" type="QString" value="Structure_Mimics_93e82b1d_40a9_45c3_a7ac_80f62015377d"/>
+            <Option name="LayerName" type="QString" value="Structure Mimics"/>
+            <Option name="LayerProviderName" type="QString" value="ogr"/>
+            <Option name="LayerSource" type="QString" value="/Users/nick/Desktop/ztest/designs/designs.gpkg|layername=structure_mimics"/>
+            <Option name="NofColumns" type="int" value="1"/>
+            <Option name="OrderByValue" type="bool" value="false"/>
+            <Option name="UseCompleter" type="bool" value="false"/>
+            <Option name="Value" type="QString" value="name"/>
           </Option>
         </config>
       </editWidget>
@@ -68,8 +74,8 @@
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="true" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="true"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
         </config>
       </editWidget>
@@ -78,8 +84,8 @@
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="true" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="true"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
         </config>
       </editWidget>
@@ -88,12 +94,12 @@
       <editWidget type="Range">
         <config>
           <Option type="Map">
-            <Option value="true" type="bool" name="AllowNull"/>
-            <Option value="500" type="int" name="Max"/>
-            <Option value="0" type="int" name="Min"/>
-            <Option value="0" type="int" name="Precision"/>
-            <Option value="1" type="int" name="Step"/>
-            <Option value="SpinBox" type="QString" name="Style"/>
+            <Option name="AllowNull" type="bool" value="true"/>
+            <Option name="Max" type="double" value="500"/>
+            <Option name="Min" type="double" value="0"/>
+            <Option name="Precision" type="int" value="0"/>
+            <Option name="Step" type="double" value="1"/>
+            <Option name="Style" type="QString" value="SpinBox"/>
           </Option>
         </config>
       </editWidget>
@@ -102,8 +108,8 @@
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="false" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="false"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
         </config>
       </editWidget>
@@ -112,8 +118,8 @@
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="false" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="false"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
         </config>
       </editWidget>
@@ -122,73 +128,85 @@
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option value="false" type="bool" name="IsMultiline"/>
-            <Option value="false" type="bool" name="UseHtml"/>
+            <Option name="IsMultiline" type="bool" value="false"/>
+            <Option name="UseHtml" type="bool" value="false"/>
           </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="None" name="created">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
         </config>
       </editWidget>
     </field>
   </fieldConfiguration>
   <aliases>
-    <alias field="fid" index="0" name="Structure Type ID"/>
-    <alias field="structure_type_name" index="1" name="Type Name"/>
-    <alias field="structure_mimics" index="2" name="Mimics"/>
-    <alias field="construction_description" index="3" name="Construction Description"/>
-    <alias field="function_description" index="4" name="Function Description"/>
-    <alias field="typical_posts" index="5" name="Typical Posts"/>
-    <alias field="typical_length" index="6" name="Typical Length"/>
-    <alias field="typical_width" index="7" name="Typical Width"/>
-    <alias field="typical_height" index="8" name="Typical Height"/>
+    <alias index="0" name="Structure Type ID" field="fid"/>
+    <alias index="1" name="Structure Type Name" field="name"/>
+    <alias index="2" name="Structure Mimics" field="mimics_id"/>
+    <alias index="3" name="Construction Description" field="construction_description"/>
+    <alias index="4" name="Function Description" field="function_description"/>
+    <alias index="5" name="Typical Posts" field="typical_posts"/>
+    <alias index="6" name="Typical Length" field="typical_length"/>
+    <alias index="7" name="Typical Width" field="typical_width"/>
+    <alias index="8" name="Typical Height" field="typical_height"/>
+    <alias index="9" name="" field="created"/>
   </aliases>
   <defaults>
-    <default expression="" applyOnUpdate="0" field="fid"/>
-    <default expression="" applyOnUpdate="0" field="structure_type_name"/>
-    <default expression="'Beaver Dam'" applyOnUpdate="0" field="structure_mimics"/>
-    <default expression="" applyOnUpdate="0" field="construction_description"/>
-    <default expression="" applyOnUpdate="0" field="function_description"/>
-    <default expression="" applyOnUpdate="0" field="typical_posts"/>
-    <default expression="" applyOnUpdate="0" field="typical_length"/>
-    <default expression="" applyOnUpdate="0" field="typical_width"/>
-    <default expression="" applyOnUpdate="0" field="typical_height"/>
+    <default applyOnUpdate="0" expression="" field="fid"/>
+    <default applyOnUpdate="0" expression="" field="name"/>
+    <default applyOnUpdate="0" expression="" field="mimics_id"/>
+    <default applyOnUpdate="0" expression="" field="construction_description"/>
+    <default applyOnUpdate="0" expression="" field="function_description"/>
+    <default applyOnUpdate="0" expression="" field="typical_posts"/>
+    <default applyOnUpdate="0" expression="" field="typical_length"/>
+    <default applyOnUpdate="0" expression="" field="typical_width"/>
+    <default applyOnUpdate="0" expression="" field="typical_height"/>
+    <default applyOnUpdate="0" expression="" field="created"/>
   </defaults>
   <constraints>
-    <constraint unique_strength="1" exp_strength="0" constraints="3" notnull_strength="1" field="fid"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="1" notnull_strength="1" field="structure_type_name"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="1" notnull_strength="1" field="structure_mimics"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0" field="construction_description"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0" field="function_description"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0" field="typical_posts"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0" field="typical_length"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0" field="typical_width"/>
-    <constraint unique_strength="0" exp_strength="0" constraints="0" notnull_strength="0" field="typical_height"/>
+    <constraint constraints="3" notnull_strength="1" unique_strength="1" exp_strength="0" field="fid"/>
+    <constraint constraints="3" notnull_strength="1" unique_strength="1" exp_strength="0" field="name"/>
+    <constraint constraints="1" notnull_strength="2" unique_strength="0" exp_strength="0" field="mimics_id"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="construction_description"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="function_description"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="typical_posts"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="typical_length"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="typical_width"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="typical_height"/>
+    <constraint constraints="0" notnull_strength="0" unique_strength="0" exp_strength="0" field="created"/>
   </constraints>
   <constraintExpressions>
-    <constraint field="fid" exp="" desc=""/>
-    <constraint field="structure_type_name" exp="" desc=""/>
-    <constraint field="structure_mimics" exp="" desc=""/>
-    <constraint field="construction_description" exp="" desc=""/>
-    <constraint field="function_description" exp="" desc=""/>
-    <constraint field="typical_posts" exp="" desc=""/>
-    <constraint field="typical_length" exp="" desc=""/>
-    <constraint field="typical_width" exp="" desc=""/>
-    <constraint field="typical_height" exp="" desc=""/>
+    <constraint exp="" desc="" field="fid"/>
+    <constraint exp="" desc="" field="name"/>
+    <constraint exp="" desc="" field="mimics_id"/>
+    <constraint exp="" desc="" field="construction_description"/>
+    <constraint exp="" desc="" field="function_description"/>
+    <constraint exp="" desc="" field="typical_posts"/>
+    <constraint exp="" desc="" field="typical_length"/>
+    <constraint exp="" desc="" field="typical_width"/>
+    <constraint exp="" desc="" field="typical_height"/>
+    <constraint exp="" desc="" field="created"/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
     <defaultAction value="{00000000-0000-0000-0000-000000000000}" key="Canvas"/>
   </attributeactions>
-  <attributetableconfig actionWidgetStyle="dropDown" sortOrder="0" sortExpression="">
+  <attributetableconfig sortOrder="0" sortExpression="" actionWidgetStyle="dropDown">
     <columns>
-      <column width="-1" type="field" hidden="0" name="fid"/>
-      <column width="-1" type="field" hidden="0" name="structure_type_name"/>
-      <column width="-1" type="field" hidden="0" name="structure_mimics"/>
-      <column width="-1" type="field" hidden="0" name="construction_description"/>
-      <column width="-1" type="field" hidden="0" name="function_description"/>
-      <column width="-1" type="field" hidden="0" name="typical_length"/>
-      <column width="-1" type="field" hidden="0" name="typical_width"/>
-      <column width="-1" type="field" hidden="0" name="typical_height"/>
-      <column width="-1" type="actions" hidden="1"/>
-      <column width="-1" type="field" hidden="0" name="typical_posts"/>
+      <column name="fid" type="field" width="-1" hidden="0"/>
+      <column name="name" type="field" width="137" hidden="0"/>
+      <column name="mimics_id" type="field" width="100" hidden="0"/>
+      <column name="construction_description" type="field" width="169" hidden="0"/>
+      <column name="function_description" type="field" width="120" hidden="0"/>
+      <column name="typical_posts" type="field" width="100" hidden="0"/>
+      <column name="typical_length" type="field" width="87" hidden="0"/>
+      <column name="typical_width" type="field" width="81" hidden="0"/>
+      <column name="typical_height" type="field" width="85" hidden="0"/>
+      <column type="actions" width="-1" hidden="1"/>
+      <column name="created" type="field" width="136" hidden="0"/>
     </columns>
   </attributetableconfig>
   <conditionalstyles>
@@ -220,43 +238,61 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
-    <attributeEditorField showLabel="1" index="0" name="fid"/>
-    <attributeEditorField showLabel="1" index="1" name="structure_type_name"/>
-    <attributeEditorField showLabel="1" index="2" name="structure_mimics"/>
-    <attributeEditorField showLabel="1" index="3" name="construction_description"/>
-    <attributeEditorField showLabel="1" index="4" name="function_description"/>
-    <attributeEditorField showLabel="1" index="5" name="typical_posts"/>
-    <attributeEditorField showLabel="1" index="6" name="typical_length"/>
-    <attributeEditorField showLabel="1" index="7" name="typical_width"/>
-    <attributeEditorField showLabel="1" index="8" name="typical_height"/>
+    <attributeEditorField showLabel="1" name="fid" index="0"/>
+    <attributeEditorField showLabel="1" name="name" index="1"/>
+    <attributeEditorField showLabel="1" name="mimics_id" index="2"/>
+    <attributeEditorField showLabel="1" name="construction_description" index="3"/>
+    <attributeEditorField showLabel="1" name="function_description" index="4"/>
+    <attributeEditorField showLabel="1" name="typical_posts" index="5"/>
+    <attributeEditorField showLabel="1" name="typical_length" index="6"/>
+    <attributeEditorField showLabel="1" name="typical_width" index="7"/>
+    <attributeEditorField showLabel="1" name="typical_height" index="8"/>
   </attributeEditorForm>
   <editable>
-    <field editable="1" name="construction_description"/>
-    <field editable="1" name="estimated_posts"/>
-    <field editable="0" name="fid"/>
-    <field editable="1" name="function_description"/>
-    <field editable="1" name="structure_mimics"/>
-    <field editable="1" name="structure_type_name"/>
-    <field editable="1" name="typical_height"/>
-    <field editable="1" name="typical_length"/>
-    <field editable="1" name="typical_posts"/>
-    <field editable="1" name="typical_width"/>
+    <field name="construction_description" editable="1"/>
+    <field name="created" editable="1"/>
+    <field name="estimated_posts" editable="1"/>
+    <field name="fid" editable="0"/>
+    <field name="function_description" editable="1"/>
+    <field name="mimics_id" editable="1"/>
+    <field name="name" editable="1"/>
+    <field name="structure_mimics" editable="1"/>
+    <field name="structure_type_name" editable="1"/>
+    <field name="typical_height" editable="1"/>
+    <field name="typical_length" editable="1"/>
+    <field name="typical_posts" editable="1"/>
+    <field name="typical_width" editable="1"/>
   </editable>
   <labelOnTop>
-    <field labelOnTop="0" name="construction_description"/>
-    <field labelOnTop="0" name="estimated_posts"/>
-    <field labelOnTop="0" name="fid"/>
-    <field labelOnTop="0" name="function_description"/>
-    <field labelOnTop="0" name="structure_mimics"/>
-    <field labelOnTop="0" name="structure_type_name"/>
-    <field labelOnTop="0" name="typical_height"/>
-    <field labelOnTop="0" name="typical_length"/>
-    <field labelOnTop="0" name="typical_posts"/>
-    <field labelOnTop="0" name="typical_width"/>
+    <field name="construction_description" labelOnTop="1"/>
+    <field name="created" labelOnTop="0"/>
+    <field name="estimated_posts" labelOnTop="0"/>
+    <field name="fid" labelOnTop="0"/>
+    <field name="function_description" labelOnTop="1"/>
+    <field name="mimics_id" labelOnTop="0"/>
+    <field name="name" labelOnTop="0"/>
+    <field name="structure_mimics" labelOnTop="0"/>
+    <field name="structure_type_name" labelOnTop="0"/>
+    <field name="typical_height" labelOnTop="0"/>
+    <field name="typical_length" labelOnTop="0"/>
+    <field name="typical_posts" labelOnTop="0"/>
+    <field name="typical_width" labelOnTop="0"/>
   </labelOnTop>
+  <reuseLastValue>
+    <field reuseLastValue="0" name="construction_description"/>
+    <field reuseLastValue="0" name="created"/>
+    <field reuseLastValue="0" name="fid"/>
+    <field reuseLastValue="0" name="function_description"/>
+    <field reuseLastValue="0" name="mimics_id"/>
+    <field reuseLastValue="0" name="name"/>
+    <field reuseLastValue="0" name="typical_height"/>
+    <field reuseLastValue="0" name="typical_length"/>
+    <field reuseLastValue="0" name="typical_posts"/>
+    <field reuseLastValue="0" name="typical_width"/>
+  </reuseLastValue>
   <dataDefinedFieldProperties/>
   <widgets/>
-  <previewExpression>"construction_description"</previewExpression>
+  <previewExpression>"name"</previewExpression>
   <mapTip></mapTip>
   <layerGeometryType>4</layerGeometryType>
 </qgis>
