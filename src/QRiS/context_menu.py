@@ -15,11 +15,11 @@ class ContextMenu(QMenu):
         ),
         'ADD_ALL_TO_MAP': (
             "Add All Layers To The Map",
-            ':/plugins/qris_toolbar/AddToMap.png',
+            ':/plugins/qris_toolbar/test_add_map.png',
         ),
         'ADD_TO_MAP': (
             "Add to Map",
-            ':/plugins/qris_toolbar/AddToMap.png',
+            ':/plugins/qris_toolbar/test_add_map.png',
         ),
         # 'BROWSE_PROJECT_FOLDER': (
         #     'Browse Project Folder',
@@ -67,11 +67,11 @@ class ContextMenu(QMenu):
         ),
         'ADD_PROJECT_EXTENT_LAYER': (
             'Import a project extent polygon',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         'CREATE_BLANK_PROJECT_EXTENT_LAYER': (
             'Create a blank project extent layer and draw a polygon',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         'UPDATE_PROJECT_EXTENT': (
             'Rename the project extent layer',
@@ -83,7 +83,7 @@ class ContextMenu(QMenu):
         ),
         'IMPORT_PROJECT_LAYER': (
             'Import and clip a new project layer',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         'EXPLORE_ELEVATIONS': (
             'Explore Elevations',
@@ -95,20 +95,20 @@ class ContextMenu(QMenu):
         ),
         'ADD_DESIGN': (
             'New Low-Tech Design',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         'ADD_STRUCTURE_TYPE': (
             'Add a new structure type',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         'ADD_ZOI_TYPE': (
             'Add a new ZOI type',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         # TODO needs new icon
         'ADD_PHASE': (
             'Add a new implementation phase',
-            ':/plugins/qris_toolbar/icon.png'
+            ':/plugins/qris_toolbar/test_new.png'
         ),
         'IMPORT_PHOTOS': (
             'Import project photos',

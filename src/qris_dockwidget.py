@@ -102,26 +102,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # set the project root
         project_node = QStandardItem(self.qris_project.project_name)
-        project_node.setIcon(QIcon(':/plugins/qris_toolbar/test_Riverscapes.png'))
+        project_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
         project_node.setData('project_root', item_code['item_type'])
         rootNode.appendRow(project_node)
 
         # Add project extent layers to tree
         extent_folder = QStandardItem("Project Extents")
-        extent_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+        extent_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
         extent_folder.setData('extent_folder', item_code['item_type'])
         project_node.appendRow(extent_folder)
 
         for extent in self.qris_project.project_extents.values():
             extent_node = QStandardItem(extent.display_name)
-            extent_node.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polygon.png'))
+            extent_node.setIcon(QIcon(':/plugins/qris_toolbar/test_project_extent.png'))
             extent_node.setData('extent_node', item_code['item_type'])
             extent_node.setData(extent, item_code['INSTANCE'])
             extent_folder.appendRow(extent_node)
 
         # Add project layers node
         layers_folder = QStandardItem("Project Layers")
-        layers_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+        layers_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
         layers_folder.setData('layers_folder', item_code['item_type'])
         project_node.appendRow(layers_folder)
 
@@ -129,7 +129,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for layer in self.qris_project.project_vector_layers.values():
             layer_node = QStandardItem(layer.display_name)
             # TODO change icon by type
-            layer_node.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polyline.png'))
+            layer_node.setIcon(QIcon(':/plugins/qris_toolbar/test_layers.png'))
             layer_node.setData('layer_node', item_code['item_type'])
             layer_node.setData(layer, item_code['INSTANCE'])
             layers_folder.appendRow(layer_node)
@@ -200,7 +200,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # Add designs to tree
         design_folder = QStandardItem("Low-Tech Designs")
-        design_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
+        design_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
         design_folder.setData('design_folder', item_code['item_type'])
         project_node.appendRow(design_folder)
 
@@ -211,7 +211,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             for design_feature in designs_layer.getFeatures():
                 # If these data types stick this should be refactored into a create node function
                 design_node = QStandardItem(design_feature.attribute('name'))
-                design_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+                design_node.setIcon(QIcon(':/plugins/qris_toolbar/test_design.png'))
                 design_node.setData('design', item_code['item_type'])
                 design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
                 design_folder.appendRow(design_node)
@@ -223,7 +223,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # populate structure types
         structure_type_folder = QStandardItem("Structure Types")
-        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/Options.png'))
+        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_settings.png'))
         structure_type_folder.setData('structure_type_folder', item_code['item_type'])
         design_folder.appendRow(structure_type_folder)
 
@@ -232,7 +232,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for structure_type in structure_type_layer.getFeatures():
             structure_type_node = QStandardItem(structure_type.attribute('name'))
             # TODO change the icon
-            structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+            structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/test_structure.png'))
             structure_type_node.setData('structure_type', item_code['item_type'])
             structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
             structure_type_folder.appendRow(structure_type_node)
@@ -240,7 +240,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # populate design phases types
         phase_folder = QStandardItem("Implementation Phases")
         # TODO change icon
-        phase_folder.setIcon(QIcon(':/plugins/qris_toolbar/Options.png'))
+        phase_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_settings.png'))
         phase_folder.setData('phase_folder', item_code['item_type'])
         design_folder.appendRow(phase_folder)
 
@@ -249,14 +249,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for phase in phase_layer.getFeatures():
             phase_node = QStandardItem(phase.attribute('name'))
             # TODO change the icon
-            phase_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+            phase_node.setIcon(QIcon(':/plugins/qris_toolbar/test_phase.png'))
             phase_node.setData('phase', item_code['item_type'])
             phase_node.setData(phase.attribute('fid'), item_code['feature_id'])
             phase_folder.appendRow(phase_node)
 
         # populate zoi types
         zoi_type_folder = QStandardItem("ZOI Types")
-        zoi_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/Options.png'))
+        zoi_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_settings.png'))
         zoi_type_folder.setData('zoi_type_folder', item_code['item_type'])
         design_folder.appendRow(zoi_type_folder)
 
@@ -265,7 +265,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         for zoi_type in zoi_type_layer.getFeatures():
             zoi_type_node = QStandardItem(zoi_type.attribute('name'))
             # TODO change the icon
-            zoi_type_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
+            zoi_type_node.setIcon(QIcon(':/plugins/qris_toolbar/test_influence.png'))
             zoi_type_node.setData('zoi_type', item_code['item_type'])
             zoi_type_node.setData(zoi_type.attribute('fid'), item_code['feature_id'])
             zoi_type_folder.appendRow(zoi_type_node)
@@ -326,8 +326,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "layer_node":
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type in ['extent_node', 'Project_Extent']:
-            self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
-            self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
+            # self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
+            # self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
             self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "design_folder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
@@ -337,8 +337,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
         elif item_type == "zoi_type_folder":
             self.menu.addAction('ADD_ZOI_TYPE', lambda: self.add_zoi_type())
-        elif item_type == "zoi_type":
-            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "phase_folder":
             self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
         # elif item_type == "photos_folder":
@@ -441,33 +439,33 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         """Renames the project extent layer"""
         pass
 
-    def delete_project_extent(self, selected_item):
-        """Deletes a project extent layer"""
-        display_name = selected_item.data(item_code['INSTANCE']).display_name
-        feature_name = selected_item.data(item_code['INSTANCE']).feature_name
-        geopackage_path = selected_item.data(item_code['INSTANCE']).geopackage_path(self.qris_project.project_path)
+    # def delete_project_extent(self, selected_item):
+    #     """Deletes a project extent layer"""
+    #     display_name = selected_item.data(item_code['INSTANCE']).display_name
+    #     feature_name = selected_item.data(item_code['INSTANCE']).feature_name
+    #     geopackage_path = selected_item.data(item_code['INSTANCE']).geopackage_path(self.qris_project.project_path)
 
-        delete_ok = QMessageBox.question(self, f"Delete extent", f"Are you fucking sure you wanna delete the extent layer: {display_name}")
-        if delete_ok == QMessageBox.Yes:
-            # remove from the map if it's there
-            # TODO consider doing this based on the path
-            for layer in QgsProject.instance().mapLayers().values():
-                if layer.name() == display_name:
-                    QgsProject.instance().removeMapLayers([layer.id()])
-                    iface.mapCanvas().refresh()
+    #     delete_ok = QMessageBox.question(self, f"Delete extent", f"Are you fucking sure you wanna delete the extent layer: {display_name}")
+    #     if delete_ok == QMessageBox.Yes:
+    #         # remove from the map if it's there
+    #         # TODO consider doing this based on the path
+    #         for layer in QgsProject.instance().mapLayers().values():
+    #             if layer.name() == display_name:
+    #                 QgsProject.instance().removeMapLayers([layer.id()])
+    #                 iface.mapCanvas().refresh()
 
-            # TODO be sure to test whether the table exists first
-            gdal_delete = gdal.OpenEx(geopackage_path, gdal.OF_UPDATE, allowed_drivers=['GPKG'])
-            error = gdal_delete.DeleteLayer(feature_name)
-            gdal_delete.ExecuteSQL('VACUUM')
-            # TODO remove this from the Extents dictionary that will also remove from promect xml
-            del(self.qris_project.project_extents[feature_name])
-            # refresh the project xml
-            self.qris_project.write_project_xml()
-            # refresh the tree
-            self.build_tree_view(self.qris_project, None)
-        else:
-            QMessageBox.information(self, "Delete extent", "No layers were deleted")
+    #         # TODO be sure to test whether the table exists first
+    #         gdal_delete = gdal.OpenEx(geopackage_path, gdal.OF_UPDATE, allowed_drivers=['GPKG'])
+    #         error = gdal_delete.DeleteLayer(feature_name)
+    #         gdal_delete.ExecuteSQL('VACUUM')
+    #         # TODO remove this from the Extents dictionary that will also remove from promect xml
+    #         del(self.qris_project.project_extents[feature_name])
+    #         # refresh the project xml
+    #         self.qris_project.write_project_xml()
+    #         # refresh the tree
+    #         self.build_tree_view(self.qris_project, None)
+    #     else:
+    #         QMessageBox.information(self, "Delete extent", "No layers were deleted")
 
     def import_project_layer(self):
         """launches a dialog that supports import of project layers that can be clipped to a project extent"""

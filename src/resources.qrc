@@ -14,13 +14,25 @@
         <file alias="Detrend.png">../Images/Detrend.png</file>
         
         <file alias="refresh.png">../Images/refresh.png</file>
-        <file alias="project_view.png">../Images/project_view.png</file>
         <file alias="tree.png">../Images/tree.png</file>
         <file alias="expand.png">../Images/expand.png</file>
         <file alias="collapse.png">../Images/collapse.png</file>
         <file alias="AddToMap.png">../Images/AddToMap.png</file>
         <file alias="metadata.png">../Images/metadata.png</file>
         <file alias="close.png">../Images/close.png</file>
+
+        <!-- Temporary icons -->
+        <file alias="test_structure.png">../Images/test_structure.png</file>
+        <file alias="test_folder.png">../Images/test_folder.png</file>
+        <file alias="test_structure_folder.png">../Images/test_structure_folder.png</file>
+        <file alias="test_settings.png">../Images/test_settings.png</file>
+        <file alias="test_new.png">../Images/test_new.png</file>
+        <file alias="test_design.png">../Images/test_design.png</file>
+        <file alias="test_add_map.png">../Images/test_add_map.png</file>
+        <file alias="test_phase.png">../Images/test_phase.png</file>
+        <file alias="test_influence.png">../Images/test_influence.png</file>
+        <file alias="test_project_extent.png">../Images/test_project_extent.png</file>
+        <file alias="test_layers.png">../Images/test_layers.png</file>
 
     
 
