@@ -111,6 +111,33 @@ def add_design_to_map(qris_project, item, node):
     design_feature = next(design_iterator)
     structure_geometry = design_feature['structure_geometry']
 
+    def add_design_table(display_name, table_name, qml_name, read_only, group_node):
+        """A handy way to add design layers and tables to the map"""
+        if not any([c.name() == display_name for c in group_node.children()]):
+            layer = QgsProject.instance().addMapLayer(QgsVectorLayer(geopackage_path + "|layername=" + table_name, display_name, "ogr"), False)
+            if qml_name:
+                layer_qml = os.path.join(symbology_path, 'symbology', qml_name)
+                layer.loadNamedStyle(layer_qml)
+            if read_only:
+                layer.setReadOnly()
+            group_node.addLayer(layer)
+
+    # Summary tables (views)
+    if any([c.name() == "Summary Tables" for c in node.children()]):
+        # if is there set it to the design node
+        summary_node = next(n for n in node.children() if n.name() == "Summary Tables")
+    else:
+        # if not add the node as a group
+        summary_node = node.addGroup("Summary Tables")
+
+    add_design_table('Structure Totals - Points', 'qry_total_structures_points', None, True, summary_node)
+    add_design_table('Structure Totals - Lines', 'qry_total_structures_lines', None, True, summary_node)
+    add_design_table('Structure Summary - Points', 'qry_structure_summary_points', None, True, summary_node)
+    add_design_table('Structure Summary - Lines', 'qry_structure_summary_lines', None, True, summary_node)
+    add_design_table('Complexes Summary - Points', 'qry_complexes_by_type_points', None, True, summary_node)
+    add_design_table('Complexes Summary - Lines', 'qry_complexes_by_type_lines', None, True, summary_node)
+    add_design_table('ZOI Summary', 'qry_zoi_summary', None, True, summary_node)
+
     # Lookup Tables
     if any([c.name() == "Lookup Tables" for c in node.children()]):
         # if is there set it to the design node
@@ -118,16 +145,6 @@ def add_design_to_map(qris_project, item, node):
     else:
         # if not add the node as a group
         lookup_node = node.addGroup("Lookup Tables")
-
-    # TODO add qml to this function
-    def add_design_table(display_name, table_name, qml_name, read_only, group_node):
-        if not any([c.name() == display_name for c in group_node.children()]):
-            layer = QgsProject.instance().addMapLayer(QgsVectorLayer(geopackage_path + "|layername=" + table_name, display_name, "ogr"), False)
-            layer_qml = os.path.join(symbology_path, 'symbology', qml_name)
-            layer.loadNamedStyle(layer_qml)
-            if read_only:
-                layer.setReadOnly()
-            group_node.addLayer(layer)
 
     add_design_table('Design Status', 'lkp_design_status', 'lkp_design_status.qml', True, lookup_node)
     add_design_table('Phase Action', 'lkp_phase_action', 'lkp_phase_action.qml', True, lookup_node)

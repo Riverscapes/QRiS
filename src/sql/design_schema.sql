@@ -91,6 +91,7 @@ INSERT INTO structure_types (fid, name, mimics_id) VALUES (3, "BDA Postless", 1)
 INSERT INTO structure_types (fid, name, mimics_id) VALUES (4, "PALS Mid-Channel", 2);
 INSERT INTO structure_types (fid, name, mimics_id) VALUES (5, "PALS Bank Attached", 2);
 INSERT INTO structure_types (fid, name, mimics_id) VALUES (6, "Wood Jam", 2);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (7, "Other", 3);
 
 CREATE TABLE zoi_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,7 +152,9 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("s
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("zoi_types", "attributes", "zoi_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("phases", "attributes", "phases", 0);
 
--- views
+-- --------------- VIEWS ------------------
+
+
 -- CREATE VIEW complex_structure_counts AS
 -- SELECT designs.fid AS Design_ID, designs.design_name AS Design_Name, complexes.fid AS Complex_ID, complexes.complex_name AS Complex_Name, COUNT(structure_points.fid) AS Structure_Count
 -- FROM structure_points, designs, complexes
@@ -160,3 +163,65 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("p
 -- ORDER BY designs.design_name, complexes.complex_name DESC;
 
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("complex_structure_counts", "attributes", "complex_structure_counts", 0);
+
+-- Structures Points Detailed
+CREATE VIEW qry_structure_summary_points AS
+SELECT MAX(structure_points.FID) AS [Summary ID], designs.name AS [Design Name], lkp_design_status.name AS [Design Status], phases.name AS [Phase Name], structure_types.name AS [Structure Type], lkp_structure_mimics.name AS [Structure Mimics], Count(structure_points.FID) AS [Structure Count]
+FROM phases
+    INNER JOIN ((lkp_structure_mimics INNER JOIN structure_types ON lkp_structure_mimics.FID = structure_types.mimics_id)
+        INNER JOIN (lkp_design_status INNER JOIN (designs INNER JOIN structure_points ON designs.FID = structure_points.design_id) ON lkp_design_status.FID = designs.status_id) ON structure_types.FID = structure_points.structure_type_id) ON phases.FID = structure_points.phase_id
+GROUP BY designs.name, lkp_design_status.name, phases.name, structure_types.name, lkp_structure_mimics.name;
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_structure_summary_points", "attributes", "qry_structure_summary_points", 0);
+
+
+-- Structures Lines Detailed
+CREATE VIEW qry_structure_summary_lines AS
+SELECT MAX(structure_lines.FID) AS [Summary ID], designs.name AS [Design Name], lkp_design_status.name AS [Design Status], phases.name AS [Phase Name], structure_types.name AS [Structure Type], lkp_structure_mimics.name AS [Structure Mimics], Count(structure_lines.FID) AS [Structure Count], Round(Sum(st_length(structure_lines.geom, false)),1) AS [Total Length]
+FROM phases INNER JOIN ((lkp_structure_mimics INNER JOIN structure_types ON lkp_structure_mimics.FID = structure_types.mimics_id) INNER JOIN (lkp_design_status INNER JOIN (designs INNER JOIN structure_lines ON designs.FID = structure_lines.design_id) ON lkp_design_status.FID = designs.status_id) ON structure_types.FID = structure_lines.structure_type_id) ON phases.FID = structure_lines.phase_id
+GROUP BY designs.name, lkp_design_status.name, phases.name, structure_types.name, lkp_structure_mimics.name;
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_structure_summary_lines", "attributes", "qry_structure_summary_lines", 0);
+
+-- Complexes by Type Points
+CREATE VIEW qry_complexes_by_type_points AS
+SELECT Max(structure_points.FID) AS [Summary ID], designs.name AS [Design Name], lkp_design_status.name AS [Design Status], complexes.FID AS [Complex ID], complexes.name AS [Complex Name], structure_types.name AS [Structure Type], lkp_structure_mimics.name AS [Structure Mimics], Count(structure_points.FID) AS [Structure Count]
+FROM ((lkp_structure_mimics INNER JOIN structure_types ON lkp_structure_mimics.FID = structure_types.mimics_id) INNER JOIN (lkp_design_status INNER JOIN (designs INNER JOIN structure_points ON designs.FID = structure_points.design_id) ON lkp_design_status.FID = designs.status_id) ON structure_types.FID = structure_points.structure_type_id) INNER JOIN complexes ON designs.FID = complexes.design_id
+WHERE st_contains(complexes.geom, structure_points.geom) AND complexes.design_id = structure_points.design_id
+GROUP BY designs.name, lkp_design_status.name, complexes.FID, structure_types.name, lkp_structure_mimics.name;
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_complexes_by_type_points", "attributes", "qry_complexes_by_type_points", 0);
+
+
+-- Complexes By Type Lines
+CREATE VIEW qry_complexes_by_type_lines AS
+SELECT Max(structure_lines.FID) AS [Summary ID], designs.name AS [Design Name], lkp_design_status.name AS [Design Status], complexes.FID AS [Complex ID], complexes.name AS [Complex Name], structure_types.name AS [Structure Type], lkp_structure_mimics.name AS [Structure Mimics], Count(structure_lines.FID) AS [Structure Count], Round(Sum(st_length(structure_lines.geom, false)),1) AS [Total Length]
+FROM ((lkp_structure_mimics INNER JOIN structure_types ON lkp_structure_mimics.FID = structure_types.mimics_id) INNER JOIN (lkp_design_status INNER JOIN (designs INNER JOIN structure_lines ON designs.FID = structure_lines.design_id) ON lkp_design_status.FID = designs.status_id) ON structure_types.FID = structure_lines.structure_type_id) INNER JOIN complexes ON designs.FID = complexes.design_id
+WHERE st_contains(complexes.geom, structure_lines.geom) AND complexes.design_id = structure_lines.design_id
+GROUP BY designs.name, lkp_design_status.name, complexes.FID, structure_types.name, lkp_structure_mimics.name;
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_complexes_by_type_lines", "attributes", "qry_complexes_by_type_lines", 0);
+
+-- Design Structure Count Points
+CREATE VIEW qry_total_structures_points AS
+SELECT Max(qry_structure_summary_points.[Summary ID]) AS [Summary ID], qry_structure_summary_points.[Design Name], qry_structure_summary_points.[Design Status], qry_structure_summary_points.[Phase Name], Sum(qry_structure_summary_points.[Structure Count]) AS [Total Structures]
+FROM qry_structure_summary_points
+GROUP BY qry_structure_summary_points.[Design Name], qry_structure_summary_points.[Design Status], qry_structure_summary_points.[Phase Name];
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_total_structures_points", "attributes", "qry_total_structures_points", 0);
+
+-- Design Structure Count Lines
+CREATE VIEW qry_total_structures_lines AS
+SELECT Max(qry_structure_summary_lines.[Summary ID]) AS [Summary ID], qry_structure_summary_lines.[Design Name], qry_structure_summary_lines.[Design Status], qry_structure_summary_lines.[Phase Name], Sum(qry_structure_summary_lines.[Structure Count]) AS [Total Structures], Sum(qry_structure_summary_lines.[Total Length]) AS [Total Structure Length]
+FROM qry_structure_summary_lines
+GROUP BY qry_structure_summary_lines.[Design Name], qry_structure_summary_lines.[Design Status], qry_structure_summary_lines.[Phase Name];
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_total_structures_lines", "attributes", "qry_total_structures_lines", 0);
+
+-- ZOI Summary
+CREATE VIEW qry_zoi_summary AS
+SELECT Max(zoi.FID) AS [Summary ID], designs.name AS [Design Name], lkp_zoi_stage.name AS [Influence Stage], zoi_types.name AS [Influence Type], Round(Sum(st_area(zoi.geom, false)), 0) AS [Total Influence Area]
+FROM (lkp_zoi_influence INNER JOIN zoi_types ON lkp_zoi_influence.FID = zoi_types.influence_id) INNER JOIN (lkp_zoi_stage INNER JOIN (designs INNER JOIN zoi ON designs.FID = zoi.design_id) ON lkp_zoi_stage.FID = zoi.stage_id) ON zoi_types.FID = zoi.influence_type_id
+GROUP BY designs.name, lkp_zoi_stage.name, zoi_types.name;
+
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_zoi_summary", "attributes", "qry_zoi_summary", 0);

@@ -122,15 +122,9 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         conn.execute('PRAGMA foreign_keys = ON;')
         curs = conn.cursor()
         sql_path = os.path.dirname(os.path.dirname(__file__))
-
         design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
         design_qry_string = open(design_schema_path, 'r').read()
         curs.executescript(design_qry_string)
-
-        design_schema_path = os.path.join(sql_path, "sql", "design_schema.sql")
-        design_qry_string = open(design_schema_path, 'r').read()
-        curs.executescript(design_qry_string)
-
         conn.commit()
         conn.close()
 
