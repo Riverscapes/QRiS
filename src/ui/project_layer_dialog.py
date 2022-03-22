@@ -35,11 +35,14 @@ class ProjectLayerDlg(QDialog, DIALOG_CLASS):
         self.layer_uri = layer_uri
         self.qris_project = qris_project
 
-        if self.layer_uri is not None:
-            self.lineEdit_import_layer.setText(self.layer_uri.uri)
-            self.lineEdit_display_name.setText(self.layer_uri.name)
-        else:
-            self.lineEdit_feature_name.setText("Create New Layer")
+        # Add any styling
+        background_color = 'background-color: silver;'
+        self.lineEdit_import_layer.setStyleSheet(background_color)
+        self.lineEdit_feature_name.setStyleSheet(background_color)
+
+        # Add layer values to fields
+        self.lineEdit_import_layer.setText(self.layer_uri.uri)
+        self.lineEdit_display_name.setText(self.layer_uri.name)
 
         self.set_valid_layer_name()
         self.lineEdit_display_name.textChanged.connect(self.set_valid_layer_name)

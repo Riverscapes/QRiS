@@ -186,18 +186,18 @@ class QRiSToolbar:
         # Initialize the processing framework
         self.initProcessing()
 
-        icon_path = ':/plugins/qris_toolbar/test_Riverscapes.png'
+        icon_path = ':/plugins/qris_toolbar/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'QRiS'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/new_folder.png'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
+        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/test_new.png'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
         self.newProjectAction.triggered.connect(self.open_new_project_dialog)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/open_folder.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
+        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/test_folder.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
         self.open_projectAction.triggered.connect(self.projectBrowserDlg)
         self.toolbar.addAction(self.open_projectAction)
 

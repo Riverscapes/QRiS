@@ -1,4 +1,6 @@
 import os
+import sqlite3
+
 # from typing_extensions import ParamSpecKwargs
 
 from osgeo import gdal
@@ -38,18 +40,18 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
         self.geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
         self.structure_types_path = self.geopackage_path + '|layername=structure_types'
 
-        # population combo boxes
-        list_of_structure_mimics = ['Beaver Dam', 'Woody Debris', 'Other']
-        self.comboBox_structure_mimics.addItems(list_of_structure_mimics)
+        # population combo box
+        conn = sqlite3.connect(self.geopackage_path)
+        curs = conn.cursor()
+        curs.execute('SELECT * FROM lkp_structure_mimics')
+        mimics = curs.fetchall()
+        conn.close()
+        for mimic in mimics:
+            self.comboBox_structure_mimics.addItem(mimic[1], mimic[0])
 
         # add signals
         self.buttonBox.accepted.connect(self.save_structure_type)
         self.buttonBox.rejected.connect(self.cancel_structure_type)
-        self.lineEdit_post_spacing.textChanged.connect(self.estimate_posts)
-        self.lineEdit_average_length.textChanged.connect(self.estimate_posts)
-
-        # run the post estimate
-        self.estimate_posts()
 
     def save_structure_type(self):
         """Creates and saves a new design record to the db from the design dialog"""
@@ -61,41 +63,31 @@ class StructureTypeDlg(QDialog, DIALOG_CLASS):
             new_fid = 1
         # grab the form values
         new_structure_type_name = self.lineEdit_structure_type_name.text()
-        new_structure_mimics = self.comboBox_structure_mimics.currentText()
+        new_structure_mimics = self.comboBox_structure_mimics.currentData()
         new_construction_description = self.plainTextEdit_construction_description.toPlainText()
         new_function_description = self.plainTextEdit_function_description.toPlainText()
-        # create a blank QgsFeature that copies the deployemnt table
 
-        # TODO Add validation for only numbers
-        new_post_spacing = self.lineEdit_post_spacing.text()
-        new_average_length = self.lineEdit_average_length.text()
-        new_average_width = self.lineEdit_average_width.text()
-        new_average_height = self.lineEdit_average_height.text()
+        new_typical_posts = self.lineEdit_typical_posts.text()
+        new_typical_length = self.lineEdit_typical_length.text()
+        new_typical_width = self.lineEdit_typical_width.text()
+        new_typical_height = self.lineEdit_typical_height.text()
 
         new_structure_type_feature = QgsFeature(self.structure_type_layer.fields())
-        # set the form values to the feature
         new_structure_type_feature.setAttribute("fid", new_fid)
-        new_structure_type_feature.setAttribute("structure_type_name", new_structure_type_name)
-        new_structure_type_feature.setAttribute("structure_mimics", new_structure_mimics)
+        new_structure_type_feature.setAttribute("name", new_structure_type_name)
+        new_structure_type_feature.setAttribute("mimics_id", new_structure_mimics)
         new_structure_type_feature.setAttribute("construction_description", new_construction_description)
         new_structure_type_feature.setAttribute("function_description", new_function_description)
 
-        new_structure_type_feature.setAttribute("post_spacing", float(new_post_spacing))
-        new_structure_type_feature.setAttribute("average_length", float(new_average_length))
-        new_structure_type_feature.setAttribute("average_width", float(new_average_width))
-        new_structure_type_feature.setAttribute("average_height", float(new_average_height))
+        new_structure_type_feature.setAttribute("typical_posts", new_typical_posts)
+        new_structure_type_feature.setAttribute("typical_length", new_typical_length)
+        new_structure_type_feature.setAttribute("typical_width", new_typical_width)
+        new_structure_type_feature.setAttribute("typical_height", new_typical_height)
         pr = self.structure_type_layer.dataProvider()
         pr.addFeatures([new_structure_type_feature])
 
         self.dataChange.emit(self.qris_project, None)
         self.close()
-
-    def estimate_posts(self):
-        """Validates text entered into the layer name to be GIS friendly"""
-        posts = float(self.lineEdit_post_spacing.text())
-        length = float(self.lineEdit_average_length.text())
-        post_estimate = posts * length
-        self.label_total_posts.setText(str(post_estimate))
 
     def cancel_structure_type(self):
         self.close()

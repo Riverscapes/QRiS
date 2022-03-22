@@ -1,6 +1,7 @@
+from optparse import Values
 import os
 
-from random import randint
+from random import randint, randrange
 
 
 from PyQt5.QtWidgets import QMessageBox
@@ -8,6 +9,13 @@ from PyQt5.QtWidgets import QMessageBox
 from qgis.core import (
     QgsVectorLayer,
     QgsFeatureRequest,
+    QgsSymbol,
+    QgsRendererCategory,
+    QgsMarkerSymbol,
+    QgsLineSymbol,
+    QgsFillSymbol,
+    QgsSimpleFillSymbolLayer,
+    QgsCategorizedSymbolRenderer,
     QgsProject,
     QgsExpressionContextUtils)
 
@@ -88,69 +96,196 @@ def add_design_to_map(qris_project, item, node):
     subset_string = ("design_id = " + str(design_id))
     design_name = item.text()
     geopackage_path = qris_project.project_designs.geopackage_path(qris_project.project_path)
-
     designs_layer = QgsVectorLayer(geopackage_path + "|layername=designs", "Designs", "ogr")
     structure_types_layer = QgsVectorLayer(geopackage_path + "|layername=structure_types", "Structure Types", "ogr")
-    zoi_layer = QgsVectorLayer(geopackage_path + "|layername=structure_zoi", "ZOI", "ogr")
-    structures_field_layer = QgsVectorLayer(geopackage_path + "|layername=structures_field", "Field Structures", "ogr")
-    structures_desktop_layer = QgsVectorLayer(geopackage_path + "|layername=structures_desktop", "Desktop Structures", "ogr")
+    phases_layer = QgsVectorLayer(geopackage_path + "|layername=phases", "Implementation Phases", "ogr")
+    zoi_layer = QgsVectorLayer(geopackage_path + "|layername=zoi", "ZOI", "ogr")
+    zoi_types_layer = QgsVectorLayer(geopackage_path + "|layername=zoi_types", "ZOI", "ogr")
+    complexes_layer = QgsVectorLayer(geopackage_path + "|layername=complexes", "Complexes", "ogr")
+    structure_points_layer = QgsVectorLayer(geopackage_path + "|layername=structure_points", "Structures", "ogr")
+    structure_lines_layer = QgsVectorLayer(geopackage_path + "|layername=structure_lines", "Structures", "ogr")
 
-    # Get the design source as field or desktop from the feature itself
+    # Get the structure geometry type
+    # Could also do this with SQL
     design_iterator = designs_layer.getFeatures(QgsFeatureRequest().setFilterFid(design_id))
     design_feature = next(design_iterator)
-    design_source = design_feature['design_source']
+    structure_geometry = design_feature['structure_geometry']
 
-    # Check if the designs table has been added and if not add it.
-    if not any([c.name() == 'Designs' for c in node.children()]):
-        QgsProject.instance().addMapLayer(designs_layer, False)
-        # TODO consider making the types read only
-        node.addLayer(designs_layer)
-        # Consider making this layer read only
+    def add_design_table(display_name, table_name, qml_name, read_only, group_node):
+        """A handy way to add design layers and tables to the map"""
+        if not any([c.name() == display_name for c in group_node.children()]):
+            layer = QgsProject.instance().addMapLayer(QgsVectorLayer(geopackage_path + "|layername=" + table_name, display_name, "ogr"), False)
+            if qml_name:
+                layer_qml = os.path.join(symbology_path, 'symbology', qml_name)
+                layer.loadNamedStyle(layer_qml)
+            if read_only:
+                layer.setReadOnly()
+            group_node.addLayer(layer)
 
-    # Check if the STRUCTURE TYPES table has been added and if not add it.
-    if not any([c.name() == 'Structure Types' for c in node.children()]):
-        QgsProject.instance().addMapLayer(structure_types_layer, False)
-        # TODO consider making the types read only
-        node.addLayer(structure_types_layer)
-        # Consider making this layer read only
-
-    # Check if the low tech design node is already added
-    if any([c.name() == item.text() for c in node.children()]):
+    # Summary tables (views)
+    if any([c.name() == "Summary Tables" for c in node.children()]):
         # if is there set it to the design node
-        design_node = next(n for n in node.children() if n.name() == item.text())
+        summary_node = next(n for n in node.children() if n.name() == "Summary Tables")
     else:
         # if not add the node as a group
-        design_node = node.addGroup(item.text())
+        summary_node = node.addGroup("Summary Tables")
 
-    # TODO All layers consider adding symbology that randomizes some aspect of colors for differentiation
-    # TODO All layers consider adding a design identifier such as the fid to the filtered layer name
-    if design_source == 'field':
-        # Add field structures
-        if not any([c.name() == 'Field Structures' for c in design_node.children()]):
-            structures_field_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_field.qml')
-            structures_field_layer.loadNamedStyle(structures_field_qml)
-            QgsExpressionContextUtils.setLayerVariable(structures_field_layer, 'parent_id', design_id)
-            structures_field_layer.setSubsetString(subset_string)
-            QgsProject.instance().addMapLayer(structures_field_layer, False)
-            design_node.addLayer(structures_field_layer)
+    add_design_table('Structure Totals - Points', 'qry_total_structures_points', None, True, summary_node)
+    add_design_table('Structure Totals - Lines', 'qry_total_structures_lines', None, True, summary_node)
+    add_design_table('Structure Summary - Points', 'qry_structure_summary_points', None, True, summary_node)
+    add_design_table('Structure Summary - Lines', 'qry_structure_summary_lines', None, True, summary_node)
+    add_design_table('Complexes Summary - Points', 'qry_complexes_by_type_points', None, True, summary_node)
+    add_design_table('Complexes Summary - Lines', 'qry_complexes_by_type_lines', None, True, summary_node)
+    add_design_table('ZOI Summary', 'qry_zoi_summary', None, True, summary_node)
+
+    # Lookup Tables
+    if any([c.name() == "Lookup Tables" for c in node.children()]):
+        # if is there set it to the design node
+        lookup_node = next(n for n in node.children() if n.name() == "Lookup Tables")
     else:
-        # Add desktop structures
-        if not any([c.name() == 'Desktop Structures' for c in design_node.children()]):
-            structures_desktop_qml = os.path.join(symbology_path, 'symbology', 'designs_structures_desktop.qml')
-            structures_desktop_layer.loadNamedStyle(structures_desktop_qml)
-            QgsExpressionContextUtils.setLayerVariable(structures_desktop_layer, 'parent_id', design_id)
-            structures_desktop_layer.setSubsetString(subset_string)
-            QgsProject.instance().addMapLayer(structures_desktop_layer, False)
-            design_node.addLayer(structures_desktop_layer)
+        # if not add the node as a group
+        lookup_node = node.addGroup("Lookup Tables")
+
+    add_design_table('Design Status', 'lkp_design_status', 'lkp_design_status.qml', True, lookup_node)
+    add_design_table('Phase Action', 'lkp_phase_action', 'lkp_phase_action.qml', True, lookup_node)
+    add_design_table('ZOI Influence', 'lkp_zoi_influence', 'lkp_zoi_influence.qml', True, lookup_node)
+    add_design_table('ZOI Stage', 'lkp_zoi_stage', 'lkp_zoi_stage.qml', True, lookup_node)
+    add_design_table('Structure Mimics', 'lkp_structure_mimics', 'lkp_structure_mimics.qml', True, lookup_node)
+
+    # Add Design Tables
+    if any([c.name() == "Design Tables" for c in node.children()]):
+        # if is there set it to the design node
+        design_node = next(n for n in node.children() if n.name() == "Design Tables")
+    else:
+        # if not add the node as a group
+        design_node = node.addGroup("Design Tables")
+
+    # Check if the designs table has been added and if not add it.
+    add_design_table('Designs', 'designs', 'designs.qml', False, design_node)
+    add_design_table('Structure Types', 'structure_types', 'structure_types.qml', False, design_node)
+    add_design_table('ZOI Types', 'zoi_types', 'zoi_types.qml', False, design_node)
+    add_design_table('Phases', 'phases', 'phases.qml', False, design_node)
+
+    # Check if the design node is already added
+    design_group_name = str(design_id) + "-" + item.text()
+    if any([c.name() == design_group_name for c in node.children()]):
+        # if is there set it to the design node
+        design_node = next(n for n in node.children() if n.name() == design_group_name)
+    else:
+        # if not add the node as a group
+        design_node = node.addGroup(design_group_name)
+
+    # Add structures
+    structure_layer_name = str(design_id) + "-Structures"
+    if structure_geometry == 'Point':
+        # Add point structures
+        if not any([c.name() == structure_layer_name for c in design_node.children()]):
+            # Adding the type suffix as I could see adding qml that symbolizes on other attributes
+            structure_points_qml = os.path.join(symbology_path, 'symbology', 'structure_points.qml')
+            structure_points_layer.loadNamedStyle(structure_points_qml)
+            QgsExpressionContextUtils.setLayerVariable(structure_points_layer, 'parent_id', design_id)
+            structure_points_layer.setSubsetString(subset_string)
+            QgsProject.instance().addMapLayer(structure_points_layer, False)
+            # Start setting custom symbology
+            # TODO Refactor into a function
+            unique_values = []
+            for feature in structure_types_layer.getFeatures():
+                values = (feature["fid"], feature["name"])
+                unique_values.append(values)
+
+            categories = []
+            for value in unique_values:
+                layer_style = {}
+                layer_style["color"] = '%d, %d, %d' % (randrange(0, 256), randrange(0, 256), randrange(0, 256))
+                layer_style['size'] = '3'
+                layer_style['outline_color'] = 'black'
+                symbol_layer = QgsMarkerSymbol.createSimple(layer_style)
+                category = QgsRendererCategory(str(value[0]), symbol_layer, value[1])
+                categories.append(category)
+            renderer = QgsCategorizedSymbolRenderer('structure_type_id', categories)
+            if renderer is not None:
+                structure_points_layer.setRenderer(renderer)
+            structure_points_layer.triggerRepaint()
+            # end custom symbology
+            structure_points_layer.setName(structure_layer_name)
+            design_node.addLayer(structure_points_layer)
+
+    else:
+        # Add line structures
+        if not any([c.name() == structure_layer_name for c in design_node.children()]):
+            structures_lines_qml = os.path.join(symbology_path, 'symbology', 'structure_lines.qml')
+            structure_lines_layer.loadNamedStyle(structures_lines_qml)
+            QgsExpressionContextUtils.setLayerVariable(structure_lines_layer, 'parent_id', design_id)
+            structure_lines_layer.setSubsetString(subset_string)
+            QgsProject.instance().addMapLayer(structure_lines_layer, False)
+            # Start setting custom symbology
+            # TODO Refactor into a function
+            unique_values = []
+            for feature in structure_types_layer.getFeatures():
+                values = (feature["fid"], feature["name"])
+                unique_values.append(values)
+
+            categories = []
+            for value in unique_values:
+                layer_style = {}
+                layer_style["color"] = '%d, %d, %d' % (randrange(0, 256), randrange(0, 256), randrange(0, 256))
+                layer_style['width'] = '1'
+                layer_style['capstyle'] = 'round'
+                symbol_layer = QgsLineSymbol.createSimple(layer_style)
+                category = QgsRendererCategory(str(value[0]), symbol_layer, value[1])
+                categories.append(category)
+            renderer = QgsCategorizedSymbolRenderer('structure_type_id', categories)
+            if renderer is not None:
+                structure_lines_layer.setRenderer(renderer)
+            structure_points_layer.triggerRepaint()
+            # end custom symbology
+            structure_lines_layer.setName(structure_layer_name)
+            design_node.addLayer(structure_lines_layer)
 
     # Add zoi
-    if not any([c.name() == 'ZOI' for c in design_node.children()]):
-        zoi_qml = os.path.join(symbology_path, 'symbology', 'designs_zoi.qml')
+    zoi_layer_name = str(design_id) + "-ZOI"
+    if not any([c.name() == zoi_layer_name for c in design_node.children()]):
+        zoi_qml = os.path.join(symbology_path, 'symbology', 'zoi.qml')
         zoi_layer.loadNamedStyle(zoi_qml)
         QgsExpressionContextUtils.setLayerVariable(zoi_layer, 'parent_id', design_id)
         zoi_layer.setSubsetString(subset_string)
         QgsProject.instance().addMapLayer(zoi_layer, False)
+        # Start setting custom symbology
+        # TODO Refactor into a function
+        # TODO Refactor into sql query
+        unique_values = []
+        for feature in zoi_types_layer.getFeatures():
+            values = (feature["fid"], feature["name"])
+            unique_values.append(values)
+
+        categories = []
+        for value in unique_values:
+            layer_style = {}
+            alpha = 50
+            layer_style["color"] = "{}, {}, {}, {}".format(randrange(0, 256), randrange(0, 256), randrange(0, 256), alpha)
+            # layer_style['width'] = '1'
+            # layer_style['capstyle'] = 'round'
+            symbol_layer = QgsFillSymbol.createSimple(layer_style)
+            category = QgsRendererCategory(str(value[0]), symbol_layer, value[1])
+            categories.append(category)
+        renderer = QgsCategorizedSymbolRenderer('influence_type_id', categories)
+        if renderer is not None:
+            zoi_layer.setRenderer(renderer)
+        zoi_layer.triggerRepaint()
+        # end custom symbology
+        zoi_layer.setName(zoi_layer_name)
         design_node.addLayer(zoi_layer)
+
+    # Add complexes
+    complex_layer_name = str(design_id) + "-Complexes"
+    if not any([c.name() == complex_layer_name for c in design_node.children()]):
+        complex_qml = os.path.join(symbology_path, 'symbology', 'complexes.qml')
+        complexes_layer.loadNamedStyle(complex_qml)
+        QgsExpressionContextUtils.setLayerVariable(complexes_layer, 'parent_id', design_id)
+        complexes_layer.setSubsetString(subset_string)
+        QgsProject.instance().addMapLayer(complexes_layer, False)
+        complexes_layer.setName(complex_layer_name)
+        design_node.addLayer(complexes_layer)
 
 
 def add_layer_to_map(qris_project, item, node):
