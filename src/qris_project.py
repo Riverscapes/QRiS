@@ -107,7 +107,7 @@ class Raster():
 
 class QRiSProject():
 
-    version = "0.0.1"
+    version = "0.1.0"
 
     def __init__(self, name=None) -> None:
         self.project_name = name

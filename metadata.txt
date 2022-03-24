@@ -3,14 +3,14 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Riverscapes Studio (QRiS)
+name=QRiS
 qgisMinimumVersion=3.0
 description=QGIS Riverscapes Studio (QRiS)
-version=0.0.1
+version=0.1.0
 author=North Arrow Research
 email=info@northarrowresearch.com
 
-about=Provide a brief description of the plugin and its purpose.
+about=QRiS is a QGIS plugin designed to support a framework for consistently authoring, analyzing, and presenting information related to riverscape health.
 
 tracker=https://github.com/Riverscapes/QRiS/issues
 repository=https://github.com/Riverscapes/QRiS
@@ -25,7 +25,7 @@ hasProcessingProvider=yes
 # Tags are comma separated with spaces allowed
 tags=python,riverscapes,planning
 
-homepage=https://github.com/Riverscapes/QRiS
+homepage=https://riverscapes.github.io/QRiS/
 category=Plugins
 icon=icon.png
 

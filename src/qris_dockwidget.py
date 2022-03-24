@@ -390,7 +390,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.zoi_type_dialog.show()
         else:
             # TODO move the creation of the design data model so that this isn't necessary
-            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")
+            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding a new influence type")
 
     def add_phase(self):
         """Initiates adding a new phase within the phase dialog"""

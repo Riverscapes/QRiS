@@ -6,7 +6,7 @@ import re
 import zipfile
 
 
-PLUGIN_NAME = "qrave_toolbar"
+PLUGIN_NAME = "qris"
 UI_DIR = "src/ui"
 
 
@@ -35,6 +35,9 @@ def copy_plugin():
         ['README.md'],
         ['config.json'],
         ['src', '**', '*.py'],
+        ['src', '**', '*.ui'],
+        ['src', '**', '*.sql'],
+        ['src', '**', '*.qml'],
         ['resources', '**', '*.?ml'],
         ['resources', '**', '*.json'],
     ]
