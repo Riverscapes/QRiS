@@ -6,7 +6,7 @@
 name=QRiS
 qgisMinimumVersion=3.0
 description=QGIS Riverscapes Studio (QRiS)
-version=0.1.0
+version=0.1.1
 author=North Arrow Research
 email=info@northarrowresearch.com
 
