@@ -106,6 +106,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
         project_node.setData('project_root', item_code['item_type'])
         rootNode.appendRow(project_node)
+        self.treeView.setExpanded(project_node.index(), True)
 
         # Add project extent layers to tree
         extent_folder = QStandardItem("Project Extents")
@@ -204,6 +205,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         design_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
         design_folder.setData('design_folder', item_code['item_type'])
         project_node.appendRow(design_folder)
+        self.treeView.setExpanded(design_folder.index(), True)
 
         design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
         designs_path = design_geopackage_path + '|layername=designs'
@@ -278,7 +280,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # project_node.appendRow(photos_folder)
 
         # TODO for now we are expanding the map however need to remember expanded state or add new nodes as we add data
-        self.treeView.expandAll()
+        # self.treeView.expandAll()
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
         # Adds a test comment

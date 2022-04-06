@@ -123,12 +123,22 @@ def add_design_to_map(qris_project, item, node):
             group_node.addLayer(layer)
 
     # Summary tables (views)
-    if any([c.name() == "Summary Tables" for c in node.children()]):
+    if any([c.name() == "Low-Tech Tables" for c in node.children()]):
         # if is there set it to the design node
-        summary_node = next(n for n in node.children() if n.name() == "Summary Tables")
+        table_node = next(n for n in node.children() if n.name() == "Low-Tech Tables")
     else:
         # if not add the node as a group
-        summary_node = node.addGroup("Summary Tables")
+        table_node = node.addGroup("Low-Tech Tables")
+        table_node.setExpanded(False)
+
+    # Summary tables (views)
+    if any([c.name() == "Summary Tables" for c in table_node.children()]):
+        # if is there set it to the design node
+        summary_node = next(n for n in table_node.children() if n.name() == "Summary Tables")
+    else:
+        # if not add the node as a group
+        summary_node = table_node.addGroup("Summary Tables")
+        summary_node.setExpanded(False)
 
     add_design_table('Structure Totals - Points', 'qry_total_structures_points', None, True, summary_node)
     add_design_table('Structure Totals - Lines', 'qry_total_structures_lines', None, True, summary_node)
@@ -139,12 +149,13 @@ def add_design_to_map(qris_project, item, node):
     add_design_table('ZOI Summary', 'qry_zoi_summary', None, True, summary_node)
 
     # Lookup Tables
-    if any([c.name() == "Lookup Tables" for c in node.children()]):
+    if any([c.name() == "Lookup Tables" for c in table_node.children()]):
         # if is there set it to the design node
-        lookup_node = next(n for n in node.children() if n.name() == "Lookup Tables")
+        lookup_node = next(n for n in table_node.children() if n.name() == "Lookup Tables")
     else:
         # if not add the node as a group
-        lookup_node = node.addGroup("Lookup Tables")
+        lookup_node = table_node.addGroup("Lookup Tables")
+        lookup_node.setExpanded(False)
 
     add_design_table('Design Status', 'lkp_design_status', 'lkp_design_status.qml', True, lookup_node)
     add_design_table('Phase Action', 'lkp_phase_action', 'lkp_phase_action.qml', True, lookup_node)
@@ -153,18 +164,19 @@ def add_design_to_map(qris_project, item, node):
     add_design_table('Structure Mimics', 'lkp_structure_mimics', 'lkp_structure_mimics.qml', True, lookup_node)
 
     # Add Design Tables
-    if any([c.name() == "Design Tables" for c in node.children()]):
+    if any([c.name() == "Design Tables" for c in table_node.children()]):
         # if is there set it to the design node
-        design_node = next(n for n in node.children() if n.name() == "Design Tables")
+        design_tables_node = next(n for n in table_node.children() if n.name() == "Design Tables")
     else:
         # if not add the node as a group
-        design_node = node.addGroup("Design Tables")
+        design_tables_node = table_node.addGroup("Design Tables")
+        design_tables_node.setExpanded(False)
 
     # Check if the designs table has been added and if not add it.
-    add_design_table('Designs', 'designs', 'designs.qml', False, design_node)
-    add_design_table('Structure Types', 'structure_types', 'structure_types.qml', False, design_node)
-    add_design_table('ZOI Types', 'zoi_types', 'zoi_types.qml', False, design_node)
-    add_design_table('Phases', 'phases', 'phases.qml', False, design_node)
+    add_design_table('Designs', 'designs', 'designs.qml', False, design_tables_node)
+    add_design_table('Structure Types', 'structure_types', 'structure_types.qml', False, design_tables_node)
+    add_design_table('ZOI Types', 'zoi_types', 'zoi_types.qml', False, design_tables_node)
+    add_design_table('Phases', 'phases', 'phases.qml', False, design_tables_node)
 
     # Check if the design node is already added
     design_group_name = str(design_id) + "-" + item.text()
@@ -204,6 +216,8 @@ def add_design_to_map(qris_project, item, node):
             QgsProject.instance().addMapLayer(structure_points_layer, False)
             structure_points_layer.setName(structure_layer_name)
             design_node.addLayer(structure_points_layer)
+            layer_node = design_node.findLayer(structure_points_layer.id())
+            layer_node.setExpanded(False)
         else:
             structure_points_layer = QgsProject.instance().mapLayersByName(structure_layer_name)[0]
         if renderer is not None:
@@ -239,6 +253,8 @@ def add_design_to_map(qris_project, item, node):
             QgsProject.instance().addMapLayer(structure_lines_layer, False)
             structure_lines_layer.setName(structure_layer_name)
             design_node.addLayer(structure_lines_layer)
+            layer_node = design_node.findLayer(structure_lines_layer.id())
+            layer_node.setExpanded(False)
         else:
             structure_lines_layer = QgsProject.instance().mapLayersByName(structure_layer_name)[0]
         if renderer is not None:
@@ -256,8 +272,10 @@ def add_design_to_map(qris_project, item, node):
     categories = []
     for value in unique_values:
         layer_style = {}
-        alpha = 50
+        alpha = 60
         layer_style["color"] = "{}, {}, {}, {}".format(randrange(0, 256), randrange(0, 256), randrange(0, 256), alpha)
+        layer_style["outline_width"] = '0.50'
+        layer_style["outline_style"] = 'dash'
         symbol_layer = QgsFillSymbol.createSimple(layer_style)
         category = QgsRendererCategory(str(value[0]), symbol_layer, value[1])
         categories.append(category)
@@ -273,6 +291,8 @@ def add_design_to_map(qris_project, item, node):
         QgsProject.instance().addMapLayer(zoi_layer, False)
         zoi_layer.setName(zoi_layer_name)
         design_node.addLayer(zoi_layer)
+        layer_node = design_node.findLayer(zoi_layer.id())
+        layer_node.setExpanded(False)
     else:
         zoi_layer = QgsProject.instance().mapLayersByName(zoi_layer_name)[0]
     if renderer is not None:
