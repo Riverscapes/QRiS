@@ -13,12 +13,20 @@ class ContextMenu(QMenu):
             "Collapse All Child Nodes",
             ':/plugins/qris_toolbar/collapse.png',
         ),
+        'REFRESH_TREE': (
+            "Refresh Tree",
+            ':/plugins/qris_toolbar/test_layers.png',
+        ),
         'ADD_ALL_TO_MAP': (
             "Add All Layers To The Map",
             ':/plugins/qris_toolbar/test_add_map.png',
         ),
         'ADD_TO_MAP': (
             "Add to Map",
+            ':/plugins/qris_toolbar/test_add_map.png',
+        ),
+        'ADD_TO_MAP_OR_UPDATE_SYMBOLOGY': (
+            "Add to Map or Update Symbology",
             ':/plugins/qris_toolbar/test_add_map.png',
         ),
         # 'BROWSE_PROJECT_FOLDER': (

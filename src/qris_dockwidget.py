@@ -98,6 +98,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.qris_project = qris_project
 
         self.model.clear()
+        self.tree_state = {}
         rootNode = self.model.invisibleRootItem()
 
         # set the project root
@@ -318,6 +319,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         if item_type == 'project_root':
             self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
             self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
+            self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
@@ -332,16 +334,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         elif item_type == "design_folder":
             self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
         elif item_type == "design":
-            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
+            self.menu.addAction('ADD_TO_MAP_OR_UPDATE_SYMBOLOGY', lambda: add_to_map(self.qris_project, self.model, model_item))
         elif item_type == "structure_type_folder":
             self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
         elif item_type == "zoi_type_folder":
             self.menu.addAction('ADD_ZOI_TYPE', lambda: self.add_zoi_type())
         elif item_type == "phase_folder":
             self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
-        # elif item_type == "photos_folder":
-        #     self.menu.addAction('IMPORT_PHOTOS', lambda: self.import_photos())
-        #     self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
         else:
             self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
