@@ -6,7 +6,7 @@ title: Home
 
 <h1>QRiS - QGIS Riverscapes Studio</h1>
 
-The QRiS is a [QGIS](https://www.qgis.org/) plugin designed to support a unified framework for consistently authoring, analyzing, and presenting riverscape information. The current beta release (v 0.1.0) is meant to support [Anabranch Solutions](https://www.anabranchsolutions.com) restoration design and implementation personnel, and also to serve as teaching tool for [Utah State University students in the Watershed Sciences Department](https://qcnr.usu.edu/wats/).
+The QRiS is a [QGIS](https://www.qgis.org/) plugin designed to support a unified framework for consistently authoring, analyzing, and presenting riverscape information. The current beta release (v 0.1.1) is meant to support [Anabranch Solutions](https://www.anabranchsolutions.com) restoration design and implementation personnel, and also to serve as teaching tool for [Utah State University students in the Watershed Sciences Department](https://qcnr.usu.edu/wats/).
 
 <div align="center">
   <img src="assets/images/qgis_200.png">
