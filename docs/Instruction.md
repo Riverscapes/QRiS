@@ -15,39 +15,49 @@ weight: 1
 
 <h3>1. Get oriented in QGIS</h3>
 <i>Get acquanted with the interface and basic operations in QGIS</i>
-
-<h3>2. File Types for GIS</h3>
-<i>A brief introduction to basic file and data types with a riverscapes emphasis</i>
-
-<h3>3. Adding, Editing, and Exporting Data</h3>
-<i>Basic operations for adding and editing spatial and non-spatial data within a QGIS session</i>
-
-<h3>4. QGIS Plugins</h3>
-<i>Introduction to QGIS plugins and plugin management</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/Y0h-MopIUjI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
 <hr>
-<br>
+
+<h3>2. QGIS Plugins</h3>
+<i>Introduction to QGIS plugins and plugin management</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/ANo8d19hns4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
+
+
+<h3>3. File Types for GIS</h3>
+<i>A brief introduction to basic file and data types with a riverscapes emphasis</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/Mp_3lI6DwM4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
+
+<h3>4. Adding and Editing Basic Spatial Data</h3>
+<i>Basic operations for adding and editing spatial and non-spatial data within a QGIS session</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/LBHYrT-F9gA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
+
 <h2>LOW-TECH RESTORATION DESIGN IN - QRiS</h2>
 <i>How to use the QRiS plugin to document LTPBR designs within QGIS</i>
 <div align="center">
   <img src="assets/images/riv_q.png">
 </div>
 
-<h3>1. An Intrdoction to the QGIS Riverscapes Studio (QRiS) Plugin</h3>
-<i>Brief introduction, overview, and vision for the QRiS plguin</i>
-
-<h3>2. LTPBR Designs in QRiS</h3>
+<h3>1. LTPBR Designs in QRiS</h3>
 <i>Overview of LTPBR design components within QRiS</i>
 
-<h3>3. Defining a Project Extent</h3>
+<h3>2. Defining a Project Extent</h3>
 <i>Defining a project extent and importing supporting spatial data</i>
 
-<h3>4. LTPBR Design Customization</h3>
+<h3>3. LTPBR Design Customization</h3>
 <i>Add you own custome structure types and structure functions</i>
 
-<h3>4. LTPBR Design Customization</h3>
-<i>Add you own custome structure types and structure functions</i>
-
-<h3>5. Summary Data and Data Export</h3>
+<h3>4. Summary Data and Data Export</h3>
 <i>Built in LTPBR design summary data and how to get it</i>
 <hr>
 
