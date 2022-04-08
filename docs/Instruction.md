@@ -50,15 +50,40 @@ weight: 1
 
 <h3>1. LTPBR Designs in QRiS</h3>
 <i>Overview of LTPBR design components within QRiS</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/1OklbhUJtC4/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
 
 <h3>2. Defining a Project Extent</h3>
 <i>Defining a project extent and importing supporting spatial data</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/pnF7diMEVQY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
 
-<h3>3. LTPBR Design Customization</h3>
+<h3>3. Laying out an LTPBR Design</h3>
+<i>Adding and Editing Structures, Complexes, and Zones of Influence</i>
+<i>Defining a project extent and importing supporting spatial data</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/jKCfuQj2gPk" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
+
+<h3>4. LTPBR Design Customization</h3>
 <i>Add you own custome structure types and structure functions</i>
+<i>Defining a project extent and importing supporting spatial data</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/0xdmIbylDuc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
 
-<h3>4. Summary Data and Data Export</h3>
-<i>Built in LTPBR design summary data and how to get it</i>
+<h3>5. Summary Data and Data Export</h3>
+<i>Built in LTPBR design summary data and how to get it out</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<hr>
 <hr>
 
 <br>
