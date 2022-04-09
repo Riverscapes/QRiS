@@ -13,19 +13,20 @@ weight: 1
   <img src="assets/images/qgis_500.png">
 </div>
 
+
 <h3>1. Get oriented in QGIS</h3>
 <i>Get acquanted with the interface and basic operations in QGIS</i>
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/Y0h-MopIUjI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 <h3>2. QGIS Plugins</h3>
 <i>Introduction to QGIS plugins and plugin management</i>
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/ANo8d19hns4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 
 <h3>3. File Types for GIS</h3>
@@ -33,7 +34,7 @@ weight: 1
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/Mp_3lI6DwM4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 <h3>4. Adding and Editing Basic Spatial Data</h3>
 <i>Basic operations for adding and editing spatial and non-spatial data within a QGIS session</i>
@@ -41,6 +42,7 @@ weight: 1
   <iframe width="560" height="315" src="https://www.youtube.com/embed/LBHYrT-F9gA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
 <hr>
+
 
 <h2>LOW-TECH RESTORATION DESIGN IN - QRiS</h2>
 <i>How to use the QRiS plugin to document LTPBR designs within QGIS</i>
@@ -53,38 +55,37 @@ weight: 1
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/1OklbhUJtC4/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 <h3>2. Defining a Project Extent</h3>
 <i>Defining a project extent and importing supporting spatial data</i>
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/pnF7diMEVQY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 <h3>3. Laying out an LTPBR Design</h3>
 <i>Adding and Editing Structures, Complexes, and Zones of Influence</i>
-<i>Defining a project extent and importing supporting spatial data</i>
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/jKCfuQj2gPk" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 <h3>4. LTPBR Design Customization</h3>
 <i>Add you own custome structure types and structure functions</i>
-<i>Defining a project extent and importing supporting spatial data</i>
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/0xdmIbylDuc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr>
+
 
 <h3>5. Summary Data and Data Export</h3>
 <i>Built in LTPBR design summary data and how to get it out</i>
 <div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/CiVel6kegjo" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
 <hr>
-<hr>
+
+
 
 <br>
 <h2>INTRODUCTION TO QFIELD</h2>
@@ -93,29 +94,48 @@ weight: 1
   <img src="assets/images/riv_q_f.png">
 </div>
 
+
 <h3>1. The QField Project Life-Cycle</h3>
 <i>General overview and concepts for deploying and syncing QField projects</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/aV1XYKJUsfo" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
 
 <h3>2. Package a Project for QField</h3>
 <i>Preparing your geospatial data for mobile deployment in QField</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/5F1Eih8DbLw" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
 
 <h3>3. Base Maps in QField</h3>
-<i>Best practices for caching basemaps for offline use in QField</i>
+<i>Best practices for caching basemaps for offline use in QField (Coming Soon)</i>
+
+
+<h3>4. Opening QField Projects</h3>
+<i>File management and opening QField projects on a mobile device</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/_bXecVrOWAs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
 
 <h3>4. QField Functionality</h3>
-<i>Basic functionality for adding and editing data within QField</i>
+<i>Opening a project and basic QField functionality</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/acGvj5K_6Qk" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+
 
 <h3>5. Completing QField Projects</h3>
 <i>Getting your field data back to the source</i>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/SaGD2RufALY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
 
 <h3>6. Syncing Field and Local Data</h3>
 <i>Syncing your field data to the original source data</i>
-
-
-
-
-
-<!-- <div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/2fhFpqZZ3qs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<div class="responsive-embed widescreen">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/iHlRrYyWWq0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </div>
-<hr> -->
+
+<h3>7. QField Cloud</h3>
+<i>Overview of QField Cloud for Deploying and Managing Mobile GIS Data (Coming soon....)</i>
+<hr>
