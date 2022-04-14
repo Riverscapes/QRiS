@@ -88,7 +88,7 @@ weight: 1
 
 
 <br>
-<h2>INTRODUCTION TO QFIELD</h2>
+<h2>INTRODUCTION TO QFIELD (More Coming....)</h2>
 <i>Getting mobile with your QRiS projects and geo-spatial data</i>
 <div align="center">
   <img src="assets/images/riv_q_f.png">
@@ -103,39 +103,23 @@ weight: 1
 
 <h3>2. Package a Project for QField</h3>
 <i>Preparing your geospatial data for mobile deployment in QField</i>
-<div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/5F1Eih8DbLw" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
 
 <h3>3. Base Maps in QField</h3>
-<i>Best practices for caching basemaps for offline use in QField (Coming Soon)</i>
-
+<i>Best practices for caching basemaps for offline use in QField</i>
 
 <h3>4. Opening QField Projects</h3>
 <i>File management and opening QField projects on a mobile device</i>
-<div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/_bXecVrOWAs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
 
 <h3>4. QField Functionality</h3>
 <i>Opening a project and basic QField functionality</i>
-<div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/acGvj5K_6Qk" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
 
 
 <h3>5. Completing QField Projects</h3>
 <i>Getting your field data back to the source</i>
-<div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/SaGD2RufALY" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
 
 <h3>6. Syncing Field and Local Data</h3>
 <i>Syncing your field data to the original source data</i>
-<div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/iHlRrYyWWq0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
 
 <h3>7. QField Cloud</h3>
-<i>Overview of QField Cloud for Deploying and Managing Mobile GIS Data (Coming soon....)</i>
+<i>Overview of QField Cloud for Deploying and Managing Mobile GIS Data</i>
 <hr>
