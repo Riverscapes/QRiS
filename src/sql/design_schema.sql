@@ -45,22 +45,6 @@ INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (2, "Typical Flood", "
 INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (3, "Large Flood", "Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)");
 INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (4, "Other", "Extent is not related to flood event");
 
-
-CREATE TABLE lkp_zoi_influence (
-    fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    description TEXT,
-    created DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (1, "Depositional Zone", "Area of lateral (e.g., point bar development) and/or elevational (mid-channel bar formation) sediment deposition");
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (2, "Erosional Zone", "Area of lateral (e.g., bank erosion) and/or elevational (e.g., pool formation) erosion");
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (3, "Overbank Flow", "Area of overbank flow dispersal onto valley bottom surfaces (e.g., secondary channel formation, disconnected floodplain inundation)");
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (4, "Pond Extent", "Area of pond formation behind a structural element (e.g., BDA, wood jam, BDA structure complex)");
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (5, "Vegetation Response", "Area of vegetation response (e.g., upland vegetation reduction, riparian vegetation expansion, planting treatment footprint)");
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (6, "Hydraulic Response", "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
-INSERT INTO lkp_zoi_influence (fid, name, description) VALUES (7, "Other", "A project specific response or influence");
-
 -- Create non-spatial tables
 CREATE TABLE designs (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,17 +80,17 @@ INSERT INTO structure_types (fid, name, mimics_id) VALUES (7, "Other", 3);
 CREATE TABLE zoi_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT,
-    influence_id REFERENCES lkp_zoi_influence(fid) ON DELETE CASCADE,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (1, "Depositional Zone", 1, "Area of lateral (e.g., point bar development) and/or elevational (mid-channel bar formation) sediment deposition");
-INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (2, "Erosional Zone", 2, "Area of lateral (e.g., bank erosion) and/or elevational (e.g., pool formation) erosion");
-INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (3, "Overbank Flow", 3, "Area of overbank flow dispersal onto valley bottom surfaces (e.g., secondary channel formation, disconnected floodplain inundation)");
-INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (4, "Pond Extent", 4, "Area of pond formation behind a structural element (e.g., BDA, wood jam, BDA structure complex)");
-INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (5, "Vegetation Response", 5, "Area of vegetation response (e.g., upland vegetation reduction, riparian vegetation expansion, planting treatment footprint)");
-INSERT INTO zoi_types (fid, name, influence_id, description) VALUES (6, "Hydraulic Response", 6, "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
+-- TODO Get abbreviated descriptions from the manual.
+INSERT INTO zoi_types (fid, name, description) VALUES (1, "Increase Channel Complexity", "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment");
+INSERT INTO zoi_types (fid, name, description) VALUES (2, "Accelerate Incision Recovery", "Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation");
+INSERT INTO zoi_types (fid, name, description) VALUES (3, "Lateral Channel Migration", "Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders");
+INSERT INTO zoi_types (fid, name, description) VALUES (4, "Increase Floodplain Connectivity", "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow");
+INSERT INTO zoi_types (fid, name, description) VALUES (5, "Facilitate Beaver Translocation", "Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation");
+INSERT INTO zoi_types (fid, name, description) VALUES (6, "Other", "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
 
 CREATE TABLE phases (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,7 +128,6 @@ ALTER TABLE structure_lines ADD COLUMN created DATETIME;
 -- Add table names to the geopackages contents table so they are revealed in QGIS
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_mimics", "attributes", "lkp_structure_mimics", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_zoi_stage", "attributes", "lkp_zoi_stage", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_zoi_influence", "attributes", "lkp_zoi_influence", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_phase_action", "attributes", "lkp_phase_action", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_design_status", "attributes", "lkp_design_status", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("designs", "attributes", "designs", 0);
@@ -217,11 +200,3 @@ FROM qry_structure_summary_lines
 GROUP BY qry_structure_summary_lines.[Design Name], qry_structure_summary_lines.[Design Status], qry_structure_summary_lines.[Phase Name];
 
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_total_structures_lines", "attributes", "qry_total_structures_lines", 0);
-
--- ZOI Summary
-CREATE VIEW qry_zoi_summary AS
-SELECT Max(zoi.FID) AS [Summary ID], designs.name AS [Design Name], lkp_zoi_stage.name AS [Influence Stage], zoi_types.name AS [Influence Type], Round(Sum(st_area(zoi.geom, false)), 0) AS [Total Influence Area]
-FROM (lkp_zoi_influence INNER JOIN zoi_types ON lkp_zoi_influence.FID = zoi_types.influence_id) INNER JOIN (lkp_zoi_stage INNER JOIN (designs INNER JOIN zoi ON designs.FID = zoi.design_id) ON lkp_zoi_stage.FID = zoi.stage_id) ON zoi_types.FID = zoi.influence_type_id
-GROUP BY designs.name, lkp_zoi_stage.name, zoi_types.name;
-
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_zoi_summary", "attributes", "qry_zoi_summary", 0);
