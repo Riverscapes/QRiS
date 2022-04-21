@@ -3,9 +3,12 @@ title: Instruction
 weight: 1
 ---
 
-<h1>QRiS - Instruction and Documentation</h1>
-<i>Learning resources to help you get started with QGIS and the Riverscapes Studio (QRiS) plugin</i>
-<hr>
+* QRiS - Instruction and Documentation
+
+*Learning resources to help you get started with QGIS and the Riverscapes Studio (QRiS) plugin*
+
+---
+
 <br>
 <h2>QGIS - A GENTLE INTRODUCTION</h2>
 <i>Just enough GIS for you to be dangerous to yourself and others</i>
