@@ -10,7 +10,7 @@ weight: 1
 ---
 
 <br>
-<h2>QGIS - A GENTLE INTRODUCTION</h2>
+** QGIS - A GENTLE INTRODUCTION
 <i>Just enough GIS for you to be dangerous to yourself and others</i>
 <div align="center">
   <img src="assets/images/qgis_500.png">
