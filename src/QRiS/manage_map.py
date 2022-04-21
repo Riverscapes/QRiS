@@ -146,7 +146,6 @@ def add_design_to_map(qris_project, item, node):
     add_design_table('Structure Summary - Lines', 'qry_structure_summary_lines', None, True, summary_node)
     add_design_table('Complexes Summary - Points', 'qry_complexes_by_type_points', None, True, summary_node)
     add_design_table('Complexes Summary - Lines', 'qry_complexes_by_type_lines', None, True, summary_node)
-    add_design_table('ZOI Summary', 'qry_zoi_summary', None, True, summary_node)
 
     # Lookup Tables
     if any([c.name() == "Lookup Tables" for c in table_node.children()]):
@@ -159,7 +158,6 @@ def add_design_to_map(qris_project, item, node):
 
     add_design_table('Design Status', 'lkp_design_status', 'lkp_design_status.qml', True, lookup_node)
     add_design_table('Phase Action', 'lkp_phase_action', 'lkp_phase_action.qml', True, lookup_node)
-    add_design_table('ZOI Influence', 'lkp_zoi_influence', 'lkp_zoi_influence.qml', True, lookup_node)
     add_design_table('ZOI Stage', 'lkp_zoi_stage', 'lkp_zoi_stage.qml', True, lookup_node)
     add_design_table('Structure Mimics', 'lkp_structure_mimics', 'lkp_structure_mimics.qml', True, lookup_node)
 
