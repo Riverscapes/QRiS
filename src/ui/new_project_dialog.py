@@ -1,12 +1,14 @@
 import os
-import json
+import sqlite3
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox
-from qgis.PyQt.QtCore import pyqtSignal, QUrl
+from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
-from qgis.core import Qgis
+from qgis.core import Qgis, QgsFeature, QgsVectorLayer
 
 from ..qris_project import QRiSProject
+from ..QRiS.functions import create_geopackage_table
+
 
 DIALOG_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'new_project_dialog.ui'))
@@ -61,12 +63,33 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
             self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
     def save_new_project(self):
-        """Saves the new project from the dialog"""
-        # TODO refactor this into seperate classes
+        """Saves the new project from the dialog and creates the master geopackage"""
         # Create new dir
         os.makedirs(self.project_folder)
         qris_project = QRiSProject(self.project_name)
         qris_project.project_path = self.project_folder
+
+        # Create the geopackage and spatial tables
+        # TODO make sure you aren't overwriting anything
+        self.qris_geopackage = os.path.join(self.project_folder, "qris_project.gpkg")
+        if not os.path.exists(self.qris_geopackage):
+            mask_features_path = self.qris_geopackage + "|layername=mask_features"
+            create_geopackage_table('Polygon', 'mask_features', self.qris_geopackage, mask_features_path,
+                                    [
+                                        ('name', QVariant.String)
+                                    ])
+
+            # and now run the schema ddl
+            conn = sqlite3.connect(self.qris_geopackage)
+            conn.execute('PRAGMA foreign_keys = ON;')
+            curs = conn.cursor()
+            sql_path = os.path.dirname(os.path.dirname(__file__))
+            schema_path = os.path.join(sql_path, "sql", "schema.sql")
+            schema_qry_string = open(schema_path, 'r').read()
+            curs.executescript(schema_qry_string)
+            conn.commit()
+            conn.close()
+
         # Create .qris
         qris_project_file = os.path.join(self.project_folder, "project.qris")
         qris_project.write_project_xml(qris_project_file)
