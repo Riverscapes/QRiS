@@ -167,3 +167,89 @@ CREATE TABLE  metric_values (
     Uncertainty NUMERIC,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- dam and jam surveys
+CREATE TABLE  structure_source (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO structure_source (fid, name) VALUES (1, "Natural");
+INSERT INTO structure_source (fid, name) VALUES (2, "Artificial");
+INSERT INTO structure_source (fid, name) VALUES (3, "Unknown");
+
+
+CREATE TABLE  dam_integrity (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO dam_integrity (fid, name) VALUES (1, "Intact");
+INSERT INTO dam_integrity (fid, name) VALUES (2, "Breached");
+INSERT INTO dam_integrity (fid, name) VALUES (3, "Blown");
+INSERT INTO dam_integrity (fid, name) VALUES (4, "Burried");
+INSERT INTO dam_integrity (fid, name) VALUES (5, "Flooded");
+INSERT INTO dam_integrity (fid, name) VALUES (6, "NA");
+
+CREATE TABLE structure_flow_type (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO structure_flow_type (fid, name) VALUES (1, "Over");
+INSERT INTO structure_flow_type (fid, name) VALUES (2, "Around");
+INSERT INTO structure_flow_type (fid, name) VALUES (3, "Under");
+INSERT INTO structure_flow_type (fid, name) VALUES (4, "Through");
+INSERT INTO structure_flow_type (fid, name) VALUES (5, "Terminal");
+INSERT INTO structure_flow_type (fid, name) VALUES (6, "Dry");
+INSERT INTO structure_flow_type (fid, name) VALUES (7, "NA");
+
+
+CREATE TABLE beaver_maintenance (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO beaver_maintenance (fid, name) VALUES (1, "None");
+INSERT INTO beaver_maintenance (fid, name) VALUES (2, "Old");
+INSERT INTO beaver_maintenance (fid, name) VALUES (3, "Fresh");
+INSERT INTO beaver_maintenance (fid, name) VALUES (4, "NA");
+
+
+-- dam points
+ALTER TABLE dams ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE dams ADD COLUMN structure_source_id INTEGER REFERENCES structure_source(fid) ON DELETE CASCADE;
+ALTER TABLE dams ADD COLUMN dam_integrity_id INTEGER REFERENCES dam_integrity(fid) ON DELETE CASCADE;
+ALTER TABLE dams ADD COLUMN structure_flow_type_id INTEGER REFERENCES structure_flow_type(fid) ON DELETE CASCADE;
+ALTER TABLE dams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES beaver_maintenance(fid) ON DELETE CASCADE;
+ALTER TABLE dams ADD COLUMN length NUMERIC;
+ALTER TABLE dams ADD COLUMN height NUMERIC;
+
+-- jam points
+ALTER TABLE jams ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE jams ADD COLUMN structure_source_id INTEGER REFERENCES structure_source(fid) ON DELETE CASCADE;
+ALTER TABLE jams ADD COLUMN structure_flow_type_id INTEGER REFERENCES structure_flow_type(fid) ON DELETE CASCADE;
+ALTER TABLE jams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES beaver_maintenance(fid) ON DELETE CASCADE;
+ALTER TABLE jams ADD COLUMN length NUMERIC;
+ALTER TABLE jams ADD COLUMN width NUMERIC;
+ALTER TABLE jams ADD COLUMN height NUMERIC;
+ALTER TABLE jams ADD COLUMN wood_count INTEGER;
+
+-- dam lines - I assume that these will basically be desktop rim surveys. May want to remove many of these attributes
+ALTER TABLE dam_crests ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE dam_crests ADD COLUMN structure_source_id INTEGER REFERENCES structure_source(fid) ON DELETE CASCADE;
+ALTER TABLE dam_crests ADD COLUMN structure_flow_type_id INTEGER REFERENCES structure_flow_type(fid) ON DELETE CASCADE;
+ALTER TABLE dam_crests ADD COLUMN dam_integrity_id INTEGER REFERENCES dam_integrity(fid) ON DELETE CASCADE;
+ALTER TABLE dam_crests ADD COLUMN beaver_maintenance_id INTEGER REFERENCES beaver_maintenance(fid) ON DELETE CASCADE;
+-- likely remove for crests, but maybe not....
+ALTER TABLE dam_crests ADD COLUMN height NUMERIC;
+
+-- should their be jam crests, or maybe polygons, or how about both......
