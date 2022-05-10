@@ -79,6 +79,25 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
                                         ('name', QVariant.String)
                                     ])
 
+            # TODO need to remove the temp attribute, or is possible refactor so that an attribute is not required
+            dams_path = self.qris_geopackage + "|layername=dams"
+            create_geopackage_table('Point', 'dams', self.qris_geopackage, dams_path,
+                                    [
+                                        ('temp', QVariant.String)
+                                    ])
+
+            jams_path = self.qris_geopackage + "|layername=jams"
+            create_geopackage_table('Point', 'jams', self.qris_geopackage, jams_path,
+                                    [
+                                        ('temp', QVariant.String)
+                                    ])
+
+            dam_crests_path = self.qris_geopackage + "|layername=dam_crests"
+            create_geopackage_table('Linestring', 'dam_crests', self.qris_geopackage, dam_crests_path,
+                                    [
+                                        ('temp', QVariant.String)
+                                    ])
+
             # and now run the schema ddl
             conn = sqlite3.connect(self.qris_geopackage)
             conn.execute('PRAGMA foreign_keys = ON;')
