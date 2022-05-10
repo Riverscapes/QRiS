@@ -74,29 +74,55 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
         self.qris_geopackage = os.path.join(self.project_folder, "qris_project.gpkg")
         if not os.path.exists(self.qris_geopackage):
             mask_features_path = self.qris_geopackage + "|layername=mask_features"
-            create_geopackage_table('Polygon', 'mask_features', self.qris_geopackage, mask_features_path,
-                                    [
-                                        ('name', QVariant.String)
-                                    ])
+            create_geopackage_table('Polygon', 'mask_features', self.qris_geopackage, mask_features_path, None)
 
-            # TODO need to remove the temp attribute, or is possible refactor so that an attribute is not required
-            dams_path = self.qris_geopackage + "|layername=dams"
-            create_geopackage_table('Point', 'dams', self.qris_geopackage, dams_path,
-                                    [
-                                        ('temp', QVariant.String)
-                                    ])
+            layer_path = self.qris_geopackage + "|layername=dams"
+            create_geopackage_table('Point', 'dams', self.qris_geopackage, layer_path, None)
 
-            jams_path = self.qris_geopackage + "|layername=jams"
-            create_geopackage_table('Point', 'jams', self.qris_geopackage, jams_path,
-                                    [
-                                        ('temp', QVariant.String)
-                                    ])
+            layer_path = self.qris_geopackage + "|layername=jams"
+            create_geopackage_table('Point', 'jams', self.qris_geopackage, layer_path, None)
 
-            dam_crests_path = self.qris_geopackage + "|layername=dam_crests"
-            create_geopackage_table('Linestring', 'dam_crests', self.qris_geopackage, dam_crests_path,
-                                    [
-                                        ('temp', QVariant.String)
-                                    ])
+            layer_path = self.qris_geopackage + "|layername=dam_crests"
+            create_geopackage_table('Linestring', 'dam_crests', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=thalwegs"
+            create_geopackage_table('Linestring', 'thalwegs', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=riverscape_units"
+            create_geopackage_table('Polygon', 'riverscape_units', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=centerlines"
+            create_geopackage_table('Linestring', 'centerlines', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=inundation_extents"
+            create_geopackage_table('Polygon', 'inundation_extents', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=valley_bottoms"
+            create_geopackage_table('Polygon', 'valley_bottoms', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=junctions"
+            create_geopackage_table('Point', 'junctions', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=geomorphic_units"
+            create_geopackage_table('Point', 'geomorphic_units', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=geomorphic_unit_extents"
+            create_geopackage_table('Polygon', 'geomorphic_unit_extents', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=cem_phases"
+            create_geopackage_table('Polygon', 'cem_phases', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=vegetation_extents"
+            create_geopackage_table('Polygon', 'vegetation_extents', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=floodplain_accessibilities"
+            create_geopackage_table('Polygon', 'floodplain_accessibilities', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=zoi_extents"
+            create_geopackage_table('Polygon', 'zoi_extents', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=brat_vegetation"
+            create_geopackage_table('Polygon', 'brat_vegetation', self.qris_geopackage, layer_path, None)
 
             # and now run the schema ddl
             conn = sqlite3.connect(self.qris_geopackage)

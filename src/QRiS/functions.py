@@ -7,7 +7,7 @@ from qgis.core import (
 )
 
 
-def create_geopackage_table(geometry_type, table_name, geopackage_path, full_path, field_tuple_list):
+def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
     """
         Creates tables in existing or new geopackages
         geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
@@ -17,12 +17,13 @@ def create_geopackage_table(geometry_type, table_name, geopackage_path, full_pat
         field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
         """
     memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
-    fields = []
-    for field_tuple in field_tuple_list:
-        field = QgsField(field_tuple[0], field_tuple[1])
-        fields.append(field)
-    memory_layer.dataProvider().addAttributes(fields)
-    memory_layer.updateFields()
+    if field_tuple_list:
+        fields = []
+        for field_tuple in field_tuple_list:
+            field = QgsField(field_tuple[0], field_tuple[1])
+            fields.append(field)
+        memory_layer.dataProvider().addAttributes(fields)
+        memory_layer.updateFields()
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.layerName = table_name
     options.driverName = 'GPKG'
