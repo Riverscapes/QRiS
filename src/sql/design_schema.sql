@@ -199,4 +199,4 @@ SELECT Max(qry_structure_summary_lines.[Summary ID]) AS [Summary ID], qry_struct
 FROM qry_structure_summary_lines
 GROUP BY qry_structure_summary_lines.[Design Name], qry_structure_summary_lines.[Design Status], qry_structure_summary_lines.[Phase Name];
 
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("qry_total_structures_lines", "attributes", "qry_total_structures_lines", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessments", "attributes", "qry_total_structures_lines", 0);
