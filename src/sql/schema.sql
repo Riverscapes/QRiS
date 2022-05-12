@@ -52,8 +52,12 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VAL
 INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 'temp.qml', NULL); -- veg_classes
 INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 'temp.qml', NULL); -- floating point accessibility
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (17, 'zoi_extent', 'Zones of Influence', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (18, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 'temp.qml', NULL);
 
 
 CREATE TABLE  method_layers (
@@ -70,7 +74,11 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (2, 6);
 INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 3);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 4);
-INSERT INTO method_layers (method_id, layer_id) VALUES (5, 12);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 18);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 19);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 20);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 21);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 22);
 
 
 -- NON-SPATIAL TABLES
@@ -246,7 +254,7 @@ ALTER TABLE jams ADD COLUMN height NUMERIC;
 ALTER TABLE jams ADD COLUMN wood_count INTEGER;
 
 -- thalwegs
-CREATE TABLE lkp_thalweg_types(
+CREATE TABLE lkp_thalweg_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     description TEXT,
@@ -371,7 +379,7 @@ ALTER TABLE floodplain_accessibilities ADD COLUMN assessment_id INTEGER REFERENC
 ALTER TABLE floodplain_accessibilities ADD COLUMN type_id INTEGER REFERENCES lkp_floodplain_accessibility_types(fid) ON DELETE CASCADE;
 
 -- zoi_extents
-ALTER TABLE zoi_extents ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+-- ALTER TABLE zoi_extents ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
 
 -- brat vegetation
 CREATE TABLE lkp_brat_vegetation_types (
@@ -391,6 +399,32 @@ INSERT INTO lkp_brat_vegetation_types (fid, name) VALUES (5, 'Unsuitable');
 ALTER TABLE brat_vegetation ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
 ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_vegetation_types(fid) ON DELETE CASCADE;
 
--- add to geopackage contents if needed although seems in new QGIS versions this is not necessary
+
+-- add to geopackage contents
 -- this is only necessary for non-spatial tables that created using ddl.
--- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_brat_vegetation_types", "attributes", "lkp_brat_vegetation_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("methods", "attributes", "methods", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_metric_sources", "attributes", "lkp_metric_sources", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("layers", "attributes", "layers", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("method_layers", "attributes", "method_layers", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("projects", "attributes", "projects", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessments", "attributes", "assessments", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_platform", "attributes", "lkp_platform", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessment_methods", "attributes", "assessment_methods", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("bases", "attributes", "bases", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessment_bases", "attributes", "assessment_bases", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_mask_types", "attributes", "lkp_mask_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("masks", "attributes", "masks", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("calculations", "attributes", "calculations", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("metrics", "attributes", "metrics", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("metric_values", "attributes", "metric_values", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_source", "attributes", "lkp_structure_source", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_dam_integrity", "attributes", "lkp_dam_integrity", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_beaver_maintenance", "attributes", "lkp_beaver_maintenance", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_thyalweg_types", "attributes", "lkp_thyalweg_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_riverscape_unit_types", "attributes", "lkp_riverscape_unit_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_junction_types", "attributes", "lkp_junction_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_geomorphic_unit_types", "attributes", "lkp_geomorphic_unit_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_vegetation_extent_types", "attributes", "lkp_vegetation_extent_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_cem_phase_types", "attributes", "lkp_cem_phase_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_floodplain_accessibility_types", "attributes", "lkp_floodplain_accessibility_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_brat_vegetation_types", "attributes", "lkp_brat_vegetation_types", 0);

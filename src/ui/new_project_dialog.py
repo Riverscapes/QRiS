@@ -118,11 +118,24 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
             layer_path = self.qris_geopackage + "|layername=floodplain_accessibilities"
             create_geopackage_table('Polygon', 'floodplain_accessibilities', self.qris_geopackage, layer_path, None)
 
-            layer_path = self.qris_geopackage + "|layername=zoi_extents"
-            create_geopackage_table('Polygon', 'zoi_extents', self.qris_geopackage, layer_path, None)
+            # layer_path = self.qris_geopackage + "|layername=zoi_extents"
+            # create_geopackage_table('Polygon', 'zoi_extents', self.qris_geopackage, layer_path, None)
 
             layer_path = self.qris_geopackage + "|layername=brat_vegetation"
             create_geopackage_table('Polygon', 'brat_vegetation', self.qris_geopackage, layer_path, None)
+
+            # TODO result issue of duplicate ZOI layers types
+            layer_path = self.qris_geopackage + "|layername=zoi"
+            create_geopackage_table('Polygon', 'zoi', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|layername=complexes"
+            create_geopackage_table('Polygon', 'complexes', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|structure_points"
+            create_geopackage_table('Point', 'structure_points', self.qris_geopackage, layer_path, None)
+
+            layer_path = self.qris_geopackage + "|structure_lines"
+            create_geopackage_table('Linestring', 'structure_lines', self.qris_geopackage, layer_path, None)
 
             # and now run the schema ddl
             conn = sqlite3.connect(self.qris_geopackage)
@@ -130,6 +143,11 @@ class NewProjectDialog(QDialog, DIALOG_CLASS):
             curs = conn.cursor()
             sql_path = os.path.dirname(os.path.dirname(__file__))
             schema_path = os.path.join(sql_path, "sql", "schema.sql")
+            schema_qry_string = open(schema_path, 'r').read()
+            curs.executescript(schema_qry_string)
+            # design schema
+            sql_path = os.path.dirname(os.path.dirname(__file__))
+            schema_path = os.path.join(sql_path, "sql", "schema_design.sql")
             schema_qry_string = open(schema_path, 'r').read()
             curs.executescript(schema_qry_string)
             conn.commit()
