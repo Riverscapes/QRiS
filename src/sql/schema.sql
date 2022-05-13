@@ -81,7 +81,29 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (3, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 22);
 
 
--- NON-SPATIAL TABLES
+CREATE TABLE lkp_context_layer_types (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (1, 'aerial imagery');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (2, 'detrended dem');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (3, 'other');
+
+-- 
+CREATE TABLE context_layers (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
+    type_id INTEGER REFERENCES lkp_context_layer_types(fid) ON DELETE CASCADE,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    path TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE projects (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -405,6 +427,7 @@ ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_veget
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("methods", "attributes", "methods", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_metric_sources", "attributes", "lkp_metric_sources", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("layers", "attributes", "layers", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("context_layers", "attributes", "context_layers", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("method_layers", "attributes", "method_layers", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("projects", "attributes", "projects", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessments", "attributes", "assessments", 0);
@@ -428,3 +451,4 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_cem_phase_types", "attributes", "lkp_cem_phase_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_floodplain_accessibility_types", "attributes", "lkp_floodplain_accessibility_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_brat_vegetation_types", "attributes", "lkp_brat_vegetation_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_context_layer_types", "attributes", "lkp_context_layer_types", 0);
