@@ -92,7 +92,7 @@ INSERT INTO lkp_context_layer_types (fid, name) VALUES (1, 'aerial imagery');
 INSERT INTO lkp_context_layer_types (fid, name) VALUES (2, 'detrended dem');
 INSERT INTO lkp_context_layer_types (fid, name) VALUES (3, 'other');
 
--- 
+-- so, can these be vector and raster? does it matter?
 CREATE TABLE context_layers (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
