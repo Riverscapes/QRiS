@@ -21,9 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog
 from qgis.core import QgsApplication
 
 # TODO fix this
@@ -38,9 +38,13 @@ from . import resources
 from .qris_dockwidget import QRiSDockWidget
 from .qris_project import QRiSProject
 
-from .ui.new_project_dialog import NewProjectDialog
+from .view.frm_new_project import FrmNewProject
 
 import os.path
+
+ORGANIZATION = 'Riverscapes'
+APPNAME = 'QRiS'
+LAST_PROJECT_FOLDER = 'last_project_folder'
 
 
 class QRiSToolbar:
@@ -194,11 +198,11 @@ class QRiSToolbar:
             parent=self.iface.mainWindow())
 
         self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/test_new.png'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
-        self.newProjectAction.triggered.connect(self.open_new_project_dialog)
+        self.newProjectAction.triggered.connect(self.create_new_project_dialog)
         self.toolbar.addAction(self.newProjectAction)
 
         self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/test_folder.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
-        self.open_projectAction.triggered.connect(self.projectBrowserDlg)
+        self.open_projectAction.triggered.connect(self.open_existing_project)
         self.toolbar.addAction(self.open_projectAction)
 
         # self.addLayerAction = QAction(QIcon(':/plugins/qris_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
@@ -264,27 +268,48 @@ class QRiSToolbar:
             self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
-    def projectBrowserDlg(self):
+    def open_existing_project(self):
         """
         Browse for a project directory
         :return:
         """
-        last_browse_path = self.settings.getValue('lastBrowsePath')
-        last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
 
-        dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Open a QRiS project", last_dir, self.tr("QRiS Project files (project.qris)"))
-        if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
+        settings = QSettings(ORGANIZATION, APPNAME)
+        last_project_folder = settings.value(LAST_PROJECT_FOLDER)
+
+        dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (qris_project.gpkg)"))
+        if dialog_return is not None and dialog_return[0] != '' and os.path.isfile(dialog_return[0]):
+
+            settings = QSettings(ORGANIZATION, APPNAME)
+            settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(dialog_return[0]))
+            settings.sync()
+
+            self.toggle_widget(forceOn=True)
+            self.dockwidget.build_tree_view(dialog_return[0])
+
             # We set the project path in the project settings. This way it will be saved with the QgsProject file
-            if self.dockwidget is None or self.dockwidget.isHidden() is True:
-                # self.toggle_widget(forceOn=True)
-                project = QRiSProject()
-                project.load_project_file(dialog_return[0])
-                self.open_project(project)
+            # if self.dockwidget is None or self.dockwidget.isHidden() is True:
+            #     # self.toggle_widget(forceOn=True)
+            #     project = QRiSProject()
+            #     project.load_project_file(dialog_return[0])
+            #     self.open_project(project)
 
-    def open_new_project_dialog(self):
+    def create_new_project_dialog(self):
 
-        self.new_project_dlg = NewProjectDialog()
-        self.new_project_dlg.dataChange.connect(self.open_project)
+        settings = QSettings(ORGANIZATION, APPNAME)
+        last_parent_folder = os.path.dirname(settings.value(LAST_PROJECT_FOLDER)) if settings.value(LAST_PROJECT_FOLDER) is not None else None
+
+        dialog_return = QFileDialog.getExistingDirectory(self.dockwidget, 'Create New QRiS Project', last_parent_folder)
+        if len(dialog_return) > 0:
+            self.save_folder = dialog_return
+            frm_new_project = FrmNewProject(dialog_return)
+            result = frm_new_project.exec_()
+            if result == QDialog.Accepted:
+                settings.setValue(LAST_PROJECT_FOLDER, frm_new_project.project_dir)
+                settings.sync()
+
+                self.toggle_widget(forceOn=True)
+                self.dockwidget.build_tree_view(frm_new_project.txtPath.text())
 
         # if qris_project is not None:
         #     # We set the proect path in the project settings. This way it will be saved with the QgsProject file
@@ -334,20 +359,20 @@ class QRiSToolbar:
         # else:
         #     self.qproject.removeEntry(CONSTANTS['settingsCategory'], 'enabled')
 
-    def open_project(self, project):
-        self.toggle_widget()
-        self.dockwidget.build_tree_view(project)
+    # def open_project(self, project):
+    #     self.toggle_widget()
+    #     self.dockwidget.build_tree_view(project)
         # self.addLayerAction.setEnabled(True)
 
-    def addLayerDlg(self):
+    # def addLayerDlg(self):
 
-        if self.dockwidget is not None:
-            if self.dockwidget.qris_project is not None:
-                last_browse_path = self.settings.getValue('lastBrowsePath')
-                last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
+    #     if self.dockwidget is not None:
+    #         if self.dockwidget.qris_project is not None:
+    #             last_browse_path = self.settings.getValue('lastBrowsePath')
+    #             last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
 
-                dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
-                if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-                    pass
-            else:
-                self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
+    #             dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
+    #             if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
+    #                 pass
+    #         else:
+    #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
