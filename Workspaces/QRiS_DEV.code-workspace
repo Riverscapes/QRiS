@@ -1,10 +1,36 @@
 {
 	"folders": [
 		{
-			"path": ".."
+			"path": "..",
 		}
 	],
 	"settings": {
+		"[python]": {
+			"editor.tabSize": 4,
+			"editor.formatOnSave": true,
+		},
+		"python.linting.enabled": true,
+		"python.linting.lintOnSave": true,
+		"python.linting.pycodestyleEnabled": true,
+		"python.linting.pylintEnabled": true,
+		"python.linting.pycodestyleArgs": [
+			"--ignore=E501"
+		],
+		"python.formatting.autopep8Args": [
+			"--ignore=E501"
+		],
+		"files.exclude": {
+			"**/*.egg-info": true,
+			"**/__pycache__": true
+		},
+		"files.watcherExclude": {
+			"**/*.egg-info/**": true,
+			"**/__pycache__": true
+		},
+		"search.exclude": {
+			"**/*.egg-info": true,
+			"**/__pycache__": true
+		},
 		// FROM: https://gist.github.com/NicolaiMogensen/acfd8723720c4761aefef3cdfc2aa55a
 		// I like changing colors for my projects. QGIS projects are usually green. 
 		"workbench.colorCustomizations": {
@@ -18,6 +44,9 @@
 		},
 		// NOTE: For this to work you need an env file with "QGIS_PATH=/Applications/QGIS-LTR.app/Contents" or whatever your path is
     "python.pythonPath": "${env:QGIS_PATH}/Contents/MacOS/bin/python3.9",
+		"qtForPython.uic.args": [
+			"-o \"${workspaceFolder}${pathSeparator}src${pathSeparator}view${pathSeparator}ui${pathSeparator}${fileBasenameNoExtension}.py\""
+		]
 	},
 	"launch": {
 		"configurations": [],

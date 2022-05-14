@@ -63,6 +63,8 @@ from .ui.structure_type_dialog import StructureTypeDlg
 from .ui.zoi_type_dialog import ZoiTypeDlg
 from .ui.phase_dialog import PhaseDlg
 
+from .model.project import Project
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
 
@@ -97,20 +99,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeView.setModel(self.model)
 
     # Take this out of init so that nodes can be added as new data is added and imported;
-    def build_tree_view(self, qris_project, new_item=None):
+    def build_tree_view(self, project_file, new_item=None):
         """Builds items in the tree view based on dictionary values that are part of the project"""
-        self.qris_project = qris_project
+        self.project = Project(project_file)
 
         self.model.clear()
         self.tree_state = {}
         rootNode = self.model.invisibleRootItem()
 
         # set the project root
-        project_node = QStandardItem(self.qris_project.project_name)
+        project_node = QStandardItem(self.project.name)
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
         project_node.setData('project_root', item_code['item_type'])
         rootNode.appendRow(project_node)
         self.treeView.setExpanded(project_node.index(), True)
+
+        return
 
         # Add project extent layers to tree
         extent_folder = QStandardItem("Project Extents")
