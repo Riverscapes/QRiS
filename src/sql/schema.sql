@@ -26,38 +26,41 @@ INSERT INTO lkp_metric_sources (fid, name,  description) VALUES (1, 'Calculated'
 INSERT INTO lkp_metric_sources (fid, name,  description) VALUES (2, 'Estimated', 'Estimated from other sources or evidence');
 
 
--- fundamental question is about geometry
 CREATE TABLE  layers (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     fc_name TEXT UNIQUE NOT NULL,
     display_name TEXT UNIQUE NOT NULL,
     qml TEXT NOT NULL,
+    is_lookup BOOLEAN,
     geom_type TEXT,
     description TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 'temp.qml', NULL); -- type: primary, secondary - see GUT
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (6, 'riverscape_units', 'Riverscape Units', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 'temp.qml', NULL); -- type: free flow, overflow, ponded
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 'temp.qml', NULL); -- type: convergence, divergence
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (13, 'geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point', 'temp.qml', NULL); -- fluvial taxonomy
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 'temp.qml', NULL); -- veg_classes
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 'temp.qml', NULL); -- floating point accessibility
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 'temp.qml', NULL);
+
+
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'temp.qml', NULL); -- type: primary, secondary - see GUT
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (6, 'riverscape_units', 'Riverscape Units', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'temp.qml', NULL); -- type: free flow, overflow, ponded
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'temp.qml', NULL); -- type: convergence, divergence
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (13, 'geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point', 0, 'temp.qml', NULL); -- fluvial taxonomy
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL); -- veg_classes
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'temp.qml', NULL);
+
 
 
 CREATE TABLE  method_layers (

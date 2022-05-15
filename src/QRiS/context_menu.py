@@ -21,6 +21,10 @@ class ContextMenu(QMenu):
             "Add All Layers To The Map",
             ':/plugins/qris_toolbar/test_add_map.png',
         ),
+        'TEST_ADD_ASSESSMENT_METHOD': (
+            "Test Adding Assessment Method to Map",
+            ':/plugins/qris_toolbar/test_add_map.png',
+        ),
         'ADD_TO_MAP': (
             "Add to Map",
             ':/plugins/qris_toolbar/test_add_map.png',
