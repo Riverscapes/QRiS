@@ -116,32 +116,25 @@ class FrmAssessment(QDialog, Ui_Assessment):
             self.txtName.setFocus()
             return()
 
-        methods = []
+        method_names = []
         for row in range(self.model.rowCount()):
             index = self.model.index(row, 0)
             check = self.model.data(index, Qt.CheckStateRole)
             if check == Qt.Checked:
-                methods.append(self.model.data(index, Qt.DisplayRole))
+                method_names.append(self.model.data(index, Qt.DisplayRole))
 
-        if len(methods) < 1:
+        if len(method_names) < 1:
             QMessageBox.warning(self, 'No Methods Selected', 'You must select at least one method to continue.')
             self.txtProjectName.setFocus()
             return()
 
-        conn = sqlite3.connect(self.qris_project.project_file)
-
         try:
-            curs = conn.cursor()
-            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [self.txtName.text(), description])
-            self.assessment_id = curs.lastrowid
-
-            assessment_methods = [(self.assessment_id, method_id) for method_id in methods]
-            curs.executemany("""INSERT INTO assessment_methods (assessment_id, method_id)
-                SELECT ?, fid FROM methods WHERE name = ?""", assessment_methods)
-            conn.commit()
+            self.assessment = self.qris_project.add_assessment(self.txtName.text(), self.txtDescription.toPlainText(), method_names)
             super(FrmAssessment, self).accept()
 
         except Exception as ex:
-            conn.rollback()
-            QMessageBox.warning(self, 'Error Saving Assessment', ex)
+            if 'unique' in str(ex).lower():
+                QMessageBox.warning(self, 'Assessment Already Exists', "An assessment with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                self.txtName.setFocus()
+            else:
+                QMessageBox.warning(self, 'Error Saving Assessment', str(ex))

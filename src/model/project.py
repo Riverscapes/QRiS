@@ -1,5 +1,7 @@
 import sqlite3
 
+from .assessment import Assessment
+
 
 class Project():
 
@@ -15,6 +17,25 @@ class Project():
 
         curs.execute('SELECT fid, name FROM assessments')
         self.assessments = {row['name']: row['fid'] for row in curs.fetchall()}
+
+    def add_assessment(self, name: str, description: str, methods: list) -> Assessment:
+
+        conn = sqlite3.connect(self.project_file)
+        conn.row_factory = dict_factory
+        curs = conn.cursor()
+        curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [name, description if len(description) > 1 else None])
+        assessment_id = curs.lastrowid
+
+        assessment_methods = [(assessment_id, method_id) for method_id in methods]
+        curs.executemany("""INSERT INTO assessment_methods (assessment_id, method_id)
+                    SELECT ?, fid FROM methods WHERE name = ?""", assessment_methods)
+        conn.commit()
+
+        # Hack because listview only stores the method strings
+        curs.execute('SELECT am.fid, m.name FROM assessment_methods am INNER JOIN methods m ON am.method_id = m.fid WHERE assessment_id = ?', [assessment_id])
+        methods = {row['fid']: row['name'] for row in curs.fetchall()}
+
+        return Assessment(assessment_id, name, description, methods)
 
 
 def dict_factory(cursor, row):
