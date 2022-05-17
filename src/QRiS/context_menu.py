@@ -81,6 +81,10 @@ class ContextMenu(QMenu):
             'Import a project extent polygon',
             ':/plugins/qris_toolbar/test_new.png'
         ),
+        'ASSESSMENTS': (
+            'Create A New Assessment',
+            ':/plugins/qris_toolbar/test_new.png'
+        ),
         'CREATE_BLANK_PROJECT_EXTENT_LAYER': (
             'Create a blank project extent layer and draw a polygon',
             ':/plugins/qris_toolbar/test_new.png'

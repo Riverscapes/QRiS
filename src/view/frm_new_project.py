@@ -27,10 +27,11 @@ layers = [
     ('geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon'),
     ('geomorphic_units', 'Geomorphic Unit Points', 'Point'),
     ('geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point'),
-    ('cem_phases', 'Polygon', 'Channel Evolution Model Stages'),
-    ('riparian', 'Polygon', 'Riparian Vegetation'),
-    ('floodplain_accessilibity', 'Floodplain Accessibility', 'Polygon'),
-    ('zoi', 'Polygon', 'Zones of Influence')
+    ('cem_phases', 'Channel Evolution Model Stages', 'Polygon'),
+    ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
+    ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
+    ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
+    ('zoi', 'Zones of Influence', 'Polygon')
 ]
 
 
