@@ -68,6 +68,7 @@ from .view.frm_assessment import FrmAssessment
 
 from .model.project import Project
 from .model.assessment import Assessment
+from .QRiS.method_to_map import add_assessment_method_to_map
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
@@ -378,9 +379,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeView.collapseAll()
         return
 
-    def add_assessment_layer_to_map(self, assessment_id, method_id):
-        print('adding method {} to map.'.format(method_id))
-
     def add_assessment(self, assessments_model_node):
         """Initiates adding a new assessment"""
         frm = FrmAssessment(self, self.project)
@@ -396,7 +394,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
             if frm.chkAddToMap.isChecked():
                 for method_id in assessment.methods.keys():
-                    self.add_assessment_layer_to_map(frm.assessment_id, method_id)
+                    add_assessment_method_to_map(self.project, method_id)
 
     def add_design(self):
         """Initiates adding a new design"""
