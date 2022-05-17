@@ -24,6 +24,7 @@
 
 from cgi import test
 import os
+import sqlite3
 
 from osgeo import gdal
 
@@ -66,6 +67,7 @@ from .ui.phase_dialog import PhaseDlg
 from .view.frm_assessment import FrmAssessment
 
 from .model.project import Project
+from .model.assessment import Assessment
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
@@ -342,7 +344,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
             self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
         elif item_type == ASSESSMENT_NODE_TAG:
-            self.menu.addAction(ASSESSMENT_NODE_TAG, lambda: self.add_assessment())
+            self.menu.addAction(ASSESSMENT_NODE_TAG, lambda: self.add_assessment(model_item))
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
@@ -376,12 +378,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeView.collapseAll()
         return
 
-    def add_assessment(self):
+    def add_assessment_layer_to_map(self, assessment_id, method_id):
+        print('adding method {} to map.'.format(method_id))
+
+    def add_assessment(self, assessments_model_node):
         """Initiates adding a new assessment"""
         frm = FrmAssessment(self, self.project)
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
+        if result is not None:
+            assessment = frm.assessment
+            assessment_node = QStandardItem(assessment.name)
+            assessment_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+            assessment_node.setData(ASSESSMENT_NODE_TAG, item_code['item_type'])
+            assessments_model_node.appendRow(assessment_node)
+
+            if frm.chkAddToMap.isChecked():
+                for method_id in assessment.methods.keys():
+                    self.add_assessment_layer_to_map(frm.assessment_id, method_id)
 
     def add_design(self):
         """Initiates adding a new design"""
