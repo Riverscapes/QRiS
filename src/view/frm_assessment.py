@@ -3,7 +3,7 @@ import sqlite3
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
-from qgis.PyQt.QtGui import QIcon, QDesktopServices
+from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
 from qgis.core import Qgis, QgsFeature, QgsVectorLayer
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 
@@ -13,36 +13,36 @@ from ..QRiS.functions import create_geopackage_table
 from .ui.assessment import Ui_Assessment
 
 
-class CheckBoxListTableModel(QSqlTableModel):
-    def __init__(self, *args, **kwargs):
+# class CheckBoxListTableModel(QSqlTableModel):
+#     def __init__(self, *args, **kwargs):
 
-        QSqlTableModel.__init__(self, *args, **kwargs)
-        self.checkeable_data = {}
+#         QSqlTableModel.__init__(self, *args, **kwargs)
+#         self.checkeable_data = {}
 
-    def flags(self, index):
-        fl = QSqlTableModel.flags(self, index)
-        if index.column() == 1:
-            fl |= Qt.ItemIsUserCheckable
-        return fl
+#     def flags(self, index):
+#         fl = QSqlTableModel.flags(self, index)
+#         if index.column() == 1:
+#             fl |= Qt.ItemIsUserCheckable
+#         return fl
 
-    def data(self, index, role=Qt.DisplayRole):
-        if role == Qt.CheckStateRole and (
-            self.flags(index) & Qt.ItemIsUserCheckable != Qt.NoItemFlags
-        ):
-            if index.row() not in self.checkeable_data.keys():
-                self.setData(index, Qt.Unchecked, Qt.CheckStateRole)
-            return self.checkeable_data[index.row()]
-        else:
-            return QSqlTableModel.data(self, index, role)
+#     def data(self, index, role=Qt.DisplayRole):
+#         if role == Qt.CheckStateRole and (
+#             self.flags(index) & Qt.ItemIsUserCheckable != Qt.NoItemFlags
+#         ):
+#             if index.row() not in self.checkeable_data.keys():
+#                 self.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+#             return self.checkeable_data[index.row()]
+#         else:
+#             return QSqlTableModel.data(self, index, role)
 
-    def setData(self, index, value, role=Qt.EditRole):
-        if role == Qt.CheckStateRole and (
-            self.flags(index) & Qt.ItemIsUserCheckable != Qt.NoItemFlags
-        ):
-            self.checkeable_data[index.row()] = value
-            self.dataChanged.emit(index, index, (role,))
-            return True
-        return QSqlTableModel.setData(self, index, value, role)
+#     def setData(self, index, value, role=Qt.EditRole):
+#         if role == Qt.CheckStateRole and (
+#             self.flags(index) & Qt.ItemIsUserCheckable != Qt.NoItemFlags
+#         ):
+#             self.checkeable_data[index.row()] = value
+#             self.dataChanged.emit(index, index, (role,))
+#             return True
+#         return QSqlTableModel.setData(self, index, value, role)
 
 
 class FrmAssessment(QDialog, Ui_Assessment):
@@ -60,14 +60,24 @@ class FrmAssessment(QDialog, Ui_Assessment):
 
         self.gridLayout.setGeometry(QRect(0, 0, self.width(), self.height()))
 
-        db = QSqlDatabase('QSQLITE')
-        db.setDatabaseName(qris_project.project_file)
-        if not db.open():
-            print('uh oh')
+        # db = QSqlDatabase('QSQLITE')
+        # db.setDatabaseName(qris_project.project_file)
+        # if not db.open():
+        #     print('uh oh')
 
-        self.model = CheckBoxListTableModel(self, db=db)
-        self.model.setTable('methods')
-        self.model.select()
+        # self.model = CheckBoxListTableModel(self, db=db)
+        # self.model.setTable('methods')
+        # self.model.select()
+
+        self.model = QStandardItemModel()
+        conn = sqlite3.connect(qris_project.project_file)
+        curs = conn.cursor()
+        curs.execute('SELECT fid, name FROM methods ORDER BY name')
+        for row in curs.fetchall():
+            item = QStandardItem(row[1])
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
+            self.model.appendRow(item)
 
         # for row in range(self.model.rowCount()):
         #     index = self.model.index(row, 0)
@@ -89,7 +99,7 @@ class FrmAssessment(QDialog, Ui_Assessment):
         for row in range(self.model.rowCount()):
             index = self.model.index(row, 0)
             check = self.model.data(index, Qt.CheckStateRole)
-            if check is not None:
+            if check == Qt.Checked:
                 methods.append(self.model.data(index, Qt.DisplayRole))
 
         if len(methods) < 1:
