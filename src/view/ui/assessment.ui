@@ -25,8 +25,8 @@
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>29</x>
-     <y>19</y>
+     <x>-10</x>
+     <y>10</y>
      <width>581</width>
      <height>451</height>
     </rect>
@@ -43,7 +43,7 @@
      <widget class="QListView" name="vwMethods"/>
     </item>
     <item row="2" column="1">
-     <widget class="QPlainTextEdit" name="plainTextEdit"/>
+     <widget class="QPlainTextEdit" name="txtDescription"/>
     </item>
     <item row="0" column="0">
      <widget class="QLabel" name="lblName">
@@ -85,7 +85,7 @@
  <tabstops>
   <tabstop>txtName</tabstop>
   <tabstop>vwMethods</tabstop>
-  <tabstop>plainTextEdit</tabstop>
+  <tabstop>txtDescription</tabstop>
  </tabstops>
  <resources/>
  <connections/>

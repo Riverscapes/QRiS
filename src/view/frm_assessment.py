@@ -45,6 +45,27 @@ from .ui.assessment import Ui_Assessment
 #         return QSqlTableModel.setData(self, index, value, role)
 
 
+# class TableModel(QtCore.QAbstractTableModel):
+#     def __init__(self, data):
+#         super().__init__()
+#         self._data = data
+
+#     def data(self, index, role):
+#         if role == Qt.DisplayRole:
+#             # See below for the nested-list data structure. # .row() indexes into the outer list,
+#             # .column() indexes into the sub-list
+#             return self._data[index.row()][index.column()]
+
+#     def rowCount(self, index):
+#         # The length of the outer list.
+#         return len(self._data)
+
+#     def columnCount(self, index):
+#         # The following takes the first sub-list, and returns
+#         # the length (only works if all rows are an equal length)
+#         return len(self._data[0])
+
+
 class FrmAssessment(QDialog, Ui_Assessment):
 
     def __init__(self, parent, qris_project, assessment=None):
@@ -107,15 +128,17 @@ class FrmAssessment(QDialog, Ui_Assessment):
             self.txtProjectName.setFocus()
             return()
 
-        conn = sqlite3.connect(self.qris_project.project.file)
+        conn = sqlite3.connect(self.qris_project.project_file)
 
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [self.txtName.text(), self.txtDescription.text()])
+            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
+            curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [self.txtName.text(), description])
             self.assessment_id = curs.lastrowid
 
             assessment_methods = [(self.assessment_id, method_id) for method_id in methods]
-            curs.executemany('INSERT INTO assessment_methods (assessment_id, method_id) VALUES (?, ?)', assessment_methods)
+            curs.executemany("""INSERT INTO assessment_methods (assessment_id, method_id)
+                SELECT ?, fid FROM methods WHERE name = ?""", assessment_methods)
             conn.commit()
             super(FrmAssessment, self).accept()
 
