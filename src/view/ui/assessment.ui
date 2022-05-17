@@ -10,8 +10,17 @@
     <height>480</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>300</width>
+    <height>400</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Dialog</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <widget class="QWidget" name="gridLayoutWidget">
    <property name="geometry">
@@ -19,26 +28,29 @@
      <x>29</x>
      <y>19</y>
      <width>581</width>
-     <height>421</height>
+     <height>451</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="3" column="1">
-     <widget class="QDialogButtonBox" name="buttonBox">
-      <property name="standardButtons">
-       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+    <item row="2" column="0">
+     <widget class="QLabel" name="lblDescription">
+      <property name="text">
+       <string>Description</string>
       </property>
      </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QListView" name="vwMethods"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QPlainTextEdit" name="plainTextEdit"/>
     </item>
     <item row="0" column="0">
      <widget class="QLabel" name="lblName">
       <property name="text">
-       <string>TextLabel</string>
+       <string>Name</string>
       </property>
      </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QLineEdit" name="txtName"/>
     </item>
     <item row="1" column="0">
      <widget class="QLabel" name="lblMethods">
@@ -47,22 +59,34 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="lblDescription">
-      <property name="text">
-       <string>Description</string>
+    <item row="4" column="1">
+     <widget class="QDialogButtonBox" name="buttonBox">
+      <property name="standardButtons">
+       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
       </property>
      </widget>
     </item>
-    <item row="2" column="1">
-     <widget class="QPlainTextEdit" name="plainTextEdit"/>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="txtName"/>
     </item>
-    <item row="1" column="1">
-     <widget class="QListView" name="vwMethods"/>
+    <item row="3" column="1">
+     <widget class="QCheckBox" name="chkAddToMap">
+      <property name="text">
+       <string>Add Assessment To Map</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>txtName</tabstop>
+  <tabstop>vwMethods</tabstop>
+  <tabstop>plainTextEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

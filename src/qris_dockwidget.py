@@ -57,16 +57,20 @@ from .ui.elevation_dockwidget import ElevationDockWidget
 from .ui.project_extent_dialog import ProjectExtentDlg
 from .ui.project_layer_dialog import ProjectLayerDlg
 from .ui.add_detrended_dialog import AddDetrendedRasterDlg
-from .ui.assessment_dialog import AssessmentDlg
+# from .ui.assessment_dialog import AssessmentDlg
 from .ui.design_dialog import DesignDlg
 from .ui.structure_type_dialog import StructureTypeDlg
 from .ui.zoi_type_dialog import ZoiTypeDlg
 from .ui.phase_dialog import PhaseDlg
 
+from .view.frm_assessment import FrmAssessment
+
 from .model.project import Project
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'qris_dockwidget.ui'))
+
+ASSESSMENT_NODE_TAG = 'ASSESSMENTS'
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
@@ -112,8 +116,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
         project_node.setData('project_root', item_code['item_type'])
         rootNode.appendRow(project_node)
-        self.treeView.setExpanded(project_node.index(), True)
+        # self.treeView.setExpanded(project_node.index(), True)
 
+        assessment_node = QStandardItem('Assessments')
+        assessment_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        assessment_node.setData(ASSESSMENT_NODE_TAG, item_code['item_type'])
+        project_node.appendRow(assessment_node)
+
+        self.treeView.expandAll()
         return
 
         # Add project extent layers to tree
@@ -331,6 +341,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
             self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
             self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
+        elif item_type == ASSESSMENT_NODE_TAG:
+            self.menu.addAction(ASSESSMENT_NODE_TAG, lambda: self.add_assessment())
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
@@ -366,10 +378,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def add_assessment(self):
         """Initiates adding a new assessment"""
-        self.assessment_dialog = AssessmentDlg(self.qris_project)
-        self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
-        self.assessment_dialog.dataChange.connect(self.build_tree_view)
-        self.assessment_dialog.show()
+        frm = FrmAssessment(self, self.project)
+        # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
+        # self.assessment_dialog.dataChange.connect(self.build_tree_view)
+        result = frm.exec_()
 
     def add_design(self):
         """Initiates adding a new design"""

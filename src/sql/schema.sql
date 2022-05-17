@@ -118,6 +118,7 @@ CREATE TABLE projects (
 CREATE TABLE assessments (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
+    name TEXT UNIQUE NOT NULL,
     epoch TEXT,
     description TEXT,
     start_date DATE,
@@ -180,7 +181,7 @@ CREATE TABLE masks (
 );
 
 ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(fid) ON DELETE CASCADE;
-ALTER TABLE mask_features ADD COLUMN name TEXT;
+-- ALTER TABLE mask_features ADD COLUMN name TEXT;
 ALTER TABLE mask_features ADD COLUMN position INTEGER;
 ALTER TABLE mask_features ADD COLUMN description TEXT;
 

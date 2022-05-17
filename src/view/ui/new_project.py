@@ -13,6 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_NewProject(object):
     def setupUi(self, NewProject):
         NewProject.setObjectName("NewProject")
+        NewProject.setWindowModality(QtCore.Qt.ApplicationModal)
         NewProject.resize(563, 481)
         self.verticalLayout = QtWidgets.QVBoxLayout(NewProject)
         self.verticalLayout.setObjectName("verticalLayout")

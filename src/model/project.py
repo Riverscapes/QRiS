@@ -5,6 +5,7 @@ class Project():
 
     def __init__(self, project_file: str):
 
+        self.project_file = project_file
         conn = sqlite3.connect(project_file)
         conn.row_factory = dict_factory
         curs = conn.cursor()
