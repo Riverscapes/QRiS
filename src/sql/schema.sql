@@ -38,7 +38,6 @@ CREATE TABLE  layers (
 );
 
 
-
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'temp.qml', NULL);

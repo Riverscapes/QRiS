@@ -326,7 +326,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
             self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
             self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
-            self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 1))
+            self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
