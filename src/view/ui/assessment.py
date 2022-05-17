@@ -17,7 +17,7 @@ class Ui_Assessment(object):
         Assessment.setMinimumSize(QtCore.QSize(300, 400))
         Assessment.setModal(True)
         self.gridLayoutWidget = QtWidgets.QWidget(Assessment)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(29, 19, 581, 451))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(-10, 10, 581, 451))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -28,9 +28,9 @@ class Ui_Assessment(object):
         self.vwMethods = QtWidgets.QListView(self.gridLayoutWidget)
         self.vwMethods.setObjectName("vwMethods")
         self.gridLayout.addWidget(self.vwMethods, 1, 1, 1, 1)
-        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.gridLayoutWidget)
-        self.plainTextEdit.setObjectName("plainTextEdit")
-        self.gridLayout.addWidget(self.plainTextEdit, 2, 1, 1, 1)
+        self.txtDescription = QtWidgets.QPlainTextEdit(self.gridLayoutWidget)
+        self.txtDescription.setObjectName("txtDescription")
+        self.gridLayout.addWidget(self.txtDescription, 2, 1, 1, 1)
         self.lblName = QtWidgets.QLabel(self.gridLayoutWidget)
         self.lblName.setObjectName("lblName")
         self.gridLayout.addWidget(self.lblName, 0, 0, 1, 1)
@@ -52,7 +52,7 @@ class Ui_Assessment(object):
         self.retranslateUi(Assessment)
         QtCore.QMetaObject.connectSlotsByName(Assessment)
         Assessment.setTabOrder(self.txtName, self.vwMethods)
-        Assessment.setTabOrder(self.vwMethods, self.plainTextEdit)
+        Assessment.setTabOrder(self.vwMethods, self.txtDescription)
 
     def retranslateUi(self, Assessment):
         _translate = QtCore.QCoreApplication.translate
