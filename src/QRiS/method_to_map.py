@@ -47,8 +47,8 @@ def dict_factory(cursor, row):
 
 def add_assessment_method_to_map(qris_project, assessment_method_id: int):
     """Starts with an assessment_method_id and then adds all of the filtered layers for that assessment and method"""
-    geopackage_path = os.path.join(qris_project.project_path, 'qris_project.gpkg')
-    conn = sqlite3.connect(geopackage_path)
+    geopackage_path = os.path.join(qris_project.project_file, 'qris_project.gpkg')
+    conn = sqlite3.connect(qris_project.project_file)
     conn.row_factory = dict_factory
     curs = conn.cursor()
     # 2. Queries the method_layers table and gets a list of layers required for that method -done
