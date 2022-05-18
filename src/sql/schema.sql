@@ -428,21 +428,23 @@ ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_veget
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables that created using ddl.
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("methods", "attributes", "methods", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_metric_sources", "attributes", "lkp_metric_sources", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("layers", "attributes", "layers", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("context_layers", "attributes", "context_layers", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("method_layers", "attributes", "method_layers", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("projects", "attributes", "projects", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessments", "attributes", "assessments", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_platform", "attributes", "lkp_platform", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessment_methods", "attributes", "assessment_methods", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("bases", "attributes", "bases", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessment_bases", "attributes", "assessment_bases", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_mask_types", "attributes", "lkp_mask_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("masks", "attributes", "masks", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("calculations", "attributes", "calculations", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("metrics", "attributes", "metrics", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("metric_values", "attributes", "metric_values", 0);
+
+-- LOOKUP TABLES
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_metric_sources", "attributes", "lkp_metric_sources", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_platform", "attributes", "lkp_platform", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_mask_types", "attributes", "lkp_mask_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_source", "attributes", "lkp_structure_source", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_dam_integrity", "attributes", "lkp_dam_integrity", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_beaver_maintenance", "attributes", "lkp_beaver_maintenance", 0);
