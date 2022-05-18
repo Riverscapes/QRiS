@@ -37,14 +37,14 @@ CREATE TABLE  layers (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
+-- Layers
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'temp.qml', NULL); -- type: primary, secondary - see GUT
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (6, 'riverscape_units', 'Riverscape Units', 'Polygon', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'temp.qml', NULL); -- type: free flow, overflow, ponded
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL); -- type: free flow, overflow, ponded
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'temp.qml', NULL); -- type: convergence, divergence
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL);
@@ -60,6 +60,23 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'temp.qml', NULL);
 
+-- Lookup Tables
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (101, 'lkp_platform', 'Platform', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (102, 'lkp_mask_types', 'Mask Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (103, 'lkp_structure_source', 'Structure Sources', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (104, 'lkp_dam_integrity', 'Dam Integrity', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (105, 'lkp_beaver_maintenance', 'Beaver Maintenance', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (106, 'lkp_thalweg_types', 'Thalweg Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (107, 'lkp_riverscape_unit_types', 'Riverscape Units Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (108, 'lkp_junction_types', 'Junction Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (109, 'lkp_geomorphic_unit_types', 'Geomorphic Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (110, 'lkp_vegetation_extent_types', 'Vegetation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (111, 'lkp_cem_phase_types', 'CEM Phase Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (112, 'lkp_floodplain_accessibility_types', 'Floodplain Accessibility Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (113, 'lkp_brat_vegetation_types', 'Brat Vegetation Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (114, 'lkp_context_layer_types', 'Context Layer Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (115, 'lkp_inundation_extent_types', 'Inundation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
 
 CREATE TABLE  method_layers (
@@ -68,14 +85,23 @@ CREATE TABLE  method_layers (
     CONSTRAINT pk_method_layers PRIMARY KEY (method_id, layer_id)
 );
 
-
+-- RIM
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 5);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 8);
-INSERT INTO method_layers (method_id, layer_id) VALUES (2, 6);
-INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 106);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 115);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 103);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 105); 
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 104);
+-- Structural Elements
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 3);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 4);
+INSERT INTO method_layers (method_id, layer_id) VALUES (4, 1);
+INSERT INTO method_layers (method_id, layer_id) VALUES (4, 103);
+INSERT INTO method_layers (method_id, layer_id) VALUES (4, 104);
+INSERT INTO method_layers (method_id, layer_id) VALUES (4, 105);
+
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 18);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 20);
@@ -311,8 +337,21 @@ ALTER TABLE riverscape_units ADD COLUMN type_id INTEGER REFERENCES lkp_riverscap
 -- centerlines
 ALTER TABLE centerlines ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
 
+CREATE TABLE lkp_inundation_extent_types (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_inundation_extent_types (fid, name) VALUES (1, 'Free Flowing');
+INSERT INTO lkp_inundation_extent_types (fid, name) VALUES (2, 'Ponded');
+INSERT INTO lkp_inundation_extent_types (fid, name) VALUES (3, 'Overflow');
+
+
 -- inundation
 ALTER TABLE inundation_extents ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE inundation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_inundation_extent_types(fid) ON DELETE CASCADE;
 
 -- valley bottoms
 ALTER TABLE valley_bottoms ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE  CASCADE;
@@ -448,7 +487,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_source", "attributes", "lkp_structure_source", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_dam_integrity", "attributes", "lkp_dam_integrity", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_beaver_maintenance", "attributes", "lkp_beaver_maintenance", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_thyalweg_types", "attributes", "lkp_thyalweg_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_thalweg_types", "attributes", "lkp_thalweg_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_riverscape_unit_types", "attributes", "lkp_riverscape_unit_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_junction_types", "attributes", "lkp_junction_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_geomorphic_unit_types", "attributes", "lkp_geomorphic_unit_types", 0);
@@ -457,3 +496,4 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_floodplain_accessibility_types", "attributes", "lkp_floodplain_accessibility_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_brat_vegetation_types", "attributes", "lkp_brat_vegetation_types", 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_context_layer_types", "attributes", "lkp_context_layer_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_inundation_extent_types", "attributes", "lkp_inundation_extent_types", 0);
