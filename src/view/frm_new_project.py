@@ -11,6 +11,7 @@ from ..QRiS.functions import create_geopackage_table
 
 from .ui.new_project import Ui_NewProject
 
+# all spatial layers
 # feature class, layer name, geometry
 layers = [
     ('mask_features', 'Mask Features', 'Polygon'),
