@@ -15,7 +15,6 @@ from .ui.new_project import Ui_NewProject
 layers = [
     ('mask_features', 'Mask Features', 'Polygon'),
     ('dam_crests', 'Dam Crests', 'Linestring'),
-    ('jam_crests', 'Jam Crests', 'Linestring'),
     ('dams', 'Dam Points', 'Point'),
     ('jams', 'Jam Points', 'Point'),
     ('thalwegs', 'Thalwegs', 'Linestring'),
@@ -31,7 +30,10 @@ layers = [
     ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
     ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
     ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
-    ('zoi', 'Zones of Influence', 'Polygon')
+    ('zoi', 'Zones of Influence', 'Polygon'),
+    ('complexes', 'Complexes', 'Polygon'),
+    ('structure_points', 'Structure Points', 'Point'),
+    ('structure_lines', 'Structure Lines', 'Linestring')
 ]
 
 
@@ -90,8 +92,8 @@ class FrmNewProject(QDialog, Ui_NewProject):
         # Create the geopackage and spatial tables
 
         for fc_name, layer_name, geometry_type in layers:
-            mask_features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
-            create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), mask_features_path, [('name', QVariant.String)])
+            features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
+            create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), features_path, None)
 
         # Run the schema DDL to create lookup tables and relationships
         conn = sqlite3.connect(self.txtPath.text())
@@ -99,6 +101,10 @@ class FrmNewProject(QDialog, Ui_NewProject):
         curs = conn.cursor()
         sql_path = os.path.dirname(os.path.dirname(__file__))
         schema_path = os.path.join(sql_path, "sql", "schema.sql")
+        schema_qry_string = open(schema_path, 'r').read()
+        curs.executescript(schema_qry_string)
+        # design schema
+        schema_path = os.path.join(sql_path, "sql", "schema_design.sql")
         schema_qry_string = open(schema_path, 'r').read()
         curs.executescript(schema_qry_string)
 
