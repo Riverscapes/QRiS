@@ -47,7 +47,7 @@ def dict_factory(cursor, row):
 
 def add_assessment_method_to_map(qris_project, assessment_method_id: int):
     """Starts with an assessment_method_id and then adds all of the filtered layers for that assessment and method"""
-    geopackage_path = os.path.join(qris_project.project_file, 'qris_project.gpkg')
+    # geopackage_path = os.path.join(qris_project.project_file, 'qris_project.gpkg')
     conn = sqlite3.connect(qris_project.project_file)
     conn.row_factory = dict_factory
     curs = conn.cursor()
@@ -87,7 +87,7 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
 
         if len(QgsProject.instance().mapLayersByName(assessment_layer_name)) == 0:
             # if not make a layer out of it
-            layer_path = geopackage_path + '|layername=' + layer['fc_name']
+            layer_path = qris_project.project_file + '|layername=' + layer['fc_name']
             # TODO probably want to give this a name that includes the assessment_id or identifier
 
             map_layer = QgsVectorLayer(layer_path, layer['fc_name'], 'ogr')
