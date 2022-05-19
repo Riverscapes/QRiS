@@ -7,6 +7,7 @@ from random import randint, randrange
 from PyQt5.QtWidgets import QMessageBox
 
 from qgis.core import (
+    QgsField,
     QgsVectorLayer,
     QgsDefaultValue,
     QgsEditorWidgetSetup,
@@ -22,22 +23,12 @@ from qgis.core import (
     QgsExpressionContextUtils)
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QVariant
 
 from .qt_user_role import item_code
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
-
-
-def add_assessment_layer_to_map(assessment_id, layer_id, fc_name, display_name, qml_path):
-    # Query the layers DB table to get the layer display name and QML file Path for the layer_id
-    # If layer exists in map with the same assessment_id definition query then do nothing
-    # Create QGISLayer for the layer feature class name
-    # apply definition query with assessment_id
-    # Apply symbology from QML file
-    # Build layer edit form in code depending on the layer type
-    pass
 
 
 def dict_factory(cursor, row):
@@ -55,12 +46,14 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
         assessments_layer = QgsVectorLayer(assessments_path, 'assessments', 'ogr')
         QgsProject.instance().addMapLayer(assessments_layer, False)
 
+    # 2. Queries the method_layers table and gets a list of layers required for that method -done
+    # a. also returns the parent assessment_id
     conn = sqlite3.connect(qris_project.project_file)
     conn.row_factory = dict_factory
     curs = conn.cursor()
-    # 2. Queries the method_layers table and gets a list of layers required for that method -done
-    # a. also returns the parent assessment_id
-    curs.execute("""SELECT assessments.fid AS assessment_id,
+    curs.execute("""SELECT projects.name AS project_name,
+                    assessments.fid AS assessment_id,
+                    assessments.name AS assessment_name,
                     assessment_methods.fid AS assessment_method_id,
                     methods.fid AS method_id,
                     layers.fid AS layer_id,
@@ -68,21 +61,24 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
                     layers.display_name,
                     layers.geom_type,
                     layers.is_lookup,
-                    layers.qml FROM (methods
+                    layers.qml FROM projects INNER
+                    JOIN((methods
                     INNER JOIN (assessments
                     INNER JOIN assessment_methods ON assessments.fid = assessment_methods.assessment_id)
                     ON methods.fid = assessment_methods.method_id)
                     INNER JOIN (layers
                     INNER JOIN method_layers
                     ON layers.fid = method_layers.layer_id)
-                    ON methods.fid = method_layers.method_id
+                    ON methods.fid = method_layers.method_id)
                     WHERE (((assessment_methods.fid)=?));""", [assessment_method_id])
     method_layers = curs.fetchall()
     conn.commit()
     conn.close()
 
-    # a. Check if the specific Assessment Group is already added to the Project group
-    # b. If not, add the group by date (or something) to an Assessment Group
+    # Send project and assessment name to create group function
+    project_group_name = str(method_layers[0]['project_name'])
+    assessment_group_name = str(method_layers[0]['assessment_id']) + '-' + method_layers[0]['assessment_name']
+    assessment_group = set_assessment_layer_groups(project_group_name, assessment_group_name)
 
     # now loop through each layer and see if they need to be added
     spatial_layers = []
@@ -92,7 +88,7 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
         layer['ass_name'] = str(layer['assessment_id']) + '-' + layer['display_name']
         # check if it's a lookup layer, if it is send it on
         if layer['is_lookup']:
-            add_lookup_table_to_map(layer)
+            add_lookup_table(layer)
         else:
             # add layer to spatial layers list, ensures that all lookups are added to the project first
             spatial_layers.append(layer)
@@ -103,7 +99,7 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
         if len(QgsProject.instance().mapLayersByName(layer['ass_name'])) == 0:
             # if not make a layer out of it
             map_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
-            QgsProject.instance().addMapLayer(map_layer, True)
+            QgsProject.instance().addMapLayer(map_layer, False)
             map_layer.setName(layer['ass_name'])
             # Set the QML symbology
             qml = os.path.join(symbology_path, 'symbology', layer['qml'])
@@ -115,41 +111,101 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
             # Set the default value from the variable
             assessment_field_index = map_layer.fields().indexFromName('assessment_id')
             map_layer.setDefaultValueDefinition(assessment_field_index, QgsDefaultValue("@assessment_id"))
-            # send to layer specific add to map functions (lookup tables use general add_lookup_to_instance function)
-            # first check if it's a lookup
+            # finally add the layer to the group
+            assessment_group.addLayer(map_layer)
+            # send to layer specific add to map functions
             fc_name = layer['fc_name']
             if fc_name == 'dam_crests':
-                pass
+                add_dam_crests(map_layer)
             elif fc_name == 'thalwegs':
-                pass
+                add_thalwegs(map_layer)
             elif fc_name == 'inundation_extents':
                 add_inundation_extents(map_layer)
+            elif fc_name == 'dams':
+                add_dams(map_layer)
+            elif fc_name == 'jams':
+                add_jams(map_layer)
+            else:
+                pass
 
 
-def add_lookup_table_to_map(layer: dict):
+# ---------- ASSESSMENT GROUP STUFF -----------
+def set_assessment_layer_groups(project_group_name: str, assessment_group_name: str):
+    """Looks for each item in the group_list adding missing children as needed"""
+    # This is maybe kinda working for now
+    # get the layer tree root and set to group to start
+    group = QgsProject.instance().layerTreeRoot()
+    # set the list of group names to search
+    group_list = [project_group_name, 'Assessments', assessment_group_name]
+    # Check for the Assessment group, add if not there
+    for group_name in group_list:
+        if not any([child.name() == group_name for child in group.children()]):
+            # if it ain't there add it is a new group and set to group for recursion
+            new_group = group.addGroup(group_name)
+            group = new_group
+        else:
+            group = next(child for child in group.children() if child.name() == group_name)
+    return group
+
+
+# -------- LAYER SPECIFIC ADD TO MAP FUNCTIONS ---------
+def add_lookup_table(layer: dict):
     """Checks if a lookup table has been added as private in the current QGIS session"""
     # Check if the lookup table has been added
+    # TODO make sure the lookup tables are actually from the correct project geopackage
     if len(QgsProject.instance().mapLayersByName(layer['fc_name'])) == 0:
         lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
+        # TODO consider adding and then marking as private instead of using the False flag
         QgsProject.instance().addMapLayer(lookup_layer, False)
 
 
-# LAYER SPECIFIC ADD TO MAP FUNCTIONS
 def add_dam_crests(map_layer: QgsVectorLayer):
-    pass
+    set_hidden(map_layer, 'fid', 'Dam Crests ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
+    set_value_relation(map_layer, 'dam_integrity_id', 'lkp_dam_integrity', 'Dam Integrity')
+    set_value_relation(map_layer, 'beaver_maintenance_id', 'lkp_beaver_maintenance', 'Beaver Maintenance')
+    set_alias(map_layer, 'height', 'Dam Height')
+    set_virtual_dimension(map_layer, 'length')
+
+
+def add_dams(map_layer: QgsVectorLayer):
+    set_hidden(map_layer, 'fid', 'Dam ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
+    set_value_relation(map_layer, 'dam_integrity_id', 'lkp_dam_integrity', 'Dam Integrity')
+    set_value_relation(map_layer, 'beaver_maintenance_id', 'lkp_beaver_maintenance', 'Beaver Maintenance')
+    set_alias(map_layer, 'length', 'Dam Length')
+    set_alias(map_layer, 'height', 'Dam Height')
+
+
+def add_jams(map_layer: QgsVectorLayer):
+    set_hidden(map_layer, 'fid', 'Jam ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
+    set_value_relation(map_layer, 'beaver_maintenance_id', 'lkp_beaver_maintenance', 'Beaver Maintenance')
+    set_alias(map_layer, 'wood_count', 'Wood Count')
+    set_alias(map_layer, 'length', 'Jam Length')
+    set_alias(map_layer, 'width', 'Jam Width')
+    set_alias(map_layer, 'height', 'Jam Height')
 
 
 def add_inundation_extents(map_layer: QgsVectorLayer):
-    configure_value_relation(map_layer, 'type_id', 'lkp_inundation_extent_types')
-    configure_value_relation(map_layer, 'assessment_id', 'assessments')
+    set_hidden(map_layer, 'fid', 'Extent ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'type_id', 'lkp_inundation_extent_types', 'Extent Type')
+    set_virtual_dimension(map_layer, 'area')
 
 
 def add_thalwegs(map_layer: QgsVectorLayer):
-    pass
+    set_hidden(map_layer, 'fid', 'Thalweg ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'type_id', 'lkp_thalweg_types', 'Thalweg Type')
+    set_virtual_dimension(map_layer, 'length')
 
 
-# Function for setting form widgets
-def configure_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_name: str):
+# ------ SETTING FIELD AND FORM PROPERTIES -------
+def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str):
     """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
     # value relation widget configuration. Just add the Layer name
     lookup_config = {
@@ -168,55 +224,44 @@ def configure_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_
     field_index = fields.indexFromName(field_name)
     widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
     map_layer.setEditorWidgetSetup(field_index, widget_setup)
+    # alias the field
+    map_layer.setFieldAlias(field_index, field_alias)
 
 
-def set_default_value_from_variable(map_layer: QgsVectorLayer, field_name: str, variable_name):
-    pass
-
-# thalwegs = QgsProject.instance().mapLayersByName('thalwegs')[0]
-
-# # Form configuration stuff will come back to this once we are adding to the map
-# fields = thalwegs.fields()
-# thalwegs.setFieldAlias(field_index, 'Thalweg ID')
-
-# # # start the form configuration
-# form_config = thalwegs.editFormConfig()
-
-# # # setting read - only
-# # form_config.setReadOnly(field_index, True)
-
-# # # view the editor widget setup
-# field = thalwegs.fields()[2]
-# field.editorWidgetSetup().config()
-
-# # # commit the form configuration
-# child_layer.setEditFormConfig(form_config)
-
-# # # full setup for value relation
-# full_config = {
-#     'AllowMulti': False,
-#     'AllowNull': False,
-#     'Description': '',
-#     'FilterExpression': '',
-#     'Key': 'fid',
-#     'LayerName': 'lkp_thalweg_types',
-#     'LayerProviderName': 'ogr',
-#     'LayerSource': '/Users/nick/Desktop/asdF3/qris_project.gpkg|layername=lkp_thalweg_types',
-#     'NofColumns': 1,
-#     'OrderByValue': False,
-#     'UseCompleter': False,
-#     'Value': 'name'
-# }
+def set_hidden(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
+    """Sets a field to hidden, read only, and also sets an alias just in case. Often used on fid and assessment_id"""
+    fields = map_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    form_config = map_layer.editFormConfig()
+    form_config.setReadOnly(field_index, True)
+    map_layer.setEditFormConfig(form_config)
+    map_layer.setFieldAlias(field_index, field_alias)
+    widget_setup = QgsEditorWidgetSetup('Hidden', {})
+    map_layer.setEditorWidgetSetup(field_index, widget_setup)
 
 
-# # # get the layer id
-# lookup_layer = QgsProject.instance().mapLayersByName('parent_layer')[0]
-# relation_config['Layer'] = lookup_layer.id()
+def set_alias(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
+    """Just provides an alias to the field for display"""
+    fields = map_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    map_layer.setFieldAlias(field_index, field_alias)
 
-# # # apply the widget configuration
-# widget_setup = QgsEditorWidgetSetup('ValueRelation', full_config)
-# field_index = child_fields.indexFromName('parent_id')
-# thalwegs.setEditorWidgetSetup(2, widget_setup)
 
-# # setting a default value
-# child_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("@parent_fid"))
+# ----- CREATING VIRTUAL FIELDS --------
+def set_virtual_dimension(map_layer: QgsVectorLayer, dimension: str):
+    """dimension should be 'area' or 'length'
+    sets a virtual length field named vrt_length
+    aliases the field as Length
+    sets the widget type to text
+    sets default value to the length expression"""
+    field_name = 'vrt_' + dimension
+    field_alias = dimension.capitalize()
+    field_expression = 'round(${}, 0)'.format(dimension)
+    virtual_field = QgsField(field_name, QVariant.Int)
+    map_layer.addExpressionField(field_expression, virtual_field)
+    fields = map_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    map_layer.setFieldAlias(field_index, field_alias)
+    map_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+    widget_setup = QgsEditorWidgetSetup('TextEdit', {})
+    map_layer.setEditorWidgetSetup(field_index, widget_setup)
