@@ -38,15 +38,15 @@ CREATE TABLE  layers (
 );
 
 -- Layers
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'temp.qml', NULL); -- type: primary, secondary - see GUT
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (6, 'riverscape_units', 'Riverscape Units', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL); -- type: primary, secondary - see GUT
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (6, 'riverscape_units', 'Riverscape Units', 'Polygon', 0, 'riverscape_units.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL); -- type: free flow, overflow, ponded
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'temp.qml', NULL); -- type: convergence, divergence
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'valley_bottoms.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'junctions.qml', NULL); -- type: convergence, divergence
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (13, 'geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point', 0, 'temp.qml', NULL); -- fluvial taxonomy
@@ -101,13 +101,12 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (4, 1);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 103);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 104);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 105);
-
+-- Low Tech Designs
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 18);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 22);
-
 
 CREATE TABLE lkp_context_layer_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
