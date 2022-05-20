@@ -137,7 +137,7 @@ class FrmAssessment(QDialog, Ui_Assessment):
 
         try:
             self.assessment = self.qris_project.add_assessment(self.txtName.text(), self.txtDescription.toPlainText(), method_names, basis_names)
-            super(FrmAssessment, self).accept()
+            super().accept()
 
         except Exception as ex:
             if 'unique' in str(ex).lower():
