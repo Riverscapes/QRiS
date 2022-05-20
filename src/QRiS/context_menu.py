@@ -2,6 +2,9 @@ from qgis.PyQt.QtWidgets import QDockWidget, QWidget, QTreeView, QVBoxLayout, QM
 from qgis.PyQt.QtCore import pyqtSlot, QModelIndex
 from qgis.PyQt.QtGui import QIcon, QStandardItem
 
+from ..model.assessment import ASSESSMENT_MACHINE_CODE
+from ..model.basis import BASIS_MACHINE_CODE
+
 
 class ContextMenu(QMenu):
     MENUS = {
@@ -81,8 +84,12 @@ class ContextMenu(QMenu):
             'Import a project extent polygon',
             ':/plugins/qris_toolbar/test_new.png'
         ),
-        'ASSESSMENTS': (
+        ASSESSMENT_MACHINE_CODE: (
             'Create A New Assessment',
+            ':/plugins/qris_toolbar/test_new.png'
+        ),
+        BASIS_MACHINE_CODE: (
+            'Import An Existing Basis Dataset',
             ':/plugins/qris_toolbar/test_new.png'
         ),
         'CREATE_BLANK_PROJECT_EXTENT_LAYER': (
