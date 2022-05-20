@@ -66,6 +66,7 @@ from ..ui.phase_dialog import PhaseDlg
 
 from .frm_assessment import FrmAssessment
 from .frm_basis import FrmBasis
+from .frm_mask import FrmMask
 
 from ..model.project import Project
 from ..model.assessment import Assessment
@@ -75,9 +76,9 @@ from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
 from ..model.assessment import ASSESSMENT_MACHINE_CODE
 from ..model.basis import BASIS_MACHINE_CODE
+from ..model.mask import MASK_MACHINE_CODE
 
 
-MASKS_NODE_TAG = 'MASKS'
 SCRATCH_NODE_TAG = 'SCRATCH'
 
 
@@ -138,7 +139,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         masks_node = QStandardItem('Masks')
         masks_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        masks_node.setData(MASKS_NODE_TAG, Qt.UserRole)
+        masks_node.setData(MASK_MACHINE_CODE, Qt.UserRole)
         project_node.appendRow(masks_node)
 
         scratch_node = QStandardItem('Scratch Space')
@@ -364,6 +365,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 self.add_context_menu_item('Add New Assessment', 'test_new.png', lambda: self.add_assessment(model_item))
             elif model_data == BASIS_MACHINE_CODE:
                 self.add_context_menu_item('Add New Base Dataset', 'test_new.png', lambda: self.add_basis(model_item))
+            elif model_data == MASK_MACHINE_CODE:
+                self.add_context_menu_item('Add New Mask', 'test_new.png', lambda: self.add_massk(model_item))
             else:
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
@@ -451,6 +454,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             if frm.chkAddToMap.isChecked():
                 # TODO: add basis to map
                 print(basis.path)
+
+    def add_mask(self, parent_node):
+        """Initiates adding a new mask"""
+        frm = FrmMask(self, self.project)
+        result = frm.exec_()
+        if result != 0:
+            mask = frm.mask
+            new_node = QStandardItem(mask.name)
+            new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+            new_node.setData(mask, Qt.UserRole)
+            parent_node.appendRow(new_node)
+
+            if frm.chkAddToMap.isChecked():
+                # TODO: add basis to map
+                print(mask.path)
 
     def add_assessment_to_map(self, assessment):
         for method_id in assessment.methods.keys():
