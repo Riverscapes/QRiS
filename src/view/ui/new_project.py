@@ -14,7 +14,7 @@ class Ui_NewProject(object):
     def setupUi(self, NewProject):
         NewProject.setObjectName("NewProject")
         NewProject.setWindowModality(QtCore.Qt.ApplicationModal)
-        NewProject.resize(563, 481)
+        NewProject.resize(500, 400)
         self.verticalLayout = QtWidgets.QVBoxLayout(NewProject)
         self.verticalLayout.setObjectName("verticalLayout")
         self.gridLayoutWidget = QtWidgets.QGridLayout()

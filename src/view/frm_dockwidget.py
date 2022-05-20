@@ -46,37 +46,42 @@ from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 
-from .QRiS.context_menu import ContextMenu
-from .QRiS.settings import Settings
-from .QRiS.qt_user_role import item_code
-from .QRiS.manage_map import add_to_map
+from ..QRiS.context_menu import ContextMenu
+from ..QRiS.settings import Settings
+from ..QRiS.qt_user_role import item_code
+from ..QRiS.manage_map import add_to_map
 
 # testing a new function
-from .QRiS.method_to_map import add_assessment_method_to_map
+from ..QRiS.method_to_map import add_assessment_method_to_map
 
-from .ui.elevation_dockwidget import ElevationDockWidget
-from .ui.project_extent_dialog import ProjectExtentDlg
-from .ui.project_layer_dialog import ProjectLayerDlg
-from .ui.add_detrended_dialog import AddDetrendedRasterDlg
+from ..ui.elevation_dockwidget import ElevationDockWidget
+from ..ui.project_extent_dialog import ProjectExtentDlg
+from ..ui.project_layer_dialog import ProjectLayerDlg
+from ..ui.add_detrended_dialog import AddDetrendedRasterDlg
 # from .ui.assessment_dialog import AssessmentDlg
-from .ui.design_dialog import DesignDlg
-from .ui.structure_type_dialog import StructureTypeDlg
-from .ui.zoi_type_dialog import ZoiTypeDlg
-from .ui.phase_dialog import PhaseDlg
+from ..ui.design_dialog import DesignDlg
+from ..ui.structure_type_dialog import StructureTypeDlg
+from ..ui.zoi_type_dialog import ZoiTypeDlg
+from ..ui.phase_dialog import PhaseDlg
 
-from .view.frm_assessment import FrmAssessment
+from .frm_assessment import FrmAssessment
+from .frm_basis import FrmBasis
 
-from .model.project import Project
-from .model.assessment import Assessment
-from .QRiS.method_to_map import add_assessment_method_to_map
+from ..model.project import Project
+from ..model.assessment import Assessment
+from ..QRiS.method_to_map import add_assessment_method_to_map
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'qris_dockwidget.ui'))
+from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
-ASSESSMENT_NODE_TAG = 'ASSESSMENTS'
+from ..model.assessment import ASSESSMENT_MACHINE_CODE
+from ..model.basis import BASIS_MACHINE_CODE
 
 
-class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
+MASKS_NODE_TAG = 'MASKS'
+SCRATCH_NODE_TAG = 'SCRATCH'
+
+
+class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
     closingPlugin = pyqtSignal()
 
@@ -123,8 +128,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         assessment_node = QStandardItem('Assessments')
         assessment_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        assessment_node.setData(ASSESSMENT_NODE_TAG, item_code['item_type'])
+        assessment_node.setData(ASSESSMENT_MACHINE_CODE, item_code['item_type'])
         project_node.appendRow(assessment_node)
+
+        bases_node = QStandardItem('Bases')
+        bases_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        bases_node.setData(BASIS_MACHINE_CODE, item_code['item_type'])
+        project_node.appendRow(bases_node)
+
+        masks_node = QStandardItem('Masks')
+        masks_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        masks_node.setData(MASKS_NODE_TAG, item_code['item_type'])
+        project_node.appendRow(masks_node)
+
+        scratch_node = QStandardItem('Scratch Space')
+        scratch_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        scratch_node.setData(SCRATCH_NODE_TAG, item_code['item_type'])
+        project_node.appendRow(scratch_node)
 
         self.treeView.expandAll()
         return
@@ -344,8 +364,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
             self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
             self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
-        elif item_type == ASSESSMENT_NODE_TAG:
-            self.menu.addAction(ASSESSMENT_NODE_TAG, lambda: self.add_assessment(model_item))
+        elif item_type == ASSESSMENT_MACHINE_CODE:
+            self.menu.addAction(ASSESSMENT_MACHINE_CODE, lambda: self.add_assessment(model_item))
+        elif item_type == BASIS_MACHINE_CODE:
+            self.menu.addAction(BASIS_MACHINE_CODE, lambda: self.add_basis(model_item))
+
         elif item_type == "extent_folder":
             self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
             self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
@@ -379,7 +402,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.treeView.collapseAll()
         return
 
-    def add_assessment(self, assessments_model_node):
+    def add_assessment(self, parent_node):
         """Initiates adding a new assessment"""
         frm = FrmAssessment(self, self.project)
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
@@ -387,14 +410,29 @@ class QRiSDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         result = frm.exec_()
         if result is not None:
             assessment = frm.assessment
-            assessment_node = QStandardItem(assessment.name)
-            assessment_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            assessment_node.setData(ASSESSMENT_NODE_TAG, item_code['item_type'])
-            assessments_model_node.appendRow(assessment_node)
+            new_node = QStandardItem(assessment.name)
+            new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+            new_node.setData(ASSESSMENT_MACHINE_CODE, item_code['item_type'])
+            parent_node.appendRow(new_node)
 
             if frm.chkAddToMap.isChecked():
                 for method_id in assessment.methods.keys():
                     add_assessment_method_to_map(self.project, method_id)
+
+    def add_basis(self, parent_node):
+        """Initiates adding a new basis"""
+        frm = FrmBasis(self, self.project)
+        result = frm.exec_()
+        if result != 0:
+            basis = frm.basis
+            new_node = QStandardItem(basis.name)
+            new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+            new_node.setData(ASSESSMENT_MACHINE_CODE, item_code['item_type'])
+            parent_node.appendRow(new_node)
+
+            if frm.chkAddToMap.isChecked():
+                # TODO: add basis to map
+                print(basis.path)
 
     def add_design(self):
         """Initiates adding a new design"""

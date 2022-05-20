@@ -35,7 +35,7 @@ from .QRiS.settings import Settings, CONSTANTS
 from . import resources
 
 # Import the code for the DockWidget
-from .qris_dockwidget import QRiSDockWidget
+from .view.frm_dockwidget import QRiSDockWidget
 from .qris_project import QRiSProject
 
 from .view.frm_new_project import FrmNewProject
@@ -224,7 +224,7 @@ class QRiSToolbar:
         # for reuse if plugin is reopened
         # Commented next statement since it causes QGIS crashe
         # when closing the docked window:
-        # self.dockwidget = None
+        self.dockwidget = None
 
         self.pluginIsActive = False
 

@@ -81,16 +81,8 @@ class FrmAssessment(QDialog, Ui_Assessment):
 
         self.gridLayout.setGeometry(QRect(0, 0, self.width(), self.height()))
 
-        # db = QSqlDatabase('QSQLITE')
-        # db.setDatabaseName(qris_project.project_file)
-        # if not db.open():
-        #     print('uh oh')
-
-        # self.model = CheckBoxListTableModel(self, db=db)
-        # self.model.setTable('methods')
-        # self.model.select()
-
-        self.model = QStandardItemModel()
+        # Methods
+        self.methods_model = QStandardItemModel()
         conn = sqlite3.connect(qris_project.project_file)
         curs = conn.cursor()
         curs.execute('SELECT fid, name FROM methods ORDER BY name')
@@ -98,16 +90,24 @@ class FrmAssessment(QDialog, Ui_Assessment):
             item = QStandardItem(row[1])
             item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
-            self.model.appendRow(item)
+            self.methods_model.appendRow(item)
 
-        # for row in range(self.model.rowCount()):
-        #     index = self.model.index(row, 0)
-        #     self.model.setData(index, Qt.Checked, Qt.CheckStateRole)
-
-        # item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-
-        self.vwMethods.setModel(self.model)
+        self.vwMethods.setModel(self.methods_model)
         self.vwMethods.setModelColumn(1)
+
+        # Bases
+        self.bases_model = QStandardItemModel()
+        conn = sqlite3.connect(qris_project.project_file)
+        curs = conn.cursor()
+        curs.execute('SELECT fid, name FROM bases ORDER BY name')
+        for row in curs.fetchall():
+            item = QStandardItem(row[1])
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
+            self.bases_model.appendRow(item)
+
+        self.vwBasis.setModel(self.bases_model)
+        self.vwBasis.setModelColumn(1)
 
     def accept(self):
 
@@ -117,19 +117,26 @@ class FrmAssessment(QDialog, Ui_Assessment):
             return()
 
         method_names = []
-        for row in range(self.model.rowCount()):
-            index = self.model.index(row, 0)
-            check = self.model.data(index, Qt.CheckStateRole)
+        for row in range(self.methods_model.rowCount()):
+            index = self.methods_model.index(row, 0)
+            check = self.methods_model.data(index, Qt.CheckStateRole)
             if check == Qt.Checked:
-                method_names.append(self.model.data(index, Qt.DisplayRole))
+                method_names.append(self.methods_model.data(index, Qt.DisplayRole))
 
         if len(method_names) < 1:
             QMessageBox.warning(self, 'No Methods Selected', 'You must select at least one method to continue.')
             self.txtProjectName.setFocus()
             return()
 
+        basis_names = []
+        for row in range(self.bases_model.rowCount()):
+            index = self.bases_model.index(row, 0)
+            check = self.bases_model.data(index, Qt.CheckStateRole)
+            if check == Qt.Checked:
+                basis_names.append(self.bases_model.data(index, Qt.DisplayRole))
+
         try:
-            self.assessment = self.qris_project.add_assessment(self.txtName.text(), self.txtDescription.toPlainText(), method_names)
+            self.assessment = self.qris_project.add_assessment(self.txtName.text(), self.txtDescription.toPlainText(), method_names, basis_names)
             super(FrmAssessment, self).accept()
 
         except Exception as ex:
