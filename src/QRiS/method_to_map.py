@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from qgis.core import (
     QgsField,
+    QgsLayerTreeGroup,
     QgsVectorLayer,
     QgsDefaultValue,
     QgsEditorWidgetSetup,
@@ -75,10 +76,11 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
     conn.commit()
     conn.close()
 
-    # Send project and assessment name to create group function
+    # Create the layer group list and set the target assessment group
     project_group_name = str(method_layers[0]['project_name'])
     assessment_group_name = str(method_layers[0]['assessment_id']) + '-' + method_layers[0]['assessment_name']
-    assessment_group = set_assessment_layer_groups(project_group_name, assessment_group_name)
+    group_lineage = [project_group_name, 'Assessments', assessment_group_name]
+    assessment_group = set_target_layer_group(group_lineage)
 
     # now loop through each layer and see if they need to be added
     spatial_layers = []
@@ -130,14 +132,17 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
 
 
 # ---------- ASSESSMENT GROUP STUFF -----------
-def set_assessment_layer_groups(project_group_name: str, assessment_group_name: str):
-    """Looks for each item in the group_list adding missing children as needed"""
+# TODO: This could be written with the findGroup method which doesn't depend on children.
+def set_target_layer_group(group_list: list) -> QgsLayerTreeGroup:
+    """
+    Looks for each item in the group_list recursively adding missing children as needed.
+    group_list should consist of needed strings for text matching at each level of the tree heierarchy.
+    returns the target group at which layers should be added.
+    """
     # This is maybe kinda working for now
     # get the layer tree root and set to group to start
     group = QgsProject.instance().layerTreeRoot()
     # set the list of group names to search
-    group_list = [project_group_name, 'Assessments', assessment_group_name]
-    # Check for the Assessment group, add if not there
     for group_name in group_list:
         if not any([child.name() == group_name for child in group.children()]):
             # if it ain't there add it is a new group and set to group for recursion
