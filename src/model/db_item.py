@@ -3,8 +3,6 @@ from PyQt5.QtCore import Qt
 
 import sqlite3
 
-from ..model.project import dict_factory
-
 
 class DBItem():
 
@@ -60,3 +58,10 @@ def load_lookup_table(db_path: str, table: str) -> dict:
         row['id'],
         row['name']
     ) for row in curs.fetchall()}
+
+
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
