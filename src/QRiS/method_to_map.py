@@ -210,7 +210,7 @@ def add_thalwegs(map_layer: QgsVectorLayer):
 
 
 # ------ SETTING FIELD AND FORM PROPERTIES -------
-def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str):
+def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True):
     """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
     # value relation widget configuration. Just add the Layer name
     lookup_config = {
@@ -229,12 +229,14 @@ def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_
     field_index = fields.indexFromName(field_name)
     widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
     map_layer.setEditorWidgetSetup(field_index, widget_setup)
-    # alias the field
     map_layer.setFieldAlias(field_index, field_alias)
+    form_config = map_layer.editFormConfig()
+    form_config.setReuseLastValue(field_index, reuse_last)
+    map_layer.setEditFormConfig(form_config)
 
 
 def set_hidden(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
-    """Sets a field to hidden, read only, and also sets an alias just in case. Often used on fid and assessment_id"""
+    """Sets a field to hidden, read only, and also sets an alias just in case. Often used on fid, project_id, and assessment_id"""
     fields = map_layer.fields()
     field_index = fields.indexFromName(field_name)
     form_config = map_layer.editFormConfig()
