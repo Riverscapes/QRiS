@@ -49,8 +49,8 @@ class Project():
         conn.commit()
 
         # Hack because listview only stores the strings
-        curs.execute('SELECT am.fid, m.name FROM assessment_bases am INNER JOIN bases m ON am.base_id = m.fid WHERE assessment_id = ?', [assessment_id])
-        bases = {row['fid']: row['name'] for row in curs.fetchall()}
+        # curs.execute('SELECT am.fid, m.name FROM assessment_bases am INNER JOIN bases m ON am.base_id = m.fid WHERE assessment_id = ?', [assessment_id])
+        bases = {}  # {row['fid']: row['name'] for row in curs.fetchall()}
 
         return Assessment(assessment_id, name, description, methods, bases)
 

@@ -43,7 +43,7 @@ from qgis.utils import iface
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
-from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 
 from ..QRiS.context_menu import ContextMenu
@@ -128,22 +128,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         assessment_node = QStandardItem('Assessments')
         assessment_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        assessment_node.setData(ASSESSMENT_MACHINE_CODE, item_code['item_type'])
+        assessment_node.setData(ASSESSMENT_MACHINE_CODE, Qt.UserRole)
         project_node.appendRow(assessment_node)
 
         bases_node = QStandardItem('Bases')
         bases_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        bases_node.setData(BASIS_MACHINE_CODE, item_code['item_type'])
+        bases_node.setData(BASIS_MACHINE_CODE, Qt.UserRole)
         project_node.appendRow(bases_node)
 
         masks_node = QStandardItem('Masks')
         masks_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        masks_node.setData(MASKS_NODE_TAG, item_code['item_type'])
+        masks_node.setData(MASKS_NODE_TAG, Qt.UserRole)
         project_node.appendRow(masks_node)
 
         scratch_node = QStandardItem('Scratch Space')
         scratch_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        scratch_node.setData(SCRATCH_NODE_TAG, item_code['item_type'])
+        scratch_node.setData(SCRATCH_NODE_TAG, Qt.UserRole)
         project_node.appendRow(scratch_node)
 
         self.treeView.expandAll()
@@ -357,42 +357,60 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             return
 
         model_item = self.model.itemFromIndex(indexes[0])
-        item_type = model_item.data(item_code['item_type'])
+        model_data = model_item.data(Qt.UserRole)
 
-        if item_type == 'project_root':
-            self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
-            self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
-            self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
-            self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
-        elif item_type == ASSESSMENT_MACHINE_CODE:
-            self.menu.addAction(ASSESSMENT_MACHINE_CODE, lambda: self.add_assessment(model_item))
-        elif item_type == BASIS_MACHINE_CODE:
-            self.menu.addAction(BASIS_MACHINE_CODE, lambda: self.add_basis(model_item))
-
-        elif item_type == "extent_folder":
-            self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
-            self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
-        elif item_type == "layers_folder":
-            self.menu.addAction('IMPORT_PROJECT_LAYER', lambda: self.import_project_layer())
-        elif item_type == "layer_node":
-            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
-        elif item_type in ['extent_node', 'Project_Extent']:
-            # self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
-            # self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
-            self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
-        elif item_type == "design_folder":
-            self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
-        elif item_type == "design":
-            self.menu.addAction('ADD_TO_MAP_OR_UPDATE_SYMBOLOGY', lambda: add_to_map(self.qris_project, self.model, model_item))
-        elif item_type == "structure_type_folder":
-            self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
-        elif item_type == "zoi_type_folder":
-            self.menu.addAction('ADD_ZOI_TYPE', lambda: self.add_zoi_type())
-        elif item_type == "phase_folder":
-            self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
+        if isinstance(model_data, str):
+            if model_data == ASSESSMENT_MACHINE_CODE:
+                self.add_context_menu_item('Add New Assessment', 'test_new.png', lambda: self.add_assessment(model_item))
+            elif model_data == BASIS_MACHINE_CODE:
+                self.add_context_menu_item('Add New Base Dataset', 'test_new.png', lambda: self.add_basis(model_item))
+            else:
+                raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
-            self.menu.clear()
+            if isinstance(model_data, Assessment):
+                self.add_context_menu_item('Add Assessment To Map', 'test_add_map.png', lambda: self.add_assessment_to_map(model_data))
+
+        # if item_type == 'project_root':
+        #     self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
+        #     self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
+        #     self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
+        #     self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
+        # elif item_type == ASSESSMENT_MACHINE_CODE:
+        #     self.menu.addAction(ASSESSMENT_MACHINE_CODE, lambda: self.add_assessment(model_item))
+        # elif item_type == BASIS_MACHINE_CODE:
+        #     self.menu.addAction(BASIS_MACHINE_CODE, lambda: self.add_basis(model_item))
+
+        # elif item_type == "extent_folder":
+        #     self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
+        #     self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
+        # elif item_type == "layers_folder":
+        #     self.menu.addAction('IMPORT_PROJECT_LAYER', lambda: self.import_project_layer())
+        # elif item_type == "layer_node":
+        #     self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
+        # elif item_type in ['extent_node', 'Project_Extent']:
+        #     # self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
+        #     # self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
+        #     self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
+        # elif item_type == "design_folder":
+        #     self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
+        # elif item_type == "design":
+        #     self.menu.addAction('ADD_TO_MAP_OR_UPDATE_SYMBOLOGY', lambda: add_to_map(self.qris_project, self.model, model_item))
+        # elif item_type == "structure_type_folder":
+        #     self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
+        # elif item_type == "zoi_type_folder":
+        #     self.menu.addAction('ADD_ZOI_TYPE', lambda: self.add_zoi_type())
+        # elif item_type == "phase_folder":
+        #     self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
+        # else:
+        #     self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
+
+    def add_context_menu_item(self, menu_item_text: str, icon_file_nam, slot: pyqtSlot = None, enabled=True):
+        action = self.menu.addAction(QIcon(':/plugins/qris_toolbar/{}'.format(icon_file_nam)), menu_item_text)
+        action.setEnabled(enabled)
+
+        if slot is not None:
+            action.triggered.connect(slot)
 
     def expand_tree(self):
         self.treeView.expandAll()
@@ -412,7 +430,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             assessment = frm.assessment
             new_node = QStandardItem(assessment.name)
             new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(ASSESSMENT_MACHINE_CODE, item_code['item_type'])
+            new_node.setData(assessment, Qt.UserRole)
             parent_node.appendRow(new_node)
 
             if frm.chkAddToMap.isChecked():
@@ -427,12 +445,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             basis = frm.basis
             new_node = QStandardItem(basis.name)
             new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(ASSESSMENT_MACHINE_CODE, item_code['item_type'])
+            new_node.setData(basis, Qt.UserRole)
             parent_node.appendRow(new_node)
 
             if frm.chkAddToMap.isChecked():
                 # TODO: add basis to map
                 print(basis.path)
+
+    def add_assessment_to_map(self, assessment):
+        for method_id in assessment.methods.keys():
+            add_assessment_method_to_map(self.project, method_id)
 
     def add_design(self):
         """Initiates adding a new design"""
