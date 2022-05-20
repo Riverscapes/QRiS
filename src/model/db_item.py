@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 
 import sqlite3
 
-# from ..model.project import dict_factory
+from ..model.project import dict_factory
 
 
 class DBItem():
@@ -48,3 +48,15 @@ class DBItemModel(QAbstractListModel):
 
     def rowCount(self, index):
         return len(self._data)
+
+
+def load_lookup_table(db_path: str, table: str) -> dict:
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = dict_factory
+    curs = conn.cursor()
+    curs.execute('SELECT fid, name, description FROM {}'.format(table))
+    return {row['fid']: DBItem(
+        row['id'],
+        row['name']
+    ) for row in curs.fetchall()}
