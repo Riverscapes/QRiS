@@ -15,18 +15,18 @@ class Basemap(DBItem):
 
     def update(self, curs: sqlite3.Cursor, name: str, description: str) -> None:
 
-        curs.execute('UPDATE bases SET name = ?, description = ?', [name, description])
+        curs.execute('UPDATE basemaps SET name = ?, description = ?', [name, description])
         self.name = name
         self.description = description
 
     def delete(self, conn: sqlite3.Connection) -> None:
         curs = conn.cursor()
-        curs.execute('DELETE FROM bases WHERE fid = ?', [self.id])
+        curs.execute('DELETE FROM basemaps WHERE fid = ?', [self.id])
 
 
 def load_basemaps(curs: sqlite3.Cursor) -> dict:
 
-    curs.execute('SELECT fid, name, path, type, description FROM bases')
+    curs.execute('SELECT fid, name, path, type, description FROM basemaps')
     return {row['fid']: Basemap(
         row['id'],
         row['name'],

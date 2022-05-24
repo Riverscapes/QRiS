@@ -1,3 +1,10 @@
+-- Database migrations tracking
+CREATE TABLE migrations (
+  migration_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  file_name TEXT UNIQUE NOT NULL,
+  created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- LOOKUP TABLES
 CREATE TABLE  methods (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -169,7 +176,7 @@ CREATE TABLE assessment_methods (
 );
 
 
-CREATE TABLE bases (
+CREATE TABLE basemaps (
     -- this table name is horid. try: contexts, evidences, base_rasters
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
@@ -181,7 +188,7 @@ CREATE TABLE bases (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE assessment_bases (
+CREATE TABLE assessment_basemaps (
     assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE,
     base_id INTEGER REFERENCES bases(fid) ON DELETE CASCADE
 );
