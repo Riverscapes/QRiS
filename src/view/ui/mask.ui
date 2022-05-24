@@ -16,9 +16,6 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="5" column="1">
-      <widget class="QTextEdit" name="txtDescription"/>
-     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -26,35 +23,25 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
+     <item row="3" column="1">
+      <widget class="QCheckBox" name="chkAddToMap">
+       <property name="text">
+        <string>Add to Map</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QTextEdit" name="txtDescription"/>
+     </item>
+     <item row="2" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Description</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QgsFeatureListComboBox" name="mFeatureListComboBox"/>
-     </item>
      <item row="1" column="1">
       <widget class="QComboBox" name="cboType"/>
-     </item>
-     <item row="4" column="1">
-      <widget class="QgsExternalResourceWidget" name="mQgsExternalResourceWidget"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Type</string>
-       </property>
-      </widget>
      </item>
      <item row="0" column="1">
       <widget class="QLineEdit" name="txtName">
@@ -63,13 +50,17 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox"/>
+     <item row="4" column="1">
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QCheckBox" name="chkAddToMap">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Add to Map</string>
+        <string>Type</string>
        </property>
       </widget>
      </item>
@@ -77,23 +68,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QgsExternalResourceWidget</class>
-   <extends>QWidget</extends>
-   <header>qgsexternalresourcewidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QgsFeatureListComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsfeaturelistcombobox.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QgsMapLayerComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsmaplayercombobox.h</header>
-  </customwidget>
- </customwidgets>
  <tabstops>
   <tabstop>txtName</tabstop>
   <tabstop>cboType</tabstop>
