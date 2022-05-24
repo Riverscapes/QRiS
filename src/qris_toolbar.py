@@ -38,6 +38,8 @@ from . import resources
 from .view.frm_dockwidget import QRiSDockWidget
 from .qris_project import QRiSProject
 
+from .model.project import apply_db_migrations
+
 from .view.frm_new_project import FrmNewProject
 
 import os.path
@@ -284,6 +286,9 @@ class QRiSToolbar:
             settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(dialog_return[0]))
             settings.sync()
 
+            # Apply database migrations to ensure latest schema
+            self.update_database(dialog_return[0])
+
             self.toggle_widget(forceOn=True)
             self.dockwidget.build_tree_view(dialog_return[0])
 
@@ -308,6 +313,9 @@ class QRiSToolbar:
                 settings.setValue(LAST_PROJECT_FOLDER, frm_new_project.project_dir)
                 settings.sync()
 
+                # Apply database migrations to ensure latest schema
+                self.update_database(frm_new_project.txtPath.text())
+
                 self.toggle_widget(forceOn=True)
                 self.dockwidget.build_tree_view(frm_new_project.txtPath.text())
 
@@ -315,6 +323,12 @@ class QRiSToolbar:
         #     # We set the proect path in the project settings. This way it will be saved with the QgsProject file
         #     if self.dockwidget is None or self.dockwidget.isHidden() is True:
         #         self.toggle_widget(forceOn=True)
+
+    def update_database(self, db_path):
+        try:
+            apply_db_migrations(db_path)
+        except Exception as ex:
+            QMessageBox.warning(self, 'Error Appling QRiS Database Migrations', str(ex))
 
     def toggle_widget(self, forceOn=False):
         """Toggle the widget open and closed when clicking the toolbar"""

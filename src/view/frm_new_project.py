@@ -90,34 +90,23 @@ class FrmNewProject(QDialog, Ui_NewProject):
         # qris_project = QRiSProject(self.project_name)
         # qris_project.project_path = self.project_folder
 
-        # Create the geopackage and spatial tables
-
+        # Create the geopackage feature classes that will in turn cause the project geopackage to get created
         for fc_name, layer_name, geometry_type in layers:
             features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
             create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), features_path, None)
 
-        # Run the schema DDL to create lookup tables and relationships
+        # Run the schema DDL migrations to create lookup tables and relationships
         conn = sqlite3.connect(self.txtPath.text())
         conn.execute('PRAGMA foreign_keys = ON;')
         curs = conn.cursor()
-        sql_path = os.path.dirname(os.path.dirname(__file__))
-        schema_path = os.path.join(sql_path, "sql", "schema.sql")
-        schema_qry_string = open(schema_path, 'r').read()
-        curs.executescript(schema_qry_string)
-        # design schema
-        schema_path = os.path.join(sql_path, "sql", "schema_design.sql")
-        schema_qry_string = open(schema_path, 'r').read()
-        curs.executescript(schema_qry_string)
+
+        schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
+        sql_commands = open(schema_path, 'r').read()
+        curs.executescript(sql_commands)
 
         # Create the project
         curs.execute('INSERT INTO projects (name) VALUES (?)', [self.txtProjectName.text()])
-
         conn.commit()
         conn.close()
-
-        # Create .qris
-        # qris_project_file = os.path.join(self.project_folder, "project.qris")
-        # qris_project.write_project_xml(qris_project_file)
-        # self.dataChange.emit(self.txtPath.text())
 
         super(FrmNewProject, self).accept()
