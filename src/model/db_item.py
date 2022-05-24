@@ -3,6 +3,9 @@ from PyQt5.QtCore import Qt
 
 import sqlite3
 
+DB_MODE_CREATE = 'create'
+DB_MODE_IMPORT = 'import'
+
 
 class DBItem():
 
@@ -48,14 +51,11 @@ class DBItemModel(QAbstractListModel):
         return len(self._data)
 
 
-def load_lookup_table(db_path: str, table: str) -> dict:
+def load_lookup_table(curs: sqlite3.Cursor, table: str) -> dict:
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = dict_factory
-    curs = conn.cursor()
-    curs.execute('SELECT fid, name, description FROM {}'.format(table))
+    curs.execute('SELECT fid, name FROM {}'.format(table))
     return {row['fid']: DBItem(
-        row['id'],
+        row['fid'],
         row['name']
     ) for row in curs.fetchall()}
 

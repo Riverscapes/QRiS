@@ -66,4 +66,4 @@ class Ui_Assessment(object):
         self.lblMethods.setText(_translate("Assessment", "Methods / Protocols"))
         self.lblDescription.setText(_translate("Assessment", "Description"))
         self.chkAddToMap.setText(_translate("Assessment", "Add Assessment To Map"))
-        self.label.setText(_translate("Assessment", "Basis"))
+        self.label.setText(_translate("Assessment", "Basemaps"))

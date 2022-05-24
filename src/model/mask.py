@@ -1,6 +1,5 @@
 import sqlite3
 from .db_item import DBItem
-from ..model.project import dict_factory
 
 MASK_MACHINE_CODE = 'Mask'
 
@@ -13,15 +12,12 @@ class Mask(DBItem):
         self.mask_type = mask_type
 
 
-def load_masks(db_path: str) -> dict:
+def load_masks(curs: sqlite3.Cursor, mask_types: dict) -> dict:
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = dict_factory
-    curs = conn.cursor()
-    curs.execute('SELECT m.fid, m.name, t.mask_type_id, t.name mask_type_name, m.description FROM masks m INNER JOIN mask_types t on m.mask_type_id = t.fid')
+    curs.execute("""SELECT * FROM masks""")
     return {row['fid']: Mask(
-        row['id'],
+        row['fid'],
         row['name'],
-        DBItem(row['mask_type_id'], row['mask_type_name']),
+        mask_types[row['mask_type_id']],
         row['description']
     ) for row in curs.fetchall()}

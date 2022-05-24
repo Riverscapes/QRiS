@@ -13,7 +13,7 @@ from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer
 
 from .ui.basis import Ui_Basis
-from ..model.basis import BASIS_PARENT_FOLDER, Basis
+from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap
 from ..model.db_item import DBItemModel, DBItem
 
 from ..model.mask import load_masks, Mask
@@ -37,10 +37,9 @@ class FrmBasis(QDialog, Ui_Basis):
         self.txtName.textChanged.connect(self.on_name_changed)
 
         # Masks
-        self.masks = load_masks(qris_project.project_file)
+        self.masks = self.qris_project.masks
         self.masks[0] = DBItem(0, 'None - Retain full dataset extent')
         self.masks_model = DBItemModel(self.masks)
-        # self.masks_model.load_data(qris_project.project_file, table='masks')
         self.cboMask.setModel(self.masks_model)
 
         self.browse_source()
@@ -58,7 +57,7 @@ class FrmBasis(QDialog, Ui_Basis):
             description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
             curs.execute('INSERT INTO bases (name, path, description) VALUES (?, ?, ?)', [self.txtName.text(), self.txtProjectPath.text(), description])
             id = curs.lastrowid
-            self.Basis = Basis(id, self.txtName.text(), self.txtProjectPath.text(), description)
+            self.Basis = Basemap(id, self.txtName.text(), self.txtProjectPath.text(), description)
 
             mask = self.cboMask.currentData(Qt.UserRole)
             mask_path = self.qris_project.get_absolute_ath(mask.path) if mask.id > 0 else None
@@ -81,7 +80,7 @@ class FrmBasis(QDialog, Ui_Basis):
 
         if len(new_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
-            self.txtProjectPath.setText(os.path.join(BASIS_PARENT_FOLDER, self.qris_project.get_safe_file_name(new_name, ext)))
+            self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(new_name, ext)))
         else:
             self.txtProjectPath.setText('')
 

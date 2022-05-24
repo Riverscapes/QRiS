@@ -7,29 +7,28 @@ from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStanda
 from qgis.core import Qgis, QgsFeature, QgsVectorLayer
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 
-from ..qris_project import QRiSProject
 from ..QRiS.functions import create_geopackage_table
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer
 
 from .ui.mask import Ui_Mask
-from ..model.basis import BASIS_PARENT_FOLDER, Basis
-from ..model.db_item import DBItemModel, DBItem
+from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap
+from ..model.db_item import DBItemModel, DBItem, DB_MODE_IMPORT
 
-from ..model.db_item import load_lookup_table
+from ..model.project import Project
 from ..model.mask import Mask
 
 
 class FrmMask(QDialog, Ui_Mask):
 
-    def __init__(self, parent, qris_project, basis=None):
+    def __init__(self, parent, project: Project, mode: str, mask: Mask = None):
 
-        self.qris_project = qris_project
-        self.basis = basis
+        self.qris_project = project
+        self.mask = mask
 
         super(FrmMask, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowTitle('Create New Mask' if self.basis is None else 'Edit Mask Properties')
+        self.setWindowTitle('Create New Mask' if self.mask is None else 'Edit Mask Properties')
         self.buttonBox.accepted.connect(super(FrmMask, self).accept)
         self.buttonBox.rejected.connect(super(FrmMask, self).reject)
 
@@ -38,11 +37,12 @@ class FrmMask(QDialog, Ui_Mask):
         self.txtName.textChanged.connect(self.on_name_changed)
 
         # Masks
-        self.mask_types = load_lookup_table(qris_project.project_file, 'mask_types')
-        self.mask_types_model = DBItemModel(self.mask_types)
-        self.cboType.setModel(self.mask_types)
+        self.mask_types_model = DBItemModel(project.lookup_tables['mask_types'])
+        self.cboType.setModel(self.mask_types_model)
 
-        self.browse_source()
+        self.mode = mode
+        if mode == DB_MODE_IMPORT:
+            self.browse_source()
 
     def accept(self):
 
@@ -62,26 +62,28 @@ class FrmMask(QDialog, Ui_Mask):
             self.mask = Mask(id, self.txtName.text(), mask_type, description)
 
             # TODO: copy vector to project
+            # if self.mode == DB_MODE_IMPORT:
             # self.qris_project.copy_raster_to_project(self.txtSourcePath().text(), mask, self.txtProjectPath.text())
 
             conn.commit()
-            super(FrmBasis, self).accept()
+            super(FrmMask, self).accept()
 
         except Exception as ex:
             conn.rollback()
             if 'unique' in str(ex).lower():
-                QMessageBox.warning(self, 'Duplicate Name', "A basis dataset with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
             else:
-                QMessageBox.warning(self, 'Error Saving Basis', str(ex))
+                QMessageBox.warning(self, 'Error Saving Mask', str(ex))
 
     def on_name_changed(self, new_name):
 
-        if len(new_name) > 0:
-            _name, ext = os.path.splitext(self.txtSourcePath.text())
-            self.txtProjectPath.setText(os.path.join(BASIS_PARENT_FOLDER, self.qris_project.get_safe_file_name(new_name, ext)))
-        else:
-            self.txtProjectPath.setText('')
+        # if len(new_name) > 0:
+        #     _name, ext = os.path.splitext(self.txtSourcePath.text())
+        #     self.txtProjectPath.setText(os.path.join(BASIS_PARENT_FOLDER, self.qris_project.get_safe_file_name(new_name, ext)))
+        # else:
+        #     self.txtProjectPath.setText('')
+        print('TODO')
 
     def browse_source(self):
         # https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html
@@ -94,6 +96,6 @@ class FrmMask(QDialog, Ui_Mask):
         if uri is not None and uri.isValid():  # and uri.wkbType == 3:
             self.txtName.setText(os.path.splitext(os.path.basename(uri.uri))[0])
             self.txtName.selectAll()
-            self.txtSourcePath.setText(uri.uri)
+            # self.txtSourcePath.setText(uri.uri)
         else:
             self.reject()

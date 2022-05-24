@@ -3,7 +3,7 @@ from qgis.PyQt.QtCore import pyqtSlot, QModelIndex
 from qgis.PyQt.QtGui import QIcon, QStandardItem
 
 from ..model.assessment import ASSESSMENT_MACHINE_CODE
-from ..model.basis import BASIS_MACHINE_CODE
+from ..model.basemap import BASEMAP_MACHINE_CODE
 
 
 class ContextMenu(QMenu):
@@ -88,7 +88,7 @@ class ContextMenu(QMenu):
             'Create A New Assessment',
             ':/plugins/qris_toolbar/test_new.png'
         ),
-        BASIS_MACHINE_CODE: (
+        BASEMAP_MACHINE_CODE: (
             'Import An Existing Basis Dataset',
             ':/plugins/qris_toolbar/test_new.png'
         ),
