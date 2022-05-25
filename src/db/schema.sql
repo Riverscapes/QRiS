@@ -10,16 +10,17 @@ CREATE TABLE  methods (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- major question is whether a method is specific to the type of geometry used?
 -- methods could also be specific to whether the survey is being conducted in the field or on the desktop.
-INSERT INTO methods (fid, name,  description) VALUES (1, 'RIM', 'Riverscape Inundation Mapping');
-INSERT INTO methods (fid, name,  description) VALUES (2, 'Riverscape Units', 'Placeholder name for the streams need space stupidity');
-INSERT INTO methods (fid, name,  description) VALUES (3, 'Low-Tech Design', 'Documentation of a design or as-built low-tech structures');
-INSERT INTO methods (fid, name,  description) VALUES (4, 'Structural Elements', 'Survey of primary structural element types');
-INSERT INTO methods (fid, name,  description) VALUES (5, 'Geomorphic Units', 'In-channel geomorphic unit survey, could be out of channel as well, who fricken knows');
+INSERT INTO methods (fid, name, description) VALUES (1, 'RIM', 'Riverscape Inundation Mapping');
+INSERT INTO methods (fid, name, description) VALUES (2, 'Riverscape Units', 'Placeholder name for the streams need space stupidity');
+INSERT INTO methods (fid, name, description) VALUES (3, 'Low-Tech Design', 'Documentation of a design or as-built low-tech structures');
+INSERT INTO methods (fid, name, description) VALUES (4, 'Structural Elements', 'Survey of primary structural element types');
+INSERT INTO methods (fid, name, description) VALUES (5, 'Geomorphic Units', 'In-channel geomorphic unit survey, could be out of channel as well, who fricken knows');
 
 
 CREATE TABLE  lkp_metric_sources (
@@ -41,6 +42,7 @@ CREATE TABLE  layers (
     is_lookup BOOLEAN,
     geom_type TEXT,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -89,6 +91,7 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 CREATE TABLE  method_layers (
     method_id INTEGER REFERENCES methods(fid) ON DELETE CASCADE,
     layer_id INTEGER REFERENCES layers(fid) ON DELETE CASCADE,
+    metadata TEXT,
     CONSTRAINT pk_method_layers PRIMARY KEY (method_id, layer_id)
 );
 
@@ -119,12 +122,15 @@ CREATE TABLE lkp_context_layer_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_context_layer_types (fid, name) VALUES (1, 'aerial imagery');
-INSERT INTO lkp_context_layer_types (fid, name) VALUES (2, 'detrended dem');
-INSERT INTO lkp_context_layer_types (fid, name) VALUES (3, 'other');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (1, 'Aerial imagery');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (2, 'DEM');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (3, 'Detrended DEM');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (4, 'Hillshade');
+INSERT INTO lkp_context_layer_types (fid, name) VALUES (5, 'Other');
 
 -- so, can these be vector and raster? does it matter?
 CREATE TABLE context_layers (
@@ -133,6 +139,7 @@ CREATE TABLE context_layers (
     type_id INTEGER REFERENCES lkp_context_layer_types(fid) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     path TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -142,6 +149,7 @@ CREATE TABLE projects (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     created_by TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -153,6 +161,7 @@ CREATE TABLE assessments (
     name TEXT UNIQUE NOT NULL,
     epoch TEXT,
     description TEXT,
+    metadata TEXT,
     start_date DATE,
     end_date DATE,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -171,6 +180,7 @@ CREATE TABLE assessment_methods (
     method_id INTEGER REFERENCES methods(fid) ON DELETE CASCADE,
     platform_id INTEGER REFERENCES lkp_platform(fid) ON DELETE CASCADE,
     description TEXT,
+    metadata TEXT,
     date DATE,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -185,6 +195,7 @@ CREATE TABLE basemaps (
     -- type will likely be populated from a lookup. e.g., imagery, dem, lidar, etc....
     type TEXT,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -195,7 +206,7 @@ CREATE TABLE assessment_basemaps (
 
 CREATE TABLE lkp_mask_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL
+    name TEXT UNIQUE NOT NULL,
 );
 
 -- need to review these types. I'm not totally sure that this is necessary in a table.
@@ -209,6 +220,7 @@ CREATE TABLE masks (
     name TEXT UNIQUE NOT NULL,
     mask_type_id INTEGER NOT NULL REFERENCES masks(fid),
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -216,12 +228,14 @@ ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(fid) ON DE
 -- ALTER TABLE mask_features ADD COLUMN name TEXT;
 ALTER TABLE mask_features ADD COLUMN position INTEGER;
 ALTER TABLE mask_features ADD COLUMN description TEXT;
+ALTER TABLE mask_features ADD COLUMN metadata TEXT;
 
 
 CREATE TABLE calculations (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -231,6 +245,7 @@ CREATE TABLE metrics (
     calculation_id INTEGER REFERENCES calculations(fid) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -242,6 +257,7 @@ CREATE TABLE metric_values (
     assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE,
     metric_source_id INTEGER REFERENCES metric_sources(fid) ON DELETE CASCADE,
     value NUMERIC,
+    metadata TEXT,
     Uncertainty NUMERIC,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
