@@ -1,3 +1,4 @@
+from locale import CODESET
 import os
 import sqlite3
 
@@ -26,7 +27,7 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
 
-from .qt_user_role import item_code
+from ..model.assessment import ASSESSMENT_MACHINE_CODE
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
@@ -79,7 +80,7 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
     # Create the layer group list and set the target assessment group
     project_group_name = str(method_layers[0]['project_name'])
     assessment_group_name = str(method_layers[0]['assessment_id']) + '-' + method_layers[0]['assessment_name']
-    group_lineage = [project_group_name, 'Assessments', assessment_group_name]
+    group_lineage = [project_group_name, ASSESSMENT_MACHINE_CODE, assessment_group_name]
     assessment_group = set_target_layer_group(group_lineage)
 
     # now loop through each layer and see if they need to be added
@@ -131,16 +132,20 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
                 pass
 
 
-# ---------- ASSESSMENT GROUP STUFF -----------
-# TODO: This could be written with the findGroup method which doesn't depend on children.
+# ---------- GROUP STUFF -----------
+
+
 def set_target_layer_group(group_list: list) -> QgsLayerTreeGroup:
     """
     Looks for each item in the group_list recursively adding missing children as needed.
     group_list should consist of needed strings for text matching at each level of the tree heierarchy.
     returns the target group at which layers should be added.
     """
-    # This is maybe kinda working for now
     # get the layer tree root and set to group to start
+    # TODO: consider adding cusome properties to groups using for identification in the tree.
+    # from ..model.assessment import ASSESSMENT_MACHINE_CODE
+    # 'qris_type': ASSESSMENT_MACHINE_CODE
+    # 'qris_id': fid
     group = QgsProject.instance().layerTreeRoot()
     # set the list of group names to search
     for group_name in group_list:
@@ -149,6 +154,7 @@ def set_target_layer_group(group_list: list) -> QgsLayerTreeGroup:
             new_group = group.addGroup(group_name)
             group = new_group
         else:
+            # if it is there set it as the next group to search
             group = next(child for child in group.children() if child.name() == group_name)
     return group
 
@@ -158,6 +164,7 @@ def add_lookup_table(layer: dict):
     """Checks if a lookup table has been added as private in the current QGIS session"""
     # Check if the lookup table has been added
     # TODO make sure the lookup tables are actually from the correct project geopackage
+    # TODO Use custom properties to double check that the correct layers are being used
     if len(QgsProject.instance().mapLayersByName(layer['fc_name'])) == 0:
         lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
         # TODO consider adding and then marking as private instead of using the False flag
