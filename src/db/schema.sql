@@ -206,7 +206,7 @@ CREATE TABLE assessment_basemaps (
 
 CREATE TABLE lkp_mask_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT UNIQUE NOT NULL
 );
 
 -- need to review these types. I'm not totally sure that this is necessary in a table.
@@ -255,7 +255,7 @@ CREATE TABLE metric_values (
     mask_feature_id INTEGER REFERENCES mask_features(fid) ON DELETE CASCADE,
     metric_id INTEGER REFERENCES metrics(fid) ON DELETE CASCADE,
     assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE,
-    metric_source_id INTEGER REFERENCES metric_sources(fid) ON DELETE CASCADE,
+--     metric_source_id INTEGER REFERENCES metric_sources(fid) ON DELETE CASCADE,
     value NUMERIC,
     metadata TEXT,
     Uncertainty NUMERIC,
@@ -488,34 +488,34 @@ ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_veget
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables that created using ddl.
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("methods", "attributes", "methods", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("layers", "attributes", "layers", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("context_layers", "attributes", "context_layers", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("method_layers", "attributes", "method_layers", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("projects", "attributes", "projects", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessments", "attributes", "assessments", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessment_methods", "attributes", "assessment_methods", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("bases", "attributes", "bases", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("assessment_bases", "attributes", "assessment_bases", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("masks", "attributes", "masks", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("calculations", "attributes", "calculations", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("metrics", "attributes", "metrics", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("metric_values", "attributes", "metric_values", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('methods', 'attributes', 'methods', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('layers', 'attributes', 'layers', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('context_layers', 'attributes', 'context_layers', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('method_layers', 'attributes', 'method_layers', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('projects', 'attributes', 'projects', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('assessments', 'attributes', 'assessments', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('assessment_methods', 'attributes', 'assessment_methods', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('bases', 'attributes', 'bases', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('assessment_bases', 'attributes', 'assessment_bases', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metrics', 'attributes', 'metrics', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metric_values', 'attributes', 'metric_values', 0);
 
 -- LOOKUP TABLES
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_metric_sources", "attributes", "lkp_metric_sources", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_platform", "attributes", "lkp_platform", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_mask_types", "attributes", "lkp_mask_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_source", "attributes", "lkp_structure_source", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_dam_integrity", "attributes", "lkp_dam_integrity", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_beaver_maintenance", "attributes", "lkp_beaver_maintenance", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_thalweg_types", "attributes", "lkp_thalweg_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_riverscape_unit_types", "attributes", "lkp_riverscape_unit_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_junction_types", "attributes", "lkp_junction_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_geomorphic_unit_types", "attributes", "lkp_geomorphic_unit_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_vegetation_extent_types", "attributes", "lkp_vegetation_extent_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_cem_phase_types", "attributes", "lkp_cem_phase_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_floodplain_accessibility_types", "attributes", "lkp_floodplain_accessibility_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_brat_vegetation_types", "attributes", "lkp_brat_vegetation_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_context_layer_types", "attributes", "lkp_context_layer_types", 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_inundation_extent_types", "attributes", "lkp_inundation_extent_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_metric_sources', 'attributes', 'lkp_metric_sources', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_platform', 'attributes', 'lkp_platform', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_mask_types', 'attributes', 'lkp_mask_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_source', 'attributes', 'lkp_structure_source', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_dam_integrity', 'attributes', 'lkp_dam_integrity', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_beaver_maintenance', 'attributes', 'lkp_beaver_maintenance', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_thalweg_types', 'attributes', 'lkp_thalweg_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_riverscape_unit_types', 'attributes', 'lkp_riverscape_unit_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_junction_types', 'attributes', 'lkp_junction_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_geomorphic_unit_types', 'attributes', 'lkp_geomorphic_unit_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_vegetation_extent_types', 'attributes', 'lkp_vegetation_extent_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_cem_phase_types', 'attributes', 'lkp_cem_phase_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_floodplain_accessibility_types', 'attributes', 'lkp_floodplain_accessibility_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_types', 'attributes', 'lkp_brat_vegetation_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_context_layer_types', 'attributes', 'lkp_context_layer_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_inundation_extent_types', 'attributes', 'lkp_inundation_extent_types', 0);
