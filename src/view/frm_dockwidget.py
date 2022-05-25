@@ -382,7 +382,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
             if isinstance(model_data, Assessment):
-                self.add_context_menu_item('Add Assessment To Map', 'test_add_map.png', lambda: self.add_assessment_to_map(model_data))
+                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: self.add_assessment_to_map(model_data))
+            else:
+                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: self.add_to_map(model_data))
+
+            self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_data))
+            self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
 
         # if item_type == 'project_root':
         #     self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
@@ -484,6 +489,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
     def add_assessment_to_map(self, assessment):
         for method_id in assessment.methods.keys():
             add_assessment_method_to_map(self.project, method_id)
+
+    def add_to_map(self, db_item: DBItem):
+        add_assessment_method_to_map(self.project, db_item)
+
+    def edit_item(self, db_item: DBItem):
+        QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
+
+    def delete_item(self, db_item: DBItem):
+        QMessageBox.warning(self, 'Delete', 'Deleting items is not yet implemented.')
 
     def add_design(self):
         """Initiates adding a new design"""

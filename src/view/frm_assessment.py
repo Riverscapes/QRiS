@@ -11,6 +11,7 @@ from ..qris_project import QRiSProject
 from ..QRiS.functions import create_geopackage_table
 
 from ..model.assessment import add_assessment
+from ..model.db_item import DBItemModel
 from .ui.assessment import Ui_Assessment
 
 
@@ -96,19 +97,23 @@ class FrmAssessment(QDialog, Ui_Assessment):
         self.vwMethods.setModel(self.methods_model)
         self.vwMethods.setModelColumn(1)
 
-        # Bases
-        self.bases_model = QStandardItemModel()
-        conn = sqlite3.connect(qris_project.project_file)
-        curs = conn.cursor()
-        curs.execute('SELECT fid, name FROM bases ORDER BY name')
-        for row in curs.fetchall():
-            item = QStandardItem(row[1])
-            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
-            self.bases_model.appendRow(item)
+        # Basemaps
 
-        self.vwBasis.setModel(self.bases_model)
-        self.vwBasis.setModelColumn(1)
+        self.basemaps_model = DBItemModel(qris_project.basemaps)
+        self.vwBasis.setModel(self.basemaps_model)
+
+        # self.bases_model = QStandardItemModel()
+        # conn = sqlite3.connect(qris_project.project_file)
+        # curs = conn.cursor()
+        # curs.execute('SELECT fid, name FROM bases ORDER BY name')
+        # for row in curs.fetchall():
+        #     item = QStandardItem(row[1])
+        #     item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        #     item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
+        #     self.bases_model.appendRow(item)
+
+        # self.vwBasis.setModel(self.bases_model)
+        # self.vwBasis.setModelColumn(1)
 
     def accept(self):
 
