@@ -18,6 +18,8 @@ from ..model.db_item import DBItemModel, DBItem, DB_MODE_IMPORT
 from ..model.project import Project
 from ..model.mask import Mask
 
+from ..processing_provider.feature_class_functions import check_geometry_type
+
 
 class FrmMask(QDialog, Ui_Mask):
 
@@ -93,7 +95,12 @@ class FrmMask(QDialog, Ui_Mask):
         frm_browse.exec()
         uri = frm_browse.uri()
         # TODO: check only polygon geometry
-        if uri is not None and uri.isValid():  # and uri.wkbType == 3:
+        if uri is not None and uri.isValid():
+
+            if uri.wkbType != 3:
+                QMessageBox.warning(self, 'Invalid Geometry Type', "Masks can only be of geometry type 'polygon'.")
+                self.reject()
+
             self.txtName.setText(os.path.splitext(os.path.basename(uri.uri))[0])
             self.txtName.selectAll()
             # self.txtSourcePath.setText(uri.uri)
