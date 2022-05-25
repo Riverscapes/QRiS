@@ -3,6 +3,7 @@ import os
 import sqlite3
 
 from random import randint, randrange
+from urllib.parse import non_hierarchical
 
 
 from PyQt5.QtWidgets import QMessageBox
@@ -27,7 +28,13 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
 
-from ..model.assessment import ASSESSMENT_MACHINE_CODE
+from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
+from ..model.mask import MASK_MACHINE_CODE, Mask
+
+from ..model.db_item import DBItem
+from ..model.mask import Mask
+from ..model.basemap import Basemap
+from ..model.project import Project
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
@@ -40,9 +47,54 @@ def dict_factory(cursor, row):
     return d
 
 
-def add_assessment_method_to_map(qris_project, assessment_method_id: int):
+def add_basemap_to_map(qris_project: Project, basemap: Basemap) -> None:
+    basemap_id = basemap.id
+    basemap_name = basemap.name
+
+
+def add_mask_to_map(qris_project: Project, mask: Mask) -> None:
+    mask_id = mask.id
+    mask_name = mask.name
+    project_name = qris_project.name
+
+    # First, check if the layer is there
+    # TODO Be sure you're checking the right shit by adding properties
+    if not len(QgsProject.instance().mapLayersByName(mask_name)) == 0:
+        QMessageBox.information(None, 'Add Mask Layer', 'The layer is already on the map')
+    else:
+        # Create a layer from the table
+        mask_feature_path = qris_project.project_file + '|layername=' + 'mask_features'
+        mask_feature_layer = QgsVectorLayer(mask_feature_path, mask_name, 'ogr')
+        QgsProject.instance().addMapLayer(mask_feature_layer, False)
+        # hit it with qml
+        qml = os.path.join(symbology_path, 'symbology', 'masks.qml')
+        mask_feature_layer.loadNamedStyle(qml)
+        # set the substring
+        mask_feature_layer.setSubsetString('mask_id = ' + str(mask_id))
+        # Set a parent assessment variable
+        QgsExpressionContextUtils.setLayerVariable(mask_feature_layer, 'mask_id', mask_id)
+        # Set the default value from the variable
+        mask_field_index = mask_feature_layer.fields().indexFromName('mask_id')
+        mask_feature_layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue("@mask_id"))
+
+        # setup fields
+        set_hidden(mask_feature_layer, 'fid', 'Mask Feature ID')
+        set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
+        set_alias(mask_feature_layer, 'position', 'Position')
+        set_alias(mask_feature_layer, 'description', 'Description')
+        set_alias(mask_feature_layer, 'metadata', 'Metadata')
+        set_virtual_dimension(mask_feature_layer, 'area')
+
+        # Get the target group and add it to the map
+        group_lineage = [project_name, MASK_MACHINE_CODE]
+        mask_group = set_target_layer_group(group_lineage)
+        mask_group.addLayer(mask_feature_layer)
+
+
+def add_assessment_method_to_map(qris_project, assessment_method_id: int) -> None:
     """Starts with an assessment_method_id and then adds all of the filtered layers for that assessment and method"""
     # First, check if the assessments table has been added as hidden in the project, if not add it
+    # TODO add a property to this so to ensure that it is from the project database
     if len(QgsProject.instance().mapLayersByName('assessments')) == 0:
         assessments_path = qris_project.project_file + '|layername=' + 'assessments'
         assessments_layer = QgsVectorLayer(assessments_path, 'assessments', 'ogr')
@@ -78,6 +130,7 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
     conn.close()
 
     # Create the layer group list and set the target assessment group
+    # TODO this is actually in the qris_project object, just use that
     project_group_name = str(method_layers[0]['project_name'])
     assessment_group_name = str(method_layers[0]['assessment_id']) + '-' + method_layers[0]['assessment_name']
     group_lineage = [project_group_name, ASSESSMENT_MACHINE_CODE, assessment_group_name]
@@ -133,8 +186,6 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int):
 
 
 # ---------- GROUP STUFF -----------
-
-
 def set_target_layer_group(group_list: list) -> QgsLayerTreeGroup:
     """
     Looks for each item in the group_list recursively adding missing children as needed.
@@ -160,7 +211,7 @@ def set_target_layer_group(group_list: list) -> QgsLayerTreeGroup:
 
 
 # -------- LAYER SPECIFIC ADD TO MAP FUNCTIONS ---------
-def add_lookup_table(layer: dict):
+def add_lookup_table(layer: dict) -> None:
     """Checks if a lookup table has been added as private in the current QGIS session"""
     # Check if the lookup table has been added
     # TODO make sure the lookup tables are actually from the correct project geopackage
@@ -171,7 +222,7 @@ def add_lookup_table(layer: dict):
         QgsProject.instance().addMapLayer(lookup_layer, False)
 
 
-def add_dam_crests(map_layer: QgsVectorLayer):
+def add_dam_crests(map_layer: QgsVectorLayer) -> None:
     set_hidden(map_layer, 'fid', 'Dam Crests ID')
     set_hidden(map_layer, 'assessment_id', 'Assessment ID')
     set_value_relation(map_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
@@ -181,7 +232,7 @@ def add_dam_crests(map_layer: QgsVectorLayer):
     set_virtual_dimension(map_layer, 'length')
 
 
-def add_dams(map_layer: QgsVectorLayer):
+def add_dams(map_layer: QgsVectorLayer) -> None:
     set_hidden(map_layer, 'fid', 'Dam ID')
     set_hidden(map_layer, 'assessment_id', 'Assessment ID')
     set_value_relation(map_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
@@ -191,7 +242,7 @@ def add_dams(map_layer: QgsVectorLayer):
     set_alias(map_layer, 'height', 'Dam Height')
 
 
-def add_jams(map_layer: QgsVectorLayer):
+def add_jams(map_layer: QgsVectorLayer) -> None:
     set_hidden(map_layer, 'fid', 'Jam ID')
     set_hidden(map_layer, 'assessment_id', 'Assessment ID')
     set_value_relation(map_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
@@ -202,14 +253,14 @@ def add_jams(map_layer: QgsVectorLayer):
     set_alias(map_layer, 'height', 'Jam Height')
 
 
-def add_inundation_extents(map_layer: QgsVectorLayer):
+def add_inundation_extents(map_layer: QgsVectorLayer) -> None:
     set_hidden(map_layer, 'fid', 'Extent ID')
     set_hidden(map_layer, 'assessment_id', 'Assessment ID')
     set_value_relation(map_layer, 'type_id', 'lkp_inundation_extent_types', 'Extent Type')
     set_virtual_dimension(map_layer, 'area')
 
 
-def add_thalwegs(map_layer: QgsVectorLayer):
+def add_thalwegs(map_layer: QgsVectorLayer) -> None:
     set_hidden(map_layer, 'fid', 'Thalweg ID')
     set_hidden(map_layer, 'assessment_id', 'Assessment ID')
     set_value_relation(map_layer, 'type_id', 'lkp_thalweg_types', 'Thalweg Type')
@@ -217,7 +268,7 @@ def add_thalwegs(map_layer: QgsVectorLayer):
 
 
 # ------ SETTING FIELD AND FORM PROPERTIES -------
-def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True):
+def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True) -> None:
     """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
     # value relation widget configuration. Just add the Layer name
     lookup_config = {
@@ -242,7 +293,15 @@ def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_
     map_layer.setEditFormConfig(form_config)
 
 
-def set_hidden(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
+def set_multiline_text(map_layer: QgsVectorLayer, field_name: str, field_alis: str) -> None:
+    # fields = map_layer.fields()
+    # field_index = fields.indexFromName(field_name)
+    # widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
+    # map_layer.setEditorWidgetSetup(field_index, widget_setup)
+    pass
+
+
+def set_hidden(map_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
     """Sets a field to hidden, read only, and also sets an alias just in case. Often used on fid, project_id, and assessment_id"""
     fields = map_layer.fields()
     field_index = fields.indexFromName(field_name)
@@ -254,7 +313,7 @@ def set_hidden(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
     map_layer.setEditorWidgetSetup(field_index, widget_setup)
 
 
-def set_alias(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
+def set_alias(map_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
     """Just provides an alias to the field for display"""
     fields = map_layer.fields()
     field_index = fields.indexFromName(field_name)
@@ -262,7 +321,7 @@ def set_alias(map_layer: QgsVectorLayer, field_name: str, field_alias: str):
 
 
 # ----- CREATING VIRTUAL FIELDS --------
-def set_virtual_dimension(map_layer: QgsVectorLayer, dimension: str):
+def set_virtual_dimension(map_layer: QgsVectorLayer, dimension: str) -> None:
     """dimension should be 'area' or 'length'
     sets a virtual length field named vrt_length
     aliases the field as Length

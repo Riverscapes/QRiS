@@ -53,6 +53,7 @@ from ..QRiS.manage_map import add_to_map
 
 # testing a new function
 from ..QRiS.method_to_map import add_assessment_method_to_map
+from ..QRiS.method_to_map import add_mask_to_map
 
 from ..ui.elevation_dockwidget import ElevationDockWidget
 from ..ui.project_extent_dialog import ProjectExtentDlg
@@ -491,7 +492,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             add_assessment_method_to_map(self.project, method_id)
 
     def add_to_map(self, db_item: DBItem):
-        add_assessment_method_to_map(self.project, db_item)
+        add_mask_to_map(self.project, db_item)
 
     def edit_item(self, db_item: DBItem):
         QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')

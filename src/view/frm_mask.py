@@ -18,7 +18,7 @@ from ..model.db_item import DBItemModel, DBItem, DB_MODE_IMPORT
 from ..model.project import Project
 from ..model.mask import Mask
 
-from ..processing_provider.feature_class_functions import check_geometry_type
+# from ..processing_provider.feature_class_functions import check_geometry_type
 
 
 class FrmMask(QDialog, Ui_Mask):
