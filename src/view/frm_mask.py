@@ -1,5 +1,4 @@
 import os
-import sqlite3
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
@@ -11,12 +10,13 @@ from ..QRiS.functions import create_geopackage_table
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer
 
-from .ui.mask import Ui_Mask
 from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap
 from ..model.db_item import DBItemModel, DBItem, DB_MODE_IMPORT
-
 from ..model.project import Project
-from ..model.mask import Mask, delete_mask, insert_mask
+from ..model.mask import Mask, insert_mask
+
+from .ui.mask import Ui_Mask
+
 
 from ..processing_provider.feature_class_functions import import_mask
 
@@ -72,22 +72,13 @@ class FrmMask(QDialog, Ui_Mask):
                 import_mask(self.import_source_path, self.qris_project.project_file, self.mask.id)
             except Exception as ex:
                 try:
-                    delete_mask(self.qris_project.project_file, self.mask.id)
-                except:
+                    self.mask.delete(self.qris_project.project_file)
+                except Exception as ex:
                     print('Error attempting to delete mask after the importing of features failed.')
                 QMessageBox.warning(self, 'Error Importing Mask Features', str(ex))
                 return
 
         super(FrmMask, self).accept()
-
-    def on_name_changed(self, new_name):
-
-        # if len(new_name) > 0:
-        #     _name, ext = os.path.splitext(self.txtSourcePath.text())
-        #     self.txtProjectPath.setText(os.path.join(BASIS_PARENT_FOLDER, self.qris_project.get_safe_file_name(new_name, ext)))
-        # else:
-        #     self.txtProjectPath.setText('')
-        print('TODO')
 
     def browse_source(self):
         # https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html

@@ -29,16 +29,13 @@ def import_mask(source_path: str, dest_path: str, mask_id: int) -> None:
 
     for src_feature in src_layer:
         geom = src_feature.GetGeometryRef()
-        print(geom.IsValid())
         geom.Transform(transform)
         # print(geom.ExportToJson())
-        print(geom.IsValid())
 
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
         dst_feature.SetField('mask_id', mask_id)
         err = dst_layer.CreateFeature(dst_feature)
-        print(err)
         dst_feature = None
 
     src_dataset = None

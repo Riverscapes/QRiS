@@ -6,10 +6,27 @@ MASK_MACHINE_CODE = 'Mask'
 
 class Mask(DBItem):
 
-    def __init__(self, id: int, name: str, mask_type, description: str):
-        super().__init__(id, name)
+    def __init__(self, id: int, name: str, mask_type: DBItem, description: str):
+        super().__init__('masks', id, name)
         self.description = description
         self.mask_type = mask_type
+
+    def update(self, db_path: str, name: str, mask_type: DBItem, description: str) -> None:
+
+        description = description if len(description) > 0 else None
+        with sqlite3.connect(db_path) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute('UPDATE masks SET name = ?, mask_type = ?, description = ? WHERE mask_id = ?', [name, mask_type.id, description, self.id])
+                conn.commit()
+
+                self.name = name
+                self.mask_type = mask_type
+                self.description = description
+
+            except Exception as ex:
+                conn.rollback()
+                raise ex
 
 
 def load_masks(curs: sqlite3.Cursor, mask_types: dict) -> dict:
@@ -26,6 +43,7 @@ def load_masks(curs: sqlite3.Cursor, mask_types: dict) -> dict:
 def insert_mask(db_path: str, name: str, mask_type: DBItem, description: str) -> Mask:
 
     mask = None
+    description = description if len(description) > 0 else None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
@@ -40,16 +58,3 @@ def insert_mask(db_path: str, name: str, mask_type: DBItem, description: str) ->
             raise ex
 
     return mask
-
-
-def delete_mask(db_path: str, mask_id: int):
-
-    with sqlite3.connect(db_path) as conn:
-        try:
-            curs = conn.cursor()
-            curs.execute('DELETE FROM masks WHERE mask_id = ?', [mask_id])
-            conn.commit()
-
-        except Exception as ex:
-            conn.rollback()
-            raise ex

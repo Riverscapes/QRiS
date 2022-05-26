@@ -71,7 +71,7 @@ class Ui_Basis(object):
         _translate = QtCore.QCoreApplication.translate
         Basis.setWindowTitle(_translate("Basis", "Dialog"))
         self.label.setText(_translate("Basis", "Name"))
-        self.chkAddToMap.setText(_translate("Basis", "Add Basis to Map"))
+        self.chkAddToMap.setText(_translate("Basis", "Add to Map"))
         self.lblProjectPath.setText(_translate("Basis", "Project path"))
         self.label_3.setText(_translate("Basis", "Clip to mask"))
         self.label_2.setText(_translate("Basis", "Source path"))

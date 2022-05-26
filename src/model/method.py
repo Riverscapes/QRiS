@@ -5,7 +5,7 @@ from .db_item import DBItem, dict_factory
 class Method(DBItem):
 
     def __init__(self, id: int, name: str, description: str):
-        super().__init__(id, name)
+        super().__init__('methods', id, name)
         self.description = description
 
 

@@ -28,7 +28,7 @@ class FrmBasis(QDialog, Ui_Basis):
 
         super(FrmBasis, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowTitle('Create New Basis' if self.basis is None else 'Edit Basis Properties')
+        self.setWindowTitle('Create New Basemap' if self.basis is None else 'Edit Basemap Properties')
         self.buttonBox.accepted.connect(super(FrmBasis, self).accept)
         self.buttonBox.rejected.connect(super(FrmBasis, self).reject)
 
