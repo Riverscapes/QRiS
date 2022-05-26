@@ -20,7 +20,8 @@ INSERT INTO methods (fid, name, description) VALUES (1, 'RIM', 'Riverscape Inund
 INSERT INTO methods (fid, name, description) VALUES (2, 'Riverscape Units', 'Placeholder name for the streams need space stupidity');
 INSERT INTO methods (fid, name, description) VALUES (3, 'Low-Tech Design', 'Documentation of a design or as-built low-tech structures');
 INSERT INTO methods (fid, name, description) VALUES (4, 'Structural Elements', 'Survey of primary structural element types');
-INSERT INTO methods (fid, name, description) VALUES (5, 'Geomorphic Units', 'In-channel geomorphic unit survey, could be out of channel as well, who fricken knows');
+INSERT INTO methods (fid, name, description) VALUES (5, 'Geomorphic Units', 'Some sort of riverscape feature classification, who fricken knows');
+INSERT INTO methods (fid, name, description) VALUES (6, 'Channel Units', 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
 
 
 CREATE TABLE  lkp_metric_sources (
@@ -68,6 +69,8 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL);
 
 -- Lookup Tables
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
@@ -86,6 +89,10 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (113, 'lkp_brat_vegetation_types', 'Brat Vegetation Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (114, 'lkp_context_layer_types', 'Context Layer Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (115, 'lkp_inundation_extent_types', 'Inundation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (116, 'lkp_channel_primary', 'Primary Channel Type', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (117, 'lkp_unit_primary', 'Primary Unit Type', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (118, 'lkp_structure_forced', 'Structure Forced', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (119, 'lkp_channel_unit_types', 'Channel Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
 
 CREATE TABLE  method_layers (
@@ -117,6 +124,15 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (3, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 22);
+-- Channel Units
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 22);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 23);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 116);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 117);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 118);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 119);
+
+
 
 CREATE TABLE lkp_context_layer_types (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -464,8 +480,6 @@ INSERT INTO lkp_floodplain_accessibility_types (fid, name) VALUES (4, 'Fully Acc
 ALTER TABLE floodplain_accessibilities ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
 ALTER TABLE floodplain_accessibilities ADD COLUMN type_id INTEGER REFERENCES lkp_floodplain_accessibility_types(fid) ON DELETE CASCADE;
 
--- zoi_extents
--- ALTER TABLE zoi_extents ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
 
 -- brat vegetation
 CREATE TABLE lkp_brat_vegetation_types (
@@ -485,6 +499,78 @@ INSERT INTO lkp_brat_vegetation_types (fid, name) VALUES (5, 'Unsuitable');
 ALTER TABLE brat_vegetation ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
 ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_vegetation_types(fid) ON DELETE CASCADE;
 
+
+-- channel unit layers
+CREATE TABLE lkp_channel_unit_types (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_channel_unit_types (fid, name) VALUES (1, 'Concavity');
+INSERT INTO lkp_channel_unit_types (fid, name) VALUES (2, 'Convexity');
+INSERT INTO lkp_channel_unit_types (fid, name) VALUES (3, 'Planar');
+INSERT INTO lkp_channel_unit_types (fid, name) VALUES (4, 'Pond');
+INSERT INTO lkp_channel_unit_types (fid, name) VALUES (5, 'NA');
+
+
+CREATE TABLE lkp_structure_forced (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_structure_forced (fid, name) VALUES (1, 'Artificial Structure');
+INSERT INTO lkp_structure_forced (fid, name) VALUES (2, 'Natural Structure');
+INSERT INTO lkp_structure_forced (fid, name) VALUES (3, 'Not Structure Forced');
+INSERT INTO lkp_structure_forced (fid, name) VALUES (4, 'NA');
+
+
+CREATE TABLE lkp_channel_primary (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_channel_primary (fid, name) VALUES (1, 'Primary Channel');
+INSERT INTO lkp_channel_primary (fid, name) VALUES (2, 'Non-Primary Channel');
+INSERT INTO lkp_channel_primary (fid, name) VALUES (3, 'NA');
+
+CREATE TABLE lkp_unit_primary (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_unit_primary (fid, name) VALUES (1, 'Primary Unit');
+INSERT INTO lkp_unit_primary (fid, name) VALUES (2, 'Non-Primary Unit');
+INSERT INTO lkp_unit_primary (fid, name) VALUES (3, 'NA');
+
+
+ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
+ALTER TABLE channel_unit_points ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_points ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_unit_primary(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_points ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_channel_primary(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_points ADD COLUMN length NUMERIC;
+ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
+ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
+ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
+
+ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
+ALTER TABLE channel_unit_polygons ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_polygons ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_unit_primary(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_channel_primary(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables that created using ddl.
@@ -519,3 +605,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_types', 'attributes', 'lkp_brat_vegetation_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_context_layer_types', 'attributes', 'lkp_context_layer_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_inundation_extent_types', 'attributes', 'lkp_inundation_extent_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_primary', 'attributes', 'lkp_channel_primary', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_unit_primary', 'attributes', 'lkp_unit_primary', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_unit_types', 'attributes', 'lkp_channel_unit_types', 0);

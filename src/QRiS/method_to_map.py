@@ -81,7 +81,7 @@ def add_mask_to_map(qris_project: Project, mask: Mask) -> None:
         set_hidden(mask_feature_layer, 'fid', 'Mask Feature ID')
         set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
         set_alias(mask_feature_layer, 'position', 'Position')
-        set_alias(mask_feature_layer, 'description', 'Description')
+        set_multiline(mask_feature_layer, 'description', 'Description')
         set_alias(mask_feature_layer, 'metadata', 'Metadata')
         set_virtual_dimension(mask_feature_layer, 'area')
 
@@ -194,9 +194,6 @@ def set_target_layer_group(group_list: list) -> QgsLayerTreeGroup:
     """
     # get the layer tree root and set to group to start
     # TODO: consider adding cusome properties to groups using for identification in the tree.
-    # from ..model.assessment import ASSESSMENT_MACHINE_CODE
-    # 'qris_type': ASSESSMENT_MACHINE_CODE
-    # 'qris_id': fid
     group = QgsProject.instance().layerTreeRoot()
     # set the list of group names to search
     for group_name in group_list:
@@ -293,12 +290,12 @@ def set_value_relation(map_layer: QgsVectorLayer, field_name: str, lookup_table_
     map_layer.setEditFormConfig(form_config)
 
 
-def set_multiline_text(map_layer: QgsVectorLayer, field_name: str, field_alis: str) -> None:
-    # fields = map_layer.fields()
-    # field_index = fields.indexFromName(field_name)
-    # widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
-    # map_layer.setEditorWidgetSetup(field_index, widget_setup)
-    pass
+def set_multiline(map_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
+    fields = map_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    widget_setup = QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False})
+    map_layer.setEditorWidgetSetup(field_index, widget_setup)
+    map_layer.setFieldAlias(field_index, field_alias)
 
 
 def set_hidden(map_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
