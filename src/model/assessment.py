@@ -76,20 +76,21 @@ def load_assessments(curs: sqlite3.Cursor, methods: dict, basemaps: dict) -> dic
     return assessments
 
 
-def add_assessment(db_path: str, name: str, description: str, methods: list, basemaps: list) -> Assessment:
+def insert_assessment(db_path: str, name: str, description: str, methods: list, basemaps: list) -> Assessment:
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = dict_factory
-    curs = conn.cursor()
-    curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [name, description if len(description) > 1 else None])
-    assessment_id = curs.lastrowid
+    description = description if len(description) > 0 else None
+    with sqlite3.connect(db_path) as conn:
+        curs = conn.cursor()
+        try:
+            curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [name, description])
+            assessment_id = curs.lastrowid
 
-    curs.executemany("""INSERT INTO assessment_methods (assessment_id, method_id)
-                SELECT ?, fid FROM methods WHERE name = ?""", [(assessment_id, method.id) for method in methods])
+            curs.executemany('INSERT INTO assessment_methods (assessment_id, method_id) VALUES (?, ?)', [(assessment_id, method.id) for method in methods])
+            curs.executemany('INSERT INTO assessment_basemaps (assessment_id, basemap_id) VALUES (?, ?)', [(assessment_id, basemap.id) for basemap in basemaps])
 
-    curs.executemany("""INSERT INTO assessment_bases (assessment_id, base_id)
-                SELECT ?, fid FROM bases WHERE name = ?""", [(assessment_id, basemap.id) for basemap in basemaps])
-
-    conn.commit()
+            conn.commit()
+        except Exception as ex:
+            conn.rollback()
+            raise ex
 
     return Assessment(assessment_id, name, description, methods, basemaps)

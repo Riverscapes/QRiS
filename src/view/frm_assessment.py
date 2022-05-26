@@ -10,7 +10,7 @@ from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 from ..qris_project import QRiSProject
 from ..QRiS.functions import create_geopackage_table
 
-from ..model.assessment import add_assessment
+from ..model.assessment import insert_assessment
 from ..model.db_item import DBItemModel
 from .ui.assessment import Ui_Assessment
 
@@ -115,48 +115,48 @@ class FrmAssessment(QDialog, Ui_Assessment):
         # self.vwBasis.setModel(self.bases_model)
         # self.vwBasis.setModelColumn(1)
 
+        self.txtName.setFocus()
+
     def accept(self):
 
         if len(self.txtName.text()) < 1:
             QMessageBox.warning(self, 'Missing Assessment Name', 'You must provide an assessment name to continue.')
             self.txtName.setFocus()
-            return()
+            return
 
         methods = []
         for row in range(self.methods_model.rowCount()):
             index = self.methods_model.index(row, 0)
             check = self.methods_model.data(index, Qt.CheckStateRole)
             if check == Qt.Checked:
-                for method_id, method in self.qris_project.methods.items():
+                for method in self.qris_project.methods.values():
                     if method.name == self.methods_model.data(index, Qt.DisplayRole):
                         methods.append(method)
                         break
 
         if len(methods) < 1:
             QMessageBox.warning(self, 'No Methods Selected', 'You must select at least one method to continue.')
-            self.txtProjectName.setFocus()
-            return()
+            return
 
         basemaps = []
-        for row in range(self.bases_model.rowCount()):
-            index = self.bases_model.index(row, 0)
-            check = self.bases_model.data(index, Qt.CheckStateRole)
-            if check == Qt.Checked:
-                for basemap_id, basemap in self.qris_project.basemaps.items():
-                    if basemap.name == self.bases_model.data(index, Qt.DisplayRole):
-                        basemaps.append(basemap)
+        # for row in range(self.bases_model.rowCount()):
+        #     index = self.bases_model.index(row, 0)
+        #     check = self.bases_model.data(index, Qt.CheckStateRole)
+        #     if check == Qt.Checked:
+        #         for basemap in self.qris_project.basemaps.values():
+        #             if basemap.name == self.bases_model.data(index, Qt.DisplayRole):
+        #                 basemaps.append(basemap)
 
         try:
-            self.assessment = add_assessment(
+            self.assessment = insert_assessment(
                 self.qris_project.project_file,
-                self.qris_project.id,
                 self.txtName.text(),
                 self.txtDescription.toPlainText(),
                 methods,
                 basemaps
             )
 
-            self.qris_project.assessments.append(self.assessment)
+            self.qris_project.assessments[self.assessment.id] = self.assessment
             super().accept()
 
         except Exception as ex:
