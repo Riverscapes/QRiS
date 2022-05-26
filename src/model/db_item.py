@@ -9,9 +9,22 @@ DB_MODE_IMPORT = 'import'
 
 class DBItem():
 
-    def __init__(self, id: int, name: str):
+    def __init__(self, db_table_name: str, id: int, name: str):
+        self.db_table_name = db_table_name
         self.id = id
         self.name = name
+
+    def delete(self, db_path: str) -> None:
+
+        with sqlite3.connect(db_path) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute('DELETE FROM {} WHERE fid = ?'.format(self.db_table_name), [self.id])
+                conn.commit()
+
+            except Exception as ex:
+                conn.rollback()
+                raise ex
 
 
 class DBItemModel(QAbstractListModel):

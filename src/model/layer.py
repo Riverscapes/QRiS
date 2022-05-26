@@ -5,7 +5,7 @@ from .db_item import DBItem, dict_factory
 class Layer(DBItem):
 
     def __init__(self, id: int, fc_name: str, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str):
-        super().__init__(id, fc_name)
+        super().__init__('layers', id, fc_name)
         self.display_name = display_name
         self.qml = qml
         self.is_lookup = is_lookup

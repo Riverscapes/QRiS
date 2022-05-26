@@ -7,7 +7,7 @@ ASSESSMENT_MACHINE_CODE = 'Assessment'
 class Assessment(DBItem):
 
     def __init__(self, id: int, name: str, description: str, methods: dict, basemaps: dict):
-        super().__init__(id, name)
+        super().__init__('assessments', id, name)
         self.description = description
         self.methods = methods or {}
         self.basemaps = basemaps or {}

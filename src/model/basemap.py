@@ -9,19 +9,25 @@ BASEMAP_PARENT_FOLDER = 'basemaps'
 class Basemap(DBItem):
 
     def __init__(self, id: int, name: str, relative_project_path: str, description: str):
-        super().__init__(id, name)
+        super().__init__('basemaps', id, name)
         self.path = relative_project_path
         self.description = description
 
-    def update(self, curs: sqlite3.Cursor, name: str, description: str) -> None:
+    def update(self, db_path: str, name: str, description: str) -> None:
 
-        curs.execute('UPDATE basemaps SET name = ?, description = ?', [name, description])
-        self.name = name
-        self.description = description
+        description = description if len(description) > 0 else None
+        with sqlite3.connect(db_path) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute('UPDATE basemaps SET name = ?, description = ? WHERE fid = ?', [name, description, self.id])
+                conn.commit()
 
-    def delete(self, conn: sqlite3.Connection) -> None:
-        curs = conn.cursor()
-        curs.execute('DELETE FROM basemaps WHERE fid = ?', [self.id])
+                self.name = name
+                self.description = description
+
+            except Exception as ex:
+                conn.rollback()
+                raise ex
 
 
 def load_basemaps(curs: sqlite3.Cursor) -> dict:
@@ -33,3 +39,22 @@ def load_basemaps(curs: sqlite3.Cursor) -> dict:
         row['path'],
         row['description']
     ) for row in curs.fetchall()}
+
+
+def insert_basemap(db_path: str, name: str, path: str, description: str) -> Basemap:
+
+    result = None
+    with sqlite3.connect(db_path) as conn:
+        try:
+            curs = conn.cursor()
+            curs.execute('INSERT INTO basemaps (name, path, description) VALUES (?, ?, ?)', [name, path, description])
+            id = curs.lastrowid
+            result = Basemap(id, name, path, description)
+            conn.commit()
+
+        except Exception as ex:
+            result = None
+            conn.rollback()
+            raise ex
+
+    return result

@@ -375,7 +375,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             if model_data == ASSESSMENT_MACHINE_CODE:
                 self.add_context_menu_item('Add New Assessment', 'test_new.png', lambda: self.add_assessment(model_item))
             elif model_data == BASEMAP_MACHINE_CODE:
-                self.add_context_menu_item('Add New Base Dataset', 'test_new.png', lambda: self.add_basis(model_item))
+                self.add_context_menu_item('Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basis(model_item))
             elif model_data == MASK_MACHINE_CODE:
                 self.add_context_menu_item('Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                 self.add_context_menu_item('Import Existing Mask Feature Class', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
