@@ -44,28 +44,7 @@ class Project():
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))
 
     def get_absolute_path(self, relative_path: str) -> str:
-        return os.path.join(self.project_file, relative_path)
-
-    def copy_raster_to_project(self, source_path: str, mask_path, relative_path: str) -> str:
-
-        project_path = self.get_absolute_path(relative_path)
-
-        args = {
-            'INPUT': source_path,
-            'OUTPUT': project_path
-        }
-
-        if mask_path is not None:
-            args['OVERLAY'] = mask_path
-
-        # output_info = processing.run('native:clip', args)
-
-        # ds = gdal.Open(self.txtOriginalRasterPath.text())
-        # driver = gdal.GetDriverByName('GTiff')
-        # out_ds = driver.CreateCopy(out_raster, ds, strict=True)
-        # out_ds = None
-
-        return ''  # output_info['OUTPUT']
+        return os.path.join(os.path.dirname(self.project_file), relative_path)
 
     def get_safe_file_name(self, raw_name: str, ext: str = None):
         name = raw_name.strip().replace(' ', '_').replace('__', '_')

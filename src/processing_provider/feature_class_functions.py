@@ -1,6 +1,7 @@
 from osgeo import ogr
 from osgeo import osr
 from shapely.wkb import loads as wkbload, dumps as wkbdumps
+from osgeo.gdal import Warp, WarpOptions
 
 
 def check_geometry_type(path) -> int:
@@ -40,3 +41,21 @@ def import_mask(source_path: str, dest_path: str, mask_id: int) -> None:
 
     src_dataset = None
     dst_dataset = None
+
+
+def copy_raster_to_project(source_path: str, mask_tuple, output_path: str) -> None:
+    """
+    https://gdal.org/python/osgeo.gdal-module.html#WarpOptions
+    https://gis.stackexchange.com/questions/278627/using-gdal-warp-and-gdal-warpoptions-of-gdal-python-api
+    """
+
+    # You can use this WarpOptions to get a list of the possible options
+    # wo = WarpOptions(format: 'GTiff', cutl)
+
+    kwargs = {'format': 'GTiff'}
+    if mask_tuple is not None:
+        kwargs['cutlineDSName'] = mask_tuple[0]
+        kwargs['cutlineLayer'] = 'mask_features'
+        kwargs['cutlineWhere'] = 'mask_id = {}'.format(mask_tuple[1])
+
+    Warp(output_path, source_path, **kwargs)

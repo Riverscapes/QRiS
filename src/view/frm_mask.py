@@ -36,8 +36,6 @@ class FrmMask(QDialog, Ui_Mask):
 
         self.gridLayout.setGeometry(QRect(0, 0, self.width(), self.height()))
 
-        self.txtName.textChanged.connect(self.on_name_changed)
-
         # Masks
         self.mask_types_model = DBItemModel(project.lookup_tables['mask_types'])
         self.cboType.setModel(self.mask_types_model)
@@ -57,8 +55,7 @@ class FrmMask(QDialog, Ui_Mask):
 
         self.mask = None
         try:
-            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            self.mask = insert_mask(self.qris_project.project_file, self.txtName.text(), mask_type, description)
+            self.mask = insert_mask(self.qris_project.project_file, self.txtName.text(), mask_type, self.txtDescription.toPlainText())
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
