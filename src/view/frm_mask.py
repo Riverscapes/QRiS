@@ -18,7 +18,11 @@ from ..model.db_item import DBItemModel, DBItem, DB_MODE_IMPORT
 from ..model.project import Project
 from ..model.mask import Mask
 
+<<<<<<< HEAD
 # from ..processing_provider.feature_class_functions import check_geometry_type
+=======
+from ..processing_provider.feature_class_functions import import_mask
+>>>>>>> ecac017 (stubbing mask import)
 
 
 class FrmMask(QDialog, Ui_Mask):
@@ -67,6 +71,9 @@ class FrmMask(QDialog, Ui_Mask):
             # if self.mode == DB_MODE_IMPORT:
             # self.qris_project.copy_raster_to_project(self.txtSourcePath().text(), mask, self.txtProjectPath.text())
 
+            if self.mode == DB_MODE_IMPORT:
+                import_mask(self.import_source_path, self.qris_project.project_file, id)
+
             conn.commit()
             super(FrmMask, self).accept()
 
@@ -103,6 +110,6 @@ class FrmMask(QDialog, Ui_Mask):
 
             self.txtName.setText(os.path.splitext(os.path.basename(uri.uri))[0])
             self.txtName.selectAll()
-            # self.txtSourcePath.setText(uri.uri)
+            self.import_source_path = uri.uri
         else:
             self.reject()

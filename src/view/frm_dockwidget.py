@@ -78,7 +78,7 @@ from ..model.assessment import Assessment
 from ..model.assessment import ASSESSMENT_MACHINE_CODE
 from ..model.basemap import BASEMAP_MACHINE_CODE
 from ..model.mask import MASK_MACHINE_CODE
-from ..model.db_item import DBItem
+from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -134,7 +134,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         project_node.appendRow(assessment_node)
         [self.add_child_node(item, assessment_node, 'test_layers.png') for item in self.project.assessments.values()]
 
-        basemaps_node = QStandardItem('Bases')
+        basemaps_node = QStandardItem('Basemaps')
         basemaps_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
         basemaps_node.setData(BASEMAP_MACHINE_CODE, Qt.UserRole)
         project_node.appendRow(basemaps_node)
@@ -377,8 +377,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             elif model_data == BASEMAP_MACHINE_CODE:
                 self.add_context_menu_item('Add New Base Dataset', 'test_new.png', lambda: self.add_basis(model_item))
             elif model_data == MASK_MACHINE_CODE:
-                self.add_context_menu_item('Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, 'create'))
-                self.add_context_menu_item('Import Existing Mask Feature Class', 'test_new.png', lambda: self.import_mask(model_item, 'import'))
+                self.add_context_menu_item('Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
+                self.add_context_menu_item('Import Existing Mask Feature Class', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
             else:
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
