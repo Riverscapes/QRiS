@@ -89,8 +89,8 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (113, 'lkp_brat_vegetation_types', 'Brat Vegetation Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (114, 'lkp_context_layer_types', 'Context Layer Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (115, 'lkp_inundation_extent_types', 'Inundation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (116, 'lkp_channel_primary', 'Primary Channel Type', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (117, 'lkp_unit_primary', 'Primary Unit Type', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (116, 'lkp_primary_channel', 'Primary Channel Type', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (117, 'lkp_primary_unit', 'Primary Unit Type', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (118, 'lkp_structure_forced', 'Structure Forced', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (119, 'lkp_channel_unit_types', 'Channel Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
@@ -526,7 +526,7 @@ INSERT INTO lkp_structure_forced (fid, name) VALUES (3, 'Not Structure Forced');
 INSERT INTO lkp_structure_forced (fid, name) VALUES (4, 'NA');
 
 
-CREATE TABLE lkp_channel_primary (
+CREATE TABLE lkp_primary_channel (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
@@ -534,11 +534,11 @@ CREATE TABLE lkp_channel_primary (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_channel_primary (fid, name) VALUES (1, 'Primary Channel');
-INSERT INTO lkp_channel_primary (fid, name) VALUES (2, 'Non-Primary Channel');
-INSERT INTO lkp_channel_primary (fid, name) VALUES (3, 'NA');
+INSERT INTO lkp_primary_channel (fid, name) VALUES (1, 'Primary Channel');
+INSERT INTO lkp_primary_channel (fid, name) VALUES (2, 'Non-Primary Channel');
+INSERT INTO lkp_primary_channel (fid, name) VALUES (3, 'NA');
 
-CREATE TABLE lkp_unit_primary (
+CREATE TABLE lkp_primary_unit (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
@@ -546,16 +546,16 @@ CREATE TABLE lkp_unit_primary (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_unit_primary (fid, name) VALUES (1, 'Primary Unit');
-INSERT INTO lkp_unit_primary (fid, name) VALUES (2, 'Non-Primary Unit');
-INSERT INTO lkp_unit_primary (fid, name) VALUES (3, 'NA');
+INSERT INTO lkp_primary_unit (fid, name) VALUES (1, 'Primary Unit');
+INSERT INTO lkp_primary_unit (fid, name) VALUES (2, 'Non-Primary Unit');
+INSERT INTO lkp_primary_unit (fid, name) VALUES (3, 'NA');
 
 
 ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
 ALTER TABLE channel_unit_points ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(fid) ON DELETE CASCADE;
 ALTER TABLE channel_unit_points ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(fid) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_unit_primary(fid) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_channel_primary(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_points ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(fid) ON DELETE CASCADE;
 ALTER TABLE channel_unit_points ADD COLUMN length NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
@@ -564,8 +564,8 @@ ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
 ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
 ALTER TABLE channel_unit_polygons ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(fid) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(fid) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_unit_primary(fid) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_channel_primary(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(fid) ON DELETE CASCADE;
+ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(fid) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
 
 -- add to geopackage contents
@@ -601,7 +601,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_types', 'attributes', 'lkp_brat_vegetation_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_context_layer_types', 'attributes', 'lkp_context_layer_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_inundation_extent_types', 'attributes', 'lkp_inundation_extent_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_primary', 'attributes', 'lkp_channel_primary', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_unit_primary', 'attributes', 'lkp_unit_primary', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_channel', 'attributes', 'lkp_primary_channel', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_unit', 'attributes', 'lkp_primary_unit', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_unit_types', 'attributes', 'lkp_channel_unit_types', 0);

@@ -82,7 +82,7 @@ def add_mask_to_map(qris_project: Project, mask: Mask) -> None:
         set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
         set_alias(mask_feature_layer, 'position', 'Position')
         set_multiline(mask_feature_layer, 'description', 'Description')
-        set_alias(mask_feature_layer, 'metadata', 'Metadata')
+        set_hidden(mask_feature_layer, 'metadata', 'Metadata')
         set_virtual_dimension(mask_feature_layer, 'area')
 
         # Get the target group and add it to the map
@@ -100,8 +100,8 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int) -> Non
         assessments_layer = QgsVectorLayer(assessments_path, 'assessments', 'ogr')
         QgsProject.instance().addMapLayer(assessments_layer, False)
 
-    # 2. Queries the method_layers table and gets a list of layers required for that method -done
-    # a. also returns the parent assessment_id
+    # Queries the method_layers table and gets a list of layers required for that method -done
+    # TODO refactor this to return just necessary tables
     conn = sqlite3.connect(qris_project.project_file)
     conn.row_factory = dict_factory
     curs = conn.cursor()
@@ -151,7 +151,7 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int) -> Non
 
     # now deal with the spatial layers
     for layer in spatial_layers:
-        # check if the layer has already been added.
+        # check if the layer has already been added, probably better way to do this
         if len(QgsProject.instance().mapLayersByName(layer['ass_name'])) == 0:
             # if not make a layer out of it
             map_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
@@ -181,6 +181,10 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int) -> Non
                 add_dams(map_layer)
             elif fc_name == 'jams':
                 add_jams(map_layer)
+            elif fc_name == 'channel_unit_points':
+                add_channel_unit_points(map_layer)
+            elif fc_name == 'channel_unit_polygons':
+                add_channel_unit_polygons(map_layer)
             else:
                 pass
 
@@ -262,6 +266,31 @@ def add_thalwegs(map_layer: QgsVectorLayer) -> None:
     set_hidden(map_layer, 'assessment_id', 'Assessment ID')
     set_value_relation(map_layer, 'type_id', 'lkp_thalweg_types', 'Thalweg Type')
     set_virtual_dimension(map_layer, 'length')
+
+
+def add_channel_unit_points(map_layer: QgsVectorLayer) -> None:
+    set_hidden(map_layer, 'fid', 'Channel Unit ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'unit_type_id', 'lkp_channel_unit_types', 'Unit Type')
+    set_value_relation(map_layer, 'structure_forced_id', 'lkp_structure_forced', 'Structure Forced')
+    set_value_relation(map_layer, 'primary_channel_id', 'lkp_primary_channel', 'Primary Channel')
+    set_value_relation(map_layer, 'primary_unit_id', 'lkp_primary_unit', 'Primary Unit')
+    set_multiline(map_layer, 'description', 'Description')
+    set_alias(map_layer, 'length', 'Length')
+    set_alias(map_layer, 'width', 'Width')
+    set_alias(map_layer, 'depth', 'Depth')
+    set_alias(map_layer, 'percent_wetted', 'Percent Wetted')
+
+
+def add_channel_unit_polygons(map_layer: QgsVectorLayer) -> None:
+    set_hidden(map_layer, 'fid', 'Channel Unit ID')
+    set_hidden(map_layer, 'assessment_id', 'Assessment ID')
+    set_value_relation(map_layer, 'unit_type_id', 'lkp_channel_unit_types', 'Unit Type')
+    set_value_relation(map_layer, 'structure_forced_id', 'lkp_structure_forced', 'Structure Forced')
+    set_value_relation(map_layer, 'primary_channel_id', 'lkp_primary_channel', 'Primary Channel')
+    set_value_relation(map_layer, 'primary_unit_id', 'lkp_primary_unit', 'Primary Unit')
+    set_multiline(map_layer, 'description', 'Description')
+    set_alias(map_layer, 'percent_wetted', 'Percent Wetted')
 
 
 # ------ SETTING FIELD AND FORM PROPERTIES -------
