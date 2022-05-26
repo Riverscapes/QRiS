@@ -22,6 +22,7 @@ class Ui_Mask(object):
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
         self.chkAddToMap = QtWidgets.QCheckBox(Mask)
+        self.chkAddToMap.setChecked(True)
         self.chkAddToMap.setObjectName("chkAddToMap")
         self.gridLayout.addWidget(self.chkAddToMap, 3, 1, 1, 1)
         self.txtDescription = QtWidgets.QTextEdit(Mask)

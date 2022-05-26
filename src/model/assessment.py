@@ -76,7 +76,7 @@ def load_assessments(curs: sqlite3.Cursor, methods: dict, basemaps: dict) -> dic
     return assessments
 
 
-def add_assessment(db_path: str, project_id: int, name: str, description: str, methods: list, basemaps: list) -> Assessment:
+def add_assessment(db_path: str, name: str, description: str, methods: list, basemaps: list) -> Assessment:
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = dict_factory

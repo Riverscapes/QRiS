@@ -151,7 +151,6 @@ INSERT INTO lkp_context_layer_types (fid, name) VALUES (5, 'Other');
 -- so, can these be vector and raster? does it matter?
 CREATE TABLE context_layers (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
     type_id INTEGER REFERENCES lkp_context_layer_types(fid) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
@@ -173,7 +172,6 @@ CREATE TABLE projects (
 
 CREATE TABLE assessments (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
     epoch TEXT,
     description TEXT,
@@ -205,7 +203,6 @@ CREATE TABLE assessment_methods (
 CREATE TABLE basemaps (
     -- this table name is horid. try: contexts, evidences, base_rasters
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
     path TEXT UNIQUE NOT NULL,
     -- type will likely be populated from a lookup. e.g., imagery, dem, lidar, etc....
@@ -232,7 +229,6 @@ INSERT INTO lkp_mask_types (fid, name) VALUES (3, 'Area of Interest (AOI)');
 
 CREATE TABLE masks (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER REFERENCES projects(fid) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
     mask_type_id INTEGER NOT NULL REFERENCES masks(fid),
     description TEXT,

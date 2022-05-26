@@ -16,7 +16,7 @@ from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap
 from ..model.db_item import DBItemModel, DBItem, DB_MODE_IMPORT
 
 from ..model.project import Project
-from ..model.mask import Mask
+from ..model.mask import Mask, delete_mask, insert_mask
 
 <<<<<<< HEAD
 # from ..processing_provider.feature_class_functions import check_geometry_type
@@ -59,31 +59,30 @@ class FrmMask(QDialog, Ui_Mask):
 
         mask_type = self.cboType.currentData(Qt.UserRole)
 
-        conn = sqlite3.connect(self.qris_project.project_file)
+        self.mask = None
         try:
-            curs = conn.cursor()
             description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            curs.execute('INSERT INTO masks (name, project_id, mask_type_id, description) VALUES (?, ?, ?, ?)', [self.txtName.text(), self.qris_project.id, mask_type.id, description])
-            id = curs.lastrowid
-            self.mask = Mask(id, self.txtName.text(), mask_type, description)
-
-            # TODO: copy vector to project
-            # if self.mode == DB_MODE_IMPORT:
-            # self.qris_project.copy_raster_to_project(self.txtSourcePath().text(), mask, self.txtProjectPath.text())
-
-            if self.mode == DB_MODE_IMPORT:
-                import_mask(self.import_source_path, self.qris_project.project_file, id)
-
-            conn.commit()
-            super(FrmMask, self).accept()
-
+            self.mask = insert_mask(self.qris_project.project_file, self.txtName.text(), mask_type, description)
         except Exception as ex:
-            conn.rollback()
             if 'unique' in str(ex).lower():
                 QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
             else:
                 QMessageBox.warning(self, 'Error Saving Mask', str(ex))
+            return
+
+        if self.mode == DB_MODE_IMPORT:
+            try:
+                import_mask(self.import_source_path, self.qris_project.project_file, self.mask.id)
+            except Exception as ex:
+                try:
+                    delete_mask(self.qris_project.project_file, self.mask.id)
+                except:
+                    print('Error attempting to delete mask after the importing of features failed.')
+                QMessageBox.warning(self, 'Error Importing Mask Features', str(ex))
+                return
+
+        super(FrmMask, self).accept()
 
     def on_name_changed(self, new_name):
 
