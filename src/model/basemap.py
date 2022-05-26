@@ -34,7 +34,7 @@ def load_basemaps(curs: sqlite3.Cursor) -> dict:
 
     curs.execute('SELECT fid, name, path, type, description FROM basemaps')
     return {row['fid']: Basemap(
-        row['id'],
+        row['fid'],
         row['name'],
         row['path'],
         row['description']

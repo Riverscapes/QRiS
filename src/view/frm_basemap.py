@@ -13,32 +13,36 @@ from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer
 
 from .ui.basis import Ui_Basis
-from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap
+from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap, insert_basemap
 from ..model.db_item import DBItemModel, DBItem
+from ..model.project import Project
 
 from ..model.mask import load_masks, Mask
 
+from ..processing_provider.feature_class_functions import copy_raster_to_project
 
-class FrmBasis(QDialog, Ui_Basis):
 
-    def __init__(self, parent, qris_project, basis=None):
+class FrmBasemap(QDialog, Ui_Basis):
+
+    def __init__(self, parent, qris_project: Project, basis=None):
 
         self.qris_project = qris_project
         self.basis = basis
 
-        super(FrmBasis, self).__init__(parent)
+        super(FrmBasemap, self).__init__(parent)
         self.setupUi(self)
         self.setWindowTitle('Create New Basemap' if self.basis is None else 'Edit Basemap Properties')
-        self.buttonBox.accepted.connect(super(FrmBasis, self).accept)
-        self.buttonBox.rejected.connect(super(FrmBasis, self).reject)
+        self.buttonBox.accepted.connect(super(FrmBasemap, self).accept)
+        self.buttonBox.rejected.connect(super(FrmBasemap, self).reject)
 
         self.gridLayout.setGeometry(QRect(0, 0, self.width(), self.height()))
 
         self.txtName.textChanged.connect(self.on_name_changed)
+        self.txtSourcePath.textChanged.connect(self.on_name_changed)
 
         # Masks
         self.masks = self.qris_project.masks
-        self.masks[0] = DBItem(0, 'None - Retain full dataset extent')
+        self.masks[0] = DBItem('None', 0, 'None - Retain full dataset extent')
         self.masks_model = DBItemModel(self.masks)
         self.cboMask.setModel(self.masks_model)
 
@@ -51,36 +55,44 @@ class FrmBasis(QDialog, Ui_Basis):
             self.txtName.setFocus()
             return()
 
-        conn = sqlite3.connect(self.qris_project.project_file)
+        self.basemap = None
         try:
-            curs = conn.cursor()
-            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            curs.execute('INSERT INTO bases (name, path, description) VALUES (?, ?, ?)', [self.txtName.text(), self.txtProjectPath.text(), description])
-            id = curs.lastrowid
-            self.Basis = Basemap(id, self.txtName.text(), self.txtProjectPath.text(), description)
-
-            mask = self.cboMask.currentData(Qt.UserRole)
-            mask_path = self.qris_project.get_absolute_ath(mask.path) if mask.id > 0 else None
-
-            # mask = self.cboMask.
-            self.qris_project.copy_raster_to_project(self.txtSourcePath().text(), mask, self.txtProjectPath.text())
-
-            conn.commit()
-            super(FrmBasis, self).accept()
-
+            self.basemap = insert_basemap(self.qris_project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.txtDescription.toPlainText())
         except Exception as ex:
-            conn.rollback()
             if 'unique' in str(ex).lower():
-                QMessageBox.warning(self, 'Duplicate Name', "A basis dataset with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
             else:
-                QMessageBox.warning(self, 'Error Saving Basis', str(ex))
+                QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+            return
+
+        try:
+            mask = self.cboMask.currentData(Qt.UserRole)
+            mask_tuple = (self.qris_project.project_file, mask.id) if mask.id > 0 else None
+
+            project_path = self.qris_project.get_absolute_path(self.txtProjectPath.text())
+
+            if not os.path.isdir(os.path.dirname(project_path)):
+                os.makedirs(os.path.dirname(project_path))
+
+            copy_raster_to_project(self.txtSourcePath.text(), mask_tuple, project_path)
+        except Exception as ex:
+            try:
+                self.basemap.delete(self.qris_project.project_file)
+            except Exception as ex:
+                print('Error attempting to delete basemap after the importing raster failed.')
+            self.basemap = None
+            QMessageBox.warning(self, 'Error Importing Basemap', str(ex))
+            return
+
+        super(FrmBasemap, self).accept()
 
     def on_name_changed(self, new_name):
 
-        if len(new_name) > 0:
+        project_name = self.txtName.text()
+        if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
-            self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(new_name, ext)))
+            self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(project_name, ext)))
         else:
             self.txtProjectPath.setText('')
 

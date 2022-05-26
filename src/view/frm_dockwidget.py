@@ -66,7 +66,7 @@ from ..ui.zoi_type_dialog import ZoiTypeDlg
 from ..ui.phase_dialog import PhaseDlg
 
 from .frm_assessment import FrmAssessment
-from .frm_basis import FrmBasis
+from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
 
 from ..QRiS.method_to_map import add_assessment_method_to_map
@@ -459,18 +459,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
     def add_basis(self, parent_node):
         """Initiates adding a new basis"""
-        frm = FrmBasis(self, self.project)
+        frm = FrmBasemap(self, self.project)
         result = frm.exec_()
         if result != 0:
-            basis = frm.basis
-            new_node = QStandardItem(basis.name)
+            new_node = QStandardItem(frm.basemap.name)
             new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(basis, Qt.UserRole)
+            new_node.setData(frm.basemap, Qt.UserRole)
             parent_node.appendRow(new_node)
 
             if frm.chkAddToMap.isChecked():
                 # TODO: add basis to map
-                print(basis.path)
+                print(frm.basemap.path)
 
     def add_mask(self, parent_node, mode):
         """Initiates adding a new mask"""

@@ -68,6 +68,7 @@ def load_lookup_table(curs: sqlite3.Cursor, table: str) -> dict:
 
     curs.execute('SELECT fid, name FROM {}'.format(table))
     return {row['fid']: DBItem(
+        table,
         row['fid'],
         row['name']
     ) for row in curs.fetchall()}
