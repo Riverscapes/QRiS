@@ -454,7 +454,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             parent_node.appendRow(new_node)
 
             if frm.chkAddToMap.isChecked():
-                for method_id in assessment.methods.keys():
+                for method_id in assessment.methods:
                     add_assessment_method_to_map(self.project, method_id)
 
     def add_basis(self, parent_node):
