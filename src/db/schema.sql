@@ -214,7 +214,7 @@ CREATE TABLE basemaps (
 
 CREATE TABLE assessment_basemaps (
     assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE,
-    base_id INTEGER REFERENCES bases(fid) ON DELETE CASCADE
+    basemap_id INTEGER REFERENCES bases(fid) ON DELETE CASCADE
 );
 
 CREATE TABLE lkp_mask_types (
