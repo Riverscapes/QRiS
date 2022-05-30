@@ -52,9 +52,9 @@ def add_basemap_to_map(qris_project: Project, basemap: Basemap) -> None:
     basemap_name = basemap.name
 
 
-def add_mask_to_map(qris_project: Project, mask: Mask) -> None:
-    mask_id = mask.id
-    mask_name = mask.name
+def add_mask_to_map(qris_project: Project, item: DBItem) -> None:
+    mask_id = item.id
+    mask_name = item.name
     project_name = qris_project.name
 
     # First, check if the layer is there
