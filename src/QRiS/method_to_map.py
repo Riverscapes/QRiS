@@ -30,14 +30,16 @@ from qgis.PyQt.QtCore import Qt, QVariant
 
 from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
 from ..model.mask import MASK_MACHINE_CODE, Mask
+from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
+
 
 from ..model.db_item import DBItem
-from ..model.mask import Mask
-from ..model.basemap import Basemap
 from ..model.project import Project
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
+
+# TODO consider moving this somewhere more universal for use in other modules
 
 
 def dict_factory(cursor, row):
@@ -45,6 +47,20 @@ def dict_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
+
+
+def map_item_receiver(qris_project: Project, item: DBItem) -> None:
+    """Recieves a qris tree item model and sends to the type specific add to map function"""
+    if isinstance(item, Mask):
+        add_mask_to_map(qris_project, item)
+    elif isinstance(item, Basemap):
+        add_basemap_to_map(qris_project, item)
+    elif isinstance(item, Assessment):
+        add_assessment_to_map(qris_project, item)
+    else:
+        pass
+        # TODO scratch space add to map
+        # TODO raise Exception
 
 
 def add_basemap_to_map(qris_project: Project, basemap: Basemap) -> None:
@@ -56,7 +72,6 @@ def add_mask_to_map(qris_project: Project, item: DBItem) -> None:
     mask_id = item.id
     mask_name = item.name
     project_name = qris_project.name
-
     # First, check if the layer is there
     # TODO Be sure you're checking the right shit by adding properties
     if not len(QgsProject.instance().mapLayersByName(mask_name)) == 0:
@@ -76,7 +91,6 @@ def add_mask_to_map(qris_project: Project, item: DBItem) -> None:
         # Set the default value from the variable
         mask_field_index = mask_feature_layer.fields().indexFromName('mask_id')
         mask_feature_layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue("@mask_id"))
-
         # setup fields
         set_hidden(mask_feature_layer, 'fid', 'Mask Feature ID')
         set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
@@ -84,15 +98,19 @@ def add_mask_to_map(qris_project: Project, item: DBItem) -> None:
         set_multiline(mask_feature_layer, 'description', 'Description')
         set_hidden(mask_feature_layer, 'metadata', 'Metadata')
         set_virtual_dimension(mask_feature_layer, 'area')
-
         # Get the target group and add it to the map
         group_lineage = [project_name, MASK_MACHINE_CODE]
         mask_group = set_target_layer_group(group_lineage)
         mask_group.addLayer(mask_feature_layer)
 
 
-def add_assessment_method_to_map(qris_project, assessment_method_id: int) -> None:
-    """Starts with an assessment_method_id and then adds all of the filtered layers for that assessment and method"""
+def add_assessment_to_map(qris_project, item: DBItem) -> None:
+    """Starts with an assessment and then adds all of the filtered layers for that assessment and method"""
+    assessment_id = item.id
+    assessment_name = item.name
+    assessment_methods = item.methods
+    project_name = qris_project.name
+
     # First, check if the assessments table has been added as hidden in the project, if not add it
     # TODO add a property to this so to ensure that it is from the project database
     if len(QgsProject.instance().mapLayersByName('assessments')) == 0:
@@ -100,93 +118,79 @@ def add_assessment_method_to_map(qris_project, assessment_method_id: int) -> Non
         assessments_layer = QgsVectorLayer(assessments_path, 'assessments', 'ogr')
         QgsProject.instance().addMapLayer(assessments_layer, False)
 
-    # Queries the method_layers table and gets a list of layers required for that method -done
-    # TODO refactor this to return just necessary tables
-    conn = sqlite3.connect(qris_project.project_file)
-    conn.row_factory = dict_factory
-    curs = conn.cursor()
-    curs.execute("""SELECT projects.name AS project_name,
-                    assessments.fid AS assessment_id,
-                    assessments.name AS assessment_name,
-                    assessment_methods.fid AS assessment_method_id,
-                    methods.fid AS method_id,
-                    layers.fid AS layer_id,
-                    layers.fc_name,
-                    layers.display_name,
-                    layers.geom_type,
-                    layers.is_lookup,
-                    layers.qml FROM projects INNER
-                    JOIN((methods
-                    INNER JOIN (assessments
-                    INNER JOIN assessment_methods ON assessments.fid = assessment_methods.assessment_id)
-                    ON methods.fid = assessment_methods.method_id)
-                    INNER JOIN (layers
-                    INNER JOIN method_layers
-                    ON layers.fid = method_layers.layer_id)
-                    ON methods.fid = method_layers.method_id)
-                    WHERE (((assessment_methods.fid)=?));""", [assessment_method_id])
-    method_layers = curs.fetchall()
-    conn.commit()
-    conn.close()
+    # Queries the method_layers table and gets a list of layers required for that method
+    for method in assessment_methods:
+        conn = sqlite3.connect(qris_project.project_file)
+        conn.row_factory = dict_factory
+        curs = conn.cursor()
+        curs.execute("""SELECT methods.fid AS method_id,
+                        layers.fid AS layer_id,
+                        layers.fc_name, layers.display_name, layers.geom_type, layers.is_lookup, layers.qml
+                        FROM methods
+                        INNER JOIN (layers
+                        INNER JOIN method_layers ON layers.fid = method_layers.layer_id)
+                        ON methods.fid = method_layers.method_id
+                        WHERE (((methods.fid)=?));""", [method.id])
+        method_layers = curs.fetchall()
+        conn.commit()
+        conn.close()
 
-    # Create the layer group list and set the target assessment group
-    # TODO this is actually in the qris_project object, just use that
-    project_group_name = str(method_layers[0]['project_name'])
-    assessment_group_name = str(method_layers[0]['assessment_id']) + '-' + method_layers[0]['assessment_name']
-    group_lineage = [project_group_name, ASSESSMENT_MACHINE_CODE, assessment_group_name]
-    assessment_group = set_target_layer_group(group_lineage)
+        # Create the layer group list and set the target assessment group
+        assessment_group_name = str(assessment_id) + '-' + assessment_name
+        group_lineage = [qris_project.name, ASSESSMENT_MACHINE_CODE, assessment_group_name]
+        assessment_group = set_target_layer_group(group_lineage)
 
-    # now loop through each layer and see if they need to be added
-    spatial_layers = []
-    for layer in method_layers:
-        # set the layer path
-        layer['path'] = qris_project.project_file + '|layername=' + layer['fc_name']
-        layer['ass_name'] = str(layer['assessment_id']) + '-' + layer['display_name']
-        # check if it's a lookup layer, if it is send it on
-        if layer['is_lookup']:
-            add_lookup_table(layer)
-        else:
-            # add layer to spatial layers list, ensures that all lookups are added to the project first
-            spatial_layers.append(layer)
-
-    # now deal with the spatial layers
-    for layer in spatial_layers:
-        # check if the layer has already been added, probably better way to do this
-        if len(QgsProject.instance().mapLayersByName(layer['ass_name'])) == 0:
-            # if not make a layer out of it
-            map_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
-            QgsProject.instance().addMapLayer(map_layer, False)
-            map_layer.setName(layer['ass_name'])
-            # Set the QML symbology
-            qml = os.path.join(symbology_path, 'symbology', layer['qml'])
-            map_layer.loadNamedStyle(qml)
-            # Set the assessment definition query
-            map_layer.setSubsetString('assessment_id = ' + str(layer['assessment_id']))
-            # Set a parent assessment variable
-            QgsExpressionContextUtils.setLayerVariable(map_layer, 'assessment_id', layer['assessment_id'])
-            # Set the default value from the variable
-            assessment_field_index = map_layer.fields().indexFromName('assessment_id')
-            map_layer.setDefaultValueDefinition(assessment_field_index, QgsDefaultValue("@assessment_id"))
-            # finally add the layer to the group
-            assessment_group.addLayer(map_layer)
-            # send to layer specific add to map functions
-            fc_name = layer['fc_name']
-            if fc_name == 'dam_crests':
-                add_dam_crests(map_layer)
-            elif fc_name == 'thalwegs':
-                add_thalwegs(map_layer)
-            elif fc_name == 'inundation_extents':
-                add_inundation_extents(map_layer)
-            elif fc_name == 'dams':
-                add_dams(map_layer)
-            elif fc_name == 'jams':
-                add_jams(map_layer)
-            elif fc_name == 'channel_unit_points':
-                add_channel_unit_points(map_layer)
-            elif fc_name == 'channel_unit_polygons':
-                add_channel_unit_polygons(map_layer)
+        # now loop through each layer and see if they need to be added
+        spatial_layers = []
+        for layer in method_layers:
+            # set the layer path
+            layer['path'] = qris_project.project_file + '|layername=' + layer['fc_name']
+            layer['ass_name'] = str(assessment_id) + '-' + layer['display_name']
+            # check if it's a lookup layer, if it is send it on
+            if layer['is_lookup']:
+                add_lookup_table(layer)
             else:
-                pass
+                # add layer to spatial layers list, ensures that all lookups are added to the project first
+                spatial_layers.append(layer)
+
+        # now deal with the spatial layers
+        for layer in spatial_layers:
+            # check if the layer has already been added, probably better way to do this
+            if len(QgsProject.instance().mapLayersByName(layer['ass_name'])) == 0:
+                # if not make a layer out of it
+                map_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
+                QgsProject.instance().addMapLayer(map_layer, False)
+                map_layer.setName(layer['ass_name'])
+                # Set the QML symbology
+                qml = os.path.join(symbology_path, 'symbology', layer['qml'])
+                map_layer.loadNamedStyle(qml)
+                # Set the assessment definition query
+                map_layer.setSubsetString('assessment_id = ' + str(assessment_id))
+                # Set a parent assessment variable
+                QgsExpressionContextUtils.setLayerVariable(map_layer, 'assessment_id', assessment_id)
+                # Set the default value from the variable
+                assessment_field_index = map_layer.fields().indexFromName('assessment_id')
+                map_layer.setDefaultValueDefinition(assessment_field_index, QgsDefaultValue("@assessment_id"))
+                # finally add the layer to the group
+                assessment_group.addLayer(map_layer)
+                # send to layer specific add to map functions
+                fc_name = layer['fc_name']
+                if fc_name == 'dam_crests':
+                    add_dam_crests(map_layer)
+                elif fc_name == 'thalwegs':
+                    add_thalwegs(map_layer)
+                elif fc_name == 'inundation_extents':
+                    add_inundation_extents(map_layer)
+                elif fc_name == 'dams':
+                    add_dams(map_layer)
+                elif fc_name == 'jams':
+                    add_jams(map_layer)
+                elif fc_name == 'channel_unit_points':
+                    add_channel_unit_points(map_layer)
+                elif fc_name == 'channel_unit_polygons':
+                    add_channel_unit_polygons(map_layer)
+                else:
+                    pass
 
 
 # ---------- GROUP STUFF -----------

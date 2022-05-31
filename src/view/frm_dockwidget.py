@@ -51,9 +51,6 @@ from ..QRiS.settings import Settings
 from ..QRiS.qt_user_role import item_code
 from ..QRiS.manage_map import add_to_map
 
-# testing a new function
-from ..QRiS.method_to_map import add_assessment_method_to_map
-from ..QRiS.method_to_map import add_mask_to_map
 
 from ..ui.elevation_dockwidget import ElevationDockWidget
 from ..ui.project_extent_dialog import ProjectExtentDlg
@@ -69,16 +66,15 @@ from .frm_assessment import FrmAssessment
 from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
 
-from ..QRiS.method_to_map import add_assessment_method_to_map
+from ..QRiS.method_to_map import map_item_receiver
 
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
 from ..model.project import Project
-from ..model.assessment import Assessment
-from ..model.assessment import ASSESSMENT_MACHINE_CODE
-from ..model.basemap import BASEMAP_MACHINE_CODE
-from ..model.mask import MASK_MACHINE_CODE
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
+from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
+from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
+from ..model.mask import MASK_MACHINE_CODE, Mask
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -382,10 +378,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             else:
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
-            if isinstance(model_data, Assessment):
-                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: self.add_assessment_to_map(model_data))
+            if isinstance(model_data, DBItem):
+                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: map_item_receiver(self.project, model_data))
             else:
-                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: self.add_to_map(model_data))
+                raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
 
             self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_data))
             self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
@@ -486,12 +482,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 # TODO: add basis to map
                 print(mask.name)
 
-    def add_assessment_to_map(self, assessment):
-        for method_id in assessment.methods.keys():
-            add_assessment_method_to_map(self.project, method_id)
+    # def add_assessment_to_map(self, assessment):
+    #     for method_id in assessment.methods.keys():
+    #         add_assessment_method_to_map(self.project, method_id)
 
-    def add_to_map(self, db_item: DBItem):
-        add_mask_to_map(self.project, db_item)
+    # def add_to_map(self, db_item: DBItem):
+    #     add_mask_to_map(self.project, db_item)
 
     def edit_item(self, db_item: DBItem):
         QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
