@@ -2,6 +2,11 @@ from osgeo import ogr
 from osgeo import osr
 from shapely.wkb import loads as wkbload, dumps as wkbdumps
 from osgeo.gdal import Warp, WarpOptions
+from qgis.PyQt.QtWidgets import QMessageBox
+
+
+from qgis.gui import QgsDataSourceSelectDialog
+from qgis.core import QgsMapLayer
 
 
 def check_geometry_type(path) -> int:
@@ -59,3 +64,21 @@ def copy_raster_to_project(source_path: str, mask_tuple, output_path: str) -> No
         kwargs['cutlineWhere'] = 'mask_id = {}'.format(mask_tuple[1])
 
     Warp(output_path, source_path, **kwargs)
+
+
+def browse_source(parent, description: str, layer_type: QgsMapLayer) -> str:
+    # https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html
+    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=layer_type)
+    frm_browse.setDescription(description)
+
+    frm_browse.exec()
+    uri = frm_browse.uri()
+    # TODO: check only polygon geometry
+    if uri is not None and uri.isValid():
+        if layer_type == QgsMapLayer.VectorLayer and uri.wkbType != 3:
+            QMessageBox.warning(parent, 'Invalid Geometry Type', "The layer must be of geometry type 'polygon'.")
+            return None
+
+        return uri.uri
+
+    return None

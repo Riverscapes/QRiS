@@ -24,7 +24,7 @@ from ..processing_provider.feature_class_functions import copy_raster_to_project
 
 class FrmBasemap(QDialog, Ui_Basis):
 
-    def __init__(self, parent, qris_project: Project, basis=None):
+    def __init__(self, parent, qris_project: Project, import_source_path: str, basis: Basemap = None):
 
         self.qris_project = qris_project
         self.basis = basis
@@ -40,13 +40,15 @@ class FrmBasemap(QDialog, Ui_Basis):
         self.txtName.textChanged.connect(self.on_name_changed)
         self.txtSourcePath.textChanged.connect(self.on_name_changed)
 
+        self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
+        self.txtName.selectAll()
+        self.txtSourcePath.setText(import_source_path)
+
         # Masks
         self.masks = self.qris_project.masks
         self.masks[0] = DBItem('None', 0, 'None - Retain full dataset extent')
         self.masks_model = DBItemModel(self.masks)
         self.cboMask.setModel(self.masks_model)
-
-        self.browse_source()
 
     def accept(self):
 
@@ -95,18 +97,3 @@ class FrmBasemap(QDialog, Ui_Basis):
             self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(project_name, ext)))
         else:
             self.txtProjectPath.setText('')
-
-    def browse_source(self):
-        # https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html
-        frm_browse = QgsDataSourceSelectDialog(parent=self, setFilterByLayerType=True, layerType=QgsMapLayer.RasterLayer)
-        frm_browse.setDescription('Select a raster dataset to import as a new basis dataset.')
-        # frm_browse.setLayerTypeFilter(layerType)
-
-        frm_browse.exec()
-        uri = frm_browse.uri()
-        if uri is not None and uri.isValid():  # and uri.wkbType == 3:
-            self.txtName.setText(os.path.splitext(os.path.basename(uri.uri))[0])
-            self.txtName.selectAll()
-            self.txtSourcePath.setText(uri.uri)
-        else:
-            self.reject()
