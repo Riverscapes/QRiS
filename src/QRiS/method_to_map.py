@@ -1,3 +1,4 @@
+from email.mime import base
 from locale import CODESET
 import os
 import sqlite3
@@ -11,9 +12,13 @@ from PyQt5.QtWidgets import QMessageBox
 from qgis.core import (
     QgsField,
     QgsLayerTreeGroup,
+    QgsLayerTreeNode,
     QgsVectorLayer,
+    QgsRasterLayer,
+    QgsLayerTree,
     QgsDefaultValue,
     QgsEditorWidgetSetup,
+    QgsMapLayer,
     QgsFeatureRequest,
     QgsSymbol,
     QgsRendererCategory,
@@ -33,20 +38,165 @@ from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 
 
-from ..model.db_item import DBItem
-from ..model.project import Project
+from ..model.db_item import DBItem, dict_factory
+from ..model.mask import Mask
+from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
+from ..model.project import Project, PROJECT_MACHINE_CODE
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
 
 # TODO consider moving this somewhere more universal for use in other modules
 
+QRIS_MAP_LAYER_MACHINE_CODE = 'QRIS_MAP_LAYER_MACHINE_CODE'
 
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+
+def get_db_item_layer(db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeNode:
+    """
+    Finds the tree item that represents the db_item. Returns None if it cannot be found.
+    The function first checks if the layer argument represents db_item
+    and then recursively searches all of the children of layer.
+
+    layer should either be the QRiS project node, or a node within the project.
+    """
+
+    # Check whether the node that was passed in possesses the correct custom property
+    custom_property = layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+    if isinstance(custom_property, DBItem) and db_item == custom_property:
+        return layer
+
+    # If the layer is a group then search it's children
+    if isinstance(layer, QgsLayerTreeGroup):
+        for child_layer in layer.children():
+            result = get_db_item_layer(db_item, child_layer)
+            if isinstance(result, QgsLayerTreeNode):
+                return result
+
+    return None
+
+
+def get_group_layer(machine_code, group_label, parent: QgsLayerTreeGroup, add_missing=False) -> QgsLayerTreeGroup:
+    """
+    Finds a group layer directly underneath "parent" with the specified
+    machine code as the custom property. No string matching with group
+    label is performed.
+
+    When add_missing is True, the group will be created if it can't be found.
+    """
+
+    for child_layer in parent.children():
+        custom_property = child_layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+        if isinstance(custom_property, str) and machine_code == custom_property:
+            return child_layer
+
+    if add_missing:
+        group_layer = parent.addGroup(group_label)
+        group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, machine_code)
+        return group_layer
+
+    return None
+
+
+def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
+
+    root = QgsProject.instance().layerTreeRoot()
+    project_group_layer = get_db_item_layer(project, root)
+
+    if project_group_layer is None and add_missing is True:
+        project_group_layer = root.addGroup(project.name)
+        project_group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, project)
+
+    return project_group_layer
+
+
+def add_root_map_item(project: Project, db_item: DBItem) -> QgsLayerTreeNode:
+
+    # First check if the item exists already within the project
+    project_group = get_project_group(project)
+    result = get_db_item_layer(db_item, project_group)
+    if result is not None:
+        return result
+
+    # Do layer specific construction here
+    if isinstance(db_item, Mask):
+        machine_code = MASK_MACHINE_CODE
+        group_name = 'Masks'
+        map_layer = build_mask_layer(project, db_item)
+    elif isinstance(db_item, Basemap):
+        machine_code = BASEMAP_MACHINE_CODE
+        group_name = 'Basemaps'
+        map_layer = build_basemap_layer(project, db_item)
+
+    # Finally add the new layer here
+    group_layer = get_group_layer(machine_code, group_name, project_group, True)
+    tree_layer_node = group_layer.addLayer(map_layer)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, db_item)
+    return tree_layer_node
+
+
+def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
+
+    parent_node = group_node.parent()
+    if parent_node is None:
+        return
+
+    if len(group_node.children()) <= 1:
+        parent_node.removeChildNode(group_node)
+
+    if isinstance(parent_node, QgsLayerTreeGroup):
+        remove_empty_groups(parent_node)
+
+
+def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
+
+    project_group = get_project_group(project, False)
+    if project_group is not None:
+        tree_layer_node = get_db_item_layer(db_item, project_group)
+        if tree_layer_node is not None:
+            # QgsProject.removeMapLayer()
+            parent_node = tree_layer_node.parent()
+            parent_node.removeChildNode(tree_layer_node)
+
+            remove_empty_groups(parent_node)
+
+#             QgsMapLayerRegistry.instance().removeMapLayer(item_layer)
+
+
+def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
+
+    # Create a layer from the table
+    mask_feature_path = project.project_file + '|layername=' + 'mask_features'
+    mask_feature_layer = QgsVectorLayer(mask_feature_path, mask.name, 'ogr')
+    QgsProject.instance().addMapLayer(mask_feature_layer, False)
+
+    # hit it with qml
+    qml = os.path.join(symbology_path, 'symbology', 'masks.qml')
+    mask_feature_layer.loadNamedStyle(qml)
+    # set the substring
+    mask_feature_layer.setSubsetString('mask_id = ' + str(mask.id))
+    # Set a parent assessment variable
+    QgsExpressionContextUtils.setLayerVariable(mask_feature_layer, 'mask_id', mask.id)
+    # Set the default value from the variable
+    mask_field_index = mask_feature_layer.fields().indexFromName('mask_id')
+    mask_feature_layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue("@mask_id"))
+
+    # setup fields
+    set_hidden(mask_feature_layer, 'fid', 'Mask Feature ID')
+    set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
+    set_alias(mask_feature_layer, 'position', 'Position')
+    set_multiline(mask_feature_layer, 'description', 'Description')
+    set_hidden(mask_feature_layer, 'metadata', 'Metadata')
+    set_virtual_dimension(mask_feature_layer, 'area')
+
+    return mask_feature_layer
+
+
+def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:
+    raster_path = os.path.join(os.path.dirname(project.project_file), basemap.path)
+    raster_layer = QgsRasterLayer(raster_path, basemap.name)
+    QgsProject.instance().addMapLayer(raster_layer, False)
+    # TODO: raster symbology?
+    return raster_layer
 
 
 def map_item_receiver(qris_project: Project, item: DBItem) -> None:
@@ -66,6 +216,11 @@ def map_item_receiver(qris_project: Project, item: DBItem) -> None:
 def add_basemap_to_map(qris_project: Project, basemap: Basemap) -> None:
     basemap_id = basemap.id
     basemap_name = basemap.name
+    raster_path = os.path.join(os.path.dirname(project.project_file), basemap.path)
+    raster_layer = QgsRasterLayer(raster_path, basemap.name)
+    QgsProject.instance().addMapLayer(raster_layer, False)
+    # TODO: raster symbology?
+    return raster_layer
 
 
 def add_mask_to_map(qris_project: Project, item: DBItem) -> None:

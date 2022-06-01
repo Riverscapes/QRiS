@@ -45,12 +45,15 @@ from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
+from qgis.core import QgsMapLayer
 
 from ..QRiS.context_menu import ContextMenu
 from ..QRiS.settings import Settings
 from ..QRiS.qt_user_role import item_code
 from ..QRiS.manage_map import add_to_map
 
+
+from ..QRiS.method_to_map import get_project_group, add_root_map_item, remove_db_item_layer
 
 from ..ui.elevation_dockwidget import ElevationDockWidget
 from ..ui.project_extent_dialog import ProjectExtentDlg
@@ -65,16 +68,24 @@ from ..ui.phase_dialog import PhaseDlg
 from .frm_assessment import FrmAssessment
 from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
+from .frm_new_analysis import FrmNewAnalysis
 
 from ..QRiS.method_to_map import map_item_receiver
 
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
 from ..model.project import Project
+from ..model.assessment import Assessment
+from ..model.assessment import ASSESSMENT_MACHINE_CODE
+from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
+from ..model.mask import MASK_MACHINE_CODE
+from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
+
+from ..processing_provider.feature_class_functions import browse_source
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -146,6 +157,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         scratch_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
         scratch_node.setData(SCRATCH_NODE_TAG, Qt.UserRole)
         project_node.appendRow(scratch_node)
+
+        analyses_node = QStandardItem('Analyses')
+        analyses_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        analyses_node.setData(ANALYSIS_MACHINE_CODE, Qt.UserRole)
+        analyses_node.appendRow(analyses_node)
 
         self.treeView.expandAll()
         return
@@ -371,10 +387,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             if model_data == ASSESSMENT_MACHINE_CODE:
                 self.add_context_menu_item('Add New Assessment', 'test_new.png', lambda: self.add_assessment(model_item))
             elif model_data == BASEMAP_MACHINE_CODE:
-                self.add_context_menu_item('Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basis(model_item))
+                self.add_context_menu_item('Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basemap(model_item))
             elif model_data == MASK_MACHINE_CODE:
                 self.add_context_menu_item('Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                 self.add_context_menu_item('Import Existing Mask Feature Class', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
+            elif model_data == ANALYSIS_MACHINE_CODE:
+                self.add_context_menu_item('Create New Analysis', 'test_new.png', lambda: self.add_analysis(model_item, DB_MODE_CREATE))
             else:
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
@@ -385,6 +403,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
             self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_data))
             self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
+            self.add_context_menu_item('Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
 
         # if item_type == 'project_root':
         #     self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
@@ -453,9 +472,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 for method_id in assessment.methods:
                     add_assessment_method_to_map(self.project, method_id)
 
-    def add_basis(self, parent_node):
+    def add_basemap(self, parent_node):
         """Initiates adding a new basis"""
-        frm = FrmBasemap(self, self.project)
+
+        import_source_path = browse_source(self, 'Select a raster dataset to import as a new basis dataset.', QgsMapLayer.RasterLayer)
+        if import_source_path is None:
+            return
+
+        frm = FrmBasemap(self, self.project, import_source_path)
         result = frm.exec_()
         if result != 0:
             new_node = QStandardItem(frm.basemap.name)
@@ -469,7 +493,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
     def add_mask(self, parent_node, mode):
         """Initiates adding a new mask"""
-        frm = FrmMask(self, self.project, mode)
+
+        get_project_group(self.project)
+
+        import_source_path = None
+        if mode == DB_MODE_IMPORT:
+            import_source_path = browse_source(self, 'Select a polygon dataset to import as a new mask.', QgsMapLayer.VectorLayer)
+            if import_source_path is None:
+                return
+
+        frm = FrmMask(self, self.project, import_source_path, mode)
         result = frm.exec_()
         if result != 0:
             mask = frm.mask
@@ -489,11 +522,38 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
     # def add_to_map(self, db_item: DBItem):
     #     add_mask_to_map(self.project, db_item)
 
+    def add_analysis(self, parent_node, mode):
+
+        frm = FrmNewAnalysis(self, self.project)
+        # result = frm.exec_()
+        # if result!=0:
+        #     analysis =
+
+    def add_assessment_to_map(self, assessment):
+        for method_id in assessment.methods.keys():
+            add_assessment_method_to_map(self.project, method_id)
+
+    def add_to_map(self, db_item: DBItem):
+        add_root_map_item(self.project, db_item)
+
     def edit_item(self, db_item: DBItem):
         QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
 
     def delete_item(self, db_item: DBItem):
+
+        remove_db_item_layer(self.project, db_item)
+
         QMessageBox.warning(self, 'Delete', 'Deleting items is not yet implemented.')
+
+    def browse_item(self, db_item: DBItem):
+
+        folder_path = None
+        if isinstance(db_item, Basemap):
+            folder_path = os.path.dirname(os.path.join(os.path.dirname(self.project.project_file), db_item.path))
+        else:
+            folder_path = os.path.dirname(self.project.project_file)
+
+        QMessageBox.warning(self, "Not Implemented", "Browing to a dataset is not yet implemented.")
 
     def add_design(self):
         """Initiates adding a new design"""

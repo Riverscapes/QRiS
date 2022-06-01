@@ -64,6 +64,41 @@ class DBItemModel(QAbstractListModel):
         return len(self._data)
 
 
+class CheckableDBItemModel(QAbstractListModel):
+    def __init__(self, data: dict):
+
+        super.__init__()
+        self._data = [(key, value, False) for key, value in data.items()] or []
+
+    def flags(self, index):
+        fl = QAbstractListModel.flags(self, index)
+        if index.column() == 1:
+            fl |= Qt.ItemIsUserCheckable
+        return fl
+
+    def data(self, index, role):
+
+        if role == Qt.DisplayRole:
+            _id, value, is_checked = self._data[index.row()]
+            return value.name
+        elif role == Qt.CheckStateRole and (self.flags(index) & Qt.ItemIsUserCheckable != Qt.NoItemFlags):
+            if index.row() not in self.checkeable_data.keys():
+                self.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+            return self._data[index.row()]
+        elif role == Qt.UserRole:
+            _id, value, is_checked = self._data[index.row()]
+            return value
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if role == Qt.CheckStateRole and (
+            self.flags(index) & Qt.ItemIsUserCheckable != Qt.NoItemFlags
+        ):
+            self.checkeable_data[index.row()] = value
+            self.dataChanged.emit(index, index, (role,))
+            return True
+        return QSqlTableModel.setData(self, index, value, role)
+
+
 def load_lookup_table(curs: sqlite3.Cursor, table: str) -> dict:
 
     curs.execute('SELECT fid, name FROM {}'.format(table))

@@ -9,16 +9,19 @@ from .method import Method, load_methods
 from .basemap import Basemap, load_basemaps
 from .assessment import Assessment, load_assessments
 
-from .db_item import dict_factory, load_lookup_table
+from .db_item import DBItem, dict_factory, load_lookup_table
 
 from pathlib import Path, PurePosixPath
 
 from qgis import processing
 
+PROJECT_MACHINE_CODE = 'Project'
 
-class Project():
+
+class Project(DBItem):
 
     def __init__(self, project_file: str):
+        super().__init__('projects', 1, 'Placeholder')
 
         self.project_file = project_file
         with sqlite3.connect(self.project_file) as conn:
