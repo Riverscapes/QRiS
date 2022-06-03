@@ -47,6 +47,8 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 from qgis.core import QgsMapLayer
 
+from .frm_design import FrmDesign
+
 from ..QRiS.context_menu import ContextMenu
 from ..QRiS.settings import Settings
 from ..QRiS.qt_user_role import item_code
@@ -84,6 +86,7 @@ from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
+from ..model.method import Method
 
 from ..processing_provider.feature_class_functions import browse_source
 
@@ -131,7 +134,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         # set the project root
         project_node = QStandardItem(self.project.name)
         project_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
-        project_node.setData('project_root', item_code['item_type'])
+        project_node.setData(self.project, Qt.UserRole)
         rootNode.appendRow(project_node)
         # self.treeView.setExpanded(project_node.index(), True)
 
@@ -396,10 +399,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             else:
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
+            if isinstance(model_data, Project) or isinstance(model_data, Assessment):
+                for method_id, method in model_data.methods.items():
+                    self.add_context_menu_item(f'Create New {method.name}', 'test_add_map.png', lambda: self.add_assessment_method(self.project, method))
+
             if isinstance(model_data, DBItem):
                 self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: map_item_receiver(self.project, model_data))
             else:
-                raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
+                raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
             self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_data))
             self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
@@ -468,9 +475,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             new_node.setData(assessment, Qt.UserRole)
             parent_node.appendRow(new_node)
 
+            for method in assessment.methods.values():
+                method_node = QStandardItem(method.name)
+                method_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+                method_node.setData(method, Qt.UserRole)
+                new_node.appendRow(method_node)
+
             if frm.chkAddToMap.isChecked():
                 for method_id in assessment.methods:
                     add_assessment_method_to_map(self.project, method_id)
+
+    def add_assessment_method(self, project: Project, method: Method):
+
+        # if method.id == 3:
+        frm = FrmDesign(self, self.project)
+        result = frm.exec_()
+
+        # QMessageBox.warning(self, 'Add', 'Adding Assessment Method Directly Is Not Yet Implemented.')
 
     def add_basemap(self, parent_node):
         """Initiates adding a new basis"""
