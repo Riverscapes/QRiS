@@ -200,6 +200,7 @@ CREATE TABLE lkp_platform (
 
 CREATE TABLE assessment_methods (
     fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name text not null,
     assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE,
     method_id INTEGER REFERENCES methods(fid) ON DELETE CASCADE,
     platform_id INTEGER REFERENCES lkp_platform(fid) ON DELETE CASCADE,
@@ -208,6 +209,11 @@ CREATE TABLE assessment_methods (
     date DATE,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+-- Each assessment can only contain each method/protocol once!
+CREATE UNIQUE INDEX ux_assessment_methods ON assessment_methods(assessment_id, method_id);
+
+-- Each assessment method must have a unique name within the context of the assessment
+CREATE UNIQUE INDEX ux_assessment_method_name ON assessment_methods(assessment_id, name);
 
 
 CREATE TABLE basemaps (
