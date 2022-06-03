@@ -64,7 +64,7 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL); -- veg_classes
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
+-- INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'temp.qml', NULL);
@@ -94,6 +94,12 @@ INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, descr
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (118, 'lkp_structure_forced', 'Structure Forced', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (119, 'lkp_channel_unit_types', 'Channel Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (120, 'lkp_design_status', 'Design Status', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (121, 'lkp_structure_mimics', 'Structure Mimics', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (122, 'lkp_zoi_stage', 'ZOI Stage', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (123, 'structure_types', 'Structure Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (fid, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (124, 'zoi_types', 'Zoi Types', 'NoGeometry', 1, 'temp.qml', NULL);
+
 
 CREATE TABLE  method_layers (
     method_id INTEGER REFERENCES methods(fid) ON DELETE CASCADE,
@@ -119,11 +125,15 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (4, 103);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 104);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 105);
 -- Low Tech Designs
-INSERT INTO method_layers (method_id, layer_id) VALUES (3, 18);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 22);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 120);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 121);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 122);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 123);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 124);
 -- Channel Units
 INSERT INTO method_layers (method_id, layer_id) VALUES (6, 22);
 INSERT INTO method_layers (method_id, layer_id) VALUES (6, 23);
@@ -568,8 +578,111 @@ ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES 
 ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(fid) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
 
+
+-- Design Lookup Tables
+CREATE TABLE lkp_design_status (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_design_status (fid, name, description) VALUES (1, "Specification", "Design is a specification of structure locations and types that may be built in the future");
+INSERT INTO lkp_design_status (fid, name, description) VALUES (2, "As-Built", "Design is a representation of structure locations and types that have been built");
+
+
+CREATE TABLE lkp_structure_mimics (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_structure_mimics (fid, name, description) VALUES (1, "Beaver Dam", "Structure has been designed to mimic the form and function of a beaver dam");
+INSERT INTO lkp_structure_mimics (fid, name, description) VALUES (2, "Wood Jam", "Structure has been designed to mimic the form and function of a wood jam or piece of woody debris");
+INSERT INTO lkp_structure_mimics (fid, name, description) VALUES (3, "Other", "Structure does not mimic a beaver dam, wood jam, or woody debris");
+
+
+CREATE TABLE lkp_zoi_stage (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (1, "Baseflow", "Extent is the expected influence during or in response to baseflow discharge");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (2, "Typical Flood", "Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (3, "Large Flood", "Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)");
+INSERT INTO lkp_zoi_stage (fid, name, description) VALUES (4, "Other", "Extent is not related to flood event");
+
+CREATE TABLE structure_types (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    mimics_id INTEGER REFERENCES lkp_structure_mimics(fid) ON DELETE CASCADE,
+    construction_description TEXT,
+    function_description TEXT,
+    typical_posts INTEGER,
+    typical_length NUMERIC,
+    typical_width NUMERIC,
+    typical_height NUMERIC,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (1, "BDA Large", 1);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (2, "BDA Small", 1);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (3, "BDA Postless", 1);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (4, "PALS Mid-Channel", 2);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (5, "PALS Bank Attached", 2);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (6, "Wood Jam", 2);
+INSERT INTO structure_types (fid, name, mimics_id) VALUES (7, "Other", 3);
+
+CREATE TABLE zoi_types (
+    fid INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO zoi_types (fid, name, description) VALUES (1, "Increase Channel Complexity", "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment");
+INSERT INTO zoi_types (fid, name, description) VALUES (2, "Accelerate Incision Recovery", "Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation");
+INSERT INTO zoi_types (fid, name, description) VALUES (3, "Lateral Channel Migration", "Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders");
+INSERT INTO zoi_types (fid, name, description) VALUES (4, "Increase Floodplain Connectivity", "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow");
+INSERT INTO zoi_types (fid, name, description) VALUES (5, "Facilitate Beaver Translocation", "Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation");
+INSERT INTO zoi_types (fid, name, description) VALUES (6, "Other", "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)");
+
+
+
+-- Design Spatial Table Fields and Relationships
+ALTER TABLE zoi ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE zoi ADD COLUMN type_id INTEGER REFERENCES zoi_types(fid) ON DELETE CASCADE;
+ALTER TABLE zoi ADD COLUMN stage_id INTEGER REFERENCES lkp_zoi_stage(fid) ON DELETE CASCADE;
+ALTER TABLE zoi ADD COLUMN description TEXT;
+ALTER TABLE zoi ADD COLUMN created DATETIME;
+
+
+ALTER TABLE complexes ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE complexes ADD COLUMN description TEXT;
+ALTER TABLE complexes ADD COLUMN initial_condition TEXT;
+ALTER TABLE complexes ADD COLUMN target_condition TEXT;
+ALTER TABLE complexes ADD COLUMN created DATETIME;
+
+
+ALTER TABLE structure_lines ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE structure_lines ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(fid) ON DELETE CASCADE;
+ALTER TABLE structure_lines ADD COLUMN name TEXT;
+ALTER TABLE structure_lines ADD COLUMN description TEXT;
+ALTER TABLE structure_lines ADD COLUMN created DATETIME;
+
+
+ALTER TABLE structure_points ADD COLUMN assessment_id INTEGER REFERENCES assessments(fid) ON DELETE CASCADE;
+ALTER TABLE structure_points ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(fid) ON DELETE CASCADE;
+ALTER TABLE structure_points ADD COLUMN name TEXT;
+ALTER TABLE structure_points ADD COLUMN description TEXT;
+ALTER TABLE structure_points ADD COLUMN created DATETIME;
+
+
 -- add to geopackage contents
--- this is only necessary for non-spatial tables that created using ddl.
+-- this is only necessary for non-spatial tables created using ddl.
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('methods', 'attributes', 'methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('layers', 'attributes', 'layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('context_layers', 'attributes', 'context_layers', 0);
@@ -605,3 +718,10 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_unit', 'attributes', 'lkp_primary_unit', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_unit_types', 'attributes', 'lkp_channel_unit_types', 0);
+
+-- DESIGN TABLES
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_structure_mimics", "attributes", "lkp_structure_mimics", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_zoi_stage", "attributes", "lkp_zoi_stage", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("lkp_design_status", "attributes", "lkp_design_status", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("structure_types", "attributes", "structure_types", 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ("zoi_types", "attributes", "zoi_types", 0);
