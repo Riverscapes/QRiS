@@ -28,12 +28,12 @@ class DBItem():
 
 
 class DBItemModel(QAbstractListModel):
-    """ Model for any class derived from DBItem. Essentially allows for 
+    """ Model for any class derived from DBItem. Essentially allows for
     objects to be stored in a list and displayed in comboboxes or lists.
     Construct with dictionry of DBItem derived objects. The name property
     will be used as the display string.
 
-    For comboboxes the currently selected item can be retrieved with 
+    For comboboxes the currently selected item can be retrieved with
 
     obj = self.cboComboBox.currentData(Qt.UserRole)
     """
@@ -121,3 +121,17 @@ def dict_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
+
+
+def get_unique_name(curs: sqlite3.Cursor, table: str, seed_name: str) -> str:
+
+    attempts = 0
+    success = False
+    while success is False:
+        candidate_name = f"{seed_name}{ ' ' + attempts if attempts > 0 else ''}"
+
+        curs.execute(f'SELECT name FROM {table} WHERE name = ?', [candidate_name])
+        row = curs.fetchone()
+        success = row is None
+
+    return candidate_name

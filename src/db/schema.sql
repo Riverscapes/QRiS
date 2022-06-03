@@ -1,6 +1,6 @@
 -- Database migrations tracking
 CREATE TABLE migrations (
-  migration_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   file_name TEXT UNIQUE NOT NULL,
   created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -4,7 +4,7 @@ from .db_item import DBItem, dict_factory
 
 class Method(DBItem):
 
-    def __init__(self, id: int, name: str, description: str):
+    def __init__(self, id: int, name: str, machine_code: str, description: str):
         super().__init__('methods', id, name)
         self.description = description
 
@@ -15,5 +15,6 @@ def load_methods(curs: sqlite3.Cursor) -> dict:
     return {row['fid']: Method(
         row['fid'],
         row['name'],
+        row['machine_code'],
         row['description']
     ) for row in curs.fetchall()}
