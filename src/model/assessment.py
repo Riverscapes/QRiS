@@ -1,5 +1,5 @@
 import sqlite3
-from .db_item import DBItem, dict_factory
+from .db_item import DBItem, dict_factory, get_unique_name
 
 ASSESSMENT_MACHINE_CODE = 'Assessment'
 
@@ -78,9 +78,15 @@ def load_assessments(curs: sqlite3.Cursor, methods: dict, basemaps: dict) -> dic
 
 def insert_assessment(db_path: str, name: str, description: str, methods: list, basemaps: list) -> Assessment:
 
-    description = description if len(description) > 0 else None
+    description = description if description and len(description) > 0 else None
+    basemaps = basemaps or []
+    methods = methods or []
+
     with sqlite3.connect(db_path) as conn:
         curs = conn.cursor()
+
+        name = name or get_unique_name(curs, 'assessments', 'Assessment')
+
         try:
             curs.execute('INSERT INTO assessments (name, description) VALUES (?, ?)', [name, description])
             assessment_id = curs.lastrowid
