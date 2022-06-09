@@ -47,6 +47,8 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 from qgis.core import QgsMapLayer
 
+from ..model.layer import Layer
+
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
 
@@ -56,7 +58,7 @@ from ..QRiS.qt_user_role import item_code
 from ..QRiS.manage_map import add_to_map
 
 
-from ..QRiS.method_to_map import get_project_group, add_root_map_item, remove_db_item_layer
+from ..QRiS.method_to_map import build_basemap_layer, get_project_group, add_root_map_item, remove_db_item_layer
 
 from ..ui.elevation_dockwidget import ElevationDockWidget
 from ..ui.project_extent_dialog import ProjectExtentDlg
@@ -74,7 +76,7 @@ from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
 from .frm_new_analysis import FrmNewAnalysis
 
-from ..QRiS.method_to_map import map_item_receiver
+from ..QRiS.method_to_map import map_item_receiver, build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
 
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
@@ -144,7 +146,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         events_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
         events_node.setData(EVENT_MACHINE_CODE, Qt.UserRole)
         project_node.appendRow(events_node)
-        [self.add_child_node(item, events_node, 'test_layers.png') for item in self.project.events.values()]
+        [self.add_event_too_tree(events_node, item) for item in self.project.events.values()]
 
         basemaps_node = QStandardItem('Basemaps')
         basemaps_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
@@ -170,180 +172,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         self.treeView.expandAll()
         return
-
-        # Add project extent layers to tree
-        extent_folder = QStandardItem("Project Extents")
-        extent_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
-        extent_folder.setData('extent_folder', item_code['item_type'])
-        project_node.appendRow(extent_folder)
-
-        for extent in self.qris_project.project_extents.values():
-            extent_node = QStandardItem(extent.display_name)
-            extent_node.setIcon(QIcon(':/plugins/qris_toolbar/test_project_extent.png'))
-            extent_node.setData('extent_node', item_code['item_type'])
-            extent_node.setData(extent, item_code['INSTANCE'])
-            extent_folder.appendRow(extent_node)
-
-        # Add project layers node
-        layers_folder = QStandardItem("Project Layers")
-        layers_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
-        layers_folder.setData('layers_folder', item_code['item_type'])
-        project_node.appendRow(layers_folder)
-
-        # TODO extend this for geometry types and raster layers
-        for layer in self.qris_project.project_vector_layers.values():
-            layer_node = QStandardItem(layer.display_name)
-            # TODO change icon by type
-            layer_node.setIcon(QIcon(':/plugins/qris_toolbar/test_layers.png'))
-            layer_node.setData('layer_node', item_code['item_type'])
-            layer_node.setData(layer, item_code['INSTANCE'])
-            layers_folder.appendRow(layer_node)
-
-        # # Add riverscape surfaces node
-        # # TODO go through and add layers to the tree
-        # riverscape_surfaces_node = QStandardItem("Riverscape Surfaces")
-        # riverscape_surfaces_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        # riverscape_surfaces_node.setData('riverscape_surfaces_folder', item_code['item_type'])
-        # riverscape_surfaces_node.setData('group', item_code['item_layer'])
-        # project_node.appendRow(riverscape_surfaces_node)
-
-        # # Add riverscape segments node
-        # # TODO go through and add layers to the tree
-        # riverscape_segments_node = QStandardItem("Riverscape Segments")
-        # riverscape_segments_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        # riverscape_segments_node.setData('riverscape_segments_folder', item_code['item_type'])
-        # riverscape_segments_node.setData('group', item_code['item_layer'])
-        # project_node.appendRow(riverscape_segments_node)
-
-        # # Add detrended rasters to tree
-        # detrended_rasters = QStandardItem("Detrended Rasters")
-        # detrended_rasters.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        # detrended_rasters.setData("DetrendedRastersFolder", item_code['item_type'])
-        # detrended_rasters.setData('group', item_code['item_layer'])
-        # project_node.appendRow(detrended_rasters)
-
-        # for raster in self.qris_project.detrended_rasters.values():
-        #     detrended_raster = QStandardItem(raster.name)
-        #     detrended_raster.setIcon(QIcon(':/plugins/qris_toolbar/qris_raster.png'))
-        #     detrended_raster.setData('DetrendedRaster', item_code['item_type'])
-        #     detrended_raster.setData(raster, item_code['INSTANCE'])
-        #     detrended_raster.setData('raster_layer', item_code['item_layer'])
-        #     detrended_rasters.appendRow(detrended_raster)
-
-        #     if len(raster.surfaces.values()) > 0:
-        #         item_surfaces = QStandardItem("Surfaces")
-        #         item_surfaces.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        #         item_surfaces.setData('group', item_code['item_layer'])
-        #         detrended_raster.appendRow(item_surfaces)
-        #         for surface in raster.surfaces.values():
-        #             item_surface = QStandardItem(surface.name)
-        #             item_surface.setIcon(QIcon(':/plugins/qris_toolbar/layers/Polygon.png'))
-        #             item_surface.setData('DetrendedRasterSurface', item_code['item_type'])
-        #             item_surface.setData('surface_layer', item_code['item_layer'])
-        #             item_surface.setData(surface, item_code['INSTANCE'])
-        #             item_surfaces.appendRow(item_surface)
-
-        # # Add assessments to tree
-        # assessments_parent_node = QStandardItem("Riverscape Assessments")
-        # assessments_parent_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        # assessments_parent_node.setData('assessments_folder', item_code['item_type'])
-        # assessments_parent_node.setData('group', item_code['item_layer'])
-        # project_node.appendRow(assessments_parent_node)
-
-        # if self.qris_project.project_assessments:
-        #     self.qris_project.assessments_path = os.path.join(self.qris_project.project_path, "Assessments.gpkg")
-        #     assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
-        #     for assessment_feature in assessments_layer.getFeatures():
-        #         assessment_node = QStandardItem(assessment_feature.attribute('assessment_date').toString('yyyy-MM-dd'))
-        #         assessment_node.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        #         assessment_node.setData('dam_assessment', item_code['item_type'])
-        #         assessment_node.setData('group', item_code['item_layer'])
-        #         assessment_node.setData(assessment_feature.attribute('fid'), item_code['feature_id'])
-        #         assessments_parent_node.appendRow(assessment_node)
-
-        # assessments_parent_node.sortChildren(Qt.AscendingOrder)
-
-        # Add designs to tree
-        design_folder = QStandardItem("Low-Tech Designs")
-        design_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_folder.png'))
-        design_folder.setData('design_folder', item_code['item_type'])
-        project_node.appendRow(design_folder)
-        self.treeView.setExpanded(design_folder.index(), True)
-
-        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
-        designs_path = design_geopackage_path + '|layername=designs'
-        if os.path.exists(design_geopackage_path):
-            designs_layer = QgsVectorLayer(designs_path, "designs", "ogr")
-            for design_feature in designs_layer.getFeatures():
-                # If these data types stick this should be refactored into a create node function
-                design_node = QStandardItem(design_feature.attribute('name'))
-                design_node.setIcon(QIcon(':/plugins/qris_toolbar/test_design.png'))
-                design_node.setData('design', item_code['item_type'])
-                design_node.setData(design_feature.attribute('fid'), item_code['feature_id'])
-                design_folder.appendRow(design_node)
-
-                # TODO add the structure, footprint, and zoi to the tree under each design
-
-            # TODO This just doesn't work very well
-            design_folder.sortChildren(Qt.AscendingOrder)
-
-        # populate structure types
-        structure_type_folder = QStandardItem("Structure Types")
-        structure_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_settings.png'))
-        structure_type_folder.setData('structure_type_folder', item_code['item_type'])
-        design_folder.appendRow(structure_type_folder)
-
-        structure_type_path = design_geopackage_path + '|layername=structure_types'
-        structure_type_layer = QgsVectorLayer(structure_type_path, "structure_types", "ogr")
-        for structure_type in structure_type_layer.getFeatures():
-            structure_type_node = QStandardItem(structure_type.attribute('name'))
-            # TODO change the icon
-            structure_type_node.setIcon(QIcon(':/plugins/qris_toolbar/test_structure.png'))
-            structure_type_node.setData('structure_type', item_code['item_type'])
-            structure_type_node.setData(structure_type.attribute('fid'), item_code['feature_id'])
-            structure_type_folder.appendRow(structure_type_node)
-
-        # populate design phases types
-        phase_folder = QStandardItem("Implementation Phases")
-        # TODO change icon
-        phase_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_settings.png'))
-        phase_folder.setData('phase_folder', item_code['item_type'])
-        design_folder.appendRow(phase_folder)
-
-        phase_path = design_geopackage_path + '|layername=phases'
-        phase_layer = QgsVectorLayer(phase_path, "phases", "ogr")
-        for phase in phase_layer.getFeatures():
-            phase_node = QStandardItem(phase.attribute('name'))
-            # TODO change the icon
-            phase_node.setIcon(QIcon(':/plugins/qris_toolbar/test_phase.png'))
-            phase_node.setData('phase', item_code['item_type'])
-            phase_node.setData(phase.attribute('fid'), item_code['feature_id'])
-            phase_folder.appendRow(phase_node)
-
-        # populate zoi types
-        zoi_type_folder = QStandardItem("ZOI Types")
-        zoi_type_folder.setIcon(QIcon(':/plugins/qris_toolbar/test_settings.png'))
-        zoi_type_folder.setData('zoi_type_folder', item_code['item_type'])
-        design_folder.appendRow(zoi_type_folder)
-
-        zoi_type_path = design_geopackage_path + '|layername=zoi_types'
-        zoi_type_layer = QgsVectorLayer(zoi_type_path, "zoi_types", "ogr")
-        for zoi_type in zoi_type_layer.getFeatures():
-            zoi_type_node = QStandardItem(zoi_type.attribute('name'))
-            # TODO change the icon
-            zoi_type_node.setIcon(QIcon(':/plugins/qris_toolbar/test_influence.png'))
-            zoi_type_node.setData('zoi_type', item_code['item_type'])
-            zoi_type_node.setData(zoi_type.attribute('fid'), item_code['feature_id'])
-            zoi_type_folder.appendRow(zoi_type_node)
-
-        # Add a placed for photos
-        # photos_folder = QStandardItem("Project Photos")
-        # photos_folder.setIcon(QIcon(':/plugins/qris_toolbar/BrowseFolder.png'))
-        # photos_folder.setData('photos_folder', item_code['item_type'])
-        # project_node.appendRow(photos_folder)
-
-        # TODO for now we are expanding the map however need to remember expanded state or add new nodes as we add data
-        # self.treeView.expandAll()
 
         # Check if new item is in the tree, if it is pass it to the add_to_map function
         # Adds a test comment
@@ -403,7 +231,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
             if isinstance(model_data, DBItem):
-                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: map_item_receiver(self.project, model_data))
+                self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: self.add_db_item_to_tree(model_item, model_data))
             else:
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
@@ -419,6 +247,29 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         if slot is not None:
             action.triggered.connect(slot)
+
+    def add_db_item_to_tree(self, tree_node: QStandardItem, db_item: DBItem):
+
+        if isinstance(db_item, Mask):
+            build_mask_layer(self.project, db_item)
+        elif isinstance(db_item, Basemap):
+            build_basemap_layer(self.project, db_item)
+        elif isinstance(db_item, Event):
+            [build_event_protocol_single_layer(self.project, event_layer) for event_layer in db_item.event_layers]
+        elif isinstance(db_item, Protocol):
+            # determine parent node
+            event_node = tree_node.parent()
+            event = event_node.data(Qt.UserRole)
+            for event_layer in event.event_layers:
+                if event_layer.layer in db_item.layers:
+                    build_event_protocol_single_layer(self.project, event_layer)
+        elif isinstance(db_item, Layer):
+            # determine parent node
+            event_node = tree_node.parent().parent()
+            event = event_node.data(Qt.UserRole)
+            for event_layer in event.event_layers:
+                if event_layer.layer == db_item:
+                    build_event_protocol_single_layer(self.project, event_layer)
 
     def expand_tree(self):
         self.treeView.expandAll()
@@ -439,21 +290,31 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
         if result is not None and result != 0:
-            event = frm.event
-            new_node = QStandardItem(event.name)
-            new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(event, Qt.UserRole)
-            parent_node.appendRow(new_node)
-
-            for protocol in event.protocols:
-                protocol_node = QStandardItem(protocol.name)
-                protocol_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-                protocol_node.setData(protocol, Qt.UserRole)
-                new_node.appendRow(protocol_node)
+            self.add_event_too_tree(parent_node, frm.event)
 
             # if frm.chkAddToMap.isChecked():
             #     for method_id in event.protocols:
             #         add_to_map(self.project, method_id)
+
+    def add_event_too_tree(self, parent_node, event: Event):
+
+        event_node = QStandardItem(event.name)
+        event_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+        event_node.setData(event, Qt.UserRole)
+        parent_node.appendRow(event_node)
+
+        for protocol in event.protocols:
+            protocol_node = QStandardItem(protocol.name)
+            protocol_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+            protocol_node.setData(protocol, Qt.UserRole)
+            event_node.appendRow(protocol_node)
+
+            for layer in protocol.layers:
+                if layer.is_lookup == False:
+                    layer_node = QStandardItem(layer.name)
+                    layer_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+                    layer_node.setData(layer, Qt.UserRole)
+                    protocol_node.appendRow(layer_node)
 
     def add_assessment_method(self, project: Project, protocol: Protocol):
 

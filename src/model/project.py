@@ -42,7 +42,7 @@ class Project(DBItem):
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)
-            self.protocols = load_protocols(curs)
+            self.protocols = load_protocols(curs, self.layers)
             self.basemaps = load_basemaps(curs)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
 

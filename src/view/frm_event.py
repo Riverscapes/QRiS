@@ -47,11 +47,12 @@ class FrmEvent(QDialog, Ui_event2):
         # Methods
         self.protocol_model = QStandardItemModel()
         for protocol in qris_project.protocols.values():
-            item = QStandardItem(protocol.name)
-            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
-            item.setData(protocol, Qt.UserRole)
-            self.protocol_model.appendRow(item)
+            if protocol.has_custom_ui is False:
+                item = QStandardItem(protocol.name)
+                item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
+                item.setData(protocol, Qt.UserRole)
+                self.protocol_model.appendRow(item)
 
         self.vwProtocols.setModel(self.protocol_model)
         self.vwProtocols.setModelColumn(1)
