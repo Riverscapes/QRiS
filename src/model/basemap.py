@@ -32,9 +32,9 @@ class Basemap(DBItem):
 
 def load_basemaps(curs: sqlite3.Cursor) -> dict:
 
-    curs.execute('SELECT fid, name, path, type, description FROM basemaps')
-    return {row['fid']: Basemap(
-        row['fid'],
+    curs.execute('SELECT id, name, path, type, description FROM basemaps')
+    return {row['id']: Basemap(
+        row['id'],
         row['name'],
         row['path'],
         row['description']

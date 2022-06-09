@@ -32,8 +32,8 @@ class Mask(DBItem):
 def load_masks(curs: sqlite3.Cursor, mask_types: dict) -> dict:
 
     curs.execute("""SELECT * FROM masks""")
-    return {row['fid']: Mask(
-        row['fid'],
+    return {row['id']: Mask(
+        row['id'],
         row['name'],
         mask_types[row['mask_type_id']],
         row['description']

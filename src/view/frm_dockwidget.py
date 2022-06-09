@@ -67,7 +67,8 @@ from ..ui.structure_type_dialog import StructureTypeDlg
 from ..ui.zoi_type_dialog import ZoiTypeDlg
 from ..ui.phase_dialog import PhaseDlg
 
-from .frm_assessment import FrmAssessment
+from .frm_event import FrmEvent
+# from .ui.event2 import Ui_event2
 from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
 from .frm_new_analysis import FrmNewAnalysis
@@ -77,16 +78,16 @@ from ..QRiS.method_to_map import map_item_receiver
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
 from ..model.project import Project
-from ..model.assessment import Assessment
-from ..model.assessment import ASSESSMENT_MACHINE_CODE
+from ..model.event import Event
+from ..model.event import EVENT_MACHINE_CODE
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
-from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
+from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
-from ..model.method import Method
+from ..model.protocol import Protocol
 
 from ..processing_provider.feature_class_functions import browse_source
 
@@ -138,11 +139,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         rootNode.appendRow(project_node)
         # self.treeView.setExpanded(project_node.index(), True)
 
-        assessment_node = QStandardItem('Assessments')
-        assessment_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        assessment_node.setData(ASSESSMENT_MACHINE_CODE, Qt.UserRole)
-        project_node.appendRow(assessment_node)
-        [self.add_child_node(item, assessment_node, 'test_layers.png') for item in self.project.assessments.values()]
+        events_node = QStandardItem('Data Capture Events')
+        events_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        events_node.setData(EVENT_MACHINE_CODE, Qt.UserRole)
+        project_node.appendRow(events_node)
+        [self.add_child_node(item, events_node, 'test_layers.png') for item in self.project.events.values()]
 
         basemaps_node = QStandardItem('Basemaps')
         basemaps_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
@@ -387,8 +388,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         model_data = model_item.data(Qt.UserRole)
 
         if isinstance(model_data, str):
-            if model_data == ASSESSMENT_MACHINE_CODE:
-                self.add_context_menu_item('Add New Assessment', 'test_new.png', lambda: self.add_assessment(model_item))
+            if model_data == EVENT_MACHINE_CODE:
+                self.add_context_menu_item('Add New Data Capture Event', 'test_new.png', lambda: self.add_event(model_item))
+                self.add_context_menu_item('Add New Design', 'test_new.png', lambda: self.add_design(model_item))
             elif model_data == BASEMAP_MACHINE_CODE:
                 self.add_context_menu_item('Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basemap(model_item))
             elif model_data == MASK_MACHINE_CODE:
@@ -399,10 +401,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             else:
                 raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
-            if isinstance(model_data, Project) or isinstance(model_data, Assessment):
-                for method_id, method in model_data.methods.items():
-                    self.add_context_menu_item(f'Create New {method.name}', 'test_add_map.png', lambda: self.add_assessment_method(self.project, method))
-
             if isinstance(model_data, DBItem):
                 self.add_context_menu_item('Add To Map', 'test_add_map.png', lambda: map_item_receiver(self.project, model_data))
             else:
@@ -412,39 +410,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
             self.add_context_menu_item('Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
 
-        # if item_type == 'project_root':
-        #     self.menu.addAction('EXPAND_ALL', lambda: self.expand_tree())
-        #     self.menu.addAction('COLLAPSE_ALL', lambda: self.collapse_tree())
-        #     self.menu.addAction('REFRESH_TREE', lambda: self.build_tree_view(self.qris_project, None))
-        #     self.menu.addAction('TEST_ADD_ASSESSMENT_METHOD', lambda: add_assessment_method_to_map(self.qris_project, 3))
-        # elif item_type == ASSESSMENT_MACHINE_CODE:
-        #     self.menu.addAction(ASSESSMENT_MACHINE_CODE, lambda: self.add_assessment(model_item))
-        # elif item_type == BASIS_MACHINE_CODE:
-        #     self.menu.addAction(BASIS_MACHINE_CODE, lambda: self.add_basis(model_item))
-
-        # elif item_type == "extent_folder":
-        #     self.menu.addAction('ADD_PROJECT_EXTENT_LAYER', lambda: self.import_project_extent_layer())
-        #     self.menu.addAction('CREATE_BLANK_PROJECT_EXTENT_LAYER', lambda: self.create_blank_project_extent())
-        # elif item_type == "layers_folder":
-        #     self.menu.addAction('IMPORT_PROJECT_LAYER', lambda: self.import_project_layer())
-        # elif item_type == "layer_node":
-        #     self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
-        # elif item_type in ['extent_node', 'Project_Extent']:
-        #     # self.menu.addAction('UPDATE_PROJECT_EXTENT', lambda: self.update_project_extent(model_item))
-        #     # self.menu.addAction('DELETE_PROJECT_EXTENT', lambda: self.delete_project_extent(model_item))
-        #     self.menu.addAction('ADD_TO_MAP', lambda: add_to_map(self.qris_project, self.model, model_item))
-        # elif item_type == "design_folder":
-        #     self.menu.addAction('ADD_DESIGN', lambda: self.add_design())
-        # elif item_type == "design":
-        #     self.menu.addAction('ADD_TO_MAP_OR_UPDATE_SYMBOLOGY', lambda: add_to_map(self.qris_project, self.model, model_item))
-        # elif item_type == "structure_type_folder":
-        #     self.menu.addAction('ADD_STRUCTURE_TYPE', lambda: self.add_structure_type())
-        # elif item_type == "zoi_type_folder":
-        #     self.menu.addAction('ADD_ZOI_TYPE', lambda: self.add_zoi_type())
-        # elif item_type == "phase_folder":
-        #     self.menu.addAction('ADD_PHASE', lambda: self.add_phase())
-        # else:
-        #     self.menu.clear()
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
     def add_context_menu_item(self, menu_item_text: str, icon_file_nam, slot: pyqtSlot = None, enabled=True):
@@ -462,30 +427,30 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         self.treeView.collapseAll()
         return
 
-    def add_assessment(self, parent_node):
-        """Initiates adding a new assessment"""
-        frm = FrmAssessment(self, self.project)
+    def add_event(self, parent_node):
+        """Initiates adding a new data capture event"""
+        frm = FrmEvent(self, self.project)
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
         if result is not None:
-            assessment = frm.assessment
-            new_node = QStandardItem(assessment.name)
+            event = frm.event
+            new_node = QStandardItem(event.name)
             new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(assessment, Qt.UserRole)
+            new_node.setData(event, Qt.UserRole)
             parent_node.appendRow(new_node)
 
-            for method in assessment.methods.values():
-                method_node = QStandardItem(method.name)
-                method_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-                method_node.setData(method, Qt.UserRole)
-                new_node.appendRow(method_node)
+            for protocol in event.protocols:
+                protocol_node = QStandardItem(protocol.name)
+                protocol_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+                protocol_node.setData(protocol, Qt.UserRole)
+                new_node.appendRow(protocol_node)
 
             if frm.chkAddToMap.isChecked():
-                for method_id in assessment.methods:
-                    add_assessment_method_to_map(self.project, method_id)
+                for method_id in event.protocols:
+                    add_to_map(self.project, method_id)
 
-    def add_assessment_method(self, project: Project, method: Method):
+    def add_assessment_method(self, project: Project, protocol: Protocol):
 
         # if method.id == 3:
         frm = FrmDesign(self, self.project)
@@ -550,9 +515,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         # if result!=0:
         #     analysis =
 
-    def add_assessment_to_map(self, assessment):
-        for method_id in assessment.methods.keys():
-            add_assessment_method_to_map(self.project, method_id)
+    def add_assessment_to_map(self, event: Event):
+        for protocol_id in event.protocols.keys():
+            add_assessment_method_to_map(self.project, protocol_id)
 
     def add_to_map(self, db_item: DBItem):
         add_root_map_item(self.project, db_item)
@@ -576,7 +541,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         QMessageBox.warning(self, "Not Implemented", "Browing to a dataset is not yet implemented.")
 
-    def add_design(self):
+    def add_design(self, parent_node: DBItem):
         """Initiates adding a new design"""
         self.design_dialog = DesignDlg(self.qris_project)
         # TODO remove this stuff about date

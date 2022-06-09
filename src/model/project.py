@@ -5,9 +5,9 @@ from numpy import inner
 
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
-from .method import Method, load_methods
+from .protocol import Protocol, load as load_protocols
 from .basemap import Basemap, load_basemaps
-from .assessment import Assessment, load_assessments
+from .event import Event, load as load_events
 
 from .db_item import DBItem, dict_factory, load_lookup_table
 
@@ -28,20 +28,22 @@ class Project(DBItem):
             conn.row_factory = dict_factory
             curs = conn.cursor()
 
-            curs.execute('SELECT fid, name FROM projects LIMIT 1')
+            curs.execute('SELECT id, name FROM projects LIMIT 1')
             project_row = curs.fetchone()
             self.name = project_row['name']
-            self.id = project_row['fid']
+            self.id = project_row['id']
 
-            self.lookup_tables = {
-                'mask_types': load_lookup_table(curs, 'lkp_mask_types')
-            }
+            self.lookup_tables = {table: load_lookup_table(curs, table) for table in [
+                'lkp_mask_types',
+                'lkp_platform',
+                'lkp_event_types'
+            ]}
 
-            self.masks = load_masks(curs, self.lookup_tables['mask_types'])
+            self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)
-            self.methods = load_methods(curs)
+            self.protocols = load_protocols(curs)
             self.basemaps = load_basemaps(curs)
-            self.assessments = load_assessments(curs, self.methods, self.basemaps)
+            self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))

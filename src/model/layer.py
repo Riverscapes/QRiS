@@ -16,8 +16,8 @@ class Layer(DBItem):
 def load_layers(curs: sqlite3.Cursor) -> dict:
 
     curs.execute('SELECT * FROM layers')
-    return {row['fid']: Layer(
-        row['fid'],
+    return {row['id']: Layer(
+        row['id'],
         row['fc_name'],
         row['display_name'],
         row['qml'],

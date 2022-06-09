@@ -4,14 +4,14 @@ from datetime import datetime
 
 from simplejson import loads
 from .db_item import DBItem
-from .assessment import Assessment, insert_assessment
+from .event import Event, insert as insert_event
 
 DESIGN_MACHINE_CODE = 'DESIGN'
 
 
 class Design(DBItem):
 
-    def __init__(self, assessment: Assessment, id: int, name: str, description: str, date: datetime, status: DBItem):
+    def __init__(self, assessment: Event, id: int, name: str, description: str, date: datetime, status: DBItem):
         super().__init__('assessment_methods', id, name)
         self.description = description
         self.assessement = assessment
@@ -39,14 +39,14 @@ class Design(DBItem):
                 raise ex
 
 
-def load_designs(curs: sqlite3.Cursor, statuses: dict, assessment: Assessment) -> dict:
+def load_designs(curs: sqlite3.Cursor, statuses: dict, assessment: Event) -> dict:
 
     curs.execute("""SELECT am.* FROM assessment_methods am INNER JOIN methods m ON am.method_id = m.fid
         WHERE am.assessment_id = ?
         AND m.fid = ?""", [assessment.id, DESIGN_MACHINE_CODE])
 
     for row in curs.fetchall():
-        assessment_method_id = row['fid']
+        assessment_method_id = row['id']
         metadata = loads(row['metadata']) if row['metadata'] is not None else None
         status = statuses[metadata['statusId']] if 'statusId' in metadata else None
         date = metadata['date'] if 'date' in metadata else None
@@ -54,7 +54,7 @@ def load_designs(curs: sqlite3.Cursor, statuses: dict, assessment: Assessment) -
         assessment.methods[assessment_method_id] = Design(assessment, assessment_method_id, row['name'], row['description'], date, status)
 
 
-def insert_design(db_path: str, assessment: Assessment, name: str, description: str, date: datetime, status: DBItem) -> Design:
+def insert_design(db_path: str, assessment: Event, name: str, description: str, date: datetime, status: DBItem) -> Design:
 
     description = description if len(description) > 0 else None
     metadata = _build_metadata(status, date)
@@ -64,7 +64,7 @@ def insert_design(db_path: str, assessment: Assessment, name: str, description: 
             curs = conn.cursor()
 
             if assessment is None:
-                assessment = insert_assessment(db_path, None, None, None, None)
+                assessment = insert_event(db_path, None, None, None, None, None, None, None, None, None, None, None)
 
             curs.execute("""INSERT INTO assessment_methods (assessment_id, method_id, name, description, metadata)
                 SELECT  ?, method_id, ?, ?, ? FROM methods WHERE method_id = ?""", [assessment.id, name, description, json.dumps(metadata), DESIGN_MACHINE_CODE])

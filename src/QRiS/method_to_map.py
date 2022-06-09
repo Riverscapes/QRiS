@@ -33,7 +33,7 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
 
-from ..model.assessment import ASSESSMENT_MACHINE_CODE, Assessment
+from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 
@@ -205,7 +205,7 @@ def map_item_receiver(qris_project: Project, item: DBItem) -> None:
         add_mask_to_map(qris_project, item)
     elif isinstance(item, Basemap):
         add_basemap_to_map(qris_project, item)
-    elif isinstance(item, Assessment):
+    elif isinstance(item, Event):
         add_assessment_to_map(qris_project, item)
     else:
         pass
@@ -292,7 +292,7 @@ def add_assessment_to_map(qris_project, item: DBItem) -> None:
 
         # Create the layer group list and set the target assessment group
         assessment_group_name = str(assessment_id) + '-' + assessment_name
-        group_lineage = [qris_project.name, ASSESSMENT_MACHINE_CODE, assessment_group_name]
+        group_lineage = [qris_project.name, EVENT_MACHINE_CODE, assessment_group_name]
         assessment_group = set_target_layer_group(group_lineage)
 
         # now loop through each layer and see if they need to be added
