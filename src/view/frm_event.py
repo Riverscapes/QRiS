@@ -23,14 +23,16 @@ DATA_CAPTURE_EVENT_TYPE_ID = 1
 
 class FrmEvent(QDialog, Ui_event2):
 
-    def __init__(self, parent, qris_project: Project, assessment=None):
+    def __init__(self, parent, qris_project: Project, event=None):
 
         self.qris_project = qris_project
-        self.assessment = assessment
+        self.event = event
+        self.protocols = []
+        self.metadata = None
 
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowTitle('Create New Data Capture Event' if assessment is None else 'Edit Data Capture Event')
+        self.setWindowTitle('Create New Data Capture Event' if event is None else 'Edit Data Capture Event')
         self.buttonBox.accepted.connect(super(FrmEvent, self).accept)
         self.buttonBox.rejected.connect(super(FrmEvent, self).reject)
 
@@ -70,19 +72,19 @@ class FrmEvent(QDialog, Ui_event2):
             self.txtName.setFocus()
             return
 
-        protocols = []
-        for row in range(self.protocol_model.rowCount()):
-            index = self.protocol_model.index(row, 0)
-            check = self.protocol_model.data(index, Qt.CheckStateRole)
-            if check == Qt.Checked:
-                for protocol in self.qris_project.protocols.values():
-                    if protocol == self.protocol_model.data(index, Qt.UserRole):
-                        protocols.append(protocol)
-                        break
+        if len(self.protocols) < 1:
+            for row in range(self.protocol_model.rowCount()):
+                index = self.protocol_model.index(row, 0)
+                check = self.protocol_model.data(index, Qt.CheckStateRole)
+                if check == Qt.Checked:
+                    for protocol in self.qris_project.protocols.values():
+                        if protocol == self.protocol_model.data(index, Qt.UserRole):
+                            self.protocols.append(protocol)
+                            break
 
-        if len(protocols) < 1:
-            QMessageBox.warning(self, 'No Protocols Selected', 'You must select at least one protocol to continue.')
-            return
+            if len(self.protocols) < 1:
+                QMessageBox.warning(self, 'No Protocols Selected', 'You must select at least one protocol to continue.')
+                return
 
         basemaps = []
         # for row in range(self.bases_model.rowCount()):
@@ -103,9 +105,9 @@ class FrmEvent(QDialog, Ui_event2):
                 '',
                 self.qris_project.lookup_tables['lkp_event_types'][DATA_CAPTURE_EVENT_TYPE_ID],
                 self.cboPlatform.currentData(Qt.UserRole),
-                protocols,
+                self.protocols,
                 basemaps,
-                None
+                self.metadata
             )
 
             self.qris_project.events[self.event.id] = self.event
