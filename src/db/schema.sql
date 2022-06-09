@@ -12,15 +12,16 @@ CREATE TABLE protocols (
     machine_code TEXT UNIQUE NOT NULL,
     description TEXT,
     metadata TEXT,
+    has_custom_ui BOOLEAN,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO protocols (id, name, machine_code, description) VALUES (1, 'RIM', 'RIM', 'Riverscape Inundation Mapping');
-INSERT INTO protocols (id, name, machine_code, description) VALUES (2, 'Riverscape Units', 'RIVERSCAPE_UNITS', 'Placeholder name for the streams need space stupidity');
-INSERT INTO protocols (id, name, machine_code, description) VALUES (3, 'Low-Tech Design', 'DESIGN', 'Documentation of a design or as-built low-tech structures');
-INSERT INTO protocols (id, name, machine_code, description) VALUES (4, 'Structural Elements', 'STRUCTURES', 'Survey of primary structural element types');
-INSERT INTO protocols (id, name, machine_code, description) VALUES (5, 'Geomorphic Units', 'GUT', 'Some sort of riverscape feature classification, who fricken knows');
-INSERT INTO protocols (id, name, machine_code, description) VALUES (6, 'Channel Units', 'CHANNEL_UNITS', 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (1, 'RIM', 'RIM', 0, 'Riverscape Inundation Mapping');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Riverscape Units', 'RIVERSCAPE_UNITS', 0, 'Placeholder name for the streams need space stupidity');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (3, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Geomorphic Units', 'GUT', 0, 'Some sort of riverscape feature classification, who fricken knows');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (6, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
 
 CREATE TABLE lkp_metric_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

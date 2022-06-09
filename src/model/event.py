@@ -1,5 +1,7 @@
 import json
 import sqlite3
+
+from .event_layer import EventLayer
 from .db_item import DBItem, dict_factory, get_unique_name
 from .datespec import DateSpec
 
@@ -32,6 +34,15 @@ class Event(DBItem):
         self.basemaps = basemaps.copy() if basemaps else []
         self.metadata = metadata
 
+        event_layers = {}
+        for protocol in self.protocols:
+            for layer in protocol.layers:
+                if layer.id not in event_layers:
+                    # Note the key is the layer. The id passed into the constructor is that of the Event itself
+                    event_layers[layer.id] = EventLayer(id, layer)
+
+        self.event_layers = list(event_layers.values())
+
     def update(self, curs: sqlite3.Cursor, name: str, description: str, basemaps: dict):
 
         curs.execute('UPDATE events SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
@@ -54,8 +65,14 @@ class Event(DBItem):
 
 def load(curs: sqlite3.Cursor, protocols: dict, lookups: dict, basemaps: dict) -> dict:
 
+    curs.execute('SELECT * FROM event_protocols')
+    event_protocols = [(row['event_id'], protocols[row['protocol_id']]) for row in curs.fetchall()]
+
+    curs.execute('SELECT * FROM event_basemaps')
+    event_basemaps = [(row['event_id'], basemaps(row['basemap_id'])) for row in curs.fetchall()]
+
     curs.execute('SELECT * FROM events')
-    events = {row['id']: Event(
+    return {row['id']: Event(
         row['id'],
         row['name'],
         row['description'],
@@ -64,20 +81,10 @@ def load(curs: sqlite3.Cursor, protocols: dict, lookups: dict, basemaps: dict) -
         row['date_text'],
         lookups['lkp_event_types'][row['event_type_id']],
         lookups['lkp_platform'][row['platform_id']],
-        json.loads(row['metadata']) if row['metadata'] else None,
-        None,
-        None
+        [protocol for event_id, protocol in event_protocols if event_id == row['id']],
+        [basemap for event_id, basemap in event_basemaps if event_id == row['id']],
+        json.loads(row['metadata']) if row['metadata'] else None
     ) for row in curs.fetchall()}
-
-    for event in events.values():
-
-        curs.execute('SELECT * FROM event_protocols WHERE event_id = ?', [event.id])
-        event.protocols = [protocols[row['protocol_id']] for row in curs.fetchall()]
-
-        curs.execute('SELECT * FROM event_basemaps WHERE event_id = ?', [event.id])
-        event.basemaps = [basemaps[row['basemap_id']] for row in curs.fetchall()]
-
-    return events
 
 
 def insert(db_path: str,

@@ -42,6 +42,9 @@ from ..model.db_item import DBItem, dict_factory
 from ..model.mask import Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.project import Project, PROJECT_MACHINE_CODE
+from ..model.protocol import Protocol
+from ..model.layer import Layer
+from ..model.event_layer import EventLayer
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
@@ -119,19 +122,21 @@ def add_root_map_item(project: Project, db_item: DBItem) -> QgsLayerTreeNode:
 
     # Do layer specific construction here
     if isinstance(db_item, Mask):
-        machine_code = MASK_MACHINE_CODE
-        group_name = 'Masks'
-        map_layer = build_mask_layer(project, db_item)
+        # machine_code = MASK_MACHINE_CODE
+        # group_name = 'Masks'
+        build_mask_layer(project, db_item)
     elif isinstance(db_item, Basemap):
-        machine_code = BASEMAP_MACHINE_CODE
-        group_name = 'Basemaps'
-        map_layer = build_basemap_layer(project, db_item)
-
-    # Finally add the new layer here
-    group_layer = get_group_layer(machine_code, group_name, project_group, True)
-    tree_layer_node = group_layer.addLayer(map_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, db_item)
-    return tree_layer_node
+        # machine_code = BASEMAP_MACHINE_CODE
+        # group_name = 'Basemaps'
+        build_basemap_layer(project, db_item)
+    if isinstance(db_item, Event):
+        # machine_code = EVENT_MACHINE_CODE
+        # group_name = 'Data Capture Events'
+        build_event_layer(project, db_item)
+    if isinstance(db_item, EventLayer):
+        # machine_code = EVENT_MACHINE_CODE
+        # group_name = 'Data Capture Events'
+        build_event_layer(project, db_item)
 
 
 def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
@@ -162,6 +167,60 @@ def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
 #             QgsMapLayerRegistry.instance().removeMapLayer(item_layer)
 
 
+def build_event_layer(project: Project, event: Event) -> None:
+    """ 
+    Add all layers for the event, across all protocols
+    """
+
+    [build_event_protocol_single_layer(project, event_layer) for event_layer in event.event_layers]
+
+
+def build_event_protocol_layer(event_layer: QgsLayerTreeGroup, project: Project, event: Event, protocol: Protocol) -> None:
+    """
+    Add all yaers in the event that are also in the protocol
+    """
+
+    for event_layer in event.event_layers:
+        if event_layer.layer in protocol.layers:
+            build_event_protocol_single_layer(project, event_layer)
+
+
+def build_event_protocol_single_layer(project: Project, event_layer: EventLayer) -> None:
+    """
+    Add a single layer for an event
+    """
+
+    # The ID of the event layer is actually the event ID!
+    event = project.events[event_layer.id]
+
+    project_group = get_project_group(project)
+    events_group_group_layer = get_group_layer(EVENT_MACHINE_CODE + 'S', 'Data Capture Events', project_group, True)
+    event_group_layer = get_group_layer(EVENT_MACHINE_CODE, event.name, events_group_group_layer, True)
+
+    event_protocol_layer = get_db_item_layer(event_layer, event_group_layer)
+    if event_protocol_layer is not None:
+        return
+
+    # Create a layer from the table
+    fc_path = project.project_file + '|layername=' + event_layer.layer.name
+    feature_layer = QgsVectorLayer(fc_path, event_layer.layer.name, 'ogr')
+    QgsProject.instance().addMapLayer(feature_layer, False)
+
+    # hit it with qml
+    qml = os.path.join(symbology_path, 'symbology', event_layer.layer.qml)
+    feature_layer.loadNamedStyle(qml)
+    # set the substring
+    feature_layer.setSubsetString('event_id = ' + str(event.id))
+    # Set a parent assessment variable
+    QgsExpressionContextUtils.setLayerVariable(feature_layer, 'event_id', event.id)
+    # Set the default value from the variable
+    field_index = feature_layer.fields().indexFromName('event_id')
+    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("@event_id"))
+
+    tree_layer_node = event_group_layer.addLayer(feature_layer)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, event_layer)
+
+
 def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
 
     # Create a layer from the table
@@ -188,6 +247,12 @@ def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
     set_hidden(mask_feature_layer, 'metadata', 'Metadata')
     set_virtual_dimension(mask_feature_layer, 'area')
 
+    # Finally add the new layer here
+    project_group = get_project_group(project, True)
+    group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
+    tree_layer_node = group_layer.addLayer(mask_feature_layer)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask)
+
     return mask_feature_layer
 
 
@@ -196,24 +261,31 @@ def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:
     raster_layer = QgsRasterLayer(raster_path, basemap.name)
     QgsProject.instance().addMapLayer(raster_layer, False)
     # TODO: raster symbology?
+
+    # Finally add the new layer here
+    project_group = get_project_group(project, True)
+    group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
+    tree_layer_node = group_layer.addLayer(raster_layer)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap)
+
     return raster_layer
 
 
-def map_item_receiver(qris_project: Project, item: DBItem) -> None:
+def map_item_receiver(project: Project, item: DBItem) -> None:
     """Recieves a qris tree item model and sends to the type specific add to map function"""
     if isinstance(item, Mask):
-        add_mask_to_map(qris_project, item)
+        add_mask_to_map(project, item)
     elif isinstance(item, Basemap):
-        add_basemap_to_map(qris_project, item)
+        add_basemap_to_map(project, item)
     elif isinstance(item, Event):
-        add_assessment_to_map(qris_project, item)
+        add_assessment_to_map(project, item)
     else:
         pass
         # TODO scratch space add to map
         # TODO raise Exception
 
 
-def add_basemap_to_map(qris_project: Project, basemap: Basemap) -> None:
+def add_basemap_to_map(project: Project, basemap: Basemap) -> None:
     basemap_id = basemap.id
     basemap_name = basemap.name
     raster_path = os.path.join(os.path.dirname(project.project_file), basemap.path)
