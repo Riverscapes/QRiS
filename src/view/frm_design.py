@@ -40,7 +40,7 @@ class FrmDesign(QDialog, Ui_Design):
         # self.txtName.textChanged.connect(self.on_name_changed)
 
         # Assessments
-        self.assessments = self.qris_project.assessments
+        self.assessments = self.qris_project.events
         assessment_index = None
 
         if isinstance(design, Design):

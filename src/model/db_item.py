@@ -108,10 +108,10 @@ class DBItemModel(QAbstractListModel):
 
 def load_lookup_table(curs: sqlite3.Cursor, table: str) -> dict:
 
-    curs.execute('SELECT fid, name FROM {}'.format(table))
-    return {row['fid']: DBItem(
+    curs.execute('SELECT id, name FROM {}'.format(table))
+    return {row['id']: DBItem(
         table,
-        row['fid'],
+        row['id'],
         row['name']
     ) for row in curs.fetchall()}
 

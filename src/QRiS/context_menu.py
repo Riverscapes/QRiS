@@ -2,7 +2,7 @@ from qgis.PyQt.QtWidgets import QDockWidget, QWidget, QTreeView, QVBoxLayout, QM
 from qgis.PyQt.QtCore import pyqtSlot, QModelIndex
 from qgis.PyQt.QtGui import QIcon, QStandardItem
 
-from ..model.assessment import ASSESSMENT_MACHINE_CODE
+from ..model.event import EVENT_MACHINE_CODE
 from ..model.basemap import BASEMAP_MACHINE_CODE
 
 
@@ -84,7 +84,7 @@ class ContextMenu(QMenu):
             'Import a project extent polygon',
             ':/plugins/qris_toolbar/test_new.png'
         ),
-        ASSESSMENT_MACHINE_CODE: (
+        EVENT_MACHINE_CODE: (
             'Create A New Assessment',
             ':/plugins/qris_toolbar/test_new.png'
         ),

@@ -29,9 +29,9 @@ class Analysis(DBItem):
 
 def load_analyses(curs: sqlite3.Cursor) -> dict:
 
-    curs.execute('SELECT fid, name, description FROM analyses')
-    return {row['fid']: Analysis(
-        row['fid'],
+    curs.execute('SELECT id, name, description FROM analyses')
+    return {row['id']: Analysis(
+        row['id'],
         row['name'],
         row['description']
     ) for row in curs.fetchall()}
