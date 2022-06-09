@@ -47,7 +47,8 @@ from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
 from qgis.core import QgsMapLayer
 
-from .frm_design import FrmDesign
+from .frm_design2 import FrmDesign
+from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
 
 from ..QRiS.context_menu import ContextMenu
 from ..QRiS.settings import Settings
@@ -389,8 +390,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         if isinstance(model_data, str):
             if model_data == EVENT_MACHINE_CODE:
-                self.add_context_menu_item('Add New Data Capture Event', 'test_new.png', lambda: self.add_event(model_item))
-                self.add_context_menu_item('Add New Design', 'test_new.png', lambda: self.add_design(model_item))
+                self.add_context_menu_item('Add New Data Capture Event', 'test_new.png', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
+                self.add_context_menu_item('Add New Design', 'test_new.png', lambda: self.add_event(model_item, 0))
             elif model_data == BASEMAP_MACHINE_CODE:
                 self.add_context_menu_item('Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basemap(model_item))
             elif model_data == MASK_MACHINE_CODE:
@@ -427,13 +428,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         self.treeView.collapseAll()
         return
 
-    def add_event(self, parent_node):
+    def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
-        frm = FrmEvent(self, self.project)
+        if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
+            frm = FrmEvent(self, self.project)
+        else:
+            frm = FrmDesign(self, self.project)
+
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
-        if result is not None:
+        if result is not None and result != 0:
             event = frm.event
             new_node = QStandardItem(event.name)
             new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
@@ -446,9 +451,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 protocol_node.setData(protocol, Qt.UserRole)
                 new_node.appendRow(protocol_node)
 
-            if frm.chkAddToMap.isChecked():
-                for method_id in event.protocols:
-                    add_to_map(self.project, method_id)
+            # if frm.chkAddToMap.isChecked():
+            #     for method_id in event.protocols:
+            #         add_to_map(self.project, method_id)
 
     def add_assessment_method(self, project: Project, protocol: Protocol):
 
@@ -540,13 +545,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             folder_path = os.path.dirname(self.project.project_file)
 
         QMessageBox.warning(self, "Not Implemented", "Browing to a dataset is not yet implemented.")
-
-    def add_design(self, parent_node: DBItem):
-        """Initiates adding a new design"""
-        self.design_dialog = DesignDlg(self.qris_project)
-        # TODO remove this stuff about date
-        self.design_dialog.dataChange.connect(self.build_tree_view)
-        self.design_dialog.show()
 
     def add_structure_type(self):
         """Initiates adding a structure type and the structure type dialog"""

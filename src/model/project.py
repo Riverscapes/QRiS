@@ -36,7 +36,8 @@ class Project(DBItem):
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in [
                 'lkp_mask_types',
                 'lkp_platform',
-                'lkp_event_types'
+                'lkp_event_types',
+                'lkp_design_status'
             ]}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
