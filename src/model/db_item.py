@@ -8,6 +8,11 @@ DB_MODE_IMPORT = 'import'
 
 
 class DBItem():
+    """ Base class for in-memory representations of database objects. 
+
+    The id property tracks the primary key that uniquely identifies the object.
+    The name tracks the official name (that is normally unique across all
+    objects of the same type."""
 
     def __init__(self, db_table_name: str, id: int, name: str):
         self.db_table_name = db_table_name
@@ -59,13 +64,6 @@ class DBItemModel(QAbstractListModel):
                 return value
 
         return None
-
-    # def load_data(self, db_path: str, table: str, id_col: str = 'fid', name_col: str = 'name') -> None:
-    #     conn = sqlite3.connect(db_path)
-    #     curs = conn.cursor()
-    #     curs.execute('SELECT {0}, {1} FROM {2} ORDER BY {1}'.format(id_col, name_col, table))
-    #     for row in curs.fetchall():
-    #         self._data.append((row[0], row[1]))
 
     def rowCount(self, index):
         return len(self._data)

@@ -2,13 +2,14 @@ import json
 import sqlite3
 
 from .event_layer import EventLayer
-from .db_item import DBItem, dict_factory, get_unique_name
+from .db_item import DBItem, dict_factory
 from .datespec import DateSpec
 
 EVENT_MACHINE_CODE = 'Event'
 
 
 class Event(DBItem):
+    """ Data Capture Event class"""
 
     def __init__(self,
                  id: int,

@@ -16,7 +16,7 @@ class Analysis(DBItem):
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE analyses SET name = ?, description = ? WHERE fid = ?', [name, description, self.id])
+                curs.execute('UPDATE analyses SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
                 conn.commit()
 
                 self.name = name

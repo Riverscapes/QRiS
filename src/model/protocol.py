@@ -1,5 +1,5 @@
 import sqlite3
-from .db_item import DBItem, dict_factory
+from .db_item import DBItem
 
 
 class Protocol(DBItem):

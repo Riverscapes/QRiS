@@ -17,7 +17,7 @@ class Mask(DBItem):
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE masks SET name = ?, mask_type = ?, description = ? WHERE mask_id = ?', [name, mask_type.id, description, self.id])
+                curs.execute('UPDATE masks SET name = ?, mask_type = ?, description = ? WHERE id = ?', [name, mask_type.id, description, self.id])
                 conn.commit()
 
                 self.name = name
