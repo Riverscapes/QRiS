@@ -1,8 +1,6 @@
 import os
 import sqlite3
 
-from numpy import inner
-
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
@@ -12,8 +10,6 @@ from .event import Event, load as load_events
 from .db_item import DBItem, dict_factory, load_lookup_table
 
 from pathlib import Path, PurePosixPath
-
-from qgis import processing
 
 PROJECT_MACHINE_CODE = 'Project'
 

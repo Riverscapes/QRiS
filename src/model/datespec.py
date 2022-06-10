@@ -1,6 +1,9 @@
 
 
 class DateSpec:
+    """
+    Simple class to store a date with optional year/month/day parts.
+    """
 
     def __init__(self, year: int, month: int, day: int):
         self.set_year(year)
