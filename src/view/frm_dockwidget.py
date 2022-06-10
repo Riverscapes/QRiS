@@ -58,7 +58,7 @@ from ..QRiS.qt_user_role import item_code
 from ..QRiS.manage_map import add_to_map
 
 
-from ..QRiS.method_to_map import build_basemap_layer, get_project_group, add_root_map_item, remove_db_item_layer
+from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer
 
 from ..ui.elevation_dockwidget import ElevationDockWidget
 from ..ui.project_extent_dialog import ProjectExtentDlg
@@ -381,12 +381,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         # if result!=0:
         #     analysis =
 
-    def add_assessment_to_map(self, event: Event):
-        for protocol_id in event.protocols.keys():
-            add_assessment_method_to_map(self.project, protocol_id)
+    # def add_assessment_to_map(self, event: Event):
+    #     for protocol_id in event.protocols.keys():
+    #         add_assessment_method_to_map(self.project, protocol_id)
 
-    def add_to_map(self, db_item: DBItem):
-        add_root_map_item(self.project, db_item)
+    # def add_to_map(self, db_item: DBItem):
+    #     add_root_map_item(self.project, db_item)
 
     def edit_item(self, db_item: DBItem):
         QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')

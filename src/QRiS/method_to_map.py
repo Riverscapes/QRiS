@@ -112,31 +112,31 @@ def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
     return project_group_layer
 
 
-def add_root_map_item(project: Project, db_item: DBItem) -> QgsLayerTreeNode:
+# def add_root_map_item(project: Project, db_item: DBItem) -> QgsLayerTreeNode:
 
-    # First check if the item exists already within the project
-    project_group = get_project_group(project)
-    result = get_db_item_layer(db_item, project_group)
-    if result is not None:
-        return result
+#     # First check if the item exists already within the project
+#     project_group = get_project_group(project)
+#     result = get_db_item_layer(db_item, project_group)
+#     if result is not None:
+#         return result
 
-    # Do layer specific construction here
-    if isinstance(db_item, Mask):
-        # machine_code = MASK_MACHINE_CODE
-        # group_name = 'Masks'
-        build_mask_layer(project, db_item)
-    elif isinstance(db_item, Basemap):
-        # machine_code = BASEMAP_MACHINE_CODE
-        # group_name = 'Basemaps'
-        build_basemap_layer(project, db_item)
-    if isinstance(db_item, Event):
-        # machine_code = EVENT_MACHINE_CODE
-        # group_name = 'Data Capture Events'
-        build_event_layer(project, db_item)
-    if isinstance(db_item, EventLayer):
-        # machine_code = EVENT_MACHINE_CODE
-        # group_name = 'Data Capture Events'
-        build_event_layer(project, db_item)
+#     # Do layer specific construction here
+#     if isinstance(db_item, Mask):
+#         # machine_code = MASK_MACHINE_CODE
+#         # group_name = 'Masks'
+#         build_mask_layer(project, db_item)
+#     elif isinstance(db_item, Basemap):
+#         # machine_code = BASEMAP_MACHINE_CODE
+#         # group_name = 'Basemaps'
+#         build_basemap_layer(project, db_item)
+#     if isinstance(db_item, Event):
+#         # machine_code = EVENT_MACHINE_CODE
+#         # group_name = 'Data Capture Events'
+#         build_event_layer(project, db_item)
+#     if isinstance(db_item, EventLayer):
+#         # machine_code = EVENT_MACHINE_CODE
+#         # group_name = 'Data Capture Events'
+#         build_event_layer(project, db_item)
 
 
 def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
@@ -167,22 +167,22 @@ def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
 #             QgsMapLayerRegistry.instance().removeMapLayer(item_layer)
 
 
-def build_event_layer(project: Project, event: Event) -> None:
-    """ 
-    Add all layers for the event, across all protocols
-    """
+# def build_event_layer(project: Project, event: Event) -> None:
+#     """
+#     Add all layers for the event, across all protocols
+#     """
 
-    [build_event_protocol_single_layer(project, event_layer) for event_layer in event.event_layers]
+#     [build_event_protocol_single_layer(project, event_layer) for event_layer in event.event_layers]
 
 
-def build_event_protocol_layer(event_layer: QgsLayerTreeGroup, project: Project, event: Event, protocol: Protocol) -> None:
-    """
-    Add all yaers in the event that are also in the protocol
-    """
+# def build_event_protocol_layer(event_layer: QgsLayerTreeGroup, project: Project, event: Event, protocol: Protocol) -> None:
+#     """
+#     Add all yaers in the event that are also in the protocol
+#     """
 
-    for event_layer in event.event_layers:
-        if event_layer.layer in protocol.layers:
-            build_event_protocol_single_layer(project, event_layer)
+#     for event_layer in event.event_layers:
+#         if event_layer.layer in protocol.layers:
+#             build_event_protocol_single_layer(project, event_layer)
 
 
 def build_event_protocol_single_layer(project: Project, event_layer: EventLayer) -> None:

@@ -47,7 +47,7 @@ class FrmEvent(QDialog, Ui_event2):
         # Methods
         self.protocol_model = QStandardItemModel()
         for protocol in qris_project.protocols.values():
-            if protocol.has_custom_ui is False:
+            if protocol.has_custom_ui == 0:
                 item = QStandardItem(protocol.name)
                 item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
                 item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
