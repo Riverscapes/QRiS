@@ -76,7 +76,7 @@ from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
 from .frm_new_analysis import FrmNewAnalysis
 
-from ..QRiS.method_to_map import map_item_receiver, build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
+from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
 
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
