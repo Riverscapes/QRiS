@@ -6,6 +6,8 @@ from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.core import Qgis, QgsFeature, QgsVectorLayer
 
+from ..model.project import Project
+
 from ..qris_project import QRiSProject
 from ..QRiS.functions import create_geopackage_table
 
@@ -45,7 +47,7 @@ class FrmNewProject(QDialog, Ui_NewProject):
     closingPlugin = pyqtSignal()
     dataChange = pyqtSignal(QRiSProject)
 
-    def __init__(self, root_project_folder: str, parent=None):
+    def __init__(self, root_project_folder: str, parent=None, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
         self.setupUi(self)
         self.gridLayoutWidget.setGeometry(QRect(0, 0, self.width(), self.height()))
@@ -53,12 +55,15 @@ class FrmNewProject(QDialog, Ui_NewProject):
         # Save the original folder that the user selected so that it can be reused
         self.root_path = root_project_folder
         self.txtPath.setText(root_project_folder)
+        self.project = project
 
-        self.txtProjectName.textChanged.connect(self.update_project_folder)
-        # self.btnSaveFolder.clicked.connect(self.openFolderDlg)
-        # self.buttonBox.accepted.connect(self.save_new_project)
-
-        # self.buttonBox.button(QDialogButtonBox.Ok).
+        if project is None:
+            # Changes to project name change the project folder location
+            self.txtProjectName.textChanged.connect(self.update_project_folder)
+        else:
+            self.setWindowTitle('Edit Project Properties')
+            self.txtProjectName.setText(project.name)
+            self.txtDescription.setPlainText(project.description)
 
     def update_project_folder(self):
 
@@ -80,35 +85,47 @@ class FrmNewProject(QDialog, Ui_NewProject):
             self.txtProjectName.setFocus()
             return
 
-        # Saves the new project from the dialog and creates the master geopackage
-        # Create new project directory
-        self.project_dir = os.path.dirname(self.txtPath.text())
-        if (os.path.isdir(self.project_dir)):
-            QMessageBox.warning(self, 'Directory Already Exists',
-                                'The specified directory already exists. Choose a different root directory or change the project name.')
-            return
+        if isinstance(self.project, Project):
+            # Update the existing project
+            conn = sqlite3.connect(self.project.project_file)
+            cursor = conn.cursor()
+            try:
+                cursor.execute('UPDATE projects SET name = ?, description = ? WHERE id = ?', [self.txtProjectName.text(), self.txtDescription.toPlainText(), self.project.id])
+                conn.commit()
+            except Exception as ex:
+                conn.rollback()
+                QMessageBox.warning(self, 'Error Updating Project', str(ex))
+                return
+        else:
+            # Saves the new project from the dialog and creates the master geopackage
+            # Create new project directory
+            self.project_dir = os.path.dirname(self.txtPath.text())
+            if (os.path.isdir(self.project_dir)):
+                QMessageBox.warning(self, 'Directory Already Exists',
+                                    'The specified directory already exists. Choose a different root directory or change the project name.')
+                return
 
-        os.makedirs(self.project_dir)
-        # qris_project = QRiSProject(self.project_name)
-        # qris_project.project_path = self.project_folder
+            os.makedirs(self.project_dir)
+            # qris_project = QRiSProject(self.project_name)
+            # qris_project.project_path = self.project_folder
 
-        # Create the geopackage feature classes that will in turn cause the project geopackage to get created
-        for fc_name, layer_name, geometry_type in layers:
-            features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
-            create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), features_path, None)
+            # Create the geopackage feature classes that will in turn cause the project geopackage to get created
+            for fc_name, layer_name, geometry_type in layers:
+                features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
+                create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), features_path, None)
 
-        # Run the schema DDL migrations to create lookup tables and relationships
-        conn = sqlite3.connect(self.txtPath.text())
-        conn.execute('PRAGMA foreign_keys = ON;')
-        curs = conn.cursor()
+            # Run the schema DDL migrations to create lookup tables and relationships
+            conn = sqlite3.connect(self.txtPath.text())
+            conn.execute('PRAGMA foreign_keys = ON;')
+            curs = conn.cursor()
 
-        schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
-        sql_commands = open(schema_path, 'r').read()
-        curs.executescript(sql_commands)
+            schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
+            sql_commands = open(schema_path, 'r').read()
+            curs.executescript(sql_commands)
 
-        # Create the project
-        curs.execute('INSERT INTO projects (name) VALUES (?)', [self.txtProjectName.text()])
-        conn.commit()
-        conn.close()
+            # Create the project
+            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtProjectName.text(), self.txtDescription.toPlainText()])
+            conn.commit()
+            conn.close()
 
         super(FrmNewProject, self).accept()

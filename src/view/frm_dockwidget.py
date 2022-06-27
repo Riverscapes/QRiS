@@ -75,6 +75,7 @@ from .frm_event import FrmEvent
 from .frm_basemap import FrmBasemap
 from .frm_mask import FrmMask
 from .frm_new_analysis import FrmNewAnalysis
+from .frm_new_project import FrmNewProject
 
 from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
 
@@ -235,7 +236,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             else:
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-            self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_data))
+            self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_item, model_data))
             self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
             self.add_context_menu_item('Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
 
@@ -388,8 +389,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
     # def add_to_map(self, db_item: DBItem):
     #     add_root_map_item(self.project, db_item)
 
-    def edit_item(self, db_item: DBItem):
-        QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
+    def edit_item(self, model_item: QStandardItem, db_item: DBItem):
+
+        frm = None
+        if isinstance(db_item, Project):
+            frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
+        else:
+            QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
+
+        if frm is not None:
+            result = frm.exec_()
+            if result is not None and result != 0:
+                model_item.setText(frm.txtProjectName.text())
 
     def delete_item(self, db_item: DBItem):
 
