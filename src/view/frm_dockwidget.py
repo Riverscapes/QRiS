@@ -43,8 +43,8 @@ from qgis.utils import iface
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog
-from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon
+from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot, QUrl
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QDesktopServices
 from qgis.core import QgsMapLayer
 
 from ..model.layer import Layer
@@ -237,8 +237,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
             self.add_context_menu_item('Edit', 'Options.png', lambda: self.edit_item(model_item, model_data))
-            self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
-            self.add_context_menu_item('Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
+
+            if isinstance(model_data, Project):
+                self.add_context_menu_item('Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
+            else:
+                self.add_context_menu_item('Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -271,6 +274,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             for event_layer in event.event_layers:
                 if event_layer.layer == db_item:
                     build_event_protocol_single_layer(self.project, event_layer)
+        elif isinstance(db_item, Project):
+            [build_mask_layer(mask) for mask in self.project.masks.values()]
+            [build_basemap_layer(basemap) for basemap in self.project.basemaps.values()]
+            [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
 
     def expand_tree(self):
         self.treeView.expandAll()
@@ -412,11 +419,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
 
         folder_path = None
         if isinstance(db_item, Basemap):
-            folder_path = os.path.dirname(os.path.join(os.path.dirname(self.project.project_file), db_item.path))
+            folder_path = os.path.join(os.path.dirname(self.project.project_file), db_item.path)
         else:
-            folder_path = os.path.dirname(self.project.project_file)
+            folder_path = self.project.project_file
 
-        QMessageBox.warning(self, "Not Implemented", "Browing to a dataset is not yet implemented.")
+        while not os.path.isdir(folder_path):
+            folder_path = os.path.dirname(folder_path)
+
+        qurl = QUrl.fromLocalFile(folder_path)
+        QDesktopServices.openUrl(qurl)
 
     def add_structure_type(self):
         """Initiates adding a structure type and the structure type dialog"""
