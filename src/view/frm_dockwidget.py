@@ -218,28 +218,30 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         model_data = model_item.data(Qt.UserRole)
 
         if isinstance(model_data, str):
-            if model_data == EVENT_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'test_new.png', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
-                self.add_context_menu_item(self.menu, 'Add New Design', 'test_new.png', lambda: self.add_event(model_item, 0))
-            elif model_data == BASEMAP_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basemap(model_item))
-            elif model_data == MASK_MACHINE_CODE:
-                add_mask_menu = self.menu.addMenu('Create New')
-                self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
-                self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
-
-                import_mask_menu = self.menu.addMenu('Import Existing')
-                self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
-                self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
-                self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
-
-                # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
-            elif model_data == ANALYSIS_MACHINE_CODE:
+            if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'test_new.png', lambda: self.add_analysis(model_item, DB_MODE_CREATE))
             else:
-                raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
+                self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map.png', lambda: self.add_tree_group_to_map(model_item))
+                if model_data == EVENT_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'test_new.png', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
+                    self.add_context_menu_item(self.menu, 'Add New Design', 'test_new.png', lambda: self.add_event(model_item, 0))
+                elif model_data == BASEMAP_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'test_new.png', lambda: self.add_basemap(model_item))
+                elif model_data == MASK_MACHINE_CODE:
+                    add_mask_menu = self.menu.addMenu('Create New')
+                    self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
+                    self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
+                    self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
+
+                    import_mask_menu = self.menu.addMenu('Import Existing')
+                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
+                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
+
+                    # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
+                    # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
+                else:
+                    raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
         else:
             if isinstance(model_data, DBItem):
                 self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map.png', lambda: self.add_db_item_to_tree(model_item, model_data))
@@ -288,6 +290,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             [build_mask_layer(mask) for mask in self.project.masks.values()]
             [build_basemap_layer(basemap) for basemap in self.project.basemaps.values()]
             [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
+
+    def add_tree_group_to_map(self, model_item: QStandardItem):
+        """Add all children of a group node to the map ToC
+        """
+
+        for row in range(0, model_item.rowCount()):
+            child_item = model_item.child(row)
+            self.add_db_item_to_tree(child_item, child_item.data(Qt.UserRole))
 
     def expand_tree(self):
         self.treeView.expandAll()
@@ -358,8 +368,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             parent_node.appendRow(new_node)
 
             if frm.chkAddToMap.isChecked():
-                # TODO: add basis to map
-                print(frm.basemap.path)
+                build_basemap_layer(self.project, frm.basemap)
 
     def add_mask(self, parent_node, mode):
         """Initiates adding a new mask"""
@@ -412,6 +421,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(parent=self, project=self.project, import_source_path=None, mask=db_item)
+        elif isinstance(db_item, Basemap):
+            frm = FrmBasemap(self, self.project, None, db_item)
         else:
             QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
 
