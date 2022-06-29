@@ -249,7 +249,7 @@ INSERT INTO lkp_mask_types (id, name) VALUES (3, 'Area of Interest (AOI)');
 CREATE TABLE masks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
-    mask_type_id INTEGER NOT NULL REFERENCES masks(id),
+    mask_type_id INTEGER NOT NULL REFERENCES lkp_mask_types(id),
     description TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
