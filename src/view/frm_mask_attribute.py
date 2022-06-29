@@ -10,12 +10,12 @@ from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..model.mask import Mask, insert_mask
 
-from .ui.mask import Ui_Mask
+from .ui.mask_attribute import Ui_MaskAttribute
 
 from ..processing_provider.feature_class_functions import import_mask
 
 
-class FrmMask(QDialog, Ui_Mask):
+class FrmMaskAttribute(QDialog, Ui_MaskAttribute):
 
     def __init__(self, parent, project: Project, import_source_path: str, mask: Mask = None):
 
@@ -23,11 +23,11 @@ class FrmMask(QDialog, Ui_Mask):
         self.mask = mask
         self.import_source_path = import_source_path
 
-        super(FrmMask, self).__init__(parent)
+        super(FrmMaskAttribute, self).__init__(parent)
         self.setupUi(self)
         self.setWindowTitle('Create New Mask' if self.mask is None else 'Edit Mask Properties')
-        self.buttonBox.accepted.connect(super(FrmMask, self).accept)
-        self.buttonBox.rejected.connect(super(FrmMask, self).reject)
+        self.buttonBox.accepted.connect(super(FrmMaskAttribute, self).accept)
+        self.buttonBox.rejected.connect(super(FrmMaskAttribute, self).reject)
 
         if import_source_path is not None:
             self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
@@ -72,4 +72,4 @@ class FrmMask(QDialog, Ui_Mask):
                 QMessageBox.warning(self, 'Error Importing Mask Features', str(ex))
                 return
 
-        super(FrmMask, self).accept()
+        super(FrmMaskAttribute, self).accept()

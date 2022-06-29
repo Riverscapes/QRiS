@@ -245,6 +245,14 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
 
 
 def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
+
+    project_group = get_project_group(project)
+    mask_layer = get_db_item_layer(mask, project_group)
+    if mask_layer is not None:
+        # Ensure it has the latest name (in case this method is called after an edit)
+        mask_layer.setName(mask.name)
+        return mask_layer
+
     # Create a layer from the table
     mask_feature_path = project.project_file + '|layername=' + 'mask_features'
     mask_feature_layer = QgsVectorLayer(mask_feature_path, mask.name, 'ogr')
