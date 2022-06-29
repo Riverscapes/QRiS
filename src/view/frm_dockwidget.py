@@ -251,7 +251,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
             else:
-                self.add_context_menu_item(self.menu, 'Delete', 'RaveAddIn.png', lambda: self.delete_item(model_data))
+                self.add_context_menu_item(self.menu, 'Delete', 'RaveAddIn.png', lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -421,11 +421,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                 model_item.setText(frm.txtName.text())
                 build_mask_layer(self.project, db_item)
 
-    def delete_item(self, db_item: DBItem):
+    def delete_item(self, model_item: QStandardItem, db_item: DBItem):
 
+        response = QMessageBox.question(self, 'Confirm Delete', 'Are you sure that you want to delete the selected item?')
+        if response == QMessageBox.No:
+            return
+
+        # Remove the layer from the map first
         remove_db_item_layer(self.project, db_item)
 
-        QMessageBox.warning(self, 'Delete', 'Deleting items is not yet implemented.')
+        # Remove the item from the project tree
+        model_item.parent().removeRow(model_item.row())
+
+        # Delete the item from the database
+        db_item.delete(self.project.project_file)
 
     def browse_item(self, db_item: DBItem):
 

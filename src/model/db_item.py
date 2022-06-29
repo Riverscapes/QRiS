@@ -24,7 +24,7 @@ class DBItem():
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('DELETE FROM {} WHERE fid = ?'.format(self.db_table_name), [self.id])
+                curs.execute('DELETE FROM {} WHERE id = ?'.format(self.db_table_name), [self.id])
                 conn.commit()
 
             except Exception as ex:
