@@ -1,6 +1,8 @@
 import os
 import sqlite3
 
+from numpy import isin
+
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
@@ -54,6 +56,17 @@ class Project(DBItem):
         if ext is not None:
             name = name + ext
         return name
+
+    def remove(self, db_item: DBItem):
+
+        if isinstance(db_item, Mask):
+            self.masks.pop(db_item.id)
+        elif isinstance(db_item, Basemap):
+            self.basemaps.pop(db_item.id)
+        elif isinstance(db_item, Event):
+            self.events.pop(db_item.id)
+        else:
+            raise Exception('Attempting to remove unhandled database type from project')
 
 
 def apply_db_migrations(db_path):
