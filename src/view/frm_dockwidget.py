@@ -433,6 +433,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         # Remove the item from the project tree
         model_item.parent().removeRow(model_item.row())
 
+        # Remove the item from the project
+        self.project.remove(db_item)
+
         # Delete the item from the database
         db_item.delete(self.project.project_file)
 
