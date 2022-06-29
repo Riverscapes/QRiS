@@ -244,14 +244,22 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
         pass
 
 
-def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
+def check_for_existing_layer(project: Project, db_item: DBItem):
 
     project_group = get_project_group(project)
-    mask_layer = get_db_item_layer(mask, project_group)
-    if mask_layer is not None:
+    existing_layer = get_db_item_layer(db_item, project_group)
+    if existing_layer is not None:
         # Ensure it has the latest name (in case this method is called after an edit)
-        mask_layer.setName(mask.name)
-        return mask_layer
+        existing_layer.setName(db_item.name)
+        return existing_layer
+
+    return None
+
+
+def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
+
+    if check_for_existing_layer(project, mask) is not None:
+        return
 
     # Create a layer from the table
     mask_feature_path = project.project_file + '|layername=' + 'mask_features'
@@ -286,6 +294,10 @@ def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
 
 
 def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:
+
+    if check_for_existing_layer(project, basemap) is not None:
+        return
+
     raster_path = os.path.join(os.path.dirname(project.project_file), basemap.path)
     raster_layer = QgsRasterLayer(raster_path, basemap.name)
     QgsProject.instance().addMapLayer(raster_layer, False)
