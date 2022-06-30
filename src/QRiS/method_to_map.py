@@ -164,8 +164,6 @@ def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
 
             remove_empty_groups(parent_node)
 
-#             QgsMapLayerRegistry.instance().removeMapLayer(item_layer)
-
 
 # def build_event_layer(project: Project, event: Event) -> None:
 #     """
