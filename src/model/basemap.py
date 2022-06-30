@@ -1,4 +1,8 @@
+import os
 import sqlite3
+from numpy import absolute
+from osgeo import gdal
+from qgis.core import QgsRasterLayer
 from .db_item import DBItem, dict_factory
 
 
@@ -28,6 +32,16 @@ class Basemap(DBItem):
             except Exception as ex:
                 conn.rollback()
                 raise ex
+
+    def delete(self, db_path: str) -> None:
+
+        absolute_path = os.path.join(os.path.dirname(db_path), self.path)
+
+        if os.path.isfile(absolute_path):
+            raster = QgsRasterLayer(absolute_path)
+            raster.dataProvider().remove()
+
+        super().delete(db_path)
 
 
 def load_basemaps(curs: sqlite3.Cursor) -> dict:

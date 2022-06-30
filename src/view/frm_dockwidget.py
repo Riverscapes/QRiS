@@ -58,7 +58,7 @@ from ..QRiS.qt_user_role import item_code
 from ..QRiS.manage_map import add_to_map
 
 
-from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer
+from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
 
 from ..ui.elevation_dockwidget import ElevationDockWidget
 from ..ui.project_extent_dialog import ProjectExtentDlg
@@ -338,7 +338,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             event_node.appendRow(protocol_node)
 
             for layer in protocol.layers:
-                if layer.is_lookup == False:
+                if layer.is_lookup is False:
                     layer_node = QStandardItem(layer.name)
                     layer_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
                     layer_node.setData(layer, Qt.UserRole)
@@ -430,7 +430,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             result = frm.exec_()
             if result is not None and result != 0:
                 model_item.setText(frm.txtName.text())
-                build_mask_layer(self.project, db_item)
+                # This will check if the item is in the map and update its name if it is
+                check_for_existing_layer(self.project, db_item)
 
     def delete_item(self, model_item: QStandardItem, db_item: DBItem):
 

@@ -48,7 +48,15 @@ class FrmMaskAOI(QDialog, Ui_MaskAOI):
             return
 
         if self.mask is not None:
-            self.mask.update(self.qris_project.project_file, self.txtName.text(), self.qris_project.lookup_tables['lkp_mask_types'][3], self.txtDescription.toPlainText())
+            try:
+                self.mask.update(self.qris_project.project_file, self.txtName.text(), self.qris_project.lookup_tables['lkp_mask_types'][3], self.txtDescription.toPlainText())
+            except Exception as ex:
+                if 'unique' in str(ex).lower():
+                    QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    self.txtName.setFocus()
+                else:
+                    QMessageBox.warning(self, 'Error Saving Mask', str(ex))
+                return
         else:
             try:
                 self.mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.qris_project.lookup_tables['lkp_mask_types'][3], self.txtDescription.toPlainText())

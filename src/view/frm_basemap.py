@@ -69,7 +69,15 @@ class FrmBasemap(QDialog, Ui_Basis):
             return()
 
         if self.basemap is not None:
-            self.basemap.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+            try:
+                self.basemap.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+            except Exception as ex:
+                if 'unique' in str(ex).lower():
+                    QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    self.txtName.setFocus()
+                else:
+                    QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+                return
         else:
             try:
                 self.basemap = insert_basemap(self.qris_project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.txtDescription.toPlainText())
