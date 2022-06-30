@@ -59,6 +59,8 @@ class FrmBasemap(QDialog, Ui_Basis):
             self.lblClipToMask.setVisible(False)
             self.cboMask.setVisible(False)
 
+            self.chkAddToMap.setCheckState(Qt.Unchecked)
+
         self.txtName.selectAll()
 
     def accept(self):

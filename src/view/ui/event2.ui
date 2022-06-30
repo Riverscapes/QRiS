@@ -33,7 +33,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabBasic">
         <attribute name="title">
@@ -118,7 +118,7 @@
      <item>
       <widget class="QCheckBox" name="chkAddToMap">
        <property name="text">
-        <string>CheckBox</string>
+        <string>Add to Map</string>
        </property>
        <property name="checked">
         <bool>true</bool>

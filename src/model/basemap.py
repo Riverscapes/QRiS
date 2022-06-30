@@ -7,6 +7,7 @@ from .db_item import DBItem, dict_factory
 
 
 BASEMAP_MACHINE_CODE = 'BASEMAP'
+PROTOCOL_BASEMAP_MACHINE_CODE = 'PROTOCOL_BASEMAP'
 BASEMAP_PARENT_FOLDER = 'basemaps'
 
 

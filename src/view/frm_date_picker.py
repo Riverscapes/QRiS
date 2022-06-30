@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from psycopg2 import Date
 from qgis.PyQt.QtWidgets import QWidget, QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 
@@ -27,17 +27,7 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
                 index = widget.findData(0)
                 widget.setCurrentIndex(index)
         else:
-            if date_spec.year is not None:
-                index = self.cboYear.findData(date_spec.year)
-                self.cboYear.setCurrentIndex(index)
-
-            if date_spec.month is not None:
-                index = self.cboMonth.findData(date_spec.month)
-                self.cboMonth.setCurrentIndex(index)
-
-            if date_spec.day is not None:
-                index = self.cboDay.findDate(date_spec.day)
-                self.cboDay.setCurrentIndex(index)
+            self.set_date_spec(date_spec)
 
     def get_date_spec(self):
 
@@ -49,3 +39,17 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
             year if year != 0 else None,
             month if month != 0 else None,
             day if day != 0 else None)
+
+    def set_date_spec(self, date_spec: DateSpec):
+
+        if date_spec.year is not None:
+            index = self.cboYear.findData(date_spec.year)
+            self.cboYear.setCurrentIndex(index)
+
+        if date_spec.month is not None:
+            index = self.cboMonth.findData(date_spec.month)
+            self.cboMonth.setCurrentIndex(index)
+
+        if date_spec.day is not None:
+            index = self.cboDay.findDate(date_spec.day)
+            self.cboDay.setCurrentIndex(index)

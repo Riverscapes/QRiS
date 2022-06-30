@@ -25,6 +25,7 @@
 from cgi import test
 import os
 import sqlite3
+from numpy import isin
 
 from osgeo import gdal
 
@@ -84,7 +85,7 @@ from .ui.qris_dockwidget import Ui_QRiSDockWidget
 from ..model.project import Project
 from ..model.event import Event
 from ..model.event import EVENT_MACHINE_CODE
-from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
+from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
@@ -241,14 +242,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                     # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                     # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'test_new.png', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
                 else:
-                    raise 'Unhandled group folder clicked in QRiS project tree: {}'.format(model_data)
+                    f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
             if isinstance(model_data, DBItem):
                 self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map.png', lambda: self.add_db_item_to_tree(model_item, model_data))
             else:
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-            self.add_context_menu_item(self.menu, 'Edit', 'Options.png', lambda: self.edit_item(model_item, model_data))
+            if isinstance(model_data, Project) or isinstance(model_data, Event) or isinstance(model_data, Basemap) or isinstance(model_data, Mask):
+                self.add_context_menu_item(self.menu, 'Edit', 'Options.png', lambda: self.edit_item(model_item, model_data))
 
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'RaveAddIn.png', lambda: self.browse_item(model_data))
@@ -344,6 +346,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
                     layer_node.setData(layer, Qt.UserRole)
                     protocol_node.appendRow(layer_node)
 
+        # Basemaps
+        basemap_group_node = QStandardItem('Basemaps')
+        basemap_group_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        basemap_group_node.setData(PROTOCOL_BASEMAP_MACHINE_CODE, Qt.UserRole)
+        event_node.appendRow(basemap_group_node)
+        for basemap in event.basemaps:
+            basemap_node = QStandardItem(basemap.name)
+            basemap_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
+            basemap_node.setData(basemap, Qt.UserRole)
+            basemap_group_node.appendRow(basemap_node)
+
     def add_assessment_method(self, project: Project, protocol: Protocol):
 
         # if method.id == 3:
@@ -419,6 +432,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         frm = None
         if isinstance(db_item, Project):
             frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
+        elif isinstance(db_item, Event):
+            frm = FrmEvent(self, self.project, db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(parent=self, project=self.project, import_source_path=None, mask=db_item)
         elif isinstance(db_item, Basemap):

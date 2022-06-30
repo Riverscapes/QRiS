@@ -2,7 +2,7 @@ import json
 import sqlite3
 
 from .event_layer import EventLayer
-from .db_item import DBItem, dict_factory
+from .db_item import DBItem, dict_factory, update_intersect_table
 from .datespec import DateSpec
 
 EVENT_MACHINE_CODE = 'Event'
@@ -44,24 +44,27 @@ class Event(DBItem):
 
         self.event_layers = list(event_layers.values())
 
-    def update(self, curs: sqlite3.Cursor, name: str, description: str, basemaps: dict):
+    def update(self, db_path: str, name: str, description: str, protocols: list, basemaps: list):
 
-        curs.execute('UPDATE events SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = dict_factory
+            curs = conn.cursor()
 
-        unused_basemap_ids = []
-        curs.execute('SELECT basemap_id FROM event_basemaps WHERE event_id = ?', self.id)
-        for row in curs.fetchall():
-            if row['id'] not in basemaps.keys():
-                unused_basemap_ids.append((self.id, row['basemap_id']))
+            try:
+                curs.execute('UPDATE events SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
 
-        if len(unused_basemap_ids) > 0:
-            curs.executemany('DELETE FROM event_basemaps where event_id = ? and basemap_id = ?', self.id, unused_basemap_ids)
+                update_intersect_table(curs, 'event_basemaps', 'event_id', 'basemap_id', self.id, [item.id for item in basemaps])
+                update_intersect_table(curs, 'event_protocols', 'event_id', 'protocol_id', self.id, [item.id for item in protocols])
 
-        curs.executemany('INSERT INTO event_basemaps (event_id, basemap_id) VALUES (?, ?) ON CONFLICT(event_id, basemap_id) DO NOTHING', [self.id, basemaps.keys()])
+                self.name = name
+                self.description = description
+                self.basemaps = basemaps
 
-        self.name = name
-        self.description = description
-        self.basemaps = basemaps
+                conn.commit()
+
+            except Exception as ex:
+                conn.rollback()
+                raise ex
 
 
 def load(curs: sqlite3.Cursor, protocols: dict, lookups: dict, basemaps: dict) -> dict:
@@ -70,7 +73,7 @@ def load(curs: sqlite3.Cursor, protocols: dict, lookups: dict, basemaps: dict) -
     event_protocols = [(row['event_id'], protocols[row['protocol_id']]) for row in curs.fetchall()]
 
     curs.execute('SELECT * FROM event_basemaps')
-    event_basemaps = [(row['event_id'], basemaps(row['basemap_id'])) for row in curs.fetchall()]
+    event_basemaps = [(row['event_id'], basemaps[row['basemap_id']]) for row in curs.fetchall()]
 
     curs.execute('SELECT * FROM events')
     return {row['id']: Event(

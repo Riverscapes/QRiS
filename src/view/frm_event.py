@@ -10,7 +10,7 @@ from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 from ..qris_project import QRiSProject
 from ..QRiS.functions import create_geopackage_table
 
-from ..model.event import insert as insert_event
+from ..model.event import Event, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
@@ -23,7 +23,7 @@ DATA_CAPTURE_EVENT_TYPE_ID = 1
 
 class FrmEvent(QDialog, Ui_event2):
 
-    def __init__(self, parent, qris_project: Project, event=None):
+    def __init__(self, parent, qris_project: Project, event: Event = None):
 
         self.qris_project = qris_project
         self.event = event
@@ -44,25 +44,46 @@ class FrmEvent(QDialog, Ui_event2):
         self.uc_end = FrmDatePicker()
         self.gridLayout.addWidget(self.uc_end, 1, 1)
 
-        # Methods
+        # Protocols
         self.protocol_model = QStandardItemModel()
         for protocol in qris_project.protocols.values():
             if protocol.has_custom_ui == 0:
                 item = QStandardItem(protocol.name)
                 item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                item.setData(QVariant(Qt.Unchecked), Qt.CheckStateRole)
                 item.setData(protocol, Qt.UserRole)
                 self.protocol_model.appendRow(item)
+
+                checked_state = Qt.Checked if event is not None and protocol in event.protocols else Qt.Unchecked
+                item.setData(QVariant(checked_state), Qt.CheckStateRole)
 
         self.vwProtocols.setModel(self.protocol_model)
         self.vwProtocols.setModelColumn(1)
 
         # Basemaps
-        self.basemaps_model = DBItemModel(qris_project.basemaps)
-        self.vwBasemaps.setModel(self.basemaps_model)
+        self.basemap_model = QStandardItemModel()
+        for basemap in qris_project.basemaps.values():
+            item = QStandardItem(basemap.name)
+            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+            item.setData(basemap, Qt.UserRole)
+            self.basemap_model.appendRow(item)
+
+            checked_state = Qt.Checked if event is not None and basemap in event.basemaps else Qt.Unchecked
+            item.setData(QVariant(checked_state), Qt.CheckStateRole)
+
+        self.vwBasemaps.setModel(self.basemap_model)
+        self.vwBasemaps.setModelColumn(1)
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.cboPlatform.setModel(self.platform_model)
+
+        if event is not None:
+            self.txtName.setText(event.name)
+            self.txtDescription.setPlainText(event.description)
+
+            self.uc_start.set_date_spec(event.start)
+            self.uc_end.set_date_spec(event.end)
+
+            self.chkAddToMap.setCheckState(Qt.Unchecked)
 
         self.txtName.setFocus()
 
@@ -88,35 +109,58 @@ class FrmEvent(QDialog, Ui_event2):
                 return
 
         basemaps = []
-        # for row in range(self.bases_model.rowCount()):
-        #     index = self.bases_model.index(row, 0)
-        #     check = self.bases_model.data(index, Qt.CheckStateRole)
-        #     if check == Qt.Checked:
-        #         for basemap in self.qris_project.basemaps.values():
-        #             if basemap.name == self.bases_model.data(index, Qt.DisplayRole):
-        #                 basemaps.append(basemap)
+        for row in range(self.basemap_model.rowCount()):
+            index = self.basemap_model.index(row, 0)
+            check = self.basemap_model.data(index, Qt.CheckStateRole)
+            if check == Qt.Checked:
+                for basemap in self.qris_project.basemaps.values():
+                    if basemap == self.basemap_model.data(index, Qt.UserRole):
+                        basemaps.append(basemap)
+                        break
 
-        try:
-            self.event = insert_event(
-                self.qris_project.project_file,
-                self.txtName.text(),
-                self.txtDescription.toPlainText(),
-                self.uc_start.get_date_spec(),
-                self.uc_end.get_date_spec(),
-                '',
-                self.qris_project.lookup_tables['lkp_event_types'][DATA_CAPTURE_EVENT_TYPE_ID],
-                self.cboPlatform.currentData(Qt.UserRole),
-                self.protocols,
-                basemaps,
-                self.metadata
-            )
+        if self.event is not None:
+            # Check if any GIS data might be lost
+            for originial_protocol in self.event.protocols:
+                for original_layer in originial_protocol.layers:
+                    existing_layer_in_use = False
+                    for new_protocol in self.protocols:
+                        for new_layer in new_protocol.layers:
+                            if original_layer == new_layer:
+                                existing_layer_in_use = True
 
-            self.qris_project.events[self.event.id] = self.event
-            super().accept()
+                    if existing_layer_in_use is False:
+                        response = QMessageBox.question(self, 'Possible Data Loss',
+                                                        """One or more layers that were part of this data capture event are no longer associated with the event.
+                        Continuing might lead to the loss of geospatial data. Do you want to continue?
+                        "Click Yes to proceed and delete all data associated with layers that are no longer used by the
+                        current data capture event protocols. Click No to stop and avoid any data loss.""")
+                        if response == QMessageBox.No:
+                            return
 
-        except Exception as ex:
-            if 'unique' in str(ex).lower():
-                QMessageBox.warning(self, 'Duplicate Name', "A data capture event with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
-                self.txtName.setFocus()
-            else:
-                QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
+            self.event.update(self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps)
+
+        else:
+            try:
+                self.event = insert_event(
+                    self.qris_project.project_file,
+                    self.txtName.text(),
+                    self.txtDescription.toPlainText(),
+                    self.uc_start.get_date_spec(),
+                    self.uc_end.get_date_spec(),
+                    '',
+                    self.qris_project.lookup_tables['lkp_event_types'][DATA_CAPTURE_EVENT_TYPE_ID],
+                    self.cboPlatform.currentData(Qt.UserRole),
+                    self.protocols,
+                    basemaps,
+                    self.metadata
+                )
+
+                self.qris_project.events[self.event.id] = self.event
+                super().accept()
+
+            except Exception as ex:
+                if 'unique' in str(ex).lower():
+                    QMessageBox.warning(self, 'Duplicate Name', "A data capture event with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    self.txtName.setFocus()
+                else:
+                    QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
