@@ -234,6 +234,8 @@ CREATE TABLE basemaps (
 CREATE TABLE event_basemaps (
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
     basemap_id INTEGER REFERENCES basemaps(id) ON DELETE CASCADE
+    
+    CONSTRAINT pk_event_basemaps PRIMARY KEY (event_id, basemap_id)
 );
 
 CREATE TABLE lkp_mask_types (

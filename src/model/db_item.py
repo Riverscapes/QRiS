@@ -8,7 +8,7 @@ DB_MODE_IMPORT = 'import'
 
 
 class DBItem():
-    """ Base class for in-memory representations of database objects. 
+    """ Base class for in-memory representations of database objects.
 
     The id property tracks the primary key that uniquely identifies the object.
     The name tracks the official name (that is normally unique across all
@@ -133,3 +133,25 @@ def get_unique_name(curs: sqlite3.Cursor, table: str, seed_name: str) -> str:
         success = row is None
 
     return candidate_name
+
+
+def update_intersect_table(curs: sqlite3.Cursor, table: str, parent_col_name: str, child_col_name: str, parent_id: int, new_child_id_list: list):
+    """
+    Use this method to refresh an intersect table that consists of just a parent and child ID. See event_basemaps table as an example.
+    In this example, the event_id is parent column and the basemap_id is the child."""
+
+    # Determine if there are IDs in the database that are no longer in use (new_child_id_list)
+    unused_child_ids = []
+    curs.execute(f'SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?', parent_id)
+    for row in curs.fetchall():
+        if row['id'] not in new_child_id_list:
+            unused_child_ids.append((parent_id, row[child_col_name]))
+
+    # Delete those records no longer in use.
+    if len(unused_child_ids) > 0:
+        curs.executemany(f'DELETE FROM {table} where {parent_col_name} = ? and {child_col_name} = ?', unused_child_ids)
+
+    # Now insert all the records and use NO CONFLICT to skip and duplates that are already there!
+    new_ids = [[parent_id, child_id] for child_id in new_child_id_list]
+    curs.executemany(f"""INSERT INTO {table} ({parent_col_name}, {child_col_name}) VALUES (?, ?)
+        ON CONFLICT({parent_col_name}, {child_col_name}) DO NOTHING""", new_ids)
