@@ -38,7 +38,8 @@ layers = [
     ('structure_points', 'Structure Points', 'Point'),
     ('structure_lines', 'Structure Lines', 'Linestring'),
     ('channel_unit_points', 'Channel Unit Points', 'Point'),
-    ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon')
+    ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
+    ('brat_cis', 'BRAT CIS', 'Point')
 ]
 
 
