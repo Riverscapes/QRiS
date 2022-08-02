@@ -589,7 +589,7 @@ CREATE TABLE lkp_brat_vegetation_cis
 );
 CREATE INDEX ux_lkp_brat_vegetation_Cis ON lkp_brat_vegetation_Cis(streamside_veg_id, riparian_veg_id, output_id) ;
 
--- INSERT INTO lkp_brat_vegetation_Cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
+INSERT INTO lkp_brat_vegetation_Cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
 -- TODO populate with rest of vegetation CIS rules
 
 CREATE TABLE lkp_brat_combined_cis (
@@ -615,6 +615,8 @@ ALTER TABLE brat_cis ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base
 ALTER TABLE brat_cis ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
 ALTER TABLE brat_cis ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
 ALTER TABLE brat_cis ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+ALTER TABLE brat_cis ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
+
 ALTER TABLE brat_cis ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
 ALTER TABLE brat_cis ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
 ALTER TABLE brat_cis ADD COLUMN notes TEXT;

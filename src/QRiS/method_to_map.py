@@ -1,5 +1,5 @@
 from email.mime import base
-from locale import CODESET
+# from locale import CODESET
 import os
 import sqlite3
 
@@ -8,7 +8,7 @@ from urllib.parse import non_hierarchical
 
 
 from PyQt5.QtWidgets import QMessageBox
-
+# from isort import stream
 from qgis.core import (
     QgsField,
     QgsLayerTreeGroup,
@@ -28,7 +28,8 @@ from qgis.core import (
     QgsSimpleFillSymbolLayer,
     QgsCategorizedSymbolRenderer,
     QgsProject,
-    QgsExpressionContextUtils)
+    QgsExpressionContextUtils,
+    qgsfunction)
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
@@ -238,6 +239,8 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
         add_channel_unit_points(project, feature_layer)
     elif layer_name == 'channel_unit_polygons':
         add_channel_unit_polygons(project, feature_layer)
+    elif layer_name == 'brat_cis':
+        add_brat_cis(project, feature_layer)
     else:
         pass
 
@@ -281,7 +284,6 @@ def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
     set_multiline(mask_feature_layer, 'description', 'Description')
     set_hidden(mask_feature_layer, 'metadata', 'Metadata')
     set_virtual_dimension(mask_feature_layer, 'area')
-
     # Finally add the new layer here
     project_group = get_project_group(project, True)
     group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
@@ -318,6 +320,19 @@ def add_lookup_table(layer: dict) -> None:
         lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
         # TODO consider adding and then marking as private instead of using the False flag
         QgsProject.instance().addMapLayer(lookup_layer, False)
+
+
+def add_brat_cis(project: Project, feature_layer: QgsVectorLayer) -> None:
+    set_value_map(project, feature_layer, 'base_streampower_id', 'lkp_brat_base_streampower', 'Base Streampower')
+    set_value_map(project, feature_layer, 'high_streampower_id', 'lkp_brat_high_streampower', 'High Streampower')
+    set_value_map(project, feature_layer, 'streamside_veg_id', 'lkp_brat_vegetation_types', 'Streamside Vegetation')
+    set_value_map(project, feature_layer, 'riparian_veg_id', 'lkp_brat_vegetation_types', 'Riparian Vegetation')
+    set_value_map(project, feature_layer, 'slope_id', 'lkp_brat_slope', 'Slope')
+
+    set_value_map_veg(project, feature_layer, 'veg_density_id', 'lkp_brat_dam_density', 'Vegetation Dam Density')
+    set_value_map_combined(project, feature_layer, 'combined_density_id', 'lkp_brat_dam_density', 'Combined Dam Density')
+
+    # set_virtual_brat(feature_layer)
 
 
 def add_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> None:
@@ -490,3 +505,157 @@ def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None
     feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
     widget_setup = QgsEditorWidgetSetup('TextEdit', {})
     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+
+
+@qgsfunction(args='auto', group='Custom', referenced_columns=[])
+def get_veg_dam_density(stream_veg, riparian_veg, feature, parent):
+    veg_rules = [
+        (1, 5, 5, 1),
+        (2, 4, 5, 2),
+        (3, 3, 5, 3),
+        (4, 2, 5, 3),
+        (5, 1, 5, 3),
+        (6, 5, 4, 2),
+        (7, 4, 4, 3),
+        (8, 3, 4, 3),
+        (9, 2, 4, 4),
+        (10, 1, 4, 4),
+        (11, 5, 3, 3),
+        (12, 4, 3, 2),
+        (13, 3, 3, 4),
+        (14, 2, 3, 4),
+        (15, 1, 3, 5),
+        (16, 5, 2, 2),
+        (17, 4, 2, 4),
+        (18, 3, 2, 4),
+        (19, 2, 2, 4),
+        (20, 1, 2, 5),
+        (21, 5, 1, 3),
+        (22, 4, 1, 4),
+        (23, 3, 1, 4),
+        (24, 2, 1, 5),
+        (25, 1, 1, 5),
+    ]
+    result = -1
+    for rule in veg_rules:
+        if stream_veg == rule[1] and riparian_veg == rule[2]:
+            result = rule[3]
+    return result
+
+
+@qgsfunction(args='auto', group='Custom', referenced_columns=[])
+def get_comb_dam_density(veg_density, base_power, high_power, slope, feature, parent):
+    combined_rules = [
+        (1, 1, 0, 0, 0, 1), (2, 0, 5, 0, 0, 1), (3, 0, 0, 0, 1, 1), (4, 2, 2, 4, 0, 2),
+        (5, 3, 2, 4, 0, 3), (6, 4, 2, 4, 4, 4), (7, 4, 2, 4, 2, 3), (8, 5, 2, 4, 5, 5),
+        (9, 5, 2, 4, 4, 5), (10, 5, 2, 4, 2, 3), (11, 2, 2, 2, 0, 2), (12, 3, 2, 2, 0, 3),
+        (13, 4, 2, 2, 4, 4), (14, 4, 2, 2, 2, 3), (15, 5, 2, 2, 5, 3), (16, 5, 2, 2, 4, 4),
+        (17, 5, 2, 2, 2, 3), (18, 2, 2, 3, 0, 2), (19, 3, 2, 3, 0, 3), (20, 4, 2, 3, 4, 4),
+        (21, 4, 2, 3, 2, 3), (22, 5, 2, 3, 5, 3), (23, 5, 2, 3, 4, 4), (24, 5, 2, 3, 2, 3),
+        (25, 2, 2, 1, 0, 1), (26, 3, 2, 1, 0, 2), (27, 4, 2, 1, 4, 2), (28, 4, 2, 1, 2, 1),
+        (29, 5, 2, 1, 5, 2), (30, 5, 2, 1, 4, 3), (31, 5, 2, 1, 2, 2), (32, 2, 1, 2, 0, 2),
+        (33, 3, 1, 2, 0, 3), (34, 4, 1, 2, 4, 4), (35, 4, 1, 2, 2, 3), (36, 5, 1, 2, 5, 3),
+        (37, 5, 1, 2, 4, 4), (38, 5, 1, 2, 2, 3), (39, 2, 1, 3, 0, 2), (40, 3, 1, 3, 0, 3),
+        (41, 4, 1, 3, 4, 3), (42, 4, 1, 3, 2, 2), (43, 5, 1, 3, 5, 3), (44, 5, 1, 3, 4, 4),
+        (45, 5, 1, 3, 2, 3), (46, 2, 1, 1, 0, 1), (47, 3, 1, 1, 0, 2), (48, 4, 1, 1, 4, 2),
+        (49, 4, 1, 1, 2, 1), (50, 5, 1, 1, 5, 2), (51, 5, 1, 1, 4, 3), (52, 5, 1, 1, 2, 2)]
+    result = -1
+    for rule in combined_rules:
+        if (veg_density == rule[1] or rule[1] == 0) and (high_power == rule[3] or rule[3] == 0):
+            if (rule[2] == 1 and base_power in [1, 4]) or (rule[2] == 2 and base_power in [2, 3]) or base_power == rule[2] or rule[2] == 0:
+                if (rule[4] == 4 and base_power in [3, 4]) or slope == rule[4] or rule[4] == 0:
+                    result = rule[5]
+    return result
+
+
+"""
+def set_virtual_brat(feature_layer: QgsVectorLayer):
+    # TODO: Select output value from rule table in db based on inputs from UI
+
+    field_name = 'vrt_' + "vegetation"
+    field_alias = "Vegetation"
+    # riparian_veg = feature_layer.fields()[feature_layer.fields().indexFromName('riparian_veg_id')]
+    # stream_veg = feature_layer.fields()[feature_layer.fields().indexFromName('streamside_veg_id')]
+
+    # field_expression = 'round(${}, 0)'.format("vegetation")
+    field_expression = 'my_summm(streamside_veg_id, riparian_veg_id)'
+
+    virtual_field = QgsField(field_name, QVariant.Int)
+    feature_layer.addExpressionField(field_expression, virtual_field)
+    fields = feature_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    feature_layer.setFieldAlias(field_index, field_alias)
+    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+    widget_setup = QgsEditorWidgetSetup('TextEdit', {})
+    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+"""
+
+
+def set_value_map_veg(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True) -> None:
+    conn = sqlite3.connect(project.project_file)
+    # conn.row_factory = dict_factory
+    curs = conn.cursor()
+    curs.execute("SELECT * FROM {};".format(lookup_table_name))
+    lookup_collection = curs.fetchall()
+    conn.commit()
+    conn.close()
+    # make a dictionary from the returned values
+    lookup_list = []
+    for row in lookup_collection:
+        key = str(row[desc_position])
+        value = row[value_position]
+        lookup_list.append({key: value})
+    lookup_config = {
+        'map': lookup_list
+    }
+
+    # Set field to display vegetation dam density based on values in other fields
+    virtual_field = QgsField(field_name, QVariant.Int)
+    field_expression = 'get_veg_dam_density(streamside_veg_id, riparian_veg_id)'
+    feature_layer.addExpressionField(field_expression, virtual_field)
+
+    fields = feature_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    widget_setup = QgsEditorWidgetSetup('ValueMap', lookup_config)
+    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+    feature_layer.setFieldAlias(field_index, field_alias)
+    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+    form_config = feature_layer.editFormConfig()
+    form_config.setReuseLastValue(field_index, reuse_last)
+    form_config.setReadOnly(field_index)
+    feature_layer.setEditFormConfig(form_config)
+
+
+def set_value_map_combined(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True) -> None:
+    conn = sqlite3.connect(project.project_file)
+    # conn.row_factory = dict_factory
+    curs = conn.cursor()
+    curs.execute("SELECT * FROM {};".format(lookup_table_name))
+    lookup_collection = curs.fetchall()
+    conn.commit()
+    conn.close()
+    # make a dictionary from the returned values
+    lookup_list = []
+    for row in lookup_collection:
+        key = str(row[desc_position])
+        value = row[value_position]
+        lookup_list.append({key: value})
+    lookup_config = {
+        'map': lookup_list
+    }
+
+    # Set field to display vegetation dam density based on values in other fields
+    virtual_field = QgsField(field_name, QVariant.Int)
+    field_expression = 'get_comb_dam_density(veg_density_id, base_streampower_id, high_streampower_id, slope_id)'
+    feature_layer.addExpressionField(field_expression, virtual_field)
+
+    fields = feature_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    widget_setup = QgsEditorWidgetSetup('ValueMap', lookup_config)
+    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+    feature_layer.setFieldAlias(field_index, field_alias)
+    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+    form_config = feature_layer.editFormConfig()
+    form_config.setReuseLastValue(field_index, reuse_last)
+    form_config.setReadOnly(field_index)
+    feature_layer.setEditFormConfig(form_config)
