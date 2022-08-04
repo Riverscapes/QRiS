@@ -1,13 +1,5 @@
-from email.mime import base
-from locale import CODESET
 import os
 import sqlite3
-
-from random import randint, randrange
-from urllib.parse import non_hierarchical
-
-
-from PyQt5.QtWidgets import QMessageBox
 
 from qgis.core import (
     QgsField,
@@ -36,8 +28,6 @@ from qgis.PyQt.QtCore import Qt, QVariant
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
-
-
 from ..model.db_item import DBItem, dict_factory
 from ..model.mask import Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap

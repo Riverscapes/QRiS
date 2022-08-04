@@ -22,66 +22,16 @@
  ***************************************************************************/
 """
 
-from cgi import test
 import os
-import sqlite3
-from numpy import isin
 
-from osgeo import gdal
-
-from PyQt5.QtWidgets import QMessageBox
-
-from qgis.core import (
-    QgsRasterLayer,
-    QgsVectorLayer,
-    QgsProject,
-    QgsField,
-    QgsExpressionContextUtils,
-    QgsVectorFileWriter)
-
+from qgis.core import QgsMapLayer
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.utils import iface
-
-from qgis.PyQt import QtGui, QtWidgets, uic
-from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog, QMenu
+from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QDockWidget
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot, QUrl
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QDesktopServices
-from qgis.core import QgsMapLayer
 
 from ..model.layer import Layer
-
-from .frm_design2 import FrmDesign
-from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
-
-from ..QRiS.context_menu import ContextMenu
-from ..QRiS.settings import Settings
-from ..QRiS.qt_user_role import item_code
-from ..QRiS.manage_map import add_to_map
-
-
-from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
-
-from ..ui.elevation_dockwidget import ElevationDockWidget
-from ..ui.project_extent_dialog import ProjectExtentDlg
-from ..ui.project_layer_dialog import ProjectLayerDlg
-from ..ui.add_detrended_dialog import AddDetrendedRasterDlg
-# from .ui.assessment_dialog import AssessmentDlg
-from ..ui.design_dialog import DesignDlg
-from ..ui.structure_type_dialog import StructureTypeDlg
-from ..ui.zoi_type_dialog import ZoiTypeDlg
-from ..ui.phase_dialog import PhaseDlg
-
-from .frm_event import FrmEvent
-# from .ui.event2 import Ui_event2
-from .frm_basemap import FrmBasemap
-from .frm_mask_aoi import FrmMaskAOI
-from .frm_new_analysis import FrmNewAnalysis
-from .frm_new_project import FrmNewProject
-
-from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
-
-from .ui.qris_dockwidget import Ui_QRiSDockWidget
-
 from ..model.project import Project
 from ..model.event import Event
 from ..model.event import EVENT_MACHINE_CODE
@@ -94,12 +44,26 @@ from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.protocol import Protocol
 
-from ..processing_provider.feature_class_functions import browse_source
+from .frm_design2 import FrmDesign
+from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
+from .frm_event import FrmEvent
+from .frm_basemap import FrmBasemap
+from .frm_mask_aoi import FrmMaskAOI
+from .frm_new_analysis import FrmNewAnalysis
+from .frm_new_project import FrmNewProject
+
+from ..QRiS.settings import Settings
+from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
+from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
+
+from .ui.qris_dockwidget import Ui_QRiSDockWidget
+
+from ..gp.feature_class_functions import browse_source
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
 
-class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
+class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
     closingPlugin = pyqtSignal()
 
@@ -116,7 +80,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         self.settings = Settings()
 
         self.qris_project = None
-        self.menu = ContextMenu()
+        self.menu = QMenu()
 
         self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -162,15 +126,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
         project_node.appendRow(masks_node)
         [self.add_child_node(item, masks_node, 'test_layers.png') for item in self.project.masks.values()]
 
-        scratch_node = QStandardItem('Scratch Space')
-        scratch_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        scratch_node.setData(SCRATCH_NODE_TAG, Qt.UserRole)
-        project_node.appendRow(scratch_node)
+        # scratch_node = QStandardItem('Scratch Space')
+        # scratch_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        # scratch_node.setData(SCRATCH_NODE_TAG, Qt.UserRole)
+        # project_node.appendRow(scratch_node)
 
-        analyses_node = QStandardItem('Analyses')
-        analyses_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        analyses_node.setData(ANALYSIS_MACHINE_CODE, Qt.UserRole)
-        analyses_node.appendRow(analyses_node)
+        # analyses_node = QStandardItem('Analyses')
+        # analyses_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
+        # analyses_node.setData(ANALYSIS_MACHINE_CODE, Qt.UserRole)
+        # analyses_node.appendRow(analyses_node)
 
         self.treeView.expandAll()
         return
@@ -592,7 +556,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget, Ui_QRiSDockWidget):
             QMessageBox.critical(self, "Invalid Layer", "Please select a valid gis layer")
 
     def explore_elevations(self, selected_item):
-        raster = selected_item.data(item_code['INSTANCE'])
+        # raster = selected_item.data(item_code['INSTANCE'])
         self.elevation_widget = ElevationDockWidget(raster, self.qris_project)
         self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
         self.elevation_widget.dataChange.connect(self.build_tree_view)

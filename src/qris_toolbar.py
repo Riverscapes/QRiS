@@ -21,14 +21,17 @@
  *                                                                         *
  ***************************************************************************/
 """
+
+import os.path
+
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog
 from qgis.core import QgsApplication
 
 # TODO fix this
-from .processing_provider.provider import Provider
-from .QRiS.settings import Settings, CONSTANTS
+from .gp.provider import Provider
+from .QRiS.settings import Settings
 
 # TODO determine if this is needed
 # Initialize Qt resources from file resources.py
@@ -36,13 +39,10 @@ from . import resources
 
 # Import the code for the DockWidget
 from .view.frm_dockwidget import QRiSDockWidget
-from .qris_project import QRiSProject
+from .view.frm_new_project import FrmNewProject
 
 from .model.project import apply_db_migrations
 
-from .view.frm_new_project import FrmNewProject
-
-import os.path
 
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'

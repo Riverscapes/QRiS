@@ -1,10 +1,6 @@
-import os
-from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox, QLabel, QComboBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
-
-from ..qris_project import QRiSProject
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project

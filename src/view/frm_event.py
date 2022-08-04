@@ -1,14 +1,6 @@
-import os
-import sqlite3
-from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox, QLabel
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
-from qgis.core import Qgis, QgsFeature, QgsVectorLayer
-from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
-
-from ..qris_project import QRiSProject
-from ..QRiS.functions import create_geopackage_table
 
 from ..model.event import Event, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
