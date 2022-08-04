@@ -1,15 +1,16 @@
 import os
-import sqlite3
-from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
-from qgis.core import Qgis, QgsFeature, QgsVectorLayer
+
+
+from qgis.core import (
+    QgsField,
+    QgsVectorLayer,
+    QgsVectorFileWriter
+)
 
 from ..model.project import Project
-
-from ..qris_project import QRiSProject
-from ..QRiS.functions import create_geopackage_table
 
 from .ui.new_project import Ui_NewProject
 
@@ -45,7 +46,7 @@ layers = [
 class FrmNewProject(QDialog, Ui_NewProject):
 
     closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(QRiSProject)
+    dataChange = pyqtSignal(Project)
 
     def __init__(self, root_project_folder: str, parent=None, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
@@ -129,3 +130,34 @@ class FrmNewProject(QDialog, Ui_NewProject):
             conn.close()
 
         super(FrmNewProject, self).accept()
+
+
+def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
+    """
+        Creates tables in existing or new geopackages
+        geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
+        table_name (string): Name for the new table
+        geopackage_path (string): full path to the geopackage i.e., dir/package.gpkg
+        full_path (string): full path including the layer i.e., dir/package.gpkg|layername=layer
+        field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
+        """
+    memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
+    if field_tuple_list:
+        fields = []
+        for field_tuple in field_tuple_list:
+            field = QgsField(field_tuple[0], field_tuple[1])
+            fields.append(field)
+        memory_layer.dataProvider().addAttributes(fields)
+        memory_layer.updateFields()
+    options = QgsVectorFileWriter.SaveVectorOptions()
+    options.layerName = table_name
+    options.driverName = 'GPKG'
+    if os.path.exists(geopackage_path):
+        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+    QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
+
+
+def format_layer_name(input_text):
+    """Takes raw text from an input and field and returns a GIS friendly text string suitable for naming layers"""
+    valid_text = ''.join(e for e in input_text.replace(" ", "_") if e.isalnum() or e == "_")
+    return valid_text

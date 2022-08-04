@@ -1,9 +1,6 @@
-import os
-from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
-from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 
 
 from .ui.new_analysis import Ui_Dialog

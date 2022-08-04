@@ -1,10 +1,8 @@
-from datetime import date, datetime
-from psycopg2 import Date
-from qgis.PyQt.QtWidgets import QWidget, QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
+from datetime import datetime
+from qgis.PyQt.QtWidgets import QWidget
 
 from .ui.date_picker import Ui_DatePicker
 from ..model.datespec import DateSpec
-from ..model.db_item import DBItem, DBItemModel
 
 NONE_TEXT = 'None'
 

@@ -1,10 +1,6 @@
-import os
-from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
-from qgis.core import Qgis, QgsFeature, QgsVectorLayer
-from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 
 from ..model.db_item import DBItemModel
 from ..model.project import Project
@@ -12,7 +8,7 @@ from ..model.mask import Mask, insert_mask
 
 from .ui.mask_attribute import Ui_MaskAttribute
 
-from ..processing_provider.feature_class_functions import import_mask
+from ..gp.feature_class_functions import import_mask
 
 
 class FrmMaskAttribute(QDialog, Ui_MaskAttribute):
