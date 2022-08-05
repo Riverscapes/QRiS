@@ -10,6 +10,8 @@ from .ui.mask_aoi import Ui_MaskAOI
 
 from ..gp.feature_class_functions import import_mask
 
+import os
+
 
 class FrmMaskAOI(QDialog, Ui_MaskAOI):
 

@@ -84,7 +84,7 @@ class DesignDlg(QDialog, DIALOG_CLASS):
         # options.driverName = 'GPKG'
         # if os.path.exists(self.geopackage_path):
         #     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        # QgsVectorFileWriter.writeAsVectorFormat(memory_designs, self.geopackage_path, options)
+        # QgsVectorFileWriter.writeAsVectorFormatV2(memory_designs, self.geopackage_path, options)
 
         create_geopackage_table('Polygon', 'zoi', self.geopackage_path, self.zoi_path,
                                 [

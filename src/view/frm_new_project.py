@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
@@ -93,6 +94,8 @@ class FrmNewProject(QDialog, Ui_NewProject):
             try:
                 cursor.execute('UPDATE projects SET name = ?, description = ? WHERE id = ?', [self.txtProjectName.text(), self.txtDescription.toPlainText(), self.project.id])
                 conn.commit()
+                self.project.name = self.txtProjectName.text()
+                self.project.description = self.txtDescription.toPlainText()
             except Exception as ex:
                 conn.rollback()
                 QMessageBox.warning(self, 'Error Updating Project', str(ex))
@@ -121,13 +124,15 @@ class FrmNewProject(QDialog, Ui_NewProject):
             curs = conn.cursor()
 
             schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
-            sql_commands = open(schema_path, 'r').read()
+            schema_file = open(schema_path, 'r')
+            sql_commands = schema_file.read()
             curs.executescript(sql_commands)
 
             # Create the project
             curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtProjectName.text(), self.txtDescription.toPlainText()])
             conn.commit()
             conn.close()
+            schema_file.close()
 
         super(FrmNewProject, self).accept()
 
@@ -154,7 +159,7 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
     options.driverName = 'GPKG'
     if os.path.exists(geopackage_path):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-    QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
+    QgsVectorFileWriter.writeAsVectorFormatV2(memory_layer, geopackage_path, options)
 
 
 def format_layer_name(input_text):
