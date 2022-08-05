@@ -53,7 +53,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         # layer for creating the geopackage
         memory_create = QgsVectorLayer("NoGeometry", "memory_create", "memory")
         # write to disk
-        QgsVectorFileWriter.writeAsVectorFormat(memory_create, self.qris_project.assessments_path, 'utf-8', driverName='GPKG', onlySelected=False)
+        QgsVectorFileWriter.writeAsVectorFormatV2(memory_create, self.qris_project.assessments_path, 'utf-8', driverName='GPKG', onlySelected=False)
 
         # create assessments table and write to geopackage
         memory_assessments = QgsVectorLayer("NoGeometry", "memory_assessments", "memory")
@@ -63,7 +63,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         options.driverName = 'GPKG'
         if os.path.exists(self.qris_project.assessments_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_assessments, self.qris_project.assessments_path, options)
+            QgsVectorFileWriter.writeAsVectorFormatV2(memory_assessments, self.qris_project.assessments_path, options)
             self.assessments_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=assessments", "assessments", "ogr")
             # the data model and add fields
             assessment_date_field = QgsField("assessment_date", QVariant.Date)
@@ -80,7 +80,7 @@ class AssessmentDlg(QDialog, DIALOG_CLASS):
         options.driverName = 'GPKG'
         if os.path.exists(self.qris_project.assessments_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(memory_dams, self.qris_project.assessments_path, options)
+            QgsVectorFileWriter.writeAsVectorFormatV2(memory_dams, self.qris_project.assessments_path, options)
             self.dams_layer = QgsVectorLayer(self.qris_project.assessments_path + "|layername=dams", "dams", "ogr")
             # the data model and add fields to the layer
             assessment_id = QgsField("assessment_id", QVariant.Int)

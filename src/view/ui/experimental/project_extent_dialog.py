@@ -86,7 +86,7 @@ class ProjectExtentDlg(QDialog, DIALOG_CLASS):
         options.driverName = 'GPKG'
         if os.path.exists(extent_geopackage_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        QgsVectorFileWriter.writeAsVectorFormat(new_extent_layer, extent_geopackage_path, options)
+        QgsVectorFileWriter.writeAsVectorFormatV2(new_extent_layer, extent_geopackage_path, options)
 
         # Add the new feature to the project
         self.qris_project.project_extents[new_feature_name] = new_extent_instance
