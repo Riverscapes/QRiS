@@ -159,7 +159,7 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
     options.driverName = 'GPKG'
     if os.path.exists(geopackage_path):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-    QgsVectorFileWriter.writeAsVectorFormatV2(memory_layer, geopackage_path, options)
+    QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
 
 
 def format_layer_name(input_text):

@@ -15,7 +15,7 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
 
         [self.cboYear.addItem(str(year), year) for year in range(1970, 2050)]
         [self.cboMonth.addItem(datetime(2000, month, 1).strftime('%b'), month) for month in range(1, 13)]
-        [self.cboDay.addItem((str(day)), day) for day in range(1, 31)]
+        [self.cboDay.addItem((str(day)), day) for day in range(1, 32)]
 
         # Add the unspecified text with a value of zero
         [widget.addItem(NONE_TEXT, 0) for widget in [self.cboYear, self.cboMonth, self.cboDay]]
@@ -30,7 +30,7 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
     def get_date_spec(self):
 
         year = self.cboYear.currentData()
-        month = self.cboYear.currentData()
+        month = self.cboMonth.currentData()
         day = self.cboDay.currentData()
 
         return DateSpec(
@@ -49,5 +49,5 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
             self.cboMonth.setCurrentIndex(index)
 
         if date_spec.day is not None:
-            index = self.cboDay.findDate(date_spec.day)
+            index = self.cboDay.findData(date_spec.day)
             self.cboDay.setCurrentIndex(index)
