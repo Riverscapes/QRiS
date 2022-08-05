@@ -142,9 +142,10 @@ def update_intersect_table(curs: sqlite3.Cursor, table: str, parent_col_name: st
 
     # Determine if there are IDs in the database that are no longer in use (new_child_id_list)
     unused_child_ids = []
-    curs.execute(f'SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?', parent_id)
+    curs.execute(f'SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?', str(parent_id))
+
     for row in curs.fetchall():
-        if row['id'] not in new_child_id_list:
+        if row['protocol_id'] not in new_child_id_list:
             unused_child_ids.append((parent_id, row[child_col_name]))
 
     # Delete those records no longer in use.

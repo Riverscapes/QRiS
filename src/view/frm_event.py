@@ -129,7 +129,7 @@ class FrmEvent(QDialog, Ui_event2):
                         if response == QMessageBox.No:
                             return
 
-            self.event.update(self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps)
+            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps)
 
         else:
             try:
