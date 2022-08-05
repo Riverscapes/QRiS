@@ -203,7 +203,7 @@ def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surfa
     options.driverName = 'GPKG'
     if os.path.exists(out_gpkg):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-    QgsVectorFileWriter.writeAsVectorFormatV2(
+    QgsVectorFileWriter.writeAsVectorFormat(
         final_vector, out_gpkg, options)
 
     # open the output layer

@@ -114,7 +114,7 @@ class ProjectLayerDlg(QDialog, DIALOG_CLASS):
         options.driverName = 'GPKG'
         if os.path.exists(vector_geopackage_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        QgsVectorFileWriter.writeAsVectorFormatV2(new_layer_clipped, vector_geopackage_path, options)
+        QgsVectorFileWriter.writeAsVectorFormat(new_layer_clipped, vector_geopackage_path, options)
 
         # Add the new feature to the project vector dictionary
         self.qris_project.project_vector_layers[new_feature_name] = new_vector_instance
