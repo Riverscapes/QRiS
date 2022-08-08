@@ -408,7 +408,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         if frm is not None:
             result = frm.exec_()
             if result is not None and result != 0:
-                model_item.setText(frm.txtProjectName.text())
+                model_item.setText(db_item.name)
                 # This will check if the item is in the map and update its name if it is
                 check_for_existing_layer(self.project, db_item)
 
