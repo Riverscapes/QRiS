@@ -82,19 +82,25 @@ class FrmEvent(QDialog, Ui_event2):
         self.txtName.setFocus()
 
     def accept(self):
+        # Uses datetime to determine if start and end dates are real/valid dates
         start_date = self.uc_start.get_date_spec()
         try:
-            datetime(year=start_date.year, month=start_date.month, day=start_date.day)
+            start_dt = datetime(year=start_date.year, month=start_date.month, day=start_date.day)
         except ValueError as value_error:
-            QMessageBox.warning(self, 'Invalid Start Date', str(value_error))
+            QMessageBox.warning(self, 'Invalid Start Date', str(value_error).capitalize())
             self.txtName.setFocus()
             return
 
         end_date = self.uc_end.get_date_spec()
         try:
-            datetime(year=end_date.year, month=end_date.month, day=end_date.day)
+            end_dt = datetime(year=end_date.year, month=end_date.month, day=end_date.day)
         except ValueError as value_error:
-            QMessageBox.warning(self, 'Invalid End Date', str(value_error))
+            QMessageBox.warning(self, 'Invalid End Date', str(value_error).capitalize())
+            self.txtName.setFocus()
+            return
+
+        if start_dt > end_dt:
+            QMessageBox.warning(self, 'Invalid Dates', 'The end date takes place before the start date.')
             self.txtName.setFocus()
             return
 
