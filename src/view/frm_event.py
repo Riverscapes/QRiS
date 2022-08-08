@@ -10,6 +10,8 @@ from ..model.project import Project
 from .ui.event2 import Ui_event2
 from .frm_date_picker import FrmDatePicker
 
+from datetime import datetime
+
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
 
@@ -80,6 +82,21 @@ class FrmEvent(QDialog, Ui_event2):
         self.txtName.setFocus()
 
     def accept(self):
+        start_date = self.uc_start.get_date_spec()
+        try:
+            datetime(year=start_date.year, month=start_date.month, day=start_date.day)
+        except ValueError as value_error:
+            QMessageBox.warning(self, 'Invalid Start Date', str(value_error))
+            self.txtName.setFocus()
+            return
+
+        end_date = self.uc_end.get_date_spec()
+        try:
+            datetime(year=end_date.year, month=end_date.month, day=end_date.day)
+        except ValueError as value_error:
+            QMessageBox.warning(self, 'Invalid End Date', str(value_error))
+            self.txtName.setFocus()
+            return
 
         if len(self.txtName.text()) < 1:
             QMessageBox.warning(self, 'Missing Data Capture Event Name', 'You must provide a name for the data capture event to continue.')
