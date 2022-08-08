@@ -395,8 +395,7 @@ def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_ta
         'Value': 'name'
     }
     # TODO this lookup needs to check custom property and should also have try except block
-    lookup_layer_id = QgsProject.instance().mapLayersByName(lookup_table_name)[0].id()
-    lookup_config['Layer'] = lookup_layer_id
+    lookup_config['Layer'] = feature_layer.id()
     fields = feature_layer.fields()
     field_index = fields.indexFromName(field_name)
     widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
