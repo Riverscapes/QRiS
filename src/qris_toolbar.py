@@ -23,10 +23,10 @@
 """
 
 import os.path
-
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog
+import requests
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings, QUrl
+from qgis.PyQt.QtGui import QIcon, QDesktopServices
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog, QToolButton, QMenu
 from qgis.core import QgsApplication
 
 # TODO fix this
@@ -40,6 +40,7 @@ from . import resources
 # Import the code for the DockWidget
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
+from .view.frm_about import FrmAboutDialog
 
 from .model.project import apply_db_migrations
 
@@ -88,6 +89,9 @@ class QRiSToolbar:
         self.settings = Settings(iface=self.iface)
 
         # print "** INITIALIZING RIPT"
+
+        # Populated on load from a URL
+        self.acknowledgements = None
 
         self.pluginIsActive = False
         self.dockwidget = None
@@ -211,6 +215,8 @@ class QRiSToolbar:
         # self.addLayerAction.triggered.connect(self.addLayerDlg)
         # self.addLayerAction.setEnabled(False)
         # self.toolbar.addAction(self.addLayerAction)
+
+        self.configure_help_menu()
 
     # --------------------------------------------------------------------------
 
@@ -391,3 +397,83 @@ class QRiSToolbar:
     #                 pass
     #         else:
     #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
+
+    def configure_help_menu(self):
+
+        self.helpButton = QToolButton()
+        self.helpButton.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.helpButton.setMenu(QMenu())
+        self.helpButton.setPopupMode(QToolButton.MenuButtonPopup)
+
+        m = self.helpButton.menu()
+
+        # TODO: get the local help working
+        # self.helpAction = QAction(
+        #     QIcon(':/plugins/qris_toolbar/Help.png'),
+        #     self.tr('Help'),
+        #     self.iface.mainWindow()
+        # )
+        # self.helpAction.triggered.connect(partial(showPluginHelp, None, filename=':/plugins/qris_toolbar/help/build/html/index'))
+        # self.websiteAction = QAction(
+        #     QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
+        #     self.tr('Website'),
+        #     self.iface.mainWindow()
+        # )
+        # self.websiteAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("http://rave.riverscapes.xyz")))
+
+        self.helpAction = QAction(
+            QIcon(':/plugins/qris_toolbar/Help.png'),
+            self.tr('Help'),
+            self.iface.mainWindow()
+        )
+        self.helpAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("https://riverscapes.github.io/QRiS/")))
+
+        # self.raveOptionsAction = QAction(
+        #     QIcon(':/plugins/qris_toolbar/Options.png'),
+        #     self.tr('Settings'),
+        #     self.iface.mainWindow()
+        # )
+        # self.raveOptionsAction.triggered.connect(self.options_load)
+
+        # self.net_sync_action = QAction(
+        #     QIcon(':/plugins/qris_toolbar/refresh.png'),
+        #     self.tr('Update resources'),
+        #     self.iface.mainWindow()
+        # )
+        # self.net_sync_action.triggered.connect(lambda: self.net_sync_load(force=True))
+
+        # self.find_resources_action = QAction(
+        #     QIcon(':/plugins/qris_toolbar/BrowseFolder.png'),
+        #     self.tr('Find Resources folder'),
+        #     self.iface.mainWindow()
+        # )
+        # self.find_resources_action.triggered.connect(self.locateResources)
+
+        self.about_action = QAction(
+            QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
+            self.tr('About QRiS'),
+            self.iface.mainWindow()
+        )
+        self.about_action.triggered.connect(self.about_load)
+
+        m.addAction(self.helpAction)
+        # m.addAction(self.websiteAction)
+        # m.addAction(self.raveOptionsAction)
+        # m.addAction(self.net_sync_action)
+        # m.addSeparator()
+        # m.addAction(self.find_resources_action)
+        m.addAction(self.about_action)
+        self.helpButton.setDefaultAction(self.helpAction)
+
+        self.toolbar.addWidget(self.helpButton)
+
+    def about_load(self):
+        """
+        Open the About dialog
+        """
+        dialog = FrmAboutDialog()
+        if self.acknowledgements is None:
+            self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
+
+        dialog.acknowledgements.setText(self.acknowledgements)
+        dialog.exec_()

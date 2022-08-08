@@ -103,4 +103,4 @@ iface.messageBar().pushMessage("Error", "I'm sorry Dave, I'm afraid I can't do t
 # https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/communicating.html
 ```
 
-clone this repo to `qrave_toolbar_dev` so that `qrave_toolbar` is what gets used for deployment
+clone this repo to `qris_toolbar_dev` so that `qris_toolbar` is what gets used for deployment

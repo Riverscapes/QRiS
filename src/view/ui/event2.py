@@ -85,7 +85,7 @@ class Ui_event2(object):
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
         self.retranslateUi(event2)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(event2)
 
     def retranslateUi(self, event2):

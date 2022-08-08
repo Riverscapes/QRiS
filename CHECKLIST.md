@@ -12,5 +12,5 @@ NEVER WORK DIRECTLY ON THE MASTER BRANCH
 6. Tag the commit in git with the version number
 7. Run `deploy.py` again. This will produce the zip file to upload
 8. Test again
-9. Go to https://plugins.qgis.org/plugins/qrave_toolbar/ and log in. You should be able to manage and add a new version from there.
+9. Go to https://plugins.qgis.org/plugins/qris_toolbar/ and log in. You should be able to manage and add a new version from there.
 10. Go make a release on github. This might be redundant but....  TBA
