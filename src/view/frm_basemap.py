@@ -104,10 +104,11 @@ class FrmBasemap(QDialog, Ui_Basis):
         super(FrmBasemap, self).accept()
 
     def on_name_changed(self, new_name):
+        project_name = self.txtName.text().strip()
+        clean_name = ''.join(e for e in project_name.replace(" ", "_") if e.isalnum() or e == "_")
 
-        project_name = self.txtName.text()
         if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
-            self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(project_name, ext)))
+            self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(clean_name, ext)))
         else:
             self.txtProjectPath.setText('')
