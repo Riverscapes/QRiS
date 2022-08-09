@@ -62,6 +62,17 @@ from ..gp.feature_class_functions import browse_source
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
+# Name of the icon PNG file used for group folders in the QRiS project tree
+# /Images/BrowseFolder.png
+FOLDER_ICON = 'BrowseFolder'
+
+# These are the labels used for displaying the group nodes in the QRiS project tree
+GROUP_FOLDER_LABELS = {
+    EVENT_MACHINE_CODE: 'Data Capture Events',
+    BASEMAP_MACHINE_CODE: 'Basemaps',
+    MASK_MACHINE_CODE: 'Masks'
+}
+
 
 class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
@@ -74,7 +85,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # After setupUI you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots - see
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
+        # widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
         self.settings = Settings()
@@ -94,7 +105,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
     # Take this out of init so that nodes can be added as new data is added and imported;
     def build_tree_view(self, project_file, new_item=None):
-        """Builds items in the tree view based on dictionary values that are part of the project"""
+        """
+        Builds the project tree from scratch for the first time
+        """
         self.project = Project(project_file)
 
         self.model.clear()
@@ -102,65 +115,21 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         rootNode = self.model.invisibleRootItem()
 
         # set the project root
-        project_node = QStandardItem(self.project.name)
-        project_node.setIcon(QIcon(':/plugins/qris_toolbar/icon.png'))
-        project_node.setData(self.project, Qt.UserRole)
-        rootNode.appendRow(project_node)
-        # self.treeView.setExpanded(project_node.index(), True)
+        project_node = self.add_child_to_project_tree(rootNode, self.project)
+        events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
+        [self.add_event_too_project_tree(events_node, item) for item in self.project.events.values()]
 
-        events_node = QStandardItem('Data Capture Events')
-        events_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        events_node.setData(EVENT_MACHINE_CODE, Qt.UserRole)
-        project_node.appendRow(events_node)
-        [self.add_event_too_tree(events_node, item) for item in self.project.events.values()]
+        basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
+        [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps.values()]
 
-        basemaps_node = QStandardItem('Basemaps')
-        basemaps_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        basemaps_node.setData(BASEMAP_MACHINE_CODE, Qt.UserRole)
-        project_node.appendRow(basemaps_node)
-        [self.add_child_node(item, basemaps_node, 'test_layers.png') for item in self.project.basemaps.values()]
+        masks_node = self.add_child_to_project_tree(project_node, MASK_MACHINE_CODE)
+        [self.add_child_to_project_tree(masks_node, item) for item in self.project.masks.values()]
 
-        masks_node = QStandardItem('Masks')
-        masks_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        masks_node.setData(MASK_MACHINE_CODE, Qt.UserRole)
-        project_node.appendRow(masks_node)
-        [self.add_child_node(item, masks_node, 'test_layers.png') for item in self.project.masks.values()]
-
-        # scratch_node = QStandardItem('Scratch Space')
-        # scratch_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        # scratch_node.setData(SCRATCH_NODE_TAG, Qt.UserRole)
-        # project_node.appendRow(scratch_node)
-
-        # analyses_node = QStandardItem('Analyses')
-        # analyses_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        # analyses_node.setData(ANALYSIS_MACHINE_CODE, Qt.UserRole)
-        # analyses_node.appendRow(analyses_node)
+        # scratch_node = self.add_child(project_node, SCRATCH_NODE_TAG, 'BrowseFolder')
+        # analyses_node = self.add_child(project_node, ANALYSIS_MACHINE_CODE, 'BrowseFolder')
 
         self.treeView.expandAll()
         return
-
-        # Check if new item is in the tree, if it is pass it to the add_to_map function
-        # Adds a test comment
-        if new_item is not None and new_item != '':
-            selected_item = self._find_item_in_model(new_item)
-            if selected_item is not None:
-                add_to_map(self.qris_project, self.model, selected_item)
-
-    # def add_child_node(self, db_item: DBItem, parent_node: QStandardItem, icon_file_name: str):
-
-    #     node = QStandardItem(db_item.name)
-    #     node.setIcon(QIcon(':plugins/qris_toolbar/{}'.format(icon_file_name)))
-    #     node.setData(db_item, Qt.UserRole)
-    #     parent_node.appendRow(node)
-
-    def _find_item_in_model(self, name):
-        """Looks in the tree for an item name passed from the dataChange method."""
-        # TODO may want to pass this is a try except block and give an informative error message
-        selected_item = self.model.findItems(name, Qt.MatchRecursive)[0]
-        return selected_item
-
-    def get_item_expanded_state(self):
-        """Recursively records a list of the expanded state for items in the tree"""
 
     def closeEvent(self, event):
         self.qris_project = None
@@ -209,7 +178,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
             if isinstance(model_data, DBItem):
-                self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map.png', lambda: self.add_db_item_to_tree(model_item, model_data))
+                self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map.png', lambda: self.add_db_item_to_map(model_item, model_data))
             else:
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
@@ -223,14 +192,14 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
-    def add_context_menu_item(self, menu: QMenu, menu_item_text: str, icon_file_nam, slot: pyqtSlot = None, enabled=True):
-        action = menu.addAction(QIcon(':/plugins/qris_toolbar/{}'.format(icon_file_nam)), menu_item_text)
+    def add_context_menu_item(self, menu: QMenu, menu_item_text: str, icon_file_name, slot: pyqtSlot = None, enabled=True):
+        action = menu.addAction(QIcon(f':/plugins/qris_toolbar/{icon_file_name}.png'), menu_item_text)
         action.setEnabled(enabled)
 
         if slot is not None:
             action.triggered.connect(slot)
 
-    def add_db_item_to_tree(self, tree_node: QStandardItem, db_item: DBItem):
+    def add_db_item_to_map(self, tree_node: QStandardItem, db_item: DBItem):
 
         if isinstance(db_item, Mask):
             build_mask_layer(self.project, db_item)
@@ -263,7 +232,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         for row in range(0, model_item.rowCount()):
             child_item = model_item.child(row)
-            self.add_db_item_to_tree(child_item, child_item.data(Qt.UserRole))
+            self.add_db_item_to_map(child_item, child_item.data(Qt.UserRole))
 
     def expand_tree(self):
         self.treeView.expandAll()
@@ -284,13 +253,13 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_event_too_tree(parent_node, frm.event)
+            self.add_event_too_project_tree(parent_node, frm.event)
 
             # if frm.chkAddToMap.isChecked():
             #     for method_id in event.protocols:
             #         add_to_map(self.project, method_id)
 
-    def add_child(self, parent_node: QStandardItem, data_item, icon: str) -> QStandardItem:
+    def add_child_to_project_tree(self, parent_node: QStandardItem, data_item) -> QStandardItem:
         """
         Looks at all child nodes of the parent_node and returns the existing QStandardItem
         that has the DBitem attached. It will also update the existing node with the latest name
@@ -303,7 +272,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         # Search for a child node of the parent with the specified data attached
         target_node = None
-        for row in range(0, parent_node.rows()):
+        for row in range(0, parent_node.rowCount()):
             child_node = parent_node.child(row)
             if child_node.data(Qt.UserRole) == data_item:
                 target_node = child_node
@@ -311,11 +280,11 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         # Create a new node if none found, or ensure the existing node has the latest name
         if target_node is None:
-            target_node = QStandardItem(data_item.name)
-            target_node.setIcon(QIcon(f':plugins/qris_toolbar/{icon}.png'))
+            target_node = QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])
+            target_node.setIcon(QIcon(f':plugins/qris_toolbar/{data_item.icon if isinstance(data_item, DBItem) else FOLDER_ICON}.png'))
             target_node.setData(data_item, Qt.UserRole)
             parent_node.appendRow(target_node)
-        else:
+        elif isinstance(data_item, DBItem):
             target_node.setText(data_item.name)
 
             # Check if the item is in the map and update its name if it is
@@ -323,29 +292,26 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         return target_node
 
-    def add_event_too_tree(self, parent_node, event: Event):
+    def add_event_too_project_tree(self, parent_node: QStandardItem, event: Event):
+        """
+        Most project data types can be added to the project tree using add_child_to_project_tree()
+        but data capture events have child nodes so they need this special method.
+        """
 
-        event_node = self.add_child(parent_node, event, 'icon')
+        # Event, protocols and layers
+        event_node = self.add_child_to_project_tree(parent_node, event)
         for protocol in event.protocols:
-            protocol_node = self.add_child(event_node, protocol, 'icon')
+            protocol_node = self.add_child_to_project_tree(event_node, protocol)
             for layer in protocol.layers:
                 if layer.is_lookup is False:
-                    self.add_child(protocol_node, layer, 'icon')
+                    self.add_child_to_project_tree(protocol_node, layer)
 
         # Basemaps
-        basemap_group_node = self.add_child(parent_node, PROTOCOL_BASEMAP_MACHINE_CODE, 'BrowseFolder')
-        [self.add_child(basemap_group_node, basemap, 'icon') for basemap in event.basemaps]
+        basemap_group_node = self.add_child_to_project_tree(parent_node, PROTOCOL_BASEMAP_MACHINE_CODE)
+        [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
 
-    def add_assessment_method(self, project: Project, protocol: Protocol):
-
-        # if method.id == 3:
-        frm = FrmDesign(self, self.project)
-        result = frm.exec_()
-
-        # QMessageBox.warning(self, 'Add', 'Adding Assessment Method Directly Is Not Yet Implemented.')
-
-    def add_basemap(self, parent_node):
-        """Initiates adding a new basis"""
+    def add_basemap(self, parent_node: QStandardItem):
+        """Initiates adding a new base map to the project"""
 
         import_source_path = browse_source(self, 'Select a raster dataset to import as a new basis dataset.', QgsMapLayer.RasterLayer)
         if import_source_path is None:
@@ -354,18 +320,13 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         frm = FrmBasemap(self, self.project, import_source_path)
         result = frm.exec_()
         if result != 0:
-            new_node = QStandardItem(frm.basemap.name)
-            new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(frm.basemap, Qt.UserRole)
-            parent_node.appendRow(new_node)
+            self.add_child_to_project_tree(parent_node, frm.basemap)
 
             if frm.chkAddToMap.isChecked():
                 build_basemap_layer(self.project, frm.basemap)
 
     def add_mask(self, parent_node, mode):
         """Initiates adding a new mask"""
-
-        get_project_group(self.project)
 
         import_source_path = None
         if mode == DB_MODE_IMPORT:
@@ -376,35 +337,10 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         frm = FrmMaskAOI(self, self.project, import_source_path)
         result = frm.exec_()
         if result != 0:
-            mask = frm.mask
-            new_node = QStandardItem(mask.name)
-            new_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            new_node.setData(mask, Qt.UserRole)
-            parent_node.appendRow(new_node)
+            self.add_child_to_project_tree(parent_node, frm.mask)
 
             if frm.chkAddToMap.isChecked():
-                build_mask_layer(self.project, mask)
-
-    # def add_assessment_to_map(self, assessment):
-    #     for method_id in assessment.methods.keys():
-    #         add_assessment_method_to_map(self.project, method_id)
-
-    # def add_to_map(self, db_item: DBItem):
-    #     add_mask_to_map(self.project, db_item)
-
-    def add_analysis(self, parent_node, mode):
-
-        frm = FrmNewAnalysis(self, self.project)
-        # result = frm.exec_()
-        # if result!=0:
-        #     analysis =
-
-    # def add_assessment_to_map(self, event: Event):
-    #     for protocol_id in event.protocols.keys():
-    #         add_assessment_method_to_map(self.project, protocol_id)
-
-    # def add_to_map(self, db_item: DBItem):
-    #     add_root_map_item(self.project, db_item)
+                build_mask_layer(self.project, frm.mask)
 
     def edit_item(self, model_item: QStandardItem, db_item: DBItem):
 
@@ -425,17 +361,14 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             if result is not None and result != 0:
 
                 # Adding the item into the tree again will ensure that it's name is up to date
-                # and that any child nodes are correct. It will also ensure the map table of
-                # contents item is renamed
-
+                # and that any child nodes are correct. It will also ensure that the corresponding
+                # map table of contents item is renamed.
                 if isinstance(db_item, Project):
-                    frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
+                    self.add_child_to_project_tree(self.model.invisibleRootItem(), db_item)
                 elif isinstance(db_item, Event):
-                    self.add_child(model_item.parent(), db_item, model_item.ico)
-                elif isinstance(db_item, Mask):
-                    frm = FrmMaskAOI(parent=self, project=self.project, import_source_path=None, mask=db_item)
-                elif isinstance(db_item, Basemap):
-                    frm = FrmBasemap(self, self.project, None, db_item)
+                    self.add_event_too_project_tree(model_item.parent(), db_item)
+                else:
+                    self.add_child_to_project_tree(model_item.parent(), db_item)
 
     def delete_item(self, model_item: QStandardItem, db_item: DBItem):
 
@@ -469,76 +402,76 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         qurl = QUrl.fromLocalFile(folder_path)
         QDesktopServices.openUrl(qurl)
 
-    def add_structure_type(self):
-        """Initiates adding a structure type and the structure type dialog"""
-        # TODO First check if the path to the database exists
-        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
-        if os.path.exists(design_geopackage_path):
-            self.structure_type_dialog = StructureTypeDlg(self.qris_project)
-            self.structure_type_dialog.dataChange.connect(self.build_tree_view)
-            self.structure_type_dialog.show()
-        else:
-            # TODO move the creation of the design data model so that this isn't necessary
-            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")
+    # def add_structure_type(self):
+    #     """Initiates adding a structure type and the structure type dialog"""
+    #     # TODO First check if the path to the database exists
+    #     design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+    #     if os.path.exists(design_geopackage_path):
+    #         self.structure_type_dialog = StructureTypeDlg(self.qris_project)
+    #         self.structure_type_dialog.dataChange.connect(self.build_tree_view)
+    #         self.structure_type_dialog.show()
+    #     else:
+    #         # TODO move the creation of the design data model so that this isn't necessary
+    #         QMessageBox.information(self, "Structure Types", "Please create a new project design before adding structure types")
 
-    def add_zoi_type(self):
-        """Initiates adding a zoi type and the zoi type dialog"""
-        # TODO First check if the path to the database exists
-        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
-        if os.path.exists(design_geopackage_path):
-            self.zoi_type_dialog = ZoiTypeDlg(self.qris_project)
-            self.zoi_type_dialog.dataChange.connect(self.build_tree_view)
-            self.zoi_type_dialog.show()
-        else:
-            # TODO move the creation of the design data model so that this isn't necessary
-            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding a new influence type")
+    # def add_zoi_type(self):
+    #     """Initiates adding a zoi type and the zoi type dialog"""
+    #     # TODO First check if the path to the database exists
+    #     design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+    #     if os.path.exists(design_geopackage_path):
+    #         self.zoi_type_dialog = ZoiTypeDlg(self.qris_project)
+    #         self.zoi_type_dialog.dataChange.connect(self.build_tree_view)
+    #         self.zoi_type_dialog.show()
+    #     else:
+    #         # TODO move the creation of the design data model so that this isn't necessary
+    #         QMessageBox.information(self, "Structure Types", "Please create a new project design before adding a new influence type")
 
-    def add_phase(self):
-        """Initiates adding a new phase within the phase dialog"""
-        # TODO First check if the path to the database exists
-        design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
-        if os.path.exists(design_geopackage_path):
-            self.phase_dialog = PhaseDlg(self.qris_project)
-            self.phase_dialog.dataChange.connect(self.build_tree_view)
-            self.phase_dialog.show()
-        else:
-            # TODO move the creation of the design data model so that this isn't necessary
-            QMessageBox.information(self, "Structure Types", "Please create a new project design before adding phases")
+    # def add_phase(self):
+    #     """Initiates adding a new phase within the phase dialog"""
+    #     # TODO First check if the path to the database exists
+    #     design_geopackage_path = self.qris_project.project_designs.geopackage_path(self.qris_project.project_path)
+    #     if os.path.exists(design_geopackage_path):
+    #         self.phase_dialog = PhaseDlg(self.qris_project)
+    #         self.phase_dialog.dataChange.connect(self.build_tree_view)
+    #         self.phase_dialog.show()
+    #     else:
+    #         # TODO move the creation of the design data model so that this isn't necessary
+    #         QMessageBox.information(self, "Structure Types", "Please create a new project design before adding phases")
 
     # This will kick off importing photos
-    def import_photos(self):
-        pass
+    # def import_photos(self):
+    #     pass
 
-    def add_detrended_raster(self):
-        # last_browse_path = self.settings.getValue('lastBrowsePath')
-        # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
-        dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to QRiS project", None, self.tr("Raster Data Sources (*.tif)"))
-        if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-            self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.qris_project)
-            self.addDetrendedDlg.dataChange.connect(self.build_tree_view)
-            self.addDetrendedDlg.exec()
+    # def add_detrended_raster(self):
+    #     # last_browse_path = self.settings.getValue('lastBrowsePath')
+    #     # last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
+    #     dialog_return = QFileDialog.getOpenFileName(None, "Add Detrended Raster to QRiS project", None, self.tr("Raster Data Sources (*.tif)"))
+    #     if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
+    #         self.addDetrendedDlg = AddDetrendedRasterDlg(None, dialog_return[0], self.qris_project)
+    #         self.addDetrendedDlg.dataChange.connect(self.build_tree_view)
+    #         self.addDetrendedDlg.exec()
 
-    def import_project_extent_layer(self):
-        """launches the dialog that supports import of a project extent layer polygon"""
-        select_layer = QgsDataSourceSelectDialog()
-        select_layer.exec()
-        uri = select_layer.uri()
-        if uri is not None and uri.isValid() and uri.wkbType == 3:
-            self.project_extent_dialog = ProjectExtentDlg(uri, self.qris_project)
-            self.project_extent_dialog.dataChange.connect(self.build_tree_view)
-            self.project_extent_dialog.exec_()
-        else:
-            QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon layer")
+    # def import_project_extent_layer(self):
+    #     """launches the dialog that supports import of a project extent layer polygon"""
+    #     select_layer = QgsDataSourceSelectDialog()
+    #     select_layer.exec()
+    #     uri = select_layer.uri()
+    #     if uri is not None and uri.isValid() and uri.wkbType == 3:
+    #         self.project_extent_dialog = ProjectExtentDlg(uri, self.qris_project)
+    #         self.project_extent_dialog.dataChange.connect(self.build_tree_view)
+    #         self.project_extent_dialog.exec_()
+    #     else:
+    #         QMessageBox.critical(self, "Invalid Layer", "Please select a valid polygon layer")
 
-    def create_blank_project_extent(self):
-        """Adds a blank project extent that will be edited by the user"""
-        self.project_extent_dialog = ProjectExtentDlg(None, self.qris_project)
-        self.project_extent_dialog.dataChange.connect(self.build_tree_view)
-        self.project_extent_dialog.exec_()
+    # def create_blank_project_extent(self):
+    #     """Adds a blank project extent that will be edited by the user"""
+    #     self.project_extent_dialog = ProjectExtentDlg(None, self.qris_project)
+    #     self.project_extent_dialog.dataChange.connect(self.build_tree_view)
+    #     self.project_extent_dialog.exec_()
 
-    def update_project_extent(self):
-        """Renames the project extent layer"""
-        pass
+    # def update_project_extent(self):
+    #     """Renames the project extent layer"""
+    #     pass
 
     # def delete_project_extent(self, selected_item):
     #     """Deletes a project extent layer"""
@@ -568,21 +501,21 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
     #     else:
     #         QMessageBox.information(self, "Delete extent", "No layers were deleted")
 
-    def import_project_layer(self):
-        """launches a dialog that supports import of project layers that can be clipped to a project extent"""
-        select_layer = QgsDataSourceSelectDialog()
-        select_layer.exec()
-        uri = select_layer.uri()
-        if uri is not None and uri.isValid():  # and uri.wkbType == 3:
-            self.project_layer_dialog = ProjectLayerDlg(uri, self.qris_project)
-            self.project_layer_dialog.dataChange.connect(self.build_tree_view)
-            self.project_layer_dialog.exec_()
-        else:
-            QMessageBox.critical(self, "Invalid Layer", "Please select a valid gis layer")
+    # def import_project_layer(self):
+    #     """launches a dialog that supports import of project layers that can be clipped to a project extent"""
+    #     select_layer = QgsDataSourceSelectDialog()
+    #     select_layer.exec()
+    #     uri = select_layer.uri()
+    #     if uri is not None and uri.isValid():  # and uri.wkbType == 3:
+    #         self.project_layer_dialog = ProjectLayerDlg(uri, self.qris_project)
+    #         self.project_layer_dialog.dataChange.connect(self.build_tree_view)
+    #         self.project_layer_dialog.exec_()
+    #     else:
+    #         QMessageBox.critical(self, "Invalid Layer", "Please select a valid gis layer")
 
-    def explore_elevations(self, selected_item):
-        # raster = selected_item.data(item_code['INSTANCE'])
-        self.elevation_widget = ElevationDockWidget(raster, self.qris_project)
-        self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
-        self.elevation_widget.dataChange.connect(self.build_tree_view)
-        self.elevation_widget.show()
+    # def explore_elevations(self, selected_item):
+    #     # raster = selected_item.data(item_code['INSTANCE'])
+    #     self.elevation_widget = ElevationDockWidget(raster, self.qris_project)
+    #     self.settings.iface.addDockWidget(Qt.LeftDockWidgetArea, self.elevation_widget)
+    #     self.elevation_widget.dataChange.connect(self.build_tree_view)
+    #     self.elevation_widget.show()
