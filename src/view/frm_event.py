@@ -153,7 +153,7 @@ class FrmEvent(QDialog, Ui_event2):
                             return
 
             self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps)
-
+            super().accept()
         else:
             try:
                 self.event = insert_event(
