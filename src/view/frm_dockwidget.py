@@ -146,12 +146,12 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             if selected_item is not None:
                 add_to_map(self.qris_project, self.model, selected_item)
 
-    def add_child_node(self, db_item: DBItem, parent_node: QStandardItem, icon_file_name: str):
+    # def add_child_node(self, db_item: DBItem, parent_node: QStandardItem, icon_file_name: str):
 
-        node = QStandardItem(db_item.name)
-        node.setIcon(QIcon(':plugins/qris_toolbar/{}'.format(icon_file_name)))
-        node.setData(db_item, Qt.UserRole)
-        parent_node.appendRow(node)
+    #     node = QStandardItem(db_item.name)
+    #     node.setIcon(QIcon(':plugins/qris_toolbar/{}'.format(icon_file_name)))
+    #     node.setData(db_item, Qt.UserRole)
+    #     parent_node.appendRow(node)
 
     def _find_item_in_model(self, name):
         """Looks in the tree for an item name passed from the dataChange method."""
@@ -290,36 +290,51 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             #     for method_id in event.protocols:
             #         add_to_map(self.project, method_id)
 
+    def add_child(self, parent_node: QStandardItem, data_item, icon: str) -> QStandardItem:
+        """
+        Looks at all child nodes of the parent_node and returns the existing QStandardItem
+        that has the DBitem attached. It will also update the existing node with the latest name
+        in the event that the data item has just been edited.
+
+        A new node is created if no existing node is found.
+
+        The data_item can either be a DBItem object or a string for group nodes
+        """
+
+        # Search for a child node of the parent with the specified data attached
+        target_node = None
+        for row in range(0, parent_node.rows()):
+            child_node = parent_node.child(row)
+            if child_node.data(Qt.UserRole) == data_item:
+                target_node = child_node
+                break
+
+        # Create a new node if none found, or ensure the existing node has the latest name
+        if target_node is None:
+            target_node = QStandardItem(data_item.name)
+            target_node.setIcon(QIcon(f':plugins/qris_toolbar/{icon}.png'))
+            target_node.setData(data_item, Qt.UserRole)
+            parent_node.appendRow(target_node)
+        else:
+            target_node.setText(data_item.name)
+
+            # Check if the item is in the map and update its name if it is
+            check_for_existing_layer(self.project, data_item)
+
+        return target_node
+
     def add_event_too_tree(self, parent_node, event: Event):
 
-        event_node = QStandardItem(event.name)
-        event_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-        event_node.setData(event, Qt.UserRole)
-        parent_node.appendRow(event_node)
-
+        event_node = self.add_child(parent_node, event, 'icon')
         for protocol in event.protocols:
-            protocol_node = QStandardItem(protocol.name)
-            protocol_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            protocol_node.setData(protocol, Qt.UserRole)
-            event_node.appendRow(protocol_node)
-
+            protocol_node = self.add_child(event_node, protocol, 'icon')
             for layer in protocol.layers:
                 if layer.is_lookup is False:
-                    layer_node = QStandardItem(layer.name)
-                    layer_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-                    layer_node.setData(layer, Qt.UserRole)
-                    protocol_node.appendRow(layer_node)
+                    self.add_child(protocol_node, layer, 'icon')
 
         # Basemaps
-        basemap_group_node = QStandardItem('Basemaps')
-        basemap_group_node.setIcon(QIcon(':plugins/qris_toolbar/BrowseFolder.png'))
-        basemap_group_node.setData(PROTOCOL_BASEMAP_MACHINE_CODE, Qt.UserRole)
-        event_node.appendRow(basemap_group_node)
-        for basemap in event.basemaps:
-            basemap_node = QStandardItem(basemap.name)
-            basemap_node.setIcon(QIcon(':plugins/qris_toolbar/icon.png'))
-            basemap_node.setData(basemap, Qt.UserRole)
-            basemap_group_node.appendRow(basemap_node)
+        basemap_group_node = self.add_child(parent_node, PROTOCOL_BASEMAP_MACHINE_CODE, 'BrowseFolder')
+        [self.add_child(basemap_group_node, basemap, 'icon') for basemap in event.basemaps]
 
     def add_assessment_method(self, project: Project, protocol: Protocol):
 
@@ -408,9 +423,19 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         if frm is not None:
             result = frm.exec_()
             if result is not None and result != 0:
-                model_item.setText(db_item.name)
-                # This will check if the item is in the map and update its name if it is
-                check_for_existing_layer(self.project, db_item)
+
+                # Adding the item into the tree again will ensure that it's name is up to date
+                # and that any child nodes are correct. It will also ensure the map table of
+                # contents item is renamed
+
+                if isinstance(db_item, Project):
+                    frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
+                elif isinstance(db_item, Event):
+                    self.add_child(model_item.parent(), db_item, model_item.ico)
+                elif isinstance(db_item, Mask):
+                    frm = FrmMaskAOI(parent=self, project=self.project, import_source_path=None, mask=db_item)
+                elif isinstance(db_item, Basemap):
+                    frm = FrmBasemap(self, self.project, None, db_item)
 
     def delete_item(self, model_item: QStandardItem, db_item: DBItem):
 
