@@ -19,6 +19,13 @@ class DBItem():
         self.id = id
         self.name = name
 
+        # Inherited classes should override this icon file name if they
+        # need customer icon files. Code that uses this icon does so
+        # using the following syntax. All icon image files should be
+        # stored directly in the Images folder.
+        # QIcon(f':/plugins/qris_toolbar/{db_item.name}.png')
+        self.icon = 'icon'
+
     def delete(self, db_path: str) -> None:
 
         with sqlite3.connect(db_path) as conn:
