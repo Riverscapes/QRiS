@@ -44,14 +44,15 @@ class Event(DBItem):
 
         self.event_layers = list(event_layers.values())
 
-    def update(self, db_path: str, name: str, description: str, protocols: list, basemaps: list):
+    def update(self, db_path: str, name: str, description: str, protocols: list, basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem):
 
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
 
             try:
-                curs.execute('UPDATE events SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
+                curs.execute('UPDATE events SET name = ?, description = ?, platform_id = ?, start_year = ?, start_month = ?, start_day = ?, end_year = ?, end_month = ?, end_day = ? WHERE id = ?',
+                             [name, description, platform.id, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, self.id])
 
                 update_intersect_table(curs, 'event_basemaps', 'event_id', 'basemap_id', self.id, [item.id for item in basemaps])
                 update_intersect_table(curs, 'event_protocols', 'event_id', 'protocol_id', self.id, [item.id for item in protocols])
@@ -59,7 +60,10 @@ class Event(DBItem):
                 self.name = name
                 self.description = description
                 self.basemaps = basemaps
-
+                self.protocols = protocols
+                self.start = start_date
+                self.end = end_date
+                self.platform = platform
                 conn.commit()
 
             except Exception as ex:

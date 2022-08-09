@@ -69,6 +69,7 @@ class FrmEvent(QDialog, Ui_event2):
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.cboPlatform.setModel(self.platform_model)
+        self.cboPlatform.setCurrentIndex(event.platform.id - 1)
 
         if event is not None:
             self.txtName.setText(event.name)
@@ -152,7 +153,7 @@ class FrmEvent(QDialog, Ui_event2):
                         if response == QMessageBox.No:
                             return
 
-            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps)
+            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps, start_date, end_date, self.cboPlatform.currentData(Qt.UserRole))
             super().accept()
         else:
             try:
