@@ -23,7 +23,7 @@ layers = [
     ('dams', 'Dam Points', 'Point'),
     ('jams', 'Jam Points', 'Point'),
     ('thalwegs', 'Thalwegs', 'Linestring'),
-    ('riverscape_units', 'Riverscape Units', 'Polygon'),
+    ('active_extents', 'Active Extents', 'Polygon'),
     ('centerlines', 'Centerlines', 'Linestring'),
     ('inundation_extents', 'Inundation Extents', 'Polygon'),
     ('valley_bottoms', 'Valley Bottoms', 'Polygon'),

@@ -245,6 +245,9 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
         add_channel_unit_points(project, feature_layer)
     elif layer_name == 'channel_unit_polygons':
         add_channel_unit_polygons(project, feature_layer)
+    elif layer_name == 'active_extents':
+        add_active_extents(project, feature_layer)
+
     else:
         pass
 
@@ -399,7 +402,18 @@ def add_channel_unit_polygons(project: Project, feature_layer: QgsVectorLayer) -
     set_alias(feature_layer, 'percent_wetted', 'Percent Wetted')
 
 
+def add_active_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
+    set_hidden(feature_layer, 'fid', 'Extent ID')
+    # We may consider adding a value map for the event ID,
+    set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_value_map(project, feature_layer, 'type_id', 'lkp_active_extent_types', 'Extent Type')
+    set_multiline(feature_layer, 'description', 'Description')
+    set_virtual_dimension(feature_layer, 'area')
+
+
 # ------ SETTING FIELD AND FORM PROPERTIES -------
+
+
 def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True) -> None:
     """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
     # value relation widget configuration. Just add the Layer name

@@ -17,7 +17,7 @@ CREATE TABLE protocols (
 );
 
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (1, 'RIM', 'RIM', 0, 'Riverscape Inundation Mapping');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Riverscape Units', 'RIVERSCAPE_UNITS', 0, 'Placeholder name for the streams need space stupidity');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Active Extents', 'ACTIVE_EXTENT', 0, 'Mapping portions of the valley bottom that are part of the active channel or floodplain');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (3, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
 -- INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Geomorphic Units', 'GUT', 0, 'Some sort of riverscape feature classification, who fricken knows');
@@ -51,7 +51,7 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL); -- type: primary, secondary - see GUT
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (6, 'riverscape_units', 'Riverscape Units', 'Polygon', 0, 'riverscape_units.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL); -- type: free flow, overflow, ponded
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'valley_bottoms.qml', NULL);
@@ -79,7 +79,7 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (104, 'lkp_dam_integrity', 'Dam Integrity', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (105, 'lkp_beaver_maintenance', 'Beaver Maintenance', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (106, 'lkp_thalweg_types', 'Thalweg Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (107, 'lkp_riverscape_unit_types', 'Riverscape Units Types', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (107, 'lkp_active_extent_types', 'Active Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (108, 'lkp_junction_types', 'Junction Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (109, 'lkp_geomorphic_unit_types', 'Geomorphic Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (110, 'lkp_vegetation_extent_types', 'Vegetation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
@@ -116,6 +116,11 @@ INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 115);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 103);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 105);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 104);
+
+-- Active Extents
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (2, 6);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (2, 107);
+
 -- Structural Elements
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 3);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 4);
@@ -376,18 +381,20 @@ ALTER TABLE thalwegs ADD description TEXT;
 
 
 -- riverscape units
-CREATE TABLE lkp_riverscape_unit_types (
+CREATE TABLE lkp_active_extent_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     description TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_riverscape_unit_types (id, name) VALUES (1, 'Active');
-INSERT INTO lkp_riverscape_unit_types (id, name) VALUES (2, 'Inactive');
+INSERT INTO lkp_active_extent_types (id, name) VALUES (1, 'Active');
+INSERT INTO lkp_active_extent_types (id, name) VALUES (2, 'Inactive');
 
-ALTER TABLE riverscape_units ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE riverscape_units ADD COLUMN type_id INTEGER REFERENCES lkp_riverscape_unit_types(id);
+ALTER TABLE active_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE active_extents ADD COLUMN type_id INTEGER REFERENCES lkp_active_extent_types(id);
+ALTER TABLE active_extents ADD description TEXT;
+
 
 -- centerlines
 ALTER TABLE centerlines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -717,7 +724,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_dam_integrity', 'attributes', 'lkp_dam_integrity', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_beaver_maintenance', 'attributes', 'lkp_beaver_maintenance', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_thalweg_types', 'attributes', 'lkp_thalweg_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_riverscape_unit_types', 'attributes', 'lkp_riverscape_unit_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_active_extent_types', 'attributes', 'lkp_active_extent_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_junction_types', 'attributes', 'lkp_junction_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_geomorphic_unit_types', 'attributes', 'lkp_geomorphic_unit_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_vegetation_extent_types', 'attributes', 'lkp_vegetation_extent_types', 0);
