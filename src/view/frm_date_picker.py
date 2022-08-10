@@ -1,3 +1,4 @@
+from calendar import month
 from datetime import datetime
 from qgis.PyQt.QtWidgets import QWidget
 
@@ -53,4 +54,24 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
             self.cboDay.setCurrentIndex(index)
 
     def validate(self) -> bool:
-        return
+        event_date = self.get_date_spec()
+        is_valid_date = True
+        error_message = ""
+        if event_date.year is None and event_date.month is not None:
+            is_valid_date = False
+            error_message = "A year is required if a month is present."
+        elif event_date.year is None and event_date.month is None and event_date.day is not None:
+            is_valid_date = False
+            error_message = "A year and month are required if a day is present."
+        elif event_date.year is not None and event_date.month is None and event_date.day is not None:
+            is_valid_date = False
+            error_message = "A month is required if a day is present."
+        # Dates must be real dates (February 30th is not allowed)
+        elif event_date.year is not None and event_date.month is not None and event_date.day is not None:
+            try:
+                datetime(event_date.year, event_date.month, event_date.day)
+            except ValueError:
+                is_valid_date = False
+                error_message = "Not a valid calendar date."
+
+        return is_valid_date, error_message

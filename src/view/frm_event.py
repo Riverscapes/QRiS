@@ -1,3 +1,4 @@
+from sqlite3 import Date
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox, QLabel
 from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
@@ -10,7 +11,7 @@ from ..model.project import Project
 from .ui.event2 import Ui_event2
 from .frm_date_picker import FrmDatePicker
 
-from datetime import datetime
+from datetime import date, datetime
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
@@ -84,36 +85,26 @@ class FrmEvent(QDialog, Ui_event2):
         self.txtName.setFocus()
 
     def accept(self):
+        start_date_valid, start_date_error_msg = self.uc_start.validate()
+        if not start_date_valid:
+            QMessageBox.warning(self, 'Invalid Start Date', start_date_error_msg)
+            self.uc_start.setFocus()
+            return
 
-        # if not self.uc_start.validate():
-        #     QMessageBox.warning(self, 'Invalid Start Date', str(value_error).capitalize())
-        #     self.uc_start.setFocus()
-        #     return
-        # if not self.uc_end.validate():
-        #     QMessageBox.warning(self, 'Invalid End Date', str(value_error).capitalize())
-        #     self.uc_end.setFocus()
-        #     return
+        end_date_valid, end_date_error_msg = self.uc_end.validate()
+        if not end_date_valid:
+            QMessageBox.warning(self, 'Invalid End Date', end_date_error_msg)
+            self.uc_end.setFocus()
+            return
 
-        # Uses datetime to determine if start and end dates are real/valid dates
         start_date = self.uc_start.get_date_spec()
-        # try:
-        #     start_dt = datetime(year=start_date.year, month=start_date.month, day=start_date.day)
-        # except ValueError as value_error:
-        #     QMessageBox.warning(self, 'Invalid Start Date', str(value_error).capitalize())
-        #     self.txtName.setFocus()
-        #     return
-
         end_date = self.uc_end.get_date_spec()
-        # try:
-        #     end_dt = datetime(year=end_date.year, month=end_date.month, day=end_date.day)
-        # except ValueError as value_error:
 
-        #     return
-
-        # if start_dt > end_dt:
-        #     QMessageBox.warning(self, 'Invalid Dates', 'The end date takes place before the start date.')
-        #     self.txtName.setFocus()
-        #     return
+        date_order_valid = check_if_date_order_valid(start_date, end_date)
+        if not date_order_valid:
+            QMessageBox.warning(self, 'Invalid Date Order', "")
+            self.uc_end.setFocus()
+            return
 
         if len(self.txtName.text()) < 1:
             QMessageBox.warning(self, 'Missing Data Capture Event Name', 'You must provide a name for the data capture event to continue.')
@@ -190,3 +181,24 @@ class FrmEvent(QDialog, Ui_event2):
                     self.txtName.setFocus()
                 else:
                     QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
+
+
+def check_if_date_order_valid(start_date: DateSpec, end_date: DateSpec):
+    if start_date.year is None or end_date.month is None:
+        return True
+    elif start_date.month is None or end_date.month is None:
+        if start_date.year <= end_date.year:
+            return True
+        else:
+            return False
+    elif start_date.day is None or end_date.day is None:
+        start_dt = datetime(start_date.year, start_date.month, 1)
+        end_dt = datetime(end_date.year, end_date.month, 1)
+    else:
+        start_dt = datetime(start_date.year, start_date.month, start_date.day)
+        end_dt = datetime(end_date.year, end_date.month, end_date.day)
+
+    if start_dt > end_dt:
+        return False
+    else:
+        return True
