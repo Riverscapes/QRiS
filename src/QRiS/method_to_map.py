@@ -20,7 +20,8 @@ from qgis.core import (
     QgsSimpleFillSymbolLayer,
     QgsCategorizedSymbolRenderer,
     QgsProject,
-    QgsExpressionContextUtils)
+    QgsExpressionContextUtils,
+    QgsFieldConstraints)
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
@@ -332,7 +333,7 @@ def add_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_value_map(project, feature_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
     set_value_map(project, feature_layer, 'dam_integrity_id', 'lkp_dam_integrity', 'Dam Integrity')
     set_value_map(project, feature_layer, 'beaver_maintenance_id', 'lkp_beaver_maintenance', 'Beaver Maintenance')
-    set_alias(feature_layer, 'height', 'Dam Height')
+    set_multiline(feature_layer, 'description', 'Description')
     set_virtual_dimension(feature_layer, 'length')
 
 
@@ -361,6 +362,7 @@ def add_inundation_extents(project: Project, feature_layer: QgsVectorLayer) -> N
     set_hidden(feature_layer, 'fid', 'Extent ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'type_id', 'lkp_inundation_extent_types', 'Extent Type')
+    set_multiline(feature_layer, 'description', 'Description')
     set_virtual_dimension(feature_layer, 'area')
 
 
@@ -368,6 +370,7 @@ def add_thalwegs(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Thalweg ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'type_id', 'lkp_thalweg_types', 'Thalweg Type')
+    set_multiline(feature_layer, 'description', 'Description')
     set_virtual_dimension(feature_layer, 'length')
 
 
@@ -420,6 +423,7 @@ def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_ta
     form_config = feature_layer.editFormConfig()
     form_config.setReuseLastValue(field_index, reuse_last)
     feature_layer.setEditFormConfig(form_config)
+    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True) -> None:
@@ -448,6 +452,7 @@ def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: s
     form_config = feature_layer.editFormConfig()
     form_config.setReuseLastValue(field_index, reuse_last)
     feature_layer.setEditFormConfig(form_config)
+    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
@@ -456,6 +461,7 @@ def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: s
     widget_setup = QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False})
     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
     feature_layer.setFieldAlias(field_index, field_alias)
+    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 def set_hidden(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
@@ -475,17 +481,18 @@ def set_alias(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) 
     fields = feature_layer.fields()
     field_index = fields.indexFromName(field_name)
     feature_layer.setFieldAlias(field_index, field_alias)
+    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 # ----- CREATING VIRTUAL FIELDS --------
 def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None:
     """dimension should be 'area' or 'length'
     sets a virtual length field named vrt_length
-    aliases the field as Length
+    aliases the field as Length (m)
     sets the widget type to text
     sets default value to the dimension expression"""
     field_name = 'vrt_' + dimension
-    field_alias = dimension.capitalize()
+    field_alias = dimension.capitalize() + ' (m)'
     field_expression = 'round(${}, 0)'.format(dimension)
     virtual_field = QgsField(field_name, QVariant.Int)
     feature_layer.addExpressionField(field_expression, virtual_field)

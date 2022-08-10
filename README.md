@@ -89,7 +89,9 @@ call "C:\Users\Matt\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd"
 * [Plugin Reloader](https://github.com/borysiasty/plugin_reloader) -- Handy tool to reload all the code for a given plugin so you don't need to close QGIS when you make code changes.
 * [First Aid](https://github.com/wonder-sk/qgis-first-aid-plugin) -- Provides Python debugger and replaces the default Python error handling in QGIS. This one is optional but highly recommended. It gives error traces you might not get otherwise and makes QGIS a lot less black-box.
 * [debugvs](https://github.com/lmotta/debug_vs_plugin/wiki) -- This plugin is for debugging in Visual Studio ( tested in Visual Studio Code).
-For use, run this plugin and enable the Debug (Python:Attach) in Visual Studio. Need install the ptvsd's module(pip3 install ptvsd).
+For use, run this plugin and enable the Debug (Python:Attach) in Visual Studio. Need install the ptvsd's module(pip3 install ptvsd). On OSX you can run the following in the terminal to install ptvsd:
+``` /Applications/QGIS.app/Contents/MacOS/bin/pip3 install ptvsd ```
+
 * [Plugin Builder 3](http://g-sherman.github.io/Qgis-Plugin-Builder) -- Creates a QGIS plugin template for use as a starting point in plugin development. Not totally necessary but good to have if you want to build plugins. (this one is optional but it's really handy)
 
 
