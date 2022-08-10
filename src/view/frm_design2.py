@@ -28,6 +28,9 @@ class FrmDesign(FrmEvent):
         self.vwProtocols.setVisible(False)
         self.lblProtocols.setVisible(False)
 
+        if event is not None:
+            self.chkAddToMap.setVisible(False)
+
     def accept(self):
 
         self.metadata = {'statusId': self.cboStatus.currentData(Qt.UserRole).id}
