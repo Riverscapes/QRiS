@@ -20,7 +20,7 @@ INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUE
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Riverscape Units', 'RIVERSCAPE_UNITS', 0, 'Placeholder name for the streams need space stupidity');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (3, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Geomorphic Units', 'GUT', 0, 'Some sort of riverscape feature classification, who fricken knows');
+-- INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Geomorphic Units', 'GUT', 0, 'Some sort of riverscape feature classification, who fricken knows');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (6, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
 
 CREATE TABLE lkp_metric_sources (
@@ -338,7 +338,8 @@ ALTER TABLE dam_crests ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELE
 ALTER TABLE dam_crests ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
 ALTER TABLE dam_crests ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
 ALTER TABLE dam_crests ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
-ALTER TABLE dam_crests ADD COLUMN height NUMERIC;
+ALTER TABLE dam_crests ADD description TEXT;
+
 
 -- dam points
 ALTER TABLE dams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -370,6 +371,8 @@ INSERT INTO lkp_thalweg_types (id, name) VALUES (2, 'Non-Primary');
 
 ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
+ALTER TABLE thalwegs ADD description TEXT;
+
 
 
 -- riverscape units
@@ -404,6 +407,9 @@ INSERT INTO lkp_inundation_extent_types (id, name) VALUES (3, 'Overflow');
 -- inundation
 ALTER TABLE inundation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE inundation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_inundation_extent_types(id);
+ALTER TABLE inundation_extents ADD description TEXT;
+
+
 
 -- valley bottoms
 ALTER TABLE valley_bottoms ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
