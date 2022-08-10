@@ -51,3 +51,6 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
         if date_spec.day is not None:
             index = self.cboDay.findData(date_spec.day)
             self.cboDay.setCurrentIndex(index)
+
+    def validate(self) -> bool:
+        return
