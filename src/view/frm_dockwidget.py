@@ -359,7 +359,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 # and that any child nodes are correct. It will also ensure that the corresponding
                 # map table of contents item is renamed.
                 if isinstance(db_item, Project):
-                    self.add_child_to_project_tree(self.model.invisibleRootItem(), db_item, frm.chkAddToMap.isChecked())
+                    self.add_child_to_project_tree(self.model.invisibleRootItem(), db_item, False)
                 elif isinstance(db_item, Event):
                     self.add_event_too_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
                 else:
