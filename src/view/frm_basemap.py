@@ -44,11 +44,12 @@ class FrmBasemap(QDialog, Ui_Basis):
 
             self.lblSourcePath.setVisible(False)
             self.txtSourcePath.setVisible(False)
-            self.lblProjectPath.setVisible(False)
-            self.txtProjectPath.setVisible(False)
             self.lblClipToMask.setVisible(False)
             self.cboMask.setVisible(False)
 
+            self.txtProjectPath.setText(qris_project.get_absolute_path(basemap.path))
+
+            self.chkAddToMap.setVisible(False)
             self.chkAddToMap.setCheckState(Qt.Unchecked)
 
         self.txtName.selectAll()

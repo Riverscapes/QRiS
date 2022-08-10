@@ -53,6 +53,10 @@ def get_db_item_layer(db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeN
     layer should either be the QRiS project node, or a node within the project.
     """
 
+    # Handles a completely empty map
+    if layer is None:
+        return None
+
     # Check whether the node that was passed in possesses the correct custom property
     custom_property = layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
     if isinstance(custom_property, DBItem) and db_item == custom_property:
@@ -232,9 +236,9 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
         pass
 
 
-def check_for_existing_layer(project: Project, db_item: DBItem):
+def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=False):
 
-    project_group = get_project_group(project)
+    project_group = get_project_group(project, add_missing)
     existing_layer = get_db_item_layer(db_item, project_group)
     if existing_layer is not None:
         # Ensure it has the latest name (in case this method is called after an edit)
@@ -292,7 +296,7 @@ def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:
     # TODO: raster symbology?
     # Finally add the new layer here
     project_group = get_project_group(project, True)
-    group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
+    group_layer = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', project_group, True)
     tree_layer_node = group_layer.addLayer(raster_layer)
     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap)
     return raster_layer

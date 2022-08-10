@@ -69,16 +69,17 @@ class FrmEvent(QDialog, Ui_event2):
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.cboPlatform.setModel(self.platform_model)
-        self.cboPlatform.setCurrentIndex(event.platform.id - 1)
 
         if event is not None:
             self.txtName.setText(event.name)
             self.txtDescription.setPlainText(event.description)
+            self.cboPlatform.setCurrentIndex(event.platform.id - 1)
 
             self.uc_start.set_date_spec(event.start)
             self.uc_end.set_date_spec(event.end)
 
             self.chkAddToMap.setCheckState(Qt.Unchecked)
+            self.chkAddToMap.setVisible(False)
 
         self.txtName.setFocus()
 

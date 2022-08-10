@@ -35,6 +35,7 @@ class FrmMaskAOI(QDialog, Ui_MaskAOI):
             self.txtName.setText(mask.name)
             self.txtDescription.setPlainText(mask.description)
             self.chkAddToMap.setCheckState(Qt.Unchecked)
+            self.chkAddToMap.setVisible(False)
 
         self.gridLayout.setGeometry(QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
