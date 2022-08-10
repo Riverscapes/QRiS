@@ -71,7 +71,8 @@ FOLDER_ICON = 'BrowseFolder'
 GROUP_FOLDER_LABELS = {
     EVENT_MACHINE_CODE: 'Data Capture Events',
     BASEMAP_MACHINE_CODE: 'Basemaps',
-    MASK_MACHINE_CODE: 'Masks'
+    MASK_MACHINE_CODE: 'Masks',
+    PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps'
 }
 
 
