@@ -46,7 +46,10 @@
     "python.pythonPath": "${env:QGIS_PATH}/Contents/MacOS/bin/python3.9",
 		"qtForPython.uic.args": [
 			"-o \"${workspaceFolder}${pathSeparator}src${pathSeparator}view${pathSeparator}ui${pathSeparator}${fileBasenameNoExtension}.py\""
-		]
+		],
+		"qtForPython.rcc.args": [
+			"-o \"${workspaceFolder}${pathSeparator}src${pathSeparator}${fileBasenameNoExtension}.py\""
+		  ]
 	},
 	"launch": {
 		"configurations": [],

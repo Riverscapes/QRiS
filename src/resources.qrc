@@ -10,6 +10,7 @@
         <file alias="RaveAddIn_16px.png">../Images/RaveAddIn_16px.png</file>
         <file alias="ucProjectExplorer.png">../Images/ucProjectExplorer.png</file>
         <file alias="icon.png">../icon.png</file>
+        <file alias="pencil_ruler.png">../Images/pencil_ruler.png</file>
 
         <file alias="Detrend.png">../Images/Detrend.png</file>
         
