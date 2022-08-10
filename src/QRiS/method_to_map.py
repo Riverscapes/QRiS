@@ -87,7 +87,19 @@ def get_group_layer(machine_code, group_label, parent: QgsLayerTreeGroup, add_mi
             return child_layer
 
     if add_missing:
-        group_layer = parent.addGroup(group_label)
+
+        # Find the basemaps group layer. If it is already in the map then
+        # insert the new group layer ABOVE it rather than just add it (which
+        # will cause it to get added below the basemaps).
+        basemap_group_index = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', parent, False)
+
+        if basemap_group_index is None:
+            # No basemaps under this parent. Add the new group. It will get added last.
+            group_layer = parent.addGroup(group_label)
+        else:
+            # Basemap group node exists. Add the new group as penultimate group.
+            group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
+
         group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, machine_code)
         return group_layer
 
