@@ -5,12 +5,12 @@
         <file alias="basemap">../Images/basemap.png</file>
         <file alias="collapse">../Images/collapse.png</file>
         <file alias="design">../Images/design.png</file>
+        <file alias="delete">../Images/delete.png</file>
         <file alias="detrend">../Images/detrend.png</file>
         <file alias="event">../Images/event.png</file>
         <file alias="expand">../Images/expand.png</file>
         <file alias="folder">../Images/folder.png</file>
         <file alias="help">../Images/help.png</file>
-        <file alias="icon.png">../Images/icon.png</file>
         <file alias="influence">../Images/influence.png</file>
         <file alias="layer">../Images/layer.png</file>
         <file alias="mask">../Images/mask.png</file>
