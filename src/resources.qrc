@@ -14,6 +14,7 @@
         <file alias="influence">../Images/influence.png</file>
         <file alias="layer">../Images/layer.png</file>
         <file alias="mask">../Images/mask.png</file>
+        <file alias="mask_regular">../Images/mask_regular.png</file>
         <file alias="metadata">../Images/metadata.png</file>
         <file alias="metric">../Images/metric.png</file>
         <file alias="new_folder">../Images/new_folder.png</file>
