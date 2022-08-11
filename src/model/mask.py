@@ -10,6 +10,7 @@ class Mask(DBItem):
         super().__init__('masks', id, name)
         self.description = description
         self.mask_type = mask_type
+        self.icon = 'mask'
 
     def update(self, db_path: str, name: str, mask_type: DBItem, description: str) -> None:
 

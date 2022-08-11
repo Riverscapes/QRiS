@@ -18,12 +18,13 @@ DATA_CAPTURE_EVENT_TYPE_ID = 1
 
 class FrmEvent(QDialog, Ui_event2):
 
-    def __init__(self, parent, qris_project: Project, event: Event = None):
+    def __init__(self, parent, qris_project: Project, event_type_id: int = DATA_CAPTURE_EVENT_TYPE_ID, event: Event = None):
 
         self.qris_project = qris_project
         self.event = event
         self.protocols = []
         self.metadata = None
+        self.event_type_id = event_type_id
 
         super().__init__(parent)
         self.setupUi(self)
@@ -165,7 +166,7 @@ class FrmEvent(QDialog, Ui_event2):
                     self.uc_start.get_date_spec(),
                     self.uc_end.get_date_spec(),
                     '',
-                    self.qris_project.lookup_tables['lkp_event_types'][DATA_CAPTURE_EVENT_TYPE_ID],
+                    self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
                     self.cboPlatform.currentData(Qt.UserRole),
                     self.protocols,
                     basemaps,

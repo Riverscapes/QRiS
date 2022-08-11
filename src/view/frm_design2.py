@@ -7,13 +7,13 @@ from ..model.project import Project
 
 from .frm_event import FrmEvent
 
-DATA_CAPTURE_EVENT_TYPE_ID = 1
+DESIGN_EVENT_TYPE_ID = 2
 
 
 class FrmDesign(FrmEvent):
 
     def __init__(self, parent, qris_project: Project, event=None):
-        super().__init__(parent, qris_project, event)
+        super().__init__(parent, qris_project, DESIGN_EVENT_TYPE_ID, event)
 
         self.setWindowTitle('Create New Design' if event is None else 'Edit Design')
 
