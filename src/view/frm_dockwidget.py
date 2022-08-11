@@ -185,7 +185,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
             if isinstance(model_data, Project) or isinstance(model_data, Event) or isinstance(model_data, Basemap) or isinstance(model_data, Mask):
-                self.add_context_menu_item(self.menu, 'Edit', 'Options', lambda: self.edit_item(model_item, model_data))
+                self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'RaveAddIn', lambda: self.browse_item(model_data))
