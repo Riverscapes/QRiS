@@ -203,11 +203,11 @@ class QRiSToolbar:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/test_new.png'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
+        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/new'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
         self.newProjectAction.triggered.connect(self.create_new_project_dialog)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/test_folder.png'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
+        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/folder'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
         self.open_projectAction.triggered.connect(self.open_existing_project)
         self.toolbar.addAction(self.open_projectAction)
 
@@ -422,7 +422,7 @@ class QRiSToolbar:
         # self.websiteAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("http://rave.riverscapes.xyz")))
 
         self.helpAction = QAction(
-            QIcon(':/plugins/qris_toolbar/Help.png'),
+            QIcon(':/plugins/qris_toolbar/help'),
             self.tr('Help'),
             self.iface.mainWindow()
         )
@@ -450,7 +450,7 @@ class QRiSToolbar:
         # self.find_resources_action.triggered.connect(self.locateResources)
 
         self.about_action = QAction(
-            QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
+            QIcon(':/plugins/qris_toolbar/riverscapes_icon'),
             self.tr('About QRiS'),
             self.iface.mainWindow()
         )

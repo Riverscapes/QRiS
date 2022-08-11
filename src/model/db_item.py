@@ -23,8 +23,8 @@ class DBItem():
         # need customer icon files. Code that uses this icon does so
         # using the following syntax. All icon image files should be
         # stored directly in the Images folder.
-        # QIcon(f':/plugins/qris_toolbar/{db_item.name}.png')
-        self.icon = 'icon'
+        # QIcon(f':/plugins/qris_toolbar/{db_item.name}')
+        self.icon = 'riverscapes_icon'
 
     def delete(self, db_path: str) -> None:
 

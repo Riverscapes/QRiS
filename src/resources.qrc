@@ -1,48 +1,23 @@
 <RCC>
     <qresource prefix="/plugins/qris_toolbar">
-
-        <file alias="BrowseFolder.png">../Images/BrowseFolder.png</file>
-        <file alias="Help.png">../Images/Help.png</file>
-        <file alias="NewProject.png">../Images/NewProject.png</file>
-        <file alias="OpenProject.png">../Images/OpenProject.png</file>
-        <file alias="Options.png">../Images/Options.png</file>
-        <file alias="RaveAddIn.png">../Images/RaveAddIn.png</file>
-        <file alias="RaveAddIn_16px.png">../Images/RaveAddIn_16px.png</file>
-        <file alias="ucProjectExplorer.png">../Images/ucProjectExplorer.png</file>
-        <file alias="icon.png">../icon.png</file>
-        <file alias="pencil_ruler.png">../Images/pencil_ruler.png</file>
-
-        <file alias="Detrend.png">../Images/Detrend.png</file>
-        
-        <file alias="refresh.png">../Images/refresh.png</file>
-        <file alias="tree.png">../Images/tree.png</file>
-        <file alias="expand.png">../Images/expand.png</file>
-        <file alias="collapse.png">../Images/collapse.png</file>
-        <file alias="AddToMap.png">../Images/AddToMap.png</file>
-        <file alias="metadata.png">../Images/metadata.png</file>
-        <file alias="close.png">../Images/close.png</file>
-
-        <!-- Temporary icons -->
-        <file alias="test_structure.png">../Images/test_structure.png</file>
-        <file alias="test_folder.png">../Images/test_folder.png</file>
-        <file alias="test_structure_folder.png">../Images/test_structure_folder.png</file>
-        <file alias="test_settings.png">../Images/test_settings.png</file>
-        <file alias="test_new.png">../Images/test_new.png</file>
-        <file alias="test_design.png">../Images/test_design.png</file>
-        <file alias="test_add_map.png">../Images/test_add_map.png</file>
-        <file alias="test_phase.png">../Images/test_phase.png</file>
-        <file alias="test_influence.png">../Images/test_influence.png</file>
-        <file alias="test_project_extent.png">../Images/test_project_extent.png</file>
-        <file alias="test_layers.png">../Images/test_layers.png</file>
-
-    
-
-        <!-- Layer icons -->
-        <file alias="layers/Dot.png">../Images/layers/Dot16.png</file>
-        <file alias="layers/MultiDot.png">../Images/layers/MultiDot16.png</file>
-        <file alias="layers/Polygon.png">../Images/layers/Polygon16.png</file>
-        <file alias="layers/Polyline.png">../Images/layers/Polyline16.png</file>
-        <file alias="layers/Raster.png">../Images/layers/Raster16.png</file>
-
+        <file alias="add_to_map">../Images/add_to_map.png</file>
+        <file alias="basemap">../Images/basemap.png</file>
+        <file alias="collapse">../Images/collapse.png</file>
+        <file alias="design">../Images/design.png</file>
+        <file alias="detrend">../Images/detrend.png</file>
+        <file alias="event">../Images/event.png</file>
+        <file alias="expand">../Images/expand.png</file>
+        <file alias="folder">../Images/folder.png</file>
+        <file alias="help">../Images/help.png</file>
+        <file alias="icon.png">../Images/icon.png</file>
+        <file alias="influence">../Images/influence.png</file>
+        <file alias="layer">../Images/layer.png</file>
+        <file alias="metadata">../Images/metadata.png</file>
+        <file alias="new_folder">../Images/new_folder.png</file>
+        <file alias="new">../Images/new.png</file>
+        <file alias="options">../Images/options.png</file>
+        <file alias="refresh">../Images/refresh.png</file>
+        <file alias="riverscapes_icon">../Images/riverscapes_icon.png</file>
+        <file alias="riverscapes_logo">../Images/riverscapes_logo.png</file>
     </qresource>
 </RCC>

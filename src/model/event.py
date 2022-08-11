@@ -34,6 +34,7 @@ class Event(DBItem):
         self.protocols = protocols.copy() if protocols else []
         self.basemaps = basemaps.copy() if basemaps else []
         self.metadata = metadata
+        self.icon = 'event'
 
         event_layers = {}
         for protocol in self.protocols:
