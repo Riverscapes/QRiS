@@ -155,32 +155,32 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         if isinstance(model_data, str):
             if model_data == ANALYSIS_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Create New Analysis', 'test_new', lambda: self.add_analysis(model_item, DB_MODE_CREATE))
+                self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item, DB_MODE_CREATE))
             else:
-                self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map', lambda: self.add_tree_group_to_map(model_item))
+                self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 if model_data == EVENT_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'test_new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
-                    self.add_context_menu_item(self.menu, 'Add New Design', 'test_new', lambda: self.add_event(model_item, 0))
+                    self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
+                    self.add_context_menu_item(self.menu, 'Add New Design', 'new', lambda: self.add_event(model_item, 0))
                 elif model_data == BASEMAP_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'test_new', lambda: self.add_basemap(model_item))
+                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item))
                 elif model_data == MASK_MACHINE_CODE:
                     add_mask_menu = self.menu.addMenu('Create New')
-                    self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'test_new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                    self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'test_new', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
-                    self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'test_new', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
+                    self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
+                    self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
+                    self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
 
                     import_mask_menu = self.menu.addMenu('Import Existing')
-                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'test_new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'test_new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
-                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'test_new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
+                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
+                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
 
-                    # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'test_new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                    # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'test_new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
+                    # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
+                    # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
             if isinstance(model_data, DBItem):
-                self.add_context_menu_item(self.menu, 'Add To Map', 'test_add_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
             else:
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
@@ -188,9 +188,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
             if isinstance(model_data, Project):
-                self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'RaveAddIn', lambda: self.browse_item(model_data))
+                self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data))
             else:
-                self.add_context_menu_item(self.menu, 'Delete', 'RaveAddIn', lambda: self.delete_item(model_item, model_data))
+                self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -310,8 +310,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     self.add_child_to_project_tree(protocol_node, layer)
 
         # Basemaps
-        basemap_group_node = self.add_child_to_project_tree(parent_node, PROTOCOL_BASEMAP_MACHINE_CODE)
-        [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
+        if len(event.basemaps) > 0:
+            basemap_group_node = self.add_child_to_project_tree(parent_node, PROTOCOL_BASEMAP_MACHINE_CODE)
+            [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
 
     def add_basemap(self, parent_node: QStandardItem):
         """Initiates adding a new base map to the project"""

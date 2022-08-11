@@ -196,7 +196,7 @@ class QRiSToolbar:
         # Initialize the processing framework
         self.initProcessing()
 
-        icon_path = ':/plugins/qris_toolbar/icon.png'
+        icon_path = ':/plugins/qris_toolbar/riverscapes_icon'
         self.add_action(
             icon_path,
             text=self.tr(u'QRiS'),
