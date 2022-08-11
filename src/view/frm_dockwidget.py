@@ -287,6 +287,10 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             target_node.setIcon(QIcon(f':plugins/qris_toolbar/{data_item.icon if isinstance(data_item, DBItem) else FOLDER_ICON}'))
             target_node.setData(data_item, Qt.UserRole)
             parent_node.appendRow(target_node)
+
+            if add_to_map == True and isinstance(data_item, DBItem):
+                self.add_db_item_to_map(target_node, data_item)
+
         elif isinstance(data_item, DBItem):
             target_node.setText(data_item.name)
 
