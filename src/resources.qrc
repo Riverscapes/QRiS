@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/plugins/qris_toolbar">
         <file alias="add_to_map">../Images/add_to_map.png</file>
+        <file alias="analysis">../Images/analysis.png</file>
         <file alias="basemap">../Images/basemap.png</file>
         <file alias="collapse">../Images/collapse.png</file>
         <file alias="design">../Images/design.png</file>
@@ -14,9 +15,11 @@
         <file alias="layer">../Images/layer.png</file>
         <file alias="mask">../Images/mask.png</file>
         <file alias="metadata">../Images/metadata.png</file>
+        <file alias="metric">../Images/metric.png</file>
         <file alias="new_folder">../Images/new_folder.png</file>
         <file alias="new">../Images/new.png</file>
         <file alias="options">../Images/options.png</file>
+        <file alias="protocol">../Images/protocol.png</file>
         <file alias="refresh">../Images/refresh.png</file>
         <file alias="riverscapes_icon">../Images/riverscapes_icon.png</file>
         <file alias="riverscapes_logo">../Images/riverscapes_logo.png</file>

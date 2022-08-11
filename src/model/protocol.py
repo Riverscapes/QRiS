@@ -10,6 +10,7 @@ class Protocol(DBItem):
         self.machine_code = machine_code
         self.has_custom_ui = has_custom_ui
         self.layers = []
+        self.icon = 'protocol'
 
 
 def load(curs: sqlite3.Cursor, layers: dict) -> dict:
