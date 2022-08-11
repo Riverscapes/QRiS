@@ -119,7 +119,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # set the project root
         project_node = self.add_child_to_project_tree(rootNode, self.project)
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
-        [self.add_event_too_project_tree(events_node, item) for item in self.project.events.values()]
+        [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
 
         basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
         [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps.values()]
@@ -255,7 +255,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_event_too_project_tree(parent_node, frm.event)
+            self.add_event_to_project_tree(parent_node, frm.event)
 
             # if frm.chkAddToMap.isChecked():
             #     for method_id in event.protocols:
@@ -294,7 +294,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         return target_node
 
-    def add_event_too_project_tree(self, parent_node: QStandardItem, event: Event):
+    def add_event_to_project_tree(self, parent_node: QStandardItem, event: Event):
         """
         Most project data types can be added to the project tree using add_child_to_project_tree()
         but data capture events have child nodes so they need this special method.
@@ -362,7 +362,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 if isinstance(db_item, Project):
                     self.add_child_to_project_tree(self.model.invisibleRootItem(), db_item, False)
                 elif isinstance(db_item, Event):
-                    self.add_event_too_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
+                    self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
                 else:
                     self.add_child_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
 
