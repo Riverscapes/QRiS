@@ -9,6 +9,7 @@ class Analysis(DBItem):
     def __init__(self, id: int, name: str, description: str):
         super().__init__('analyses', id, name)
         self.description = description
+        self.icon = 'analysis'
 
     def update(self, db_path: str, name: str, description: str) -> None:
 
