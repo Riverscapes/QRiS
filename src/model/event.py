@@ -7,6 +7,9 @@ from .datespec import DateSpec
 
 EVENT_MACHINE_CODE = 'Event'
 
+# Database ID of the design event type. Used to determine which icon to use
+DESIGN_EVENT_TYPE_ID = 2
+
 
 class Event(DBItem):
     """ Data Capture Event class"""
@@ -34,7 +37,8 @@ class Event(DBItem):
         self.protocols = protocols.copy() if protocols else []
         self.basemaps = basemaps.copy() if basemaps else []
         self.metadata = metadata
-        self.icon = 'event'
+
+        self.icon = 'design' if self.event_type.id == DESIGN_EVENT_TYPE_ID else 'event'
 
         event_layers = {}
         for protocol in self.protocols:

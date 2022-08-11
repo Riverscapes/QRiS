@@ -282,6 +282,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         # Create a new node if none found, or ensure the existing node has the latest name
         if target_node is None:
+            icon = FOLDER_ICON
             target_node = QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])
             target_node.setIcon(QIcon(f':plugins/qris_toolbar/{data_item.icon if isinstance(data_item, DBItem) else FOLDER_ICON}'))
             target_node.setData(data_item, Qt.UserRole)
