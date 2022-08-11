@@ -21,7 +21,7 @@ class FrmAboutDialog(QDialog, Ui_Dialog):
         QDialog.__init__(self, parent)
         self.setupUi(self)
 
-        pixmap = QPixmap(':/plugins/qris_toolbar/RaveAddIn.png').scaled(128, 128)
+        pixmap = QPixmap(':/plugins/qris_toolbar/riverscapes_logo').scaled(128, 128)
         self.logo.setPixmap(pixmap)
         self.website.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['webUrl']))
         self.issues.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['issueUrl']))
