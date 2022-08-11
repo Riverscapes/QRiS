@@ -350,7 +350,10 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         if isinstance(db_item, Project):
             frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
         elif isinstance(db_item, Event):
-            frm = FrmEvent(self, self.project, db_item)
+            if db_item.event_type.id == DATA_CAPTURE_EVENT_TYPE_ID:
+                frm = FrmEvent(self, self.project, event=db_item)
+            else:
+                frm = FrmDesign(self, self.project, db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(parent=self, project=self.project, import_source_path=None, mask=db_item)
         elif isinstance(db_item, Basemap):
