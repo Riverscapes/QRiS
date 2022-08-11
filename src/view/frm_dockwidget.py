@@ -64,8 +64,8 @@ from ..gp.feature_class_functions import browse_source
 SCRATCH_NODE_TAG = 'SCRATCH'
 
 # Name of the icon PNG file used for group folders in the QRiS project tree
-# /Images/BrowseFolder.png
-FOLDER_ICON = 'BrowseFolder'
+# /Images/folder.png
+FOLDER_ICON = 'folder'
 
 # These are the labels used for displaying the group nodes in the QRiS project tree
 GROUP_FOLDER_LABELS = {
@@ -195,7 +195,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
     def add_context_menu_item(self, menu: QMenu, menu_item_text: str, icon_file_name, slot: pyqtSlot = None, enabled=True):
-        action = menu.addAction(QIcon(f':/plugins/qris_toolbar/{icon_file_name}.png'), menu_item_text)
+        action = menu.addAction(QIcon(f':/plugins/qris_toolbar/{icon_file_name}'), menu_item_text)
         action.setEnabled(enabled)
 
         if slot is not None:
@@ -283,7 +283,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # Create a new node if none found, or ensure the existing node has the latest name
         if target_node is None:
             target_node = QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])
-            target_node.setIcon(QIcon(f':plugins/qris_toolbar/{data_item.icon if isinstance(data_item, DBItem) else FOLDER_ICON}.png'))
+            target_node.setIcon(QIcon(f':plugins/qris_toolbar/{data_item.icon if isinstance(data_item, DBItem) else FOLDER_ICON}'))
             target_node.setData(data_item, Qt.UserRole)
             parent_node.appendRow(target_node)
         elif isinstance(data_item, DBItem):

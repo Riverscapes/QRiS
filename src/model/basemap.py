@@ -17,6 +17,7 @@ class Basemap(DBItem):
         super().__init__('basemaps', id, name)
         self.path = relative_project_path
         self.description = description
+        self.icon = 'basemap'
 
     def update(self, db_path: str, name: str, description: str) -> None:
 
