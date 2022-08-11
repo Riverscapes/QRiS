@@ -359,6 +359,7 @@ def add_jams(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_alias(feature_layer, 'length', 'Jam Length')
     set_alias(feature_layer, 'width', 'Jam Width')
     set_alias(feature_layer, 'height', 'Jam Height')
+    set_multiline(feature_layer, 'description', 'Description')
 
 
 def add_inundation_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
@@ -378,8 +379,8 @@ def add_thalwegs(project: Project, feature_layer: QgsVectorLayer) -> None:
 
 
 def add_channel_unit_points(project: Project, feature_layer: QgsVectorLayer) -> None:
-    set_hidden(feature_layer, 'fid', 'Channel Unit ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_hidden(feature_layer, 'fid', 'Channel Unit ID')
     set_value_map(project, feature_layer, 'unit_type_id', 'lkp_channel_unit_types', 'Unit Type')
     set_value_map(project, feature_layer, 'structure_forced_id', 'lkp_structure_forced', 'Structure Forced')
     set_value_map(project, feature_layer, 'primary_channel_id', 'lkp_primary_channel', 'Primary Channel')
@@ -389,17 +390,19 @@ def add_channel_unit_points(project: Project, feature_layer: QgsVectorLayer) -> 
     set_alias(feature_layer, 'width', 'Width')
     set_alias(feature_layer, 'depth', 'Depth')
     set_alias(feature_layer, 'percent_wetted', 'Percent Wetted')
+    set_multiline(feature_layer, 'description', 'Description')
 
 
 def add_channel_unit_polygons(project: Project, feature_layer: QgsVectorLayer) -> None:
-    set_hidden(feature_layer, 'fid', 'Channel Unit ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_hidden(feature_layer, 'fid', 'Channel Unit ID')
     set_value_map(project, feature_layer, 'unit_type_id', 'lkp_channel_unit_types', 'Unit Type')
     set_value_map(project, feature_layer, 'structure_forced_id', 'lkp_structure_forced', 'Structure Forced')
     set_value_map(project, feature_layer, 'primary_channel_id', 'lkp_primary_channel', 'Primary Channel')
     set_value_map(project, feature_layer, 'primary_unit_id', 'lkp_primary_unit', 'Primary Unit')
     set_multiline(feature_layer, 'description', 'Description')
     set_alias(feature_layer, 'percent_wetted', 'Percent Wetted')
+    set_multiline(feature_layer, 'description', 'Description')
 
 
 def add_active_extents(project: Project, feature_layer: QgsVectorLayer) -> None:

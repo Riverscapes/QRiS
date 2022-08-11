@@ -139,8 +139,8 @@ INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 122);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 123);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 124);
 -- Channel Units
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 22);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 23);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 24);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 116);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 117);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 118);
@@ -353,6 +353,7 @@ ALTER TABLE dams ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrit
 ALTER TABLE dams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
 ALTER TABLE dams ADD COLUMN length NUMERIC;
 ALTER TABLE dams ADD COLUMN height NUMERIC;
+ALTER TABLE dams ADD description TEXT;
 
 -- jam points
 ALTER TABLE jams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -362,6 +363,7 @@ ALTER TABLE jams ADD COLUMN length NUMERIC;
 ALTER TABLE jams ADD COLUMN width NUMERIC;
 ALTER TABLE jams ADD COLUMN height NUMERIC;
 ALTER TABLE jams ADD COLUMN wood_count INTEGER;
+ALTER TABLE jams ADD description TEXT;
 
 -- thalwegs
 CREATE TABLE lkp_thalweg_types (
@@ -380,7 +382,7 @@ ALTER TABLE thalwegs ADD description TEXT;
 
 
 
--- riverscape units
+-- active extents
 CREATE TABLE lkp_active_extent_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
@@ -580,7 +582,7 @@ INSERT INTO lkp_primary_unit (id, name) VALUES (2, 'Non-Primary Unit');
 INSERT INTO lkp_primary_unit (id, name) VALUES (3, 'NA');
 
 
-ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
+ALTER TABLE channel_unit_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_points ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_points ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
@@ -589,13 +591,17 @@ ALTER TABLE channel_unit_points ADD COLUMN length NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
+ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
 
-ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
+
+ALTER TABLE channel_unit_polygons ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
+ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
+
 
 
 -- Design Lookup Tables
