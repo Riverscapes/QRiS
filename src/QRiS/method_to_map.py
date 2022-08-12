@@ -247,8 +247,14 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
         add_channel_unit_polygons(project, feature_layer)
     elif layer_name == 'active_extents':
         add_active_extents(project, feature_layer)
-
+    elif layer_name == 'zoi':
+        add_zoi(project, feature_layer)
+    elif layer_name == 'structure_points':
+        add_structure_points(project, feature_layer)
+    elif layer_name == 'structure_lines':
+        add_structure_lines(project, feature_layer)
     else:
+        # TODO: Should probably have a notification for layers not found....
         pass
 
 
@@ -414,7 +420,33 @@ def add_active_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_virtual_dimension(feature_layer, 'area')
 
 
-# ------ SETTING FIELD AND FORM PROPERTIES -------
+def add_zoi(project: Project, feature_layer: QgsVectorLayer) -> None:
+    set_hidden(feature_layer, 'fid', 'ZOI ID')
+    set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_value_map(project, feature_layer, 'type_id', 'zoi_types', 'ZOI Type')
+    set_value_map(project, feature_layer, 'stage_id', 'lkp_zoi_stage', 'ZOI Stage')
+    set_multiline(feature_layer, 'description', 'Description')
+
+
+def add_structure_points(project: Project, feature_layer: QgsVectorLayer) -> None:
+    set_hidden(feature_layer, 'fid', 'Structure ID')
+    set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_value_map(project, feature_layer, 'structure_type_id', 'structure_types', 'Structure Type')
+    set_alias(feature_layer, 'name', 'Structure Name')
+    set_multiline(feature_layer, 'description', 'Description')
+    set_alias(feature_layer, 'created', 'Created')
+
+
+def add_structure_lines(project: Project, feature_layer: QgsVectorLayer) -> None:
+    set_hidden(feature_layer, 'fid', 'Structure ID')
+    set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_value_map(project, feature_layer, 'structure_type_id', 'structure_types', 'Structure Type')
+    set_alias(feature_layer, 'name', 'Structure Name')
+    set_multiline(feature_layer, 'description', 'Description')
+    set_virtual_dimension(feature_layer, 'length')
+    set_alias(feature_layer, 'created', 'Created')
+
+    # ------ SETTING FIELD AND FORM PROPERTIES -------
 
 
 def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True) -> None:
@@ -478,7 +510,9 @@ def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: s
     widget_setup = QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False})
     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
     feature_layer.setFieldAlias(field_index, field_alias)
-    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
+    form_config = feature_layer.editFormConfig()
+    form_config.setLabelOnTop(field_index, True)
+    feature_layer.setEditFormConfig(form_config)
 
 
 def set_hidden(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
@@ -519,3 +553,8 @@ def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None
     feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
     widget_setup = QgsEditorWidgetSetup('TextEdit', {})
     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+
+
+def set_created_datetime(feature_layer: QgsVectorLayer) -> None:
+    """Will set a date time created field to a default value of now() and also set it to read only"""
+    pass
