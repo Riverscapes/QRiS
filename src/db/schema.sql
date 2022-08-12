@@ -111,41 +111,24 @@ CREATE TABLE protocol_layers (
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 1);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 5);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 8);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 106);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 115);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 103);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 105);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 104);
 
 -- Active Extents
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (2, 6);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (2, 107);
 
 -- Structural Elements
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 3);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 4);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 1);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 103);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 104);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 105);
+
 -- Low Tech Designs
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 19);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 20);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 21);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 22);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 120);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 121);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 122);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 123);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 124);
+
 -- Channel Units
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 23);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 24);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 116);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 117);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 118);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 119);
-
 
 
 CREATE TABLE lkp_context_layer_types (
@@ -686,6 +669,7 @@ ALTER TABLE zoi ADD COLUMN created DATETIME;
 
 
 ALTER TABLE complexes ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE complexes ADD COLUMN name TEXT;
 ALTER TABLE complexes ADD COLUMN initial_condition TEXT;
 ALTER TABLE complexes ADD COLUMN target_condition TEXT;
 ALTER TABLE complexes ADD COLUMN description TEXT;
