@@ -341,9 +341,9 @@ def configure_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> Non
 def configure_dams(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Dam ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
-    set_value_relation(feature_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
-    set_value_relation(feature_layer, 'dam_integrity_id', 'lkp_dam_integrity', 'Dam Integrity')
-    set_value_relation(feature_layer, 'beaver_maintenance_id', 'lkp_beaver_maintenance', 'Beaver Maintenance')
+    set_value_map(feature_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
+    set_value_map(feature_layer, 'dam_integrity_id', 'lkp_dam_integrity', 'Dam Integrity')
+    set_value_map(feature_layer, 'beaver_maintenance_id', 'lkp_beaver_maintenance', 'Beaver Maintenance')
     set_alias(feature_layer, 'length', 'Dam Length')
     set_alias(feature_layer, 'height', 'Dam Height')
 
