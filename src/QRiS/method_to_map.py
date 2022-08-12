@@ -232,27 +232,30 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
     # send to layer specific field handlers
     layer_name = event_layer.layer.name
     if layer_name == 'dam_crests':
-        add_dam_crests(project, feature_layer)
+        configure_dam_crests(project, feature_layer)
     elif layer_name == 'thalwegs':
-        add_thalwegs(project, feature_layer)
+        configure_thalwegs(project, feature_layer)
     elif layer_name == 'inundation_extents':
-        add_inundation_extents(project, feature_layer)
+        configure_inundation_extents(project, feature_layer)
     elif layer_name == 'dams':
-        add_dams(project, feature_layer)
+        configure_dams(project, feature_layer)
     elif layer_name == 'jams':
-        add_jams(project, feature_layer)
+        configure_jams(project, feature_layer)
     elif layer_name == 'channel_unit_points':
-        add_channel_unit_points(project, feature_layer)
+        configure_channel_unit_points(project, feature_layer)
     elif layer_name == 'channel_unit_polygons':
-        add_channel_unit_polygons(project, feature_layer)
+        configure_channel_unit_polygons(project, feature_layer)
     elif layer_name == 'active_extents':
-        add_active_extents(project, feature_layer)
+        configure_active_extents(project, feature_layer)
     elif layer_name == 'zoi':
-        add_zoi(project, feature_layer)
+        configure_zoi(project, feature_layer)
     elif layer_name == 'structure_points':
-        add_structure_points(project, feature_layer)
+        configure_structure_points(project, feature_layer)
     elif layer_name == 'structure_lines':
-        add_structure_lines(project, feature_layer)
+        configure_structure_lines(project, feature_layer)
+    elif layer_name == 'complexes':
+        configure_complexes(project, feature_layer)
+
     else:
         # TODO: Should probably have a notification for layers not found....
         pass
@@ -325,18 +328,7 @@ def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:
 
 
 # -------- LAYER SPECIFIC ADD TO MAP FUNCTIONS ---------
-def add_lookup_table(layer: dict) -> None:
-    """Checks if a lookup table has been added as private in the current QGIS session"""
-    # Check if the lookup table has been added
-    # TODO make sure the lookup tables are actually from the correct project geopackage
-    # TODO Use custom properties to double check that the correct layers are being used
-    if len(QgsProject.instance().mapLayersByName(layer['fc_name'])) == 0:
-        lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
-        # TODO consider adding and then marking as private instead of using the False flag
-        QgsProject.instance().addMapLayer(lookup_layer, False)
-
-
-def add_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Dam Crests ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
@@ -346,7 +338,7 @@ def add_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_virtual_dimension(feature_layer, 'length')
 
 
-def add_dams(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_dams(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Dam ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_relation(feature_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
@@ -356,7 +348,7 @@ def add_dams(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_alias(feature_layer, 'height', 'Dam Height')
 
 
-def add_jams(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_jams(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Jam ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'structure_source_id', 'lkp_structure_source', 'Structure Source')
@@ -368,7 +360,7 @@ def add_jams(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_multiline(feature_layer, 'description', 'Description')
 
 
-def add_inundation_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_inundation_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Extent ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'type_id', 'lkp_inundation_extent_types', 'Extent Type')
@@ -376,7 +368,7 @@ def add_inundation_extents(project: Project, feature_layer: QgsVectorLayer) -> N
     set_virtual_dimension(feature_layer, 'area')
 
 
-def add_thalwegs(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_thalwegs(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Thalweg ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'type_id', 'lkp_thalweg_types', 'Thalweg Type')
@@ -384,7 +376,7 @@ def add_thalwegs(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_virtual_dimension(feature_layer, 'length')
 
 
-def add_channel_unit_points(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_channel_unit_points(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_hidden(feature_layer, 'fid', 'Channel Unit ID')
     set_value_map(project, feature_layer, 'unit_type_id', 'lkp_channel_unit_types', 'Unit Type')
@@ -399,7 +391,7 @@ def add_channel_unit_points(project: Project, feature_layer: QgsVectorLayer) -> 
     set_multiline(feature_layer, 'description', 'Description')
 
 
-def add_channel_unit_polygons(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_channel_unit_polygons(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_hidden(feature_layer, 'fid', 'Channel Unit ID')
     set_value_map(project, feature_layer, 'unit_type_id', 'lkp_channel_unit_types', 'Unit Type')
@@ -411,7 +403,7 @@ def add_channel_unit_polygons(project: Project, feature_layer: QgsVectorLayer) -
     set_multiline(feature_layer, 'description', 'Description')
 
 
-def add_active_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_active_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Extent ID')
     # We may consider adding a value map for the event ID,
     set_hidden(feature_layer, 'event_id', 'Event ID')
@@ -420,24 +412,30 @@ def add_active_extents(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_virtual_dimension(feature_layer, 'area')
 
 
-def add_zoi(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_zoi(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'ZOI ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'type_id', 'zoi_types', 'ZOI Type')
     set_value_map(project, feature_layer, 'stage_id', 'lkp_zoi_stage', 'ZOI Stage')
     set_multiline(feature_layer, 'description', 'Description')
+    set_field_constraint_not_null(feature_layer, 'type_id', 1)
+    set_field_constraint_not_null(feature_layer, 'stage_id', 1)
+    set_virtual_dimension(feature_layer, 'area')
+    set_created_datetime(feature_layer)
 
 
-def add_structure_points(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_structure_points(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Structure ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'structure_type_id', 'structure_types', 'Structure Type')
     set_alias(feature_layer, 'name', 'Structure Name')
     set_multiline(feature_layer, 'description', 'Description')
     set_alias(feature_layer, 'created', 'Created')
+    set_field_constraint_not_null(feature_layer, 'structure_type_id', 1)
+    set_created_datetime(feature_layer)
 
 
-def add_structure_lines(project: Project, feature_layer: QgsVectorLayer) -> None:
+def configure_structure_lines(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Structure ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
     set_value_map(project, feature_layer, 'structure_type_id', 'structure_types', 'Structure Type')
@@ -445,6 +443,19 @@ def add_structure_lines(project: Project, feature_layer: QgsVectorLayer) -> None
     set_multiline(feature_layer, 'description', 'Description')
     set_virtual_dimension(feature_layer, 'length')
     set_alias(feature_layer, 'created', 'Created')
+    set_field_constraint_not_null(feature_layer, 'structure_type_id', 1)
+    set_created_datetime(feature_layer)
+
+
+def configure_complexes(project: Project, feature_layer: QgsVectorLayer) -> None:
+    set_hidden(feature_layer, 'fid', 'Structure ID')
+    set_hidden(feature_layer, 'event_id', 'Event ID')
+    set_alias(feature_layer, 'name', 'Complex Name')
+    set_multiline(feature_layer, 'initial_condition', 'Initial Conditions')
+    set_multiline(feature_layer, 'target_condition', 'Target Condition')
+    set_multiline(feature_layer, 'description', 'Description')
+    set_virtual_dimension(feature_layer, 'area')
+    set_created_datetime(feature_layer)
 
     # ------ SETTING FIELD AND FORM PROPERTIES -------
 
@@ -472,7 +483,6 @@ def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_ta
     form_config = feature_layer.editFormConfig()
     form_config.setReuseLastValue(field_index, reuse_last)
     feature_layer.setEditFormConfig(form_config)
-    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True) -> None:
@@ -501,7 +511,6 @@ def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: s
     form_config = feature_layer.editFormConfig()
     form_config.setReuseLastValue(field_index, reuse_last)
     feature_layer.setEditFormConfig(form_config)
-    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
@@ -532,7 +541,6 @@ def set_alias(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) 
     fields = feature_layer.fields()
     field_index = fields.indexFromName(field_name)
     feature_layer.setFieldAlias(field_index, field_alias)
-    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, QgsFieldConstraints.ConstraintStrengthSoft)
 
 
 # ----- CREATING VIRTUAL FIELDS --------
@@ -557,4 +565,21 @@ def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None
 
 def set_created_datetime(feature_layer: QgsVectorLayer) -> None:
     """Will set a date time created field to a default value of now() and also set it to read only"""
-    pass
+    fields = feature_layer.fields()
+    field_index = fields.indexFromName('created')
+    feature_layer.setFieldAlias(field_index, 'Created')
+    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("now()"))
+    form_config = feature_layer.editFormConfig()
+    form_config.setReadOnly(field_index, True)
+    feature_layer.setEditFormConfig(form_config)
+
+
+def set_field_constraint_not_null(feature_layer: QgsVectorLayer, field_name: str, constraint_strength: int) -> None:
+    """Sets a not null constraint and strength"""
+    if constraint_strength == 1:
+        strength = QgsFieldConstraints.ConstraintStrengthSoft
+    elif constraint_strength == 2:
+        strength = QgsFieldConstraints.ConstraintStrengthHard
+    fields = feature_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)
