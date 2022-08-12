@@ -64,10 +64,10 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'temp.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 0, 'zoi.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL);
 
@@ -321,7 +321,7 @@ CREATE TABLE lkp_dam_integrity (
 INSERT INTO lkp_dam_integrity (id, name) VALUES (1, 'Intact');
 INSERT INTO lkp_dam_integrity (id, name) VALUES (3, 'Blown');
 INSERT INTO lkp_dam_integrity (id, name) VALUES (2, 'Breached');
-INSERT INTO lkp_dam_integrity (id, name) VALUES (4, 'Burried');
+INSERT INTO lkp_dam_integrity (id, name) VALUES (4, 'Buried');
 INSERT INTO lkp_dam_integrity (id, name) VALUES (5, 'Flooded');
 INSERT INTO lkp_dam_integrity (id, name) VALUES (6, 'NA');
 
@@ -686,9 +686,9 @@ ALTER TABLE zoi ADD COLUMN created DATETIME;
 
 
 ALTER TABLE complexes ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE complexes ADD COLUMN description TEXT;
 ALTER TABLE complexes ADD COLUMN initial_condition TEXT;
 ALTER TABLE complexes ADD COLUMN target_condition TEXT;
+ALTER TABLE complexes ADD COLUMN description TEXT;
 ALTER TABLE complexes ADD COLUMN created DATETIME;
 
 
