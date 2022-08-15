@@ -27,7 +27,7 @@ class Event(DBItem):
                  basemaps: list,
                  metadata: dict):
 
-        super().__init__('data_capture_events', id, name)
+        super().__init__('events', id, name)
         self.description = description
         self.start = start
         self.end = end
