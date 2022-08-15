@@ -255,11 +255,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_event_to_project_tree(parent_node, frm.event)
-
-            # if frm.chkAddToMap.isChecked():
-            #     for method_id in event.protocols:
-            #         add_to_map(self.project, method_id)
+            self.add_event_to_project_tree(parent_node, frm.event, frm.chkAddToMap.isChecked())
 
     def add_child_to_project_tree(self, parent_node: QStandardItem, data_item, add_to_map: Boolean = False) -> QStandardItem:
         """
@@ -299,19 +295,19 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         return target_node
 
-    def add_event_to_project_tree(self, parent_node: QStandardItem, event: Event):
+    def add_event_to_project_tree(self, parent_node: QStandardItem, event: Event, add_to_map: Boolean = False):
         """
         Most project data types can be added to the project tree using add_child_to_project_tree()
         but data capture events have child nodes so they need this special method.
         """
 
         # Event, protocols and layers
-        event_node = self.add_child_to_project_tree(parent_node, event)
+        event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
         for protocol in event.protocols:
-            protocol_node = self.add_child_to_project_tree(event_node, protocol)
+            protocol_node = self.add_child_to_project_tree(event_node, protocol, add_to_map)
             for layer in protocol.layers:
                 if layer.is_lookup is False:
-                    self.add_child_to_project_tree(protocol_node, layer)
+                    self.add_child_to_project_tree(protocol_node, layer, add_to_map)
 
         # Basemaps
         if len(event.basemaps) > 0:
