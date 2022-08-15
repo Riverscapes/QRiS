@@ -225,7 +225,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     build_event_protocol_single_layer(self.project, event_layer)
         elif isinstance(db_item, Project):
             [build_mask_layer(mask) for mask in self.project.masks.values()]
-            [build_basemap_layer(basemap) for basemap in self.project.basemaps.values()]
+            [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps.values()]
             [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
 
     def add_tree_group_to_map(self, model_item: QStandardItem):
