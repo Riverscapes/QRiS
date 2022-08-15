@@ -311,7 +311,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         # Basemaps
         if len(event.basemaps) > 0:
-            basemap_group_node = self.add_child_to_project_tree(parent_node, PROTOCOL_BASEMAP_MACHINE_CODE)
+            basemap_group_node = self.add_child_to_project_tree(event_node, PROTOCOL_BASEMAP_MACHINE_CODE)
             [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
 
     def add_basemap(self, parent_node: QStandardItem):
