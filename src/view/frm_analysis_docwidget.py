@@ -23,6 +23,7 @@
 """
 
 import os
+import sqlite3
 from xmlrpc.client import Boolean
 
 from qgis.core import QgsMapLayer
@@ -69,3 +70,16 @@ class FrmAnalysisDocWidget(QDockWidget, Ui_AnalysisDocWidget):
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+    def configure_analysis(self, project: Project, analysis: Analysis):
+
+        self.project = project
+        self.analyis = analysis
+        self.txtName.text = analysis.name
+
+        with sqlite3.connect(project.project_file) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT DISTINCT display_label FROM mask_features WHERE mask_id = ?', [analysis.mask.id])
+
+        self.basemaps_model = DBItemModel(project.basemaps)
+        self.cboBasemap.setModel(self.basemaps_model)

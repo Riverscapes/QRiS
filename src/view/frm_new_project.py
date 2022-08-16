@@ -18,6 +18,7 @@ from .ui.new_project import Ui_NewProject
 # all spatial layers
 # feature class, layer name, geometry
 layers = [
+    ('aoi_features', 'AOI Features', 'Polygon'),
     ('mask_features', 'Mask Features', 'Polygon'),
     ('dam_crests', 'Dam Crests', 'Linestring'),
     ('dams', 'Dam Points', 'Point'),

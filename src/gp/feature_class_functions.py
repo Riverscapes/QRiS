@@ -16,7 +16,12 @@ def check_geometry_type(path) -> int:
     return layer.GetGeomType()
 
 
-def import_mask(source_path: str, dest_path: str, mask_id: int) -> None:
+def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict = {}) -> None:
+    """
+    Copy the features from a source feature class to a destination mask feature class.
+    The mask record must already exist. The attributes is a dictionary of source column
+    names keyed to destination column names. If not None then these attributes will be copied in
+    """
 
     ogr.UseExceptions()
 
@@ -41,7 +46,9 @@ def import_mask(source_path: str, dest_path: str, mask_id: int) -> None:
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
         dst_feature.SetField('mask_id', mask_id)
+        [dst_feature.SetField(dst_field, src_feature.GetField(src_field)) for src_field, dst_field in attributes.items()]
         err = dst_layer.CreateFeature(dst_feature)
+
         dst_feature = None
 
     src_dataset = None

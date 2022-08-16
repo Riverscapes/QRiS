@@ -3,6 +3,10 @@ from .db_item import DBItem
 
 MASK_MACHINE_CODE = 'Mask'
 
+REGULAR_MASK_TYPE_ID = 1
+AOI_MASK_TYPE_ID = 2
+DIRECTIONAL_MASK_TYPE_ID = 3
+
 
 class Mask(DBItem):
 
@@ -10,19 +14,18 @@ class Mask(DBItem):
         super().__init__('masks', id, name)
         self.description = description
         self.mask_type = mask_type
-        self.icon = 'mask'
+        self.icon = 'mask' if mask_type.id == AOI_MASK_TYPE_ID else 'mask_regular'
 
-    def update(self, db_path: str, name: str, mask_type: DBItem, description: str) -> None:
+    def update(self, db_path: str, name: str, description: str) -> None:
 
         description = description if len(description) > 0 else None
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE masks SET name = ?, mask_type_id = ?, description = ? WHERE id = ?', [name, mask_type.id, description, self.id])
+                curs.execute('UPDATE masks SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
                 conn.commit()
 
                 self.name = name
-                self.mask_type = mask_type
                 self.description = description
 
             except Exception as ex:

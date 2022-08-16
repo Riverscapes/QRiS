@@ -8,6 +8,7 @@ from .ui.basis import Ui_Basis
 from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap, insert_basemap
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
+from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import copy_raster_to_project
 
@@ -33,8 +34,8 @@ class FrmBasemap(QDialog, Ui_Basis):
             self.txtSourcePath.setText(import_source_path)
             self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
 
-            # Masks
-            self.masks = self.qris_project.masks
+            # Masks (filtered to just AOI)
+            self.masks = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
             self.masks[0] = DBItem('None', 0, 'None - Retain full dataset extent')
             self.masks_model = DBItemModel(self.masks)
             self.cboMask.setModel(self.masks_model)

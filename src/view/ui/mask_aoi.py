@@ -42,6 +42,9 @@ class Ui_MaskAOI(object):
         self.cboAttribute = QtWidgets.QComboBox(MaskAOI)
         self.cboAttribute.setObjectName("cboAttribute")
         self.gridLayout.addWidget(self.cboAttribute, 1, 1, 1, 1)
+        self.lblAttribute = QtWidgets.QLabel(MaskAOI)
+        self.lblAttribute.setObjectName("lblAttribute")
+        self.gridLayout.addWidget(self.lblAttribute, 1, 0, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
 
         self.retranslateUi(MaskAOI)
@@ -54,3 +57,4 @@ class Ui_MaskAOI(object):
         self.label_2.setText(_translate("MaskAOI", "Description"))
         self.chkAddToMap.setText(_translate("MaskAOI", "Add to Map"))
         self.label.setText(_translate("MaskAOI", "Name"))
+        self.lblAttribute.setText(_translate("MaskAOI", "Attribute"))

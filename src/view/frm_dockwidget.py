@@ -42,7 +42,7 @@ from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
-from ..model.mask import MASK_MACHINE_CODE, Mask
+from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, process_pour_point, CONTEXT_NODE_TAG
 
@@ -183,9 +183,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item))
                 elif model_data == MASK_MACHINE_CODE:
                     add_mask_menu = self.menu.addMenu('Create New')
-                    self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                    self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
-                    self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE), False)
+                    self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
+                    self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_CREATE))
+                    self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
 
                     import_mask_menu = self.menu.addMenu('Import Existing')
                     self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
@@ -364,7 +364,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.basemap, frm.chkAddToMap.isChecked())
 
-    def add_mask(self, parent_node, mode):
+    def add_mask(self, parent_node, mask_type_id, mode):
         """Initiates adding a new mask"""
 
         import_source_path = None
@@ -373,7 +373,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmMaskAOI(self, self.project, import_source_path)
+        frm = FrmMaskAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.mask, frm.chkAddToMap.isChecked())
@@ -442,11 +442,16 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             else:
                 frm = FrmDesign(self, self.project, db_item)
         elif isinstance(db_item, Mask):
-            frm = FrmMaskAOI(parent=self, project=self.project, import_source_path=None, mask=db_item)
+            frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, Basemap):
             frm = FrmBasemap(self, self.project, None, db_item)
         elif isinstance(db_item, PourPoint):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
+        elif isinstance(db_item, Analysis):
+            if self.analysis_doc_widget is None:
+                self.analysis_doc_widget = FrmAnalysisDocWidget()
+                self.iface.addDockWidget(Qt.BottomDockWidgetArea, self.analysis_doc_widget)
+            self.analysis_doc_widget.show()
         else:
             QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
 

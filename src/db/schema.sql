@@ -245,7 +245,13 @@ CREATE TABLE masks (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- AOI features refer to the AOI mask that they belong to
+ALTER TABLE aoi_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
+
+-- Regular masks refer to the mask that they belong to and have a display label
 ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
+ALTER TABLE mask_features ADD COLUMN display_label TEXT;
 -- ALTER TABLE mask_features ADD COLUMN name TEXT;
 ALTER TABLE mask_features ADD COLUMN position INTEGER;
 ALTER TABLE mask_features ADD COLUMN description TEXT;
@@ -272,7 +278,8 @@ CREATE TABLE metrics (
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
-    mask_id INTEGER NOT NULL REFERENCES masks,
+    mask_id INTEGER NOT NULL REFERENCES masks(id),
+    basemap_id INTEGER NOT NULL REFERENCES basemaps(id),
     description TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
