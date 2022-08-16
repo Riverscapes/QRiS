@@ -28,7 +28,7 @@ class Analysis(DBItem):
                 raise ex
 
 
-def load_analyses(curs: sqlite3.Cursor) -> dict:
+def load_analyses(curs: sqlite3.Cursor, masks: dict) -> dict:
 
     curs.execute('SELECT id, name, description FROM analyses')
     return {row['id']: Analysis(

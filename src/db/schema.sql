@@ -269,8 +269,18 @@ CREATE TABLE metrics (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE analyses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    mask_id INTEGER NOT NULL REFERENCES masks,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE metric_values (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    analysis_id INTEGER REFERENCES analyses(id) ON DELETE CASCADE,
     mask_feature_id INTEGER REFERENCES mask_features(fid) ON DELETE CASCADE,
     metric_id INTEGER REFERENCES metrics(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
