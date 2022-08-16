@@ -3,6 +3,8 @@ import sqlite3
 
 from numpy import isin
 
+from .analysis import load_analyses
+
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
@@ -45,6 +47,7 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.layers)
             self.basemaps = load_basemaps(curs)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
+            self.analyses = load_analyses(curs, self.masks)
             self.pour_points = load_pour_points(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:

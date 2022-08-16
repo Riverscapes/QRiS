@@ -31,7 +31,6 @@ from qgis.utils import iface
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QDockWidget
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot, QUrl
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QDesktopServices
-from qgis.gui import QgsMapToolEmitPoint
 
 from ..model.layer import Layer
 from ..model.project import Project
@@ -61,6 +60,7 @@ from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_
 from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer
 
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
+from .frm_analysis_docwidget import FrmAnalysisDocWidget
 
 from ..gp.feature_class_functions import browse_source
 
@@ -78,6 +78,7 @@ GROUP_FOLDER_LABELS = {
     BASEMAP_MACHINE_CODE: 'Basemaps',
     MASK_MACHINE_CODE: 'Masks',
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
+    ANALYSIS_MACHINE_CODE: 'Analyses',
     CONTEXT_NODE_TAG: 'Context'
 }
 
@@ -112,6 +113,8 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
+        self.analysis_doc_widget = None
+
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
 
@@ -142,7 +145,8 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
         # scratch_node = self.add_child(project_node, SCRATCH_NODE_TAG, 'BrowseFolder')
-        # analyses_node = self.add_child(project_node, ANALYSIS_MACHINE_CODE, 'BrowseFolder')
+        analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
+        [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
         self.treeView.expandAll()
         return
@@ -169,7 +173,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         if isinstance(model_data, str):
             if model_data == ANALYSIS_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item, DB_MODE_CREATE))
+                self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
             else:
                 self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 if model_data == EVENT_MACHINE_CODE:
@@ -278,6 +282,18 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         result = frm.exec_()
         if result is not None and result != 0:
             self.add_event_to_project_tree(parent_node, frm.event, frm.chkAddToMap.isChecked())
+
+    def add_analysis(self, parent_node):
+
+        frm = FrmAnalysisProperties(self, self.project)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            self.add_child_to_project_tree(parent_node, frm.analysis, frm.chkAddToMap.isChecked())
+
+            if self.analysis_doc_widget is None:
+                self.analysis_doc_widget = FrmAnalysisDocWidget()
+
+            self.analysis_doc_widget.show()
 
     def add_child_to_project_tree(self, parent_node: QStandardItem, data_item, add_to_map: Boolean = False) -> QStandardItem:
         """
