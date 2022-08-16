@@ -50,6 +50,7 @@ from . import resources
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
+from .view.frm_analysis_docwidget import FrmAnalysisDocWidget
 
 from .model.project import apply_db_migrations
 

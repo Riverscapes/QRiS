@@ -47,7 +47,7 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.layers)
             self.basemaps = load_basemaps(curs)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
-            self.analyses = load_analyses(curs, self.masks)
+            self.analyses = load_analyses(curs, self.basemaps, self.masks)
             self.pour_points = load_pour_points(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
