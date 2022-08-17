@@ -40,7 +40,7 @@ from ..model.event import EVENT_MACHINE_CODE
 from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
+from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
@@ -71,7 +71,7 @@ class FrmAnalysisDocWidget(QDockWidget, Ui_AnalysisDocWidget):
         # widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-    def configure_analysis(self, project: Project, analysis: Analysis):
+    def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
 
         self.project = project
         self.analyis = analysis
@@ -79,7 +79,11 @@ class FrmAnalysisDocWidget(QDockWidget, Ui_AnalysisDocWidget):
 
         with sqlite3.connect(project.project_file) as conn:
             curs = conn.cursor()
-            curs.execute('SELECT DISTINCT display_label FROM mask_features WHERE mask_id = ?', [analysis.mask.id])
+            curs.execute('SELECT DISTINCT fid, display_label FROM mask_features WHERE mask_id = ?', [analysis.mask.id])
+            segments = {row[0]: DBItem('None', row[0], row[1]) for row in curs.fetchall()}
+            self.segments_model = DBItemModel(segments)
+            self.cboSegment.setModel(self.segments_model)
 
-        self.basemaps_model = DBItemModel(project.basemaps)
-        self.cboBasemap.setModel(self.basemaps_model)
+        # Events
+        self.events_model = DBItemModel(project.events)
+        self.cboEvent.setModel(self.events_model)
