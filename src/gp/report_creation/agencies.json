@@ -1,0 +1,126 @@
+[
+  {
+    "Abbreviation": "PVT",
+    "Name": "Private"
+  },
+  {
+    "Abbreviation": "USFS",
+    "Name": "United States Forest Service"
+  },
+  {
+    "Abbreviation": "BLM",
+    "Name": "Bureau of Land Management"
+  },
+  {
+    "Abbreviation": "NPS",
+    "Name": "National Park Service"
+  },
+  {
+    "Abbreviation": "UND",
+    "Name": "Undefined"
+  },
+  {
+    "Abbreviation": "None",
+    "Name": "None"
+  },
+  {
+    "Abbreviation": "BIA",
+    "Name": "Unknown"
+  },
+  {
+    "Abbreviation": "USACE",
+    "Name": "United States Army Corps of Engineers"
+  },
+  {
+    "Abbreviation": "USBR",
+    "Name": "United States Bureau of Reclamation"
+  },
+  {
+    "Abbreviation": "USDA",
+    "Name": "United States Department of Agriculture"
+  },
+  {
+    "Abbreviation": "DOI",
+    "Name": "United States Department of Interior"
+  },
+  {
+    "Abbreviation": "DOD",
+    "Name": "United States Department Of Defence"
+  },
+  {
+    "Abbreviation": "FWS",
+    "Name": "United States Fish and Wildlife Service"
+  },
+  {
+    "Abbreviation": "DOE",
+    "Name": "United States Department of Energy"
+  },
+  {
+    "Abbreviation": "ST",
+    "Name": "State"
+  },
+  {
+    "Abbreviation": "4USFS",
+    "Name": "Forest Service"
+  },
+  {
+    "Abbreviation": "LG",
+    "Name": "Unknown (occurs in HUC 17040102)"
+  },
+  {
+    "Abbreviation": "BPA",
+    "Name": "Bonneville Power Administration"
+  },
+  {
+    "Abbreviation": "USCG",
+    "Name": "Unkown USCG"
+  },
+  {
+    "Abbreviation": "BOP",
+    "Name": "Unknown BOP"
+  },
+  {
+    "Abbreviation": "IBWC",
+    "Name": "Unknown IBWC"
+  },
+  {
+    "Abbreviation": "FAA",
+    "Name": "Unknown FAA"
+  },
+  {
+    "Abbreviation": "DOJ",
+    "Name": "United States Department of Justice"
+  },
+  {
+    "Abbreviation": "NAVY",
+    "Name": "United States Navy"
+  },
+  {
+    "Abbreviation": "USMC",
+    "Name": "Unknown USMC"
+  },
+  {
+    "Abbreviation": "FHA",
+    "Name": "Unknown FHA"
+  },
+  {
+    "Abbreviation": "OTHFE",
+    "Name": "Unknown OTHFE"
+  },
+  {
+    "Abbreviation": "GSA",
+    "Name": "Unknown GSA"
+  },
+  {
+    "Abbreviation": "VA",
+    "Name": "Unknown VA"
+  },
+  {
+    "Abbreviation": "ARMY",
+    "Name": "United States Army"
+  },
+  {
+    "Abbreviation": "USAF",
+    "Name": "United States Air Force"
+  }
+]

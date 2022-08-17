@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+    v2.0 | 20110126
+    License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+body {
+  line-height: 1;
+}
+ol, ul {
+  list-style: none;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+/* table {
+  border-collapse: collapse;
+  border-spacing: 0;
+} */
+
+/* 
+https://coolors.co/080705-40434e-702632-912f40-fffffa
+
+Rich Black: #080705ff;
+Charcoal: #40434eff;
+light-Charcoal: #8f93a3;
+Wine: #702632ff;
+Red-violet: #912f40ff;
+baby-powder: #fffffaff; 
+
+Friendly font-stacks:
+font-family: Arial,Helvetica Neue,Helvetica,sans-serif; 
+font-family: Courier New,Courier,Lucida Sans Typewriter,Lucida Typewriter,monospace; 
+
+*/
+
+body {
+  line-height: 1.5;
+  background: #fffffaff;
+  color: #080705ff;
+  font-family: Arial,Helvetica Neue,Helvetica,sans-serif; 
+}
+div {
+  /* border: 1px dashed #0000FF33; */
+}
+ul {
+  /* border: 2px solid green; */
+}
+h1,h2,h3,h4,h5 {
+  /* margin: 0.5rem 0 1rem 0; */
+}
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  margin: 0 0 2rem 0;
+  background: #073040;
+  padding: 5px 0px;
+  color: #fffffaff;
+  font-size: 1.5rem;
+}
+h3{
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 5px 0px;
+  color: #40434eff;
+}
+h4{
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 5px 0px;
+  color: rgb(116, 121, 138);
+}
+h5{
+  font-size: 0.6rem;
+}
+a {
+  color: #508396;
+  text-decoration: none;
+}
+/**
+  LAYOUT
+**/
+#ReportContainer {
+  background: #fafafa;
+  color: #080705ff;
+}
+#ReportInner{ 
+  max-width: 66rem;
+  margin: 0 auto;
+  background: #fffffaff;
+  color: #080705ff;
+}
+#ReportIntro .tableWrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+.section-inner {
+  margin-bottom: 2rem;
+  padding: 1rem 2rem;
+}
+section.report-section {
+  border-bottom: 1px solid #eeeeee;
+}
+section.report-section>.report-header{
+  padding: 1rem;
+}
+
+#HeaderBar .date{ float: right}
+#HeaderBar .projectType{ float: left}
+#HeaderBar .projectType{ float: left}
+#RiverscapesLogo {
+  background-image: url(https://riverscapes.xyz/assets/images/RiverscapesLogo.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex: 0 0 6%;
+  background-position: center center;
+}
+#HeaderInner {
+  max-width: 66rem;
+  margin: 0 auto;
+  display: flex;
+  padding: 0px 8px;
+}
+#HeaderBar {
+  color: #fffffaff;
+  text-shadow: 3px 3px 3px rgba(0,0,0,0.7);
+  background-size: cover;
+  background-color: #444444;
+  background-image: url(https://data.riverscapes.xyz/HeaderBackground.png);
+  background-repeat: no-repeat;
+  background-position: 0% 50%;
+}
+#HeaderRight {
+  flex: 1 1;
+  padding: 1rem;
+}
+
+
+
+#HeaderBar h1, #HeaderBar h4{
+  clear: both;
+  padding: 5px 0px;
+}
+
+
+.dictable {
+  border: 5px solid #40434e55;
+  text-align: left;
+}
+.fullwidth {
+  width: 100%;
+}
+.dictable th{
+  font-weight: bold;
+}
+
+/**
+  TABLES
+**/
+table {
+  margin: 1rem 0rem;
+}
+table tbody tr:nth-child(odd) td, 
+table tbody tr:nth-child(odd) th{
+  background: white;
+}
+table tbody tr:nth-child(even) td, 
+table tbody tr:nth-child(even) th{
+  background: #f5f5f0f5;
+}
+table th, table td {
+  border: 2px solid transparent;
+  padding: 3px 5px 3px 5px;
+}
+table thead th {
+  text-align: left;
+  padding: 5px 10px;
+  color: #fffffaff;
+  background-color: #508396;
+}
+table td {
+  /* padding: 2px; */
+}
+table .num {
+  padding-right: 10px;
+  padding-left: 20px;
+  text-align: right;
+}
+table .num.float {
+
+}
+table .idVal {
+  text-align: center;
+  font-family: Courier New,Courier,Lucida Sans Typewriter,Lucida Typewriter,monospace;
+}
+
+/* Link from the sections back to the TOC */
+a.nav-top {
+  color: white;
+  float: right;
+  font-size: 1rem;
+  line-height: 2.4;
+}
+/* Add a little arrow for effect. This is the UTF-8 code */
+a.nav-top:after {
+  content: "\2191";
+}
+
+/* Table of contents */
+#TOC {
+  margin-bottom: 3rem;
+}
+#TOC ol {
+  /* border: 1px solid blue; */
+  padding-left: 2rem;
+}
+
+#TOC ol a{
+  text-decoration: none;
+}
+
+#TOC ol.level-1 {
+  list-style: decimal;
+  font-size: 0.9rem;
+}
+
+#TOC ol.level-2 {
+  list-style: upper-roman;
+  font-size: 0.9rem;
+}
+
+#TOC ol.level-3 {
+  list-style: upper-alpha;
+  font-size: 0.9rem;
+}
+
+#TOC ol.level-4 {
+  list-style: unset;
+  font-size: 0.9rem;
+}
+
+#TOC ol.level-5 {
+  list-style: unset;
+  font-size: 0.9rem;
+}
+
+#ReportHeader {
+  padding: 1rem;
+  display: flex;
+}
+#ProjectMeta {
+  flex: 1 1 50%;
+  padding: 1rem;
+}
+#TOC {
+  flex: 1 1 50%;
+  padding: 1rem;
+}
+#ProjectMeta ul.project-meta{
+  margin-left: 2rem;
+  color: #444444;
+  font-size: 0.8rem;
+}
+
+#ProjectMeta ul.project-meta li{ 
+  display: flex;
+  border-bottom: 1px solid #EEEEEE;
+}
+
+#ProjectMeta ul.project-meta .key{
+  font-weight: bold;
+  flex: 1 1 30%;
+}
+#ProjectMeta ul.project-meta .key:after{
+  /* content: ":"; */
+}
+#ProjectMeta ul.project-meta .value{
+  flex: 1 1 70%;
+}
+
+footer {
+  display: flex;
+  height: 60px;
+}
+footer #FooterLeft {
+  flex: 1 1 70%;
+}
+footer #FooterRight {
+  flex: 1 1 30%;
+  background-image: url(https://data.riverscapes.xyz/cc-watermarks-riverscapes_orig.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;  
+}
+</style>
+  </head>
+  <body>
+    <header id="HeaderBar">
+      <div id="HeaderInner">
+        <div id="RiverscapesLogo">&nbsp;</div>
+        <div id="HeaderRight">
+          <div id="HeaderTop">
+            <div class="date">Report Created: August 15, 2022 - 09:33AM</div>
+            <div class="projectType">Project Type: </div>
+          </div>
+          <h1 id="title"></h1>
+        </div>
+      </div>
+    </header>    
+    <div id="ReportContainer">
+      <div id="ReportInner">
+        <!-- The Metadata and the TOC are at the top -->
+        <div id="ReportHeader">
+          
+          <!-- This is the section for metadata -->
+          <section id="ProjectMeta">
+            
+                        
+          </section>
+        </div>
+        <main><main id="ReportInner"><section id="ReportIntro" class="report-section"><h2 class="report-header" id="7ea18c1c-e4eb-4ccd-8313-65a4fad4303c">Introduction<a class="nav-top" href="#TOC">Top</a></h2><div class="section-inner"><div class="tableWrapper"><table id="SlopeTable" class="dictable"><tbody><tr><th>0-5</th><td>6728602</td><td>23%</td></tr><tr><th>5-10</th><td>5406888</td><td>19%</td></tr><tr><th>10-20</th><td>8576490</td><td>30%</td></tr><tr><th>20-30</th><td>5619928</td><td>19%</td></tr><tr><th>30+</th><td>2543617</td><td>9%</td></tr></tbody></table></div><div class="reachAtributeInner"><div class="imgWrap"><img class="boxplot" alt="boxplot" src="images/attribute_test.png"></div></div></div></section></main></main>
+        <footer>
+          <div id="FooterLeft">
+            
+          </div>
+          <div id="FooterRight">
+            &nbsp;
+          </div>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

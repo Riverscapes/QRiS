@@ -1,0 +1,188 @@
+[
+  {
+    "ReachCode": 33400,
+    "Name": "CONNECTOR",
+    "DisplayName": "Connector",
+    "Description": "feature type only: no attributes"
+  },
+  {
+    "ReachCode": 33600,
+    "Name": "CANAL/DITCH",
+    "DisplayName": "Canal - Ditch",
+    "Description": "feature type only: no attributes"
+  },
+  {
+    "ReachCode": 33601,
+    "Name": "CANAL/DITCH",
+    "DisplayName": "Canal - Ditch",
+    "Description": "Canal/Ditch Type|aqueduct"
+  },
+  {
+    "ReachCode": 33603,
+    "Name": "CANAL/DITCH",
+    "DisplayName": "Canal - Ditch",
+    "Description": "Canal/Ditch Type|stormwater"
+  },
+  {
+    "ReachCode": 42000,
+    "Name": "UNDERGROUND CONDUIT",
+    "DisplayName": "Conduit",
+    "Description": "feature type only: no attributes"
+  },
+  {
+    "ReachCode": 42001,
+    "Name": "UNDERGROUND CONDUIT",
+    "DisplayName": "Conduit",
+    "Description": "Positional Accuracy|definite"
+  },
+  {
+    "ReachCode": 42002,
+    "Name": "UNDERGROUND CONDUIT",
+    "DisplayName": "Conduit",
+    "Description": "Positional Accuracy|indefinite"
+  },
+  {
+    "ReachCode": 42003,
+    "Name": "UNDERGROUND CONDUIT",
+    "DisplayName": "Conduit",
+    "Description": "Positional Accuracy|appoximate"
+  },
+  {
+    "ReachCode": 42800,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "feature type only: no attributes"
+  },
+  {
+    "ReachCode": 42801,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|aqueduct; Relationship to Surface|at or near"
+  },
+  {
+    "ReachCode": 42802,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|aqueduct; Relationship to Surface|elevated"
+  },
+  {
+    "ReachCode": 42803,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|aqueduct; Relationship to Surface|underground"
+  },
+  {
+    "ReachCode": 42804,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|aqueduct; Relationship to Surface|underwater"
+  },
+  {
+    "ReachCode": 42805,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|general case; Relationship to Surface|at or near"
+  },
+  {
+    "ReachCode": 42806,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|general case; Relationship to Surface|elevated"
+  },
+  {
+    "ReachCode": 42807,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|general case; Relationship to Surface|underground"
+  },
+  {
+    "ReachCode": 42808,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|general case; Relationship to Surface|underwater"
+  },
+  {
+    "ReachCode": 42809,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|penstock; Relationship to Surface|at or near"
+  },
+  {
+    "ReachCode": 42810,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|penstock; Relationship to Surface|elevated"
+  },
+  {
+    "ReachCode": 42811,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|penstock; Relationship to Surface|underground"
+  },
+  {
+    "ReachCode": 42812,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|penstock; Relationship to Surface|underwater"
+  },
+  {
+    "ReachCode": 42813,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|siphon; Relationship to Surface|unspecified"
+  },
+  {
+    "ReachCode": 42814,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|general case"
+  },
+  {
+    "ReachCode": 42815,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|penstock"
+  },
+  {
+    "ReachCode": 42816,
+    "Name": "PIPELINE",
+    "DisplayName": "Pipeline",
+    "Description": "Product|water; Pipeline Type|aqueduct"
+  },
+  {
+    "ReachCode": 46000,
+    "Name": "STREAM/RIVER",
+    "DisplayName": "Stream",
+    "Description": "feature type only: no attributes"
+  },
+  {
+    "ReachCode": 46003,
+    "Name": "STREAM/RIVER",
+    "DisplayName": "Intermittent",
+    "Description": "Hydrographic Category|intermittent"
+  },
+  {
+    "ReachCode": 46006,
+    "Name": "STREAM/RIVER",
+    "DisplayName": "Perennial",
+    "Description": "Hydrographic Category|perennial"
+  },
+  {
+    "ReachCode": 46007,
+    "Name": "STREAM/RIVER",
+    "DisplayName": "Ephemeral",
+    "Description": "Hydrographic Category|ephemeral"
+  },
+  {
+    "ReachCode": 55800,
+    "Name": "ARTIFICIAL PATH",
+    "DisplayName": "Artificial Path",
+    "Description": "feature type only: no attributes"
+  },
+  {
+    "ReachCode": 56600,
+    "Name": "COASTLINE",
+    "DisplayName": "Coastline",
+    "Description": "feature type only: no attributes"
+  }
+]

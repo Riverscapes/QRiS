@@ -1,3 +1,4 @@
+from genericpath import isfile
 import os
 import json
 import logging
@@ -7,6 +8,14 @@ from qgis.core import QgsMessageLog, Qgis, QgsProject, QgsSettings
 
 with open(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json')) as cfg_file:
     cfg_json = json.load(cfg_file)
+
+# Load the secrets.json file with sensitive information that is git ignored.
+secrets_path = os.path.join(os.path.dirname(__file__), '..', '..', 'secrets.json')
+if os.path.isfile(secrets_path):
+    with open(secrets_path) as cfg_file:
+        secrets_json = json.load(cfg_file)
+        if 'constants' in secrets_json:
+            cfg_json['constants'].update(secrets_json['constants'])
 
 # We include these so that
 _DEFAULTS = cfg_json['defaultSettings']
