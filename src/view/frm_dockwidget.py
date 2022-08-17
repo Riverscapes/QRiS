@@ -309,10 +309,10 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 if layer.is_lookup is False:
                     self.add_child_to_project_tree(protocol_node, layer, add_to_map)
 
-        # Basemaps
-        if len(event.basemaps) > 0:
-            basemap_group_node = self.add_child_to_project_tree(event_node, PROTOCOL_BASEMAP_MACHINE_CODE)
-            [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
+        # # Basemaps
+        # if len(event.basemaps) > 0:
+        #     basemap_group_node = self.add_child_to_project_tree(event_node, PROTOCOL_BASEMAP_MACHINE_CODE)
+        #     [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
 
     def add_basemap(self, parent_node: QStandardItem):
         """Initiates adding a new base map to the project"""
