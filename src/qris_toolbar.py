@@ -21,17 +21,24 @@
  *                                                                         *
  ***************************************************************************/
 """
-
+import sys
+import subprocess
 import os.path
 import requests
+import tempfile
+import webbrowser
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog, QToolButton, QMenu
 from qgis.core import QgsApplication
+from qgis.gui import QgsMapToolEmitPoint
 
 # TODO fix this
 from .gp.provider import Provider
 from .QRiS.settings import Settings
+from .QRiS.settings import CONSTANTS
+from .gp.watershed_attribute_api import QueryMonster
+
 
 # TODO determine if this is needed
 # Initialize Qt resources from file resources.py
@@ -216,6 +223,19 @@ class QRiSToolbar:
         # self.addLayerAction.setEnabled(False)
         # self.toolbar.addAction(self.addLayerAction)
 
+        # Watershed Attribute Map Click
+        # self.watershed_attribute_action = QAction(QIcon(':/plugins/qris_toolbar/watershed'), self.tr(u'Watershed Attribute Tool'), self.iface.mainWindow())
+        # self.watershed_attribute_action.triggered.connect(self.activate_watershed_attributes)
+        # self.toolbar.addAction(self.watershed_attribute_action)
+
+        canvas = self.iface.mapCanvas()
+        self.watershed_html_tool = QgsMapToolEmitPoint(canvas)
+        self.watershed_html_tool.canvasClicked.connect(self.html_watershed_metrics)
+
+        self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
+        self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
+
+        self.configure_watershed_attribute_menu()
         self.configure_help_menu()
 
     # --------------------------------------------------------------------------
@@ -331,6 +351,65 @@ class QRiSToolbar:
         #     if self.dockwidget is None or self.dockwidget.isHidden() is True:
         #         self.toggle_widget(forceOn=True)
 
+    def activate_html_watershed_attributes(self):
+
+        canvas = self.iface.mapCanvas()
+        canvas.setMapTool(self.watershed_html_tool)
+
+    def activate_json_watershed_attributes(self):
+
+        canvas = self.iface.mapCanvas()
+        canvas.setMapTool(self.watershed_json_tool)
+
+    def json_watershed_metrics(self, point, button):
+        """
+        Display the watershed attribute results based on the point that the user clicked on the map
+        """
+
+        try:
+            json_data = self.get_watershed_metrics(point.x(), point.y())
+            if json_data is not None:
+                file_path = QFileDialog.getSaveFileName(None, 'Watershed Metrics JSON File', None, 'JSON Files (*.json)')
+                if file_path is not None and file_path[0] != '':
+                    with open(file_path[0], 'w') as f:
+                        f.write(json_data)
+                    # QDesktopServices.openUrl(QUrl('file://' + file_path[0]))
+                    webbrowser.open('file://' + file_path[0])
+        except Exception as ex:
+            QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+
+    def html_watershed_metrics(self, point, button):
+        """
+        Display the watershed attribute results based on the point that the user clicked on the map
+        """
+
+        try:
+            json_data = self.get_watershed_metrics(point.x(), point.y())
+            if json_data is not None:
+                tmp_file = tempfile.NamedTemporaryFile(delete=False).name + '.html'
+                with open(tmp_file, 'w') as f:
+                    f.write(f'<html><body><h1>{json_data}</h1></body></html>')
+                webbrowser.open('file://' + tmp_file)
+        except Exception as ex:
+            QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+
+    def get_watershed_metrics(self, lng: float, lat: float):
+
+        # Call watershed attribute API with coordinates
+        api = QueryMonster(CONSTANTS['watershedAttributeApiUrl'], CONSTANTS['watershedAttributeApiKey'])
+        response = api.run_query("""
+            query project_query($lat: Float!, $lng: Float!) {
+                pointMetrics(lat: $lat, lng: $lng) {
+                    HUC12 {
+                    id
+                    name
+                    }
+                    upstreamMetrics
+                }
+            }""", {"lng": lng, "lat": lat})
+
+        return response.json if response is not None else None
+
     def update_database(self, db_path):
         try:
             apply_db_migrations(db_path)
@@ -371,41 +450,39 @@ class QRiSToolbar:
                 elif forceOn is False:
                     self.dockwidget.hide()
 
-        # The metawidget always starts hidden
-        # if self.metawidget is not None:
-        #     self.metawidget.hide()
+    def configure_watershed_attribute_menu(self):
 
-        # if self.dockwidget is not None and not self.dockwidget.isHidden():
-        #     self.qproject.writeEntry(CONSTANTS['settingsCategory'], 'enabled', True)
-        # else:
-        #     self.qproject.removeEntry(CONSTANTS['settingsCategory'], 'enabled')
+        self.wat_button = QToolButton()
+        self.wat_button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.wat_button.setMenu(QMenu())
+        self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
+        m = self.wat_button.menu()
 
-    # def open_project(self, project):
-    #     self.toggle_widget()
-    #     self.dockwidget.build_tree_view(project)
-        # self.addLayerAction.setEnabled(True)
+        self.wat_button = QToolButton()
+        self.wat_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        wat_menu = QMenu()
+        self.wat_button.setMenu(wat_menu)
+        self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
 
-    # def addLayerDlg(self):
+        self.wat_html_action = QAction(QIcon(':/plugins/qris_toolbar/watershed'), self.tr('Export Attributes to HTML Report'), self.iface.mainWindow())
+        self.wat_html_action.triggered.connect(self.activate_html_watershed_attributes)
+        wat_menu.addAction(self.wat_html_action)
 
-    #     if self.dockwidget is not None:
-    #         if self.dockwidget.qris_project is not None:
-    #             last_browse_path = self.settings.getValue('lastBrowsePath')
-    #             last_dir = os.path.dirname(last_browse_path) if last_browse_path is not None else None
+        self.wat_json_action = QAction(QIcon(':/plugins/qris_toolbar/json'), self.tr('Export Attributes to JSON'), self.iface.mainWindow())
+        self.wat_json_action.triggered.connect(self.activate_json_watershed_attributes)
+        wat_menu.addAction(self.wat_json_action)
 
-    #             dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
-    #             if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-    #                 pass
-    #         else:
-    #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
+        self.wat_button.setDefaultAction(self.wat_html_action)
+        self.toolbar.addWidget(self.wat_button)
 
     def configure_help_menu(self):
 
-        self.helpButton = QToolButton()
-        self.helpButton.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.helpButton.setMenu(QMenu())
-        self.helpButton.setPopupMode(QToolButton.MenuButtonPopup)
+        self.wat_button = QToolButton()
+        self.wat_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.wat_button.setMenu(QMenu())
+        self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
 
-        m = self.helpButton.menu()
+        m = self.wat_button.menu()
 
         # TODO: get the local help working
         # self.helpAction = QAction(
@@ -463,9 +540,9 @@ class QRiSToolbar:
         # m.addSeparator()
         # m.addAction(self.find_resources_action)
         m.addAction(self.about_action)
-        self.helpButton.setDefaultAction(self.helpAction)
+        self.wat_button.setDefaultAction(self.helpAction)
 
-        self.toolbar.addWidget(self.helpButton)
+        self.toolbar.addWidget(self.wat_button)
 
     def about_load(self):
         """
