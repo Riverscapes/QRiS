@@ -253,6 +253,6 @@ if __name__ == '__main__':
     # project = RSProject(cfg, args.projectxml)
 
     # json_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation\\metrics_rsc_new.json"
-    file_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation"
+    file_path = "C:\\Users\\tyguy\\report_creation"
     report = QRiSReport(file_path)
     report.write()
