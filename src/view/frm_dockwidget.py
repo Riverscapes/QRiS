@@ -452,6 +452,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 self.analysis_doc_widget = FrmAnalysisDocWidget()
                 self.iface.addDockWidget(Qt.BottomDockWidgetArea, self.analysis_doc_widget)
             self.analysis_doc_widget.show()
+            self.analysis_doc_widget.configure_analysis(self.   project, db_item)
         else:
             QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
 
