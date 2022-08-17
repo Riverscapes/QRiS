@@ -1,6 +1,7 @@
 from gettext import npgettext
 import json
 from logging import NullHandler
+from unittest.mock import NonCallableMagicMock
 from report import Report
 import os
 from xml.etree import ElementTree as ET
@@ -10,15 +11,16 @@ import numpy as np
 
 class QRiSReport(Report):
 
-    def __init__(self, project_path, rs_project=None):
-        self.json_path = os.path.join(project_path, "metrics_rsc_new.json")
+    def __init__(self, project_path, src_path, secrets_path=None, rs_project=None):
+        self.json_path = os.path.join(src_path, "metrics_rsc_new.json")
         self.report_path = os.path.join(project_path, "test_report.html")
-        self.veg_types_path = os.path.join(project_path, "vegetation_types.json")
-        self.reach_codes_path = os.path.join(project_path, "reach_codes.json")
-        self.waterbody_codes_path = os.path.join(project_path, "waterbody_codes.json")
-        self.agencies_path = os.path.join(project_path, "agencies.json")
-        self.transportation_path = os.path.join(project_path, "transportation.json")
-
+        self.veg_types_path = os.path.join(src_path, "vegetation_types.json")
+        self.reach_codes_path = os.path.join(src_path, "reach_codes.json")
+        self.waterbody_codes_path = os.path.join(src_path, "waterbody_codes.json")
+        self.agencies_path = os.path.join(src_path, "agencies.json")
+        self.transportation_path = os.path.join(src_path, "transportation.json")
+        if secrets_path is not None:
+            self.secrets_path = secrets_path
         super().__init__(self.report_path)
 
         # The report has a core CSS file but we can extend it with our own if we want:
@@ -31,6 +33,9 @@ class QRiSReport(Report):
         self.build_qris_report()
 
     def build_qris_report(self):
+        section = self.section('ReportIntro', 'Map')
+        coordinates = "41.74442897545844, -111.80977686337876"
+        self.create_static_map(section, coordinates)
         section = self.section('ReportIntro', 'Slope')
 
         with open(self.json_path) as f:
@@ -224,7 +229,6 @@ class QRiSReport(Report):
         reach_wrapper_inner_bar.append(img_wrap_bar)
 
     def setup_pie_chart(self, section, data, name, title):
-        img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
         image_path = os.path.join(self.images_dir, 'attribute_{}.png'.format(name + "_pie"))
 
         if len(data[0]) == 4:
@@ -240,12 +244,49 @@ class QRiSReport(Report):
             breakpoint
 
         pie_chart(values, labels, image_path, title)
-
+        img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
         img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': '{}/{}'.format(os.path.basename(self.images_dir), os.path.basename(image_path))})
         img_wrap.append(img)
         reach_wrapper_inner = ET.Element('div', attrib={'class': 'reachAtributeInner'})
         section.append(reach_wrapper_inner)
         reach_wrapper_inner.append(img_wrap)
+
+    def create_static_map(self, section, coordinates):
+        # Load API key
+        with open(self.secrets_path) as f:
+            secrets_dict = json.loads(f.read())
+        api_key = secrets_dict["constants"]["google_api_key"]
+
+        # Call google maps api
+        static_map_api = "https://maps.googleapis.com/maps/api/staticmap?center=" + coordinates + "&zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:A%7C" + coordinates + "&key=" + api_key
+
+        img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
+        img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': static_map_api})
+        img_wrap.append(img)
+        reach_wrapper_inner = ET.Element('div', attrib={'class': 'reachAtributeInner'})
+        section.append(reach_wrapper_inner)
+        reach_wrapper_inner.append(img_wrap)
+
+        # Implementation of interactive Google Maps in HTML
+        """
+        <script>
+        function myMap() {
+        var mapProp= {
+        center:new google.maps.LatLng(41.74442897545844,-111.80977686337876),
+        zoom:13,
+        };
+        var map = new google.maps.Map(document.getElementById("googleMap"),mapProp);
+
+        new google.maps.Marker({
+            position: { lat: 41.74442897545844, lng: -111.80977686337876 },
+            map,
+            title: "Test",
+        });
+        }
+        </script>
+
+        <script src="https://maps.googleapis.com/maps/api/js?key=<API KEY HERE>&callback=myMap"></script>
+        """
 
 
 if __name__ == '__main__':
@@ -253,6 +294,8 @@ if __name__ == '__main__':
     # project = RSProject(cfg, args.projectxml)
 
     # json_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation\\metrics_rsc_new.json"
-    file_path = "C:\\Users\\tyguy\\report_creation"
-    report = QRiSReport(file_path)
+    file_path = "C:\\Users\\tyguy\\Documents\\QRiS_Report"
+    src_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation\\"
+    secrets_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\secrets.json"
+    report = QRiSReport(file_path, src_path, secrets_path)
     report.write()
