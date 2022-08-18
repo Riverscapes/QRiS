@@ -275,6 +275,10 @@ CREATE TABLE metrics (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO metrics (id, name) VALUES (1, 'dam and jam count');
+INSERT INTO metrics (id, name) VALUES (2, 'Percent Active Floddplain');
+INSERT INTO metrics (id, name) VALUES (3, 'Gradient');
+
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
