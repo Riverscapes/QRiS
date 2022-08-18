@@ -1,7 +1,6 @@
 import os
 
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
-from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
+from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
 
 from .ui.analysis_properties import Ui_AnalysisProperties
@@ -12,7 +11,7 @@ from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID
 
 
-class FrmAnalysisProperties(QDialog, Ui_AnalysisProperties):
+class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
 
     def __init__(self, parent, project: Project, analysis: Analysis = None):
 
@@ -20,7 +19,9 @@ class FrmAnalysisProperties(QDialog, Ui_AnalysisProperties):
         self.analysis = analysis
 
         super(FrmAnalysisProperties, self).__init__(parent)
-        self.setupUi(self)
+        # self.setupUi(self)
+
+        self.manual_setup()
 
         # Masks (filtered to just regular masks )
         self.masks = {id: mask for id, mask in project.masks.items() if mask.mask_type.id == REGULAR_MASK_TYPE_ID}
@@ -30,6 +31,26 @@ class FrmAnalysisProperties(QDialog, Ui_AnalysisProperties):
         # Basemaps
         self.basemaps_model = DBItemModel(project.basemaps)
         self.cboBasemap.setModel(self.basemaps_model)
+
+        self.metrics_model = QStandardItemModel(len(project.metrics), 2)
+        metrics = list(project.metrics.values())
+        for row in range(len(metrics) - 1):
+            metric = metrics[row]
+            item = QStandardItem(metric.name)
+            item.setData(metric, QtCore.Qt.UserRole)
+            self.metrics_model.setItem(row, 0, item)
+
+        self.vwMetrics.setModel(self.metrics_model)
+
+        for row in range(len(metrics) - 1):
+            cbo = QtWidgets.QComboBox()
+            cbo.addItems(['Metric', 'Indicator', 'None'])
+            self.vwMetrics.setIndexWidget(self.metrics_model.index(row, 1), cbo)
+
+        self.vwMetrics.resizeColumnToContents(0)
+        self.vwMetrics.resizeColumnToContents(1)
+        self.metrics_model.setHorizontalHeaderLabels(['Metric', 'Status'])
+        self.vwMetrics.verticalHeader().hide()
 
         if analysis is not None:
             self.txtName.setText(analysis.name)
@@ -41,6 +62,42 @@ class FrmAnalysisProperties(QDialog, Ui_AnalysisProperties):
 
             # User cannot reassign mask once the analysis is created!
             self.cboMask.setEnabled(False)
+
+    def manual_setup(self):
+
+        self.vertical1 = QtWidgets.QVBoxLayout(self)
+
+        self.grdLayout1 = QtWidgets.QGridLayout(self.vertical1)
+
+        self.lblName = QtWidgets.QLabel()
+        self.grdLayout1.addWidget(self.lblName, 0, 0, 1, 1)
+
+        self.cboName = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboName, 0, 1, 1, 1)
+
+        self.lblMask = QtWidgets.QLabel()
+        self.grdLayout1.addWidget(self.lblMask, 1, 0, 1, 1)
+
+        self.cboMask = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboMask, 1, 1, 1, 1)
+
+        self.lblBasemap = QtWidgets.QLabel()
+        self.grdLayout1.addWidget(self.lblBasemap, 2, 0, 1, 1)
+
+        self.cboBasemap = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboBasemap, 2, 1, 1, 1)
+
+        self.tabWidget = QtWidgets.QTableWidget(self.vertical1)
+        self.tab1 = QtWidgets.QWidget()
+        self.tab2 = QtWidgets.QWidget()
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1), 'Analysis Metrics')
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2), 'Analysis Metrics')
+        self.vwMetrics = QtWidgets.QTableView(self.tab1)
+
+        self.txtDescription = QtWidgets.QPlainTextEdit(self.tab2)
+
+        self.cmdButtons = QtWidgets.QDialogButtonBox(self.vertical1)
+        self.cmdButtons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
 
     def accept(self):
 

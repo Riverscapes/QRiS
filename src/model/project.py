@@ -4,12 +4,12 @@ import sqlite3
 from numpy import isin
 
 from .analysis import load_analyses
-
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
 from .basemap import Basemap, load_basemaps
 from .event import Event, load as load_events
+from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
 
 from .db_item import DBItem, dict_factory, load_lookup_table
@@ -49,6 +49,7 @@ class Project(DBItem):
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
             self.analyses = load_analyses(curs, self.basemaps, self.masks)
             self.pour_points = load_pour_points(curs)
+            self.metrics = load_metrics(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))
