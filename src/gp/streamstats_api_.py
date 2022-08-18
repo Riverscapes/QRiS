@@ -1,18 +1,24 @@
 import requests
 import json
 import os
+from time import sleep
 
 
+# Makes all 4 api calls. Currently not working consistently due to time delays
 def get_streamstats_data(lat, lon, new_file_dir=None):
     state_code = get_state_from_coordinates(lat, lon)
     watershed_data = delineate_watershed(lat, lon, state_code, new_file_dir)
+    # Added sleep timer to give time for USGS database to update
+    # sleep(30)
     workspace_id = watershed_data["workspaceID"]
-
     basin_characteristics = get_basin_characteristics(state_code, workspace_id, new_file_dir)
+    # sleep(30)
     flow_statistics = get_flow_statistics(state_code, workspace_id, new_file_dir)
+    return (watershed_data, basin_characteristics, flow_statistics)
 
 
-def delineate_watershed(lat, lon, rcode, file_path=None):
+# Returns dictionary of watershed info based on coordinates and U.S. state
+def delineate_watershed(lat, lon, rcode, file_dir=None):
     url = "https://streamstats.usgs.gov/streamstatsservices/watershed.geojson"
 
     parameters = {
@@ -27,17 +33,15 @@ def delineate_watershed(lat, lon, rcode, file_path=None):
     }
 
     response = requests.get(url, params=parameters)
-    response_dict = response.json()
+    watershed_data = response.json()
 
-    if file_path is not None:
-        save_json(response_dict, file_path, response_dict["workspaceID"] + "_wats.geojson")
-    return response_dict
-
-    # response_json = json.load(x)
-    # watershed = response_json["featurecollection"][]
+    if file_dir is not None:
+        save_json(watershed_data, file_dir, watershed_data["workspaceID"] + "_wats.geojson")
+    return watershed_data
 
 
-def get_basin_characteristics(rcode, workspace_id, file_path=None):
+# Returns dictionary of river basin characteristics
+def get_basin_characteristics(rcode, workspace_id, file_dir=None):
     url = "https://streamstats.usgs.gov/streamstatsservices/parameters.json"
     parameters = {
         "rcode": rcode,
@@ -46,15 +50,13 @@ def get_basin_characteristics(rcode, workspace_id, file_path=None):
     }
     response = requests.get(url, params=parameters)
     basin_data = response.json()
-    if file_path is not None:
-        save_json(basin_data, file_path, workspace_id + "_basin.json")
+    if file_dir is not None:
+        save_json(basin_data, file_dir, workspace_id + "_basin.json")
     return basin_data
 
 
-'UT20220818211335897000'
-
-
-def get_flow_statistics(rcode, workspace_id, file_path=None):
+# Returns dictionary of river flow stats
+def get_flow_statistics(rcode, workspace_id, file_dir=None):
     url = "https://streamstats.usgs.gov/streamstatsservices/flowstatistics.json"
     parameters = {
         "rcode": rcode,
@@ -64,16 +66,18 @@ def get_flow_statistics(rcode, workspace_id, file_path=None):
     response = requests.get(url, params=parameters)
     flow_data = response.json()
 
-    if file_path is not None:
-        save_json(flow_data, file_path, workspace_id + "_flow.json")
+    if file_dir is not None:
+        save_json(flow_data, file_dir, workspace_id + "_flow.json")
     return flow_data
 
 
+# Saves dictionary to custom location
 def save_json(dict, directory, file_name):
     with open(os.path.join(directory, file_name), 'w') as file:
         json.dump(dict, file)
 
 
+# Uses coordinates to determine U.S. state using API
 def get_state_from_coordinates(latitude, longitude):
     url = "https://nominatim.openstreetmap.org/reverse"
     parameters = {
@@ -88,11 +92,11 @@ def get_state_from_coordinates(latitude, longitude):
     return location_code[location_code.index("-") + 1:]
 
 
+# Prints dict/json
 def jprint(obj):
     text = json.dumps(obj, indent=4)
     print(text)
 
 
 if __name__ == '__main__':
-    get_streamstats_data(lat="41.81010425321681", lon="-112.07464769059571", new_file_dir="C:\\Users\\tyguy\\Documents")
-# 41.81010425321681, -112.07464769059571
+    get_streamstats_data(lat="39.93001576699861", lon="-111.54599129378481", new_file_dir="C:\\Users\\tyguy\\Documents")
