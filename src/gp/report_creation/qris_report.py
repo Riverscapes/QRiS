@@ -4,6 +4,8 @@ import numpy as np
 from xml.etree import ElementTree as ET
 from .report import Report
 from .plotting import pie_chart, bar_chart
+import urllib.request
+import urllib.parse
 
 
 class QRiSReport(Report):
@@ -246,12 +248,22 @@ class QRiSReport(Report):
         reach_wrapper_inner.append(img_wrap)
 
     def create_static_map(self, section, coordinates):
-
-        # Call google maps api
-        static_map_api = "https://maps.googleapis.com/maps/api/staticmap?center=" + coordinates + "&zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:A%7C" + coordinates + "&key=" + self.google_maps_api_key
+        static_map_api = "https://maps.googleapis.com/maps/api/staticmap"
+        api_parameters = {
+            "center": coordinates,
+            "zoom": "13",
+            "size": "600x300",
+            "maptype": "roadmap",
+            "markers": "color:blue|label:A|" + coordinates,
+            "key": self.google_maps_api_key
+        }
+        static_map_api += "?" + urllib.parse.urlencode(api_parameters)
+        map_image_path = os.path.join(self.images_dir, "static_map.png")
+        # Call Google Maps API and save image
+        urllib.request.urlretrieve(static_map_api, map_image_path)
 
         img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
-        img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': static_map_api})
+        img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': map_image_path})
         img_wrap.append(img)
         reach_wrapper_inner = ET.Element('div', attrib={'class': 'reachAtributeInner'})
         section.append(reach_wrapper_inner)
