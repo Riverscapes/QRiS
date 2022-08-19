@@ -37,6 +37,7 @@ from qgis.gui import QgsMapToolEmitPoint
 # TODO fix this
 from .gp.provider import Provider
 from .gp.report_creation.qris_report import QRiSReport
+from .gp.streamstats_api_ import get_streamstats_data
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
 from .gp.watershed_attribute_api import QueryMonster
@@ -237,6 +238,9 @@ class QRiSToolbar:
         self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
 
+        self.stream_stats_tool = QgsMapToolEmitPoint(canvas)
+        self.stream_stats_tool.canvasClicked.connect(self.stream_stats)
+
         self.configure_watershed_attribute_menu()
         self.configure_help_menu()
 
@@ -363,6 +367,11 @@ class QRiSToolbar:
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.watershed_json_tool)
 
+    def activate_stream_stats(self):
+
+        canvas = self.iface.mapCanvas()
+        canvas.setMapTool(self.stream_stats_tool)
+
     def transform_geometry(self, geometry, output_epsg: int):
 
         map_epsg = self.iface.mapCanvas().mapSettings().destinationCrs().authid()
@@ -412,6 +421,21 @@ class QRiSToolbar:
                 webbrowser.open('file://' + tmp_file)
         except Exception as ex:
             QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+
+    def stream_stats(self, point, button):
+        # The point is in the map data frame display units. Transform to WGS84
+        transformed_point = self.transform_geometry(point, 4326)
+
+        data = get_streamstats_data(transformed_point.y(), transformed_point.x(), False, False, None)
+        if data is not None:
+            geojson = data[0]['featurecollection'][1]['feature']  # {"type": "FeatureCollection", "features": data[0]['featurecollection']}
+            tmp_file = tempfile.NamedTemporaryFile(delete=False).name + '.geojson'
+            print(tmp_file)
+            with open(tmp_file, 'w') as f:
+                json.dump(geojson, f)
+            self.iface.addVectorLayer(tmp_file, 'Upstream', 'ogr')
+
+        print(data)
 
     def get_watershed_metrics(self, lng: float, lat: float):
 
@@ -492,6 +516,10 @@ class QRiSToolbar:
         self.wat_json_action = QAction(QIcon(':/plugins/qris_toolbar/json'), self.tr('Export Attributes to JSON'), self.iface.mainWindow())
         self.wat_json_action.triggered.connect(self.activate_json_watershed_attributes)
         wat_menu.addAction(self.wat_json_action)
+
+        self.stream_stats_action = QAction(QIcon(':/plugins/qris_toolbar/json'), self.tr('Upstream Catchment'), self.iface.mainWindow())
+        self.stream_stats_action.triggered.connect(self.activate_stream_stats)
+        wat_menu.addAction(self.stream_stats_action)
 
         self.wat_button.setDefaultAction(self.wat_html_action)
         self.toolbar.addWidget(self.wat_button)
