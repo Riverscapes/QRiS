@@ -34,7 +34,6 @@ class QRiSReport(Report):
         self.create_static_map(section, f'{self.latitude}, {self.longitude}')
         section = self.section('ReportIntro', 'Slope')
 
-         
         slope_data_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['floatingPoint'][4]['SLOPE']['binnedCounts']['bins0']
         total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['floatingPoint'][4]['SLOPE']["count"]
         table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
@@ -59,7 +58,6 @@ class QRiSReport(Report):
         self.setup_pie_chart(section, slope_data, "slope", "Slope")
         self.setup_bar_chart(section, slope_data, "slope", "Slope", "Slope", "Percentage")
 
-        return 
         # Convert list of vegetation strings and IDs to dict
         with open(self.veg_types_path) as f:
             veg_list = json.loads(f.read())
@@ -71,7 +69,7 @@ class QRiSReport(Report):
         for section_info in sections_info:
 
             section = self.section('ReportIntro', section_info[1])
-            veg_data_unformatted = json_data['project']['metrics']['raster']['categorical'][section_info[2]][section_info[0]]['categories']
+            veg_data_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['categorical'][section_info[2]][section_info[0]]['categories']
             veg_data = []
             # Convert dict to np array
             for key in veg_data_unformatted.keys():
@@ -107,8 +105,8 @@ class QRiSReport(Report):
         with open(self.reach_codes_path) as f:
             reach_codes_list = json.loads(f.read())
         rc_dict = {str(row['ReachCode']): row['DisplayName'] for row in reach_codes_list}
-        nhdflowlines_unformatted = json_data['project']['metrics']['vector']['polyline'][0]['NHDFlowline']['fields']['FCode']
-        total_length = json_data['project']['metrics']['vector']['polyline'][0]['NHDFlowline']['lengthTotal'] / 1000
+        nhdflowlines_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][0]['NHDFlowline']['fields']['FCode']
+        total_length = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][0]['NHDFlowline']['lengthTotal'] / 1000
 
         nhdflowlines = []
         for key in nhdflowlines_unformatted.keys():
@@ -130,8 +128,8 @@ class QRiSReport(Report):
         section = self.section('ReportIntro', 'NHD Waterbodies')
         with open(self.waterbody_codes_path) as f:
             wb_dict = json.loads(f.read())[0]
-        nhd_wb_unformatted = json_data['project']['metrics']['vector']['polygon'][1]['NHDWaterbody']['fields']['FCode']
-        total_area = json_data['project']['metrics']['vector']['polygon'][1]['NHDWaterbody']['areaTotal']
+        nhd_wb_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][1]['NHDWaterbody']['fields']['FCode']
+        total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][1]['NHDWaterbody']['areaTotal']
 
         nhd_waterbodies = []
         for key in nhd_wb_unformatted.keys():
@@ -152,8 +150,8 @@ class QRiSReport(Report):
         with open(self.agencies_path) as f:
             ownership_list = json.loads(f.read())
         ownership_dict = {str(row['Abbreviation']): row['Name'] for row in ownership_list}
-        ownership_unformatted = json_data['project']['metrics']['vector']['polygon'][3]['Ownership']['fields']['ADMIN_AGEN']
-        total_area = json_data['project']['metrics']['vector']['polygon'][3]['Ownership']['areaTotal']
+        ownership_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][3]['Ownership']['fields']['ADMIN_AGEN']
+        total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][3]['Ownership']['areaTotal']
 
         ownership_data = []
         for key in ownership_unformatted.keys():
@@ -174,8 +172,8 @@ class QRiSReport(Report):
 
         with open(self.transportation_path) as f:
             transportation_dict = json.loads(f.read())[0]
-        transport_unformatted = json_data['project']['metrics']['vector']['polyline'][1]['Roads']['fields']['TNMFRC']
-        total_length = json_data['project']['metrics']['vector']['polyline'][1]['Roads']["lengthTotal"] / 1000
+        transport_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][1]['Roads']['fields']['TNMFRC']
+        total_length = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][1]['Roads']["lengthTotal"] / 1000
 
         transport_data = []
         for key in transport_unformatted.keys():
@@ -193,7 +191,7 @@ class QRiSReport(Report):
         self.setup_bar_chart(section, transport_data, "roads", "Roads", "Road Type", "Percentage")
 
         table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
-        rail_length = json_data['project']['metrics']['vector']['polyline'][2]['Rail']["lengthTotal"] / 1000
+        rail_length = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][2]['Rail']["lengthTotal"] / 1000
         total_length_data = [["Roads", total_length, total_length * 0.621371], ["Rail", rail_length, rail_length * 0.621371]]
         column_labels = ["Type", "Length (km)", "Length(mi)"]
         Report.create_table_from_2d_array(total_length_data, table_wrapper, {'id': 'SlopeTable'}, column_labels)
