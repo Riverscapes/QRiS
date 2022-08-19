@@ -284,7 +284,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             target_node.setData(data_item, Qt.UserRole)
             parent_node.appendRow(target_node)
 
-            if add_to_map == True and isinstance(data_item, DBItem):
+            if add_to_map is True and isinstance(data_item, DBItem):
                 self.add_db_item_to_map(target_node, data_item)
 
         elif isinstance(data_item, DBItem):
