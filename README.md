@@ -23,7 +23,15 @@ In order to develop this module live in QGIS you need to clone this repo to the 
 
 ## On OSX
 
-before you start you need to set an environment variable to tell VSCode where QGIS's version of python is. This will depend on which shell you're using (The default is bash but we tend to use zsh)
+You actually have two options when cloning the repo; You can clone the repo directly into you QGIS plugins folder, as described above, or you can clone it anywhere you want and put a ssym link to the repo in your plugins folder. The latter approach gives you more control. The command to create the sym link is:
+
+```bash
+ln -s /PATH_TO_CLONED_REPO/QRiS /Users/USER_NAME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/
+```
+
+Note the absence of a trailing slash on the first path and the presence of one on the latter. You know the sym link is working if you can click the symb link in Finder and get redirected to the cloned repo.
+
+Before you start you need to set an environment variable to tell VSCode where QGIS's version of python is. This will depend on which shell you're using (The default is bash but we tend to use zsh)
 
 1. You need to add the following line at the bottom of your `~/.bashrc` or `~/.zshrc` file:
 
@@ -37,11 +45,13 @@ After this is done you need to restart VSCode completely (not just relloading th
 
 2. You need this user setting to be on (it's in the user settings preferences)
 
-```
+```json
 "terminal.integrated.allowWorkspaceConfiguration": true
 ```
 
 3. Open up the `Workspaces/OSXDev.code-workspace` using VSCode. This file contains all the right environment variables necessary to find and work with QGIS python libraries.
+
+4. Debugging the plugin in Visual Studio Code requires `ptvsd` be pip installed **in the version of Python being used by QGIS**.
 
 
 ## Developing on Windows
