@@ -1,45 +1,39 @@
-from gettext import npgettext
-import json
-from logging import NullHandler
-from unittest.mock import NonCallableMagicMock
-from report import Report
 import os
-from xml.etree import ElementTree as ET
-from plotting import pie_chart, bar_chart
+import json
 import numpy as np
+from xml.etree import ElementTree as ET
+from .report import Report
+from .plotting import pie_chart, bar_chart
 
 
 class QRiSReport(Report):
 
-    def __init__(self, project_path, src_path, secrets_path=None, rs_project=None):
-        self.json_path = os.path.join(src_path, "metrics_rsc_new.json")
-        self.report_path = os.path.join(project_path, "test_report.html")
-        self.veg_types_path = os.path.join(src_path, "vegetation_types.json")
-        self.reach_codes_path = os.path.join(src_path, "reach_codes.json")
-        self.waterbody_codes_path = os.path.join(src_path, "waterbody_codes.json")
-        self.agencies_path = os.path.join(src_path, "agencies.json")
-        self.transportation_path = os.path.join(src_path, "transportation.json")
-        if secrets_path is not None:
-            self.secrets_path = secrets_path
-        super().__init__(self.report_path)
+    def __init__(self, google_maps_api_key: str, longitude, latitude, json_data, file_path: str):
+        super().__init__(file_path)
 
-        # The report has a core CSS file but we can extend it with our own if we want:
-        # css_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'brat_report.css')
-        # self.add_css(css_path)
+        self.latitude = latitude
+        self.longitude = longitude
 
-        self.images_dir = os.path.join(project_path, 'images')
+        dir_name = os.path.dirname(__file__)
+        self.veg_types_path = os.path.join(dir_name, "vegetation_types.json")
+        self.reach_codes_path = os.path.join(dir_name, "reach_codes.json")
+        self.waterbody_codes_path = os.path.join(dir_name, "waterbody_codes.json")
+        self.agencies_path = os.path.join(dir_name, "agencies.json")
+        self.transportation_path = os.path.join(dir_name, "transportation.json")
+        self.google_maps_api_key = google_maps_api_key
+
+        self.build_qris_report(json_data, os.path.dirname(file_path))
+        self.write()
+
+    def build_qris_report(self, json_data: dict, output_dir):
+
+        self.images_dir = os.path.join(output_dir, 'images')
         # safe_makedirs(self.images_dir)
 
-        self.build_qris_report()
-
-    def build_qris_report(self):
         section = self.section('ReportIntro', 'Map')
-        coordinates = "41.74442897545844, -111.80977686337876"
-        self.create_static_map(section, coordinates)
+        self.create_static_map(section, f'{self.latitude}, {self.longitude}')
         section = self.section('ReportIntro', 'Slope')
 
-        with open(self.json_path) as f:
-            json_data = json.loads(f.read())
         slope_data_unformatted = json_data['project']['metrics']['raster']['floatingPoint'][4]['SLOPE']['binnedCounts']['bins0']
         total_area = json_data['project']['metrics']['raster']['floatingPoint'][4]['SLOPE']["count"]
         table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
@@ -252,13 +246,9 @@ class QRiSReport(Report):
         reach_wrapper_inner.append(img_wrap)
 
     def create_static_map(self, section, coordinates):
-        # Load API key
-        with open(self.secrets_path) as f:
-            secrets_dict = json.loads(f.read())
-        api_key = secrets_dict["constants"]["google_api_key"]
 
         # Call google maps api
-        static_map_api = "https://maps.googleapis.com/maps/api/staticmap?center=" + coordinates + "&zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:A%7C" + coordinates + "&key=" + api_key
+        static_map_api = "https://maps.googleapis.com/maps/api/staticmap?center=" + coordinates + "&zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:A%7C" + coordinates + "&key=" + self.google_maps_api_key
 
         img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
         img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': static_map_api})
@@ -293,9 +283,18 @@ if __name__ == '__main__':
     # cfg = ModelConfig('http://xml.riverscapes.xyz/Projects/XSD/V1/BRAT.xsd', __version__)
     # project = RSProject(cfg, args.projectxml)
 
-    # json_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation\\metrics_rsc_new.json"
-    file_path = "C:\\Users\\tyguy\\Documents\\QRiS_Report"
-    src_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation\\"
-    secrets_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\secrets.json"
-    report = QRiSReport(file_path, src_path, secrets_path)
-    report.write()
+    # Output file path
+    file_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'test_report.html')
+
+    # Input sample JSON data
+    json_data_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'metric_data.json')
+    json_data = json.load(json_data_path)
+
+    # Optional Google Map API Key
+    google_api_key = None
+    secrets_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'secrets.json')
+    if os.path.isfile(secrets_path):
+        secret_data = json.load(secrets_path)
+        google_api_key = secret_data['constants']['google_api_key']
+
+    report = QRiSReport(google_api_key, 41.74442897545844, -111.80977686337876, json_data, file_path)

@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import json
 import sys
 import subprocess
 import os.path
@@ -30,11 +31,12 @@ import webbrowser
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings, QUrl
 from qgis.PyQt.QtGui import QIcon, QDesktopServices
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog, QToolButton, QMenu
-from qgis.core import QgsApplication
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
 from qgis.gui import QgsMapToolEmitPoint
 
 # TODO fix this
 from .gp.provider import Provider
+from .gp.report_creation.qris_report import QRiSReport
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
 from .gp.watershed_attribute_api import QueryMonster
@@ -361,18 +363,29 @@ class QRiSToolbar:
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.watershed_json_tool)
 
+    def transform_geometry(self, geometry, output_epsg: int):
+
+        map_epsg = self.iface.mapCanvas().mapSettings().destinationCrs().authid()
+        source_crs = QgsCoordinateReferenceSystem(map_epsg)
+        dest_crs = QgsCoordinateReferenceSystem(output_epsg)
+        transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
+        return transform.transform(geometry)
+
     def json_watershed_metrics(self, point, button):
         """
         Display the watershed attribute results based on the point that the user clicked on the map
         """
 
         try:
-            json_data = self.get_watershed_metrics(point.x(), point.y())
-            if json_data is not None:
+            # The point is in the map data frame display units. Transform to WGS84
+            transformed_point = self.transform_geometry(point, 4326)
+
+            data = self.get_watershed_metrics(transformed_point.x(), transformed_point.y())
+            if data is not None:
                 file_path = QFileDialog.getSaveFileName(None, 'Watershed Metrics JSON File', None, 'JSON Files (*.json)')
                 if file_path is not None and file_path[0] != '':
                     with open(file_path[0], 'w') as f:
-                        f.write(json_data)
+                        json.dump(data, f)
                     # QDesktopServices.openUrl(QUrl('file://' + file_path[0]))
                     webbrowser.open('file://' + file_path[0])
         except Exception as ex:
@@ -383,12 +396,20 @@ class QRiSToolbar:
         Display the watershed attribute results based on the point that the user clicked on the map
         """
 
+        google_maps_api_key = self.settings[CONSTANTS]["google_api_key"] if "google_api_key" in self.settings[CONSTANTS] else None
+
         try:
-            json_data = self.get_watershed_metrics(point.x(), point.y())
+            # The point is in the map data frame display units. Transform to WGS84
+            transformed_point = self.transform_geometry(point, 4326)
+
+            json_data = self.get_watershed_metrics(transformed_point.x(), transformed_point.y())
             if json_data is not None:
                 tmp_file = tempfile.NamedTemporaryFile(delete=False).name + '.html'
-                with open(tmp_file, 'w') as f:
-                    f.write(f'<html><body><h1>{json_data}</h1></body></html>')
+
+                QRiSReport(google_maps_api_key, transformed_point.x(), transformed_point.y(), json_data, tmp_file)
+
+                # with open(tmp_file, 'w') as f:
+                #     f.write(f'<html><body><h1>{json_data}</h1></body></html>')
                 webbrowser.open('file://' + tmp_file)
         except Exception as ex:
             QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
@@ -408,7 +429,7 @@ class QRiSToolbar:
                 }
             }""", {"lng": lng, "lat": lat})
 
-        return response.json if response is not None else None
+        return response if response is not None else None
 
     def update_database(self, db_path):
         try:

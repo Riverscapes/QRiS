@@ -8,7 +8,7 @@ from uuid import uuid4
 class Report():
     def __init__(self, file_path):
 
-        self.template_path = "C:\\Users\\tyguy\\AppData\\Roaming\\QGIS\\QGIS3\\profiles\\developer\\python\\plugins\\QRiS\\src\\gp\\report_creation\\templates"
+        self.template_path = os.path.join(__file__, 'templates')
 
         self.file_path = file_path
         if os.path.isfile(self.file_path):
@@ -102,6 +102,7 @@ class Report():
         return hEl
 
     def write(self):
+
         css_template = "<style>\n{}\n</style>"
         html_inner = ET.tostring(self.main_el, method="html", encoding='unicode')
         styles = ''.join([css_template.format(css) for css in self.css_files])
