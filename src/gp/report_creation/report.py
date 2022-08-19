@@ -8,7 +8,7 @@ from uuid import uuid4
 class Report():
     def __init__(self, file_path):
 
-        self.template_path = os.path.join(__file__, 'templates')
+        self.template_path = os.path.join(os.path.dirname(__file__), 'templates')
 
         self.file_path = file_path
         if os.path.isfile(self.file_path):
