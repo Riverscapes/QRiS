@@ -34,8 +34,9 @@ class QRiSReport(Report):
         self.create_static_map(section, f'{self.latitude}, {self.longitude}')
         section = self.section('ReportIntro', 'Slope')
 
-        slope_data_unformatted = json_data['project']['metrics']['raster']['floatingPoint'][4]['SLOPE']['binnedCounts']['bins0']
-        total_area = json_data['project']['metrics']['raster']['floatingPoint'][4]['SLOPE']["count"]
+         
+        slope_data_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['floatingPoint'][4]['SLOPE']['binnedCounts']['bins0']
+        total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['floatingPoint'][4]['SLOPE']["count"]
         table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
         slope_data = []
 
@@ -58,6 +59,7 @@ class QRiSReport(Report):
         self.setup_pie_chart(section, slope_data, "slope", "Slope")
         self.setup_bar_chart(section, slope_data, "slope", "Slope", "Slope", "Percentage")
 
+        return 
         # Convert list of vegetation strings and IDs to dict
         with open(self.veg_types_path) as f:
             veg_list = json.loads(f.read())

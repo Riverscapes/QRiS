@@ -395,8 +395,7 @@ class QRiSToolbar:
         """
         Display the watershed attribute results based on the point that the user clicked on the map
         """
-
-        google_maps_api_key = self.settings[CONSTANTS]["google_api_key"] if "google_api_key" in self.settings[CONSTANTS] else None
+        google_maps_api_key = CONSTANTS["google_api_key"] if "google_api_key" in CONSTANTS else None
 
         try:
             # The point is in the map data frame display units. Transform to WGS84
@@ -426,6 +425,7 @@ class QRiSToolbar:
                     name
                     }
                     upstreamMetrics
+                    HUC12Metrics
                 }
             }""", {"lng": lng, "lat": lat})
 
