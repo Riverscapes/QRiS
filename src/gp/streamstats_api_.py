@@ -5,15 +5,22 @@ from time import sleep
 
 
 # Makes all 4 api calls. Currently not working consistently due to time delays
-def get_streamstats_data(lat, lon, new_file_dir=None):
+def get_streamstats_data(lat, lon, get_basin_characteristics: bool, get_flow_statistics: bool, new_file_dir=None):
     state_code = get_state_from_coordinates(lat, lon)
     watershed_data = delineate_watershed(lat, lon, state_code, new_file_dir)
     # Added sleep timer to give time for USGS database to update
-    # sleep(30)
     workspace_id = watershed_data["workspaceID"]
-    basin_characteristics = get_basin_characteristics(state_code, workspace_id, new_file_dir)
-    # sleep(30)
-    flow_statistics = get_flow_statistics(state_code, workspace_id, new_file_dir)
+
+    basin_characteristics = None
+    if get_basin_characteristics is True:
+        # sleep(30)
+        basin_characteristics = get_basin_characteristics(state_code, workspace_id, new_file_dir)
+
+    flow_statistics = None
+    if get_flow_statistics is True:
+        # sleep(30)
+        flow_statistics = get_flow_statistics(state_code, workspace_id, new_file_dir)
+
     return (watershed_data, basin_characteristics, flow_statistics)
 
 
