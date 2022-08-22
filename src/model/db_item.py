@@ -19,6 +19,12 @@ class DBItem():
         self.id = id
         self.name = name
 
+        # Nearly all the DBItem database tables are non-spatial and have
+        # an ID column called "id". However, any spatial DBItem tables
+        # will have a GIS generated ID column called "fid". These spatial
+        # tables should override this property.
+        self.id_column_name = 'id'
+
         # Inherited classes should override this icon file name if they
         # need customer icon files. Code that uses this icon does so
         # using the following syntax. All icon image files should be
@@ -31,7 +37,7 @@ class DBItem():
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('DELETE FROM {} WHERE id = ?'.format(self.db_table_name), [self.id])
+                curs.execute(f'DELETE FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])
                 conn.commit()
 
             except Exception as ex:
