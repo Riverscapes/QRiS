@@ -64,7 +64,7 @@ from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
 from ..gp.feature_class_functions import browse_source
 
-from ..gp.streamstats_api_ import get_streamstats_data, transform_geometry
+from ..gp.stream_stats import get_streamstats_data, transform_geometry
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
