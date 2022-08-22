@@ -8,6 +8,7 @@ from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
 from .basemap import Basemap, load_basemaps
 from .event import Event, load as load_events
+from .pour_point import PourPoint, load_pour_points
 
 from .db_item import DBItem, dict_factory, load_lookup_table
 
@@ -44,6 +45,7 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.layers)
             self.basemaps = load_basemaps(curs)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
+            self.pour_points = load_pour_points(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))

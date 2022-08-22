@@ -31,6 +31,7 @@ from qgis.utils import iface
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QDockWidget
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot, QUrl
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QDesktopServices
+from qgis.gui import QgsMapToolEmitPoint
 
 from ..model.layer import Layer
 from ..model.project import Project
@@ -44,6 +45,7 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.protocol import Protocol
+from ..model.pour_point import PourPoint, process_pour_point
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
@@ -61,7 +63,10 @@ from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
 from ..gp.feature_class_functions import browse_source
 
+from ..gp.streamstats_api_ import get_streamstats_data, transform_geometry
+
 SCRATCH_NODE_TAG = 'SCRATCH'
+CONTEXT_NODE_TAG = 'CONTEXT'
 
 # Name of the icon PNG file used for group folders in the QRiS project tree
 # /Images/folder.png
@@ -72,7 +77,8 @@ GROUP_FOLDER_LABELS = {
     EVENT_MACHINE_CODE: 'Data Capture Events',
     BASEMAP_MACHINE_CODE: 'Basemaps',
     MASK_MACHINE_CODE: 'Masks',
-    PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps'
+    PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
+    CONTEXT_NODE_TAG: 'Context'
 }
 
 
@@ -80,7 +86,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
     closingPlugin = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, iface, parent=None):
         """Constructor."""
         super(QRiSDockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -89,6 +95,7 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.iface = iface
 
         self.settings = Settings()
 
@@ -105,7 +112,11 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         self.model = QStandardItemModel()
         self.treeView.setModel(self.model)
 
+        self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
+        self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
+
     # Take this out of init so that nodes can be added as new data is added and imported;
+
     def build_tree_view(self, project_file, new_item=None):
         """
         Builds the project tree from scratch for the first time
@@ -126,6 +137,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
         masks_node = self.add_child_to_project_tree(project_node, MASK_MACHINE_CODE)
         [self.add_child_to_project_tree(masks_node, item) for item in self.project.masks.values()]
+
+        context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
+        [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
         # scratch_node = self.add_child(project_node, SCRATCH_NODE_TAG, 'BrowseFolder')
         # analyses_node = self.add_child(project_node, ANALYSIS_MACHINE_CODE, 'BrowseFolder')
@@ -173,6 +187,8 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
                     self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
+                elif model_data == CONTEXT_NODE_TAG:
+                    self.add_context_menu_item(self.menu, 'Create New Pour Point & Catchment', 'new', lambda: self.add_pour_point(model_item))
 
                     # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                     # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
@@ -339,6 +355,23 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.mask, frm.chkAddToMap.isChecked())
+
+    def add_pour_point(self, parent_node):
+
+        QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.' +
+                                ' Be sure to click on the precise stream location. Wait 30-60 seconds and the upstream catchment will be' +
+                                ' delineated and added to the map.')
+
+        canvas = self.iface.mapCanvas()
+        canvas.setMapTool(self.stream_stats_tool)
+
+    def stream_stats_action(self, point, button):
+        pour_point = process_pour_point(self.project.project_file, point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), '', '')
+
+        if pour_point is PourPoint:
+            self.project.pour_points[pour_point.id] = pour_point
+            context_group_node = self.add_child_to_project_tree(None, CONTEXT_NODE_TAG)
+            self.add_child_to_project_tree(context_group_node, pour_point, True)
 
     def edit_item(self, model_item: QStandardItem, db_item: DBItem):
 

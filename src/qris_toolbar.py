@@ -292,7 +292,7 @@ class QRiSToolbar:
             #    removed on close (see self.onClosePlugin method)
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QRiSDockWidget()
+                self.dockwidget = QRiSDockWidget(self.iface)
                 self.dockwidget.iface = self.iface
 
             # connect to provide cleanup on closing of dockwidget
@@ -471,7 +471,7 @@ class QRiSToolbar:
             #    removed on close (see self.onClosePlugin method)
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QRiSDockWidget()
+                self.dockwidget = QRiSDockWidget(self.iface)
                 # self.metawidget = RIPTMetaWidget()
                 # Hook metadata changes up to the metawidget
                 # self.dockwidget.metaChange.connect(self.metawidget.load)
