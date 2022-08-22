@@ -20,6 +20,7 @@ class PourPoint(DBItem):
         self.latitude = latitude
         self.longitude = longitude
         self.description = description
+        self.icon = 'watershed'
 
         # override the default ID column name because this is a spatial table.
         self.id_column_name = 'fid'
