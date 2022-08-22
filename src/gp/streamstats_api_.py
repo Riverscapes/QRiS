@@ -2,6 +2,16 @@ from urllib import response
 import requests
 import json
 import os
+from time import sleep
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
+
+
+def transform_geometry(geometry, map_epsg: int, output_epsg: int):
+
+    source_crs = QgsCoordinateReferenceSystem(map_epsg)
+    dest_crs = QgsCoordinateReferenceSystem(output_epsg)
+    transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
+    return transform.transform(geometry)
 
 
 # Makes all 4 api calls. Currently not working consistently due to time delays
