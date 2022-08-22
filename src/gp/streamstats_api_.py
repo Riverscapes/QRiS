@@ -21,11 +21,11 @@ def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool
     workspace_id = watershed_data["workspaceID"]
 
     basin_characteristics = None
-    if get_basin_chars is True:
+    if get_basin_characteristics is True:
         basin_characteristics = get_basin_characteristics(state_code, workspace_id, new_file_dir)
 
     flow_statistics = None
-    if get_flow_stats is True:
+    if get_flow_statistics is True:
         flow_statistics = get_flow_statistics(state_code, workspace_id, new_file_dir)
 
     return (watershed_data, basin_characteristics, flow_statistics)

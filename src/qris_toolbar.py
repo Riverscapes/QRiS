@@ -37,7 +37,6 @@ from qgis.gui import QgsMapToolEmitPoint
 # TODO fix this
 from .gp.provider import Provider
 # from .gp.report_creation.qris_report import QRiSReport
-from .gp.streamstats_api_ import get_streamstats_data
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
 from .gp.watershed_attribute_api import QueryMonster
@@ -238,9 +237,6 @@ class QRiSToolbar:
         self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
 
-        self.stream_stats_tool = QgsMapToolEmitPoint(canvas)
-        self.stream_stats_tool.canvasClicked.connect(self.stream_stats)
-
         self.configure_watershed_attribute_menu()
         self.configure_help_menu()
 
@@ -422,21 +418,6 @@ class QRiSToolbar:
         except Exception as ex:
             QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
 
-    def stream_stats(self, point, button):
-        # The point is in the map data frame display units. Transform to WGS84
-        transformed_point = self.transform_geometry(point, 4326)
-
-        data = get_streamstats_data(transformed_point.y(), transformed_point.x(), False, False, None)
-        if data is not None:
-            geojson = data[0]['featurecollection'][1]['feature']  # {"type": "FeatureCollection", "features": data[0]['featurecollection']}
-            tmp_file = tempfile.NamedTemporaryFile(delete=False).name + '.geojson'
-            print(tmp_file)
-            with open(tmp_file, 'w') as f:
-                json.dump(geojson, f)
-            self.iface.addVectorLayer(tmp_file, 'Upstream', 'ogr')
-
-        print(data)
-
     def get_watershed_metrics(self, lng: float, lat: float):
 
         # Call watershed attribute API with coordinates
@@ -499,99 +480,47 @@ class QRiSToolbar:
 
         self.wat_button = QToolButton()
         self.wat_button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.wat_button.setIcon(QIcon(':/plugins/qris_toolbar/watershed'))
         self.wat_button.setMenu(QMenu())
         self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
-        m = self.wat_button.menu()
+        self.toolbar.addWidget(self.wat_button)
+        self.wat_menu = self.wat_button.menu()
 
         self.wat_button = QToolButton()
         self.wat_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        wat_menu = QMenu()
-        self.wat_button.setMenu(wat_menu)
+        self.wat_button.setMenu(self.wat_menu)
         self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
 
         self.wat_html_action = QAction(QIcon(':/plugins/qris_toolbar/watershed'), self.tr('Export Attributes to HTML Report'), self.iface.mainWindow())
         self.wat_html_action.triggered.connect(self.activate_html_watershed_attributes)
-        wat_menu.addAction(self.wat_html_action)
+        self.wat_menu.addAction(self.wat_html_action)
 
         self.wat_json_action = QAction(QIcon(':/plugins/qris_toolbar/json'), self.tr('Export Attributes to JSON'), self.iface.mainWindow())
         self.wat_json_action.triggered.connect(self.activate_json_watershed_attributes)
-        wat_menu.addAction(self.wat_json_action)
-
-        self.stream_stats_action = QAction(QIcon(':/plugins/qris_toolbar/json'), self.tr('Upstream Catchment'), self.iface.mainWindow())
-        self.stream_stats_action.triggered.connect(self.activate_stream_stats)
-        wat_menu.addAction(self.stream_stats_action)
+        self.wat_menu.addAction(self.wat_json_action)
 
         self.wat_button.setDefaultAction(self.wat_html_action)
-        self.toolbar.addWidget(self.wat_button)
 
     def configure_help_menu(self):
 
-        self.wat_button = QToolButton()
-        self.wat_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.wat_button.setMenu(QMenu())
-        self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
+        self.help_button = QToolButton()
+        self.help_button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.help_button.setText('Help')
+        self.help_button.setIcon(QIcon(':/plugins/qris_toolbar/help'))
+        self.help_button.setMenu(QMenu())
+        self.help_button.setPopupMode(QToolButton.MenuButtonPopup)
+        self.toolbar.addWidget(self.help_button)
+        help_menu = self.help_button.menu()
 
-        m = self.wat_button.menu()
-
-        # TODO: get the local help working
-        # self.helpAction = QAction(
-        #     QIcon(':/plugins/qris_toolbar/Help.png'),
-        #     self.tr('Help'),
-        #     self.iface.mainWindow()
-        # )
-        # self.helpAction.triggered.connect(partial(showPluginHelp, None, filename=':/plugins/qris_toolbar/help/build/html/index'))
-        # self.websiteAction = QAction(
-        #     QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
-        #     self.tr('Website'),
-        #     self.iface.mainWindow()
-        # )
-        # self.websiteAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("http://rave.riverscapes.xyz")))
-
-        self.helpAction = QAction(
-            QIcon(':/plugins/qris_toolbar/help'),
-            self.tr('Help'),
-            self.iface.mainWindow()
-        )
+        self.helpAction = QAction(QIcon(':/plugins/qris_toolbar/help'), self.tr('Help'), self.iface.mainWindow())
         self.helpAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("https://riverscapes.github.io/QRiS/")))
+        help_menu.addAction(self.helpAction)
 
-        # self.raveOptionsAction = QAction(
-        #     QIcon(':/plugins/qris_toolbar/Options.png'),
-        #     self.tr('Settings'),
-        #     self.iface.mainWindow()
-        # )
-        # self.raveOptionsAction.triggered.connect(self.options_load)
-
-        # self.net_sync_action = QAction(
-        #     QIcon(':/plugins/qris_toolbar/refresh.png'),
-        #     self.tr('Update resources'),
-        #     self.iface.mainWindow()
-        # )
-        # self.net_sync_action.triggered.connect(lambda: self.net_sync_load(force=True))
-
-        # self.find_resources_action = QAction(
-        #     QIcon(':/plugins/qris_toolbar/BrowseFolder.png'),
-        #     self.tr('Find Resources folder'),
-        #     self.iface.mainWindow()
-        # )
-        # self.find_resources_action.triggered.connect(self.locateResources)
-
-        self.about_action = QAction(
-            QIcon(':/plugins/qris_toolbar/riverscapes_icon'),
-            self.tr('About QRiS'),
-            self.iface.mainWindow()
-        )
+        self.about_action = QAction(QIcon(':/plugins/qris_toolbar/riverscapes_icon'), self.tr('About QRiS'), self.iface.mainWindow())
         self.about_action.triggered.connect(self.about_load)
+        help_menu.addAction(self.about_action)
 
-        m.addAction(self.helpAction)
-        # m.addAction(self.websiteAction)
-        # m.addAction(self.raveOptionsAction)
-        # m.addAction(self.net_sync_action)
-        # m.addSeparator()
-        # m.addAction(self.find_resources_action)
-        m.addAction(self.about_action)
-        self.wat_button.setDefaultAction(self.helpAction)
-
-        self.toolbar.addWidget(self.wat_button)
+        self.help_button.setDefaultAction(self.helpAction)
 
     def about_load(self):
         """
