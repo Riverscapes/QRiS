@@ -4,7 +4,7 @@ from osgeo import ogr
 
 from qgis.core import QgsPoint
 from .db_item import DBItem
-from ..gp.streamstats_api_ import get_streamstats_data, transform_geometry
+from ..gp.stream_stats import get_streamstats_data, transform_geometry
 
 POUR_POINTS_MACHINE_CODE = 'Pour Points'
 CONTEXT_NODE_TAG = 'CONTEXT'
@@ -20,6 +20,9 @@ class PourPoint(DBItem):
         self.latitude = latitude
         self.longitude = longitude
         self.description = description
+
+        # override the default ID column name because this is a spatial table.
+        self.id_column_name = 'fid'
 
 
 def load_pour_points(curs: sqlite3.Cursor) -> dict:

@@ -67,6 +67,8 @@ class Project(DBItem):
             self.basemaps.pop(db_item.id)
         elif isinstance(db_item, Event):
             self.events.pop(db_item.id)
+        elif isinstance(db_item, PourPoint):
+            self.pour_points.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
