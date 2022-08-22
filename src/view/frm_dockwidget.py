@@ -45,7 +45,7 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.protocol import Protocol
-from ..model.pour_point import PourPoint, process_pour_point
+from ..model.pour_point import PourPoint, process_pour_point, CONTEXT_NODE_TAG
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
@@ -54,10 +54,11 @@ from .frm_basemap import FrmBasemap
 from .frm_mask_aoi import FrmMaskAOI
 from .frm_new_analysis import FrmNewAnalysis
 from .frm_new_project import FrmNewProject
+from .frm_pour_point import FrmPourPoint
 
 from ..QRiS.settings import Settings
 from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
-from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
+from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer
 
 from .ui.qris_dockwidget import Ui_QRiSDockWidget
 
@@ -66,7 +67,6 @@ from ..gp.feature_class_functions import browse_source
 from ..gp.streamstats_api_ import get_streamstats_data, transform_geometry
 
 SCRATCH_NODE_TAG = 'SCRATCH'
-CONTEXT_NODE_TAG = 'CONTEXT'
 
 # Name of the icon PNG file used for group folders in the QRiS project tree
 # /Images/folder.png
@@ -243,6 +243,8 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             [build_mask_layer(mask) for mask in self.project.masks.values()]
             [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps.values()]
             [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
+        elif isinstance(db_item, PourPoint):
+            build_pour_point_map_layer(self.project, db_item)
 
     def add_tree_group_to_map(self, model_item: QStandardItem):
         """Add all children of a group node to the map ToC
@@ -365,13 +367,38 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.stream_stats_tool)
 
-    def stream_stats_action(self, point, button):
-        pour_point = process_pour_point(self.project.project_file, point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), '', '')
+    def stream_stats_action(self, raw_map_point, button):
 
-        if pour_point is PourPoint:
-            self.project.pour_points[pour_point.id] = pour_point
-            context_group_node = self.add_child_to_project_tree(None, CONTEXT_NODE_TAG)
-            self.add_child_to_project_tree(context_group_node, pour_point, True)
+        try:
+            # The point is in the map data frame display units. Transform to WGS84
+            transformed_point = transform_geometry(raw_map_point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), 4326)
+            data = get_streamstats_data(transformed_point.y(), transformed_point.x(), False, False, None)
+        except Exception as ex:
+            QMessageBox.warning(self, 'Error Requesting StreamStats', str(ex))
+            return
+
+        if data is not None:
+            frm = FrmPourPoint(self, transformed_point.y(), transformed_point.x())
+            result = frm.exec_()
+            if result != 0:
+                try:
+                    pour_point = process_pour_point(
+                        self.project.project_file,
+                        transformed_point.y(),
+                        transformed_point.x(),
+                        data,
+                        frm.txtName.text(),
+                        frm.txtDescription.toPlainText())
+                    self.project.pour_points[pour_point.id] = pour_point
+                except Exception as ex:
+                    QMessageBox.warning(self, 'Error Saving Stream Stats to Project', str(ex))
+                    return
+
+                rootNode = self.model.invisibleRootItem()
+                project_node = self.add_child_to_project_tree(rootNode, self.project)
+                context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
+
+                self.add_child_to_project_tree(context_node, pour_point, True)
 
     def edit_item(self, model_item: QStandardItem, db_item: DBItem):
 
