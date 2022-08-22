@@ -11,7 +11,6 @@
         <file alias="expand">../Images/expand.png</file>
         <file alias="folder">../Images/folder.png</file>
         <file alias="help">../Images/help.png</file>
-        <file alias="help">../Images/html.png</file>
         <file alias="influence">../Images/influence.png</file>
         <file alias="json">../Images/json.png</file>
         <file alias="layer">../Images/layer.png</file>
