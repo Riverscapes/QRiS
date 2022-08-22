@@ -26,6 +26,9 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
 
+from ..model.pour_point import PourPoint
+from ..model.pour_point import CONTEXT_NODE_TAG
+
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
@@ -308,6 +311,31 @@ def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask)
 
     return mask_feature_layer
+
+
+def build_pour_point_map_layer(project: Project, pour_point: PourPoint):
+
+    if check_for_existing_layer(project, pour_point) is not None:
+        return
+
+    project_group = get_project_group(project)
+    context_group_layer = get_group_layer(CONTEXT_NODE_TAG, 'Context', project_group, True)
+    pour_point_group_layer = get_group_layer(pour_point, pour_point.name, context_group_layer, True)
+
+    # Create a layer from the pour point
+    point_feature_path = project.project_file + '|layername=' + 'pour_points'
+    point_feature_layer = QgsVectorLayer(point_feature_path, 'Pour Point', 'ogr')
+    point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
+    QgsProject.instance().addMapLayer(point_feature_layer, False)
+    pour_point_group_layer.addLayer(point_feature_layer)
+
+    catchment_feature_path = project.project_file + '|layername=' + 'catchments'
+    catchment_feature_layer = QgsVectorLayer(catchment_feature_path, 'Catchment', 'ogr')
+    catchment_feature_layer.setSubsetString('pour_point_id = ' + str(pour_point.id))
+    QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
+
+    QgsProject.instance().addMapLayer(catchment_feature_layer, False)
+    pour_point_group_layer.addLayer(catchment_feature_layer)
 
 
 def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:

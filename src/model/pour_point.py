@@ -6,6 +6,9 @@ from qgis.core import QgsPoint
 from .db_item import DBItem
 from ..gp.streamstats_api_ import get_streamstats_data, transform_geometry
 
+POUR_POINTS_MACHINE_CODE = 'Pour Points'
+CONTEXT_NODE_TAG = 'CONTEXT'
+
 
 class PourPoint(DBItem):
     """Represents points on the map that  the usser has clicked on and delineated
@@ -31,40 +34,33 @@ def load_pour_points(curs: sqlite3.Cursor) -> dict:
     ) for row in curs.fetchall()}
 
 
-def process_pour_point(project_file: str, raw_map_point: QgsPoint, epsg: int, name, description):
+def process_pour_point(project_file: str, latitude: float, longitude: float, catchment: dict, name: str, description: str):
 
-    # The point is in the map data frame display units. Transform to WGS84
-    transformed_point = transform_geometry(raw_map_point, epsg, 4326)
+    driver = ogr.GetDriverByName('GPKG')
+    dataset = driver.Open(project_file, 1)
+    pour_point_id = None
 
-    data = get_streamstats_data(transformed_point.y(), transformed_point.x(), False, False, None)
-    if data is not None:
+    # Save pour point
+    layer = dataset.GetLayerByName('pour_points')
+    featureDefn = layer.GetLayerDefn()
+    outFeature = ogr.Feature(featureDefn)
+    point = ogr.Geometry(ogr.wkbPoint)
+    point.AddPoint(longitude, latitude)
+    outFeature.SetGeometry(point)
+    outFeature.SetField('name', name)
+    if description is not None:
+        outFeature.SetField('description', description)
+    out = layer.CreateFeature(outFeature)
+    pour_point_id = outFeature.GetFID()
 
-        driver = ogr.GetDriverByName('GPKG')
-        dataset = driver.Open(project_file, 1)
+    # Save catchment polygon
+    layer = dataset.GetLayerByName('catchments')
+    geojson = catchment[0]['featurecollection'][1]['feature']['features'][0]['geometry']
+    polygon = ogr.CreateGeometryFromJson(json.dumps(geojson))
+    featureDefn = layer.GetLayerDefn()
+    outFeature = ogr.Feature(featureDefn)
+    outFeature.SetGeometry(polygon)
+    outFeature.SetField('pour_point_id', pour_point_id)
+    layer.CreateFeature(outFeature)
 
-        # Save pour point
-        layer = dataset.GetLayerByName('pour_points')
-        featureDefn = layer.GetLayerDefn()
-        outFeature = ogr.Feature(featureDefn)
-        point = ogr.Geometry(ogr.wkbPoint)
-        point.AddPoint(transformed_point.x(), transformed_point.y())
-        outFeature.SetGeometry(point)
-        outFeature.SetField('name', name)
-        if description is not None:
-            outFeature.SetField('description', description)
-        out = layer.CreateFeature(outFeature)
-        pour_point_id = outFeature.GetFID()
-
-        # Save catchment polygon
-        layer = dataset.GetLayerByName('catchments')
-        geojson = data[0]['featurecollection'][1]['feature']['features'][0]['geometry']
-        polygon = ogr.CreateGeometryFromJson(json.dumps(geojson))
-        featureDefn = layer.GetLayerDefn()
-        outFeature = ogr.Feature(featureDefn)
-        outFeature.SetGeometry(polygon)
-        outFeature.SetField('pour_point_id', pour_point_id)
-        layer.CreateFeature(outFeature)
-
-        return PourPoint(pour_point_id, name, transformed_point.x(), transformed_point.y(), description)
-
-    return None
+    return PourPoint(pour_point_id, name, longitude, latitude, description)

@@ -15,7 +15,7 @@ def transform_geometry(geometry, map_epsg: int, output_epsg: int):
 
 
 # Makes all 4 api calls. Currently not working consistently due to time delays
-def get_streamstats_data(lat, lon, get_basin_chars: bool, get_flow_stats: bool, new_file_dir=None):
+def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool, get_flow_statistics: bool, new_file_dir=None):
     state_code = get_state_from_coordinates(lat, lon)
     watershed_data = delineate_watershed(lat, lon, state_code, new_file_dir)
     workspace_id = watershed_data["workspaceID"]
@@ -111,7 +111,4 @@ def jprint(obj):
 
 
 if __name__ == '__main__':
-    get_streamstats_data("41.76732076627295", "-111.66402227432565", True, True, new_file_dir="C:\\Users\\tyguy\\Documents")
-39.52175419818472, -121.0521582257666
-# 40.057032996263885, -121.20314155445172
-# 41.76732076627295, -111.66402227432565
+    get_streamstats_data(39.93001576699861, -111.54599129378481, True, True, "C:\\Users\\tyguy\\Documents")

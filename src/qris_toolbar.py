@@ -36,7 +36,7 @@ from qgis.gui import QgsMapToolEmitPoint
 
 # TODO fix this
 from .gp.provider import Provider
-from .gp.report_creation.qris_report import QRiSReport
+# from .gp.report_creation.qris_report import QRiSReport
 from .gp.streamstats_api_ import get_streamstats_data
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
@@ -414,7 +414,7 @@ class QRiSToolbar:
             if json_data is not None:
                 tmp_file = tempfile.NamedTemporaryFile(delete=False).name + '.html'
 
-                QRiSReport(google_maps_api_key, transformed_point.x(), transformed_point.y(), json_data, tmp_file)
+                # QRiSReport(google_maps_api_key, transformed_point.x(), transformed_point.y(), json_data, tmp_file)
 
                 # with open(tmp_file, 'w') as f:
                 #     f.write(f'<html><body><h1>{json_data}</h1></body></html>')
