@@ -369,24 +369,24 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
 
     def stream_stats_action(self, raw_map_point, button):
 
-        try:
-            # The point is in the map data frame display units. Transform to WGS84
-            transformed_point = transform_geometry(raw_map_point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), 4326)
-            data = get_streamstats_data(transformed_point.y(), transformed_point.x(), False, False, None)
-        except Exception as ex:
-            QMessageBox.warning(self, 'Error Requesting StreamStats', str(ex))
-            return
+        transformed_point = transform_geometry(raw_map_point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), 4326)
+        frm = FrmPourPoint(self, transformed_point.y(), transformed_point.x())
+        result = frm.exec_()
+        if result != 0:
+            try:
+                # The point is in the map data frame display units. Transform to WGS84
+                watershed, basin_chars, flow_stats = get_streamstats_data(transformed_point.y(), transformed_point.x(), True, True, None)
+            except Exception as ex:
+                QMessageBox.warning(self, 'Error Requesting StreamStats', str(ex))
+                return
 
-        if data is not None:
-            frm = FrmPourPoint(self, transformed_point.y(), transformed_point.x())
-            result = frm.exec_()
-            if result != 0:
+            if watershed is not None:
                 try:
                     pour_point = process_pour_point(
                         self.project.project_file,
                         transformed_point.y(),
                         transformed_point.x(),
-                        data,
+                        watershed,
                         frm.txtName.text(),
                         frm.txtDescription.toPlainText())
                     self.project.pour_points[pour_point.id] = pour_point
@@ -399,6 +399,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                 context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
 
                 self.add_child_to_project_tree(context_node, pour_point, True)
+
+            # Revert the default tool so the user doesn't accidentally click again
+            self.iface.actionPan().trigger()
 
     def edit_item(self, model_item: QStandardItem, db_item: DBItem):
 
