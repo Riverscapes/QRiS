@@ -24,7 +24,7 @@ class FrmPourPoint(QDialog):  # , Ui_PoutPoint):
         if len(self.txtName.text()) < 1:
             QMessageBox.warning(self, 'Missing Name', 'You must provide a pour point name to continue.')
             self.txtName.setFocus()
-            return()
+            return ()
 
         super().accept()
 
