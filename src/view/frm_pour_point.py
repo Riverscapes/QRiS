@@ -8,8 +8,7 @@ class FrmPourPoint(QDialog):  # , Ui_PoutPoint):
 
     def __init__(self, parent, latitude, longitude):
         super().__init__(parent)
-        # self.setupUi(self)
-        self.setupUi2(self)
+        self.setupUi(self)
 
         self.setWindowTitle('Create New Pour Point with Catchment')
 
@@ -22,7 +21,7 @@ class FrmPourPoint(QDialog):  # , Ui_PoutPoint):
     def accept(self):
 
         if len(self.txtName.text()) < 1:
-            QMessageBox.warning(self, 'Missing Name', 'You must provide a pour point name to continue.')
+            QtWidgets.QMessageBox.warning(self, 'Missing Name', 'You must provide a pour point name to continue.')
             self.txtName.setFocus()
             return ()
 
