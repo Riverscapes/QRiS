@@ -22,11 +22,11 @@ def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool
 
     basin_characteristics = None
     if get_basin_characteristics is True:
-        basin_characteristics = get_basin_characteristics(state_code, workspace_id, new_file_dir)
+        basin_characteristics = retrieve_basin_characteristics(state_code, workspace_id, new_file_dir)
 
     flow_statistics = None
     if get_flow_statistics is True:
-        flow_statistics = get_flow_statistics(state_code, workspace_id, new_file_dir)
+        flow_statistics = retrieve_flow_statistics(state_code, workspace_id, new_file_dir)
 
     return (watershed_data, basin_characteristics, flow_statistics)
 
@@ -55,7 +55,7 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
 
 
 # Returns dictionary of river basin characteristics
-def get_basin_characteristics(rcode, workspace_id, file_dir=None):
+def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
     basin_chars_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/parameters.json?rcode={0}&workspaceID={1}&includeparameters=true'
     url = basin_chars_url.format(rcode, workspace_id)
     response = requests.get(url)
@@ -69,7 +69,7 @@ def get_basin_characteristics(rcode, workspace_id, file_dir=None):
 
 
 # Returns dictionary of river flow stats
-def get_flow_statistics(rcode, workspace_id, file_dir=None):
+def retrieve_flow_statistics(rcode, workspace_id, file_dir=None):
     flow_stats_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/flowstatistics.json?rcode={0}&workspaceID={1}&includeflowtypes=true'
     url = flow_stats_url.format(rcode, workspace_id)
     response = requests.get(url)
