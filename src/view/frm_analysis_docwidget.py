@@ -23,53 +23,30 @@
 """
 
 import os
+from re import S
 import sqlite3
-from xmlrpc.client import Boolean
+from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis import core, gui, utils
 
-from qgis.core import QgsMapLayer
-from qgis.gui import QgsDataSourceSelectDialog
-from qgis.utils import iface
-from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QDockWidget
-from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot, QUrl
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QDesktopServices
+# from qgis.core import QgsMapLayer
+# from qgis.gui import QgsDataSourceSelectDialog
+# from qgis.utils import iface
 
-from ..model.layer import Layer
 from ..model.project import Project
-from ..model.event import Event
-from ..model.event import EVENT_MACHINE_CODE
-from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.mask import MASK_MACHINE_CODE, Mask
-from ..model.protocol import Protocol
-
-from .ui.analysis_docwidget import Ui_AnalysisDocWidget
-
-from ..QRiS.settings import Settings
-from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
-from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer
-
-from .ui.qris_dockwidget import Ui_QRiSDockWidget
-
-from ..gp.feature_class_functions import browse_source
 
 
-class FrmAnalysisDocWidget(QDockWidget, Ui_AnalysisDocWidget):
-
-    closingPlugin = pyqtSignal()
+class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def __init__(self, parent=None):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
-        # Set up the user interface from Designer.
-        # After setupUI you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
-        # widgets-and-dialogs-with-auto-connect
-        self.setupUi(self)
+        self.setupUi()
 
     def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
 
@@ -87,3 +64,49 @@ class FrmAnalysisDocWidget(QDockWidget, Ui_AnalysisDocWidget):
         # Events
         self.events_model = DBItemModel(project.events)
         self.cboEvent.setModel(self.events_model)
+
+    def setupUi(self):
+
+        self.vert = QtWidgets.QVBoxLayout()
+        self.setLayout(self.vert)
+
+        self.grid = QtWidgets.QGridLayout()
+        self.vert.addLayout(self.grid)
+
+        self.lblName = QtWidgets.QLabel()
+        self.lblName.setText('Analysis Name')
+        self.grid.addWidget(self.lblName, 0, 0, 1, 1)
+
+        self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setMaxLength(255)
+        self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+
+        self.lblSegment = QtWidgets.QLabel()
+        self.lblSegment.setText('Riverscape Segment')
+        self.grid.addWidget(self.lblSegment, 1, 0, 1, 1)
+
+        self.cboSegment = QtWidgets.QComboBox()
+        self.grid.addWidget(self.cboSegment, 1, 1, 1, 1)
+
+        self.lblEvent = QtWidgets.QLabel()
+        self.lblEvent.setText('Data Capture Event')
+        self.grid.addWidget(self.lblEvent, 2, 0, 1, 1)
+
+        self.cboEvent = QtWidgets.QComboBox()
+        self.grid.addWidget(self.cboEvent, 2, 1, 1, 1)
+
+        self.horiz = QtWidgets.QHBoxLayout()
+        self.vert.addLayout(self.horiz)
+
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horiz.addWidget(self.spacerItem)
+
+        self.cmdCalculate = QtWidgets.QPushButton()
+        self.cmdCalculate.setText('Calculate')
+        self.horiz.addWidget(self.cmdCalculate)
+
+        self.cmdSettings = QtWidgets.QPushButton()
+        self.cmdSettings.setText('Settings')
+
+        self.table = QtWidgets.QTableWidget()
+        self.vert.addWidget(self.table)
