@@ -29,6 +29,7 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
     src_dataset = ogr.Open(src_path)
     src_layer = src_dataset.GetLayer(src_layer_name if src_layer_name is not None else 0)
     src_srs = src_layer.GetSpatialRef()
+    fid_field_name = src_layer.GetFIDColumn()
 
     gpkg_driver = ogr.GetDriverByName('GPKG')
     dst_dataset = gpkg_driver.Open(dest_path, 1)
@@ -46,7 +47,11 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
         dst_feature.SetField('mask_id', mask_id)
-        [dst_feature.SetField(dst_field, src_feature.GetField(src_field)) for src_field, dst_field in attributes.items()]
+        for src_field, dst_field in attributes.items():
+            # Retrieve the field value differently if the feature ID is being used
+            value = str(src_feature.GetFID()) if src_field == fid_field_name else src_feature.GetField(src_field)
+            dst_feature.SetField(dst_field, value)
+
         err = dst_layer.CreateFeature(dst_feature)
 
         dst_feature = None
