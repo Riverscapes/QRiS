@@ -692,6 +692,10 @@ ALTER TABLE structure_points ADD COLUMN created DATETIME;
 -- pour points and catchments
 ALTER TABLE pour_points ADD COLUMN name TEXT;
 ALTER TABLE pour_points ADD COLUMN description TEXT;
+ALTER TABLE pour_points ADD COLUMN latitude FLOAT;
+ALTER TABLE pour_points ADD COLUMN longitude FLOAT;
+ALTER TABLE pour_points ADD COLUMN basin_characteristics TEXT;
+ALTER TABLE pour_points ADD COLUMN flow_statistics TEXT;
 ALTER TABLE catchments ADD COLUMN pour_point_id INT REFERENCES pour_points(fid) ON DELETE CASCADE;
 
 

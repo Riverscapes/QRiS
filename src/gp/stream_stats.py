@@ -61,8 +61,8 @@ def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
     response = requests.get(url)
     try:
         basin_data = response.json()
-    except Exception:
-        return
+    except Exception as ex:
+        raise Exception('Error retrieving basin characteristics') from ex
     if file_dir is not None:
         save_json(basin_data, file_dir, workspace_id + "_basin.json")
     return basin_data
@@ -75,8 +75,8 @@ def retrieve_flow_statistics(rcode, workspace_id, file_dir=None):
     response = requests.get(url)
     try:
         flow_data = response.json()
-    except Exception:
-        return
+    except Exception as ex:
+        raise Exception('Error retrieving flow statistics') from ex
 
     if file_dir is not None:
         save_json(flow_data, file_dir, workspace_id + "_flow.json")
@@ -90,7 +90,7 @@ def save_json(dict, directory, file_name):
 
 
 # Uses coordinates to determine U.S. state using API
-def get_state_from_coordinates(latitude, longitude):
+def get_state_from_coordinates(latitude: float, longitude: float):
     url = "https://nominatim.openstreetmap.org/reverse"
     parameters = {
         "lat": latitude,
@@ -99,9 +99,12 @@ def get_state_from_coordinates(latitude, longitude):
     }
     response = requests.get(url, params=parameters)
     location_data = response.json()
-    location_code = location_data["address"]["ISO3166-2-lvl4"]
-    # Extracts state abbreviation from location code
-    return location_code[location_code.index("-") + 1:]
+    if 'error' in location_data:
+        return None
+    else:
+        location_code = location_data["address"]["ISO3166-2-lvl4"]
+        # Extracts state abbreviation from location code
+        return location_code[location_code.index("-") + 1:]
 
 
 # Prints dict/json
