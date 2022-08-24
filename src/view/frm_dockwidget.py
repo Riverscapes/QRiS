@@ -385,8 +385,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
     def add_pour_point(self, parent_node):
 
         QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.' +
-                                ' Be sure to click on the precise stream location. Wait 30-60 seconds and the upstream catchment will be' +
-                                ' delineated and added to the map.')
+                                '  Be sure to click on the precise stream location.' +
+                                '  A form will appear where you can provide a name and description for the point.' +
+                                '  Then wait 30-60 seconds and the upstream catchment will be delineated and added to the map.')
 
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.stream_stats_tool)
