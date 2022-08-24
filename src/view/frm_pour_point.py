@@ -1,16 +1,37 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from ..model.pour_point import PourPoint
+from ..model.project import Project
 
 
 class FrmPourPoint(QtWidgets.QDialog):
 
-    def __init__(self, parent, latitude, longitude):
+    def __init__(self, parent, project: Project, latitude: float, longitude: float, pour_point: PourPoint):
         super().__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle('Create New Pour Point with Catchment')
+        self.pour_point = pour_point
+        self.project = project
 
-        self.txtLatitude.setText(str(latitude))
-        self.txtLongitude.setText(str(longitude))
+        if self.pour_point is None:
+            self.setWindowTitle('Create New Pour Point with Catchment')
+
+            self.txtLatitude.setText(str(latitude))
+            self.txtLongitude.setText(str(longitude))
+
+            self.tabWidget.removeTab(1)
+            self.tabWidget.removeTab(1)
+        else:
+            self.setWindowTitle('Pour Point Details')
+
+            self.chkDelineate.setVisible(False)
+            self.chkBasin.setVisible(False)
+            self.chkFlowStats.setVisible(False)
+
+            self.txtName.setText(pour_point.name)
+            self.txtDescription.setPlainText(pour_point.description)
+
+            self.txtLatitude.setText(str(pour_point.latitude))
+            self.txtLongitude.setText(str(pour_point.longitude))
 
     def accept(self):
 
@@ -18,6 +39,17 @@ class FrmPourPoint(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, 'Missing Name', 'You must provide a pour point name to continue.')
             self.txtName.setFocus()
             return ()
+
+        if self.pour_point is not None:
+            try:
+                self.pour_point.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+            except Exception as ex:
+                if 'unique' in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A pour point with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    self.txtName.setFocus()
+                else:
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Pour Point', str(ex))
+                return
 
         super().accept()
 
