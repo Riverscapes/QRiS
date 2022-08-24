@@ -1,9 +1,8 @@
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
+from qgis import core, gui, utils
 
-from .ui.analysis_properties import Ui_AnalysisProperties
 from ..model.analysis import Analysis, insert_analysis
 from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap, insert_basemap
 from ..model.db_item import DBItemModel, DBItem
@@ -11,7 +10,7 @@ from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID
 
 
-class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
+class FrmAnalysisProperties(QtWidgets.QDialog):
 
     def __init__(self, parent, project: Project, analysis: Analysis = None):
 
@@ -32,11 +31,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
         self.basemaps_model = DBItemModel(project.basemaps)
         self.cboBasemap.setModel(self.basemaps_model)
 
-        self.metrics_model = QStandardItemModel(len(project.metrics), 2)
+        self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
         metrics = list(project.metrics.values())
         for row in range(len(metrics) - 1):
             metric = metrics[row]
-            item = QStandardItem(metric.name)
+            item = QtGui.QStandardItem(metric.name)
             item.setData(metric, QtCore.Qt.UserRole)
             self.metrics_model.setItem(row, 0, item)
 
@@ -63,9 +62,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
             # User cannot reassign mask once the analysis is created!
             self.cboMask.setEnabled(False)
 
-    def manual_setup(self):
+    def setupUi(self):
 
         self.vertical1 = QtWidgets.QVBoxLayout(self)
+        self.setLayout(self.vertical1)
 
         self.grdLayout1 = QtWidgets.QGridLayout(self.vertical1)
 
@@ -102,19 +102,19 @@ class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
     def accept(self):
 
         if len(self.txtName.text()) < 1:
-            QMessageBox.warning(self, 'Missing Analysis Name', 'You must provide a basis name to continue.')
+            QtWidgets.QMessageBox.warning(self, 'Missing Analysis Name', 'You must provide a basis name to continue.')
             self.txtName.setFocus()
             return()
 
         mask = self.cboMask.currentData(Qt.UserRole)
         if mask is None:
-            QMessageBox.warning(self, 'Missing Mask', 'You must select a mask to continue.')
+            QtWidgets.QMessageBox.warning(self, 'Missing Mask', 'You must select a mask to continue.')
             self.cboMask.setFocus()
             return()
 
         basemap = self.cboBasemap.currentData(Qt.UserRole)
         if basemap is None:
-            QMessageBox.warning(self, 'Missing Basemap', 'You must select a basemap to continue.')
+            QtWidgets.QMessageBox.warning(self, 'Missing Basemap', 'You must select a basemap to continue.')
             self.cboBasemap.setFocus()
             return()
 
@@ -123,10 +123,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
                 self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), basemap)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QMessageBox.warning(self, 'Error Saving Analysis', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Analysis', str(ex))
                 return
         else:
             try:
@@ -134,10 +134,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog, Ui_AnalysisProperties):
                 self.project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QMessageBox.warning(self, 'Error Saving Analysis', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Analysis', str(ex))
                 return
 
         super(FrmAnalysisProperties, self).accept()
