@@ -18,9 +18,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.analysis = analysis
 
         super(FrmAnalysisProperties, self).__init__(parent)
-        # self.setupUi(self)
-
-        self.manual_setup()
+        self.setupUi()
 
         # Masks (filtered to just regular masks )
         self.masks = {id: mask for id, mask in project.masks.items() if mask.mask_type.id == REGULAR_MASK_TYPE_ID}
@@ -39,65 +37,78 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             item.setData(metric, QtCore.Qt.UserRole)
             self.metrics_model.setItem(row, 0, item)
 
-        self.vwMetrics.setModel(self.metrics_model)
+        # self.vwMetrics.setModel(self.metrics_model)
 
-        for row in range(len(metrics) - 1):
-            cbo = QtWidgets.QComboBox()
-            cbo.addItems(['Metric', 'Indicator', 'None'])
-            self.vwMetrics.setIndexWidget(self.metrics_model.index(row, 1), cbo)
+        # for row in range(len(metrics) - 1):
+        #     cbo = QtWidgets.QComboBox()
+        #     cbo.addItems(['Metric', 'Indicator', 'None'])
+        #     self.vwMetrics.setIndexWidget(self.metrics_model.index(row, 1), cbo)
 
-        self.vwMetrics.resizeColumnToContents(0)
-        self.vwMetrics.resizeColumnToContents(1)
-        self.metrics_model.setHorizontalHeaderLabels(['Metric', 'Status'])
-        self.vwMetrics.verticalHeader().hide()
+        # self.vwMetrics.resizeColumnToContents(0)
+        # self.vwMetrics.resizeColumnToContents(1)
+        # self.metrics_model.setHorizontalHeaderLabels(['Metric', 'Status'])
+        # self.vwMetrics.verticalHeader().hide()
 
         if analysis is not None:
+            self.setWindowTitle('Edit Analysis Properties')
+
             self.txtName.setText(analysis.name)
             self.txtDescription.setPlainText(analysis.description)
-            self.chkAddToMap.setCheckState(Qt.Unchecked)
-            self.chkAddToMap.setVisible(False)
+            # self.chkAddToMap.setCheckState(Qt.Unchecked)
+            # self.chkAddToMap.setVisible(False)
 
             # TODO: Set dropdowns when existing analysis
 
             # User cannot reassign mask once the analysis is created!
             self.cboMask.setEnabled(False)
+        else:
+            self.setWindowTitle('Create New Analysis')
 
     def setupUi(self):
+
+        self.setMinimumSize(500, 500)
 
         self.vertical1 = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vertical1)
 
-        self.grdLayout1 = QtWidgets.QGridLayout(self.vertical1)
+        self.grdLayout1 = QtWidgets.QGridLayout()
+        self.vertical1.addLayout(self.grdLayout1)
 
         self.lblName = QtWidgets.QLabel()
+        self.lblName.setText('Name')
         self.grdLayout1.addWidget(self.lblName, 0, 0, 1, 1)
 
-        self.cboName = QtWidgets.QComboBox()
-        self.grdLayout1.addWidget(self.cboName, 0, 1, 1, 1)
+        self.txtName = QtWidgets.QLineEdit()
+        self.grdLayout1.addWidget(self.txtName, 0, 1, 1, 1)
 
         self.lblMask = QtWidgets.QLabel()
+        self.lblMask.setText('Mask')
         self.grdLayout1.addWidget(self.lblMask, 1, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboMask, 1, 1, 1, 1)
 
         self.lblBasemap = QtWidgets.QLabel()
+        self.lblBasemap.setText('Basemap')
         self.grdLayout1.addWidget(self.lblBasemap, 2, 0, 1, 1)
 
         self.cboBasemap = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboBasemap, 2, 1, 1, 1)
 
-        self.tabWidget = QtWidgets.QTableWidget(self.vertical1)
-        self.tab1 = QtWidgets.QWidget()
-        self.tab2 = QtWidgets.QWidget()
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1), 'Analysis Metrics')
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2), 'Analysis Metrics')
-        self.vwMetrics = QtWidgets.QTableView(self.tab1)
+        self.tabWidget = QtWidgets.QTabWidget()
+        self.vertical1.addWidget(self.tabWidget)
 
-        self.txtDescription = QtWidgets.QPlainTextEdit(self.tab2)
+        self.metricsTable = QtWidgets.QTableWidget()
+        self.tabWidget.addTab(self.metricsTable, 'Analysis Metrics')
 
-        self.cmdButtons = QtWidgets.QDialogButtonBox(self.vertical1)
+        self.txtDescription = QtWidgets.QPlainTextEdit()
+        self.tabWidget.addTab(self.txtDescription, 'Description')
+
+        self.cmdButtons = QtWidgets.QDialogButtonBox()
         self.cmdButtons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.cmdButtons.accepted.connect(self.accept)
+        self.cmdButtons.rejected.connect(self.reject)
+        self.vertical1.addWidget(self.cmdButtons)
 
     def accept(self):
 
@@ -106,13 +117,13 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.txtName.setFocus()
             return()
 
-        mask = self.cboMask.currentData(Qt.UserRole)
+        mask = self.cboMask.currentData(QtCore.Qt.UserRole)
         if mask is None:
             QtWidgets.QMessageBox.warning(self, 'Missing Mask', 'You must select a mask to continue.')
             self.cboMask.setFocus()
             return()
 
-        basemap = self.cboBasemap.currentData(Qt.UserRole)
+        basemap = self.cboBasemap.currentData(QtCore.Qt.UserRole)
         if basemap is None:
             QtWidgets.QMessageBox.warning(self, 'Missing Basemap', 'You must select a basemap to continue.')
             self.cboBasemap.setFocus()

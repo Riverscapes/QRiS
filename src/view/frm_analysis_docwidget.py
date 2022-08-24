@@ -67,8 +67,10 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def setupUi(self):
 
-        self.vert = QtWidgets.QVBoxLayout()
-        self.setLayout(self.vert)
+        self.dockWidgetContents = QtWidgets.QWidget()
+
+        self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
+        # self.setLayout(self.vert)
 
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
@@ -99,7 +101,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.vert.addLayout(self.horiz)
 
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addWidget(self.spacerItem)
+        self.horiz.addItem(self.spacerItem)
 
         self.cmdCalculate = QtWidgets.QPushButton()
         self.cmdCalculate.setText('Calculate')
@@ -107,6 +109,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         self.cmdSettings = QtWidgets.QPushButton()
         self.cmdSettings.setText('Settings')
+        self.horiz.addWidget(self.cmdSettings)
 
         self.table = QtWidgets.QTableWidget()
         self.vert.addWidget(self.table)
+
+        self.setWidget(self.dockWidgetContents)

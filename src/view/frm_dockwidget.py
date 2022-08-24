@@ -31,6 +31,7 @@ from qgis.utils import iface
 from qgis.PyQt.QtWidgets import QAbstractItemView, QFileDialog, QMenu, QMessageBox, QDockWidget
 from qgis.PyQt.QtCore import pyqtSignal, Qt, QDate, pyqtSlot, QUrl
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QDesktopServices
+from qgis.gui import QgsMapToolEmitPoint
 
 from ..model.layer import Layer
 from ..model.project import Project
@@ -51,7 +52,7 @@ from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
 from .frm_event import FrmEvent
 from .frm_basemap import FrmBasemap
 from .frm_mask_aoi import FrmMaskAOI
-from .frm_new_analysis import FrmNewAnalysis
+from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 
@@ -188,9 +189,9 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
 
                     import_mask_menu = self.menu.addMenu('Import Existing')
-                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
-                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT), False)
+                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Create New Pour Point & Catchment', 'new', lambda: self.add_pour_point(model_item))
 
@@ -208,7 +209,8 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
                     or isinstance(model_data, Event) \
                     or isinstance(model_data, Basemap) \
                     or isinstance(model_data, Mask) \
-                    or isinstance(model_data, PourPoint):
+                    or isinstance(model_data, PourPoint) \
+                    or isinstance(model_data, Analysis):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
             if isinstance(model_data, Project):
@@ -288,11 +290,13 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
         frm = FrmAnalysisProperties(self, self.project)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_child_to_project_tree(parent_node, frm.analysis, frm.chkAddToMap.isChecked())
+            self.add_child_to_project_tree(parent_node, frm.analysis, True)
 
             if self.analysis_doc_widget is None:
                 self.analysis_doc_widget = FrmAnalysisDocWidget()
+                self.iface.addDockWidget(Qt.BottomDockWidgetArea, self.analysis_doc_widget)
 
+            self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
             self.analysis_doc_widget.show()
 
     def add_child_to_project_tree(self, parent_node: QStandardItem, data_item, add_to_map: Boolean = False) -> QStandardItem:
@@ -451,8 +455,8 @@ class QRiSDockWidget(QDockWidget, Ui_QRiSDockWidget):
             if self.analysis_doc_widget is None:
                 self.analysis_doc_widget = FrmAnalysisDocWidget()
                 self.iface.addDockWidget(Qt.BottomDockWidgetArea, self.analysis_doc_widget)
+            self.analysis_doc_widget.configure_analysis(self.project, db_item, None)
             self.analysis_doc_widget.show()
-            self.analysis_doc_widget.configure_analysis(self.   project, db_item)
         else:
             QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
 
