@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ..model.pour_point import PourPoint
 from ..model.project import Project
+from ..model.basin_characteristics_table_view import BasinCharsTableModel
 
 
 class FrmPourPoint(QtWidgets.QDialog):
@@ -32,6 +33,12 @@ class FrmPourPoint(QtWidgets.QDialog):
 
             self.txtLatitude.setText(str(pour_point.latitude))
             self.txtLongitude.setText(str(pour_point.longitude))
+
+            # Load the basin characteristics
+            if pour_point.basin_chars is not None and 'parameters' in pour_point.basin_chars:
+                basin_data = [(param['name'], param['code'], param['unit'], param['value']) for param in pour_point.basin_chars['parameters']]
+                self.basin_model = BasinCharsTableModel(basin_data, ['Name', 'Code', 'Units', 'Value'])
+                self.basinTable.setModel(self.basin_model)
 
     def accept(self):
 
@@ -110,8 +117,10 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
 
-        self.tabBasin = QtWidgets.QTableWidget()
-        self.tabWidget.addTab(self.tabBasin, 'Basin Characteristics')
+        # self.tabBasin = QtWidgets.QTableWidget()
+        self.basinTable = QtWidgets.QTableView()
+        self.basinTable.verticalHeader().hide()
+        self.tabWidget.addTab(self.basinTable, 'Basin Characteristics')
 
         self.tabFlow = QtWidgets.QTableWidget()
         self.tabWidget.addTab(self.tabFlow, 'Flow Statistics')
