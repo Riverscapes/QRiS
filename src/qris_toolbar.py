@@ -531,5 +531,5 @@ class QRiSToolbar:
         if self.acknowledgements is None:
             self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
 
-        dialog.acknowledgements.setText(self.acknowledgements)
+        dialog.lblAcknowledgements.setText(self.acknowledgements)
         dialog.exec_()
