@@ -125,8 +125,18 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.tabFlow = QtWidgets.QTableWidget()
         self.tabWidget.addTab(self.tabFlow, 'Flow Statistics')
 
+        self.horiz = QtWidgets.QHBoxLayout()
+        self.vert.addLayout(self.horiz)
+
+        self.cmdHelp = QtWidgets.QPushButton()
+        self.cmdHelp.setText('Help')
+        self.horiz.addWidget(self.cmdHelp)
+
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horiz.addItem(self.spacerItem)
+
         self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.vert.addWidget(self.buttonBox)
+        self.horiz.addWidget(self.buttonBox)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.accepted.connect(self.accept)
