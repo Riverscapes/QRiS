@@ -35,6 +35,10 @@ class DBItem():
     def delete(self, db_path: str) -> None:
 
         with sqlite3.connect(db_path) as conn:
+
+            # Need foreign keys to force exceptions when deleting child records
+            conn.execute("PRAGMA foreign_keys = 1")
+
             try:
                 curs = conn.cursor()
                 curs.execute(f'DELETE FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])
