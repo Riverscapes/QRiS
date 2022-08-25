@@ -1,19 +1,9 @@
 import os
 import sqlite3
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox
-from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect
-from qgis.PyQt.QtGui import QIcon, QDesktopServices
-
-
-from qgis.core import (
-    QgsField,
-    QgsVectorLayer,
-    QgsVectorFileWriter
-)
+from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.core import QgsField, QgsVectorLayer, QgsVectorFileWriter
 
 from ..model.project import Project
-
-from .ui.new_project import Ui_NewProject
 
 # all spatial layers
 # feature class, layer name, geometry
@@ -47,15 +37,14 @@ layers = [
 ]
 
 
-class FrmNewProject(QDialog, Ui_NewProject):
+class FrmNewProject(QtWidgets.QDialog):
 
-    closingPlugin = pyqtSignal()
-    dataChange = pyqtSignal(Project)
+    closingPlugin = QtCore.pyqtSignal()
+    dataChange = QtCore.pyqtSignal(Project)
 
     def __init__(self, root_project_folder: str, parent=None, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
-        self.setupUi(self)
-        self.gridLayoutWidget.setGeometry(QRect(0, 0, self.width(), self.height()))
+        self.setupUi()
 
         # Save the original folder that the user selected so that it can be reused
         self.root_path = root_project_folder
@@ -63,16 +52,17 @@ class FrmNewProject(QDialog, Ui_NewProject):
         self.project = project
 
         if project is None:
+            self.setWindowTitle('Create New Project')
             # Changes to project name change the project folder location
-            self.txtProjectName.textChanged.connect(self.update_project_folder)
+            self.txtName.textChanged.connect(self.update_project_folder)
         else:
             self.setWindowTitle('Edit Project Properties')
-            self.txtProjectName.setText(project.name)
+            self.txtName.setText(project.name)
             self.txtDescription.setPlainText(project.description)
 
     def update_project_folder(self):
 
-        text = self.txtProjectName.text().strip()
+        text = self.txtName.text().strip()
         clean_name = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
 
         if len(clean_name) > 0:
@@ -84,10 +74,10 @@ class FrmNewProject(QDialog, Ui_NewProject):
     def accept(self):
 
         # Verify project name
-        if len(self.txtProjectName.text().strip()) < 1:
-            QMessageBox.warning(self, 'Missing Project Name',
-                                'You must provide a project name to continue.')
-            self.txtProjectName.setFocus()
+        if len(self.txtName.text().strip()) < 1:
+            QtWidgets.QMessageBox.warning(self, 'Missing Project Name',
+                                          'You must provide a project name to continue.')
+            self.txtName.setFocus()
             return
 
         if isinstance(self.project, Project):
@@ -95,21 +85,21 @@ class FrmNewProject(QDialog, Ui_NewProject):
             conn = sqlite3.connect(self.project.project_file)
             cursor = conn.cursor()
             try:
-                cursor.execute('UPDATE projects SET name = ?, description = ? WHERE id = ?', [self.txtProjectName.text(), self.txtDescription.toPlainText(), self.project.id])
+                cursor.execute('UPDATE projects SET name = ?, description = ? WHERE id = ?', [self.txtName.text(), self.txtDescription.toPlainText(), self.project.id])
                 conn.commit()
-                self.project.name = self.txtProjectName.text()
+                self.project.name = self.txtName.text()
                 self.project.description = self.txtDescription.toPlainText()
             except Exception as ex:
                 conn.rollback()
-                QMessageBox.warning(self, 'Error Updating Project', str(ex))
+                QtWidgets.QMessageBox.warning(self, 'Error Updating Project', str(ex))
                 return
         else:
             # Saves the new project from the dialog and creates the master geopackage
             # Create new project directory
             self.project_dir = os.path.dirname(self.txtPath.text())
             if (os.path.isdir(self.project_dir)):
-                QMessageBox.warning(self, 'Directory Already Exists',
-                                    'The specified directory already exists. Choose a different root directory or change the project name.')
+                QtWidgets.QMessageBox.warning(self, 'Directory Already Exists',
+                                              'The specified directory already exists. Choose a different root directory or change the project name.')
                 return
 
             os.makedirs(self.project_dir)
@@ -132,12 +122,59 @@ class FrmNewProject(QDialog, Ui_NewProject):
             curs.executescript(sql_commands)
 
             # Create the project
-            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtProjectName.text(), self.txtDescription.toPlainText()])
+            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtName.text(), self.txtDescription.toPlainText()])
             conn.commit()
             conn.close()
             schema_file.close()
 
         super(FrmNewProject, self).accept()
+
+    def setupUi(self):
+
+        self.vert = QtWidgets.QVBoxLayout()
+        self.setLayout(self.vert)
+
+        self.grid = QtWidgets.QGridLayout()
+        self.vert.addLayout(self.grid)
+
+        self.lblName = QtWidgets.QLabel()
+        self.lblName.setText('Name')
+        self.grid.addWidget(self.lblName, 0, 0, 1, 1)
+
+        self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setMaxLength(255)
+        self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+
+        self.lblPath = QtWidgets.QLabel()
+        self.lblPath.setText('Project Path')
+        self.grid.addWidget(self.lblPath, 1, 0, 1, 1)
+
+        self.txtPath = QtWidgets.QLineEdit()
+        self.grid.addWidget(self.txtPath, 1, 1, 1, 1)
+
+        self.lblDescription = QtWidgets.QLabel()
+        self.lblDescription.setText('Description')
+        self.grid.addWidget(self.lblDescription, 2, 0, 1, 1)
+
+        self.txtDescription = QtWidgets.QPlainTextEdit()
+        self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
+
+        self.horiz = QtWidgets.QHBoxLayout()
+        self.vert.addLayout(self.horiz)
+
+        self.cmdHelp = QtWidgets.QPushButton()
+        self.cmdHelp.setText('Help')
+        self.horiz.addWidget(self.cmdHelp)
+
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horiz.addItem(self.spacerItem)
+
+        self.buttonBox = QtWidgets.QDialogButtonBox()
+        self.horiz.addWidget(self.buttonBox)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
 
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
