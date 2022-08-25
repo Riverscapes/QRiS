@@ -72,7 +72,8 @@ GROUP_FOLDER_LABELS = {
     MASK_MACHINE_CODE: 'Masks',
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
     ANALYSIS_MACHINE_CODE: 'Analyses',
-    CONTEXT_NODE_TAG: 'Context'
+    CONTEXT_NODE_TAG: 'Context',
+    SCRATCH_NODE_TAG: 'Scratch'
 }
 
 
