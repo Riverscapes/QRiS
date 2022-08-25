@@ -1,18 +1,18 @@
 from calendar import month
 from datetime import datetime
-from qgis.PyQt.QtWidgets import QWidget
 
-from .ui.date_picker import Ui_DatePicker
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from ..model.datespec import DateSpec
 
 NONE_TEXT = 'None'
 
 
-class FrmDatePicker(QWidget, Ui_DatePicker):
+class FrmDatePicker(QtWidgets.QWidget):
 
     def __init__(self, date_spec: DateSpec = None):
         super().__init__()
-        self.setupUi(self)
+        self.setupUi()
 
         [self.cboYear.addItem(str(year), year) for year in range(1970, 2050)]
         [self.cboMonth.addItem(datetime(2000, month, 1).strftime('%b'), month) for month in range(1, 13)]
@@ -75,3 +75,32 @@ class FrmDatePicker(QWidget, Ui_DatePicker):
                 error_message = "Not a valid calendar date."
 
         return is_valid_date, error_message
+
+    def setupUi(self):
+
+        self.horiz = QtWidgets.QHBoxLayout()
+        self.setLayout(self.horiz)
+
+        self.lblYear = QtWidgets.QLabel()
+        self.lblYear.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.lblYear.setText('Year')
+        self.horiz.addWidget(self.lblYear)
+
+        self.cboYear = QtWidgets.QComboBox()
+        self.horiz.addWidget(self.cboYear)
+
+        self.lblMonth = QtWidgets.QLabel()
+        self.lblMonth.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.lblMonth.setText('Month')
+        self.horiz.addWidget(self.lblMonth)
+
+        self.cboMonth = QtWidgets.QComboBox()
+        self.horiz.addWidget(self.cboMonth)
+
+        self.lblDay = QtWidgets.QLabel()
+        self.lblDay.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.lblDay.setText('Day')
+        self.horiz.addWidget(self.lblDay)
+
+        self.cboDay = QtWidgets.QComboBox()
+        self.horiz.addWidget(self.cboDay)
