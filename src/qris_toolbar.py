@@ -22,15 +22,11 @@
  ***************************************************************************/
 """
 import json
-import sys
-import subprocess
 import os.path
 import requests
 import tempfile
 import webbrowser
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSettings, QUrl
-from qgis.PyQt.QtGui import QIcon, QDesktopServices
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QDialog, QToolButton, QMenu
+from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
 from qgis.gui import QgsMapToolEmitPoint
 
@@ -41,8 +37,6 @@ from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
 from .gp.watershed_attribute_api import QueryMonster
 
-
-# TODO determine if this is needed
 # Initialize Qt resources from file resources.py
 from . import resources
 
@@ -50,7 +44,6 @@ from . import resources
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
-from .view.frm_analysis_docwidget import FrmAnalysisDocWidget
 
 from .model.project import apply_db_migrations
 
@@ -78,16 +71,16 @@ class QRiSToolbar:
         self.plugin_dir = os.path.dirname(__file__)
 
         # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
+        locale = QtCore.QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
             'RIPT_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
-            self.translator = QTranslator()
+            self.translator = QtCore.QTranslator()
             self.translator.load(locale_path)
-            QCoreApplication.installTranslator(self.translator)
+            QtCore.QCoreApplication.installTranslator(self.translator)
 
         # Declare instance attributes
         self.actions = []
@@ -120,7 +113,7 @@ class QRiSToolbar:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('QRiS', message)
+        return QtCore.QCoreApplication.translate('QRiS', message)
 
     def add_action(
             self,
@@ -172,8 +165,8 @@ class QRiSToolbar:
         :rtype: QAction
         """
 
-        icon = QIcon(icon_path)
-        action = QAction(icon, text, parent)
+        icon = QtGui.QIcon(icon_path)
+        action = QtWidgets.QAction(icon, text, parent)
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
 
@@ -213,11 +206,11 @@ class QRiSToolbar:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        self.newProjectAction = QAction(QIcon(':/plugins/qris_toolbar/new'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
+        self.newProjectAction = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/new'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
         self.newProjectAction.triggered.connect(self.create_new_project_dialog)
         self.toolbar.addAction(self.newProjectAction)
 
-        self.open_projectAction = QAction(QIcon(':/plugins/qris_toolbar/folder'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
+        self.open_projectAction = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/folder'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
         self.open_projectAction.triggered.connect(self.open_existing_project)
         self.toolbar.addAction(self.open_projectAction)
 
@@ -297,7 +290,7 @@ class QRiSToolbar:
 
             # show the dockwidget
             # TODO: fix to allow choice of dock location
-            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
+            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
     def open_existing_project(self):
@@ -306,13 +299,13 @@ class QRiSToolbar:
         :return:
         """
 
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         last_project_folder = settings.value(LAST_PROJECT_FOLDER)
 
-        dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (qris_project.gpkg)"))
+        dialog_return = QtWidgets.QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (qris_project.gpkg)"))
         if dialog_return is not None and dialog_return[0] != '' and os.path.isfile(dialog_return[0]):
 
-            settings = QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(dialog_return[0]))
             settings.sync()
 
@@ -331,15 +324,15 @@ class QRiSToolbar:
 
     def create_new_project_dialog(self):
 
-        settings = QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         last_parent_folder = os.path.dirname(settings.value(LAST_PROJECT_FOLDER)) if settings.value(LAST_PROJECT_FOLDER) is not None else None
 
-        dialog_return = QFileDialog.getExistingDirectory(self.dockwidget, 'Create New QRiS Project', last_parent_folder)
+        dialog_return = QtWidgets.QFileDialog.getExistingDirectory(self.dockwidget, 'Create New QRiS Project', last_parent_folder)
         if len(dialog_return) > 0:
             self.save_folder = dialog_return
             frm_new_project = FrmNewProject(dialog_return)
             result = frm_new_project.exec_()
-            if result == QDialog.Accepted:
+            if result == QtWidgets.QDialog.Accepted:
                 settings.setValue(LAST_PROJECT_FOLDER, frm_new_project.project_dir)
                 settings.sync()
 
@@ -388,14 +381,14 @@ class QRiSToolbar:
 
             data = self.get_watershed_metrics(transformed_point.x(), transformed_point.y())
             if data is not None:
-                file_path = QFileDialog.getSaveFileName(None, 'Watershed Metrics JSON File', None, 'JSON Files (*.json)')
+                file_path = QtWidgets.QFileDialog.getSaveFileName(None, 'Watershed Metrics JSON File', None, 'JSON Files (*.json)')
                 if file_path is not None and file_path[0] != '':
                     with open(file_path[0], 'w') as f:
                         json.dump(data, f)
                     # QDesktopServices.openUrl(QUrl('file://' + file_path[0]))
                     webbrowser.open('file://' + file_path[0])
         except Exception as ex:
-            QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+            QtWidgets.QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
 
     def html_watershed_metrics(self, point, button):
         """
@@ -417,7 +410,7 @@ class QRiSToolbar:
                 #     f.write(f'<html><body><h1>{json_data}</h1></body></html>')
                 webbrowser.open('file://' + tmp_file)
         except Exception as ex:
-            QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+            QtWidgets.QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
 
     def get_watershed_metrics(self, lng: float, lat: float):
 
@@ -441,7 +434,7 @@ class QRiSToolbar:
         try:
             apply_db_migrations(db_path)
         except Exception as ex:
-            QMessageBox.warning(self, 'Error Appling QRiS Database Migrations', str(ex))
+            QtWidgets.QMessageBox.warning(self, 'Error Appling QRiS Database Migrations', str(ex))
 
     def toggle_widget(self, forceOn=False):
         """Toggle the widget open and closed when clicking the toolbar"""
@@ -466,7 +459,7 @@ class QRiSToolbar:
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
             # show the dockwidget
-            self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
+            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
             # self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.metawidget)
             self.dockwidget.show()
 
@@ -479,24 +472,24 @@ class QRiSToolbar:
 
     def configure_watershed_attribute_menu(self):
 
-        self.wat_button = QToolButton()
-        self.wat_button.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.wat_button.setIcon(QIcon(':/plugins/qris_toolbar/watershed'))
-        self.wat_button.setMenu(QMenu())
-        self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
+        self.wat_button = QtWidgets.QToolButton()
+        self.wat_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        self.wat_button.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/watershed'))
+        self.wat_button.setMenu(QtWidgets.QMenu())
+        self.wat_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
         self.toolbar.addWidget(self.wat_button)
         self.wat_menu = self.wat_button.menu()
 
-        self.wat_button = QToolButton()
-        self.wat_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.wat_button = QtWidgets.QToolButton()
+        self.wat_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
         self.wat_button.setMenu(self.wat_menu)
-        self.wat_button.setPopupMode(QToolButton.MenuButtonPopup)
+        self.wat_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
 
-        self.wat_html_action = QAction(QIcon(':/plugins/qris_toolbar/watershed'), self.tr('Export Attributes to HTML Report'), self.iface.mainWindow())
+        self.wat_html_action = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/watershed'), self.tr('Export Attributes to HTML Report'), self.iface.mainWindow())
         self.wat_html_action.triggered.connect(self.activate_html_watershed_attributes)
         self.wat_menu.addAction(self.wat_html_action)
 
-        self.wat_json_action = QAction(QIcon(':/plugins/qris_toolbar/json'), self.tr('Export Attributes to JSON'), self.iface.mainWindow())
+        self.wat_json_action = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/json'), self.tr('Export Attributes to JSON'), self.iface.mainWindow())
         self.wat_json_action.triggered.connect(self.activate_json_watershed_attributes)
         self.wat_menu.addAction(self.wat_json_action)
 
@@ -504,20 +497,20 @@ class QRiSToolbar:
 
     def configure_help_menu(self):
 
-        self.help_button = QToolButton()
-        self.help_button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.help_button = QtWidgets.QToolButton()
+        self.help_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
         self.help_button.setText('Help')
-        self.help_button.setIcon(QIcon(':/plugins/qris_toolbar/help'))
-        self.help_button.setMenu(QMenu())
-        self.help_button.setPopupMode(QToolButton.MenuButtonPopup)
+        self.help_button.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/help'))
+        self.help_button.setMenu(QtWidgets.QMenu())
+        self.help_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
         self.toolbar.addWidget(self.help_button)
         help_menu = self.help_button.menu()
 
-        self.helpAction = QAction(QIcon(':/plugins/qris_toolbar/help'), self.tr('Help'), self.iface.mainWindow())
-        self.helpAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("https://riverscapes.github.io/QRiS/")))
+        self.helpAction = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/help'), self.tr('Help'), self.iface.mainWindow())
+        self.helpAction.triggered.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://riverscapes.github.io/QRiS/")))
         help_menu.addAction(self.helpAction)
 
-        self.about_action = QAction(QIcon(':/plugins/qris_toolbar/riverscapes_icon'), self.tr('About QRiS'), self.iface.mainWindow())
+        self.about_action = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/riverscapes_icon'), self.tr('About QRiS'), self.iface.mainWindow())
         self.about_action.triggered.connect(self.about_load)
         help_menu.addAction(self.about_action)
 
