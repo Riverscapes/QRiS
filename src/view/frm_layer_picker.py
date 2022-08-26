@@ -8,6 +8,8 @@ class FrmLayerPicker(QtWidgets.QDialog):
         super().__init__(parent)
         self.setupUi()
 
+        self.layer = None
+
         self.lblMessage.setText(label_message)
 
         self.model = DBItemModel({i: layers[i] for i in range(len(layers))})
@@ -18,6 +20,8 @@ class FrmLayerPicker(QtWidgets.QDialog):
 
     def setupUi(self):
 
+        self.resize(400, 100)
+
         self.vert = QtWidgets.QVBoxLayout()
         self.setLayout(self.vert)
 
@@ -25,7 +29,7 @@ class FrmLayerPicker(QtWidgets.QDialog):
         self.vert.addLayout(self.grid)
 
         self.lblMessage = QtWidgets.QLabel()
-        self.grid.addWidget(self.lblName, 0, 0, 1, 1)
+        self.grid.addWidget(self.lblMessage, 0, 0, 1, 1)
 
         self.cboLayers = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboLayers, 0, 1, 1, 1)
@@ -36,3 +40,7 @@ class FrmLayerPicker(QtWidgets.QDialog):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+
+    def accept(self):
+
+        self.layer = self.cboLayers.currentData(QtCore.Qt.UserRole)
