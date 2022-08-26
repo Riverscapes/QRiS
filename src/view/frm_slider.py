@@ -1,8 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsRasterLayer, QgsColorRampShader, QgsRasterShader, QgsSingleBandPseudoColorRenderer
 
+from ..model.basemap import Raster
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
+
+from ..QRiS.method_to_map import build_raster_slider_layer, apply_raster_slider_value
 
 
 class FrmSlider(QtWidgets.QDockWidget):
@@ -12,28 +15,30 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.setupUi()
 
         self.project = project
+        self.raster = None
 
-    def configure_raster(self, db_item):
+    def configure_raster(self, raster: Raster):
 
-        self.raster = db_item
-        self.txtSurface.setText(db_item.name)
+        self.raster = raster
+        self.txtSurface.setText(raster.name)
+        build_raster_slider_layer(self.project, raster)
 
-    def sliderElevationChange(self, value):
+    def sliderElevationChange(self, value: float):
         self.elevation_value = value / 10
-        self.updateElevationLayer(value / 10)
-        self.numElevation.setValue(value / 10)
+        apply_raster_slider_value(self.project, self.raster, value / 10)
+        self.valElevation.setValue(value / 10)
 
-    def spinBoxElevationChange(self, value):
+    def spinBoxElevationChange(self, value: float):
         self.elevation_value = value
-        self.updateElevationLayer(value)
+        apply_raster_slider_value(self.project, self.raster, value)
         self.slider.setValue(int(value * 10))
 
-    def updateElevationLayer(self, value=1.0):
-        fcn = QgsColorRampShader()
-        fcn.setColorRampType(QgsColorRampShader.Discrete)
-        fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(value, QtGui.QColor(255, 20, 225), f'Elevation {value}')])
-        shader = QgsRasterShader()
-        shader.setRasterShaderFunction(fcn)
+    # def updateElevationLayer(self, value=1.0):
+    #     fcn = QgsColorRampShader()
+    #     fcn.setColorRampType(QgsColorRampShader.Discrete)
+    #     fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(value, QtGui.QColor(255, 20, 225), f'Elevation {value}')])
+    #     shader = QgsRasterShader()
+    #     shader.setRasterShaderFunction(fcn)
         # renderer = QgsSingleBandPseudoColorRenderer(self.raster_layer.dataProvider(), 1, shader)
         # self.raster_layer.setRenderer(renderer)
         # self.raster_layer.triggerRepaint()
@@ -83,6 +88,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         # self.valElevation.setMaximum(100)
         # self.valElevation.setSingleStep(0.1)
         self.valElevation.setDecimals(1)
+        self.valElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.grid.addWidget(self.valElevation, 1, 1, 1, 1)
 
         self.slider = QtWidgets.QSlider()
@@ -90,6 +96,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.slider.setOrientation(QtCore.Qt.Horizontal)
         self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
         self.slider.setTickInterval(100)
+        self.slider.valueChanged.connect(self.sliderElevationChange)
         self.grid.addWidget(self.slider, 2, 1, 1, 1)
 
         self.cmdExport = QtWidgets.QPushButton()
