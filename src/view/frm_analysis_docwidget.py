@@ -67,6 +67,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def setupUi(self):
 
+        self.setWindowTitle('QRiS Analysis')
         self.dockWidgetContents = QtWidgets.QWidget()
 
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)

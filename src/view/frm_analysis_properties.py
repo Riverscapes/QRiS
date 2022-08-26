@@ -26,7 +26,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.cboMask.setModel(self.masks_model)
 
         # Basemaps
-        self.basemaps_model = DBItemModel(project.basemaps)
+        self.basemaps_model = DBItemModel(project.basemaps())
         self.cboBasemap.setModel(self.basemaps_model)
 
         self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
@@ -68,11 +68,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         self.setMinimumSize(500, 500)
 
-        self.vertical1 = QtWidgets.QVBoxLayout(self)
-        self.setLayout(self.vertical1)
+        self.vert = QtWidgets.QVBoxLayout(self)
+        self.setLayout(self.vert)
 
         self.grdLayout1 = QtWidgets.QGridLayout()
-        self.vertical1.addLayout(self.grdLayout1)
+        self.vert.addLayout(self.grdLayout1)
 
         self.lblName = QtWidgets.QLabel()
         self.lblName.setText('Name')
@@ -96,7 +96,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.grdLayout1.addWidget(self.cboBasemap, 2, 1, 1, 1)
 
         self.tabWidget = QtWidgets.QTabWidget()
-        self.vertical1.addWidget(self.tabWidget)
+        self.vert.addWidget(self.tabWidget)
 
         self.metricsTable = QtWidgets.QTableWidget()
         self.tabWidget.addTab(self.metricsTable, 'Analysis Metrics')
@@ -104,11 +104,22 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
 
-        self.cmdButtons = QtWidgets.QDialogButtonBox()
-        self.cmdButtons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.cmdButtons.accepted.connect(self.accept)
-        self.cmdButtons.rejected.connect(self.reject)
-        self.vertical1.addWidget(self.cmdButtons)
+        self.horiz = QtWidgets.QHBoxLayout()
+        self.vert.addLayout(self.horiz)
+
+        self.cmdHelp = QtWidgets.QPushButton()
+        self.cmdHelp.setText('Help')
+        self.horiz.addWidget(self.cmdHelp)
+
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horiz.addItem(self.spacerItem)
+
+        self.buttonBox = QtWidgets.QDialogButtonBox()
+        self.horiz.addWidget(self.buttonBox)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
 
     def accept(self):
 
