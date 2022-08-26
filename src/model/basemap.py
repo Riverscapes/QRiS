@@ -1,21 +1,22 @@
 import os
 import sqlite3
-from numpy import absolute
-from osgeo import gdal
 from qgis.core import QgsRasterLayer
-from .db_item import DBItem, dict_factory
+from .db_item import DBItem
 
 
 BASEMAP_MACHINE_CODE = 'BASEMAP'
 PROTOCOL_BASEMAP_MACHINE_CODE = 'PROTOCOL_BASEMAP'
 BASEMAP_PARENT_FOLDER = 'basemaps'
 
+RASTER_TYPE_BASEMAP = 2
 
-class Basemap(DBItem):
 
-    def __init__(self, id: int, name: str, relative_project_path: str, description: str):
-        super().__init__('basemaps', id, name)
+class Raster(DBItem):
+
+    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str):
+        super().__init__('rasters', id, name)
         self.path = relative_project_path
+        self.raster_type_id = raster_type_id
         self.description = description
         self.icon = 'basemap'
 
@@ -25,7 +26,7 @@ class Basemap(DBItem):
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE basemaps SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
+                curs.execute('UPDATE rasters SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
                 conn.commit()
 
                 self.name = name
@@ -46,26 +47,27 @@ class Basemap(DBItem):
         super().delete(db_path)
 
 
-def load_basemaps(curs: sqlite3.Cursor) -> dict:
+def load_rasters(curs: sqlite3.Cursor) -> dict:
 
-    curs.execute('SELECT id, name, path, type, description FROM basemaps')
-    return {row['id']: Basemap(
+    curs.execute('SELECT * FROM rasters')
+    return {row['id']: Raster(
         row['id'],
         row['name'],
         row['path'],
+        row['raster_type_id'],
         row['description']
     ) for row in curs.fetchall()}
 
 
-def insert_basemap(db_path: str, name: str, path: str, description: str) -> Basemap:
+def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str) -> Raster:
 
     result = None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO basemaps (name, path, description) VALUES (?, ?, ?)', [name, path, description])
+            curs.execute('INSERT INTO rasters (name, path, raster_type_id, description) VALUES (?, ?, ?, ?)', [name, path, raster_type_id, description])
             id = curs.lastrowid
-            result = Basemap(id, name, path, description)
+            result = Raster(id, name, path, raster_type_id, description)
             conn.commit()
 
         except Exception as ex:

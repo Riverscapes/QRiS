@@ -32,12 +32,12 @@ from ..model.layer import Layer
 from ..model.project import Project
 from ..model.event import Event
 from ..model.event import EVENT_MACHINE_CODE
-from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, Basemap
+from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, RASTER_TYPE_BASEMAP, Raster
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.event import EVENT_MACHINE_CODE, Event
-from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
+from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, process_pour_point, CONTEXT_NODE_TAG
@@ -45,7 +45,7 @@ from ..model.pour_point import PourPoint, process_pour_point, CONTEXT_NODE_TAG
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
 from .frm_event import FrmEvent
-from .frm_basemap import FrmBasemap
+from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_new_project import FrmNewProject
@@ -130,7 +130,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
 
         basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
-        [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps.values()]
+        [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps().values()]
 
         masks_node = self.add_child_to_project_tree(project_node, MASK_MACHINE_CODE)
         [self.add_child_to_project_tree(masks_node, item) for item in self.project.masks.values()]
@@ -138,9 +138,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
-        # scratch_node = self.add_child(project_node, SCRATCH_NODE_TAG, 'BrowseFolder')
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
+
+        scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
+        [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
 
         self.treeView.expandAll()
         return
@@ -174,7 +176,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
                     self.add_context_menu_item(self.menu, 'Add New Design', 'new', lambda: self.add_event(model_item, 0))
                 elif model_data == BASEMAP_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item))
+                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_BASEMAP))
                 elif model_data == MASK_MACHINE_CODE:
                     add_mask_menu = self.menu.addMenu('Create New')
                     self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
@@ -187,6 +189,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Create New Pour Point & Catchment', 'new', lambda: self.add_pour_point(model_item))
+                elif model_data == SCRATCH_NODE_TAG:
+                    self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item))
 
                     # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                     # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
@@ -200,7 +204,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if isinstance(model_data, Project) \
                     or isinstance(model_data, Event) \
-                    or isinstance(model_data, Basemap) \
+                    or isinstance(model_data, Raster) \
                     or isinstance(model_data, Mask) \
                     or isinstance(model_data, PourPoint) \
                     or isinstance(model_data, Analysis):
@@ -224,7 +228,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(db_item, Mask):
             build_mask_layer(self.project, db_item)
-        elif isinstance(db_item, Basemap):
+        elif isinstance(db_item, Raster):
             build_basemap_layer(self.project, db_item)
         elif isinstance(db_item, Event):
             [build_event_protocol_single_layer(self.project, event_layer) for event_layer in db_item.event_layers]
@@ -244,7 +248,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     build_event_protocol_single_layer(self.project, event_layer)
         elif isinstance(db_item, Project):
             [build_mask_layer(mask) for mask in self.project.masks.values()]
-            [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps.values()]
+            [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps().values()]
             [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             build_pour_point_map_layer(self.project, db_item)
@@ -349,19 +353,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         #     basemap_group_node = self.add_child_to_project_tree(event_node, PROTOCOL_BASEMAP_MACHINE_CODE)
         #     [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
 
-    def add_basemap(self, parent_node: QtGui.QStandardItem):
+    def add_basemap(self, parent_node: QtGui.QStandardItem, raster_type_id: int):
         """Initiates adding a new base map to the project"""
 
-        import_source_path = browse_source(self, 'Select a raster dataset to import as a new basis dataset.', QgsMapLayer.RasterLayer)
+        import_source_path = browse_source(self, 'Select a raster dataset to import.', QgsMapLayer.RasterLayer)
         if import_source_path is None:
             return
 
-        frm = FrmBasemap(self, self.project, import_source_path)
+        frm = FrmRaster(self, self.project, import_source_path, raster_type_id)
         result = frm.exec_()
         if result != 0:
-            self.add_child_to_project_tree(parent_node, frm.basemap, frm.chkAddToMap.isChecked())
+            self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
 
-    def add_mask(self, parent_node, mask_type_id, mode):
+    def add_mask(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
         """Initiates adding a new mask"""
 
         import_source_path = None
@@ -441,8 +445,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm = FrmDesign(self, self.project, db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
-        elif isinstance(db_item, Basemap):
-            frm = FrmBasemap(self, self.project, None, db_item)
+        elif isinstance(db_item, Raster):
+            frm = FrmRaster(self, self.project, None, db_item)
         elif isinstance(db_item, PourPoint):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):

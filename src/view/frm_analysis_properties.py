@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis import core, gui, utils
 
 from ..model.analysis import Analysis, insert_analysis
-from ..model.basemap import BASEMAP_PARENT_FOLDER, Basemap, insert_basemap
+from ..model.basemap import BASEMAP_PARENT_FOLDER, Raster, insert_raster
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID

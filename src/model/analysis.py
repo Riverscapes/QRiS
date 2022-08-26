@@ -1,7 +1,7 @@
 from email.mime import base
 import sqlite3
 from .db_item import DBItem
-from .basemap import Basemap
+from .basemap import Raster
 from .mask import Mask
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
@@ -9,14 +9,14 @@ ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 
 class Analysis(DBItem):
 
-    def __init__(self, id: int, name: str, description: str, basemap: Basemap, mask: Mask):
+    def __init__(self, id: int, name: str, description: str, basemap: Raster, mask: Mask):
         super().__init__('analyses', id, name)
         self.description = description
         self.icon = 'analysis'
         self.basemap = basemap
         self.mask = mask
 
-    def update(self, db_path: str, name: str, description: str, basemap: Basemap) -> None:
+    def update(self, db_path: str, name: str, description: str, basemap: Raster) -> None:
 
         description = description if len(description) > 0 else None
         with sqlite3.connect(db_path) as conn:
@@ -45,7 +45,7 @@ def load_analyses(curs: sqlite3.Cursor, basemaps: dict, masks: dict) -> dict:
     ) for row in curs.fetchall()}
 
 
-def insert_analysis(db_path: str, name: str, description: str, basemap: Basemap, mask: Mask) -> Analysis:
+def insert_analysis(db_path: str, name: str, description: str, basemap: Raster, mask: Mask) -> Analysis:
 
     result = None
     with sqlite3.connect(db_path) as conn:

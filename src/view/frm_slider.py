@@ -90,5 +90,5 @@ class FrmSlider(QtWidgets.QDocWidget):
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export')
-        self.cmdExport.click.connect(self.cmdExport_click)
+        self.cmdExport.clicked.connect(self.cmdExport_click)
         self.grid.addWidget(self.cmdExport)

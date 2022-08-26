@@ -122,7 +122,8 @@ class FrmNewProject(QtWidgets.QDialog):
             curs.executescript(sql_commands)
 
             # Create the project
-            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtName.text(), self.txtDescription.toPlainText()])
+            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
+            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtName.text(), description])
             conn.commit()
             conn.close()
             schema_file.close()
@@ -130,6 +131,9 @@ class FrmNewProject(QtWidgets.QDialog):
         super(FrmNewProject, self).accept()
 
     def setupUi(self):
+
+        self.resize(500, 300)
+        self.setMinimumSize(300, 200)
 
         self.vert = QtWidgets.QVBoxLayout()
         self.setLayout(self.vert)
@@ -150,6 +154,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.grid.addWidget(self.lblPath, 1, 0, 1, 1)
 
         self.txtPath = QtWidgets.QLineEdit()
+        self.txtPath.setReadOnly(True)
         self.grid.addWidget(self.txtPath, 1, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel()

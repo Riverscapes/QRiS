@@ -4,12 +4,9 @@ from qgis.core import QgsVectorLayer
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
-from ..model.mask import Mask, insert_mask
+from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_mask
-
-
-REGULAR_MASK_ID = 1
 
 
 class FrmMaskAOI(QtWidgets.QDialog):
@@ -27,7 +24,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.setWindowTitle(f'Create New {mask_type.name}' if self.mask is None else f'Edit {mask_type.name} Properties')
 
         # The attribute picker is only visible when creating a new regular mask
-        show_attribute_filter = import_source_path is not None and mask_type == project.lookup_tables['lkp_mask_types'][REGULAR_MASK_ID]
+        show_attribute_filter = import_source_path is not None and mask_type.id == REGULAR_MASK_TYPE_ID
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
 
@@ -83,7 +80,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
             if self.import_source_path is not None:
                 try:
 
-                    attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else None
+                    attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
                     import_mask(self.import_source_path, self.qris_project.project_file, self.mask.id, attributes)
                 except Exception as ex:
                     try:
@@ -96,6 +93,9 @@ class FrmMaskAOI(QtWidgets.QDialog):
         super(FrmMaskAOI, self).accept()
 
     def setupUi(self):
+
+        self.resize(500, 300)
+        self.setMinimumSize(300, 200)
 
         self.vert = QtWidgets.QVBoxLayout()
         self.setLayout(self.vert)
