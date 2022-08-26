@@ -24,7 +24,8 @@ from qgis.core import (
     QgsFieldConstraints,
     QgsColorRampShader,
     QgsRasterShader,
-    QgsSingleBandPseudoColorRenderer
+    QgsSingleBandPseudoColorRenderer,
+    QgsRasterBandStats
 )
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
@@ -379,11 +380,17 @@ def build_raster_slider_layer(project: Project, raster: Raster) -> QgsMapLayer:
     raster_layer = QgsRasterLayer(raster_path, raster.name + ' (Raster Slider)')
     raster_slider_group.addLayer(raster_layer)
     raster_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, raster)
-    qml = os.path.join(symbology_path, 'symbology', 'hand.qml')
-    raster_layer.loadNamedStyle(qml)
-
+    # qml = os.path.join(symbology_path, 'symbology', 'hand.qml')
+    # raster_layer.loadNamedStyle(qml)
     QgsProject.instance().addMapLayer(raster_layer, False)
     return raster_layer
+
+
+def get_raster_statistics(project: Project, raster: Raster):
+
+    raster_layer = build_raster_slider_layer(project, raster)
+    statistics = raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.All, raster_layer.extent(), 0)
+    return statistics.minimumValue, statistics.maximumValue
 
 
 def apply_raster_slider_value(project: Project, raster: Raster, raster_value: float) -> None:

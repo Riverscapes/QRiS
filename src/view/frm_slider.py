@@ -1,11 +1,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsRasterLayer, QgsColorRampShader, QgsRasterShader, QgsSingleBandPseudoColorRenderer
 
 from ..model.basemap import Raster
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 
-from ..QRiS.method_to_map import build_raster_slider_layer, apply_raster_slider_value
+from ..QRiS.method_to_map import build_raster_slider_layer, apply_raster_slider_value, get_raster_statistics
 
 
 class FrmSlider(QtWidgets.QDockWidget):
@@ -22,39 +21,34 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.raster = raster
         self.txtSurface.setText(raster.name)
         build_raster_slider_layer(self.project, raster)
+        min, max = get_raster_statistics(self.project, raster)
+
+        self.valElevation.setMinimum(min)
+        self.valElevation.setMaximum(max)
+
+        self.slider.setMinimum(min)
+        self.slider.setMaximum(max)
 
     def sliderElevationChange(self, value: float):
-        self.elevation_value = value / 10
-        apply_raster_slider_value(self.project, self.raster, value / 10)
-        self.valElevation.setValue(value / 10)
+        apply_raster_slider_value(self.project, self.raster, value)
+        self.valElevation.setValue(value)
 
     def spinBoxElevationChange(self, value: float):
-        self.elevation_value = value
         apply_raster_slider_value(self.project, self.raster, value)
-        self.slider.setValue(int(value * 10))
-
-    # def updateElevationLayer(self, value=1.0):
-    #     fcn = QgsColorRampShader()
-    #     fcn.setColorRampType(QgsColorRampShader.Discrete)
-    #     fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(value, QtGui.QColor(255, 20, 225), f'Elevation {value}')])
-    #     shader = QgsRasterShader()
-    #     shader.setRasterShaderFunction(fcn)
-        # renderer = QgsSingleBandPseudoColorRenderer(self.raster_layer.dataProvider(), 1, shader)
-        # self.raster_layer.setRenderer(renderer)
-        # self.raster_layer.triggerRepaint()
+        self.slider.setValue(int(value))
 
     def cmdSelect_click(self):
-
         frm = FrmLayerPicker(self, 'Select raster', [])
         result = frm.exec_()
         if result is not None and result != 0:
             self.raster = frm.layer
 
     def cmdExport_click(self):
-
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Exporting is not yet implemented.')
 
     def setupUi(self):
+
+        self.setWindowTitle('Raster Slider')
 
         self.dockWidgetContents = QtWidgets.QWidget()
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)

@@ -521,6 +521,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def setupUi(self):
 
+        self.setWindowTitle('QRiS Plugin')
+
         self.resize(489, 536)
         self.dockWidgetContents = QtWidgets.QWidget()
         self.dockWidgetContents.setObjectName("dockWidgetContents")
