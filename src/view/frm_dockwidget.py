@@ -28,6 +28,7 @@ from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
 
+
 from ..model.layer import Layer
 from ..model.project import Project
 from ..model.event import Event
@@ -51,6 +52,7 @@ from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
+from .frm_slider import FrmSlider
 
 from ..QRiS.settings import Settings
 from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
@@ -108,6 +110,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.treeView.setModel(self.model)
 
         self.analysis_doc_widget = None
+        self.slider_doc_widget = None
 
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
@@ -211,7 +214,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
             if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
-                self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_item, model_data))
+                self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
 
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data))
@@ -298,6 +301,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
             self.analysis_doc_widget.show()
+
+    def raster_slider(self, db_item: DBItem):
+
+        if self.slider_doc_widget is None:
+            self.slider_doc_widget = FrmSlider(self, self.project)
+            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.slider_doc_widget)
+
+        self.slider_doc_widget.configure_raster(db_item)
+        self.slider_doc_widget.show()
 
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False) -> QtGui.QStandardItem:
         """
@@ -506,9 +518,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
-
-    def raster_slider(self, db_item: DBItem):
-        folder_path = None
 
     def setupUi(self):
 

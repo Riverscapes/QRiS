@@ -5,13 +5,18 @@ from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 
 
-class FrmSlider(QtWidgets.QDocWidget):
+class FrmSlider(QtWidgets.QDockWidget):
 
     def __init__(self, parent, project: Project):
         super().__init__(parent)
         self.setupUi()
 
         self.project = project
+
+    def configure_raster(self, db_item):
+
+        self.raster = db_item
+        self.txtSurface.setText(db_item.name)
 
     def sliderElevationChange(self, value):
         self.elevation_value = value / 10
@@ -35,11 +40,10 @@ class FrmSlider(QtWidgets.QDocWidget):
 
     def cmdSelect_click(self):
 
-        frm = FrmLayerPicker('Select raster', [])
+        frm = FrmLayerPicker(self, 'Select raster', [])
         result = frm.exec_()
         if result is not None and result != 0:
-            self.surface = None
-            print('todo')
+            self.raster = frm.layer
 
     def cmdExport_click(self):
 
@@ -47,8 +51,8 @@ class FrmSlider(QtWidgets.QDocWidget):
 
     def setupUi(self):
 
-        self.vert = QtWidgets.QVBoxLayout()
-        self.setLayout(self.vert)
+        self.dockWidgetContents = QtWidgets.QWidget()
+        self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
@@ -62,16 +66,16 @@ class FrmSlider(QtWidgets.QDocWidget):
 
         self.txtSurface = QtWidgets.QLineEdit()
         self.txtSurface.setReadOnly(True)
-        self.horiz(self.txtSurface)
+        self.horiz.addWidget(self.txtSurface)
 
         self.cmdSurface = QtWidgets.QPushButton()
         self.cmdSurface.setText('Select')
-        self.cmdExport.clicked.connect(self.cmdSelect_click)
+        self.cmdSurface.clicked.connect(self.cmdSelect_click)
         self.horiz.addWidget(self.cmdSurface)
 
         self.lblElevation = QtWidgets.QLabel()
         self.lblElevation.setText('Surface Value')
-        self.grid.addWidget(1, 0, 1, 1)
+        self.grid.addWidget(self.lblElevation, 1, 0, 1, 1)
 
         self.valElevation = QtWidgets.QDoubleSpinBox()
         # self.valElevation.setSuffix('m')
@@ -82,13 +86,15 @@ class FrmSlider(QtWidgets.QDocWidget):
         self.grid.addWidget(self.valElevation, 1, 1, 1, 1)
 
         self.slider = QtWidgets.QSlider()
-        self.slider.maximum(1000)
-        self.slider.orientation(QtCore.Qt.Horizontal)
-        self.slider.tickPosition(QtWidgets.QSlider.TicksBelow)
-        self.slider.tickInterval(100)
+        self.slider.setMaximum(1000)
+        self.slider.setOrientation(QtCore.Qt.Horizontal)
+        self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        self.slider.setTickInterval(100)
         self.grid.addWidget(self.slider, 2, 1, 1, 1)
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export')
         self.cmdExport.clicked.connect(self.cmdExport_click)
         self.grid.addWidget(self.cmdExport)
+
+        self.setWidget(self.dockWidgetContents)
