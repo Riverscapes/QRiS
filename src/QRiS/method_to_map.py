@@ -21,7 +21,11 @@ from qgis.core import (
     QgsCategorizedSymbolRenderer,
     QgsProject,
     QgsExpressionContextUtils,
-    QgsFieldConstraints)
+    QgsFieldConstraints,
+    QgsColorRampShader,
+    QgsRasterShader,
+    QgsSingleBandPseudoColorRenderer
+)
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
@@ -31,7 +35,7 @@ from ..model.pour_point import CONTEXT_NODE_TAG
 
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
-from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
+from ..model.basemap import BASEMAP_MACHINE_CODE, Raster, RASTER_SLIDER_MACHINE_CODE
 from ..model.db_item import DBItem
 from ..model.mask import Mask
 from ..model.project import Project, PROJECT_MACHINE_CODE
@@ -358,6 +362,43 @@ def build_basemap_layer(project: Project, basemap: Raster) -> QgsMapLayer:
     tree_layer_node = group_layer.addLayer(raster_layer)
     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap)
     return raster_layer
+
+
+def build_raster_slider_layer(project: Project, raster: Raster) -> QgsMapLayer:
+
+    project_group_layer = get_project_group(project)
+    raster_slider_group = get_group_layer(RASTER_SLIDER_MACHINE_CODE, 'Raster Slider', project_group_layer, True)
+    raster_layer = get_db_item_layer(raster, raster_slider_group)
+    if raster_layer is not None:
+        return raster_layer
+
+    # Remove any existing raster layer in this group
+    raster_slider_group.removeAllChildren()
+
+    raster_path = os.path.join(os.path.dirname(project.project_file), raster.path)
+    raster_layer = QgsRasterLayer(raster_path, raster.name + ' (Raster Slider)')
+    raster_slider_group.addLayer(raster_layer)
+    raster_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, raster)
+    qml = os.path.join(symbology_path, 'symbology', 'hand.qml')
+    raster_layer.loadNamedStyle(qml)
+
+    QgsProject.instance().addMapLayer(raster_layer, False)
+    return raster_layer
+
+
+def apply_raster_slider_value(project: Project, raster: Raster, raster_value: float) -> None:
+
+    raster_layer = build_raster_slider_layer(project, raster)
+
+    fcn = QgsColorRampShader()
+    fcn.setColorRampType(QgsColorRampShader.Discrete)
+    fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
+    shader = QgsRasterShader()
+    shader.setRasterShaderFunction(fcn)
+
+    renderer = QgsSingleBandPseudoColorRenderer(raster_layer.dataProvider(), 1, shader)
+    raster_layer.setRenderer(renderer)
+    raster_layer.triggerRepaint()
 
 
 # -------- LAYER SPECIFIC ADD TO MAP FUNCTIONS ---------
