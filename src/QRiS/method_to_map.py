@@ -31,10 +31,9 @@ from ..model.pour_point import CONTEXT_NODE_TAG
 
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
-from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
-from ..model.db_item import DBItem, dict_factory
+from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
+from ..model.db_item import DBItem
 from ..model.mask import Mask
-from ..model.basemap import BASEMAP_MACHINE_CODE, Basemap
 from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.protocol import Protocol
 from ..model.layer import Layer
@@ -344,7 +343,7 @@ def build_pour_point_map_layer(project: Project, pour_point: PourPoint):
     return point_feature_layer, catchment_feature_layer
 
 
-def build_basemap_layer(project: Project, basemap: Basemap) -> QgsMapLayer:
+def build_basemap_layer(project: Project, basemap: Raster) -> QgsMapLayer:
 
     if check_for_existing_layer(project, basemap) is not None:
         return

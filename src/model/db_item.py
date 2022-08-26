@@ -76,10 +76,16 @@ class DBItemModel(QAbstractListModel):
             return value
 
     def getItemIndex(self, db_item: DBItem) -> int:
-        for value in self._data.values():
-            if value == db_item:
-                return value
+        index_list = self.match(0, Qt.UserRole, db_item, 1)
+        return index_list[0] if isinstance(index_list, list) and len(index_list) == 1 else None
 
+    def getItemIndexById(self, id: int) -> int:
+
+        for row in range(self.rowCount(None)):
+            index = self.index(row)
+            db_item = self.data(index, Qt.UserRole)
+            if db_item.id == id:
+                return row
         return None
 
     def rowCount(self, index):

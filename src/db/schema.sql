@@ -208,8 +208,23 @@ CREATE TABLE event_protocols (
     CONSTRAINT pk_event_protocols PRIMARY KEY (event_id, protocol_id)
 );
 
-CREATE TABLE basemaps (
+CREATE TABLE lkp_raster_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_raster_types (id, name) VALUES (1, 'Other');
+INSERT INTO lkp_raster_types (id, name) VALUES (2, 'Basemap');
+INSERT INTO lkp_raster_types (id, name) VALUES (3, 'Detrended Surface');
+INSERT INTO lkp_raster_types (id, name) VALUES (4, 'Digital Elevation Model (DEM)');
+INSERT INTO lkp_raster_types (id, name) VALUES (5, 'Valley Bottom Evidence');
+
+
+CREATE TABLE rasters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    raster_type_id INTEGER REFERENCES lkp_raster_types(id),
     name TEXT UNIQUE NOT NULL,
     path TEXT UNIQUE NOT NULL,
     -- type will likely be populated from a lookup. e.g., imagery, dem, lidar, etc....
@@ -218,10 +233,11 @@ CREATE TABLE basemaps (
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX fx_rasters_raster_type_id ON rasters(raster_type_id);
 
 CREATE TABLE event_basemaps (
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
-    basemap_id INTEGER REFERENCES basemaps(id) ON DELETE CASCADE,
+    basemap_id INTEGER REFERENCES rasters(id) ON DELETE CASCADE,
     
     CONSTRAINT pk_event_basemaps PRIMARY KEY (event_id, basemap_id)
 );
@@ -232,9 +248,9 @@ CREATE TABLE lkp_mask_types (
 );
 
 -- need to review these types. I'm not totally sure that this is necessary in a table.
-INSERT INTO lkp_mask_types (id, name) VALUES (1, 'Regular Mask');
-INSERT INTO lkp_mask_types (id, name) VALUES (2, 'Directional Mask');
-INSERT INTO lkp_mask_types (id, name) VALUES (3, 'Area of Interest (AOI)');
+INSERT INTO lkp_mask_types (id, name) VALUES (1, 'Area of Interest (AOI)');
+INSERT INTO lkp_mask_types (id, name) VALUES (2, 'Regular Mask');
+INSERT INTO lkp_mask_types (id, name) VALUES (3, 'Directional Mask');
 
 CREATE TABLE masks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -283,7 +299,7 @@ CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     mask_id INTEGER NOT NULL REFERENCES masks(id),
-    basemap_id INTEGER NOT NULL REFERENCES basemaps(id),
+    basemap_id INTEGER NOT NULL REFERENCES rasters(id),
     description TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -729,7 +745,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('p
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('projects', 'attributes', 'projects', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('events', 'attributes', 'events', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_protocols', 'attributes', 'event_protocols', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('bases', 'attributes', 'bases', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('basemaps', 'attributes', 'basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_basemaps', 'attributes', 'event_basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
@@ -757,6 +773,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_unit', 'attributes', 'lkp_primary_unit', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_unit_types', 'attributes', 'lkp_channel_unit_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_raster_types', 'attributes', 'lkp_raster_types', 0);
 
 -- DESIGN TABLES
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_mimics', 'attributes', 'lkp_structure_mimics', 0);

@@ -1,13 +1,11 @@
 import os
 import sqlite3
 
-from numpy import isin
-
 from .analysis import load_analyses
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
-from .basemap import Basemap, load_basemaps
+from .basemap import Raster, load_rasters, RASTER_TYPE_BASEMAP
 from .event import Event, load as load_events
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
@@ -39,13 +37,14 @@ class Project(DBItem):
                 'lkp_mask_types',
                 'lkp_platform',
                 'lkp_event_types',
-                'lkp_design_status'
+                'lkp_design_status',
+                'lkp_raster_types'
             ]}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)
             self.protocols = load_protocols(curs, self.layers)
-            self.basemaps = load_basemaps(curs)
+            self.rasters = load_rasters(curs)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps)
             self.analyses = load_analyses(curs, self.basemaps, self.masks)
             self.pour_points = load_pour_points(curs)
@@ -67,8 +66,8 @@ class Project(DBItem):
 
         if isinstance(db_item, Mask):
             self.masks.pop(db_item.id)
-        elif isinstance(db_item, Basemap):
-            self.basemaps.pop(db_item.id)
+        elif isinstance(db_item, Raster):
+            self.rasters.pop(db_item.id)
         elif isinstance(db_item, Event):
             self.events.pop(db_item.id)
         elif isinstance(db_item, PourPoint):
@@ -76,8 +75,18 @@ class Project(DBItem):
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
+    def basemaps(self) -> dict:
+        """ Returns a dictionary of just those rasters that are basemaps"""
 
-def apply_db_migrations(db_path):
+        return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id == RASTER_TYPE_BASEMAP}
+
+    def scratch_rasters(self) -> dict:
+        """ Returns a dictionary of all project rasters EXCEPT basemaps"""
+
+        return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id != RASTER_TYPE_BASEMAP}
+
+
+def apply_db_migrations(db_path: str):
 
     conn = sqlite3.connect(db_path)
     conn.execute('PRAGMA foreign_keys = ON;')
