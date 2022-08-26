@@ -1,7 +1,7 @@
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from ..model.basemap import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP
+from ..model.basemap import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP, SCRATCH_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
@@ -13,19 +13,28 @@ class FrmRaster(QtWidgets.QDialog):
 
     def __init__(self, parent, project: Project, import_source_path: str, raster_type_id: int, raster: Raster = None):
 
-        self.qris_project = project
+        self.project = project
         self.raster_type_id = raster_type_id
         self.raster = raster
 
         super(FrmRaster, self).__init__(parent)
         self.setupUi()
 
-        self.raster_types_model = DBItemModel(project.lookup_tables['lkp_raster_types'])
+        raster_types = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_types'].items()}
+
+        # If scratch raster then exclude BaseMaps
+        if raster_type_id != RASTER_TYPE_BASEMAP:
+            raster_types.pop(RASTER_TYPE_BASEMAP)
+
+        self.raster_types_model = DBItemModel(raster_types)
         self.cboRasterType.setModel(self.raster_types_model)
-        self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexById(raster_type_id))
-        self.cboRasterType.setEnabled(raster_type_id != RASTER_TYPE_BASEMAP)
 
         if raster_type_id == RASTER_TYPE_BASEMAP:
+            # Select and lock in the rsater type for basemaps
+            self.cboRasterType.setEnabled(False)
+            basemap_raster_type = self.raster_types_model.getItemIndexById(RASTER_TYPE_BASEMAP)
+            self.cboRasterType.setCurrentIndex(basemap_raster_type)
+
             self.setWindowTitle('Create New Basemap' if self.raster is None else 'Edit Basemap Properties')
         else:
             self.setWindowTitle('Create New Scratch Space Raster' if self.raster is None else 'Edit Scratch Space Raster Properties')
@@ -37,17 +46,20 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
 
             # Masks (filtered to just AOI)
-            self.masks = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
-            self.masks[0] = DBItem('None', 0, 'None - Retain full dataset extent')
+            self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+            no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+            self.masks[0] = no_clipping
             self.masks_model = DBItemModel(self.masks)
             self.cboMask.setModel(self.masks_model)
+            # Default to no mask clipping
+            self.cboMask.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
         else:
             self.txtName.setText(raster.name)
             self.txtDescription.setPlainText(raster.description)
 
             self.lblSourcePath.setVisible(False)
             self.txtSourcePath.setVisible(False)
-            self.lblClipToMask.setVisible(False)
+            self.lblMask.setVisible(False)
             self.cboMask.setVisible(False)
 
             self.txtProjectPath.setText(project.get_absolute_path(raster.path))
@@ -66,7 +78,7 @@ class FrmRaster(QtWidgets.QDialog):
 
         if self.raster is not None:
             try:
-                self.raster.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -76,8 +88,8 @@ class FrmRaster(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.raster = insert_raster(self.qris_project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.raster_type_id, self.txtDescription.toPlainText())
-                self.qris_project.rasters[self.raster.id] = self.raster
+                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.raster_type_id, self.txtDescription.toPlainText())
+                self.project.rasters[self.raster.id] = self.raster
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -88,9 +100,9 @@ class FrmRaster(QtWidgets.QDialog):
 
             try:
                 mask = self.cboMask.currentData(QtCore.Qt.UserRole)
-                mask_tuple = (self.qris_project.project_file, mask.id) if mask.id > 0 else None
+                mask_tuple = (self.project.project_file, mask.id) if mask.id > 0 else None
 
-                project_path = self.qris_project.get_absolute_path(self.txtProjectPath.text())
+                project_path = self.project.get_absolute_path(self.txtProjectPath.text())
 
                 if not os.path.isdir(os.path.dirname(project_path)):
                     os.makedirs(os.path.dirname(project_path))
@@ -98,7 +110,7 @@ class FrmRaster(QtWidgets.QDialog):
                 copy_raster_to_project(self.txtSourcePath.text(), mask_tuple, project_path)
             except Exception as ex:
                 try:
-                    self.raster.delete(self.qris_project.project_file)
+                    self.raster.delete(self.project.project_file)
                 except Exception as ex:
                     print('Error attempting to delete basemap after the importing raster failed.')
                 self.raster = None
@@ -113,7 +125,8 @@ class FrmRaster(QtWidgets.QDialog):
 
         if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
-            self.txtProjectPath.setText(os.path.join(BASEMAP_PARENT_FOLDER, self.qris_project.get_safe_file_name(clean_name, ext)))
+            parent_folder = BASEMAP_PARENT_FOLDER if self.raster_type_id == RASTER_TYPE_BASEMAP else SCRATCH_PARENT_FOLDER
+            self.txtProjectPath.setText(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext)))
         else:
             self.txtProjectPath.setText('')
 

@@ -190,7 +190,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Create New Pour Point & Catchment', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == SCRATCH_NODE_TAG:
-                    self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item))
+                    self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
 
                     # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                     # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
@@ -209,6 +209,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     or isinstance(model_data, PourPoint) \
                     or isinstance(model_data, Analysis):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
+
+            if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
+                self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_item, model_data))
 
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data))
@@ -446,7 +449,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, Raster):
-            frm = FrmRaster(self, self.project, None, db_item)
+            frm = FrmRaster(self, self.project, None, db_item.raster_type_id, db_item)
         elif isinstance(db_item, PourPoint):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):
@@ -493,7 +496,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def browse_item(self, db_item: DBItem):
 
         folder_path = None
-        if isinstance(db_item, Basemap):
+        if isinstance(db_item, Raster):
             folder_path = os.path.join(os.path.dirname(self.project.project_file), db_item.path)
         else:
             folder_path = self.project.project_file
@@ -503,6 +506,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
+
+    def raster_slider(self, db_item: DBItem):
+        folder_path = None
 
     def setupUi(self):
 
