@@ -76,8 +76,8 @@ class DBItemModel(QAbstractListModel):
             return value
 
     def getItemIndex(self, db_item: DBItem) -> int:
-        index_list = self.match(0, Qt.UserRole, db_item, 1)
-        return index_list[0] if isinstance(index_list, list) and len(index_list) == 1 else None
+        index_list = self.match(self.index(0, 0), Qt.UserRole, db_item, 1, Qt.MatchFlags(Qt.MatchExactly | Qt.MatchWrap))
+        return index_list[0].row() if isinstance(index_list, list) and len(index_list) == 1 else None
 
     def getItemIndexById(self, id: int) -> int:
 
