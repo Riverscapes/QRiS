@@ -299,11 +299,11 @@ CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     mask_id INTEGER NOT NULL REFERENCES masks(id),
-    basemap_id INTEGER NOT NULL REFERENCES rasters(id),
     description TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX fx_analyses_mask_id ON analyses(mask_id);
 
 CREATE TABLE metric_values (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -317,6 +317,11 @@ CREATE TABLE metric_values (
     Uncertainty NUMERIC,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX fx_metric_values_analysis_id ON metric_values(analysis_id);
+CREATE INDEX fx_metric_values_mask_feature_id ON metric_values(mask_feature_id);
+CREATE INDEX fx_metric_values_metric_id ON metric_values(metric_id);
+CREATE INDEX fx_metric_values_event_id ON metric_values(event_id);
 
 -- dam and jam surveys
 CREATE TABLE lkp_structure_source (

@@ -4,7 +4,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis import core, gui, utils
 
 from ..model.analysis import Analysis, insert_analysis
-from ..model.basemap import BASEMAP_PARENT_FOLDER, Raster, insert_raster
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID
@@ -24,10 +23,6 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.masks = {id: mask for id, mask in project.masks.items() if mask.mask_type.id == REGULAR_MASK_TYPE_ID}
         self.masks_model = DBItemModel(self.masks)
         self.cboMask.setModel(self.masks_model)
-
-        # Basemaps
-        self.basemaps_model = DBItemModel(project.basemaps())
-        self.cboBasemap.setModel(self.basemaps_model)
 
         self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
         metrics = list(project.metrics.values())
@@ -88,13 +83,6 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.cboMask = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboMask, 1, 1, 1, 1)
 
-        self.lblBasemap = QtWidgets.QLabel()
-        self.lblBasemap.setText('Basemap')
-        self.grdLayout1.addWidget(self.lblBasemap, 2, 0, 1, 1)
-
-        self.cboBasemap = QtWidgets.QComboBox()
-        self.grdLayout1.addWidget(self.cboBasemap, 2, 1, 1, 1)
-
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
 
@@ -124,7 +112,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
     def accept(self):
 
         if len(self.txtName.text()) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Analysis Name', 'You must provide a basis name to continue.')
+            QtWidgets.QMessageBox.warning(self, 'Missing Analysis Name', 'You must provide an analysis name to continue.')
             self.txtName.setFocus()
             return()
 
@@ -134,15 +122,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboMask.setFocus()
             return()
 
-        basemap = self.cboBasemap.currentData(QtCore.Qt.UserRole)
-        if basemap is None:
-            QtWidgets.QMessageBox.warning(self, 'Missing Basemap', 'You must select a basemap to continue.')
-            self.cboBasemap.setFocus()
-            return()
-
         if self.analysis is not None:
             try:
-                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), basemap)
+                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -152,7 +134,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask, basemap)
+                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask)
                 self.project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
