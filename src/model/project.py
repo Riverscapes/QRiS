@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from .analysis import load_analyses
+from .analysis import Analysis, load_analyses
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
@@ -72,6 +72,8 @@ class Project(DBItem):
             self.events.pop(db_item.id)
         elif isinstance(db_item, PourPoint):
             self.pour_points.pop(db_item.id)
+        elif isinstance(db_item, Analysis):
+            self.analyses.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
