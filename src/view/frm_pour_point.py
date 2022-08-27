@@ -125,6 +125,10 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.tabFlow = QtWidgets.QTableWidget()
         self.tabWidget.addTab(self.tabFlow, 'Flow Statistics')
 
+        self.chkAddToMap = QtWidgets.QCheckBox()
+        self.chkAddToMap.setChecked(True)
+        self.vert.addWidget(self.chkAddToMap)
+
         self.horiz = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz)
 
