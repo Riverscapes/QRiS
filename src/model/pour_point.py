@@ -28,20 +28,29 @@ class PourPoint(DBItem):
         self.id_column_name = 'fid'
 
     def update(self, db_path: str, name: str, description: str) -> None:
+        """ Pour point is a feature class therefore need to use ogr to edit features.
+        Can't use direct SQL
+        """
 
-        description = description if len(description) > 0 else None
-        with sqlite3.connect(db_path) as conn:
-            try:
-                curs = conn.cursor()
-                curs.execute('UPDATE pour_points SET name = ?, description = ? WHERE fid = ?', [name, description, self.id])
-                conn.commit()
+        # Don't forget to include the write access modifier
+        src_dataset = ogr.Open(db_path, 1)
+        src_layer = src_dataset.GetLayer(self.db_table_name)
+        src_layer.SetAttributeFilter(f'fid={self.id}')
 
-                self.name = name
-                self.description = description
+        for feature in src_layer:
+            feature.SetField('name', name)
+            if description is None or len(description) < 1:
+                feature.SetFieldNull('description')
+            else:
+                feature.SetField('description', description)
+            src_layer.SetFeature(feature)
 
-            except Exception as ex:
-                conn.rollback()
-                raise ex
+        self.name = name
+        self.description = description
+
+        feature = None
+        src_layer = None
+        src_dataset = None
 
 
 def load_pour_points(curs: sqlite3.Cursor) -> dict:
