@@ -22,11 +22,11 @@
  ***************************************************************************/
 """
 
-import os
-from re import S
 import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis import core, gui, utils
+
+from .frm_analysis_properties import FrmAnalysisProperties
 
 # from qgis.core import QgsMapLayer
 # from qgis.gui import QgsDataSourceSelectDialog
@@ -52,7 +52,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         self.project = project
         self.analyis = analysis
-        self.txtName.text = analysis.name
+        self.txtName.setText(analysis.name)
 
         with sqlite3.connect(project.project_file) as conn:
             curs = conn.cursor()
@@ -64,6 +64,17 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # Events
         self.events_model = DBItemModel(project.events)
         self.cboEvent.setModel(self.events_model)
+
+    def cmdProperties_clicked(self):
+
+        frm = FrmAnalysisProperties(self, self.project, self.analyis)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            self.txtName.setText(self.analyis.name)
+
+    def cmdCalculate_clicked(self):
+
+        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Calculation of metrics from event layers is not yet implemented.')
 
     def setupUi(self):
 
@@ -77,40 +88,50 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.vert.addLayout(self.grid)
 
         self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Analysis Name')
+        self.lblName.setText('Analysis')
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
+
+        self.horizName = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horizName, 0, 1, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
         self.txtName.setMaxLength(255)
-        self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+        self.txtName.setReadOnly(True)
+        self.horizName.addWidget(self.txtName)
 
-        self.lblSegment = QtWidgets.QLabel()
-        self.lblSegment.setText('Riverscape Segment')
-        self.grid.addWidget(self.lblSegment, 1, 0, 1, 1)
-
-        self.cboSegment = QtWidgets.QComboBox()
-        self.grid.addWidget(self.cboSegment, 1, 1, 1, 1)
+        self.cmdProperties = QtWidgets.QPushButton()
+        self.cmdProperties.setText('Properties')
+        self.cmdProperties.clicked.connect(self.cmdProperties_clicked)
+        self.horizName.addWidget(self.cmdProperties)
 
         self.lblEvent = QtWidgets.QLabel()
         self.lblEvent.setText('Data Capture Event')
-        self.grid.addWidget(self.lblEvent, 2, 0, 1, 1)
+        self.grid.addWidget(self.lblEvent, 1, 0, 1, 1)
+
+        self.horizEvent = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horizEvent, 1, 1, 1, 1)
 
         self.cboEvent = QtWidgets.QComboBox()
-        self.grid.addWidget(self.cboEvent, 2, 1, 1, 1)
+        self.horizEvent.addWidget(self.cboEvent)
+
+        self.cmdCalculate = QtWidgets.QPushButton()
+        self.cmdCalculate.setText('Calculate')
+        self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
+        self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.horizEvent.addWidget(self.cmdCalculate, 0)
+
+        self.lblSegment = QtWidgets.QLabel()
+        self.lblSegment.setText('Riverscape Segment')
+        self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
+
+        self.cboSegment = QtWidgets.QComboBox()
+        self.grid.addWidget(self.cboSegment, 2, 1, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz)
 
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horiz.addItem(self.spacerItem)
-
-        self.cmdCalculate = QtWidgets.QPushButton()
-        self.cmdCalculate.setText('Calculate')
-        self.horiz.addWidget(self.cmdCalculate)
-
-        self.cmdSettings = QtWidgets.QPushButton()
-        self.cmdSettings.setText('Settings')
-        self.horiz.addWidget(self.cmdSettings)
 
         self.table = QtWidgets.QTableWidget()
         self.vert.addWidget(self.table)

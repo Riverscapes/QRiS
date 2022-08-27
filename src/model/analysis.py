@@ -15,7 +15,7 @@ class Analysis(DBItem):
         self.icon = 'analysis'
         self.mask = mask
 
-    def update(self, db_path: str, name: str, description: str, basemap: Raster) -> None:
+    def update(self, db_path: str, name: str, description: str) -> None:
 
         description = description if len(description) > 0 else None
         with sqlite3.connect(db_path) as conn:
