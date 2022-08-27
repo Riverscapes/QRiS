@@ -264,6 +264,9 @@ class QRiSToolbar:
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
+
+        self.dockwidget.hide()
+
         del self.toolbar
         del self.dockwidget
 

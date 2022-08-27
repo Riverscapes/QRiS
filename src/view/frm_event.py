@@ -46,7 +46,7 @@ class FrmEvent(QtWidgets.QDialog):
 
         # Basemaps
         self.basemap_model = QtGui.QStandardItemModel()
-        for basemap in qris_project.basemaps.values():
+        for basemap in qris_project.basemaps().values():
             item = QtGui.QStandardItem(basemap.name)
             item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
             item.setData(basemap, QtCore.Qt.UserRole)
@@ -120,7 +120,7 @@ class FrmEvent(QtWidgets.QDialog):
             index = self.basemap_model.index(row, 0)
             check = self.basemap_model.data(index, QtCore.Qt.CheckStateRole)
             if check == QtCore.Qt.Checked:
-                for basemap in self.qris_project.basemaps.values():
+                for basemap in self.qris_project.basemaps().values():
                     if basemap == self.basemap_model.data(index, QtCore.Qt.UserRole):
                         basemaps.append(basemap)
                         break
@@ -174,6 +174,9 @@ class FrmEvent(QtWidgets.QDialog):
 
     def setupUi(self):
 
+        self.resize(500, 400)
+        self.setMinimumSize(500, 400)
+
         self.vert = QtWidgets.QVBoxLayout()
         self.setLayout(self.vert)
 
@@ -186,7 +189,7 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.txtName = QtWidgets.QLineEdit()
         self.txtName.setMaxLength(255)
-        self.grid.addWidget(self.txtName)
+        self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
         self.tabGridWidget = QtWidgets.QWidget()
         self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
