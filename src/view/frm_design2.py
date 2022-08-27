@@ -18,12 +18,12 @@ class FrmDesign(FrmEvent):
         self.setWindowTitle('Create New Design' if event is None else 'Edit Design')
 
         self.lblStatus = QLabel('Design Status', self)
-        self.gridLayout.addWidget(self.lblStatus, 4, 0)
+        self.tabGrid.addWidget(self.lblStatus, 4, 0)
 
         self.cboStatus = QComboBox(self)
         self.status_model = DBItemModel(qris_project.lookup_tables['lkp_design_status'])
         self.cboStatus.setModel(self.status_model)
-        self.gridLayout.addWidget(self.cboStatus, 4, 1)
+        self.tabGrid.addWidget(self.cboStatus, 4, 1)
 
         self.vwProtocols.setVisible(False)
         self.lblProtocols.setVisible(False)
