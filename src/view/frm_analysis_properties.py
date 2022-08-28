@@ -24,25 +24,33 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.masks_model = DBItemModel(self.masks)
         self.cboMask.setModel(self.masks_model)
 
-        self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
+        # self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
         metrics = list(project.metrics.values())
-        for row in range(len(metrics) - 1):
-            metric = metrics[row]
-            item = QtGui.QStandardItem(metric.name)
-            item.setData(metric, QtCore.Qt.UserRole)
-            self.metrics_model.setItem(row, 0, item)
+        self.metricsTable.setRowCount(len(metrics))
+        # self.metricsTable.setColumnCount(2)
 
-        # self.vwMetrics.setModel(self.metrics_model)
+        for row in range(len(metrics)):
+            label_item = QtWidgets.QTableWidgetItem()
+            label_item.setText(metrics[row].name)
+            self.metricsTable.setItem(row, 0, label_item)
+            label_item.setData(QtCore.Qt.UserRole, metrics[row])
+            label_item.setFlags(QtCore.Qt.ItemIsEnabled)
 
-        # for row in range(len(metrics) - 1):
-        #     cbo = QtWidgets.QComboBox()
-        #     cbo.addItems(['Metric', 'Indicator', 'None'])
-        #     self.vwMetrics.setIndexWidget(self.metrics_model.index(row, 1), cbo)
+            cboStatus = QtWidgets.QComboBox()
+            cboStatus.addItem('None', 0)
+            cboStatus.addItem('Metric', 1)
+            cboStatus.addItem('Indicator', 2)
+            self.metricsTable.setCellWidget(row, 1, cboStatus)
 
-        # self.vwMetrics.resizeColumnToContents(0)
-        # self.vwMetrics.resizeColumnToContents(1)
-        # self.metrics_model.setHorizontalHeaderLabels(['Metric', 'Status'])
-        # self.vwMetrics.verticalHeader().hide()
+        self.metricsTable.setColumnWidth(0, self.metricsTable.width() / 2)
+        self.metricsTable.setColumnWidth(1, self.metricsTable.width() / 2)
+
+        # https://wiki.qt.io/How_to_Use_QTableWidget
+        # m_pTableWidget -> setEditTriggers(QAbstractItemView: : NoEditTriggers);
+        # m_pTableWidget -> setSelectionMode(QAbstractItemView: : SingleSelection);
+        # m_pTableWidget -> setShowGrid(false);
+        # m_pTableWidget -> setStyleSheet("QTableView {selection-background-color: red;}");
+        # m_pTableWidget -> setGeometry(QApplication: : desktop() -> screenGeometry());
 
         if analysis is not None:
             self.setWindowTitle('Edit Analysis Properties')
@@ -86,8 +94,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
 
-        self.metricsTable = QtWidgets.QTableWidget()
+        self.metricsTable = QtWidgets.QTableWidget(0, 2)
         self.tabWidget.addTab(self.metricsTable, 'Analysis Metrics')
+        self.metricsTable.horizontalHeader().setStretchLastSection(True)
+        self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status'])
+
+        self.metricsTable.verticalHeader().setVisible(False)
+        self.metricsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.metricsTable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
