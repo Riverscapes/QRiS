@@ -57,7 +57,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.rdoManual.setChecked(True)
         self.rdoManual.setText('Manual Value')
         self.rdoManual.toggled.connect(self.rdoManual_checkchanged)
-        self.grid.addWidget(0, 0, 1, 1)
+        self.grid.addWidget(self.rdoManual, 0, 0, 1, 1)
 
         self.lblMetric = QtWidgets.QLabel()
         self.lblMetric.setText('Metric')

@@ -35,11 +35,14 @@ from .frm_analysis_properties import FrmAnalysisProperties
 from ..model.project import Project
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
+from ..model.analysis_metric import AnalysisMetric
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.metric_value import MetricValue, load_metric_values
+
+from .frm_metric_value import FrmMetricValue
 
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
@@ -71,30 +74,38 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def cmdProperties_clicked(self):
 
-        frm = FrmAnalysisProperties(self, self.project, self.analyis)
+        frm = FrmAnalysisProperties(self, self, self.project, self.analyis)
         result = frm.exec_()
         if result is not None and result != 0:
             self.txtName.setText(self.analyis.name)
 
     def build_table(self):
 
-        self.table.clear()
-        metrics = [self.analyis.metrics.values()]
-        self.table.setRowCount(len(metrics))
-        for row in range(len(metrics)):
-            metric = metrics[row]
+        self.table.setRowCount(0)
+        analysis_metrics = list(self.analyis.analysis_metrics.values())
+        self.table.setRowCount(len(analysis_metrics))
+        for row in range(len(analysis_metrics)):
+            metric = analysis_metrics[row]
             label_metric = QtWidgets.QTableWidgetItem()
-            label_metric.setText(metric.name)
-            self.metricsTable.setItem(row, 0, label_metric)
+            label_metric.setText(metric.metric.name)
+            self.table.setItem(row, 0, label_metric)
             label_metric.setData(QtCore.Qt.UserRole, metric)
             label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
 
+        self.table.doubleClicked.connect(self.edit_metric_value)
+        # ui.tableWidget, signal(cellDoubleClicked(int,int)), this, SLOT(tableItemClicked(int,int)));
+
         self.load_table_values()
+
+        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty'])
+        self.table.setColumnWidth(0, self.table.width() * 0.8)
+        self.table.setColumnWidth(1, 100)
+        self.table.setColumnWidth(1, 100)
 
     def load_table_values(self):
 
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        mask_feature_id = self.cboSegment.currentData(QtCore.Qt.User).id
+        mask_feature_id = self.cboSegment.currentData(QtCore.Qt.UserRole).id
 
         if event is not None and mask_feature_id is not None:
             # Load latest metric values from DB
@@ -113,17 +124,25 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 self.table.cellWidget(row, 1).setText(metric_value_text)
                 self.table.cellWidget(row, 2).setText(uncertainty_text)
 
-    def cmdCalculate_clicked(self):
+    def cmdCalculate_clicked(self, row, col):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Calculation of metrics from event layers is not yet implemented.')
 
     def cmdProperties_clicked(self):
 
-        frm = FrmAnalysisProperties(self.project, self.analyis)
+        frm = FrmAnalysisProperties(self, self.project, self.analyis)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.txtName.setText(frm.metric.name)
+            self.txtName.setText(frm.analysis.name)
             self.build_table()
+
+    def edit_metric_value(self, mi):
+
+        metric_value = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole)
+        frm = FrmMetricValue(self, self.project, self.project.metrics, metric_value)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            QtWidgets.QMessageBox.information('Not Implemented', 'TODO: refresh grid')
 
     def setupUi(self):
 
@@ -183,7 +202,6 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horiz.addItem(self.spacerItem)
 
         self.table = QtWidgets.QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(['Metric', 'Value' 'Uncertainty'])
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
