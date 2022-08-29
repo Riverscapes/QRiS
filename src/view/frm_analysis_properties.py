@@ -30,6 +30,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         # self.metricsTable.setColumnCount(2)
 
         for row in range(len(metrics)):
+
+            level_id = metrics[row].default_level_id
+            if analysis is not None:
+                print('TODO: load initial metric state from analysis')
+
             label_item = QtWidgets.QTableWidgetItem()
             label_item.setText(metrics[row].name)
             self.metricsTable.setItem(row, 0, label_item)
@@ -40,6 +45,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             cboStatus.addItem('None', 0)
             cboStatus.addItem('Metric', 1)
             cboStatus.addItem('Indicator', 2)
+            cboStatus.setCurrentIndex(level_id)
             self.metricsTable.setCellWidget(row, 1, cboStatus)
 
         self.metricsTable.setColumnWidth(0, self.metricsTable.width() / 2)
@@ -96,7 +102,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         self.metricsTable = QtWidgets.QTableWidget(0, 2)
         self.tabWidget.addTab(self.metricsTable, 'Analysis Metrics')
-        self.metricsTable.horizontalHeader().setStretchLastSection(True)
+        # self.metricsTable.horizontalHeader().setStretchLastSection(True)
         self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status'])
 
         self.metricsTable.verticalHeader().setVisible(False)
@@ -128,17 +134,31 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if len(self.txtName.text()) < 1:
             QtWidgets.QMessageBox.warning(self, 'Missing Analysis Name', 'You must provide an analysis name to continue.')
             self.txtName.setFocus()
-            return()
+            return
 
         mask = self.cboMask.currentData(QtCore.Qt.UserRole)
         if mask is None:
             QtWidgets.QMessageBox.warning(self, 'Missing Mask', 'You must select a mask to continue.')
             self.cboMask.setFocus()
-            return()
+            return
+
+        # Must include at least one metric!
+        active_metrics = {}
+        for row in range(self.metricsTable.rowCount()):
+            metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
+            cboStatus = self.metricsTable.cellWidget(row, 1)
+            level_id = cboStatus.currentData(QtCore.Qt.UserRole)
+            if level_id > 0:
+                active_metrics[metric.id] = metric
+
+        if len(active_metrics) < 1:
+            QtWidgets.QMessageBox.warning(self, 'Missing Metric', 'You must include at least one metric to continue.')
+            self.metricsTable.setFocus()
+            return
 
         if self.analysis is not None:
             try:
-                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), active_metrics)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -148,7 +168,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask)
+                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask, active_metrics)
                 self.project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
