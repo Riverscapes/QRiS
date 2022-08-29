@@ -46,9 +46,9 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.layers)
             self.rasters = load_rasters(curs)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps())
-            self.analyses = load_analyses(curs, self.masks)
-            self.pour_points = load_pour_points(curs)
             self.metrics = load_metrics(curs)
+            self.analyses = load_analyses(curs, self.masks, self.metrics)
+            self.pour_points = load_pour_points(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))

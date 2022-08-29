@@ -282,18 +282,29 @@ CREATE TABLE calculations (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+
+CREATE TABLE metric_levels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
+
+INSERT INTO metric_levels (id, name) VALUES (1, 'Metric');
+INSERT INTO metric_levels (id, name) VALUES (2, 'Indicator');
+
+
 CREATE TABLE metrics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    calculation_id INTEGER REFERENCES calculations(id) ON DELETE CASCADE,
+    calculation_id INTEGER REFERENCES calculations(id),
+    default_level_id INTEGER REFERENCES metric_levels(id),
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO metrics (id, name) VALUES (1, 'dam and jam count');
-INSERT INTO metrics (id, name) VALUES (2, 'Percent Active Floddplain');
-INSERT INTO metrics (id, name) VALUES (3, 'Gradient');
+INSERT INTO metrics (id, name, default_level_id) VALUES (1, 'dam and jam count', 1);
+INSERT INTO metrics (id, name, default_level_id) VALUES (2, 'Percent Active Floddplain', 1);
+INSERT INTO metrics (id, name, default_level_id) VALUES (3, 'Gradient', 2);
 
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -305,17 +316,30 @@ CREATE TABLE analyses (
 );
 CREATE INDEX fx_analyses_mask_id ON analyses(mask_id);
 
+CREATE TABLE analysis_metrics (
+    analysis_id INT NOT NULL REFERENCES analyses(id) ON DELETE CASCADE,
+    metric_id INT NOT NULL REFERENCES metrics(id),
+    metric_level_id INT NOT NULL REFERENCES metric_levels(id),
+
+    CONSTRAINT pk_analysis_metrics PRIMARY KEY (analysis_id, metric_id)
+);
+
+
 CREATE TABLE metric_values (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     analysis_id INTEGER REFERENCES analyses(id) ON DELETE CASCADE,
     mask_feature_id INTEGER REFERENCES mask_features(fid) ON DELETE CASCADE,
     metric_id INTEGER REFERENCES metrics(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
 --     metric_source_id INTEGER REFERENCES metric_sources(id) ON DELETE CASCADE,
-    value NUMERIC,
+    manual_value NUMERIC,
+    automated_value NUMERIC,
+    is_manual INT NOT NULL DEFAULT 1,
     metadata TEXT,
+    description TEXT,
     Uncertainty NUMERIC,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id)
 );
 
 CREATE INDEX fx_metric_values_analysis_id ON metric_values(analysis_id);

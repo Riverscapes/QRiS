@@ -39,6 +39,7 @@ from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask
+from ..model.metric_value import MetricValue, load_metric_values
 
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
@@ -65,6 +66,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.events_model = DBItemModel(project.events)
         self.cboEvent.setModel(self.events_model)
 
+        # Build the metric table (this will also load the metric values)
+        self.build_table()
+
     def cmdProperties_clicked(self):
 
         frm = FrmAnalysisProperties(self, self.project, self.analyis)
@@ -72,9 +76,54 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         if result is not None and result != 0:
             self.txtName.setText(self.analyis.name)
 
+    def build_table(self):
+
+        self.table.clear()
+        metrics = [self.analyis.metrics.values()]
+        self.table.setRowCount(len(metrics))
+        for row in range(len(metrics)):
+            metric = metrics[row]
+            label_metric = QtWidgets.QTableWidgetItem()
+            label_metric.setText(metric.name)
+            self.metricsTable.setItem(row, 0, label_metric)
+            label_metric.setData(QtCore.Qt.UserRole, metric)
+            label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
+
+        self.load_table_values()
+
+    def load_table_values(self):
+
+        event = self.cboEvent.currentData(QtCore.Qt.UserRole)
+        mask_feature_id = self.cboSegment.currentData(QtCore.Qt.User).id
+
+        if event is not None and mask_feature_id is not None:
+            # Load latest metric values from DB
+            metric_values = load_metric_values(self.project.project_file, self.analyis, event, mask_feature_id, self.metrics)
+
+            # Loop over active metrics and load values into grid
+            for row in range(self.table.rowCount()):
+                metric = self.table.cellWidget(row, 0).DATA
+                metric_value_text = ''
+                uncertainty_text = ''
+                if metric.id in metric_values:
+                    metric_value = metric_values[metric.id]
+                    metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
+                    uncertainty_text = metric_value.uncertainty
+                    # TODO: cell formatting
+                self.table.cellWidget(row, 1).setText(metric_value_text)
+                self.table.cellWidget(row, 2).setText(uncertainty_text)
+
     def cmdCalculate_clicked(self):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Calculation of metrics from event layers is not yet implemented.')
+
+    def cmdProperties_clicked(self):
+
+        frm = FrmAnalysisProperties(self.project, self.analyis)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            self.txtName.setText(frm.metric.name)
+            self.build_table()
 
     def setupUi(self):
 
@@ -133,7 +182,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horiz.addItem(self.spacerItem)
 
-        self.table = QtWidgets.QTableWidget()
+        self.table = QtWidgets.QTableWidget(0, 3)
+        self.table.setHorizontalHeaderLabels(['Metric', 'Value' 'Uncertainty'])
+        self.table.verticalHeader().setVisible(False)
+        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.vert.addWidget(self.table)
 
         self.setWidget(self.dockWidgetContents)
