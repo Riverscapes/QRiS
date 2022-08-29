@@ -3,6 +3,7 @@ import sqlite3
 from .db_item import DBItem
 from .basemap import Raster
 from .mask import Mask
+from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 
@@ -14,9 +15,9 @@ class Analysis(DBItem):
         self.description = description
         self.icon = 'analysis'
         self.mask = mask
-        self.metrics = None
+        self.analysis_metrics = None
 
-    def update(self, db_path: str, name: str, description: str, active_metrics: dict) -> None:
+    def update(self, db_path: str, name: str, description: str, analysis_metrics: dict) -> None:
 
         description = description if len(description) > 0 else None
         with sqlite3.connect(db_path) as conn:
@@ -24,7 +25,7 @@ class Analysis(DBItem):
                 curs = conn.cursor()
                 curs.execute('UPDATE analyses SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
 
-                store_analysis_metrics(curs, self.id, active_metrics)
+                store_analysis_metrics(curs, self.id, analysis_metrics)
 
                 conn.commit()
 
@@ -48,12 +49,12 @@ def load_analyses(curs: sqlite3.Cursor, masks: dict, metrics: dict) -> dict:
 
     for analysis_id, analysis in analyses.items():
         curs.execute('SELECT * FROM analysis_metrics WHERE analysis_id = ?', [analysis_id])
-        analysis.metrics = {row['metric_id']: metrics[row['metric_id']] for row in curs.fetchall()}
+        analysis.analysis_metrics = {row['metric_id']: AnalysisMetric(metrics[row['metric_id']], row['level_id']) for row in curs.fetchall()}
 
     return analyses
 
 
-def insert_analysis(db_path: str, name: str, description: str, mask: Mask, active_metrics: dict) -> Analysis:
+def insert_analysis(db_path: str, name: str, description: str, mask: Mask, analysis_metrics: dict) -> Analysis:
     """
     active metrics is a dictionary with metric_id keyed to metric_level_id
     """
@@ -63,11 +64,12 @@ def insert_analysis(db_path: str, name: str, description: str, mask: Mask, activ
         try:
             curs = conn.cursor()
             curs.execute('INSERT INTO analyses (name, description, mask_id) VALUES (?, ?, ?)', [
-                name, description, mask.id])
+                name, description if description is not None and len(description) > 0 else None, mask.id])
             analysis_id = curs.lastrowid
-            result = Analysis(analysis_id, name, description, mask)
+            analysis = Analysis(analysis_id, name, description, mask)
 
-            store_analysis_metrics(curs, analysis_id, active_metrics)
+            store_analysis_metrics(curs, analysis_id, analysis_metrics)
+            analysis.analysis_metrics = analysis_metrics
 
             conn.commit()
         except Exception as ex:
@@ -75,23 +77,4 @@ def insert_analysis(db_path: str, name: str, description: str, mask: Mask, activ
             conn.rollback()
             raise ex
 
-    return result
-
-
-def store_analysis_metrics(curs: sqlite3.Cursor, analysis_id: int, active_metrics: dict) -> None:
-    """
-    active metrics is a dictionary with metric_id keyed to metric_level_id
-    """
-
-    # delete any metrics not present
-    curs.execute('SELECT metric_id FROM analysis_metrics WHERE analysis_id = ?', [analysis_id])
-    existing_metric_ids = [row['metric_id'] for row in curs.fetchall()]
-
-    for metric_id in existing_metric_ids:
-        if metric_id not in active_metrics:
-            curs.execute('DELETE FROM analysis_metrics WHERE analyis_id = ? AND metric_id = ?', [analysis_id, metric_id])
-
-    # Upsert to ensure all existing active metrics are stored
-    curs.executemany("""INSERT INTO analysis_metrics (analysis_id, metric_id, level_id) VALUES (?, ?, ?)
-                ON CONFLICT (analysis_id, metric_id) DO UPDATE SET level_id = excluded.level_id""",
-                     [(analysis_id, metric_id, level_id) for metric_id, level_id in active_metrics.items()])
+    return analysis

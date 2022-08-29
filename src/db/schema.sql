@@ -319,7 +319,7 @@ CREATE INDEX fx_analyses_mask_id ON analyses(mask_id);
 CREATE TABLE analysis_metrics (
     analysis_id INT NOT NULL REFERENCES analyses(id) ON DELETE CASCADE,
     metric_id INT NOT NULL REFERENCES metrics(id),
-    metric_level_id INT NOT NULL REFERENCES metric_levels(id),
+    level_id INT NOT NULL REFERENCES metric_levels(id),
 
     CONSTRAINT pk_analysis_metrics PRIMARY KEY (analysis_id, metric_id)
 );

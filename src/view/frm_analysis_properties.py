@@ -7,6 +7,7 @@ from ..model.analysis import Analysis, insert_analysis
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID
+from ..model.analysis_metric import AnalysisMetric
 
 
 class FrmAnalysisProperties(QtWidgets.QDialog):
@@ -143,22 +144,22 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             return
 
         # Must include at least one metric!
-        active_metrics = {}
+        analysis_metrics = {}
         for row in range(self.metricsTable.rowCount()):
             metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
             cboStatus = self.metricsTable.cellWidget(row, 1)
             level_id = cboStatus.currentData(QtCore.Qt.UserRole)
             if level_id > 0:
-                active_metrics[metric.id] = metric
+                analysis_metrics[metric.id] = AnalysisMetric(metric, level_id)
 
-        if len(active_metrics) < 1:
+        if len(analysis_metrics) < 1:
             QtWidgets.QMessageBox.warning(self, 'Missing Metric', 'You must include at least one metric to continue.')
             self.metricsTable.setFocus()
             return
 
         if self.analysis is not None:
             try:
-                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), active_metrics)
+                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -168,7 +169,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask, active_metrics)
+                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask, analysis_metrics)
                 self.project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
