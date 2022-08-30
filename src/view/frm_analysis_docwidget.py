@@ -92,6 +92,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             label_metric.setData(QtCore.Qt.UserRole, metric)
             label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
 
+            label_value = QtWidgets.QTableWidgetItem()
+            self.table.setItem(row, 1, label_value)
+
+            label_uncertainty = QtWidgets.QTableWidgetItem()
+            self.table.setItem(row, 2, label_uncertainty)
+
         self.table.doubleClicked.connect(self.edit_metric_value)
         # ui.tableWidget, signal(cellDoubleClicked(int,int)), this, SLOT(tableItemClicked(int,int)));
 
@@ -109,20 +115,22 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         if event is not None and mask_feature_id is not None:
             # Load latest metric values from DB
-            metric_values = load_metric_values(self.project.project_file, self.analyis, event, mask_feature_id, self.metrics)
+            metric_values = load_metric_values(self.project.project_file, self.analyis, event, mask_feature_id, self.project.metrics)
 
             # Loop over active metrics and load values into grid
             for row in range(self.table.rowCount()):
-                metric = self.table.cellWidget(row, 0).DATA
+
+                metric = self.table.item(row, 0).data(QtCore.Qt.UserRole)
                 metric_value_text = ''
                 uncertainty_text = ''
-                if metric.id in metric_values:
+                if metric.metric.id in metric_values:
                     metric_value = metric_values[metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
                     uncertainty_text = metric_value.uncertainty
+                    self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
                     # TODO: cell formatting
-                self.table.cellWidget(row, 1).setText(metric_value_text)
-                self.table.cellWidget(row, 2).setText(uncertainty_text)
+                self.table.item(row, 1).setText(metric_value_text)
+                self.table.item(row, 2).setText(uncertainty_text)
 
     def cmdCalculate_clicked(self, row, col):
 
@@ -138,7 +146,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def edit_metric_value(self, mi):
 
-        metric_value = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole)
+        metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
+        metric = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole)
+
+        if metric_value is None:
+            metric_value = MetricValue(metric.metric, None, None, True, None, None, {})
+
         frm = FrmMetricValue(self, self.project, self.project.metrics, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:

@@ -2,6 +2,8 @@
     <qresource prefix="/plugins/qris_toolbar">
         <file alias="add_to_map">../Images/add_to_map.png</file>
         <file alias="analysis">../Images/analysis.png</file>
+        <file alias="arrow_down">../Images/arrow_down.png</file>
+        <file alias="arrow_up">../Images/arrow_up.png</file>
         <file alias="basemap">../Images/basemap.png</file>
         <file alias="collapse">../Images/collapse.png</file>
         <file alias="design">../Images/design.png</file>
@@ -10,6 +12,7 @@
         <file alias="event">../Images/event.png</file>
         <file alias="expand">../Images/expand.png</file>
         <file alias="folder">../Images/folder.png</file>
+        <file alias="gis">../Images/gis.png</file>
         <file alias="help">../Images/help.png</file>
         <file alias="influence">../Images/influence.png</file>
         <file alias="json">../Images/json.png</file>
