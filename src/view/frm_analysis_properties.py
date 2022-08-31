@@ -8,6 +8,7 @@ from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID
 from ..model.analysis_metric import AnalysisMetric
+from .utilities import validate_name, add_standard_form_buttons
 
 
 class FrmAnalysisProperties(QtWidgets.QDialog):
@@ -113,28 +114,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
 
-        self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
-
-        self.cmdHelp = QtWidgets.QPushButton()
-        self.cmdHelp.setText('Help')
-        self.horiz.addWidget(self.cmdHelp)
-
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addItem(self.spacerItem)
-
-        self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.horiz.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        add_standard_form_buttons(self, 'analysis')
 
     def accept(self):
 
-        if len(self.txtName.text()) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Analysis Name', 'You must provide an analysis name to continue.')
-            self.txtName.setFocus()
+        if not validate_name(self, self.txtName):
             return
 
         mask = self.cboMask.currentData(QtCore.Qt.UserRole)
