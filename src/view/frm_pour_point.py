@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from ..model.pour_point import PourPoint
 from ..model.project import Project
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
+from .utilities import validate_name, add_standard_form_buttons
 
 
 class FrmPourPoint(QtWidgets.QDialog):
@@ -42,10 +43,8 @@ class FrmPourPoint(QtWidgets.QDialog):
 
     def accept(self):
 
-        if len(self.txtName.text()) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Name', 'You must provide a pour point name to continue.')
-            self.txtName.setFocus()
-            return ()
+        if not validate_name(self, self.txtName):
+            return
 
         if self.pour_point is not None:
             try:
@@ -129,22 +128,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
-        self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
-
-        self.cmdHelp = QtWidgets.QPushButton()
-        self.cmdHelp.setText('Help')
-        self.horiz.addWidget(self.cmdHelp)
-
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addItem(self.spacerItem)
-
-        self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.horiz.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.vert.addLayout(add_standard_form_buttons(self, 'pour_point'))
 
 
 if __name__ == "__main__":

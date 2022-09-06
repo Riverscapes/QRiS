@@ -4,6 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsField, QgsVectorLayer, QgsVectorFileWriter
 
 from ..model.project import Project
+from .utilities import validate_name, add_standard_form_buttons
 
 # all spatial layers
 # feature class, layer name, geometry
@@ -73,11 +74,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
     def accept(self):
 
-        # Verify project name
-        if len(self.txtName.text().strip()) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Project Name',
-                                          'You must provide a project name to continue.')
-            self.txtName.setFocus()
+        if not validate_name(self, self.txtName):
             return
 
         if isinstance(self.project, Project):
@@ -164,22 +161,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
 
-        self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
-
-        self.cmdHelp = QtWidgets.QPushButton()
-        self.cmdHelp.setText('Help')
-        self.horiz.addWidget(self.cmdHelp)
-
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addItem(self.spacerItem)
-
-        self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.horiz.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.vert.addLayout(add_standard_form_buttons(self, 'project'))
 
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
