@@ -7,6 +7,7 @@ from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import copy_raster_to_project
+from .utilities import validate_name, add_standard_form_buttons
 
 
 class FrmRaster(QtWidgets.QDialog):
@@ -71,10 +72,8 @@ class FrmRaster(QtWidgets.QDialog):
 
     def accept(self):
 
-        if len(self.txtName.text()) < 1:
-            QtWidgets.QtWidgets.QMessageBox.warning(self, 'Missing Basis Name', 'You must provide a basis name to continue.')
-            self.txtName.setFocus()
-            return()
+        if not validate_name(self, self.txtName):
+            return
 
         if self.raster is not None:
             try:
@@ -191,19 +190,4 @@ class FrmRaster(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
-        self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
-
-        self.cmdHelp = QtWidgets.QPushButton()
-        self.cmdHelp.setText('Help')
-        self.horiz.addWidget(self.cmdHelp)
-
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addItem(self.spacerItem)
-
-        self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.horiz.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.vert.addLayout(add_standard_form_buttons(self, 'basemap'))

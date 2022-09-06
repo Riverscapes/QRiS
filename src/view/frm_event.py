@@ -9,6 +9,8 @@ from ..model.project import Project
 from .frm_date_picker import FrmDatePicker
 
 from datetime import date, datetime
+from .utilities import validate_name, add_standard_form_buttons
+
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
@@ -96,9 +98,7 @@ class FrmEvent(QtWidgets.QDialog):
             self.uc_end.setFocus()
             return
 
-        if len(self.txtName.text()) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Data Capture Event Name', 'You must provide a name for the data capture event to continue.')
-            self.txtName.setFocus()
+        if not validate_name(self, self.txtName):
             return
 
         if len(self.protocols) < 1:
@@ -239,22 +239,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tab.addTab(self.txtDescription, 'Description')
 
-        self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
-
-        self.cmdHelp = QtWidgets.QPushButton()
-        self.cmdHelp.setText('Help')
-        self.horiz.addWidget(self.cmdHelp)
-
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addItem(self.spacerItem)
-
-        self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.horiz.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.vert.addLayout(add_standard_form_buttons(self, 'event'))
 
 
 def check_if_date_order_valid(start_date: DateSpec, end_date: DateSpec):

@@ -7,6 +7,7 @@ from ..model.project import Project
 from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_mask
+from .utilities import validate_name, add_standard_form_buttons
 
 
 class FrmMaskAOI(QtWidgets.QDialog):
@@ -50,9 +51,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
     def accept(self):
 
-        if len(self.txtName.text()) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Name', 'You must provide a mask name to continue.')
-            self.txtName.setFocus()
+        if not validate_name(self, self.txtName):
             return
 
         if self.mask is not None:
@@ -130,19 +129,4 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 3, 1, 1, 1)
 
-        self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
-
-        self.cmdHelp = QtWidgets.QPushButton()
-        self.cmdHelp.setText('Help')
-        self.horiz.addWidget(self.cmdHelp)
-
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horiz.addItem(self.spacerItem)
-
-        self.buttonBox = QtWidgets.QDialogButtonBox()
-        self.horiz.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.vert.addLayout(add_standard_form_buttons(self, 'mask_aoi'))

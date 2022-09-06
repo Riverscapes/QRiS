@@ -20,7 +20,7 @@ def add_standard_form_buttons(form: QtWidgets.QDialog, help_slug: str) -> QtWidg
     form.cmdHelp = QtWidgets.QPushButton()
     form.cmdHelp.setText('Help')
     help_url = CONSTANTS['webUrl'] + '/' + help_slug if help_slug is not None and len(help_slug) > 0 else CONSTANTS
-    form.cmdhelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
+    form.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
 
     form.horiz.addWidget(form.cmdHelp)
 
