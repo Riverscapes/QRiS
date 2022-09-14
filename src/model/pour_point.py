@@ -2,9 +2,7 @@ import json
 import sqlite3
 from osgeo import ogr
 
-from qgis.core import QgsPoint
 from .db_item import DBItem
-from ..gp.stream_stats import get_streamstats_data, transform_geometry
 
 POUR_POINTS_MACHINE_CODE = 'Pour Points'
 CONTEXT_NODE_TAG = 'CONTEXT'
@@ -67,7 +65,7 @@ def load_pour_points(curs: sqlite3.Cursor) -> dict:
     ) for row in curs.fetchall()}
 
 
-def process_pour_point(project_file: str, latitude: float, longitude: float, catchment: dict, name: str, description: str, basin_chars: dict, flow_stats: dict):
+def save_pour_point(project_file: str, latitude: float, longitude: float, catchment: dict, name: str, description: str, basin_chars: dict, flow_stats: dict) -> PourPoint:
 
     driver = ogr.GetDriverByName('GPKG')
     dataset = driver.Open(project_file, 1)

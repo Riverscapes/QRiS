@@ -125,6 +125,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.tabWidget.addTab(self.tabFlow, 'Flow Statistics')
 
         self.chkAddToMap = QtWidgets.QCheckBox()
+        self.chkAddToMap.setText('Add to Map')
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
