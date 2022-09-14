@@ -23,10 +23,11 @@
 """
 
 import os
-from qgis.core import QgsMapLayer
+from qgis.core import QgsMapLayer, QgsApplication, Qgis
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
+from PyQt5.QtCore import pyqtSlot
 
 
 from ..model.layer import Layer
@@ -41,7 +42,7 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
 from ..model.protocol import Protocol
-from ..model.pour_point import PourPoint, process_pour_point, CONTEXT_NODE_TAG
+from ..model.pour_point import PourPoint, save_pour_point, CONTEXT_NODE_TAG
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
@@ -60,6 +61,7 @@ from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basema
 
 from ..gp.feature_class_functions import browse_source
 from ..gp.stream_stats import get_streamstats_data, transform_geometry, get_state_from_coordinates
+from ..gp.stream_stats import StreamStats
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -399,7 +401,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.' +
                                           '  Be sure to click on the precise stream location.' +
                                           '  A form will appear where you can provide a name and description for the point.' +
-                                          '  Then wait 30-60 seconds and the upstream catchment will be delineated and added to the map.')
+                                          '  After you click OK, the pour point location will be transmitted to Stream Stats.'
+                                          '  This process can take from a few seconds to a few minutes depending on the size of the catchment.')
 
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.stream_stats_tool)
@@ -411,42 +414,50 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         transformed_point = transform_geometry(raw_map_point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), 4326)
 
-        state_code = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
-        if state_code is None:
-            QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'The selected location does not appear to be inside the United States.')
+        try:
+            state_code = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
+            if state_code is None:
+                QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'The selected location does not appear to be inside the United States.')
+                return
+        except Exception as ex:
+            QtWidgets.QMessageBox.warning(self, 'Error Determining US State', str(ex))
             return
 
         frm = FrmPourPoint(self, self.project, transformed_point.y(), transformed_point.x(), None)
         result = frm.exec_()
         if result != 0:
-            try:
-                # The point is in the map data frame display units. Transform to WGS84
-                watershed, basin_chars, flow_stats = get_streamstats_data(transformed_point.y(), transformed_point.x(), frm.chkBasin.isChecked(), frm.chkFlowStats.isChecked(), None)
+            stream_stats = StreamStats(self.project.project_file,
+                                       transformed_point.y(),
+                                       transformed_point.x(),
+                                       frm.txtName.text(),
+                                       frm.txtDescription.toPlainText(),
+                                       frm.chkBasin.isChecked(),
+                                       frm.chkFlowStats.isChecked(),
+                                       frm.chkAddToMap.isChecked())
 
-                if watershed is not None:
-                    try:
-                        pour_point = process_pour_point(
-                            self.project.project_file,
-                            transformed_point.y(),
-                            transformed_point.x(),
-                            watershed,
-                            frm.txtName.text(),
-                            frm.txtDescription.toPlainText(),
-                            basin_chars,
-                            flow_stats)
-                        self.project.pour_points[pour_point.id] = pour_point
+            stream_stats.stream_stats_successfully_complete.connect(self.stream_stats_complete)
 
-                        rootNode = self.model.invisibleRootItem()
-                        project_node = self.add_child_to_project_tree(rootNode, self.project)
-                        context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
+            # Call the run command directly during development to run the process synchronousely.
+            # DO NOT DEPLOY WITH run() UNCOMMENTED
+            # stream_stats.run()
 
-                        self.add_child_to_project_tree(context_node, pour_point, True)
+            # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
+            QgsApplication.taskManager().addTask(stream_stats)
 
-                    except Exception as ex:
-                        QtWidgets.QMessageBox.warning(self, 'Error Saving Stream Stats to Project', str(ex))
+    @pyqtSlot(PourPoint, bool)
+    def stream_stats_complete(self, pour_point: PourPoint, add_to_map: bool):
 
-            except Exception as ex:
-                QtWidgets.QMessageBox.warning(self, 'Error Requesting StreamStats', str(ex))
+        if isinstance(pour_point, PourPoint):
+            self.iface.messageBar().pushMessage('Stream Stats Complete', f'Catchment delineation successful for {pour_point.name}.', level=Qgis.Info, duration=5)
+            self.project.pour_points[pour_point.id] = pour_point
+
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
+            self.add_child_to_project_tree(context_node, pour_point, add_to_map)
+
+        else:
+            self.iface.messageBar().pushMessage('Stream Stats Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
     def edit_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
