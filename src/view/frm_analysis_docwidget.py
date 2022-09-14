@@ -148,11 +148,13 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
         metric = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole)
+        event = self.cboEvent.currentData(QtCore.Qt.UserRole)
+        mask_feature = self.cboSegment.currentData(QtCore.Qt.UserRole)
 
         if metric_value is None:
             metric_value = MetricValue(metric.metric, None, None, True, None, None, {})
 
-        frm = FrmMetricValue(self, self.project, self.project.metrics, metric_value)
+        frm = FrmMetricValue(self, self.project, self.project.metrics, self.analyis, event, mask_feature.id, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:
             QtWidgets.QMessageBox.information('Not Implemented', 'TODO: refresh grid')
