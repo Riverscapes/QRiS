@@ -120,7 +120,7 @@ def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
     project_group_layer = get_db_item_layer(project, root)
 
     if project_group_layer is None and add_missing is True:
-        project_group_layer = root.addGroup(project.name)
+        project_group_layer = root.insertGroup(0, project.name)
         project_group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, project)
 
     return project_group_layer
