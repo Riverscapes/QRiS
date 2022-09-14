@@ -14,7 +14,7 @@ MESSAGE_CATEGORY = 'QRiS_StreamStatsTask'
 class StreamStats(QgsTask):
 
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    stream_stats_successfully_complete = pyqtSignal(PourPoint, bool)
+    stream_stats_successfully_complete = pyqtSignal(PourPoint or None, bool)
 
     """
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html

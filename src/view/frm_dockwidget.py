@@ -444,7 +444,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
             QgsApplication.taskManager().addTask(stream_stats)
 
-    @pyqtSlot(PourPoint, bool)
+    @pyqtSlot(PourPoint or None, bool)
     def stream_stats_complete(self, pour_point: PourPoint, add_to_map: bool):
 
         if isinstance(pour_point, PourPoint):
