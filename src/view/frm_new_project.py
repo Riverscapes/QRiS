@@ -161,7 +161,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'project'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'projects'))
 
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):

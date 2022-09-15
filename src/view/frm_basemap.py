@@ -93,7 +93,7 @@ class FrmRaster(QtWidgets.QDialog):
 
         else:
             # Inserting a new raster. Check name uniqueness before copying the raster file
-            if validate_name_unique(self.project.project_file, 'rasters', 'name', self.txtName.text()) == False:
+            if validate_name_unique(self.project.project_file, 'rasters', 'name', self.txtName.text()) is False:
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
                 return
@@ -223,4 +223,4 @@ class FrmRaster(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'basemap'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'basemaps'))

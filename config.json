@@ -17,7 +17,7 @@
         "symbologyDir": "symbology",
         "digestSyncFreqHours": 24,
         "warehouseUrl": "https://data.riverscapes.xyz/#",
-        "webUrl": "https://rave.riverscapes.xyz",
+        "webUrl": "https://riverscapes.github.io/QRiS/",
         "issueUrl": "https://github.com/Riverscapes/QRiS/issues",
         "changelogUrl": "https://github.com/Riverscapes/QRiS/releases",
         "resourcesUrl": "https://xml.riverscapes.xyz/"
