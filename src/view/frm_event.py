@@ -144,7 +144,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole))
+            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
             super().accept()
         else:
             try:
@@ -239,7 +239,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tab.addTab(self.txtDescription, 'Description')
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'event'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'events'))
 
 
 def check_if_date_order_valid(start_date: DateSpec, end_date: DateSpec):

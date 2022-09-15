@@ -20,8 +20,9 @@ class FrmDesign(FrmEvent):
         self.lblStatus = QLabel('Design Status', self)
         self.tabGrid.addWidget(self.lblStatus, 4, 0)
 
+        statuses = qris_project.lookup_tables['lkp_design_status']
         self.cboStatus = QComboBox(self)
-        self.status_model = DBItemModel(qris_project.lookup_tables['lkp_design_status'])
+        self.status_model = DBItemModel(statuses)
         self.cboStatus.setModel(self.status_model)
         self.tabGrid.addWidget(self.cboStatus, 4, 1)
 
@@ -30,6 +31,10 @@ class FrmDesign(FrmEvent):
 
         if event is not None:
             self.chkAddToMap.setVisible(False)
+
+            status_id = event.metadata['statusId']
+            status_index = self.status_model.getItemIndexById(status_id)
+            self.cboStatus.setCurrentIndex(status_index)
 
     def accept(self):
 
