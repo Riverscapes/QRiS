@@ -143,11 +143,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
-        analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
-        [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
+        # analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
+        # [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
-        [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
+        # scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
+        # [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
 
         self.treeView.expandAll()
         return
@@ -377,7 +377,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if import_source_path is None:
             return
 
-        frm = FrmRaster(self, self.project, import_source_path, raster_type_id)
+        frm = FrmRaster(self, self.iface, self.project, import_source_path, raster_type_id)
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())

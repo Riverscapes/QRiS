@@ -1,6 +1,3 @@
-from asyncio import streams
-from termios import ECHOE
-from urllib import response
 import requests
 import json
 import os
@@ -81,6 +78,7 @@ class StreamStats(QgsTask):
 
         except Exception as ex:
             self.exception = ex
+            return False
 
         return True
 
