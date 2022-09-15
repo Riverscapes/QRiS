@@ -1,5 +1,7 @@
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSlot
+from qgis.core import Qgis, QgsApplication
 
 from ..model.basemap import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP, SCRATCH_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
@@ -7,13 +9,15 @@ from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import copy_raster_to_project
-from .utilities import validate_name, add_standard_form_buttons
+from ..gp.copy_raster import CopyRaster
+from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 
 
 class FrmRaster(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str, raster_type_id: int, raster: Raster = None):
+    def __init__(self, parent, iface, project: Project, import_source_path: str, raster_type_id: int, raster: Raster = None):
 
+        self.iface = iface
         self.project = project
         self.raster_type_id = raster_type_id
         self.raster = raster
@@ -85,16 +89,14 @@ class FrmRaster(QtWidgets.QDialog):
                 else:
                     QtWidgets.QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
                 return
+
+            super(FrmRaster, self).accept()
+
         else:
-            try:
-                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.raster_type_id, self.txtDescription.toPlainText())
-                self.project.rasters[self.raster.id] = self.raster
-            except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
-                    self.txtName.setFocus()
-                else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+            # Inserting a new raster. Check name uniqueness before copying the raster file
+            if validate_name_unique(self.project.project_file, 'rasters', 'name', self.txtName.text()) == False:
+                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                self.txtName.setFocus()
                 return
 
             try:
@@ -106,8 +108,20 @@ class FrmRaster(QtWidgets.QDialog):
                 if not os.path.isdir(os.path.dirname(project_path)):
                     os.makedirs(os.path.dirname(project_path))
 
-                copy_raster_to_project(self.txtSourcePath.text(), mask_tuple, project_path)
+                copy_raster = CopyRaster(self.txtSourcePath.text(), mask_tuple, project_path)
+                copy_raster.copy_raster_complete.connect(self.on_raster_copy_complete)
+
+                # Call the run command directly during development to run the process synchronousely.
+                # DO NOT DEPLOY WITH run() UNCOMMENTED
+                # copy_raster.run()
+
+                # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
+                self.buttonBox.setEnabled(False)
+                QgsApplication.taskManager().addTask(copy_raster)
+
             except Exception as ex:
+                self.buttonBox.setEnabled(True)
+
                 try:
                     self.raster.delete(self.project.project_file)
                 except Exception as ex:
@@ -116,7 +130,27 @@ class FrmRaster(QtWidgets.QDialog):
                 QtWidgets.QMessageBox.warning(self, 'Error Importing Basemap', str(ex))
                 return
 
-        super(FrmRaster, self).accept()
+    @pyqtSlot(bool)
+    def on_raster_copy_complete(self, result: bool):
+
+        if result is True:
+            self.iface.messageBar().pushMessage('Raster Copy Complete.', 'self.txt.', level=Qgis.Info, duration=5)
+
+            try:
+                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.raster_type_id, self.txtDescription.toPlainText())
+                self.project.rasters[self.raster.id] = self.raster
+            except Exception as ex:
+                if 'unique' in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    self.txtName.setFocus()
+                else:
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+                return
+
+            super(FrmRaster, self).accept()
+        else:
+            self.iface.messageBar().pushMessage('Raster Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):
         project_name = self.txtName.text().strip()
