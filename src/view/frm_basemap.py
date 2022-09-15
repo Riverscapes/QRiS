@@ -8,7 +8,6 @@ from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
 
-from ..gp.feature_class_functions import copy_raster_to_project
 from ..gp.copy_raster import CopyRaster
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 
