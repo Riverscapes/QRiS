@@ -24,10 +24,9 @@
 import json
 import os.path
 import requests
-import tempfile
-import webbrowser
+from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis
 from qgis.gui import QgsMapToolEmitPoint
 
 # TODO fix this
@@ -35,7 +34,6 @@ from .gp.provider import Provider
 # from .gp.report_creation.qris_report import QRiSReport
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
-from .gp.watershed_attribute_api import QueryMonster
 
 # Initialize Qt resources from file resources.py
 from . import resources
@@ -46,6 +44,8 @@ from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
 
 from .model.project import apply_db_migrations
+
+from .gp.watershed_attributes import WatershedAttributes
 
 
 ORGANIZATION = 'Riverscapes'
@@ -100,6 +100,13 @@ class QRiSToolbar:
         self.dockwidget = None
 
     # noinspection PyMethodMayBeStatic
+
+    def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
+
+        source_crs = QgsCoordinateReferenceSystem(map_epsg)
+        dest_crs = QgsCoordinateReferenceSystem(output_epsg)
+        transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
+        return transform.transform(geometry)
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -382,15 +389,16 @@ class QRiSToolbar:
         try:
             # The point is in the map data frame display units. Transform to WGS84
             transformed_point = self.transform_geometry(point, 4326)
+            long_task = WatershedAttributes(transformed_point.y(), transformed_point.x(), False)
+            long_task.process_complete.connect(self.on_watershed_attributes_complete)
 
-            data = self.get_watershed_metrics(transformed_point.x(), transformed_point.y())
-            if data is not None:
-                file_path = QtWidgets.QFileDialog.getSaveFileName(None, 'Watershed Metrics JSON File', None, 'JSON Files (*.json)')
-                if file_path is not None and file_path[0] != '':
-                    with open(file_path[0], 'w') as f:
-                        json.dump(data, f)
-                    # QDesktopServices.openUrl(QUrl('file://' + file_path[0]))
-                    webbrowser.open('file://' + file_path[0])
+            # Call the run command directly during development to run the process synchronousely.
+            # DO NOT DEPLOY WITH run() UNCOMMENTED
+            # long_task.run()
+
+            # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
+            QgsApplication.taskManager().addTask(long_task)
+
         except Exception as ex:
             QtWidgets.QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
 
@@ -398,41 +406,30 @@ class QRiSToolbar:
         """
         Display the watershed attribute results based on the point that the user clicked on the map
         """
-        google_maps_api_key = CONSTANTS["google_api_key"] if "google_api_key" in CONSTANTS else None
 
         try:
             # The point is in the map data frame display units. Transform to WGS84
             transformed_point = self.transform_geometry(point, 4326)
+            long_task = WatershedAttributes(transformed_point.y(), transformed_point.x(), True)
+            long_task.process_complete.connect(self.on_watershed_attributes_complete)
 
-            json_data = self.get_watershed_metrics(transformed_point.x(), transformed_point.y())
-            if json_data is not None:
-                tmp_file = tempfile.NamedTemporaryFile(delete=False).name + '.html'
+            # Call the run command directly during development to run the process synchronousely.
+            # DO NOT DEPLOY WITH run() UNCOMMENTED
+            # long_task.run()
 
-                # QRiSReport(google_maps_api_key, transformed_point.x(), transformed_point.y(), json_data, tmp_file)
+            # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
+            QgsApplication.taskManager().addTask(long_task)
 
-                # with open(tmp_file, 'w') as f:
-                #     f.write(f'<html><body><h1>{json_data}</h1></body></html>')
-                webbrowser.open('file://' + tmp_file)
         except Exception as ex:
             QtWidgets.QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
 
-    def get_watershed_metrics(self, lng: float, lat: float):
+    @pyqtSlot(str, bool)
+    def on_watershed_attributes_complete(self, output_path: str, result: bool) -> None:
 
-        # Call watershed attribute API with coordinates
-        api = QueryMonster(CONSTANTS['watershedAttributeApiUrl'], CONSTANTS['watershedAttributeApiKey'])
-        response = api.run_query("""
-            query project_query($lat: Float!, $lng: Float!) {
-                pointMetrics(lat: $lat, lng: $lng) {
-                    HUC12 {
-                    id
-                    name
-                    }
-                    upstreamMetrics
-                    HUC12Metrics
-                }
-            }""", {"lng": lng, "lat": lat})
-
-        return response if response is not None else None
+        if result:
+            self.iface.messageBar().pushMessage(f'Watershed Attributes Complete.', f'Outputs at {output_path}', level=Qgis.Info, duration=5)
+        else:
+            self.iface.messageBar().pushMessage(f'Watershed Attributes Error.', 'Check the QGIS log for details.', level=Qgis.Critical, duration=5)
 
     def update_database(self, db_path):
         try:
