@@ -9,10 +9,14 @@ import zipfile
 PLUGIN_NAME = "qris_deploy"
 UI_DIR = "src/ui"
 
+# Environment variable that specifies the path to the QGIS plugins folder
+#  where the plugin will be deloyed.
+PLUGIN_ENV_VAR_NAME = 'QGIS_PLUGINS'
+
 
 def copy_plugin():
     rootdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    deployfolder = os.path.abspath(os.path.join(rootdir, '..', PLUGIN_NAME))
+    deployfolder = os.path.abspath(os.path.join(os.getenv(PLUGIN_ENV_VAR_NAME), PLUGIN_NAME))
 
     if rootdir == deployfolder:
         print('deploy and source folders cannot be the same!')
@@ -72,11 +76,12 @@ def move_meta(deployfolder, version):
         wf.write(text)
 
 
-def zip_plugin(deployfolder: str):
+def zip_plugin(deployfolder: str, version: str):
     # ziph is zipfile handle
     root_dir = os.path.dirname(deployfolder)
-    zipfile_name = os.path.join(root_dir, PLUGIN_NAME)
-    shutil.make_archive(zipfile_name, 'zip', root_dir=root_dir, base_dir=PLUGIN_NAME)
+    zipfile_name = '{}-{}'.format(PLUGIN_NAME, version.replace('.', '_'))
+    zipfile_path = os.path.join(root_dir, zipfile_name)
+    shutil.make_archive(zipfile_path, 'zip', root_dir=root_dir, base_dir=PLUGIN_NAME)
 
 
 def deploy_plugin():
@@ -107,6 +112,6 @@ if __name__ == '__main__':
     deployfolder = copy_plugin()
 
     move_meta(deployfolder, version)
-    zip_plugin(deployfolder)
+    zip_plugin(deployfolder, version)
 
     deploy_plugin()
