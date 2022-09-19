@@ -6,7 +6,7 @@ import re
 import zipfile
 
 
-PLUGIN_NAME = "qris"
+PLUGIN_NAME = "qris_deploy"
 UI_DIR = "src/ui"
 
 
@@ -34,12 +34,16 @@ def copy_plugin():
         ['CHANGELOG.md'],
         ['README.md'],
         ['config.json'],
+        ['secrets.json'],
         ['src', '**', '*.py'],
-        ['src', '**', '*.ui'],
+        ['src', '**', '*.json'],
+        ['src', '**', '*.css'],
+        ['src', '**', '*.html'],
+        # ['src', '**', '*.ui'],
         ['src', '**', '*.sql'],
         ['src', '**', '*.qml'],
-        ['resources', '**', '*.?ml'],
-        ['resources', '**', '*.json'],
+        # ['resources', '**', '*.?ml'],
+        # ['resources', '**', '*.json'],
     ]
     files = []
     for p in keep_patterns:
