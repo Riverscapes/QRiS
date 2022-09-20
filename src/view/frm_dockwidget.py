@@ -472,7 +472,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, Raster):
-            frm = FrmRaster(self, self.project, None, db_item.raster_type_id, db_item)
+            frm = FrmRaster(self, self.iface, self.project, None, db_item.raster_type_id, db_item)
         elif isinstance(db_item, PourPoint):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):
