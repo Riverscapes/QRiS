@@ -143,8 +143,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
-        # analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
-        # [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
+        analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
+        [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
         # scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
         # [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
