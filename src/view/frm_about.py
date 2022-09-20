@@ -64,7 +64,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.grid.addWidget(self.lblWebsite, 1, 1, 1, 1)
 
         self.lblIssuesHeader = QtWidgets.QLabel()
-        self.lblIssuesHeader.setText('Issues')
+        self.lblIssuesHeader.setText('Discussions')
         self.grid.addWidget(self.lblIssuesHeader, 2, 0, 1, 1)
 
         self.lblIssues = QtWidgets.QLabel()
