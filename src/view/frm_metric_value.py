@@ -22,6 +22,10 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         self.setWindowTitle('Analysis Metric Value')
 
+        # hide these for now
+        self.cmdNext.setVisible(False)
+        self.cmdPrevious.setVisible(False)
+
         self.metric_value = metric_value
         self.project = project
         self.analysis = analysis
