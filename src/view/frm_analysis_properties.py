@@ -93,7 +93,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.grdLayout1.addWidget(self.txtName, 0, 1, 1, 1)
 
         self.lblMask = QtWidgets.QLabel()
-        self.lblMask.setText('Mask')
+        self.lblMask.setText('Sample Frame')
         self.grdLayout1.addWidget(self.lblMask, 1, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()

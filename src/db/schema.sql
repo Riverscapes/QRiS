@@ -268,6 +268,7 @@ ALTER TABLE aoi_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELE
 -- Regular masks refer to the mask that they belong to and have a display label
 ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
 ALTER TABLE mask_features ADD COLUMN display_label TEXT;
+ALTER TABLE mask_features ADD COLUMN display_order INTEGER;
 -- ALTER TABLE mask_features ADD COLUMN name TEXT;
 ALTER TABLE mask_features ADD COLUMN position INTEGER;
 ALTER TABLE mask_features ADD COLUMN description TEXT;
@@ -298,6 +299,7 @@ CREATE TABLE metrics (
     default_level_id INTEGER REFERENCES metric_levels(id),
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    definition_url TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
