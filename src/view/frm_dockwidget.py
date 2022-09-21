@@ -193,7 +193,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
                 elif model_data == CONTEXT_NODE_TAG:
-                    self.add_context_menu_item(self.menu, 'Create New Pour Point & Catchment', 'new', lambda: self.add_pour_point(model_item))
+                    self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == SCRATCH_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
 
@@ -417,7 +417,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         try:
             state_code = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
             if state_code is None:
-                QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'The selected location does not appear to be inside the United States.')
+                QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'This is a service by USGS and is only available in some US States. See https://streamstats.usgs.gov/ss/ for more information.')
                 return
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, 'Error Determining US State', str(ex))
