@@ -204,7 +204,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horizEvent.addWidget(self.cmdCalculate, 0)
 
         self.lblSegment = QtWidgets.QLabel()
-        self.lblSegment.setText('Riverscape Segment')
+        self.lblSegment.setText('Sample Frame')
         self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
 
         self.cboSegment = QtWidgets.QComboBox()
