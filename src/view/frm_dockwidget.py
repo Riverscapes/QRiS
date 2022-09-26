@@ -23,13 +23,14 @@
 """
 
 import os
-from qgis.core import QgsMapLayer, QgsApplication, Qgis
+from osgeo import ogr
+from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
 from PyQt5.QtCore import pyqtSlot
 
-
+from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project
 from ..model.event import Event
@@ -42,7 +43,7 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
 from ..model.protocol import Protocol
-from ..model.pour_point import PourPoint, save_pour_point, CONTEXT_NODE_TAG
+from ..model.pour_point import PourPoint, CONTEXT_NODE_TAG
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
@@ -54,13 +55,14 @@ from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
 from .frm_slider import FrmSlider
+from .frm_scratch_vector import FrmScratchVector
 
 from ..QRiS.settings import Settings
-from ..QRiS.method_to_map import build_basemap_layer, get_project_group, remove_db_item_layer, check_for_existing_layer
+from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
 from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer
 
-from ..gp.feature_class_functions import browse_source
-from ..gp.stream_stats import get_streamstats_data, transform_geometry, get_state_from_coordinates
+from ..gp.feature_class_functions import browse_raster, browse_vector
+from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 
 SCRATCH_NODE_TAG = 'SCRATCH'
@@ -146,8 +148,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        # scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
-        # [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
+        scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
+        [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
+        [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_vectors.values()]
 
         self.treeView.expandAll()
         return
@@ -195,7 +198,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == SCRATCH_NODE_TAG:
+                    self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
+                    self.add_context_menu_item(self.menu, 'Import Existing Scratch Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
 
                     # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
                     # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
@@ -219,7 +224,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
 
             if isinstance(model_data, Project):
-                self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data))
+                self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
             else:
                 self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
@@ -260,6 +265,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             build_pour_point_map_layer(self.project, db_item)
+        elif isinstance(db_item, ScratchVector):
+            build_scratch_vector(self.project, db_item)
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
         """Add all children of a group node to the map ToC
@@ -373,7 +380,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_basemap(self, parent_node: QtGui.QStandardItem, raster_type_id: int):
         """Initiates adding a new base map to the project"""
 
-        import_source_path = browse_source(self, 'Select a raster dataset to import.', QgsMapLayer.RasterLayer)
+        import_source_path = browse_raster(self, 'Select a raster dataset to import.')
         if import_source_path is None:
             return
 
@@ -382,12 +389,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
 
+    def add_scratch_vector(self, parent_node: QtGui.QStandardItem):
+
+        import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
+        if import_source_path is None:
+            return
+
+        frm = FrmScratchVector(self, self.iface, self.project, import_source_path, None, None)
+        result = frm.exec_()
+        if result != 0:
+            self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
+
     def add_mask(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
         """Initiates adding a new mask"""
 
         import_source_path = None
         if mode == DB_MODE_IMPORT:
-            import_source_path = browse_source(self, 'Select a polygon dataset to import as a new mask.', QgsMapLayer.VectorLayer)
+            import_source_path = browse_vector(self, 'Select a polygon dataset to import as a new mask.', QgsWkbTypes.GeometryType.PolygonGeometry)
             if import_source_path is None:
                 return
 
@@ -516,16 +534,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Delete the item from the database
         db_item.delete(self.project.project_file)
 
-    def browse_item(self, db_item: DBItem):
+    def browse_item(self, db_item: DBItem, folder_path):
 
-        folder_path = None
-        if isinstance(db_item, Raster):
-            folder_path = os.path.join(os.path.dirname(self.project.project_file), db_item.path)
-        else:
-            folder_path = self.project.project_file
+        # folder_path = None
+        # if isinstance(db_item, Raster):
+        #     folder_path = os.path.join(os.path.dirname(self.project.project_file), db_item.path)
+        # else:
+        #     folder_path = self.project.project_file
 
-        while not os.path.isdir(folder_path):
-            folder_path = os.path.dirname(folder_path)
+        # while not os.path.isdir(folder_path):
+        #     folder_path = os.path.dirname(folder_path)
 
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
