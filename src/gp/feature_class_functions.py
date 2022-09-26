@@ -3,10 +3,10 @@ from osgeo import osr
 from shapely.wkb import loads as wkbload, dumps as wkbdumps
 from osgeo.gdal import Warp, WarpOptions
 from qgis.PyQt.QtWidgets import QMessageBox
-
+from qgis.core import QgsVectorLayer
 
 from qgis.gui import QgsDataSourceSelectDialog
-from qgis.core import QgsMapLayer
+from qgis.core import QgsMapLayer, QgsWkbTypes
 
 
 def check_geometry_type(path) -> int:
@@ -60,17 +60,41 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
     dst_dataset = None
 
 
-def browse_source(parent, description: str, layer_type: QgsMapLayer) -> str:
+def browse_raster(parent, description: str) -> str:
     # https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html
-    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=layer_type)
+    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=QgsMapLayer.RasterLayer)
     frm_browse.setDescription(description)
 
     frm_browse.exec()
     uri = frm_browse.uri()
-    # TODO: check only polygon geometry
     if uri is not None and uri.isValid():
-        if layer_type == QgsMapLayer.VectorLayer and uri.wkbType != 3:
-            QMessageBox.warning(parent, 'Invalid Geometry Type', "The layer must be of geometry type 'polygon'.")
+        return uri.uri
+
+    return None
+
+
+def browse_vector(parent, description: str, geometry_type: QgsWkbTypes.GeometryType) -> str:
+    """
+    https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html
+    https://api.qgis.org/api/classQgsWkbTypes.html#a60e72c2f73cb07fdbcdbc2d5068b5d9c
+
+    QgsWkbTypes.GeometryType.PointGeometry
+    QgsWkbTypes.GeometryType.LineGeometry
+    QgsWkbTypes.GeometryType.PolygonGeometry
+    QgsWkbTypes.GeometryType.UnknownGeometry
+    QgsWkbTypes.GeometryType.NullGeometry
+    """
+
+    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=QgsMapLayer.VectorLayer)
+    frm_browse.setDescription(description)
+
+    frm_browse.exec()
+    uri = frm_browse.uri()
+    if uri is not None and uri.isValid():
+        layer = QgsVectorLayer(uri.uri, '', 'ogr')
+        if geometry_type is not None and geometry_type != layer.geometryType():
+            QMessageBox.warning(parent, 'Invalid Geometry Type',
+                                f'The layer is of geometry type {QgsWkbTypes.geometryDisplayString(layer.geometryType())} but must be of type {QgsWkbTypes.geometryDisplayString(geometry_type)}.')
             return None
 
         return uri.uri

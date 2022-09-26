@@ -31,6 +31,8 @@ from qgis.core import (
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
 
+from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
+
 from ..model.pour_point import PourPoint
 from ..model.pour_point import CONTEXT_NODE_TAG
 
@@ -159,7 +161,7 @@ def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
     if parent_node is None:
         return
 
-    if len(group_node.children()) <= 1:
+    if len(group_node.children()) < 1:
         parent_node.removeChildNode(group_node)
 
     if isinstance(parent_node, QgsLayerTreeGroup):
@@ -173,6 +175,7 @@ def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
         tree_layer_node = get_db_item_layer(db_item, project_group)
         if tree_layer_node is not None:
             # QgsProject.removeMapLayer()
+            # QgsProject.instance().removeMapLayer(lyr)
             parent_node = tree_layer_node.parent()
             parent_node.removeChildNode(tree_layer_node)
 
@@ -315,6 +318,23 @@ def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask)
 
     return mask_feature_layer
+
+
+def build_scratch_vector(project: Project, vector: ScratchVector):
+
+    if check_for_existing_layer(project, vector) is not None:
+        return
+
+    project_group = get_project_group(project)
+    group_layer = get_group_layer(SCRATCH_VECTOR_MACHINE_CODE, 'Scratch Vectors', project_group, True)
+    feature_path = vector.gpkg_path + '|layername=' + vector.fc_name
+    feature_layer = QgsVectorLayer(feature_path, vector.name, 'ogr')
+
+    QgsProject.instance().addMapLayer(feature_layer, False)
+    tree_layer_node = group_layer.addLayer(feature_layer)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, vector)
+
+    return feature_layer
 
 
 def build_pour_point_map_layer(project: Project, pour_point: PourPoint):

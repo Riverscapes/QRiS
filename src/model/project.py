@@ -9,6 +9,7 @@ from .basemap import Raster, load_rasters, RASTER_TYPE_BASEMAP
 from .event import Event, load as load_events
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
+from .scratch_vector import ScratchVector, load_scratch_vectors
 
 from .db_item import DBItem, dict_factory, load_lookup_table
 
@@ -38,13 +39,15 @@ class Project(DBItem):
                 'lkp_platform',
                 'lkp_event_types',
                 'lkp_design_status',
-                'lkp_raster_types'
+                'lkp_raster_types',
+                'lkp_scratch_vector_types'
             ]}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)
             self.protocols = load_protocols(curs, self.layers)
             self.rasters = load_rasters(curs)
+            self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps())
             self.metrics = load_metrics(curs)
             self.analyses = load_analyses(curs, self.masks, self.metrics)
@@ -74,6 +77,8 @@ class Project(DBItem):
             self.pour_points.pop(db_item.id)
         elif isinstance(db_item, Analysis):
             self.analyses.pop(db_item.id)
+        elif isinstance(db_item, ScratchVector):
+            self.scratch_vectors.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 

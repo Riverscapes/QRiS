@@ -29,6 +29,7 @@
         <file alias="riverscapes_icon">../Images/riverscapes_icon.png</file>
         <file alias="riverscapes_logo">../Images/riverscapes_logo.png</file>
         <file alias="slider">../Images/slider.png</file>
+        <file alias="vector">../Images/vector.png</file>
         <file alias="watershed">../Images/watershed.png</file> 
     </qresource>
 </RCC>

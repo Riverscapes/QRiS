@@ -142,8 +142,11 @@ CREATE TABLE lkp_context_layer_types (
 INSERT INTO lkp_context_layer_types (id, name) VALUES (1, 'Aerial imagery');
 INSERT INTO lkp_context_layer_types (id, name) VALUES (2, 'DEM');
 INSERT INTO lkp_context_layer_types (id, name) VALUES (3, 'Detrended DEM');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (4, 'Hillshade');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (5, 'Other');
+INSERT INTO lkp_context_layer_types (id, name) VALUES (4, 'Geomorphic Change Detection (GCD)');
+INSERT INTO lkp_context_layer_types (id, name) VALUES (5, 'Hillshade');
+INSERT INTO lkp_context_layer_types (id, name) VALUES (6, 'Slope Raster');
+INSERT INTO lkp_context_layer_types (id, name) VALUES (7, 'VBET Evidence');
+INSERT INTO lkp_context_layer_types (id, name) VALUES (8, 'Other');
 
 -- so, can these be vector and raster? does it matter?
 CREATE TABLE context_layers (
@@ -155,6 +158,7 @@ CREATE TABLE context_layers (
     path TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE TABLE projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -234,6 +238,29 @@ CREATE TABLE rasters (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX fx_rasters_raster_type_id ON rasters(raster_type_id);
+
+
+CREATE TABLE lkp_scratch_vector_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_scratch_vector_types (id, name) VALUES (1, 'Other');
+
+CREATE TABLE scratch_vectors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vector_type_id INTEGER REFERENCES lkp_scratch_vector_types(id),
+    name TEXT UNIQUE NOT NULL,
+    fc_name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX fx_scratch_vectors_vector_type_id ON scratch_vectors(vector_type_id);
+
 
 CREATE TABLE event_basemaps (
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
