@@ -100,8 +100,8 @@ class FrmScratchVector(QtWidgets.QDialog):
 
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
-                self.on_copy_complete(copy_vector.run())
-                return
+                # self.on_copy_complete(copy_vector.run())
+                # return
 
                 # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
                 self.buttonBox.setEnabled(False)
