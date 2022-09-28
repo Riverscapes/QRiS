@@ -64,6 +64,7 @@ from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basema
 from ..gp.feature_class_functions import browse_raster, browse_vector
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
+from ..gp.metrics_task import MetricsTask
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -219,6 +220,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     or isinstance(model_data, PourPoint) \
                     or isinstance(model_data, Analysis):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
+
+            if isinstance(model_data, Mask):
+                self.add_context_menu_item(self.menu, 'Geospatial Summary', 'gis', lambda: self.geospatial_summary(model_item, model_data))
 
             if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                 self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -515,6 +519,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
                 else:
                     self.add_child_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
+
+    def geospatial_summary(self, model_item, model_data: Mask):
+
+        task = MetricsTask(self.project, model_data)
+        task.run()
 
     def delete_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
