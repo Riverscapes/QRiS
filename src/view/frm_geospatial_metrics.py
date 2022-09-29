@@ -50,7 +50,11 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
                 for metric_name, metric_value in poly_values.items():
                     metric_item = QtGui.QStandardItem(metric_name)
-                    metric_value_item = QtGui.QStandardItem(str(metric_value))
+                    if isinstance(metric_value, float):
+                        metric_value_str = '{:,.2f}'.format(metric_value)
+                    else:
+                        metric_value_str = '{:,}'.format(metric_value)
+                    metric_value_item = QtGui.QStandardItem(str(metric_value_str))
                     poly_item.appendRow([metric_item, metric_value_item])
 
                     # metric_item.appendColumn([metric_value_item])
