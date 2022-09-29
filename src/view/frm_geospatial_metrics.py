@@ -64,6 +64,12 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         self.tree.setModel(self.treeModel)
         self.tree.expandAll()
 
+    def on_export(self):
+        QtWidgets.QMessageBox.warning(None, 'Export Metrics', 'This Feature Is Not Implemented.')
+
+    def on_settings(self):
+        QtWidgets.QMessageBox.warning(None, 'Settings', 'This Feature Is Not Implemented.')
+
     def accept(self):
 
         super().accept()
@@ -85,19 +91,22 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
         self.rdoPolygonsFirst = QtWidgets.QRadioButton()
         self.rdoPolygonsFirst.setText('Polygons then Layers')
-        self.rdoPolygonsFirst.setChecked(True)
+        self.rdoPolygonsFirst.setEnabled(False)
         self.horizCommands.addWidget(self.rdoPolygonsFirst)
 
         self.rdoLayersFirst = QtWidgets.QRadioButton()
         self.rdoLayersFirst.setText('Layers then Polygons')
+        self.rdoLayersFirst.setChecked(True)
         self.horizCommands.addWidget(self.rdoLayersFirst)
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export Data')
+        self.cmdExport.clicked.connect(self.on_export)
         self.horizCommands.addWidget(self.cmdExport)
 
         self.cmdSettings = QtWidgets.QPushButton()
         self.cmdSettings.setText('Settings')
+        self.cmdSettings.clicked.connect(self.on_settings)
         self.horizCommands.addWidget(self.cmdSettings)
 
         self.tree = QtWidgets.QTreeView()
