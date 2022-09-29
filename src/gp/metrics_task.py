@@ -9,6 +9,7 @@ from ..model.mask import Mask
 from .metrics import Metrics
 from ..model.basemap import SCRATCH_PARENT_FOLDER
 import webbrowser
+from ..QRiS.method_to_map import QRIS_MAP_LAYER_MACHINE_CODE
 
 MESSAGE_CATEGORY = 'QRiS_CopyFeatureClassTask'
 
@@ -26,8 +27,15 @@ class MetricsTask(QgsTask):
 
         self.map_layers = []
         for layer in QgsProject.instance().mapLayers().values():
-            if QgsProject.instance().layerTreeRoot().findLayer(layer.id()).itemVisibilityChecked():
-                layer_def = {'name:': layer.name, 'url': layer.dataProvider().dataSourceUri()}
+            layer_node = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
+            if layer_node.itemVisibilityChecked():
+
+                # Skip the mask being used to summarize layers
+                prop = layer_node.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+                if prop and isinstance(prop, Mask) and prop == mask:
+                    continue
+
+                layer_def = {'name': layer.name(), 'url': layer.dataProvider().dataSourceUri()}
                 if isinstance(layer, QgsRasterLayer):
                     layer_def['type'] = 'raster'
                     self.map_layers.append(layer_def)
@@ -51,6 +59,7 @@ class MetricsTask(QgsTask):
         """
         try:
             self.data = self.metrics.run()
+            self.polygons = self.metrics.polygons
 
         except Exception as ex:
             self.exception = ex
