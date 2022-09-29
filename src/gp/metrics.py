@@ -96,8 +96,14 @@ class Metrics:
 
     def process_vector(self, layer_def):
 
-        ds = ogr.Open(layer_def['url'])
-        layer = ds.GetLayerByName(layer_def['name']) if ds.GetLayerCount() > 1 else ds.GetLayer(0)
+        if '|' in layer_def['url']:
+            parts = layer_def['url'].split('|')
+            ds = ogr.Open(parts[0])
+            layer_name = parts[1].replace('layername=', '')
+            layer = ds.GetLayerByName(layer_name)
+        else:
+            ds = ogr.Open(layer_def['url'])
+            layer = ds.GetLayer(0)
         src_srs = layer.GetSpatialRef()
 
         dst_srs = osr.SpatialReference()
@@ -128,9 +134,9 @@ class Metrics:
                     polygon_metrics['count'] += 1
 
                     if inter.geom_type == 'LineString' or inter.geom_type == 'MultiLineString':
-                        polygon_metrics['area'] += inter.length
+                        polygon_metrics['length'] = inter.length if 'length' not in polygon_metrics else inter.length + polygon_metrics['length']
                     elif inter.geom_type == 'Polygon' or inter.geom_type == 'MultiPolygon':
-                        polygon_metrics['length'] += inter.area
+                        polygon_metrics['area'] = inter.area if 'area' not in polygon_metrics else inter.area + polygon_metrics['area']
 
             metrics[polygon_id] = polygon_metrics
 

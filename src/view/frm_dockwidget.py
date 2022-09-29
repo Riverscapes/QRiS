@@ -56,6 +56,7 @@ from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
 from .frm_slider import FrmSlider
 from .frm_scratch_vector import FrmScratchVector
+from .frm_geospatial_metrics import FrmGeospatialMetrics
 
 from ..QRiS.settings import Settings
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
@@ -523,7 +524,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def geospatial_summary(self, model_item, model_data: Mask):
 
         task = MetricsTask(self.project, model_data)
-        task.run()
+        result = task.run()
+
+        if result is True:
+            frm = FrmGeospatialMetrics(self, self.project, model_data, task.polygons, task.data)
+            frm.exec_()
 
     def delete_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
