@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import html
+from .units import Units
 
 from qgis.core import QgsMessageLog, Qgis, QgsProject, QgsSettings
 
@@ -43,6 +44,8 @@ class Settings(SettingsBorg):
 
     def __init__(self, iface=None):
         SettingsBorg.__init__(self)
+
+        self.units = Units('meter', 'square_meter')
 
         # The iface is important as a pointer so we can get to the messagebar
         if iface is not None and 'iface' not in self.__dict__:

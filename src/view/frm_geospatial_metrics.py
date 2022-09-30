@@ -2,24 +2,27 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsVectorLayer
 
+from .frm_options import FrmOptions
+
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_mask
 from .utilities import validate_name, add_standard_form_buttons
+from scipy import constants
 
 
 class FrmGeospatialMetrics(QtWidgets.QDialog):
 
     def __init__(self, parent, project: Project, mask: Mask, polygons: dict, metrics: dict):
+        super().__init__(parent)
 
         self.qris_project = project
         self.mask = mask
         self.metrics = metrics
         self.polygons = polygons
 
-        super().__init__(parent)
         self.setupUi()
 
         self.setWindowTitle(f'Geospatial Metrics for {self.mask.name}')
@@ -68,6 +71,8 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         QtWidgets.QMessageBox.warning(None, 'Export Metrics', 'This Feature Is Not Implemented.')
 
     def on_settings(self):
+        frm = FrmOptions(self, None)
+        frm.exec_()
         QtWidgets.QMessageBox.warning(None, 'Settings', 'This Feature Is Not Implemented.')
 
     def accept(self):
