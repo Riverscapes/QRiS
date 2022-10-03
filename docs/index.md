@@ -12,7 +12,7 @@ The QRiS is a [QGIS](https://www.qgis.org/) plugin designed to support a unified
 
 ** QRiS Beta Overview
 
-The beta release is primarily meant to support consistent documentation of LTPBR designs within QGIS. The LTPBR design documentation attributes follow the ideas presented in the [LTPBR Manual](https://lowtechpbr.restoration.usu.edu/) as well as the [LTPBR Implementation and Monitoring Protocol](http://fmltpbr.riverscapes.xyz/).
+The beta release is primarily meant to support consistent documentation of LTPBR designs within QGIS. The LTPBR design documentation attributes follow the ideas presented in the [LTPBR Manual](https://lowtechpbr.restoration.usu.edu/) as well as the [LTPBR Implementation and Monitoring Protocol](http://fmltpbr.riverscapes.net).
 
 <div class="responsive-embed widescreen">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/2fhFpqZZ3qs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>

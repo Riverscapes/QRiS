@@ -16,10 +16,10 @@
         "businessLogicDir": "blXML",
         "symbologyDir": "symbology",
         "digestSyncFreqHours": 24,
-        "warehouseUrl": "https://data.riverscapes.xyz/#",
+        "warehouseUrl": "https://data.riverscapes.net/#",
         "webUrl": "https://riverscapes.github.io/QRiS/",
         "issueUrl": "https://github.com/Riverscapes/QRiS/discussions",
         "changelogUrl": "https://github.com/Riverscapes/QRiS/releases",
-        "resourcesUrl": "https://xml.riverscapes.xyz/"
+        "resourcesUrl": "https://xml.riverscapes.net/"
     }
 }

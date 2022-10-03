@@ -292,7 +292,7 @@ class QRiSReport(Report):
 
 
 if __name__ == '__main__':
-    # cfg = ModelConfig('http://xml.riverscapes.xyz/Projects/XSD/V1/BRAT.xsd', __version__)
+    # cfg = ModelConfig('http://xml.riverscapes.net/Projects/XSD/V1/BRAT.xsd', __version__)
     # project = RSProject(cfg, args.projectxml)
 
     # Output file path
