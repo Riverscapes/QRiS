@@ -23,7 +23,7 @@ QRAVE requires QGIS 3.16 or newer.
 
 ## QGIS - Need to get GIS?
 
-If you do not have [QGIS](https://qgis.org/) already, or even if you have never used GIS, we show you below how quickly you can get up and running with the free desktop QGIS software (on Windows, Mac or Linux) and get QRAVE installed and start looking at a [Riverscapes Project](https://riverscapes.xyz/Tools/Technical_Reference/Documentation_Standards/Riverscapes_Projects/) from the [Riverscapes Warehouse](https://data.riverscapes.xyz/).
+If you do not have [QGIS](https://qgis.org/) already, or even if you have never used GIS, we show you below how quickly you can get up and running with the free desktop QGIS software (on Windows, Mac or Linux) and get QRAVE installed and start looking at a [Riverscapes Project](https://riverscapes.net/Tools/Technical_Reference/Documentation_Standards/Riverscapes_Projects/) from the [Riverscapes Warehouse](https://data.riverscapes.net/).
 
 **Installation time**: < 5 minutes
 
