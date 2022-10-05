@@ -2,13 +2,12 @@ import os
 import json
 import numpy as np
 import math
-import rasterio
-from rasterio.mask import mask
 import osgeo
 from osgeo import ogr, gdal, osr
 from shapely.wkb import load, loads as wkbload, dumps as wkbdumps
 from osgeo import gdal
 from shapely.geometry import mapping
+from .zonal_statistics import zonal_statistics
 
 
 class Metrics:
@@ -163,33 +162,12 @@ class Metrics:
         transform_utm_to_src = osr.CoordinateTransformation(dst_srs, src_srs)
 
         results = {}
-        with rasterio.open(layer_def['url']) as src:
-            for polygon_id, polygon_data in self.polygons.items():
 
-                mean = maximum = minimum = count = rsum = None
-                try:
-                    polygon = polygon_data['geometry']
-                    polygon_geom = ogr.CreateGeometryFromWkb(polygon.wkb)
-                    polygon_geom.Transform(transform_utm_to_src)
-                    shape = wkbload(bytes(polygon_geom.ExportToWkb()))
-                    # print(json.dumps(mapping(shape)))
-
-                    # retrieve an array for the cells under the polygon
-                    raw_raster, _out_transform = mask(src, [shape], crop=True)
-                    mask_raster = np.ma.masked_values(raw_raster, src.nodata)
-                    # print(mask_raster)
-
-                    if not mask_raster.mask.all():
-                        mean = float(mask_raster.mean())
-                        maximum = float(mask_raster.max())
-                        minimum = float(mask_raster.min())
-                        count = int(mask_raster.count())
-                        rsum = float(mask_raster.sum())
-                except Exception as ex:
-                    if 'input shapes do not overlap raster' not in str(ex).lower():
-                        raise Exception(f"Error processing polygon {polygon_id} in raster {layer_def['name']}", ex)
-
-                results[polygon_id] = {'Mean': mean, 'Maximum': maximum, 'Minimum': minimum, 'Count': count, 'Sum': rsum}
+        for polygon_id, polygon_data in self.polygons.items():
+            polygon = polygon_data['geometry']
+            polygon_geom = ogr.CreateGeometryFromWkb(polygon.wkb)
+            polygon_geom.Transform(transform_utm_to_src)
+            results[polygon_id] = zonal_statistics(layer_def['url'], polygon_geom)
 
         return results
 

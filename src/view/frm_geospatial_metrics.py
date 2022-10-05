@@ -53,7 +53,9 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
                 for metric_name, metric_value in poly_values.items():
                     metric_item = QtGui.QStandardItem(metric_name)
-                    if isinstance(metric_value, float):
+                    if metric_value is None:
+                        metric_value_str = ''
+                    elif isinstance(metric_value, float):
                         metric_value_str = '{:,.2f}'.format(metric_value)
                     else:
                         metric_value_str = '{:,}'.format(metric_value)
