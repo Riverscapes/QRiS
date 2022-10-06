@@ -18,6 +18,7 @@ from PyQt5.QtGui import *
 from qgis.PyQt.QtCore import QVariant
 from qgis.analysis import QgsNativeAlgorithms
 
+Path = str
 
 # Initialize QGIS Application
 from qgis import processing
@@ -30,27 +31,26 @@ QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 # simplify tolerance
 # use 0.00008 for most 1m LiDAR
 # try 0.0001 for 10 m elevation data
-simplify_tolerance = 0.00008
+#simplify_tolerance = 0.00008
 
 # smoothing parameter
 # use from 0.25 to 0.5. Use higher value for 10 m DEM
-smoothing_offset = 0.25
+#smoothing_offset = 0.25
 
 # small polygon removal area in meters
 # generally been using 9 meters as a cutoff to remove small islands
-polygon_min_size = 9
+#polygon_min_size = 9
 
 
-def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surface_name='valley bottom'):
-
-    # raster_layer = QgsRasterLayer(raster_path, 'in_raster')
-    out_polygon_path = os.path.join(out_gpkg, out_layer_name)
+def raster_to_polygon(raster_path: Path, out_gpkg: Path, out_layer_name: str, raster_value: float, simplify_tolerance: float = 0.00008, smoothing_offset: float = 0.25, polygon_min_size: float = 9.0):
 
     # --------- PROCESSING -------------
 
     # -- DEM --
     tempdir = tempfile.TemporaryDirectory()
     temp_raster = os.path.join(tempdir.name, "less_than.tif")
+
+    surface_name = os.path.splitext(os.path.basename(raster_path))[0]
 
     gp_calc = processing.run('gdal:rastercalculator', {'INPUT_A': raster_path,
                                                        'BAND_A': 1,
@@ -81,7 +81,7 @@ def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surfa
     pv = raw_vector.dataProvider()
 
     # add the attribute and update
-    pv.addAttributes([QgsField('raw_area_m', QVariant.Int), QgsField(
+    pv.addAttributes([QgsField('raw_area_m', QVariant.Double), QgsField(
         'max_elev_m', QVariant.Double), QgsField('surface_name', QVariant.String)])
     raw_vector.updateFields()
 
@@ -204,7 +204,7 @@ def raster_to_polygon(raster_path, out_gpkg, out_layer_name, raster_value, surfa
     if os.path.exists(out_gpkg):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
     QgsVectorFileWriter.writeAsVectorFormat(
-        final_vector, out_gpkg, options)
+        final_vector, out_gpkg, options)  # final_vector
 
     # open the output layer
-    QgsVectorLayer(out_polygon_path, out_layer_name, 'ogr')
+    #QgsVectorLayer(out_polygon_path, out_layer_name, 'ogr')

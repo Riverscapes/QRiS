@@ -322,6 +322,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.slider_doc_widget = FrmSlider(self, self.project)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.slider_doc_widget)
 
+        self.slider_doc_widget.export_complete.connect(self.raster_slider_export_complete)
+
         self.slider_doc_widget.configure_raster(db_item)
         self.slider_doc_widget.show()
 
@@ -481,6 +483,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         else:
             self.iface.messageBar().pushMessage('Stream Stats Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+
+    @pyqtSlot(ScratchVector, bool)
+    def raster_slider_export_complete(self, scratch_vector: ScratchVector, add_to_map: bool):
+
+        if isinstance(scratch_vector, ScratchVector):
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            context_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
+            self.add_child_to_project_tree(context_node, scratch_vector, add_to_map)
+        else:
+            self.iface.messageBar().pushMessage('Export Polygon Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
     def edit_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 

@@ -1,13 +1,19 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import pyqtSignal
+
+from ..model.scratch_vector import ScratchVector
 
 from ..model.basemap import Raster
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
+from .frm_slider_scratch_vector import FrmSliderScratchVector
 
 from ..QRiS.method_to_map import build_raster_slider_layer, apply_raster_slider_value, get_raster_statistics
 
 
 class FrmSlider(QtWidgets.QDockWidget):
+
+    export_complete = pyqtSignal(ScratchVector, bool)
 
     def __init__(self, parent, project: Project):
         super().__init__(parent)
@@ -15,6 +21,7 @@ class FrmSlider(QtWidgets.QDockWidget):
 
         self.project = project
         self.raster = None
+        self.scratch_vector = None
 
     def configure_raster(self, raster: Raster):
 
@@ -44,7 +51,17 @@ class FrmSlider(QtWidgets.QDockWidget):
             self.raster = frm.layer
 
     def cmdExport_click(self):
-        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Exporting is not yet implemented.')
+
+        raster_path = self.project.get_absolute_path(self.raster.path)
+        threshold_value = self.valElevation.value()
+
+        frm = FrmSliderScratchVector(self, self.project, raster_path, threshold_value)
+        frm.exec_()
+
+        self.add_to_map = frm.chkAddToMap.isChecked()
+        self.scratch_vector = frm.scratch_vector
+
+        self.export_complete.emit(self.scratch_vector, self.add_to_map)
 
     def setupUi(self):
 
