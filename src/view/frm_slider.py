@@ -13,7 +13,7 @@ from ..QRiS.method_to_map import build_raster_slider_layer, apply_raster_slider_
 
 class FrmSlider(QtWidgets.QDockWidget):
 
-    export_complete = pyqtSignal(ScratchVector, bool)
+    export_complete = pyqtSignal(ScratchVector or None, bool)
 
     def __init__(self, parent, project: Project):
         super().__init__(parent)
