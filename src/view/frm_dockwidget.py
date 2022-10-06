@@ -223,7 +223,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
             if isinstance(model_data, Mask):
-                self.add_context_menu_item(self.menu, 'Geospatial Summary', 'gis', lambda: self.geospatial_summary(model_item, model_data))
+                self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
 
             if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                 self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))

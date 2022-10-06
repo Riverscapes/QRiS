@@ -25,7 +25,7 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
         self.setupUi()
 
-        self.setWindowTitle(f'Geospatial Metrics for {self.mask.name}')
+        self.setWindowTitle(f'Zonal Statistics for {self.mask.name}')
 
         self.txtMask.setText(self.mask.name)
 
@@ -70,7 +70,7 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         self.tree.expandAll()
 
     def on_export(self):
-        QtWidgets.QMessageBox.warning(None, 'Export Metrics', 'This Feature Is Not Implemented.')
+        QtWidgets.QMessageBox.warning(None, 'Export Zonal Statistics', 'This Feature Is Not Implemented.')
 
     def on_settings(self):
         frm = FrmOptions(self, None)
