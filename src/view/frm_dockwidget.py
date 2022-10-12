@@ -60,6 +60,7 @@ from .frm_slider import FrmSlider
 from .frm_scratch_vector import FrmScratchVector
 from .frm_geospatial_metrics import FrmGeospatialMetrics
 from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
+from .frm_centerline_docwidget import FrmCenterlineDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
@@ -119,6 +120,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
         self.stream_gage_doc_widget = None
+        self.centerline_doc_widget = None
 
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
@@ -263,6 +265,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                 self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
 
+            if isinstance(model_data, ScratchVector):
+                self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
                 self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
@@ -376,6 +381,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.slider_doc_widget.configure_raster(db_item)
         self.slider_doc_widget.show()
+
+    def generate_centerline(self, db_item: DBItem):
+
+        if self.centerline_doc_widget is None:
+            self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.project, self.iface)
+            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.centerline_doc_widget)
+
+        self.centerline_doc_widget.configure_polygon(db_item)
+        self.centerline_doc_widget.show()
 
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False) -> QtGui.QStandardItem:
         """
