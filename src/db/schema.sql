@@ -793,6 +793,34 @@ ALTER TABLE pour_points ADD COLUMN basin_characteristics TEXT;
 ALTER TABLE pour_points ADD COLUMN flow_statistics TEXT;
 ALTER TABLE catchments ADD COLUMN pour_point_id INT REFERENCES pour_points(fid) ON DELETE CASCADE;
 
+-- stream gages
+ALTER TABLE stream_gages ADD COLUMN site_code TEXT;
+ALTER TABLE stream_gages ADD COLUMN site_name TEXT;
+ALTER TABLE stream_gages ADD COLUMN site_type TEXT;
+ALTER TABLE stream_gages ADD COLUMN site_datum TEXT;
+ALTER TABLE stream_gages ADD COLUMN huc TEXT;
+ALTER TABLE stream_gages ADD COLUMN agency TEXT;
+ALTER TABLE stream_gages ADD COLUMN metadata TEXT;
+ALTER TABLE stream_gages ADD COLUMN latitude REAL;
+ALTER TABLE stream_gages ADD COLUMN longitude REAL;
+CREATE UNIQUE INDEX ux_stream_gages_site_code ON stream_gages(site_code);
+CREATE INDEX ix_stream_gages_site_name ON stream_gages(site_name);
+CREATE INDEX ix_stream_gages_huc_cd ON stream_gages(huc);
+
+-- stream gage discharge
+
+CREATE TABLE stream_gage_discharges
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stream_gage_id INTEGER REFERENCES stream_gages(fid) ON DELETE CASCADE,
+    measurement_date DATETIME,
+    discharge REAL,
+    discharge_code TEXT,
+    gage_height REAL,
+    gage_height_code TEXT
+);
+CREATE INDEX fx_stream_gage_discharges ON stream_gage_discharges(stream_gage_id);
+CREATE INDEX ux_stream_gage_discharges ON stream_gage_discharges(stream_gage_id, measurement_date);
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.

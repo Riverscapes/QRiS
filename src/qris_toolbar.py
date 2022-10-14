@@ -28,6 +28,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis
 from qgis.gui import QgsMapToolEmitPoint
+from .gp.stream_gage_task import StreamGageTask
 
 # TODO fix this
 from .gp.provider import Provider

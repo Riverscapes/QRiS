@@ -10,7 +10,7 @@ from .event import Event, load as load_events
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
 from .scratch_vector import ScratchVector, load_scratch_vectors
-
+from .stream_gage import StreamGage, load_stream_gages
 from .db_item import DBItem, dict_factory, load_lookup_table
 
 from pathlib import Path, PurePosixPath
@@ -52,6 +52,7 @@ class Project(DBItem):
             self.metrics = load_metrics(curs)
             self.analyses = load_analyses(curs, self.masks, self.metrics)
             self.pour_points = load_pour_points(curs)
+            self.stream_gages = load_stream_gages(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))

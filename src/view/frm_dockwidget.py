@@ -23,6 +23,7 @@
 """
 
 import os
+from matplotlib.style import context
 from osgeo import ogr
 from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes
 from qgis.utils import iface
@@ -44,6 +45,7 @@ from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, CONTEXT_NODE_TAG
+from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
@@ -57,6 +59,7 @@ from .frm_analysis_docwidget import FrmAnalysisDocWidget
 from .frm_slider import FrmSlider
 from .frm_scratch_vector import FrmScratchVector
 from .frm_geospatial_metrics import FrmGeospatialMetrics
+from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
 
 from ..QRiS.settings import Settings
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
@@ -66,6 +69,7 @@ from ..gp.feature_class_functions import browse_raster, browse_vector
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.metrics_task import MetricsTask
+from ..gp.stream_gage_task import StreamGageTask
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -81,7 +85,8 @@ GROUP_FOLDER_LABELS = {
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
     ANALYSIS_MACHINE_CODE: 'Analyses',
     CONTEXT_NODE_TAG: 'Context',
-    SCRATCH_NODE_TAG: 'Scratch'
+    SCRATCH_NODE_TAG: 'Scratch',
+    STREAM_GAGE_NODE_TAG: 'Stream Gages'
 }
 
 
@@ -145,6 +150,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
+
+        gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_NODE_TAG)
+        [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
@@ -222,9 +230,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
+                elif model_data == STREAM_GAGE_NODE_TAG:
+                    self.add_context_menu_item(self.menu, 'Download Stream Gage Information for Map Extent', 'refresh', lambda: self.download_stream_gages())
+                    self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
 
-                    # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                    # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
+                # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
+                # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
@@ -337,6 +348,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
             self.analysis_doc_widget.show()
 
+    def stream_gage_explorer(self):
+
+        if self.stream_gage_doc_widget is None:
+            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.project)
+            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.stream_gage_doc_widget)
+
+        # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
+        self.stream_gage_doc_widget.show()
+
     def raster_slider(self, db_item: DBItem):
 
         if self.slider_doc_widget is None:
@@ -427,6 +447,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
+
+    def download_stream_gages(self):
+
+        extent = self.iface.mapCanvas().extent()
+        task = StreamGageTask(self.project.project_file, extent.yMinimum(), extent.yMaximum(), extent.xMinimum(), extent.xMaximum())
+        task.run()
+
+    def explore_stream_gages(self):
+        print('Not implemented')
 
     def add_mask(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
         """Initiates adding a new mask"""
