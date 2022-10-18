@@ -526,29 +526,18 @@ class QRiSToolbar:
             self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
 
         dialog.lblAcknowledgements.setText(self.acknowledgements)
-    #             dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
-    #             if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-    #                 pass
-    #         else:
-    #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
+        #             dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
+        #             if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
+        #                 pass
+        #         else:
+        #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
 
     def configure_help_menu(self):
 
-
-   dialog.lblAcknowledgements.setText(self.acknowledgements)
-
-   #             dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
-   #             if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-   #                 pass
-   #         else:
-   #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
-
-   def configure_help_menu(self):
-
-        self.helpButton = QToolButton()
-        self.helpButton.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.helpButton.setMenu(QMenu())
-        self.helpButton.setPopupMode(QToolButton.MenuButtonPopup)
+        self.helpButton = QtWidgets.QToolButton()
+        self.helpButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        self.helpButton.setMenu(QtWidgets.QMenu())
+        self.helpButton.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
 
         m = self.helpButton.menu()
 
@@ -566,12 +555,12 @@ class QRiSToolbar:
         # )
         # self.websiteAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("http://rave.riverscapes.xyz")))
 
-        self.helpAction = QAction(
-            QIcon(':/plugins/qris_toolbar/Help.png'),
+        self.helpAction = QtWidgets.QAction(
+            QtGui.QIcon(':/plugins/qris_toolbar/Help.png'),
             self.tr('Help'),
             self.iface.mainWindow()
         )
-        self.helpAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("https://riverscapes.github.io/QRiS/")))
+        self.helpAction.triggered.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://riverscapes.github.io/QRiS/")))
 
         # self.raveOptionsAction = QAction(
         #     QIcon(':/plugins/qris_toolbar/Options.png'),
@@ -594,8 +583,8 @@ class QRiSToolbar:
         # )
         # self.find_resources_action.triggered.connect(self.locateResources)
 
-        self.about_action = QAction(
-            QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
+        self.about_action = QtWidgets.QAction(
+            QtGui.QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
             self.tr('About QRiS'),
             self.iface.mainWindow()
         )
@@ -620,6 +609,5 @@ class QRiSToolbar:
         if self.acknowledgements is None:
             self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
 
-        dialog.acknowledgements.setText(self.acknowledgements)
-
-   dialog.exec_()
+        dialog.lblAcknowledgements.setText(self.acknowledgements)
+        dialog.exec_()

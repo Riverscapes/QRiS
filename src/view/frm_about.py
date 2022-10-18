@@ -1,15 +1,12 @@
-from qgis.PyQt.QtWidgets import QDialog
-from qgis.PyQt.QtGui import QPixmap
-from qgis.PyQt.QtCore import pyqtSignal
+import requests
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ..QRiS.settings import CONSTANTS
-
-from .ui.about_dialog import Ui_Dialog
 
 from .. import __version__
 
 
-class FrmAboutDialog(QDialog, Ui_Dialog):
+class FrmAboutDialog(QtWidgets.QDialog):
     """
     About Dialog
     """
