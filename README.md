@@ -1,5 +1,8 @@
 # QGIS Riverscapes Studio (QRiS)
 
+Users, please visit [QRiS website](https://qris.riverscapes.net) for help, documentation and installation instructions. QRiS is installed from the QGIS Plugins Library.  
+
+# Developers
 ***NB: Be sure to develop in VSCode by opening the relevant Workspace***
 
 * `Workspaces\RIPTOSXDev copy.code-workspace`
