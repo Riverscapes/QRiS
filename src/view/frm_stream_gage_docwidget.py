@@ -47,6 +47,17 @@ from .frm_metric_value import FrmMetricValue
 
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 
+# https://stackoverflow.com/questions/31406193/matplotlib-is-not-worked-with-qgis
+# from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+# import matplotlib.pyplot as plt
+
+import matplotlib as mpl
+# mpl.use('Qt4Agg')  # or mpl.use('agg')
+# import matplotlib.pyplot as plt
+
+# from matplotlib.figure import Figure
+# from matplotlib import axes
+
 
 class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
@@ -116,6 +127,23 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         # self.spacer = QtWidgets.QSpacerItem(1, 1)
         # self.right_vert.addWidget(self.spacer)
-        self.right_vert.addStretch(1)
+
+        # https://gis.stackexchange.com/questions/277873/matplotlib-integration-in-qgis
+        # https://gis.stackexchange.com/questions/97254/problem-with-matplotlib-when-installing-qgis-on-mac
+
+        # self.figure = Figure(facecolor='white')
+
+        # plt.scatter([1, 2, 3], [2, 5, 8], c='#DA8044', alpha=0.5)
+
+        self.vwGraph = QtWidgets.QGraphicsView()
+        self.right_vert.addWidget(self.vwGraph)
+        self.scene = QtWidgets.QGraphicsScene()
+        # self.right_vert.addWidget(self.scene)
+
+        # canvas = FigureCanvas(plt)
+        # self.scene.addWidget(self.figure.canvas)
+        self.vwGraph.setScene(self.scene)
+
+        # self.right_vert.addStretch(1)
 
         self.setWidget(self.dockWidgetContents)
