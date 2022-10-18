@@ -6,6 +6,7 @@
         <file alias="arrow_up">../Images/arrow_up.png</file>
         <file alias="basemap">../Images/basemap.png</file>
         <file alias="collapse">../Images/collapse.png</file>
+        <file alias="database">../Images/database.png</file>
         <file alias="design">../Images/design.png</file>
         <file alias="delete">../Images/delete.png</file>
         <file alias="detrend">../Images/detrend.png</file>

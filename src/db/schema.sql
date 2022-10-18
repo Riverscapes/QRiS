@@ -817,10 +817,12 @@ CREATE TABLE stream_gage_discharges
     discharge REAL,
     discharge_code TEXT,
     gage_height REAL,
-    gage_height_code TEXT
+    gage_height_code TEXT,
+
+    UNIQUE (stream_gage_id, measurement_date)
 );
 CREATE INDEX fx_stream_gage_discharges ON stream_gage_discharges(stream_gage_id);
-CREATE INDEX ux_stream_gage_discharges ON stream_gage_discharges(stream_gage_id, measurement_date);
+-- CREATE INDEX ux_stream_gage_discharges ON stream_gage_discharges(stream_gage_id, measurement_date);
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.

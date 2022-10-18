@@ -69,7 +69,6 @@ from ..gp.feature_class_functions import browse_raster, browse_vector
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.metrics_task import MetricsTask
-from ..gp.stream_gage_task import StreamGageTask
 
 SCRATCH_NODE_TAG = 'SCRATCH'
 
@@ -152,7 +151,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
         gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_NODE_TAG)
-        [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
+        # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
@@ -231,7 +230,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
                 elif model_data == STREAM_GAGE_NODE_TAG:
-                    self.add_context_menu_item(self.menu, 'Download Stream Gage Information for Map Extent', 'refresh', lambda: self.download_stream_gages())
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
 
                 # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
@@ -351,7 +349,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def stream_gage_explorer(self):
 
         if self.stream_gage_doc_widget is None:
-            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.project)
+            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.project)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.stream_gage_doc_widget)
 
         # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
@@ -390,8 +388,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Create a new node if none found, or ensure the existing node has the latest name
         if target_node is None:
             icon = FOLDER_ICON
+            if isinstance(data_item, DBItem):
+                icon = data_item.icon
+            elif data_item == STREAM_GAGE_NODE_TAG:
+                icon = 'database'
+
             target_node = QtGui.QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])
-            target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{data_item.icon if isinstance(data_item, DBItem) else FOLDER_ICON}'))
+            target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
             target_node.setData(data_item, QtCore.Qt.UserRole)
             parent_node.appendRow(target_node)
 
@@ -447,15 +450,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
-
-    def download_stream_gages(self):
-
-        extent = self.iface.mapCanvas().extent()
-        task = StreamGageTask(self.project.project_file, extent.yMinimum(), extent.yMaximum(), extent.xMinimum(), extent.xMaximum())
-        task.run()
-
-    def explore_stream_gages(self):
-        print('Not implemented')
 
     def add_mask(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
         """Initiates adding a new mask"""

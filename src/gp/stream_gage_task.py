@@ -1,3 +1,4 @@
+import sqlite3
 import requests
 import json
 import os
@@ -19,7 +20,7 @@ BASE_REQUEST = 'https://waterservices.usgs.gov/nwis/site/'
 class StreamGageTask(QgsTask):
 
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    on_task_complete = pyqtSignal(PourPoint or None, bool)
+    on_task_complete = pyqtSignal(bool, int)
 
     """
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
@@ -34,6 +35,7 @@ class StreamGageTask(QgsTask):
         self.min_lng = min_lng
         self.max_lng = max_lng
         self.gage_data = None
+        self.gages_downloaded = 0
 
     def run(self):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
@@ -86,7 +88,7 @@ class StreamGageTask(QgsTask):
         dst_layer_def = dst_layer.GetLayerDefn()
 
         # transform = osr.CoordinateTransformation(src_srs, dst_srs)
-
+        self.gages_downloaded = 0
         for gage in gage_data:
 
             geom = ogr.Geometry(ogr.wkbPoint)
@@ -109,6 +111,8 @@ class StreamGageTask(QgsTask):
             err = dst_layer.CreateFeature(dst_feature)
             dst_feature = None
 
+            self.gages_downloaded += 1
+
         src_dataset = None
         dst_dataset = None
 
@@ -120,14 +124,7 @@ class StreamGageTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            QgsMessageLog.logMessage(
-                'Stream Stats API call "{name}" completed\n'
-                'RandomTotal: {total} (with {iterations} '
-                'iterations)'.format(
-                    name=self.description(),
-                    total=self.total,
-                    iterations=self.iterations),
-                MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage(f'Stream Gage Download Complete. {self.gages_downloaded} gages downloaded.', MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
@@ -144,7 +141,7 @@ class StreamGageTask(QgsTask):
                     MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
-        self.stream_stats_successfully_complete.emit(self.pour_point, self.add_to_map)
+        self.on_task_complete.emit(result, self.gages_downloaded)
 
     def cancel(self):
         QgsMessageLog.logMessage(
