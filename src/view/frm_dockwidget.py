@@ -187,6 +187,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.stream_gage_doc_widget.close()
             self.stream_gage_doc_widget = None
 
+        if self.centerline_doc_widget is not None:
+            self.centerline_doc_widget.close()
+            self.centerline_doc_widget = None
+
         # Remove project from map
         # remove_db_item_layer(self.project, self.project)
         self.model = None

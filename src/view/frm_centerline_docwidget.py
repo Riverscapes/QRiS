@@ -203,7 +203,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.setWindowTitle("Build Centerlines")
 
-        self.dockWidgetContents = QtWidgets.QWidget()
+        self.dockWidgetContents = QtWidgets.QWidget(self)
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
         self.grid = QtWidgets.QGridLayout()
