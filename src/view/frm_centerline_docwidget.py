@@ -189,10 +189,15 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     @pyqtSlot(LineString)
     def centerline_complete(self, centerline):
 
-        self.geom_centerline = QgsGeometry().fromWkt(centerline.wkt)
-        # TODO adjust the smoothing params
-        smoothing_dist = float(self.dblSmoothing.value())
-        self.geom_centerline.smooth(1, 0.25, smoothing_dist)
+        geom_centerline_raw = QgsGeometry().fromWkt(centerline.wkt)
+        smoothing_iter = self.dblSmoothingIter.value()
+        if smoothing_iter == 0:
+            self.geom_centerline = geom_centerline_raw
+        else:
+            smoothing_dist = (self.dblSmoothingMin.value() / self.d.measureLength(geom_centerline_raw)) * geom_centerline_raw.length()
+            smoothing_offset = self.dblSmoothingOffset.value()
+            smoothing_angle = self.dblSmoothingAngle.value()
+            self.geom_centerline = geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle)
 
         self.feat_centerline = QgsFeature()
         self.feat_centerline.setGeometry(self.geom_centerline)
@@ -266,18 +271,52 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.cmdCaptureE.clicked.connect(self.cmdCaptureEnd_click)
         self.horizEnd.addWidget(self.cmdCaptureE)
 
-        self.lblSmoothing = QtWidgets.QLabel()
-        self.lblSmoothing.setText('Smoothing')
-        self.grid.addWidget(self.lblSmoothing, 4, 0, 1, 1)
+        self.lblSmoothingIter = QtWidgets.QLabel()
+        self.lblSmoothingIter.setText('Smoothing Iter.')
+        self.grid.addWidget(self.lblSmoothingIter, 4, 0, 1, 1)
 
-        self.dblSmoothing = QtWidgets.QDoubleSpinBox()
-        self.dblSmoothing.setDecimals(1)
-        self.dblSmoothing.setValue(10)
-        self.dblSmoothing.setRange(0, 500)
-        self.grid.addWidget(self.dblSmoothing, 4, 1, 1, 1)
+        self.dblSmoothingIter = QtWidgets.QSpinBox()
+        self.dblSmoothingIter.setValue(1)
+        self.dblSmoothingIter.setRange(0, 10)
+        self.grid.addWidget(self.dblSmoothingIter, 4, 1, 1, 1)
+
+        self.lblSmoothingOffset = QtWidgets.QLabel()
+        self.lblSmoothingOffset.setText('Smoothing Offset')
+        self.grid.addWidget(self.lblSmoothingOffset, 5, 0, 1, 1)
+
+        self.dblSmoothingOffset = QtWidgets.QDoubleSpinBox()
+        self.dblSmoothingOffset.setDecimals(2)
+        self.dblSmoothingOffset.setValue(0.25)
+        self.dblSmoothingOffset.setSingleStep(0.05)
+        self.dblSmoothingOffset.setRange(0, 1)
+        self.grid.addWidget(self.dblSmoothingOffset, 5, 1, 1, 1)
+
+        self.lblSmoothingMin = QtWidgets.QLabel()
+        self.lblSmoothingMin.setText('Smoothing Min Dist.')
+        self.grid.addWidget(self.lblSmoothingMin, 6, 0, 1, 1)
+
+        self.dblSmoothingMin = QtWidgets.QDoubleSpinBox()
+        self.dblSmoothingMin.setSuffix(' m')
+        self.dblSmoothingMin.setDecimals(1)
+        self.dblSmoothingMin.setRange(-1.0, 500.0)
+        self.dblSmoothingMin.setValue(-1.0)
+        self.dblSmoothingMin.setSingleStep(5)
+        self.grid.addWidget(self.dblSmoothingMin, 6, 1, 1, 1)
+
+        self.lblSmoothingAngle = QtWidgets.QLabel()
+        self.lblSmoothingAngle.setText('Smoothing Max Angle')
+        self.grid.addWidget(self.lblSmoothingAngle, 7, 0, 1, 1)
+
+        self.dblSmoothingAngle = QtWidgets.QDoubleSpinBox()
+        self.dblSmoothingAngle.setSuffix(' degrees')
+        self.dblSmoothingAngle.setDecimals(1)
+        self.dblSmoothingAngle.setRange(0, 180)
+        self.dblSmoothingAngle.setValue(180.0)
+
+        self.grid.addWidget(self.dblSmoothingAngle, 7, 1, 1, 1)
 
         self.horizBottom = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizBottom, 5, 1, 1, 1)
+        self.grid.addLayout(self.horizBottom, 8, 1, 1, 1)
 
         self.cmdGenerateCl = QtWidgets.QPushButton()
         self.cmdGenerateCl.setText('Generate Centerline')
@@ -292,7 +331,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.cmdReset = QtWidgets.QPushButton()
         self.cmdReset.setText('Reset')
         self.cmdReset.clicked.connect(self.cmdReset_click)
-        self.grid.addWidget(self.cmdReset, 6, 0, 1, 1)
+        self.grid.addWidget(self.cmdReset, 9, 0, 1, 1)
 
         self.vert.addLayout(add_help_button(self, 'centerlines'))
 
