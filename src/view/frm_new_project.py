@@ -43,7 +43,7 @@ class FrmNewProject(QtWidgets.QDialog):
     closingPlugin = QtCore.pyqtSignal()
     dataChange = QtCore.pyqtSignal(Project)
 
-    def __init__(self, root_project_folder: str, parent=None, project: Project = None):
+    def __init__(self, root_project_folder: str, parent, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
         self.setupUi()
 

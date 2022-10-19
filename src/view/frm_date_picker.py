@@ -10,8 +10,8 @@ NONE_TEXT = 'None'
 
 class FrmDatePicker(QtWidgets.QWidget):
 
-    def __init__(self, date_spec: DateSpec = None):
-        super().__init__()
+    def __init__(self, parent, date_spec: DateSpec = None):
+        super().__init__(parent)
         self.setupUi()
 
         [self.cboYear.addItem(str(year), year) for year in range(1970, 2050)]

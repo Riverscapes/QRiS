@@ -117,11 +117,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
+        self.stream_gage_doc_widget = None
 
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
 
-    # Take this out of init so that nodes can be added as new data is added and imported;
+    def __del__(self):
+        print('here')
 
     def build_tree_view(self, project_file, new_item=None):
         """
@@ -158,9 +160,28 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         return
 
     def closeEvent(self, event):
-        self.qris_project = None
+
         self.closingPlugin.emit()
+        self.destroy_docwidget()
         event.accept()
+
+    def destroy_docwidget(self):
+
+        if self.analysis_doc_widget is not None:
+            self.analysis_doc_widget.close()
+            self.analysis_doc_widget = None
+
+        if self.slider_doc_widget is not None:
+            self.slider_doc_widget.close()
+            self.slider_doc_widget = None
+
+        if self.stream_gage_doc_widget is not None:
+            self.stream_gage_doc_widget.close()
+            self.stream_gage_doc_widget = None
+
+        # Remove project from map
+        remove_db_item_layer(self.project, self.project)
+        self.qris_project = None
 
     def open_menu(self, position):
         """Connects signals as context menus to items in the tree"""
@@ -310,7 +331,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.add_child_to_project_tree(parent_node, frm.analysis, True)
 
             if self.analysis_doc_widget is None:
-                self.analysis_doc_widget = FrmAnalysisDocWidget()
+                self.analysis_doc_widget = FrmAnalysisDocWidget(self)
                 self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_doc_widget)
 
             self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
@@ -513,7 +534,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):
             if self.analysis_doc_widget is None:
-                self.analysis_doc_widget = FrmAnalysisDocWidget()
+                self.analysis_doc_widget = FrmAnalysisDocWidget(self)
                 self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_doc_widget)
             self.analysis_doc_widget.configure_analysis(self.project, db_item, None)
             self.analysis_doc_widget.show()

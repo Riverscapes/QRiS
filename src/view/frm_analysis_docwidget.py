@@ -47,7 +47,7 @@ from .frm_metric_value import FrmMetricValue
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
         self.setupUi()

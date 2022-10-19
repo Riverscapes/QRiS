@@ -47,7 +47,6 @@ from .model.project import apply_db_migrations
 
 from .gp.watershed_attributes import WatershedAttributes
 
-
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 LAST_PROJECT_FOLDER = 'last_project_folder'
@@ -262,6 +261,11 @@ class QRiSToolbar:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
+        # Cleanup the main dockable window
+        if self.dockwidget is not None:
+            self.dockwidget.destroy_docwidget()
+            self.dockwidget.close()
+
         # Need to de-initialize the processing framework
         QgsApplication.processingRegistry().removeProvider(self.provider)
 
@@ -270,11 +274,10 @@ class QRiSToolbar:
                 self.tr(u'&QGIS Riverscapes Studio (QRiS)'),
                 action)
             self.iface.removeToolBarIcon(action)
+
+        self.dockwidget = None
+
         # remove the toolbar
-
-        if self.dockwidget is not None:
-            self.dockwidget.hide()
-
         del self.toolbar
         del self.dockwidget
 
@@ -293,8 +296,7 @@ class QRiSToolbar:
             #    removed on close (see self.onClosePlugin method)
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QRiSDockWidget(self.iface)
-                self.dockwidget.iface = self.iface
+                self.dockwidget = QRiSDockWidget(self.iface, self)
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)

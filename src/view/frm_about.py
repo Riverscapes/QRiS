@@ -13,7 +13,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
 
     closingPlugin = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         """Constructor."""
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi2()
