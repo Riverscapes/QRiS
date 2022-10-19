@@ -122,9 +122,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
 
-    def __del__(self):
-        print('here')
-
     def build_tree_view(self, project_file, new_item=None):
         """
         Builds the project tree from scratch for the first time
@@ -181,6 +178,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Remove project from map
         remove_db_item_layer(self.project, self.project)
+        self.model = None
         self.qris_project = None
 
     def open_menu(self, position):
@@ -251,6 +249,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
+                self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
+
             else:
                 self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
