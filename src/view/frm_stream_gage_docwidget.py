@@ -166,7 +166,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         maxDate = QtCore.QDate(date.today())
 
         self.setWindowTitle('Stream Gage Explorer')
-        self.dockWidgetContents = QtWidgets.QWidget()
+        self.dockWidgetContents = QtWidgets.QWidget(self)
 
         self.main_horiz = QtWidgets.QHBoxLayout(self.dockWidgetContents)
 
