@@ -21,7 +21,8 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
     def __init__(self, parent, project: Project, iface):
 
-        super().__init__(parent)
+        super(FrmCrossSectionsDocWidget, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setupUi()
 
         self.project = project

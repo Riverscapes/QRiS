@@ -22,7 +22,8 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     def __init__(self, parent, project: Project, iface):
 
-        super().__init__(parent)
+        super(FrmCenterlineDocWidget, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setupUi()
 
         self.project = project
@@ -136,7 +137,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         sline_length = self.d.measureLine(QgsPointXY(self.geom_centerline.get().points()[0]), QgsPointXY(self.geom_centerline.get().points()[-1]))
         geom_length = self.d.measureLength(self.geom_centerline)
         metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
-        frm_save_centerline = FrmSaveCenterline(self.parent, self.iface, self.project)
+        frm_save_centerline = FrmSaveCenterline(self, self.iface, self.project)
         frm_save_centerline.add_metrics(metrics)
 
         frm_save_centerline.add_centerline(self.feat_centerline)

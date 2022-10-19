@@ -11,18 +11,18 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmSaveCenterline(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface, project: Project,):
+    def __init__(self, parent, iface, project: Project):
+
+        super(FrmSaveCenterline, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setupUi()
+        self.setWindowTitle('Create Centerline')
 
         self.iface = iface
         self.project = project
 
         self.metrics = None
         self.geom_centerline = None
-
-        super(FrmSaveCenterline, self).__init__(parent)
-        self.setupUi()
-
-        self.setWindowTitle('Create Centerline')
 
     def add_metrics(self, metrics: dict):
         """ metrics: dict(metric_name:value)
