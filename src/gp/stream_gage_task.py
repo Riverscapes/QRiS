@@ -69,7 +69,9 @@ class StreamGageTask(QgsTask):
         params = {
             'format': 'rdb',
             'bBox': '{:.7f},{:.7f},{:.7f},{:.7f}'.format(self.min_lng, self.min_lat, self.max_lng, self.max_lat),
-            'siteStatus': 'all'
+            'siteStatus': 'active',  # 'all',
+            'hasDataTypeCd': 'dv',
+            'siteType': 'ST'
         }
         response = requests.get(BASE_REQUEST, params=params)
 

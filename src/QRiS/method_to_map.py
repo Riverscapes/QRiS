@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from numpy import isin
 
 from qgis.core import (
     QgsField,
@@ -45,6 +46,7 @@ from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.protocol import Protocol
 from ..model.layer import Layer
 from ..model.event_layer import EventLayer
+from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
 
 # path to symbology directory
 symbology_path = os.path.dirname(os.path.dirname(__file__))
@@ -281,6 +283,35 @@ def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=Fals
         return existing_layer
 
     return None
+
+
+def get_stream_gage_layer(project: Project) -> QgsMapLayer:
+
+    project_group = get_project_group(project, False)
+    if project_group is not None:
+        for child_layer in project_group.children():
+            if isinstance(child_layer, QgsVectorLayer):
+                custom_property = child_layer.layer().customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+                if custom_property is not None and custom_property == STREAM_GAGE_MACHINE_CODE:
+                    return child_layer.layer()
+
+
+def build_stream_gage_layer(project: Project) -> QgsMapLayer:
+
+    feature_layer = get_stream_gage_layer(project)
+    if feature_layer is not None:
+        return feature_layer
+
+    feature_path = project.project_file + '|layername=' + 'stream_gages'
+    feature_layer = QgsVectorLayer(feature_path, 'Stream Gages', 'ogr')
+    feature_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, STREAM_GAGE_MACHINE_CODE)
+    QgsProject.instance().addMapLayer(feature_layer, False)
+
+    # Finally add the new layer here
+    project_group = get_project_group(project, True)
+    project_group.addLayer(feature_layer)
+
+    return feature_layer
 
 
 def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:

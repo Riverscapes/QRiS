@@ -63,7 +63,7 @@ from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
 
 from ..QRiS.settings import Settings
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
-from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer
+from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer, build_stream_gage_layer
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
@@ -85,7 +85,7 @@ GROUP_FOLDER_LABELS = {
     ANALYSIS_MACHINE_CODE: 'Analyses',
     CONTEXT_NODE_TAG: 'Context',
     SCRATCH_NODE_TAG: 'Scratch',
-    STREAM_GAGE_NODE_TAG: 'Stream Gages'
+    STREAM_GAGE_MACHINE_CODE: 'Stream Gages'
 }
 
 
@@ -150,7 +150,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
 
-        gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_NODE_TAG)
+        gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
         # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
@@ -229,7 +229,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
                     self.add_context_menu_item(self.menu, 'Import Existing Scratch Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
-                elif model_data == STREAM_GAGE_NODE_TAG:
+                elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
 
                 # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
@@ -307,9 +307,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """Add all children of a group node to the map ToC
         """
 
-        for row in range(0, model_item.rowCount()):
-            child_item = model_item.child(row)
-            self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
+        machine_code = model_item.data(QtCore.Qt.UserRole)
+        if machine_code == STREAM_GAGE_MACHINE_CODE:
+            build_stream_gage_layer(self.project)
+        else:
+            for row in range(0, model_item.rowCount()):
+                child_item = model_item.child(row)
+                self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
 
     def expand_tree(self):
         self.treeView.expandAll()
@@ -390,7 +394,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             icon = FOLDER_ICON
             if isinstance(data_item, DBItem):
                 icon = data_item.icon
-            elif data_item == STREAM_GAGE_NODE_TAG:
+            elif data_item == STREAM_GAGE_MACHINE_CODE:
                 icon = 'database'
 
             target_node = QtGui.QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])

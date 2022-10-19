@@ -11,7 +11,38 @@ MESSAGE_CATEGORY = 'QRiS_StreamGageTask'
 # https://waterservices.usgs.gov/rest/Site-Service.html
 # https://waterservices.usgs.gov/rest/Site-Test-Tool.html
 # https://github.com/ENV859/UsingAPIs/blob/master/1-NWIS-discharge-data-as-API.ipynb
-BASE_REQUEST = 'http://waterdata.usgs.gov/nwis/uv'
+
+
+# The code is configured to pull daily values. The quarterly configuation is
+# a holdover from when the code was first developed.
+REQUESTS = {
+    # 15 minute data
+    'quarterly': {
+        'url': 'http://waterdata.usgs.gov/nwis/uv',
+        'fields': {
+            'datetime': 'datetime',
+            'discharge': '89062_00060',
+            'discharge_code': '89062_00060_cd',
+            'gage_height': '89063_00065',
+            'gage_height_code': '89063_00065_cd'
+        }
+    },
+    # daily data
+    'daily': {
+        'url': 'http://waterdata.usgs.gov/nwis/dv',
+        'fields': {
+            'datetime': 'datetime',
+            'discharge': '84956_00060_00003',
+            'discharge_code': '84956_00060_00003_cd',
+            'gage_height': '84959_00065_00003',
+            'gage_height_code': '84959_00065_00003_cd'
+        }
+    }
+}
+
+
+# Daily value columns
+# agency_cd,site_no,datetime,84956_00060_00003,84956_00060_00003_cd,84959_00065_00003,84959_00065_00003_cd
 
 
 class StreamGageDischargeTask(QgsTask):
@@ -42,23 +73,28 @@ class StreamGageDischargeTask(QgsTask):
         try:
             params = {
                 'format': 'rdb',
-                'site_no': '02085070',  # self.site_code,
-                # 'begin_date': self.start_date,
-                # 'end_date': self.end_date
+                'site_no': self.site_code,
+                'begin_date': self.start_date.strftime('%Y-%m-%d'),
+                'end_date': self.end_date.strftime('%Y-%m-%d')
             }
-            response = requests.get(BASE_REQUEST, params=params)
+
+            request_meta = REQUESTS['daily']
+            response = requests.get(request_meta['url'], params=params)
 
             if response.status_code == 200:
                 csv_raw = [line for line in response.text.split('\n') if not (line.startswith('#') or line.startswith('5s'))]
+
+                headers = csv_raw[0].split('\t')
                 csv_data = csv.DictReader(csv_raw, delimiter='\t')
                 # agency_cd,site_no,datetime,tz_cd,89062_00060,89062_00060_cd,89063_00065,89063_00065_cd
                 sql_data = [(
                     self.site_id,
                     row['datetime'],
-                    row['89062_00060'],
-                    row['89062_00060_cd'],
-                    row['89063_00065'],
-                    row['89063_00065_cd']) for row in csv_data]
+                    row[headers[3]],
+                    row[headers[4]],
+                    row[headers[5]] if len(headers) > 6 else None,
+                    row[headers[6]] if len(headers) > 7 else None
+                ) for row in csv_data]
 
                 conn = sqlite3.connect(self.db_path)
                 curs = conn.cursor()
