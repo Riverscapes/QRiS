@@ -78,7 +78,8 @@ class FrmDatePicker(QtWidgets.QWidget):
 
     def setupUi(self):
 
-        self.horiz = QtWidgets.QHBoxLayout()
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
+        self.horiz = QtWidgets.QHBoxLayout(self)
         self.setLayout(self.horiz)
 
         self.lblYear = QtWidgets.QLabel()

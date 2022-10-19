@@ -580,8 +580,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.setWindowTitle('QRiS Plugin')
 
         self.resize(489, 536)
-        self.dockWidgetContents = QtWidgets.QWidget()
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
+        self.dockWidgetContents = QtWidgets.QWidget(self)
         self.dockWidgetContents.setObjectName("dockWidgetContents")
+
         self.gridLayout = QtWidgets.QGridLayout(self.dockWidgetContents)
         self.gridLayout.setObjectName("gridLayout")
         self.treeView = QtWidgets.QTreeView(self.dockWidgetContents)

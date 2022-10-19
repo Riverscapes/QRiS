@@ -162,10 +162,10 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def setupUi(self):
 
         self.setWindowTitle('QRiS Analysis')
-        self.dockWidgetContents = QtWidgets.QWidget()
+        self.dockWidgetContents = QtWidgets.QWidget(self)
 
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
-        # self.setLayout(self.vert)
 
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)

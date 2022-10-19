@@ -79,6 +79,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         self.setMinimumSize(500, 500)
 
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
 

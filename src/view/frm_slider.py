@@ -67,7 +67,8 @@ class FrmSlider(QtWidgets.QDockWidget):
 
         self.setWindowTitle('Raster Slider')
 
-        self.dockWidgetContents = QtWidgets.QWidget()
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
+        self.dockWidgetContents = QtWidgets.QWidget(self)
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
         self.grid = QtWidgets.QGridLayout()

@@ -44,7 +44,8 @@ class FrmOptions(QtWidgets.QDialog):
         self.resize(500, 300)
         self.setMinimumSize(300, 200)
 
-        self.vert = QtWidgets.QVBoxLayout()
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
+        self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
 
         self.grid = QtWidgets.QGridLayout()

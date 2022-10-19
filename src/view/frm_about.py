@@ -39,7 +39,8 @@ class FrmAboutDialog(QtWidgets.QDialog):
 
     def setupUi2(self):
 
-        self.vert = QtWidgets.QVBoxLayout()
+        # Top level layout must include parent. Widgets added to this layout do not need parent.
+        self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
 
         self.horiz = QtWidgets.QHBoxLayout()
