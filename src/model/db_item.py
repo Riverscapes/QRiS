@@ -32,6 +32,8 @@ class DBItem():
         # QIcon(f':/plugins/qris_toolbar/{db_item.name}')
         self.icon = 'riverscapes_icon'
 
+        self.map_guid = f'qris_{db_table_name}_{id}'
+
     def delete(self, db_path: str) -> None:
 
         with sqlite3.connect(db_path) as conn:

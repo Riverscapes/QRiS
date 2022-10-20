@@ -71,7 +71,7 @@ def get_db_item_layer(db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeN
 
     # Check whether the node that was passed in possesses the correct custom property
     custom_property = layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
-    if isinstance(custom_property, DBItem) and db_item == custom_property:
+    if isinstance(custom_property, str) and db_item.map_guid == custom_property:
         return layer
 
     # If the layer is a group then search it's children
@@ -125,7 +125,7 @@ def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
 
     if project_group_layer is None and add_missing is True:
         project_group_layer = root.insertGroup(0, project.name)
-        project_group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, project)
+        project_group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, project.map_guid)
 
     return project_group_layer
 
@@ -240,7 +240,7 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
     feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("@event_id"))
 
     tree_layer_node = event_group_layer.addLayer(feature_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, event_layer)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, event_layer.map_guid)
     # send to layer specific field handlers
     layer_name = event_layer.layer.name
     if layer_name == 'dam_crests':
@@ -346,7 +346,7 @@ def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
     project_group = get_project_group(project, True)
     group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
     tree_layer_node = group_layer.addLayer(mask_feature_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask.map_guid)
 
     return mask_feature_layer
 
@@ -363,7 +363,7 @@ def build_scratch_vector(project: Project, vector: ScratchVector):
 
     QgsProject.instance().addMapLayer(feature_layer, False)
     tree_layer_node = group_layer.addLayer(feature_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, vector)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, vector.map_guid)
 
     return feature_layer
 
@@ -430,7 +430,7 @@ def build_raster_slider_layer(project: Project, raster: Raster) -> QgsMapLayer:
     raster_path = os.path.join(os.path.dirname(project.project_file), raster.path)
     raster_layer = QgsRasterLayer(raster_path, raster.name + ' (Raster Slider)')
     raster_slider_group.addLayer(raster_layer)
-    raster_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, raster)
+    raster_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, raster.map_guid)
     # qml = os.path.join(symbology_path, 'symbology', 'hand.qml')
     # raster_layer.loadNamedStyle(qml)
     QgsProject.instance().addMapLayer(raster_layer, False)
