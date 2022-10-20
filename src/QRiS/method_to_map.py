@@ -412,7 +412,7 @@ def build_basemap_layer(project: Project, basemap: Raster) -> QgsMapLayer:
     project_group = get_project_group(project, True)
     group_layer = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', project_group, True)
     tree_layer_node = group_layer.addLayer(raster_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap.map_guid)
     return raster_layer
 
 
