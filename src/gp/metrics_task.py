@@ -32,7 +32,7 @@ class MetricsTask(QgsTask):
 
                 # Skip the mask being used to summarize layers
                 prop = layer_node.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
-                if prop and isinstance(prop, Mask) and prop == mask:
+                if prop and isinstance(prop, Mask) and prop == mask.map_guid:
                     continue
 
                 layer_def = {'name': layer.name(), 'url': layer.dataProvider().dataSourceUri()}

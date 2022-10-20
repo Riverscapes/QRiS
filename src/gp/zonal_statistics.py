@@ -32,8 +32,16 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     ogr_mem_driver = ogr.GetDriverByName('Memory')
     gdl_mem_driver = gdal.GetDriverByName('MEM')
 
+    # Attempt to delete existing feature class. This now
+    # throws an exception on latest QGIS. But there is no
+    # way to check if the feature class already exists because
+    # it is an in-memory data source
+    try:
+        ogr_mem_driver.DeleteDataSource(TEMP_FEATURE_CLASS_NAME)
+    except Exception:
+        print('Failed to delete in-memory data source')
+
     # Create in-memory feature class that contains the polygon
-    ogr_mem_driver.DeleteDataSource(TEMP_FEATURE_CLASS_NAME)
     ogr_mem_ds = ogr_mem_driver.CreateDataSource(TEMP_FEATURE_CLASS_NAME)
     ogr_mem_lyr = ogr_mem_ds.CreateLayer('polygons', None, ogr.wkbPolygon)
     featureDefn = ogr_mem_lyr.GetLayerDefn()
