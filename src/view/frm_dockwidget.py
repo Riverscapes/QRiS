@@ -25,7 +25,7 @@
 import os
 from matplotlib.style import context
 from osgeo import ogr
-from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes
+from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes, QgsProject
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
@@ -61,7 +61,7 @@ from .frm_scratch_vector import FrmScratchVector
 from .frm_geospatial_metrics import FrmGeospatialMetrics
 from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
 
-from ..QRiS.settings import Settings
+from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
 from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer, build_stream_gage_layer
 
@@ -128,6 +128,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         Builds the project tree from scratch for the first time
         """
         self.project = Project(project_file)
+
+        # Save the project in the QGIS Project (QGZ) so that it can be reloaded when
+        # the QGZ is next opened
+        QgsProject.instance().writeEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'], project_file)
 
         self.model = QtGui.QStandardItemModel()
         self.treeView.setModel(self.model)

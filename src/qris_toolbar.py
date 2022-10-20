@@ -189,6 +189,10 @@ class QRiSToolbar:
         # Initialize the processing framework
         # self.initProcessing()
 
+        # Listen for the signal when a project is being loaded
+        # so we can try and reload the relevant QRiS project
+        QgsProject.instance().readProject.connect(self.onProjectLoad)
+
         icon_path = ':/plugins/qris_toolbar/riverscapes_icon'
         self.add_action(icon_path, text='QRiS', callback=self.run, parent=self.iface.mainWindow(), add_to_menu=False)
 
@@ -305,6 +309,15 @@ class QRiSToolbar:
         if self.dockwidget.isHidden() and forceOn is True:
             self.dockwidget.show()
 
+    def onProjectLoad(self):
+        """Slot for QGIS signal when a QGIS project (QGZ) is being loaded.
+        Check if the QGIS project references a QRiS project. Load it if does."""
+
+        qris_project_path, type_conversion_ok = QgsProject.instance().readEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'])
+        if type_conversion_ok is True:
+            if qris_project_path is not None and len(qris_project_path) > 0 and os.path.exists(qris_project_path):
+                self.open_qris_project(qris_project_path)
+
     def open_existing_project(self):
         """
         Browse for a project directory
@@ -316,23 +329,26 @@ class QRiSToolbar:
 
         dialog_return = QtWidgets.QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (qris_project.gpkg)"))
         if dialog_return is not None and dialog_return[0] != '' and os.path.isfile(dialog_return[0]):
+            self.open_qris_project(dialog_return[0])
 
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(dialog_return[0]))
-            settings.sync()
+    def open_qris_project(self, db_path: str):
 
-            # Apply database migrations to ensure latest schema
-            self.update_database(dialog_return[0])
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
+        settings.sync()
 
-            self.toggle_widget(forceOn=True)
-            self.dockwidget.build_tree_view(dialog_return[0])
+        # Apply database migrations to ensure latest schema
+        self.update_database(db_path)
 
-            # We set the project path in the project settings. This way it will be saved with the QgsProject file
-            # if self.dockwidget is None or self.dockwidget.isHidden() is True:
-            #     # self.toggle_widget(forceOn=True)
-            #     project = QRiSProject()
-            #     project.load_project_file(dialog_return[0])
-            #     self.open_project(project)
+        self.toggle_widget(forceOn=True)
+        self.dockwidget.build_tree_view(db_path)
+
+        # We set the project path in the project settings. This way it will be saved with the QgsProject file
+        # if self.dockwidget is None or self.dockwidget.isHidden() is True:
+        #     # self.toggle_widget(forceOn=True)
+        #     project = QRiSProject()
+        #     project.load_project_file(dialog_return[0])
+        #     self.open_project(project)
 
     def create_new_project_dialog(self):
 
