@@ -41,8 +41,16 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     outFeature.SetGeometry(geom.Clone())
     ogr_mem_lyr.CreateFeature(outFeature)
 
+    # Set bounding box as intersection of raster extent and polygon extent
+    r_minX = raster_gt[0]
+    r_maxY = raster_gt[3]
+    r_maxX = r_minX + raster_gt[1] * raster_ds.RasterXSize
+    r_minY = r_maxY + raster_gt[5] * raster_ds.RasterYSize
+    (g_minX, g_maxX, g_minY, g_maxY) = geom.GetEnvelope()
+    extents = (max([g_minX, r_minX]), min([g_maxX, r_maxX]), max([g_minY, r_minY]), min([g_maxY, r_maxY]))
+
     # Convert the polygon bounding box to cell offset coordinates
-    offsets = boundingBoxToOffsets(geom.GetEnvelope(), raster_gt)
+    offsets = boundingBoxToOffsets(extents, raster_gt)
 
     # Calculate the new geotransform for the polygonized raster
     new_geot = geotFromOffsets(offsets[0], offsets[2], raster_gt)
