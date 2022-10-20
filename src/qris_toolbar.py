@@ -469,10 +469,6 @@ class QRiSToolbar:
     def about_load(self):
 
         dialog = FrmAboutDialog(self.iface.mainWindow())
-        if self.acknowledgements is None:
-            self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
-
-        dialog.lblAcknowledgements.setText(self.acknowledgements)
         dialog.exec_()
 
     def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):

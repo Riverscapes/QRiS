@@ -27,15 +27,8 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.lblIssues.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['issueUrl']))
         self.lblChangelog.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['changelogUrl']))
 
-        # self.lblAcknowledgements.setHtml("""<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-        #     "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-        #     "p, li { white-space: pre-wrap; }\n"
-        #     "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-        #     "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
-        # """)
-
         self.acknowledgements = requests.get(CONSTANTS['acknowledgementsUrl']).text
-        self.lblAcknowledgements.setHtml(self.acknowledgements)
+        self.lblAcknowledgements.setText(self.acknowledgements)
 
     def setupUi2(self):
 
@@ -105,7 +98,6 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.lblAcknowledgements.setObjectName('acknowledgements')
         self.lblAcknowledgements.setOpenExternalLinks(True)
         self.vert.addWidget(self.lblAcknowledgements)
-
         self.closeButton = QtWidgets.QDialogButtonBox()
         self.closeButton.setOrientation(QtCore.Qt.Horizontal)
         self.closeButton.setStandardButtons(QtWidgets.QDialogButtonBox.Close)
