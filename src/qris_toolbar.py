@@ -21,18 +21,15 @@
  *                                                                         *
  ***************************************************************************/
 """
-import json
 import os.path
 import requests
 from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis
 from qgis.gui import QgsMapToolEmitPoint
-from .gp.stream_gage_task import StreamGageTask
 
 # TODO fix this
 from .gp.provider import Provider
-# from .gp.report_creation.qris_report import QRiSReport
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
 
@@ -72,11 +69,7 @@ class QRiSToolbar:
 
         # initialize locale
         locale = QtCore.QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'RIPT_{}.qm'.format(locale))
-
+        locale_path = os.path.join(self.plugin_dir, 'i18n', 'qris_{}.qm'.format(locale))
         if os.path.exists(locale_path):
             self.translator = QtCore.QTranslator()
             self.translator.load(locale_path)
@@ -84,14 +77,12 @@ class QRiSToolbar:
 
         # Declare instance attributes
         self.actions = []
+        self.menus = []
         self.menu = self.tr(u'&QGIS Riverscapes Studio (QRiS)')
-        # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'QRiS')
         self.toolbar.setObjectName(u'QRiS')
 
         self.settings = Settings(iface=self.iface)
-
-        # print "** INITIALIZING RIPT"
 
         # Populated on load from a URL
         self.acknowledgements = None
@@ -100,14 +91,6 @@ class QRiSToolbar:
         self.dockwidget = None
 
     # noinspection PyMethodMayBeStatic
-
-    def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
-
-        source_crs = QgsCoordinateReferenceSystem(map_epsg)
-        dest_crs = QgsCoordinateReferenceSystem(output_epsg)
-        transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
-        return transform.transform(geometry)
-
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -196,40 +179,29 @@ class QRiSToolbar:
         return action
 
     # TODO Remove this I don't think it is needed
-    def initProcessing(self):
-        self.provider = Provider()
-        QgsApplication.processingRegistry().addProvider(self.provider)
+    # def initProcessing(self):
+        # self.provider = Provider()
+        # QgsApplication.processingRegistry().addProvider(self.provider)
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         # Initialize the processing framework
-        self.initProcessing()
+        # self.initProcessing()
 
         icon_path = ':/plugins/qris_toolbar/riverscapes_icon'
-        self.add_action(
-            icon_path,
-            text=self.tr(u'QRiS'),
-            callback=self.run,
-            parent=self.iface.mainWindow())
+        self.add_action(icon_path, text='QRiS', callback=self.run, parent=self.iface.mainWindow(), add_to_menu=False)
 
-        self.newProjectAction = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/new'), self.tr(u'New QRiS Project'), self.iface.mainWindow())
-        self.newProjectAction.triggered.connect(self.create_new_project_dialog)
-        self.toolbar.addAction(self.newProjectAction)
+        # --- PROJECT MENU ---
+        project_menu = self.add_toolbar_menu('Project')
+        self.add_menu_action(project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
+        self.add_menu_action(project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
+        self.add_menu_action(project_menu, 'collapse', 'Close Project', self.close_project, False, 'Close the Current QRiS Project')
 
-        self.open_projectAction = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/folder'), self.tr(u'Open QRiS Project'), self.iface.mainWindow())
-        self.open_projectAction.triggered.connect(self.open_existing_project)
-        self.toolbar.addAction(self.open_projectAction)
-
-        # self.addLayerAction = QAction(QIcon(':/plugins/qris_toolbar/AddToMap.png'), self.tr(u'new RIPT Project'), self.iface.mainWindow())
-        # self.addLayerAction.triggered.connect(self.addLayerDlg)
-        # self.addLayerAction.setEnabled(False)
-        # self.toolbar.addAction(self.addLayerAction)
-
-        # Watershed Attribute Map Click
-        # self.watershed_attribute_action = QAction(QIcon(':/plugins/qris_toolbar/watershed'), self.tr(u'Watershed Attribute Tool'), self.iface.mainWindow())
-        # self.watershed_attribute_action.triggered.connect(self.activate_watershed_attributes)
-        # self.toolbar.addAction(self.watershed_attribute_action)
+        # --- HELP MENU --
+        help_menu = self.add_toolbar_menu('Help')
+        self.add_menu_action(help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
+        self.add_menu_action(help_menu, 'riverscapes_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
 
         canvas = self.iface.mapCanvas()
         self.watershed_html_tool = QgsMapToolEmitPoint(canvas)
@@ -238,15 +210,36 @@ class QRiSToolbar:
         self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
 
-        self.configure_watershed_attribute_menu()
-        self.configure_help_menu()
+    def add_toolbar_menu(self, label: str) -> QtWidgets.QMenu:
 
-    # --------------------------------------------------------------------------
+        tool_button = QtWidgets.QToolButton(self.toolbar)
+        tool_button.setText(label)
+        tool_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        tool_button.setMenu(QtWidgets.QMenu())
+        tool_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+        self.toolbar.addWidget(tool_button)
+        self.menus.append(tool_button)
+        return tool_button.menu()
+
+    def add_menu_action(self, menu: QtWidgets.QMenu, icon_name: str, label: str, callback, enabled: bool, status_tip: str):
+
+        action = QtWidgets.QAction(QtGui.QIcon(f':/plugins/qris_toolbar/{icon_name}'), label, self.iface.mainWindow())
+        action.triggered.connect(callback)
+        action.setEnabled(enabled)
+
+        if status_tip is not None:
+            action.setStatusTip(status_tip)
+
+        menu.addAction(action)
+        self.actions.append(action)
+
+    def close_project(self):
+        raise Exception('Not Implemented')
 
     def onClosePlugin(self):
-        """Cleanup necessary items here when plugin dockwidget is closed"""
-
-        # print "** CLOSING RIPT"
+        """Cleanup necessary items here when plugin dockwidget is closed.
+        This occurs when the user clicks the X button on the top right of
+        the dockable widget."""
 
         # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
@@ -255,7 +248,7 @@ class QRiSToolbar:
         # for reuse if plugin is reopened
         # Commented next statement since it causes QGIS crashe
         # when closing the docked window:
-        self.dockwidget = None
+        # self.dockwidget = None
 
         self.pluginIsActive = False
 
@@ -268,7 +261,7 @@ class QRiSToolbar:
             self.dockwidget.close()
 
         # Need to de-initialize the processing framework
-        QgsApplication.processingRegistry().removeProvider(self.provider)
+        # QgsApplication.processingRegistry().removeProvider(self.provider)
 
         for action in self.actions:
             self.iface.removePluginMenu(
@@ -297,14 +290,19 @@ class QRiSToolbar:
             #    removed on close (see self.onClosePlugin method)
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QRiSDockWidget(self.iface, self)
+                self.dockwidget = QRiSDockWidget(self.iface)
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
             # show the dockwidget
-            # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
+            self.dockwidget.show()
+
+    def toggle_widget(self, forceOn=False):
+
+        self.run()
+        if self.dockwidget.isHidden() and forceOn is True:
             self.dockwidget.show()
 
     def open_existing_project(self):
@@ -344,7 +342,7 @@ class QRiSToolbar:
         dialog_return = QtWidgets.QFileDialog.getExistingDirectory(self.dockwidget, 'Create New QRiS Project', last_parent_folder)
         if len(dialog_return) > 0:
             self.save_folder = dialog_return
-            frm_new_project = FrmNewProject(dialog_return)
+            frm_new_project = FrmNewProject(dialog_return, self.iface.mainWindow())
             result = frm_new_project.exec_()
             if result == QtWidgets.QDialog.Accepted:
                 settings.setValue(LAST_PROJECT_FOLDER, frm_new_project.project_dir)
@@ -370,19 +368,6 @@ class QRiSToolbar:
 
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.watershed_json_tool)
-
-    def activate_stream_stats(self):
-
-        canvas = self.iface.mapCanvas()
-        canvas.setMapTool(self.stream_stats_tool)
-
-    def transform_geometry(self, geometry, output_epsg: int):
-
-        map_epsg = self.iface.mapCanvas().mapSettings().destinationCrs().authid()
-        source_crs = QgsCoordinateReferenceSystem(map_epsg)
-        dest_crs = QgsCoordinateReferenceSystem(output_epsg)
-        transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
-        return transform.transform(geometry)
 
     def json_watershed_metrics(self, point, button):
         """
@@ -440,40 +425,6 @@ class QRiSToolbar:
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, 'Error Appling QRiS Database Migrations', str(ex))
 
-    def toggle_widget(self, forceOn=False):
-        """Toggle the widget open and closed when clicking the toolbar"""
-        if not self.pluginIsActive:
-            self.pluginIsActive = True
-
-            # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
-            if self.dockwidget is None:
-                # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QRiSDockWidget(self.iface)
-                # self.metawidget = RIPTMetaWidget()
-                # Hook metadata changes up to the metawidget
-                # self.dockwidget.metaChange.connect(self.metawidget.load)
-
-                # Run a network sync operation to get the latest stuff. Don't force it.
-                #  This is just a quick check
-                # self.net_sync_load()
-
-            # connect to provide cleanup on closing of dockwidget
-            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
-            # show the dockwidget
-            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
-            # self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.metawidget)
-            self.dockwidget.show()
-
-        else:
-            if self.dockwidget is not None:
-                if self.dockwidget.isHidden():
-                    self.dockwidget.show()
-                elif forceOn is False:
-                    self.dockwidget.hide()
-
     def configure_watershed_attribute_menu(self):
 
         self.wat_button = QtWidgets.QToolButton()
@@ -499,118 +450,18 @@ class QRiSToolbar:
 
         self.wat_button.setDefaultAction(self.wat_html_action)
 
-    def configure_help_menu(self):
-
-        self.help_button = QtWidgets.QToolButton()
-        self.help_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
-        self.help_button.setText('Help')
-        self.help_button.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/help'))
-        self.help_button.setMenu(QtWidgets.QMenu())
-        self.help_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
-        self.toolbar.addWidget(self.help_button)
-        help_menu = self.help_button.menu()
-
-        self.helpAction = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/help'), self.tr('Help'), self.iface.mainWindow())
-        self.helpAction.triggered.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://riverscapes.github.io/QRiS/")))
-        help_menu.addAction(self.helpAction)
-
-        self.about_action = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/riverscapes_icon'), self.tr('About QRiS'), self.iface.mainWindow())
-        self.about_action.triggered.connect(self.about_load)
-        help_menu.addAction(self.about_action)
-
-        self.help_button.setDefaultAction(self.helpAction)
-
     def about_load(self):
-        """
-        Open the About dialog
-        """
-        dialog = FrmAboutDialog()
-        if self.acknowledgements is None:
-            self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
 
-        dialog.lblAcknowledgements.setText(self.acknowledgements)
-        #             dialog_return = QFileDialog.getOpenFileName(self.dockwidget, "Add GIS layer to QRiS project", last_dir, self.tr("GIS Data Sources (*.gpkg, *.tif)"))
-        #             if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
-        #                 pass
-        #         else:
-        #             self.iface.messageBar().pushMessage("QRiS", "Cannot Add layer: No QRiS project currently open.", level=1)
-
-    def configure_help_menu(self):
-
-        self.helpButton = QtWidgets.QToolButton()
-        self.helpButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
-        self.helpButton.setMenu(QtWidgets.QMenu())
-        self.helpButton.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
-
-        m = self.helpButton.menu()
-
-        # TODO: get the local help working
-        # self.helpAction = QAction(
-        #     QIcon(':/plugins/qris_toolbar/Help.png'),
-        #     self.tr('Help'),
-        #     self.iface.mainWindow()
-        # )
-        # self.helpAction.triggered.connect(partial(showPluginHelp, None, filename=':/plugins/qris_toolbar/help/build/html/index'))
-        # self.websiteAction = QAction(
-        #     QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
-        #     self.tr('Website'),
-        #     self.iface.mainWindow()
-        # )
-        # self.websiteAction.triggered.connect(lambda: QDesktopServices.openUrl(QUrl("http://rave.riverscapes.xyz")))
-
-        self.helpAction = QtWidgets.QAction(
-            QtGui.QIcon(':/plugins/qris_toolbar/Help.png'),
-            self.tr('Help'),
-            self.iface.mainWindow()
-        )
-        self.helpAction.triggered.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://riverscapes.github.io/QRiS/")))
-
-        # self.raveOptionsAction = QAction(
-        #     QIcon(':/plugins/qris_toolbar/Options.png'),
-        #     self.tr('Settings'),
-        #     self.iface.mainWindow()
-        # )
-        # self.raveOptionsAction.triggered.connect(self.options_load)
-
-        # self.net_sync_action = QAction(
-        #     QIcon(':/plugins/qris_toolbar/refresh.png'),
-        #     self.tr('Update resources'),
-        #     self.iface.mainWindow()
-        # )
-        # self.net_sync_action.triggered.connect(lambda: self.net_sync_load(force=True))
-
-        # self.find_resources_action = QAction(
-        #     QIcon(':/plugins/qris_toolbar/BrowseFolder.png'),
-        #     self.tr('Find Resources folder'),
-        #     self.iface.mainWindow()
-        # )
-        # self.find_resources_action.triggered.connect(self.locateResources)
-
-        self.about_action = QtWidgets.QAction(
-            QtGui.QIcon(':/plugins/qris_toolbar/RaveAddIn_16px.png'),
-            self.tr('About QRiS'),
-            self.iface.mainWindow()
-        )
-        self.about_action.triggered.connect(self.about_load)
-
-        m.addAction(self.helpAction)
-        # m.addAction(self.websiteAction)
-        # m.addAction(self.raveOptionsAction)
-        # m.addAction(self.net_sync_action)
-        # m.addSeparator()
-        # m.addAction(self.find_resources_action)
-        m.addAction(self.about_action)
-        self.helpButton.setDefaultAction(self.helpAction)
-
-        self.toolbar.addWidget(self.helpButton)
-
-    def about_load(self):
-        """
-        Open the About dialog
-        """
-        dialog = FrmAboutDialog()
+        dialog = FrmAboutDialog(self.iface.mainWindow())
         if self.acknowledgements is None:
             self.acknowledgements = requests.get('https://riverscapes.github.io/QRiS/dotnetack.html').text
 
         dialog.lblAcknowledgements.setText(self.acknowledgements)
         dialog.exec_()
+
+    def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
+
+        source_crs = QgsCoordinateReferenceSystem(map_epsg)
+        dest_crs = QgsCoordinateReferenceSystem(output_epsg)
+        transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
+        return transform.transform(geometry)

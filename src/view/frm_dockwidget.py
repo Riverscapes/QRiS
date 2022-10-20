@@ -116,9 +116,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # self.treeView.clicked.connect(self.item_change)
         # self.treeView.expanded.connect(self.expand_tree_item)
 
-        self.model = QtGui.QStandardItemModel()
-        self.treeView.setModel(self.model)
-
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
         self.stream_gage_doc_widget = None
@@ -132,7 +129,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """
         self.project = Project(project_file)
 
-        self.model.clear()
+        self.model = QtGui.QStandardItemModel()
+        self.treeView.setModel(self.model)
         self.tree_state = {}
         rootNode = self.model.invisibleRootItem()
 
@@ -184,7 +182,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.stream_gage_doc_widget = None
 
         # Remove project from map
-        remove_db_item_layer(self.project, self.project)
+        # remove_db_item_layer(self.project, self.project)
         self.model = None
         self.qris_project = None
 
