@@ -119,3 +119,11 @@ iface.messageBar().pushMessage("Error", "I'm sorry Dave, I'm afraid I can't do t
 ```
 
 clone this repo to `qris_toolbar_dev` so that `qris_toolbar` is what gets used for deployment
+
+### Widgets and Parents
+
+1. All widgets should ether be created by passing the parent widget into their constructor, or they should be added to a layout (in which case the layout will assume ownership of the widget).
+
+2. modal forms should be created using the `self` object of the parent window.
+
+https://stackoverflow.com/questions/37918012/pyqt-give-parent-when-creating-a-widget
