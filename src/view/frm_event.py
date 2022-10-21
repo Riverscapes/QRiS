@@ -203,14 +203,14 @@ class FrmEvent(QtWidgets.QDialog):
         self.lblStartDate.setText('Start Date')
         self.tabGrid.addWidget(self.lblStartDate, 0, 0, 1, 1)
 
-        self.uc_start = FrmDatePicker()
+        self.uc_start = FrmDatePicker(self)
         self.tabGrid.addWidget(self.uc_start, 0, 1, 1, 1)
 
         self.lblEndDate = QtWidgets.QLabel()
         self.lblEndDate.setText('End Date')
         self.tabGrid.addWidget(self.lblEndDate, 1, 0, 1, 1)
 
-        self.uc_end = FrmDatePicker()
+        self.uc_end = FrmDatePicker(self)
         self.tabGrid.addWidget(self.uc_end, 1, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel()

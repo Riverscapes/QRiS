@@ -328,15 +328,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
         if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-            frm = FrmEvent(self, self.project)
+            self.frm_event = FrmEvent(self, self.project)
         else:
-            frm = FrmDesign(self, self.project)
+            self.fm_event = FrmDesign(self, self.project)
 
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
-        result = frm.exec_()
+        result = self.frm_event.exec_()
         if result is not None and result != 0:
-            self.add_event_to_project_tree(parent_node, frm.event, frm.chkAddToMap.isChecked())
+            self.add_event_to_project_tree(parent_node, self.frm_event.event, self.frm_event.chkAddToMap.isChecked())
 
     def add_analysis(self, parent_node):
 

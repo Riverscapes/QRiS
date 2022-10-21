@@ -358,22 +358,17 @@ class QRiSToolbar:
         dialog_return = QtWidgets.QFileDialog.getExistingDirectory(self.dockwidget, 'Create New QRiS Project', last_parent_folder)
         if len(dialog_return) > 0:
             self.save_folder = dialog_return
-            frm_new_project = FrmNewProject(dialog_return, self.iface.mainWindow())
-            result = frm_new_project.exec_()
+            self.frm_new_project = FrmNewProject(dialog_return, self.iface.mainWindow())
+            result = self.frm_new_project.exec_()
             if result == QtWidgets.QDialog.Accepted:
-                settings.setValue(LAST_PROJECT_FOLDER, frm_new_project.project_dir)
+                settings.setValue(LAST_PROJECT_FOLDER, self.frm_new_project.project_dir)
                 settings.sync()
 
                 # Apply database migrations to ensure latest schema
-                self.update_database(frm_new_project.txtPath.text())
+                self.update_database(self.frm_new_project.txtPath.text())
 
                 self.toggle_widget(forceOn=True)
-                self.dockwidget.build_tree_view(frm_new_project.txtPath.text())
-
-        # if qris_project is not None:
-        #     # We set the proect path in the project settings. This way it will be saved with the QgsProject file
-        #     if self.dockwidget is None or self.dockwidget.isHidden() is True:
-        #         self.toggle_widget(forceOn=True)
+                self.dockwidget.build_tree_view(self.frm_new_project.txtPath.text())
 
     def activate_html_watershed_attributes(self):
 
@@ -468,8 +463,9 @@ class QRiSToolbar:
 
     def about_load(self):
 
-        dialog = FrmAboutDialog(self.iface.mainWindow())
-        dialog.exec_()
+        self.frm_about = FrmAboutDialog(self.iface.mainWindow())
+        self.frm_about.exec_()
+        self.frm_about = None
 
     def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
 
