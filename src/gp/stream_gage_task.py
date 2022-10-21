@@ -93,27 +93,32 @@ class StreamGageTask(QgsTask):
         self.gages_downloaded = 0
         for gage in gage_data:
 
-            geom = ogr.Geometry(ogr.wkbPoint)
-            geom.AddPoint(float(gage['dec_long_va']), float(gage['dec_lat_va']))
+            try:
 
-            dst_feature = ogr.Feature(dst_layer_def)
-            dst_feature.SetGeometry(geom)
+                geom = ogr.Geometry(ogr.wkbPoint)
+                geom.AddPoint(float(gage['dec_long_va']), float(gage['dec_lat_va']))
 
-            # Store fields that we need to query in dedicated attribute columns
-            dst_feature.SetField('site_code', gage['site_no'])
-            dst_feature.SetField('site_name', gage['station_nm'])
-            dst_feature.SetField('agency', gage['agency_cd'])
-            dst_feature.SetField('huc', gage['huc_cd'])
-            dst_feature.SetField('site_datum', gage['dec_coord_datum_cd'])
-            dst_feature.SetField('latitude', float(gage['dec_lat_va']))
-            dst_feature.SetField('longitude', float(gage['dec_long_va']))
+                dst_feature = ogr.Feature(dst_layer_def)
+                dst_feature.SetGeometry(geom)
 
-            # Store the entire gage record in the metadata
-            dst_feature.SetField('metadata', json.dumps(gage))
-            err = dst_layer.CreateFeature(dst_feature)
+                # Store fields that we need to query in dedicated attribute columns
+                dst_feature.SetField('site_code', gage['site_no'])
+                dst_feature.SetField('site_name', gage['station_nm'])
+                dst_feature.SetField('agency', gage['agency_cd'])
+                dst_feature.SetField('huc', gage['huc_cd'])
+                dst_feature.SetField('site_datum', gage['dec_coord_datum_cd'])
+                dst_feature.SetField('latitude', float(gage['dec_lat_va']))
+                dst_feature.SetField('longitude', float(gage['dec_long_va']))
+
+                # Store the entire gage record in the metadata
+                dst_feature.SetField('metadata', json.dumps(gage))
+                err = dst_layer.CreateFeature(dst_feature)
+                self.gages_downloaded += 1
+            except Exception as ex:
+                if 'UNIQUE constraint failed: stream_gages.site_code' not in str(ex):
+                    raise ex
+
             dst_feature = None
-
-            self.gages_downloaded += 1
 
         src_dataset = None
         dst_dataset = None

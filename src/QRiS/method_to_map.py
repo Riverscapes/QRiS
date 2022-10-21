@@ -26,7 +26,9 @@ from qgis.core import (
     QgsColorRampShader,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
-    QgsRasterBandStats
+    QgsRasterBandStats,
+    QgsPalLayerSettings,
+    QgsVectorLayerSimpleLabeling
 )
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
@@ -290,7 +292,7 @@ def get_stream_gage_layer(project: Project) -> QgsMapLayer:
     project_group = get_project_group(project, False)
     if project_group is not None:
         for child_layer in project_group.children():
-            if isinstance(child_layer, QgsVectorLayer):
+            if isinstance(child_layer.layer(), QgsVectorLayer):
                 custom_property = child_layer.layer().customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
                 if custom_property is not None and custom_property == STREAM_GAGE_MACHINE_CODE:
                     return child_layer.layer()
@@ -305,9 +307,20 @@ def build_stream_gage_layer(project: Project) -> QgsMapLayer:
     feature_path = project.project_file + '|layername=' + 'stream_gages'
     feature_layer = QgsVectorLayer(feature_path, 'Stream Gages', 'ogr')
     feature_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, STREAM_GAGE_MACHINE_CODE)
-    QgsProject.instance().addMapLayer(feature_layer, False)
+
+    qml = os.path.join(symbology_path, 'symbology', 'stream_gages.qml')
+    feature_layer.loadNamedStyle(qml)
+
+    # Labeling learned here:
+    # https://gis.stackexchange.com/questions/273266/reading-and-setting-label-settings-in-pyqgis/273268#273268
+    layer_settings = QgsPalLayerSettings()
+    layer_settings.fieldName = "site_code"
+    layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
+    feature_layer.setLabelsEnabled(True)
+    feature_layer.setLabeling(layer_settings)
 
     # Finally add the new layer here
+    QgsProject.instance().addMapLayer(feature_layer, False)
     project_group = get_project_group(project, True)
     project_group.addLayer(feature_layer)
 

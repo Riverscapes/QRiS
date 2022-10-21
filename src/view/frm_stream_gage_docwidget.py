@@ -1,3 +1,5 @@
+import os
+from re import M
 import sqlite3
 from datetime import date
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -5,6 +7,7 @@ import matplotlib
 from qgis import core, gui, utils
 from qgis.core import QgsApplication, Qgis
 from PyQt5.QtCore import pyqtSlot
+from sklearn.metrics import dcg_score
 
 # from qgis.core import QgsMapLayer
 # from qgis.gui import QgsDataSourceSelectDialog
@@ -12,6 +15,8 @@ from PyQt5.QtCore import pyqtSlot
 
 from ..model.project import Project
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
+from ..model.db_item import dict_factory
+from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..gp.stream_gage_task import StreamGageTask
 
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
@@ -69,12 +74,14 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
             return
 
         self.load_discharge_plot()
+        self.load_metadata()
 
         map_layer = get_stream_gage_layer(self.project)
         if map_layer is None:
             return
 
         # ) .setSelectedFeatures
+        self.iface.mapCanvas().setCurrentLayer(map_layer)
         map_layer.selectByIds([site_id])
         self.iface.mapCanvas().zoomToSelected()
 
@@ -86,7 +93,33 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         site_id, site_code = lst_item.data(QtCore.Qt.UserRole)
         return site_id
 
-    def load_discharge_plot(self):
+    def load_metadata(self):
+
+        lst_item = self.stream_gage_model.itemFromIndex(self.lst_gages.currentIndex())
+        if lst_item is None:
+            return
+
+        fields = {
+            'site_code': 'Site Code',
+            'site_name': 'Site Name',
+            'site_datum': 'Site Datum',
+            'huc': 'HUC',
+            'agency': 'Agency',
+            'latitude': 'Latitude',
+            'longitude': 'Longitude'
+        }
+
+        site_id, site_code = lst_item.data(QtCore.Qt.UserRole)
+        conn = sqlite3.connect(self.project.project_file)
+        conn.row_factory = dict_factory
+        curs = conn.cursor()
+        curs.execute('SELECT {} FROM stream_gages where fid = ?'.format(','.join(fields.keys())), [site_id])
+        row = curs.fetchone()
+        metadata_values = [(val, row[key]) for key, val in fields.items()]
+        self.metadata_model = BasinCharsTableModel(metadata_values, ['Name', 'Value'])
+        self.tableMeta.setModel(self.metadata_model)
+
+    def load_discharge_data(self):
 
         self._static_ax.cla()
 
@@ -104,6 +137,14 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
                      [site_id, start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')])
 
         data = [(row[0], row[1]) for row in curs.fetchall()]
+        return data
+
+    def load_discharge_plot(self):
+
+        data = self.load_discharge_data()
+        if data is None:
+            return
+
         dates = [item[0] for item in data]
         disch = [item[1] for item in data]
         self._static_ax.plot(dates, disch, ".")
@@ -160,6 +201,21 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         self.load_stream_gages()
 
+    def export(self):
+
+        data = self.load_discharge_data()
+        if data is None:
+            self.iface.messageBar().pushMessage('Discharge Export', f'No data to export.', level=Qgis.Info, duration=5)
+            return
+
+        dialog_return = QtWidgets.QFileDialog.getSaveFileName(self, "Export Discharge Data", None, 'CSV Files (*.csv)')
+        if dialog_return is not None and dialog_return[0] != '':
+            with open(dialog_return[0], 'w') as f:
+                f.write('measurement_date,discharge (cfs)\n')
+                [f.write(f'{row[0]},{row[1]}\n') for row in data]
+
+        self.iface.messageBar().pushMessage('Discharge Export', 'Data successfully exported to ' + dialog_return[0], level=Qgis.Info, duration=5)
+
     def setupUi(self):
 
         minDate = QtCore.QDate(1970, 1, 1)
@@ -174,9 +230,21 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.splitter.setSizes([300])
         self.main_horiz.addWidget(self.splitter)
 
+        self.left_vert = QtWidgets.QVBoxLayout(self)
+
+        self.left_widget = QtWidgets.QWidget(self)
+        self.splitter.addWidget(self.left_widget)
+        self.left_widget.setLayout(self.left_vert)
+
+        self.cmdGage = QtWidgets.QPushButton()
+        self.cmdGage.setText('Download Gages')
+        self.cmdGage.setToolTip('Download Stream Gage Locations for Current Map Extent')
+        self.cmdGage.clicked.connect(self.download_stream_gages)
+        self.left_vert.addWidget(self.cmdGage)
+
         self.lst_gages = QtWidgets.QListView()
-        self.lst_gages.setMaximumWidth(400)
-        self.splitter.addWidget(self.lst_gages)
+        # self.lst_gages.setMaximumWidth(400)
+        self.left_vert.addWidget(self.lst_gages)
 
         self.right_widget = QtWidgets.QWidget()
         self.splitter.addWidget(self.right_widget)
@@ -198,12 +266,6 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.dtEnd.setMaximumDate(maxDate)
         self.button_horiz.addWidget(self.dtEnd)
 
-        self.cmdGage = QtWidgets.QPushButton()
-        self.cmdGage.setText('Download Gages')
-        self.cmdGage.setToolTip('Download Stream Gage Locations for Current Map Extent')
-        self.cmdGage.clicked.connect(self.download_stream_gages)
-        self.button_horiz.addWidget(self.cmdGage)
-
         self.cmdDischarge = QtWidgets.QPushButton()
         self.cmdDischarge.setText('Download Discharge')
         self.cmdDischarge.clicked.connect(self.download_discharges)
@@ -211,10 +273,18 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export')
+        self.cmdExport.clicked.connect(self.export)
         self.button_horiz.addWidget(self.cmdExport)
 
         self.static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        self.right_vert.addWidget(self.static_canvas)
         self._static_ax = self.static_canvas.figure.subplots()
+
+        self.tableMeta = QtWidgets.QTableView(self)
+        self.tableMeta.verticalHeader().hide()
+
+        self.tabWidget = QtWidgets.QTabWidget()
+        self.right_vert.addWidget(self.tabWidget)
+        self.tabWidget.addTab(self.static_canvas, 'Graphical')
+        self.tabWidget.addTab(self.tableMeta, 'Metadata')
 
         self.setWidget(self.dockWidgetContents)
