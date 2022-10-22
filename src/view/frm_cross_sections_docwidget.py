@@ -110,7 +110,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
     def remove_cl_temp_layers(self):
         map_layers = QgsProject.instance().mapLayers()
         for layer in map_layers:
-            if map_layers[layer].name() in ["QRIS Centerline Preview", "QRIS Centerline Start Preview", "QRIS Centerline End Preview"]:
+            if map_layers[layer].name() in ["QRIS XSections Centerline Preview", "QRIS XSections Preview"]:
                 QgsProject.instance().removeMapLayer(map_layers[layer].id())
 
     def cmdSelect_click(self):
@@ -146,6 +146,9 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, 'Cross Sections Error', 'Generate the cross sections before saving.')
             return
 
+        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Export cross sections not yet implemented.')
+        return
+
         # sline_length = self.d.measureLine(QgsPointXY(self.geom_centerline.get().points()[0]), QgsPointXY(self.geom_centerline.get().points()[-1]))
         # geom_length = self.d.measureLength(self.geom_centerline)
         # metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
@@ -157,8 +160,8 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
         # TODO add to map
 
-        self.cross_sections_setup()  # Reset the map
-        return
+        # self.cross_sections_setup()  # Reset the map
+        # return
 
     def cmdReset_click(self):
         self.cross_sections_setup()
