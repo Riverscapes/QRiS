@@ -43,7 +43,7 @@
 			"PATH": "${env:PATH}:${env:QGIS_PATH}/Contents/MacOS/bin"
 		},
 		// NOTE: For this to work you need an env file with "QGIS_PATH=/Applications/QGIS-LTR.app/Contents" or whatever your path is
-    "python.pythonPath": "${env:QGIS_PATH}/Contents/MacOS/bin/python3.9",
+    "python.pythonPath": "${env:QGIS_PATH}/Contents/MacOS/bin/python3",
 		"qtForPython.uic.args": [
 			"-o \"${workspaceFolder}${pathSeparator}src${pathSeparator}view${pathSeparator}ui${pathSeparator}${fileBasenameNoExtension}.py\""
 		],
