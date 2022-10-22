@@ -49,6 +49,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         out_layer.dataProvider().addFeature(self.centerline_feat)
         out_layer.commitChanges()
 
+        super(FrmSaveCenterline, self).accept()
         return True
 
     def setupUi(self):

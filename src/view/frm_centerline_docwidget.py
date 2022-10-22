@@ -2,6 +2,7 @@
 Doc Widget for building centerlines
 
 """
+from operator import length_hint
 from PyQt5 import Qt, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 
@@ -118,10 +119,11 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.layer_centerline.dataProvider().truncate()
 
-        centerline_task = CenterlineTask(self.geom_polygon.asWkt(), self.geom_start.asWkt(), self.geom_end.asWkt())
+        centerline_task = CenterlineTask(self.geom_polygon, self.geom_start, self.geom_end)
         # DEBUG
         centerline_task.run()
-        self.centerline_complete(centerline_task.centerline)
+        self.centerline_complete(QgsGeometry(centerline_task.centerline))
+        # del centerline_task
         # PRODUCTION
         # centerline_task.centerline_complete.connect(self.centerline_complete)
         # QgsApplication.taskManager().addTask(centerline_task)
@@ -130,12 +132,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     def cmdSaveCl_click(self):
 
-        if self.geom_centerline is None:
+        if self.feat_centerline is None:
             QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Generate the centerline before saving.')
             return
+        geom_centerline = self.feat_centerline.geometry()
 
-        sline_length = self.d.measureLine(QgsPointXY(self.geom_centerline.get().points()[0]), QgsPointXY(self.geom_centerline.get().points()[-1]))
-        geom_length = self.d.measureLength(self.geom_centerline)
+        sline_length = self.d.measureLine(QgsPointXY(geom_centerline.get().points()[0]), QgsPointXY(geom_centerline.get().points()[-1]))
+        geom_length = self.d.measureLength(geom_centerline)
         metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
         frm_save_centerline = FrmSaveCenterline(self, self.iface, self.project)
         frm_save_centerline.add_metrics(metrics)
@@ -143,9 +146,10 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         frm_save_centerline.add_centerline(self.feat_centerline)
         result = frm_save_centerline.exec_()
 
-        # TODO add to map
+        if result is True:
+            # TODO add to map
+            self.centerline_setup()  # Reset the map
 
-        self.centerline_setup()  # Reset the map
         return
 
     def cmdReset_click(self):
@@ -186,21 +190,24 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.canvas.unsetMapTool(self.get_linestring)
         self.get_linestring = None
 
-    @pyqtSlot(LineString)
+    @pyqtSlot(QgsGeometry)
     def centerline_complete(self, centerline):
 
-        geom_centerline_raw = QgsGeometry().fromWkt(centerline.wkt)
+        geom_centerline_raw = QgsGeometry(centerline)
         smoothing_iter = self.dblSmoothingIter.value()
         if smoothing_iter == 0:
             self.geom_centerline = geom_centerline_raw
         else:
-            smoothing_dist = (self.dblSmoothingMin.value() / self.d.measureLength(geom_centerline_raw)) * geom_centerline_raw.length()
+            length = geom_centerline_raw.length()
+            length_measure = self.d.measureLength(geom_centerline_raw)
+            smoothing_dist = (self.dblSmoothingMin.value() / length_measure) * length
             smoothing_offset = self.dblSmoothingOffset.value()
             smoothing_angle = self.dblSmoothingAngle.value()
             self.geom_centerline = geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle)
 
         self.feat_centerline = QgsFeature()
-        self.feat_centerline.setGeometry(self.geom_centerline)
+        geom = QgsGeometry(self.geom_centerline)
+        self.feat_centerline.setGeometry(geom)
         self.layer_centerline.dataProvider().addFeature(self.feat_centerline)
         self.layer_centerline.commitChanges()
         self.canvas.refreshAllLayers()
@@ -276,7 +283,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.grid.addWidget(self.lblSmoothingIter, 4, 0, 1, 1)
 
         self.dblSmoothingIter = QtWidgets.QSpinBox()
-        self.dblSmoothingIter.setValue(1)
+        self.dblSmoothingIter.setValue(10)
         self.dblSmoothingIter.setRange(0, 10)
         self.grid.addWidget(self.dblSmoothingIter, 4, 1, 1, 1)
 
