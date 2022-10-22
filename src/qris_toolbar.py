@@ -41,7 +41,7 @@ from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
 
-from .model.project import apply_db_migrations
+from .model.project import apply_db_migrations, safe_make_abspath, safe_make_relpath
 
 from .gp.watershed_attributes import WatershedAttributes
 
@@ -67,6 +67,8 @@ class QRiSToolbar:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
 
+        self.qproject = QgsProject.instance()
+
         # initialize locale
         locale = QtCore.QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(self.plugin_dir, 'i18n', 'qris_{}.qm'.format(locale))
@@ -89,6 +91,7 @@ class QRiSToolbar:
 
         self.pluginIsActive = False
         self.dockwidget = None
+
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -191,7 +194,12 @@ class QRiSToolbar:
 
         # Listen for the signal when a project is being loaded
         # so we can try and reload the relevant QRiS project
-        QgsProject.instance().readProject.connect(self.onProjectLoad)
+        self.qproject.readProject.connect(self.onProjectLoad)
+
+        # Trigger the check for relative paths on whether the homePath has changed
+        self.qproject.homePathChanged.connect(self.project_homePathChanged)
+        # Close project when the project is cleared
+        self.qproject.cleared.connect(self.close_project)
 
         icon_path = ':/plugins/qris_toolbar/riverscapes_icon'
         self.add_action(icon_path, text='QRiS', callback=self.run, parent=self.iface.mainWindow(), add_to_menu=False)
@@ -200,7 +208,7 @@ class QRiSToolbar:
         project_menu = self.add_toolbar_menu('Project')
         self.add_menu_action(project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
         self.add_menu_action(project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
-        self.add_menu_action(project_menu, 'collapse', 'Close Project', self.close_project, False, 'Close the Current QRiS Project')
+        self.add_menu_action(project_menu, 'collapse', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
 
         # --- HELP MENU --
         help_menu = self.add_toolbar_menu('Help')
@@ -238,7 +246,10 @@ class QRiSToolbar:
         self.actions.append(action)
 
     def close_project(self):
-        raise Exception('Not Implemented')
+        if self.dockwidget is not None:
+            self.dockwidget.destroy_docwidget()
+            self.dockwidget.close()
+            self.dockwidget = None
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed.
@@ -323,10 +334,60 @@ class QRiSToolbar:
         """Slot for QGIS signal when a QGIS project (QGZ) is being loaded.
         Check if the QGIS project references a QRiS project. Load it if does."""
 
-        qris_project_path, type_conversion_ok = QgsProject.instance().readEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'])
-        if type_conversion_ok is True:
-            if qris_project_path is not None and len(qris_project_path) > 0 and os.path.exists(qris_project_path):
-                self.open_qris_project(qris_project_path)
+        qris_project_path = self.get_project_path_settings()
+        if qris_project_path is not None and len(qris_project_path) > 0 and os.path.exists(qris_project_path):
+            self.open_qris_project(qris_project_path)
+
+     
+    def project_homePathChanged(self):
+        """Trigger an event before saving the project so we have an opportunity to corrent the paths
+        """
+        proj_path = self.get_project_path_settings()
+        self.set_project_path_settings(proj_path)
+
+
+    def set_project_path_settings(self, project_file: str):
+        """Write the QRiS project filepath to the QgsProject file
+        If the destination is a .qgz file then relative paths are used
+
+        Args:
+            project_file (str): _description_
+        """
+        qgs_path = self.qproject.absoluteFilePath()
+        if os.path.isdir(os.path.dirname(qgs_path)):
+            qgs_path_dir = os.path.dirname(qgs_path)
+            # Swap all abspaths for relative ones
+            project_file = safe_make_relpath(project_file, qgs_path_dir)
+
+        self.qproject.writeEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'], project_file)
+
+    def get_project_path_settings(self):
+        """Fetch the QRiS project filepath from the QgsProject settings
+        If it comes in as a relative path it is transformed and returned as an absolute path
+
+        Returns:
+            _type_: _description_
+        """
+        project_file = None
+        try:
+            project_file, type_conversion_ok = self.qproject.readEntry(
+                CONSTANTS['settingsCategory'],
+                CONSTANTS['qris_project_path']
+            )
+
+            if type_conversion_ok is False:
+                project_file = None
+
+        except Exception as e:
+            self.settings.log('Error loading project settings: {}'.format(e), Qgis.Warning)
+
+        qgs_project_path = self.qproject.absoluteFilePath()
+        if os.path.isfile(qgs_project_path):
+            qgs_path_dir = os.path.dirname(qgs_project_path)
+            # Change all relative paths back to absolute ones
+            project_file = safe_make_abspath(project_file, qgs_path_dir)
+
+        return project_file
 
     def open_existing_project(self):
         """
@@ -351,6 +412,7 @@ class QRiSToolbar:
         self.update_database(db_path)
 
         self.toggle_widget(forceOn=True)
+        self.set_project_path_settings(db_path)
         self.dockwidget.build_tree_view(db_path)
 
         # We set the project path in the project settings. This way it will be saved with the QgsProject file
@@ -374,11 +436,14 @@ class QRiSToolbar:
                 settings.setValue(LAST_PROJECT_FOLDER, self.frm_new_project.project_dir)
                 settings.sync()
 
+                db_path = self.frm_new_project.txtPath.text()
+
                 # Apply database migrations to ensure latest schema
-                self.update_database(self.frm_new_project.txtPath.text())
+                self.update_database(db_path)
 
                 self.toggle_widget(forceOn=True)
-                self.dockwidget.build_tree_view(self.frm_new_project.txtPath.text())
+                self.set_project_path_settings(db_path)
+                self.dockwidget.build_tree_view(db_path)
 
     def activate_html_watershed_attributes(self):
 

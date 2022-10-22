@@ -133,10 +133,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """
         self.project = Project(project_file)
 
-        # Save the project in the QGIS Project (QGZ) so that it can be reloaded when
-        # the QGZ is next opened
-        QgsProject.instance().writeEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'], project_file)
-
         self.model = QtGui.QStandardItemModel()
         self.treeView.setModel(self.model)
         self.tree_state = {}
@@ -678,3 +674,4 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.treeView.header().setSortIndicatorShown(False)
         self.gridLayout.addWidget(self.treeView, 0, 0, 1, 1)
         self.setWidget(self.dockWidgetContents)
+
