@@ -7,7 +7,6 @@ import matplotlib
 from qgis import core, gui, utils
 from qgis.core import QgsApplication, Qgis
 from PyQt5.QtCore import pyqtSlot
-from sklearn.metrics import dcg_score
 
 # from qgis.core import QgsMapLayer
 # from qgis.gui import QgsDataSourceSelectDialog
