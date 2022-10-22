@@ -5,8 +5,10 @@ from datetime import date
 from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib
 from qgis import core, gui, utils
-from qgis.core import QgsApplication, Qgis
+from qgis.core import QgsApplication, Qgis, QgsMessageLog
 from PyQt5.QtCore import pyqtSlot
+
+from ..QRiS.settings import CONSTANTS
 
 # from qgis.core import QgsMapLayer
 # from qgis.gui import QgsDataSourceSelectDialog
@@ -22,10 +24,14 @@ from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 
 # https://stackoverflow.com/questions/31406193/matplotlib-is-not-worked-with-qgis
 # https://matplotlib.org/3.1.1/gallery/user_interfaces/embedding_in_qt_sgskip.html
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.dates as mdates
-import matplotlib.ticker as ticker
+try:
+    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    from matplotlib.figure import Figure
+    import matplotlib.dates as mdates
+    import matplotlib.ticker as ticker
+except ImportError:
+    QgsMessageLog.logMessage(f"Matplotlib is not at a sufficient version: {matplotlib.__version__}", CONSTANTS['logCategory'], level=Qgis.Critical)
+
 
 # Help on selection changed event
 # https://stackoverflow.com/questions/10156842/howto-get-the-selectionchanged-signal
