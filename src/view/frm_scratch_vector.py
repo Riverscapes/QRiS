@@ -29,7 +29,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.vector_types_model = DBItemModel(project.lookup_tables['lkp_scratch_vector_types'])
         self.cboVectorType.setModel(self.vector_types_model)
 
-        self.setWindowTitle('Create New Scratch Space Raster' if self.scratch_vector is None else 'Edit Scratch Space Raster Properties')
+        self.setWindowTitle('Create New Scratch Space Vector' if self.scratch_vector is None else 'Edit Scratch Space Vector Properties')
 
         if scratch_vector is None:
 
