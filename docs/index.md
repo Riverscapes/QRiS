@@ -1,19 +1,32 @@
 ---
-title: Home
+title: Riverscape Studio - for QGIS
 ---
-
-* QRiS - QGIS Riverscapes Studio
-
-The QRiS is a [QGIS](https://www.qgis.org/) plugin designed to support a unified framework for consistently authoring, analyzing, and presenting riverscape information. The current beta release (v 0.1.1) is meant to support [Anabranch Solutions](https://www.anabranchsolutions.com) restoration design and implementation personnel, and also to serve as teaching tool for [Utah State University students in the Watershed Sciences Department](https://qcnr.usu.edu/wats/).
+<img class="float-left" width="64" src="https://icons.veryicon.com/png/o/object/material-design-icons-1/android-studio.png">
+**Riverscapes Studio** - for [QGIS](https://plugins.qgis.org/) or **QRiS** (pronounced curious) is where you come to work on _your_ riverscapes. QRiS takes care of the housekeeping and lets you focus on understanding your riverscape.
 
 <div align="center">
-  <a class="button large" href="{{ site.baseurl }}/Instruction"><i class="fa fa-youtube" aria-hidden="true"></i>  Learning Resources</a>
+<img src="{{ site.baseurl }}/assets/images/MyMillRiverscape.jpg">
 </div>
 
-** QRiS Beta Overview
 
-The beta release is primarily meant to support consistent documentation of LTPBR designs within QGIS. The LTPBR design documentation attributes follow the ideas presented in the [LTPBR Manual](https://lowtechpbr.restoration.usu.edu/) as well as the [LTPBR Implementation and Monitoring Protocol](http://fmltpbr.riverscapes.net).
 
-<div class="responsive-embed widescreen">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/2fhFpqZZ3qs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
+QRiS is targeted at anyone interested in understanding and analyzing their riverscapes, such as:  _practitioners, managers, analysts, researchers_ and _students_ with some familiarity with GIS. QRiS helps _users_ with analysis, monitoring, and  assessment of riverscapes as well as preparation of the design and as-builts of [low-tech process-based restoration projects](http://lowtechpbr.restoration.usu.edu/resources/Topics/04_Design/). 
+
+### A Riverscapes Consortium Tool
+<a href="http://riverscapes.net"><img class="float-left" src="https://rave.riverscapes.net/assets/images/logos/RC_Black.png"></a>
+<a href="https://riverscapes.net/Tools/discrimination#tool-grade"><img class="float-right" src="https://riverscapes.net/assets/images/tools/grade/TRL_5_128w.png"></a> 
+[We]({{ site.baseurl }}/About/acknowledgements.html) seek for QRiS to become the flagship, [professional-grade tool](https://riverscapes.net/Tools/discrimination.html#tool-grade) of the [Riverscapes Consortium](http://riverscapes.net). The free, [open-source tool]({{ site.baseurl }}/About/license) is a [plugin](https://plugins.qgis.org/) to the free, open-source [QGIS](https://plugins.qgis.org/) software. 
+
+See the QRiS sister tool: RV - [Riverscapes Viewer](http://rave.riverscapes.net) to help visualize [riverscapes projects](https://riverscapes.net/Tools/Technical_Reference/Documentation_Standards/Riverscapes_Projects/) <img src="https://riverscapes.net/assets/images/data/RiverscapesProject_24.png">.
+
+**QRiS is in Development & Beta Testing** and is only in the experimental plugin library of GIS. Version 1.0 is scheduled for release in late Spring 2023.
+
+## What's a Riverscape?
+
+A riverscape is the part of the landscape that could plausibly flood in the contemporary natural flow regime. 
+
+
+<!---
+## Why do I need a "Studio" for my Riverscape?
+
+-->
