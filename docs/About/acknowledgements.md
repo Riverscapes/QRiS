@@ -3,11 +3,11 @@ title: Acknowledgements
 weight: 2
 ---
 
-<a href="http://riverscapes.net"><img class="float-left" src="https://rave.riverscapes.net/assets/images/logos/RC_Black.png"></a> QRiS is brought to you for free by the [Riverscapes Consortium](http://riverscapes.net). The goal is to make it quick and easy to capture geospatial data related to rivers, using consistent data formats, attributes and symbology.
+<a href="http://riverscapes.net"><img class="float-left" src="https://rave.riverscapes.net/assets/images/logos/RC_Black.png"></a> QGIS Riverscapes Studio or QRiS (pronounced curious)  is brought to you for free by the [Riverscapes Consortium](http://riverscapes.net). The goal is to make it quick and easy to capture geospatial data related to rivers, using consistent data formats, attributes and symbology.
 
-QGIS Riverscapes Studio or QRiS (pronounced curious) is a flagship, professional-grade tool of the [Riverscapes Consortium](http://riverscapes.net). The free, [open-source software](https://github.com/Riverscapes/QRiS) is a [plugin](https://plugins.qgis.org/) to the free, open-source [QGIS](https://plugins.qgis.org/) software. The tool is targeted at anyone interested in understanding and analyzing their riverscape - including:  practitioners, managers, analysts, researchers and students with some familiarity with GIS. It helps users with analysis, monitoring, assessment of riverscapes as well as preparation of the design and as-builts of [low-tech process-based restoration designs](http://lowtechpbr.restoration.usu.edu/resources/Topics/04_Design/). 
 
-**QRiS is in Beta Testing** and is only in the experimental plugin library of GIS. Version 1.0 will be released in late Spring 2023.
+
+
 
 ## Funding
 
