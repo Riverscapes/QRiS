@@ -1,0 +1,3 @@
+This is just a placeholder text file that QRiS uses during plugin load, to determine whether to load the last project. The contents of this file is never read. It's merely the presence or absence of this file that matters.
+
+If this file exists then QRiS knows that the version of QRiS is on a developers computer and that it should attempt to reload the last project when the Riverscapes logo is clicked on the QRiS toolbar. This file is NOT deployed with the published version of QRiS and therefore no end users possess this file. End users do not therefore get to reload the last used project (a feature that Joe Wheaton never cared for in GCD).

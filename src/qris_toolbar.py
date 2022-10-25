@@ -303,6 +303,16 @@ class QRiSToolbar:
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
+            # Only attempt to load the last used project for developers when the special text file is present.
+            load_last_project_key = os.path.join(os.path.dirname(__file__), '..', 'load_last_project.txt')
+            if os.path.isfile(load_last_project_key):
+                settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+                last_project_folder = settings.value(LAST_PROJECT_FOLDER)
+                if last_project_folder is not None and os.path.isdir(last_project_folder):
+                    project_file = os.path.join(last_project_folder, 'qris_project.gpkg')
+                    if os.path.isfile(project_file):
+                        self.open_qris_project(project_file)
+
     def toggle_widget(self, forceOn=False):
 
         self.run()
