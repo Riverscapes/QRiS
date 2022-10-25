@@ -2,7 +2,7 @@
 Centerline geoprocessing task using QgsGeometry
 """
 
-from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsGeometry, QgsMultiPoint, QgsLineString, QgsMultiLineString, QgsPolygon, QgsMultiPolygon, QgsPointXY, QgsPoint
+from qgis.core import QgsApplication, QgsWkbTypes, QgsTask, QgsMessageLog, Qgis, QgsGeometry, QgsLineString, QgsPointXY
 from qgis.PyQt.QtCore import pyqtSignal
 
 
@@ -11,14 +11,16 @@ MESSAGE_CATEGORY = 'CenterlineTask'
 
 class CenterlineTask(QgsTask):
 
-    centerline_complete = pyqtSignal(str)
+    centerline_complete = pyqtSignal(QgsGeometry)
 
-    def __init__(self, in_polygon: QgsGeometry, start_clipline: QgsLineString, end_clipline: QgsLineString) -> None:
+    def __init__(self, in_polygon: QgsGeometry, start_clipline: QgsLineString, end_clipline: QgsLineString, densify_distance=None) -> None:
         super().__init__('Generate Centerline Task', QgsTask.CanCancel)
 
-        self.in_polygon = in_polygon
-        self.start_clipline = start_clipline
-        self.end_clipline = end_clipline
+        # Try to make deep copies of geometries so gui/parent changes don't cause issues?
+        self.in_polygon = QgsGeometry(in_polygon)
+        self.start_clipline = start_clipline.clone()
+        self.end_clipline = end_clipline.clone()
+        self.densify_distance = densify_distance
         self.centerline = None
 
     def run(self):
@@ -30,32 +32,72 @@ class CenterlineTask(QgsTask):
         internally and raise them in self.finished
         """
 
-        # TODO Densify vertex option
-        polygon_dense = QgsGeometry(self.in_polygon)  # Deep copy of polygon
         start_clipline = self.start_clipline
         end_clipline = self.end_clipline
 
-        # geom_lines = [QgsGeometry(line) for line in [start_clipline, end_clipline]]
-        # inside_lines = [line.intersection(self.in_polygon) for line in geom_lines]
-        midpoint_start = QgsGeometry(start_clipline.interpolatePoint(start_clipline.length() / 2))
-        midpoint_end = QgsGeometry(end_clipline.interpolatePoint(end_clipline.length() / 2))
-        midpoint_start_buffer = midpoint_start.buffer(0.00001, 4)
-        midpoint_end_buffer = midpoint_end.buffer(0.00001, 4)
+        g_startline = QgsGeometry(start_clipline.clone())
+        g_endline = QgsGeometry(end_clipline.clone())
+
+        # Get one and only one polygon if multipolygon.
+        if self.in_polygon.get().wkbType() == QgsWkbTypes.MultiPolygon:
+            for part in self.in_polygon.get().parts():  # what if more than one part intersects both cliplines??
+                g_part = QgsGeometry(part.clone())
+                if g_part.intersects(g_endline) and g_part.intersects(g_startline):
+                    g_single_main_poly = g_part
+                    break
+        else:
+            g_single_main_poly = QgsGeometry(self.in_polygon)
+
+        g_inner_startline = QgsGeometry(g_startline.intersection(g_single_main_poly))
+        g_inner_endline = QgsGeometry(g_endline.intersection(g_single_main_poly))
+
+        if any(geom.isMultipart() for geom in [g_inner_endline, g_inner_startline]):
+            self.exception = Exception('Unable to find one central polygon between the clip lines. Make sure clip lines are clean across the polygon.')
+            return False
+
+        midpoint_start = QgsGeometry(g_inner_startline.get().interpolatePoint(g_inner_startline.get().length() / 2))
+        midpoint_end = QgsGeometry(g_inner_endline.get().interpolatePoint(g_inner_endline.get().length() / 2))
+        midpoint_start_buffer = QgsGeometry(midpoint_start.buffer(0.00001, 4))
+        midpoint_end_buffer = QgsGeometry(midpoint_end.buffer(0.00001, 4))
+
+        g_inner_startline = None
+        g_inner_endline = None
+
+        # TODO Get perimeter only
+        # TODO Donut Routing
+        if self.densify_distance is not None:
+            g_clipping_poly = QgsGeometry(g_single_main_poly.densifyByDistance(self.densify_distance))
+        else:
+            g_clipping_poly = QgsGeometry(g_single_main_poly)
 
         # Find the central polygon by clipping the start and end lines
-        result0 = polygon_dense.splitGeometry([QgsPointXY(start_clipline.startPoint()), QgsPointXY(start_clipline.endPoint())], True)
-        result1 = polygon_dense.splitGeometry([QgsPointXY(end_clipline.startPoint()), QgsPointXY(end_clipline.endPoint())], True)
+        _result0, l_clippedpolys0, _l_test0 = g_clipping_poly.splitGeometry([QgsPointXY(start_clipline.startPoint()), QgsPointXY(start_clipline.endPoint())], True)
+        g_clipped_poly0 = QgsGeometry(l_clippedpolys0[0])
+        if g_clipping_poly.intersects(g_endline):
+            _result1, l_clippedpolys1, _l_test1 = g_clipping_poly.splitGeometry([QgsPointXY(end_clipline.startPoint()), QgsPointXY(end_clipline.endPoint())], True)
+            g_clipped_poly1 = QgsGeometry(l_clippedpolys1[0])
+        else:
+            _result1, l_clippedpolys1, _l_test1 = g_clipped_poly0.splitGeometry([QgsPointXY(end_clipline.startPoint()), QgsPointXY(end_clipline.endPoint())], True)
+            g_clipped_poly1 = QgsGeometry(l_clippedpolys1[0])
 
-        test_polygons = [result0[1][0], result1[1][0], polygon_dense]
-
-        central_polygon = QgsGeometry(list(geom_polygon for geom_polygon in test_polygons if geom_polygon.intersects(midpoint_start_buffer) and geom_polygon.intersects(midpoint_end_buffer))[0])
+        test_polygons = [g_clipped_poly0, g_clipped_poly1, g_clipping_poly]
+        l_tested_polygons = list(geom_polygon for geom_polygon in test_polygons if geom_polygon.intersects(midpoint_start_buffer) and geom_polygon.intersects(midpoint_end_buffer))
+        if len(l_tested_polygons) != 1:
+            self.exception = Exception('Unable to find one central polygon between the clip lines. Make sure clip lines are clean across the polygon.')
+            return False
+        g_central_polygon = QgsGeometry(l_tested_polygons[0])
+        g_clipped_poly0 = None
+        g_clipped_poly1 = None
+        g_clipping_poly = None
+        test_polygons = None
 
         # Build Voronoi from clipped polygon
-        voronoi = central_polygon.voronoiDiagram()
-        l_vor_polys = [QgsGeometry(poly) for poly in voronoi.parts()]
+        voronoi = QgsGeometry(g_central_polygon.voronoiDiagram())
+        l_vor_polys = [QgsGeometry(poly.clone()) for poly in voronoi.parts()]
+        voronoi = None
 
         # Split to L and R by selecting line segments of polygon not touching midpoint of split lines
-        coords = central_polygon.asPolygon()[0]
+        coords = g_central_polygon.asPolygon()[0]
         segments = list(QgsGeometry(line) for line in list(map(QgsLineString, zip(coords[:-1], coords[1:]))))
         segments0 = [segment for segment in segments if midpoint_start_buffer.disjoint(segment)]
         segments1 = [segment for segment in segments0 if midpoint_end_buffer.disjoint(segment)]
@@ -70,11 +112,23 @@ class CenterlineTask(QgsTask):
             mpolys = QgsGeometry.unaryUnion(intersected_polys)
             side_polys.append(mpolys)
 
+        clean = None
+
         # Intersect to find the centerline
         m_centerline_raw = side_polys[0].intersection(side_polys[1])
         centerline_raw = QgsGeometry.mergeLines(m_centerline_raw)
-        centerline_out = centerline_raw.intersection(self.in_polygon)
-        self.centerline = QgsGeometry(centerline_out)
+        g_centerline_intersected = centerline_raw.intersection(g_single_main_poly)
+
+        # TODO: Find the main centerline after clipping the boundary
+        # if g_centerline_intersected.isMultipart():
+        #     g_centerline_out = QgsGeometry([line.clone() for line in g_centerline_intersected.parts() if QgsGeometry(line.clone()).intersects(g_startline) and QgsGeometry(line.clone()).intersects(g_endline)][0])
+        # else:
+        g_centerline_out = QgsGeometry(g_centerline_intersected)
+
+        if g_centerline_out.isEmpty():
+            self.exception = Exception('Centerline task has produced empty centerline polygon.')
+            return False
+        self.centerline = QgsGeometry(g_centerline_out)
 
         return True
 
@@ -107,7 +161,7 @@ class CenterlineTask(QgsTask):
                     MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
-        self.centerline_complete.emit(QgsGeometry(self.centerline))
+        self.centerline_complete.emit(self.centerline)
 
     def cancel(self):
         QgsMessageLog.logMessage(

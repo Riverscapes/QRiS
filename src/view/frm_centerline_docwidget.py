@@ -81,7 +81,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         feats = layer.getFeatures()
         feat = QgsFeature()
         feats.nextFeature(feat)
-        self.geom_polygon = feat.geometry()
+        self.geom_polygon = QgsGeometry(feat.geometry())
         self.txtPolygon.setText(f'FeatureID: {feat.id()}')
 
     def remove_cl_temp_layers(self):
@@ -119,14 +119,26 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.layer_centerline.dataProvider().truncate()
 
-        centerline_task = CenterlineTask(self.geom_polygon, self.geom_start, self.geom_end)
+        if self.geom_polygon.isMultipart():
+            geom_polygon = QgsGeometry.fromMultiPolygonXY(self.geom_polygon.asMultiPolygon())
+        else:
+            geom_polygon = QgsGeometry.fromPolygonXY(self.geom_polygon.asPolygon())
+        geom_start = self.geom_start.clone()
+        geom_end = self.geom_end.clone()
+
+        length = geom_polygon.get().perimeter()
+        length_measure = self.d.measurePerimeter(geom_polygon)
+        densify_distance = (self.dblDensity.value() / length_measure) * length
+
+        centerline_task = CenterlineTask(geom_polygon, geom_start, geom_end, densify_distance)
         # DEBUG
-        centerline_task.run()
-        self.centerline_complete(QgsGeometry(centerline_task.centerline))
-        # del centerline_task
+        # result = centerline_task.run()
+        # if result is True:
+        #     cl = QgsGeometry(centerline_task.centerline)
+        #     self.centerline_complete(cl)
         # PRODUCTION
-        # centerline_task.centerline_complete.connect(self.centerline_complete)
-        # QgsApplication.taskManager().addTask(centerline_task)
+        centerline_task.centerline_complete.connect(self.centerline_complete)
+        QgsApplication.taskManager().addTask(centerline_task)
 
         return
 
@@ -196,14 +208,14 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         geom_centerline_raw = QgsGeometry(centerline)
         smoothing_iter = self.dblSmoothingIter.value()
         if smoothing_iter == 0:
-            self.geom_centerline = geom_centerline_raw
+            self.geom_centerline = QgsGeometry(geom_centerline_raw)
         else:
             length = geom_centerline_raw.length()
             length_measure = self.d.measureLength(geom_centerline_raw)
             smoothing_dist = (self.dblSmoothingMin.value() / length_measure) * length
             smoothing_offset = self.dblSmoothingOffset.value()
             smoothing_angle = self.dblSmoothingAngle.value()
-            self.geom_centerline = geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle)
+            self.geom_centerline = QgsGeometry(geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle))
 
         self.feat_centerline = QgsFeature()
         geom = QgsGeometry(self.geom_centerline)
@@ -278,29 +290,43 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.cmdCaptureE.clicked.connect(self.cmdCaptureEnd_click)
         self.horizEnd.addWidget(self.cmdCaptureE)
 
+        self.lblDensity = QtWidgets.QLabel()
+        self.lblDensity.setText('Densify Distance')
+        self.lblDensity.setToolTip('Densify the polygon by adding regularly placed extra nodes inside each segment so that the maximum distance between any two nodes does not exceed the specified distance')
+        self.grid.addWidget(self.lblDensity, 4, 0, 1, 1)
+
+        self.dblDensity = QtWidgets.QSpinBox()
+        self.dblDensity.setValue(10)
+        self.dblDensity.setSuffix(' m')
+        self.dblDensity.setRange(0, 500)
+        self.grid.addWidget(self.dblDensity, 4, 1, 1, 1)
+
         self.lblSmoothingIter = QtWidgets.QLabel()
         self.lblSmoothingIter.setText('Smoothing Iter.')
-        self.grid.addWidget(self.lblSmoothingIter, 4, 0, 1, 1)
+        self.lblSmoothingIter.setToolTip('number of smoothing iterations to run. More iterations results in a smoother geometry. Set to 0 for no smoothing.')
+        self.grid.addWidget(self.lblSmoothingIter, 5, 0, 1, 1)
 
         self.dblSmoothingIter = QtWidgets.QSpinBox()
         self.dblSmoothingIter.setValue(10)
         self.dblSmoothingIter.setRange(0, 10)
-        self.grid.addWidget(self.dblSmoothingIter, 4, 1, 1, 1)
+        self.grid.addWidget(self.dblSmoothingIter, 5, 1, 1, 1)
 
         self.lblSmoothingOffset = QtWidgets.QLabel()
         self.lblSmoothingOffset.setText('Smoothing Offset')
-        self.grid.addWidget(self.lblSmoothingOffset, 5, 0, 1, 1)
+        self.lblSmoothingOffset.setToolTip(f'fraction of line to create new vertices along, between 0 and 1.0, e.g., the default value of 0.25 will create new vertices 25% and 75% along each line segment of the geometry for each iteration. Smaller values result in “tighter” smoothing.')
+        self.grid.addWidget(self.lblSmoothingOffset, 6, 0, 1, 1)
 
         self.dblSmoothingOffset = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingOffset.setDecimals(2)
         self.dblSmoothingOffset.setValue(0.25)
         self.dblSmoothingOffset.setSingleStep(0.05)
         self.dblSmoothingOffset.setRange(0, 1)
-        self.grid.addWidget(self.dblSmoothingOffset, 5, 1, 1, 1)
+        self.grid.addWidget(self.dblSmoothingOffset, 6, 1, 1, 1)
 
         self.lblSmoothingMin = QtWidgets.QLabel()
         self.lblSmoothingMin.setText('Smoothing Min Dist.')
-        self.grid.addWidget(self.lblSmoothingMin, 6, 0, 1, 1)
+        self.lblSmoothingMin.setToolTip('minimum segment length to apply smoothing to')
+        self.grid.addWidget(self.lblSmoothingMin, 7, 0, 1, 1)
 
         self.dblSmoothingMin = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingMin.setSuffix(' m')
@@ -308,11 +334,12 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.dblSmoothingMin.setRange(-1.0, 500.0)
         self.dblSmoothingMin.setValue(-1.0)
         self.dblSmoothingMin.setSingleStep(5)
-        self.grid.addWidget(self.dblSmoothingMin, 6, 1, 1, 1)
+        self.grid.addWidget(self.dblSmoothingMin, 7, 1, 1, 1)
 
         self.lblSmoothingAngle = QtWidgets.QLabel()
         self.lblSmoothingAngle.setText('Smoothing Max Angle')
-        self.grid.addWidget(self.lblSmoothingAngle, 7, 0, 1, 1)
+        self.lblSmoothingAngle.setToolTip('maximum angle at node (0-180) at which smoothing will be applied')
+        self.grid.addWidget(self.lblSmoothingAngle, 8, 0, 1, 1)
 
         self.dblSmoothingAngle = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingAngle.setSuffix(' degrees')
@@ -320,10 +347,10 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.dblSmoothingAngle.setRange(0, 180)
         self.dblSmoothingAngle.setValue(180.0)
 
-        self.grid.addWidget(self.dblSmoothingAngle, 7, 1, 1, 1)
+        self.grid.addWidget(self.dblSmoothingAngle, 8, 1, 1, 1)
 
         self.horizBottom = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizBottom, 8, 1, 1, 1)
+        self.grid.addLayout(self.horizBottom, 9, 1, 1, 1)
 
         self.cmdGenerateCl = QtWidgets.QPushButton()
         self.cmdGenerateCl.setText('Generate Centerline')
@@ -338,7 +365,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.cmdReset = QtWidgets.QPushButton()
         self.cmdReset.setText('Reset')
         self.cmdReset.clicked.connect(self.cmdReset_click)
-        self.grid.addWidget(self.cmdReset, 9, 0, 1, 1)
+        self.grid.addWidget(self.cmdReset, 10, 0, 1, 1)
 
         self.vert.addLayout(add_help_button(self, 'centerlines'))
 
