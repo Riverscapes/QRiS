@@ -9,6 +9,7 @@ EVENT_MACHINE_CODE = 'Event'
 
 # Database ID of the design event type. Used to determine which icon to use
 DESIGN_EVENT_TYPE_ID = 2
+AS_BUILT_EVENT_TYPE_ID = 3
 
 
 class Event(DBItem):

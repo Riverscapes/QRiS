@@ -34,8 +34,8 @@ from PyQt5.QtCore import pyqtSlot
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project
-from ..model.event import Event
-from ..model.event import EVENT_MACHINE_CODE
+from ..model.event import DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
+from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, RASTER_TYPE_BASEMAP, Raster
 from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
@@ -212,7 +212,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
-                    self.add_context_menu_item(self.menu, 'Add New Design', 'new', lambda: self.add_event(model_item, 0))
+
+                    ltpbr_menu = QtWidgets.QMenu('Low-Tech Process-Based Restoration', self)
+                    self.add_context_menu_item(ltpbr_menu, 'Add New Design', 'new', lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
+                    self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'new', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
+                    self.menu.addMenu(ltpbr_menu)
+
                 elif model_data == BASEMAP_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_BASEMAP))
                 elif model_data == MASK_MACHINE_CODE:
@@ -328,9 +333,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
         if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-            self.frm_event = FrmEvent(self, self.project)
+            self.frm_event = FrmEvent(self, self.project, event_type_id)
         else:
-            self.fm_event = FrmDesign(self, self.project)
+            self.frm_event = FrmDesign(self, self.project, event_type_id)
 
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)

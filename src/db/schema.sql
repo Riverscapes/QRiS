@@ -177,6 +177,7 @@ CREATE TABLE lkp_event_types (
 
 INSERT INTO lkp_event_types (id, name, description) VALUES (1, 'Generic Data Capture Event', NULL);
 INSERT INTO lkp_event_types (id, name, description) VALUES (2, 'Low Tech Design', NULL);
+INSERT INTO lkp_event_types (id, name, description) VALUES (3, 'As-Built survey', NULL);
 
 CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -685,18 +686,32 @@ ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
 -- Design Lookup Tables
 CREATE TABLE lkp_design_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
+    name TEXT NOT NULL UNIQUE,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_design_status (id, name, description) VALUES (1, 'Specification', 'Design is a specification of structure locations and types that may be built in the future');
-INSERT INTO lkp_design_status (id, name, description) VALUES (2, 'As-Built', 'Design is a representation of structure locations and types that have been built');
+INSERT INTO lkp_design_status (id, name, description) VALUES (1, 'Preliminary Desktop', NULL);
+INSERT INTO lkp_design_status (id, name, description) VALUES (2, 'Desktop Analysis (Remote)', NULL);
+INSERT INTO lkp_design_status (id, name, description) VALUES (3, 'Provisional', NULL);
+INSERT INTO lkp_design_status (id, name, description) VALUES (4, 'In Review', NULL);
+INSERT INTO lkp_design_status (id, name, description) VALUES (5, 'Final', NULL);
+
+CREATE TABLE lkp_design_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_design_sources (id, name, description) VALUES (1, 'Previous Site Visit', NULL);
+INSERT INTO lkp_design_sources (id, name, description) VALUES (2, 'Desktop Analysis (Remote)', NULL);
+INSERT INTO lkp_design_sources (id, name, description) VALUES (3, 'Field Work', NULL);
 
 
 CREATE TABLE lkp_structure_mimics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
+    name TEXT NOT NULL UNIQUE,
     description TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -869,3 +884,6 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_design_status', 'attributes', 'lkp_design_status', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('structure_types', 'attributes', 'structure_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('zoi_types', 'attributes', 'zoi_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_design_sources', 'attributes', 'lkp_design_sources', 0);
+
+

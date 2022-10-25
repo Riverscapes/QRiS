@@ -1,33 +1,52 @@
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QDialogButtonBox, QMessageBox, QLabel, QComboBox
-from qgis.PyQt.QtCore import pyqtSignal, QVariant, QUrl, QRect, Qt
-from qgis.PyQt.QtGui import QIcon, QDesktopServices, QStandardItemModel, QStandardItem
 
-from ..model.db_item import DBItem, DBItemModel
+import sqlite3
+from PyQt5 import QtCore, QtGui, QtWidgets
+from matplotlib.pyplot import table
+
+from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.project import Project
-
+from ..model.event import Event, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from .frm_event import FrmEvent
-
-DESIGN_EVENT_TYPE_ID = 2
 
 
 class FrmDesign(FrmEvent):
 
-    def __init__(self, parent, qris_project: Project, event=None):
-        super().__init__(parent, qris_project, DESIGN_EVENT_TYPE_ID, event)
+    def __init__(self, parent, qris_project: Project, event_type_id: int, event: Event = None):
+        super().__init__(parent, qris_project, event_type_id, event)
 
-        self.setWindowTitle('Create New Design' if event is None else 'Edit Design')
+        event_type = 'Design' if event_type_id == DESIGN_EVENT_TYPE_ID else 'As-Built Survey'
+        self.setWindowTitle(f'Create New {event_type}' if event is None else f'Edit {event_type}')
 
-        self.lblStatus = QLabel('Design Status', self)
+        self.lblPlatform.setText('Design completed at')
+
+        self.lblStatus = QtWidgets.QLabel('Design Status', self)
         self.tabGrid.addWidget(self.lblStatus, 4, 0)
 
         statuses = qris_project.lookup_tables['lkp_design_status']
-        self.cboStatus = QComboBox(self)
+        self.cboStatus = QtWidgets.QComboBox(self)
         self.status_model = DBItemModel(statuses)
         self.cboStatus.setModel(self.status_model)
-        self.tabGrid.addWidget(self.cboStatus, 4, 1)
+        self.tabGrid.addWidget(self.cboStatus, 4, 1, 1, 1)
 
         self.vwProtocols.setVisible(False)
         self.lblProtocols.setVisible(False)
+
+        self.lblDesigners = QtWidgets.QLabel(self)
+        self.lblDesigners.setText('Designers')
+        self.tabGrid.addWidget(self.lblDesigners, 5, 0, 1, 1)
+
+        self.txtDesigners = QtWidgets.QPlainTextEdit(self)
+        self.tabGrid.addWidget(self.txtDesigners, 5, 1, 1, 1)
+
+        # Create a checkbox widget for each design source
+        self.design_source_widgets, self.design_sources = add_checkbox_widgets(
+            self, self.qris_project.project_file, 'lkp_design_sources')
+
+        # Add the checkboxes to the form
+        self.lblDesignSources = QtWidgets.QLabel(self)
+        self.lblDesignSources.setText('Design Sources')
+        self.tabGrid.addWidget(self.lblDesignSources, 6, 0, 1, 1)
+        [self.tabGrid.addWidget(widget, self.tabGrid.rowCount(), 1, 1, 1) for widget in self.design_source_widgets]
 
         if event is not None:
             self.chkAddToMap.setVisible(False)
@@ -36,9 +55,49 @@ class FrmDesign(FrmEvent):
             status_index = self.status_model.getItemIndexById(status_id)
             self.cboStatus.setCurrentIndex(status_index)
 
+            if 'designers' in event.metadata:
+                self.txtDesigners.setPlainText(event.metadata['designers'])
+
+            design_source_ids = event.metadata['designSourceIds']
+            if design_source_ids is not None:
+                for source_id in design_source_ids:
+                    for widget in self.design_source_widgets:
+                        widget_id = widget.property('id')
+                        if widget_id == source_id:
+                            widget.setChecked(True)
+
     def accept(self):
 
-        self.metadata = {'statusId': self.cboStatus.currentData(Qt.UserRole).id}
+        self.metadata = {
+            'statusId': self.cboStatus.currentData(QtCore.Qt.UserRole).id,
+            'designers': self.txtDesigners.toPlainText()
+        }
+
+        design_source_ids = []
+        for widget in self.design_source_widgets:
+            if widget.isChecked() is True:
+                design_source_ids.append(widget.property('id'))
+
+        if len(design_source_ids) > 0:
+            self.metadata['designSourceIds'] = design_source_ids
+
         self.protocols = [self.qris_project.protocols[3]]
 
         super().accept()
+
+
+def add_checkbox_widgets(parent_widget, db_path, table_name):
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = dict_factory
+    curs = conn.cursor()
+    curs.execute(f'SELECT * FROM {table_name}')
+    data = {row['id']: row['name'] for row in curs.fetchall()}
+    widget_list = []
+    for id, name in data.items():
+        widget = QtWidgets.QCheckBox(parent_widget)
+        widget.setText(name)
+        widget.setProperty('id', id)
+        widget_list.append(widget)
+
+    return widget_list, data

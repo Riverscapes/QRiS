@@ -174,7 +174,7 @@ class FrmEvent(QtWidgets.QDialog):
 
     def setupUi(self):
 
-        self.resize(500, 400)
+        self.resize(500, 500)
         self.setMinimumSize(500, 400)
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
@@ -214,7 +214,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.tabGrid.addWidget(self.uc_end, 1, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel()
-        self.lblPlatform.setText('Platform')
+        self.lblPlatform.setText('Event completed at')
         self.tabGrid.addWidget(self.lblPlatform, 2, 0, 1, 1)
 
         self.cboPlatform = QtWidgets.QComboBox()
