@@ -31,6 +31,9 @@ class FrmEvent(QtWidgets.QDialog):
         self.buttonBox.accepted.connect(super(FrmEvent, self).accept)
         self.buttonBox.rejected.connect(super(FrmEvent, self).reject)
 
+        self.tree_model = None
+        self.load_layer_tree()
+
         # Protocols
         self.protocol_model = QtGui.QStandardItemModel()
         for protocol in qris_project.protocols.values():
@@ -43,8 +46,8 @@ class FrmEvent(QtWidgets.QDialog):
                 checked_state = QtCore.Qt.Checked if event is not None and protocol in event.protocols else QtCore.Qt.Unchecked
                 item.setData(QtCore.QVariant(checked_state), QtCore.Qt.CheckStateRole)
 
-        self.vwProtocols.setModel(self.protocol_model)
-        self.vwProtocols.setModelColumn(1)
+        # self.vwProtocols.setModel(self.protocol_model)
+        # self.vwProtocols.setModelColumn(1)
 
         # Basemaps
         self.basemap_model = QtGui.QStandardItemModel()
@@ -75,6 +78,101 @@ class FrmEvent(QtWidgets.QDialog):
             self.chkAddToMap.setVisible(False)
 
         self.txtName.setFocus()
+
+    def load_layer_tree(self):
+
+        if self.rdoAlphabetical.isChecked():
+            self.load_alphabetical_tree()
+        else:
+            self.load_hierarchical_tree()
+
+    def load_hierarchical_tree(self):
+
+        # Retain a list of any checked layers so they can be checked again once the three is loaded
+        checked_layers = []
+        self.get_checked_layers(None, checked_layers)
+
+        # Rebuild the tree
+        self.tree_model = QtGui.QStandardItemModel(self)
+        for protocol in self.qris_project.protocols.values():
+            protocol_si = QtGui.QStandardItem(protocol.name)
+            protocol_si.setData(protocol, QtCore.Qt.UserRole)
+            protocol_si.setCheckable(True)
+
+            for method in protocol.methods:
+                method_si = QtGui.QStandardItem(method.name)
+                method_si.setData(method, QtCore.Qt.UserRole)
+                method_si.setCheckable(True)
+
+                for layer in method.layers:
+                    layer_si = QtGui.QStandardItem(layer.name)
+                    layer_si.setData(layer, QtCore.Qt.UserRole)
+                    layer_si.setCheckable(True)
+
+                    if layer in checked_layers:
+                        layer_si.setCheckState(QtCore.Qt.Checked)
+
+                    if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or layer_si.checkState() == QtCore.Qt.Checked:
+                        method_si.appendRow(layer_si)
+
+                if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or method_si.hasChildren():
+                    protocol_si.appendRow(method_si)
+
+            if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or protocol_si.hasChildren():
+                self.tree_model.appendRow(protocol_si)
+
+        self.layer_tree.setModel(self.tree_model)
+        self.layer_tree.expandAll()
+
+    def load_alphabetical_tree(self):
+
+        # Retain a list of any checked layers so they can be checked again once the three is loaded
+        checked_layers = []
+        self.get_checked_layers(None, checked_layers)
+
+        # Rebuild the tree
+        sorted_layers = sorted(self.qris_project.layers.values(), key=lambda x: x.name)
+        self.tree_model = QtGui.QStandardItemModel(self)
+        for layer in sorted_layers:
+            item = QtGui.QStandardItem(layer.name)
+            item.setData(layer, QtCore.Qt.UserRole)
+            item.setCheckable(True)
+
+            if layer in checked_layers:
+                item.setCheckState(QtCore.Qt.Checked)
+
+            if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or item.checkState() == QtCore.Qt.Checked:
+                self.tree_model.appendRow(item)
+
+        self.layer_tree.setModel(self.tree_model)
+        self.layer_tree.expandAll()
+
+    def on_check_children(self, index: QtCore.QModelIndex) -> None:
+        self.check_children(self.tree_model.itemFromIndex(index))
+
+    def get_checked_layers(self, modelItem: QtGui.QStandardItem, checked_layers: list) -> None:
+        """return a list of the layers that are currently checked.
+        This is used to get the state of checked items before rebuilding the tree"""
+
+        if not self.tree_model:
+            return
+
+        if modelItem is None:
+            modelItem = self.tree_model.invisibleRootItem()
+
+        if modelItem.hasChildren():
+            for i in range(modelItem.rowCount()):
+                self.get_checked_layers(modelItem.child(i), checked_layers)
+        else:
+            if modelItem.checkState() == QtCore.Qt.Checked:
+                checked_layers.append(modelItem.data(QtCore.Qt.UserRole))
+
+    def check_children(self, item: QtGui.QStandardItem) -> None:
+        itemCheckState = item.checkState()
+        for i in range(item.rowCount()):
+            child = item.child(i)
+            child.setCheckState(itemCheckState)
+            self.check_children(child)
 
     def accept(self):
         start_date_valid, start_date_error_msg = self.uc_start.validate()
@@ -192,11 +290,34 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.tabGridWidget = QtWidgets.QWidget()
-        self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
-
         self.tab = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tab)
+        self.vert_layer_widget = QtWidgets.QWidget(self)
+        self.vert_layers = QtWidgets.QVBoxLayout(self.vert_layer_widget)
+        self.tab.addTab(self.vert_layer_widget, 'Layers')
+
+        self.horiz_layer_buttons = QtWidgets.QHBoxLayout(self)
+        self.vert_layers.addLayout(self.horiz_layer_buttons)
+
+        self.rdoAlphabetical = QtWidgets.QRadioButton('Alphatetical', self)
+        self.horiz_layer_buttons.addWidget(self.rdoAlphabetical)
+
+        self.rdoHierarchical = QtWidgets.QRadioButton('Hierarchical', self)
+        self.rdoHierarchical.setChecked(True)
+        self.rdoHierarchical.toggled.connect(self.load_layer_tree)
+        self.horiz_layer_buttons.addWidget(self.rdoHierarchical)
+
+        self.chkActiveLayers = QtWidgets.QCheckBox('Show Only Active Layers', self)
+        self.chkActiveLayers.toggled.connect(self.load_layer_tree)
+        self.horiz_layer_buttons.addWidget(self.chkActiveLayers)
+
+        self.layer_tree = QtWidgets.QTreeView(self)
+        self.layer_tree.setHeaderHidden(True)
+        self.layer_tree.clicked.connect(self.on_check_children)
+        self.vert_layers.addWidget(self.layer_tree)
+
+        self.tabGridWidget = QtWidgets.QWidget()
+        self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
         self.tab.addTab(self.tabGridWidget, 'Basic Properties')
 
         self.lblStartDate = QtWidgets.QLabel()
@@ -220,12 +341,12 @@ class FrmEvent(QtWidgets.QDialog):
         self.cboPlatform = QtWidgets.QComboBox()
         self.tabGrid.addWidget(self.cboPlatform, 2, 1, 1, 1)
 
-        self.lblProtocols = QtWidgets.QLabel()
-        self.lblProtocols.setText('Protocols')
-        self.tabGrid.addWidget(self.lblProtocols, 3, 0, 1, 1)
+        # self.lblProtocols = QtWidgets.QLabel()
+        # self.lblProtocols.setText('Protocols')
+        # self.tabGrid.addWidget(self.lblProtocols, 3, 0, 1, 1)
 
-        self.vwProtocols = QtWidgets.QListView()
-        self.tabGrid.addWidget(self.vwProtocols)
+        # self.vwProtocols = QtWidgets.QListView()
+        # self.tabGrid.addWidget(self.vwProtocols)
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setChecked(True)

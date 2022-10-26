@@ -24,16 +24,27 @@ INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUE
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (6, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (7, 'BRAT CIS', 'BRAT_CIS', 0, 'Beaver dam capacity estimate.');
 
-CREATE TABLE lkp_metric_sources (
+CREATE TABLE methods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
+    machine_code TEXT UNIQUE NOT NULL,
     description TEXT,
+    metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_metric_sources (id, name, description) VALUES (1, 'Calculated', 'Calculated from spatial data');
-INSERT INTO lkp_metric_sources (id, name, description) VALUES (2, 'Estimated', 'Estimated from other sources or evidence');
+INSERT INTO methods (id, name, machine_code) VALUES (1, 'Dam / Jam Survey', 'DAMJAMS');
+INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
 
+CREATE TABLE protocol_methods (
+    protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
+    method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
+
+    CONSTRAINT pk_protocol_methods PRIMARY KEY (protocol_id, method_id)
+);
+
+INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 1);
+INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
 
 CREATE TABLE layers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,47 +119,57 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (129, 'lkp_brat_vegetation_cis', 'BRAT Vegetation CIS', 'NoGeometry', 1, 'none.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
 
-CREATE TABLE protocol_layers (
-    protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
+CREATE TABLE method_layers (
+    method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
     layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
-    metadata TEXT,
-    CONSTRAINT pk_protocol_layers PRIMARY KEY (protocol_id, layer_id)
+
+    CONSTRAINT pk_nethod_layers PRIMARY KEY (method_id, layer_id)
 );
 
--- RIM
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 1);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 5);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 8);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
 
--- Active Extents
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (2, 6);
+-- CREATE TABLE protocol_layers (
+--     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
+--     layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
+--     metadata TEXT,
+--     CONSTRAINT pk_protocol_layers PRIMARY KEY (protocol_id, layer_id)
+-- );
 
--- Structural Elements
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 3);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 4);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 1);
+-- -- RIM
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 1);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 5);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (1, 8);
 
--- Low Tech Designs
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 19);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 20);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 21);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 22);
+-- -- Active Extents
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (2, 6);
 
--- Channel Units
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 23);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 24);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 116);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 117);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 118);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 119);
--- BRAT CIS
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 25);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 125);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 126);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 127);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 128);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 129);
-INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 130);
+-- -- Structural Elements
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 3);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 4);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (4, 1);
+
+-- -- Low Tech Designs
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 19);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 20);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 21);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 22);
+
+-- -- Channel Units
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 23);
+-- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 24);
+
+CREATE TABLE lkp_metric_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_metric_sources (id, name, description) VALUES (1, 'Calculated', 'Calculated from spatial data');
+INSERT INTO lkp_metric_sources (id, name, description) VALUES (2, 'Estimated', 'Estimated from other sources or evidence');
+
 
 CREATE TABLE lkp_context_layer_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

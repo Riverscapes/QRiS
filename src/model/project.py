@@ -4,6 +4,7 @@ import sqlite3
 from .analysis import Analysis, load_analyses
 from .mask import Mask, load_masks
 from .layer import Layer, load_layers
+from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
 from .basemap import Raster, load_rasters, RASTER_TYPE_BASEMAP
 from .event import Event, load as load_events
@@ -45,7 +46,8 @@ class Project(DBItem):
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)
-            self.protocols = load_protocols(curs, self.layers)
+            self.methods = load_methods(curs, self.layers)
+            self.protocols = load_protocols(curs, self.methods)
             self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
             self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps())
@@ -149,7 +151,7 @@ def safe_make_relpath(in_path: str, cwd_path: str) -> str:
         return in_path
 
 
-def safe_make_abspath(in_path: str,cwd_path: str) -> str:
+def safe_make_abspath(in_path: str, cwd_path: str) -> str:
     """ Safely create an absolute path from a relative path
 
     if this fails then just return the input
