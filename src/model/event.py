@@ -24,7 +24,7 @@ class Event(DBItem):
                  date_text: str,
                  event_type: DBItem,
                  platform: DBItem,
-                 protocols: list,
+                 methods: list,
                  basemaps: list,
                  metadata: dict):
 
@@ -35,22 +35,22 @@ class Event(DBItem):
         self.date_text = date_text
         self.event_type = event_type
         self.platform = platform
-        self.protocols = protocols.copy() if protocols else []
+        self.methods = methods.copy() if methods else []
         self.basemaps = basemaps.copy() if basemaps else []
         self.metadata = metadata
 
         self.icon = 'design' if self.event_type.id == DESIGN_EVENT_TYPE_ID else 'event'
 
         event_layers = {}
-        for protocol in self.protocols:
-            for layer in protocol.layers:
+        for method in self.methods:
+            for layer in method.layers:
                 if layer.id not in event_layers:
                     # Note the key is the layer. The id passed into the constructor is that of the Event itself
                     event_layers[layer.id] = EventLayer(id, layer)
 
         self.event_layers = list(event_layers.values())
 
-    def update(self, db_path: str, name: str, description: str, protocols: list, basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, metadata: dict):
+    def update(self, db_path: str, name: str, description: str, methods: list, basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, metadata: dict):
 
         sql_description = description if description is not None and len(description) > 0 else None
         sql_metadata = json.dumps(metadata) if metadata is not None else None
@@ -76,12 +76,12 @@ class Event(DBItem):
                              [name, sql_description, platform.id, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
 
                 update_intersect_table(curs, 'event_basemaps', 'event_id', 'basemap_id', self.id, [item.id for item in basemaps])
-                update_intersect_table(curs, 'event_protocols', 'event_id', 'protocol_id', self.id, [item.id for item in protocols])
+                update_intersect_table(curs, 'event_methods', 'event_id', 'method_id', self.id, [item.id for item in methods])
 
                 self.name = name
                 self.description = description
                 self.basemaps = basemaps
-                self.protocols = protocols
+                self.protocols = methods
                 self.start = start_date
                 self.end = end_date
                 self.platform = platform
@@ -125,13 +125,13 @@ def insert(db_path: str,
            date_text: str,
            event_type: DBItem,
            platform: DBItem,
-           protocols: list,
+           methods: list,
            basemaps: list,
            metadata: dict) -> Event:
 
     description = description if description and len(description) > 0 else None
     basemaps = basemaps or []
-    protocols = protocols or []
+    methods = methods or []
 
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = dict_factory
@@ -167,10 +167,10 @@ def insert(db_path: str,
             ])
             event_id = curs.lastrowid
 
-            curs.executemany('INSERT INTO event_protocols (event_id, protocol_id) VALUES (?, ?)', [(event_id, protocol.id) for protocol in protocols])
+            curs.executemany('INSERT INTO event_methods (event_id, method_id) VALUES (?, ?)', [(event_id, method.id) for method in methods])
             curs.executemany('INSERT INTO event_basemaps (event_id, basemap_id) VALUES (?, ?)', [(event_id, basemap.id) for basemap in basemaps])
 
-            event = Event(event_id, name, description, start, end, date_text, event_type, platform, protocols, basemaps, metadata)
+            event = Event(event_id, name, description, start, end, date_text, event_type, platform, methods, basemaps, metadata)
             conn.commit()
 
         except Exception as ex:

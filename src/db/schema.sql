@@ -246,11 +246,11 @@ CREATE TABLE lkp_platform (
 INSERT INTO lkp_platform (id, name) VALUES (1, 'Desktop');
 INSERT INTO lkp_platform (id, name) VALUES (2, 'Field');
 
-CREATE TABLE event_protocols (
+CREATE TABLE event_methods (
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    protocol_id INTEGER NOT NULL REFERENCES protocols(id),
+    method_id INTEGER NOT NULL REFERENCES methods(id),
 
-    CONSTRAINT pk_event_protocols PRIMARY KEY (event_id, protocol_id)
+    CONSTRAINT pk_event_methods PRIMARY KEY (event_id, method_id)
 );
 
 CREATE TABLE lkp_raster_types (

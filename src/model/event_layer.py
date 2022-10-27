@@ -5,9 +5,10 @@ from .db_item import DBItem
 
 class EventLayer(DBItem):
     """
-    Simply class that represents a layer used within a data capture event.
-    Note the absence of protocol! This class is intended to be used for each
-    unique layer within an event (across multiple protocols if needed).
+    Simple class that represents a layer used within a data capture event.
+    Note the absence of protocol or method! This class is intended to be
+    used for each unique layer within an event (across multiple protocols
+    and methods if needed).
 
     Note the ID passed in is the EVENT ID!!!!!! that can be used to retrieve
     the event to which this event layer belongs. The layer property can be

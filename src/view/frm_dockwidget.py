@@ -44,6 +44,7 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
 from ..model.protocol import Protocol
+from ..model.method import Method
 from ..model.pour_point import PourPoint, CONTEXT_NODE_TAG
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
 
@@ -65,7 +66,7 @@ from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
-from ..QRiS.method_to_map import build_event_protocol_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer, build_stream_gage_layer
+from ..QRiS.method_to_map import build_event_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer, build_stream_gage_layer
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
@@ -294,25 +295,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Raster):
             build_basemap_layer(self.project, db_item)
         elif isinstance(db_item, Event):
-            [build_event_protocol_single_layer(self.project, event_layer) for event_layer in db_item.event_layers]
+            [build_event_single_layer(self.project, event_layer) for event_layer in db_item.event_layers]
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
             event = event_node.data(QtCore.Qt.UserRole)
             for event_layer in event.event_layers:
                 if event_layer.layer in db_item.layers:
-                    build_event_protocol_single_layer(self.project, event_layer)
+                    build_event_single_layer(self.project, event_layer)
         elif isinstance(db_item, Layer):
             # determine parent node
             event_node = tree_node.parent().parent()
             event = event_node.data(QtCore.Qt.UserRole)
             for event_layer in event.event_layers:
                 if event_layer.layer == db_item:
-                    build_event_protocol_single_layer(self.project, event_layer)
+                    build_event_single_layer(self.project, event_layer)
         elif isinstance(db_item, Project):
             [build_mask_layer(mask) for mask in self.project.masks.values()]
             [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps().values()]
-            [[build_event_protocol_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
+            [[build_event_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             build_pour_point_map_layer(self.project, db_item)
         elif isinstance(db_item, ScratchVector):
@@ -454,9 +455,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Event, protocols and layers
         event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
-        for protocol in event.protocols:
-            protocol_node = self.add_child_to_project_tree(event_node, protocol, add_to_map)
-            for layer in protocol.layers:
+        for method in event.methods:
+            protocol_node = self.add_child_to_project_tree(event_node, method, add_to_map)
+            for layer in method.layers:
                 if layer.is_lookup is False:
                     self.add_child_to_project_tree(protocol_node, layer, add_to_map)
 
@@ -674,4 +675,3 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.treeView.header().setSortIndicatorShown(False)
         self.gridLayout.addWidget(self.treeView, 0, 0, 1, 1)
         self.setWidget(self.dockWidgetContents)
-

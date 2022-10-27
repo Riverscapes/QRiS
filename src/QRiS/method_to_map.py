@@ -54,7 +54,6 @@ from ..model.basemap import BASEMAP_MACHINE_CODE, Raster, RASTER_SLIDER_MACHINE_
 from ..model.db_item import DBItem, load_lookup_table
 from ..model.mask import Mask
 from ..model.project import Project, PROJECT_MACHINE_CODE
-from ..model.protocol import Protocol
 from ..model.layer import Layer
 from ..model.event_layer import EventLayer
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
@@ -213,7 +212,7 @@ def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
 #             build_event_protocol_single_layer(project, event_layer)
 
 
-def build_event_protocol_single_layer(project: Project, event_layer: EventLayer) -> None:
+def build_event_single_layer(project: Project, event_layer: EventLayer) -> None:
     """
     Add a single layer for an event
     """
@@ -230,8 +229,8 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
     # handle the individual DCE group
     event_group_layer = get_group_layer(EVENT_MACHINE_CODE + str(event.id), event.name, events_group_group_layer, True)
 
-    event_protocol_layer = get_db_item_layer(event_layer, event_group_layer)
-    if event_protocol_layer is not None:
+    event_method_layer = get_db_item_layer(event_layer, event_group_layer)
+    if event_method_layer is not None:
         return
 
     # Create a layer from the table

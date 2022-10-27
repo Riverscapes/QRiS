@@ -199,19 +199,15 @@ class FrmEvent(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        if len(self.protocols) < 1:
-            for row in range(self.protocol_model.rowCount()):
-                index = self.protocol_model.index(row, 0)
-                check = self.protocol_model.data(index, QtCore.Qt.CheckStateRole)
-                if check == QtCore.Qt.Checked:
-                    for protocol in self.qris_project.protocols.values():
-                        if protocol == self.protocol_model.data(index, QtCore.Qt.UserRole):
-                            self.protocols.append(protocol)
-                            break
+        # There must be at least one layer!
+        layer_items_in_use = []
+        self.get_checked_layers(None, layer_items_in_use)
+        if len(layer_items_in_use) < 1:
+            QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
+            return
 
-            if len(self.protocols) < 1:
-                QtWidgets.QMessageBox.warning(self, 'No Protocols Selected', 'You must select at least one protocol to continue.')
-                return
+        # Get the actual layers in use from the model QStandardItems
+        layers_in_use = [item.data(QtCore.Qt.UserRole) for item in layer_items_in_use]
 
         basemaps = []
         for row in range(self.basemap_model.rowCount()):
@@ -225,15 +221,9 @@ class FrmEvent(QtWidgets.QDialog):
 
         if self.event is not None:
             # Check if any GIS data might be lost
-            for originial_protocol in self.event.protocols:
-                for original_layer in originial_protocol.layers:
-                    existing_layer_in_use = False
-                    for new_protocol in self.protocols:
-                        for new_layer in new_protocol.layers:
-                            if original_layer == new_layer:
-                                existing_layer_in_use = True
-
-                    if existing_layer_in_use is False:
+            for originial_method in self.event.methods:
+                for original_layer in originial_method.layers:
+                    if original_layer not in layers_in_use:
                         response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
                                                                   """One or more layers that were part of this data capture event are no longer associated with the event.
                         Continuing might lead to the loss of geospatial data. Do you want to continue?
