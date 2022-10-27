@@ -22,6 +22,7 @@ INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUE
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
 -- INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Geomorphic Units', 'GUT', 0, 'Some sort of riverscape feature classification, who fricken knows');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (6, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (7, 'BRAT CIS', 'BRAT_CIS', 0, 'Beaver dam capacity estimate.');
 
 CREATE TABLE lkp_metric_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,6 +71,7 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL);
 
 -- Lookup Tables
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
@@ -99,6 +101,12 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (123, 'structure_types', 'Structure Types', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (124, 'zoi_types', 'Zoi Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (125, 'lkp_brat_base_streampower', 'Base Streampower', 'NoGeometry', 1, 'temp.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (126, 'lkp_brat_high_streampower', 'High flow Streampower', 'NoGeometry', 1, 'none.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (127, 'lkp_brat_slope', 'Slope', 'NoGeometry', 1, 'none.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (128, 'lkp_brat_dam_density', 'BRAT Dam Density', 'NoGeometry', 1, 'none.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (129, 'lkp_brat_vegetation_cis', 'BRAT Vegetation CIS', 'NoGeometry', 1, 'none.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
 
 CREATE TABLE protocol_layers (
     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
@@ -129,7 +137,18 @@ INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (3, 22);
 -- Channel Units
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 23);
 INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 24);
-
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 116);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 117);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 118);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 119);
+-- BRAT CIS
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 25);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 125);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 126);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 127);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 128);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 129);
+INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (7, 130);
 
 CREATE TABLE lkp_context_layer_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -605,6 +624,106 @@ INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (5, 'Unsuitable');
 ALTER TABLE brat_vegetation ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_vegetation_types(id) ON DELETE CASCADE;
 
+-- BRAT base Stream power
+CREATE TABLE lkp_brat_base_streampower (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_brat_base_streampower (id, name) VALUES (1, 'Probably can build dam');
+INSERT INTO lkp_brat_base_streampower (id, name) VALUES (2, 'Can build dam');
+INSERT INTO lkp_brat_base_streampower (id, name) VALUES (3, 'Can build dam (saw evidence of recent dams)');
+INSERT INTO lkp_brat_base_streampower (id, name) VALUES (4, 'Could build dam at one time (saw evidence of relic dams)');
+INSERT INTO lkp_brat_base_streampower (id, name) VALUES (5, 'Cannot build dam (streampower really high)');
+
+-- BRAT 2 year flood stream power
+CREATE TABLE lkp_brat_high_streampower (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_brat_high_streampower (id, name) VALUES (1, 'Blowout');
+INSERT INTO lkp_brat_high_streampower (id, name) VALUES (2, 'Occasional Breach');
+INSERT INTO lkp_brat_high_streampower (id, name) VALUES (3, 'Occasional Blowout');
+INSERT INTO lkp_brat_high_streampower (id, name) VALUES (4, 'Dam Persists');
+
+
+CREATE TABLE lkp_brat_slope (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_brat_slope (id, name) VALUES (1, 'So steep they cannot build a dam (e.g. > 20% slope)');
+INSERT INTO lkp_brat_slope (id, name) VALUES (2, 'Probably can build dam');
+INSERT INTO lkp_brat_slope (id, name) VALUES (3, 'Can build dam (inferred)');
+INSERT INTO lkp_brat_slope (id, name) VALUES (4, 'Can build dam (evidence or current or past dams)');
+INSERT INTO lkp_brat_slope (id, name) VALUES (5, 'Really flat (can build dam, but might not need as many as one dam might back up water > 0.5 km)');
+
+CREATE TABLE lkp_brat_dam_density (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (0, 'Invalid Combination of Inputs', '');
+INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (1, 'None', '(no dams)');
+INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (2, 'Rare', '(0-1 dams/km)');
+INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (3, 'Occasional', '(1-4 dams/km)');
+INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (4, 'Frequent', '(5-15 dams/km)');
+INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (5, 'Pervasive', '(15-40 dams/km)');
+
+CREATE TABLE lkp_brat_vegetation_cis
+(
+    rule_id INTEGER PRIMARY KEY AUTOINCREMENT ,
+    streamside_veg_id INT NOT NULL REFERENCES lkp_brat_vegetation_types (id) ON DELETE CASCADE,
+    riparian_veg_id INT NOT NULL REFERENCES  lkp_brat_vegetation_types (id) ON DELETE CASCADE,
+    output_id INT NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
+);
+CREATE INDEX ux_lkp_brat_vegetation_Cis ON lkp_brat_vegetation_Cis(streamside_veg_id, riparian_veg_id, output_id) ;
+
+INSERT INTO lkp_brat_vegetation_Cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
+-- TODO populate with rest of vegetation CIS rules
+
+CREATE TABLE lkp_brat_combined_cis (
+    rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    veg_density_id INTEGER NOT NULL REFERENCES lkp_brat_vegetation_Cis(rule_id) ON DELETE CASCADE,
+    base_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_base_streampower(id) ON DELETE CASCADE,
+    high_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_high_streampower(id) ON DELETE CASCADE,
+    slope_id INTEGER NOT NULL REFERENCES  lkp_brat_slope(id) ON DELETE CASCADE,
+    output_id INTEGER NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
+);
+CREATE INDEX ux_lkp_brat_combined_cis ON lkp_brat_combined_cis(veg_density_id, base_streampower_id, high_streampower_id, slope_id);
+
+-- TODO populate combined CIS rules
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES ();
+
+
+-- Alter the BRAT CIS Feature Class table
+ALTER TABLE brat_cis ADD COLUMN observer_name lkp_brat_combined_cis;
+ALTER TABLE brat_cis ADD COLUMN reach_id TEXT;
+ALTER TABLE brat_cis ADD COLUMN observation_date DATE;
+ALTER TABLE brat_cis ADD COLUMN reach_length FLOAT;
+ALTER TABLE brat_cis ADD COLUMN notes TEXT;
+
+ALTER TABLE brat_cis ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+ALTER TABLE brat_cis ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+ALTER TABLE brat_cis ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
+
+ALTER TABLE brat_cis ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base_streampower(id);
+ALTER TABLE brat_cis ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
+
+ALTER TABLE brat_cis ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
+
+ALTER TABLE brat_cis ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
+
+----------------------------------------------------------------------------------------------------------------
 
 -- channel unit layers
 CREATE TABLE lkp_channel_unit_types (
@@ -886,4 +1005,11 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('s
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('zoi_types', 'attributes', 'zoi_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_design_sources', 'attributes', 'lkp_design_sources', 0);
 
+-- BRAT CIS TABLES
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_base_streampower', 'attributes', 'lkp_brat_base_streampower', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_high_streampower', 'attributes', 'lkp_brat_high_streampower', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_slope', 'attributes', 'lkp_brat_slope', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_dam_density', 'attributes', 'lkp_brat_dam_density', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_cis', 'attributes', 'lkp_brat_vegetation_cis', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_combined_cis', 'attributes', 'lkp_brat_combined_cis', 0);
 
