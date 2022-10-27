@@ -1,9 +1,8 @@
 import os
 from osgeo import ogr
 import re
-from qgis.core import QgsTask, QgsMessageLog, Qgis
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsCoordinateReferenceSystem
 from qgis.PyQt.QtCore import pyqtSignal
-from osgeo.gdal import Warp, WarpOptions, VectorTranslate, VectorTranslateOptions
 from ..model.db_item import DBItem
 
 MESSAGE_CATEGORY = 'QRiS_CopyFeatureClassTask'
@@ -34,75 +33,47 @@ class CopyFeatureClass(QgsTask):
         https://subscription.packtpub.com/book/application-development/9781787124837/3/ch03lvl1sec58/exporting-a-layer-to-the-geopackage-format
         """
 
-        # You can use this WarpOptions to get a list of the possible options
-        # wo = WarpOptions(format: 'GTiff', cutl)
-
-        # user defined callback object
-        es_obj = {}
-
-        # kwargs = {
-        #     'format': 'GTiff',
-        #     'callback': self.progress_callback,
-        #     'callback_data': es_obj
-        # }
-
         # if self.mask_tuple is not None:
         #     kwargs['cutlineDSName'] = self.mask_tuple[0]
         #     kwargs['cutlineLayer'] = 'mask_features'
         #     kwargs['cutlineWhere'] = 'mask_id = {}'.format(self.mask_tuple[1])
 
-        # QgsMessageLog.logMessage(f'Started copy raster request', MESSAGE_CATEGORY, Qgis.Info)
-
         self.setProgress(0)
-
-        # options = VectorTranslateOptions(dstSRS='EPSG:4326')
 
         try:
             output_dir = os.path.dirname(self.output_path)
             if not os.path.isdir(output_dir):
                 os.makedirs(output_dir)
 
-            driver = ogr.GetDriverByName("GPKG")
-            if not os.path.isfile(self.output_path):
-                ds = driver.CreateDataSource(self.output_path)
+            source_layer = QgsVectorLayer(self.source_path)
+            source_layer.crs
+
+            if self.mask_tuple is not None:
+                # TODO clip layer features by mask here
+                pass
+
+            # TODO review how we want to handle crs
+            context = QgsCoordinateTransformContext()
+            ref_crs = source_layer.sourceCrs()
+            dest_crs = source_layer.sourceCrs()  # QgsCoordinateReferenceSystem("EPSG:4326")
+            context.addCoordinateOperation(ref_crs, dest_crs, "")
+
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            options.driverName = 'GPKG'
+            options.layerName = self.output_fc_name
+            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+
+            error = QgsVectorFileWriter.writeAsVectorFormatV3(source_layer, self.output_path, context, options)
+
+            if error[0] == QgsVectorFileWriter.NoError:
+                return True
             else:
-                ds = driver.Open(self.output_path, 1)
-
-            if re.match(r'.*\.shp', self.source_path) is not None:
-                sf1 = ogr.Open(self.source_path)
-            else:
-                src_ds, src_layer = self.source_path.split('|layername=')
-                sf1 = ogr.Open(src_ds)
-
-            if sf1.GetLayerCount() > 1:
-                sf_lyr1 = sf1.GetLayerByName(src_layer)
-            else:
-                sf_lyr1 = sf1.GetLayer(0)
-
-            out_lyr = ds.CopyLayer(sf_lyr1, self.output_fc_name, [])
-            if out_lyr is None:
-                raise Exception('Failed to Copy Feature Class.')
-
-            # ds = VectorTranslate(
-            #     self.output_path,
-            #     self.source_path,
-            #     options=VectorTranslateOptions(
-            #         # SQLStatement='SELECT * FROM mytable',
-            #         layerName=self.output_fc_name,
-            #         format='GPKG',
-            #         callback=self.progress_callback,
-            #         callback_data=es_obj
-            #     )
-            # )
-
-            if ds is None:
-                raise Exception('Error copying feature class')
+                self.exception = Exception(str(error))
+                return False
 
         except Exception as ex:
             self.exception = ex
             return False
-
-        return True
 
     def progress_callback(self, complete, message, unknown):
         self.setProgress(complete * 100)

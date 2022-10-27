@@ -95,7 +95,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                 # Do this because an error might have left a lingering feature class table etc
                 self.fc_name = get_unique_scratch_fc_name(self.project.project_file, self.txtName.text())
 
-                copy_vector = CopyFeatureClass(self.txtSourcePath.text(), None, os.path.dirname(self.txtProjectPath.text()), self.fc_name)
+                copy_vector = CopyFeatureClass(self.txtSourcePath.text(), mask_tuple, os.path.dirname(self.txtProjectPath.text()), self.fc_name)
                 copy_vector.copy_complete.connect(self.on_copy_complete)
 
                 # Call the run command directly during development to run the process synchronousely.
@@ -109,20 +109,15 @@ class FrmScratchVector(QtWidgets.QDialog):
 
             except Exception as ex:
                 self.buttonBox.setEnabled(True)
-
-                # try:
-                #     self.raster.delete(self.project.project_file)
-                # except Exception as ex:
-                #     print('Error attempting to delete basemap after the importing raster failed.')
                 self.scratch_vector = None
-                QtWidgets.QMessageBox.warning(self, 'Error Importing Basemap', str(ex))
+                QtWidgets.QMessageBox.warning(self, 'Error Importing Scratch Vector', str(ex))
                 return
 
     @pyqtSlot(bool)
     def on_copy_complete(self, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage('Feature Class Copy Complete.', 'self.txt.', level=Qgis.Info, duration=5)
+            self.iface.messageBar().pushMessage('Feature Class Copy Complete.', f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
 
             try:
                 self.scratch_vector = insert_scratch_vector(
@@ -139,12 +134,12 @@ class FrmScratchVector(QtWidgets.QDialog):
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A scratch vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Scratch Vector', str(ex))
                 return
 
             super(FrmScratchVector, self).accept()
         else:
-            self.iface.messageBar().pushMessage('Raster Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            self.iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
             self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):
