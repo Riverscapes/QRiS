@@ -62,6 +62,7 @@ class CopyFeatureClass(QgsTask):
             options.driverName = 'GPKG'
             options.layerName = self.output_fc_name
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+            # options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 
             error = QgsVectorFileWriter.writeAsVectorFormatV3(source_layer, self.output_path, context, options)
 
