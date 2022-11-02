@@ -672,7 +672,6 @@ CREATE TABLE lkp_brat_dam_density (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (0, 'Invalid Combination of Inputs', '');
 INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (1, 'None', '(no dams)');
 INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (2, 'Rare', '(0-1 dams/km)');
 INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (3, 'Occasional', '(1-4 dams/km)');
@@ -686,14 +685,37 @@ CREATE TABLE lkp_brat_vegetation_cis
     riparian_veg_id INT NOT NULL REFERENCES  lkp_brat_vegetation_types (id) ON DELETE CASCADE,
     output_id INT NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
 );
-CREATE INDEX ux_lkp_brat_vegetation_Cis ON lkp_brat_vegetation_Cis(streamside_veg_id, riparian_veg_id, output_id) ;
+CREATE INDEX ux_lkp_brat_vegetation_cis ON lkp_brat_vegetation_cis(streamside_veg_id, riparian_veg_id, output_id);
 
-INSERT INTO lkp_brat_vegetation_Cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
--- TODO populate with rest of vegetation CIS rules
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (2, 4, 5, 2);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (3, 3, 5, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (4, 2, 5, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (5, 1, 5, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (6, 5, 4, 2);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (7, 4, 4, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (8, 3, 4, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (9, 2, 4, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (10, 1, 4, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (11, 5, 3, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (12, 4, 3, 2);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (13, 3, 3, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (14, 2, 3, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (15, 1, 3, 5);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (16, 5, 2, 2);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (17, 4, 2, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (18, 3, 2, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (19, 2, 2, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (20, 1, 2, 5);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (21, 5, 1, 3);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (22, 4, 1, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (23, 3, 1, 4);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (24, 2, 1, 5);
+INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (25, 1, 1, 5);
 
 CREATE TABLE lkp_brat_combined_cis (
     rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    veg_density_id INTEGER NOT NULL REFERENCES lkp_brat_vegetation_Cis(rule_id) ON DELETE CASCADE,
+    veg_density_id INTEGER NOT NULL REFERENCES lkp_brat_vegetation_cis(rule_id) ON DELETE CASCADE,
     base_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_base_streampower(id) ON DELETE CASCADE,
     high_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_high_streampower(id) ON DELETE CASCADE,
     slope_id INTEGER NOT NULL REFERENCES  lkp_brat_slope(id) ON DELETE CASCADE,
@@ -701,12 +723,104 @@ CREATE TABLE lkp_brat_combined_cis (
 );
 CREATE INDEX ux_lkp_brat_combined_cis ON lkp_brat_combined_cis(veg_density_id, base_streampower_id, high_streampower_id, slope_id);
 
--- TODO populate combined CIS rules
--- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES ();
-
+--value combinations that produce an output of 'None' are not stored in this table
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (1, 2, 2, 4, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (2, 2, 2, 4, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (3, 2, 2, 4, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (4, 2, 2, 4, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (5, 2, 2, 4, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (6, 3, 2, 4, 1, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (7, 3, 2, 4, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (8, 3, 2, 4, 3, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (9, 3, 2, 4, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (10, 3, 2, 4, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (11, 4, 2, 4, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (12, 4, 2, 4, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (13, 5, 2, 4, 5, 5);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (14, 5, 2, 4, 4, 5);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (15, 5, 2, 4, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (16, 2, 2, 2, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (17, 2, 2, 2, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (18, 2, 2, 2, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (19, 2, 2, 2, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (20, 2, 2, 2, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (21, 3, 2, 2, 1, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (22, 3, 2, 2, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (23, 3, 2, 2, 3, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (24, 3, 2, 2, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (25, 3, 2, 2, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (26, 4, 2, 2, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (27, 4, 2, 2, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (28, 5, 2, 2, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (29, 5, 2, 2, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (30, 5, 2, 2, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (31, 2, 2, 3, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (32, 2, 2, 3, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (33, 2, 2, 3, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (34, 2, 2, 3, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (35, 2, 2, 3, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (36, 3, 2, 3, 1, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (37, 3, 2, 3, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (38, 3, 2, 3, 3, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (39, 3, 2, 3, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (40, 3, 2, 3, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (41, 4, 2, 3, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (42, 4, 2, 3, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (43, 5, 2, 3, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (44, 5, 2, 3, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (45, 5, 2, 3, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (46, 3, 2, 1, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (47, 3, 2, 1, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (48, 3, 2, 1, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (49, 3, 2, 1, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (50, 3, 2, 1, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (51, 4, 2, 1, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (52, 5, 2, 1, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (53, 5, 2, 1, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (54, 5, 2, 1, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (55, 2, 1, 2, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (56, 2, 1, 2, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (57, 2, 1, 2, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (58, 2, 1, 2, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (59, 2, 1, 2, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (60, 3, 1, 2, 1, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (61, 3, 1, 2, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (62, 3, 1, 2, 3, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (63, 3, 1, 2, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (64, 3, 1, 2, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (65, 4, 1, 2, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (66, 4, 1, 2, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (67, 5, 1, 2, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (68, 5, 1, 2, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (69, 5, 1, 2, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (70, 2, 1, 3, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (71, 2, 1, 3, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (72, 2, 1, 3, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (73, 2, 1, 3, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (74, 2, 1, 3, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (75, 3, 1, 3, 1, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (76, 3, 1, 3, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (77, 3, 1, 3, 3, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (78, 3, 1, 3, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (79, 3, 1, 3, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (80, 4, 1, 3, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (81, 4, 1, 3, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (82, 5, 1, 3, 5, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (83, 5, 1, 3, 4, 4);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (84, 5, 1, 3, 2, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (85, 3, 1, 1, 1, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (86, 3, 1, 1, 2, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (87, 3, 1, 1, 3, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (88, 3, 1, 1, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (89, 3, 1, 1, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (90, 4, 1, 1, 4, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (91, 5, 1, 1, 5, 2);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (92, 5, 1, 1, 4, 3);
+INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (93, 5, 1, 1, 2, 2);
 
 -- Alter the BRAT CIS Feature Class table
-ALTER TABLE brat_cis ADD COLUMN observer_name lkp_brat_combined_cis;
+ALTER TABLE brat_cis ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE brat_cis ADD COLUMN observer_name TEXT;
 ALTER TABLE brat_cis ADD COLUMN reach_id TEXT;
 ALTER TABLE brat_cis ADD COLUMN observation_date DATE;
 ALTER TABLE brat_cis ADD COLUMN reach_length FLOAT;
