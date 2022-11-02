@@ -131,6 +131,8 @@ CREATE TABLE method_layers (
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
+INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
 
 -- CREATE TABLE protocol_layers (
 --     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,

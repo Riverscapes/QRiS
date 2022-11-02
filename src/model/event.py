@@ -27,6 +27,8 @@ class Event(DBItem):
                  event_layer_info: list,
                  basemaps: list,
                  metadata: dict):
+        """ The event_layer_info is list of tuples containing the protocol, method and layer objects
+        The protocol can be None!"""
 
         super().__init__('events', id, name)
         self.description = description
@@ -49,7 +51,9 @@ class Event(DBItem):
 
         self.event_layers = list(event_layers.values())
 
-    def update(self, db_path: str, name: str, description: str, methods: list, basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, metadata: dict):
+    def update(self, db_path: str, name: str, description: str, layer_info: list, basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, metadata: dict):
+        """ The layer_info is list of tuples containing the protocol, method and layer objects
+        The protocol can be None!"""
 
         sql_description = description if description is not None and len(description) > 0 else None
         sql_metadata = json.dumps(metadata) if metadata is not None else None
@@ -75,12 +79,12 @@ class Event(DBItem):
                              [name, sql_description, platform.id, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
 
                 update_intersect_table(curs, 'event_basemaps', 'event_id', 'basemap_id', self.id, [item.id for item in basemaps])
-                update_intersect_table(curs, 'event_methods', 'event_id', 'method_id', self.id, [item.id for item in methods])
+                self.update_layers_list(curs, layer_info)
 
                 self.name = name
                 self.description = description
                 self.basemaps = basemaps
-                self.protocols = methods
+                self.protocols = layer_info
                 self.start = start_date
                 self.end = end_date
                 self.platform = platform
@@ -90,6 +94,32 @@ class Event(DBItem):
             except Exception as ex:
                 conn.rollback()
                 raise ex
+
+    def update_layers_list(self, curs: sqlite3.Cursor, layers):
+
+        # Track unused layers
+        unused_layers = []
+        curs.execute('SELECT * FROM event_layers WHERE event_id = ?', self.id)
+        for row in curs.fetchall():
+            db_protocol_id = row['protocol_id']
+            db_method_id = row['method_id']
+            db_layer_id = row['layer_id']
+            in_use = False
+            # check if in use
+            for protocol, method, layer in layers:
+                if protocol.id == db_protocol_id and method.id == db_method_id and db_layer_id == layer.id:
+                    in_use = True
+                    break
+
+            if in_use is False:
+                unused_layers.append(self.id, db_protocol_id, db_method_id, db_layer_id)
+
+        # Perform the delete
+        curs.executemany('DELETE FROM event_layers WHERE event_id = ?, protocol_id = ?, method_id = ?, layer_id = ?', unused_layers)
+
+        # upsert the remaining layers
+        upsert_data = [(self.id, protocol_id, method_id, layer_id) for protocol_id, method_id, layer_id in layers]
+        curs.executemany('INSERT INTO event_layers (event_id, protocol_id, method_id, layer_id) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', upsert_data)
 
 
 def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, lookups: dict, basemaps: dict) -> dict:
@@ -170,8 +200,8 @@ def insert(db_path: str,
             event_id = curs.lastrowid
 
             curs.executemany('INSERT INTO event_basemaps (event_id, basemap_id) VALUES (?, ?)', [(event_id, basemap.id) for basemap in basemaps])
-            curs.executemany('INSERT INTO event_layerss (event_id, protocol_id, method_id, layer_id) VALUES (?, ?, ?, ?)', [
-                (event_id, layer_info.protocol.id if layer_info.protocol.id > 0 else None, layer_info.method.id, layer_info.layer.id) for layer_info in layers])
+            curs.executemany('INSERT INTO event_layers (event_id, protocol_id, method_id, layer_id) VALUES (?, ?, ?, ?)', [
+                (event_id, protocol.id if protocol.id > 0 else None, method.id, layer.id) for protocol, method, layer in layers])
 
             event = Event(event_id, name, description, start, end, date_text, event_type, platform, layers, basemaps, metadata)
             conn.commit()

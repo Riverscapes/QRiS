@@ -115,11 +115,13 @@ class FrmEvent(QtWidgets.QDialog):
                     if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or layer_si.checkState() == QtCore.Qt.Checked:
                         method_si.appendRow(layer_si)
 
-                if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or method_si.hasChildren():
-                    protocol_si.appendRow(method_si)
+                if method_si.hasChildren():
+                    if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or method_si.hasChildren():
+                        protocol_si.appendRow(method_si)
 
-            if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or protocol_si.hasChildren():
-                self.tree_model.appendRow(protocol_si)
+            if protocol_si.hasChildren():
+                if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or protocol_si.hasChildren():
+                    self.tree_model.appendRow(protocol_si)
 
         self.layer_tree.setModel(self.tree_model)
         self.layer_tree.expandAll()
@@ -148,7 +150,29 @@ class FrmEvent(QtWidgets.QDialog):
         self.layer_tree.expandAll()
 
     def on_check_children(self, index: QtCore.QModelIndex) -> None:
-        self.check_children(self.tree_model.itemFromIndex(index))
+        modelItem = self.tree_model.itemFromIndex(index)
+        self.check_children(modelItem)
+
+        data = modelItem.data(QtCore.Qt.UserRole)
+        self.check_all_layers_of_type(None, data, modelItem.checkState())
+
+    def check_all_layers_of_type(self, modelItem: QtGui.QStandardItem, layer, state: QtCore.Qt.CheckState) -> None:
+        """ Ensures that if the user checks a particular layer then all instances of that layer type
+        become checked in the tree."""
+
+        if not self.tree_model:
+            return
+
+        if modelItem is None:
+            modelItem = self.tree_model.invisibleRootItem()
+
+        if modelItem.hasChildren():
+            for i in range(modelItem.rowCount()):
+                self.check_all_layers_of_type(modelItem.child(i), layer, state)
+        else:
+            data = modelItem.data(QtCore.Qt.UserRole)
+            if data == layer and modelItem.checkState() != state:
+                modelItem.setCheckState(state)
 
     def get_checked_layers(self, modelItem: QtGui.QStandardItem, checked_layers: list) -> None:
         """return a list of the layers that are currently checked.
@@ -171,20 +195,19 @@ class FrmEvent(QtWidgets.QDialog):
         """ Return a dictionary of the IDs of protocols, methods and layer IDs.
         This is stored in the database to be able to recrete the tree on edit."""
 
-        tree = {}
         layer_list = []
         modelItem = self.tree_model.invisibleRootItem()
         for p in range(modelItem.rowCount()):
             protocol_item = modelItem.child(p)
             protocol = protocol_item.data(QtCore.Qt.UserRole)
             for m in range(protocol_item.rowCount()):
-                method_item = modelItem.child(m)
+                method_item = protocol_item.child(m)
                 method = method_item.data(QtCore.Qt.UserRole)
                 for li in range(method_item.rowCount()):
-                    layer_item = layer_item(li)
-                    layer = layer_item.data(layer_item.rowCount())
-                    if layer_item.isChecked():
-                        layer_list.append(protocol, method, layer)
+                    layer_item = method_item.child(li)
+                    layer = layer_item.data(QtCore.Qt.UserRole)
+                    if layer_item.checkState() == QtCore.Qt.Checked:
+                        layer_list.append((protocol, method, layer))
 
         return layer_list
 
@@ -253,7 +276,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.protocols, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
+            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layer_items_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
             super().accept()
         else:
             try:
@@ -266,7 +289,7 @@ class FrmEvent(QtWidgets.QDialog):
                     '',
                     self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
                     self.cboPlatform.currentData(QtCore.Qt.UserRole),
-                    self.protocols,
+                    layer_items_in_use,
                     basemaps,
                     self.metadata
                 )
