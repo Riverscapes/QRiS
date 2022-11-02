@@ -1,6 +1,8 @@
 import os
 import sqlite3
-from numpy import isin
+import json
+
+from PyQt5.QtCore import pyqtSlot
 
 from qgis.core import (
     QgsField,
@@ -23,16 +25,23 @@ from qgis.core import (
     QgsProject,
     QgsExpressionContextUtils,
     QgsFieldConstraints,
+    qgsfunction,
     QgsColorRampShader,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
     QgsRasterBandStats,
+    QgsAttributeEditorContainer,
+    QgsAttributeEditorElement,
+    QgsReadWriteContext,
+    QgsEditFormConfig,
+    QgsAttributeEditorField,
     QgsPalLayerSettings,
     QgsVectorLayerSimpleLabeling
 )
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.PyQt.QtXml import QDomDocument
 
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 
@@ -42,7 +51,7 @@ from ..model.pour_point import CONTEXT_NODE_TAG
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
 from ..model.basemap import BASEMAP_MACHINE_CODE, Raster, RASTER_SLIDER_MACHINE_CODE
-from ..model.db_item import DBItem
+from ..model.db_item import DBItem, load_lookup_table
 from ..model.mask import Mask
 from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.protocol import Protocol
@@ -269,7 +278,8 @@ def build_event_protocol_single_layer(project: Project, event_layer: EventLayer)
         configure_structure_lines(project, feature_layer)
     elif layer_name == 'complexes':
         configure_complexes(project, feature_layer)
-
+    elif layer_name == 'brat_cis':
+        add_brat_cis(project, feature_layer)
     else:
         # TODO: Should probably have a notification for layers not found....
         pass
@@ -473,6 +483,60 @@ def apply_raster_slider_value(project: Project, raster: Raster, raster_value: fl
 
 
 # -------- LAYER SPECIFIC ADD TO MAP FUNCTIONS ---------
+def add_lookup_table(layer: dict) -> None:
+    """Checks if a lookup table has been added as private in the current QGIS session"""
+    # Check if the lookup table has been added
+    # TODO make sure the lookup tables are actually from the correct project geopackage
+    # TODO Use custom properties to double check that the correct layers are being used
+    if len(QgsProject.instance().mapLayersByName(layer['fc_name'])) == 0:
+        lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
+        # TODO consider adding and then marking as private instead of using the False flag
+        QgsProject.instance().addMapLayer(lookup_layer, False)
+
+
+def add_brat_cis(project: Project, feature_layer: QgsVectorLayer) -> None:
+    # first read and set the lookup tables
+    set_table_as_layer_variable(project, feature_layer, "lkp_brat_vegetation_cis")
+    set_table_as_layer_variable(project, feature_layer, "lkp_brat_combined_cis")
+
+    # attribute form containers: https://gis.stackexchange.com/questions/310287/qgis-editform-layout-settings-in-python
+    editFormConfig = feature_layer.editFormConfig()
+    editFormConfig.setLayout(1)
+    rootContainer = editFormConfig.invisibleRootContainer()
+    rootContainer.clear()
+
+    # FID and Event ID will not show up on the form since we cleared them from the root container, but need to set alias for attribute table.
+    set_hidden(feature_layer, 'fid', 'Brat Cis ID')
+    set_hidden(feature_layer, 'event_id', 'Event ID')
+
+    # Info Group Box
+    info_container = QgsAttributeEditorContainer('BRAT Observation Event', rootContainer)
+    set_alias(feature_layer, 'reach_id', 'Reach ID', info_container, 0)
+    set_alias(feature_layer, 'observation_date', 'Observation Date', info_container, 1)
+    set_alias(feature_layer, 'reach_length', 'Reach Length (m)', info_container, 2)
+    set_alias(feature_layer, 'notes', 'Notes', info_container, 3)
+    set_alias(feature_layer, 'observer_name', 'Observer Name', info_container, 4)
+    editFormConfig.addTab(info_container)
+
+    # Vegetation Evidence Group Box
+    veg_container = QgsAttributeEditorContainer('Vegetation Evidence CIS', rootContainer)
+    set_value_map(project, feature_layer, 'streamside_veg_id', 'lkp_brat_vegetation_types', 'Streamside Vegetation', parent_container=veg_container, display_index=0)
+    set_value_map(project, feature_layer, 'riparian_veg_id', 'lkp_brat_vegetation_types', 'Riparian Vegetation', parent_container=veg_container, display_index=1)
+    veg_expression = 'get_veg_dam_density(streamside_veg_id, riparian_veg_id, @lkp_brat_vegetation_cis)'
+    set_value_map_expression(project, feature_layer, 'veg_density_id', 'lkp_brat_dam_density', 'Vegetation Dam Density', veg_expression, parent_container=veg_container, display_index=2)
+    editFormConfig.addTab(veg_container)
+
+    # Combined Evidence Group Box
+    comb_container = QgsAttributeEditorContainer('Combined Evidence CIS', rootContainer)
+    set_value_map(project, feature_layer, 'base_streampower_id', 'lkp_brat_base_streampower', 'Base Streampower', parent_container=comb_container, display_index=0)
+    set_value_map(project, feature_layer, 'high_streampower_id', 'lkp_brat_high_streampower', 'High Streampower', parent_container=comb_container, display_index=1)
+    set_value_map(project, feature_layer, 'slope_id', 'lkp_brat_slope', 'Slope', parent_container=comb_container, display_index=2)
+    comb_expression = 'get_comb_dam_density(veg_density_id, base_streampower_id, high_streampower_id, slope_id,  @lkp_brat_combined_cis)'
+    set_value_map_expression(project, feature_layer, 'combined_density_id', 'lkp_brat_dam_density', 'Combined Dam Density', comb_expression, parent_container=comb_container, display_index=3)
+    editFormConfig.addTab(comb_container)
+    feature_layer.setEditFormConfig(editFormConfig)
+
+
 def configure_dam_crests(project: Project, feature_layer: QgsVectorLayer) -> None:
     set_hidden(feature_layer, 'fid', 'Dam Crests ID')
     set_hidden(feature_layer, 'event_id', 'Event ID')
@@ -602,9 +666,8 @@ def configure_complexes(project: Project, feature_layer: QgsVectorLayer) -> None
     set_virtual_dimension(feature_layer, 'area')
     set_created_datetime(feature_layer)
 
-    # ------ SETTING FIELD AND FORM PROPERTIES -------
 
-
+# ------ SETTING FIELD AND FORM PROPERTIES -------
 def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True) -> None:
     """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
     # value relation widget configuration. Just add the Layer name
@@ -630,10 +693,9 @@ def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_ta
     feature_layer.setEditFormConfig(form_config)
 
 
-def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True) -> None:
+def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True, parent_container=None, display_index=None) -> None:
     """Will set a Value Map widget drop down list from the lookup database table"""
     conn = sqlite3.connect(project.project_file)
-    # conn.row_factory = dict_factory
     curs = conn.cursor()
     curs.execute("SELECT * FROM {};".format(lookup_table_name))
     lookup_collection = curs.fetchall()
@@ -655,6 +717,9 @@ def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: s
     feature_layer.setFieldAlias(field_index, field_alias)
     form_config = feature_layer.editFormConfig()
     form_config.setReuseLastValue(field_index, reuse_last)
+    if parent_container is not None and display_index is not None:
+        editor_field = QgsAttributeEditorField(field_name, display_index, parent_container)
+        parent_container.addChildElement(editor_field)
     feature_layer.setEditFormConfig(form_config)
 
 
@@ -681,11 +746,16 @@ def set_hidden(feature_layer: QgsVectorLayer, field_name: str, field_alias: str)
     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
 
 
-def set_alias(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
+def set_alias(feature_layer: QgsVectorLayer, field_name: str, field_alias: str, parent_container=None, display_index=None) -> None:
     """Just provides an alias to the field for display"""
     fields = feature_layer.fields()
     field_index = fields.indexFromName(field_name)
     feature_layer.setFieldAlias(field_index, field_alias)
+    if parent_container is not None and display_index is not None:
+        form_config = feature_layer.editFormConfig()
+        editor_field = QgsAttributeEditorField(field_name, display_index, parent_container)
+        parent_container.addChildElement(editor_field)
+        feature_layer.setEditFormConfig(form_config)
 
 
 # ----- CREATING VIRTUAL FIELDS --------
@@ -728,3 +798,69 @@ def set_field_constraint_not_null(feature_layer: QgsVectorLayer, field_name: str
     fields = feature_layer.fields()
     field_index = fields.indexFromName(field_name)
     feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)
+
+
+def set_table_as_layer_variable(project, feature_layer, table):
+    conn = sqlite3.connect(project.project_file)
+    curs = conn.cursor()
+    curs.execute("SELECT * FROM {};".format(table))
+    lookup_collection = curs.fetchall()
+    conn.commit()
+    conn.close()
+
+    QgsExpressionContextUtils.setLayerVariable(feature_layer, table, json.dumps(lookup_collection))
+
+
+@qgsfunction(args='auto', group='QRIS', referenced_columns=[])
+def get_veg_dam_density(stream_veg, riparian_veg, rules_string, feature, parent):
+    rules = json.loads(rules_string)
+    for rule in rules:
+        if stream_veg == rule[1] and riparian_veg == rule[2]:
+            return rule[3]
+    return 1
+
+
+@qgsfunction(args='auto', group='QRIS', referenced_columns=[])
+def get_comb_dam_density(veg_density, base_power, high_power, slope, cis_rules, feature, parent):
+    combined_rules = json.loads(cis_rules)
+    for rule in combined_rules:
+        if veg_density == rule[1] and base_power == rule[2] and high_power == rule[3] and slope == rule[4]:
+            return rule[5]
+    return 1  # Default output is None if not in rules table
+
+
+def set_value_map_expression(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, field_expression, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True, parent_container=None, display_index=None) -> None:
+    conn = sqlite3.connect(project.project_file)
+    curs = conn.cursor()
+    curs.execute("SELECT * FROM {};".format(lookup_table_name))
+    lookup_collection = curs.fetchall()
+    conn.commit()
+    conn.close()
+    # make a dictionary from the returned values
+    lookup_list = []
+    for row in lookup_collection:
+        key = str(row[desc_position])
+        value = row[value_position]
+        lookup_list.append({key: value})
+    lookup_config = {
+        'map': lookup_list
+    }
+
+    # Set field to display vegetation dam density based on values in other fields
+    virtual_field = QgsField(field_name, QVariant.Int)
+    feature_layer.addExpressionField(field_expression, virtual_field)
+
+    fields = feature_layer.fields()
+    field_index = fields.indexFromName(field_name)
+    widget_setup = QgsEditorWidgetSetup('ValueMap', lookup_config)
+    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+    feature_layer.setFieldAlias(field_index, field_alias)
+    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+    form_config = feature_layer.editFormConfig()
+    form_config.setReuseLastValue(field_index, reuse_last)
+    form_config.setReadOnly(field_index)
+    if parent_container is not None and display_index is not None:
+        editor_field = QgsAttributeEditorField(field_name, display_index, parent_container)
+        parent_container.addChildElement(editor_field)
+    feature_layer.setEditFormConfig(form_config)
+    feature_layer.setEditFormConfig(form_config)
