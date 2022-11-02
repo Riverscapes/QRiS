@@ -35,6 +35,7 @@ CREATE TABLE methods (
 
 INSERT INTO methods (id, name, machine_code) VALUES (1, 'Dam / Jam Survey', 'DAMJAMS');
 INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
+INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
 
 CREATE TABLE protocol_methods (
     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
@@ -45,6 +46,7 @@ CREATE TABLE protocol_methods (
 
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 1);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
+INSERT INTO protocol_methods (protocol_id, method_id) VALUES (2, 2);
 
 CREATE TABLE layers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -123,7 +125,7 @@ CREATE TABLE method_layers (
     method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
     layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
 
-    CONSTRAINT pk_nethod_layers PRIMARY KEY (method_id, layer_id)
+    CONSTRAINT pk_method_layers PRIMARY KEY (method_id, layer_id)
 );
 
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
@@ -246,12 +248,19 @@ CREATE TABLE lkp_platform (
 INSERT INTO lkp_platform (id, name) VALUES (1, 'Desktop');
 INSERT INTO lkp_platform (id, name) VALUES (2, 'Field');
 
-CREATE TABLE event_methods (
+-- This table is used to reconstruct the tree in the event propeerties form.
+-- Note that the protocol ID can be NULL for layers that are associated with
+-- methods that do not belong to any protocol.
+CREATE TABLE event_layers (
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    method_id INTEGER NOT NULL REFERENCES methods(id),
+    protocol_id INTEGER REFERENCES protocols(id) ON DELETE CASCADE,
+    method_id INTEGER REFERENCES methods(id) ON DELETE CASCADE,
+    layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
 
-    CONSTRAINT pk_event_methods PRIMARY KEY (event_id, method_id)
+    CONSTRAINT pk_event_layers PRIMARY KEY (event_id, protocol_id, method_id, layer_id)
 );
+-- Useful index for determining DISTINCT layers in an event
+CREATE INDEX ix_event_layers ON event_layers(layer_id);
 
 CREATE TABLE lkp_raster_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1096,12 +1105,13 @@ CREATE INDEX fx_stream_gage_discharges ON stream_gage_discharges(stream_gage_id)
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocols', 'attributes', 'protocols', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('methods', 'attributes', 'methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('layers', 'attributes', 'layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('context_layers', 'attributes', 'context_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocol_layers', 'attributes', 'protocol_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('projects', 'attributes', 'projects', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('events', 'attributes', 'events', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_protocols', 'attributes', 'event_protocols', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('basemaps', 'attributes', 'basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_basemaps', 'attributes', 'event_basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);

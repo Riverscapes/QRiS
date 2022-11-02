@@ -50,7 +50,7 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.methods)
             self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
-            self.events = load_events(curs, self.protocols, self.lookup_tables, self.basemaps())
+            self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.basemaps())
             self.metrics = load_metrics(curs)
             self.analyses = load_analyses(curs, self.masks, self.metrics)
             self.pour_points = load_pour_points(curs)

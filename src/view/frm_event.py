@@ -167,6 +167,27 @@ class FrmEvent(QtWidgets.QDialog):
             if modelItem.checkState() == QtCore.Qt.Checked:
                 checked_layers.append(modelItem.data(QtCore.Qt.UserRole))
 
+    def get_checked_layer_tree(self) -> list:
+        """ Return a dictionary of the IDs of protocols, methods and layer IDs.
+        This is stored in the database to be able to recrete the tree on edit."""
+
+        tree = {}
+        layer_list = []
+        modelItem = self.tree_model.invisibleRootItem()
+        for p in range(modelItem.rowCount()):
+            protocol_item = modelItem.child(p)
+            protocol = protocol_item.data(QtCore.Qt.UserRole)
+            for m in range(protocol_item.rowCount()):
+                method_item = modelItem.child(m)
+                method = method_item.data(QtCore.Qt.UserRole)
+                for li in range(method_item.rowCount()):
+                    layer_item = layer_item(li)
+                    layer = layer_item.data(layer_item.rowCount())
+                    if layer_item.isChecked():
+                        layer_list.append(protocol, method, layer)
+
+        return layer_list
+
     def check_children(self, item: QtGui.QStandardItem) -> None:
         itemCheckState = item.checkState()
         for i in range(item.rowCount()):
@@ -200,14 +221,14 @@ class FrmEvent(QtWidgets.QDialog):
             return
 
         # There must be at least one layer!
-        layer_items_in_use = []
-        self.get_checked_layers(None, layer_items_in_use)
+
+        layer_items_in_use = self.get_checked_layer_tree()
         if len(layer_items_in_use) < 1:
             QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
             return
 
         # Get the actual layers in use from the model QStandardItems
-        layers_in_use = [item.data(QtCore.Qt.UserRole) for item in layer_items_in_use]
+        layers_in_use = [layer for protocol, method, layer in layer_items_in_use]
 
         basemaps = []
         for row in range(self.basemap_model.rowCount()):

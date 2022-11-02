@@ -24,8 +24,24 @@ def load(curs: sqlite3.Cursor, methods: dict) -> dict:
         row['description']
     ) for row in curs.fetchall()}
 
+    # Load methods that are part of each protocol
     for protocol in protocols.values():
         curs.execute('SELECT * FROM protocol_methods WHERE protocol_id = ?', [protocol.id])
         [protocol.methods.append(methods[row['method_id']]) for row in curs.fetchall()]
+
+    # Load methods that are not part of any protocol
+    curs.execute('SELECT m.id FROM methods m LEFT JOIN protocol_methods pm ON m.id = pm.method_id WHERE pm.method_id IS NULL')
+    orphan_method_ids = [row['id'] for row in curs.fetchall()]
+    if len(orphan_method_ids) > 0:
+        # Create a dummy protocol for these methods
+        protocols[-1] = Protocol(
+            -1,
+            'Methods without a protocol',
+            'ORPHAN_METHODS',
+            False,
+            None
+        )
+
+        [protocols[-1].methods.append(methods[method_id]) for method_id in orphan_method_ids]
 
     return protocols
