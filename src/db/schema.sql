@@ -36,6 +36,7 @@ CREATE TABLE methods (
 INSERT INTO methods (id, name, machine_code) VALUES (1, 'Dam / Jam Survey', 'DAMJAMS');
 INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
 INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
+INSERT INTO methods (id, name, machine_code) VALUES (4, 'BRAT CIS', 'BRATCIS');
 
 CREATE TABLE protocol_methods (
     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
@@ -47,6 +48,8 @@ CREATE TABLE protocol_methods (
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 1);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (2, 2);
+INSERT INTO protocol_methods (protocol_id, method_id) VALUES (7, 4);
+
 
 CREATE TABLE layers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -133,6 +136,8 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
 INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
+INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
+
 
 -- CREATE TABLE protocol_layers (
 --     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,

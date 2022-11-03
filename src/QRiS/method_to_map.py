@@ -229,9 +229,9 @@ def build_event_single_layer(project: Project, event: Event, layer: Layer) -> No
     # handle the individual DCE group
     event_group_layer = get_group_layer(EVENT_MACHINE_CODE + str(event.id), event.name, events_group_group_layer, True)
 
-    # event_method_layer = get_db_item_layer(event_layer, event_group_layer)
-    # if event_method_layer is not None:
-    #     return
+    event_layer = get_db_item_layer(layer, event_group_layer)
+    if event_layer is not None:
+        return
 
     # Create a layer from the table
     fc_path = project.project_file + '|layername=' + layer.fc_name
@@ -252,7 +252,7 @@ def build_event_single_layer(project: Project, event: Event, layer: Layer) -> No
     tree_layer_node = event_group_layer.addLayer(feature_layer)
     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, f'{event.id}_{layer.map_guid}')
     # send to layer specific field handlers
-    layer_name = layer.name
+    layer_name = layer.fc_name
     if layer_name == 'dam_crests':
         configure_dam_crests(project, feature_layer)
     elif layer_name == 'thalwegs':
