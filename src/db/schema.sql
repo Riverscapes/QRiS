@@ -17,12 +17,11 @@ CREATE TABLE protocols (
 );
 
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (1, 'RIM', 'RIM', 0, 'Riverscape Inundation Mapping');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Active Extents', 'ACTIVE_EXTENT', 0, 'Mapping portions of the valley bottom that are part of the active channel or floodplain');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (3, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
--- INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Geomorphic Units', 'GUT', 0, 'Some sort of riverscape feature classification, who fricken knows');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (6, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (7, 'BRAT CIS', 'BRAT_CIS', 0, 'Beaver dam capacity estimate.');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (3, 'Active Extents', 'ACTIVE_EXTENT', 0, 'Mapping portions of the valley bottom that are part of the active channel or floodplain');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (7, 'Beaver Dam Survey', 'BRATCIS', 0, 'Survey of beaver dams');
 
 CREATE TABLE methods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
