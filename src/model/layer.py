@@ -16,6 +16,7 @@ class Layer(DBItem):
         self.is_lookup = is_lookup
         self.geom_type = geom_type
         self.description = description
+        self.icon = 'layer'
 
 
 def load_layers(curs: sqlite3.Cursor) -> dict:

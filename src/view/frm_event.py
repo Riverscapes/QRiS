@@ -364,10 +364,15 @@ class FrmEvent(QtWidgets.QDialog):
         # self.horiz_layer_buttons.addWidget(self.chkActiveLayers)
 
         # layer tree
+        self.vert_layer_tree = QtWidgets.QVBoxLayout(self)
+        self.horiz_layers.addLayout(self.vert_layer_tree)
+        self.lblAllLayers = QtWidgets.QLabel('Available Layers')
+        self.vert_layer_tree.addWidget(self.lblAllLayers)
+
         self.layer_tree = QtWidgets.QTreeView(self)
         self.layer_tree.setHeaderHidden(True)
         # self.layer_tree.clicked.connect(self.on_check_children)
-        self.horiz_layers.addWidget(self.layer_tree)
+        self.vert_layer_tree.addWidget(self.layer_tree)
 
         # Add Remove Buttons
         self.vert_buttpns = QtWidgets.QVBoxLayout(self)
@@ -380,9 +385,19 @@ class FrmEvent(QtWidgets.QDialog):
         self.vert_buttpns.addWidget(self.cmdRemoveLayer)
 
         # Layers list
-        self.layer_list = QtWidgets.QListView(self)
-        self.horiz_layers.addWidget(self.layer_list)
+        self.vert_layers = QtWidgets.QVBoxLayout(self)
+        self.horiz_layers.addLayout(self.vert_layers)
+        # self.grpLayersInUse = QtWidgets.QGroupBox('Layers In Use')
+        # self.vert_layers.addWidget(self.grpLayersInUse)
+        # self.grpLayersInUse.setLayout(self.vert_layers)
 
+        self.lblLayersInUse = QtWidgets.QLabel('Layers In Use')
+        self.vert_layers.addWidget(self.lblLayersInUse)
+
+        self.layer_list = QtWidgets.QListView(self)
+        self.vert_layers.addWidget(self.layer_list)
+
+        # Basic Properties Tab
         self.tabGridWidget = QtWidgets.QWidget()
         self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
         self.tab.addTab(self.tabGridWidget, 'Basic Properties')
