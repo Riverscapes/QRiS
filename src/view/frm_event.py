@@ -21,10 +21,11 @@ class FrmEvent(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.qris_project = qris_project
-        self.event = event
         self.protocols = []
         self.metadata = None
         self.event_type_id = event_type_id
+        # Note that "event" is already a method from QDialog(), hence the weird name
+        self.the_event = event
 
         self.setupUi()
         self.setWindowTitle('Create New Data Capture Event' if event is None else 'Edit Data Capture Event')
@@ -63,9 +64,9 @@ class FrmEvent(QtWidgets.QDialog):
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
 
-            for layer in event.layers:
-                item = QtGui.QStandardItem(layer.name)
-                item.setData(layer, QtCore.Qt.UserRole)
+            for event_layer in event.event_layers:
+                item = QtGui.QStandardItem(event_layer.layer.name)
+                item.setData(event_layer.layer, QtCore.Qt.UserRole)
                 item.setEditable(False)
                 self.layers_model.appendRow(item)
 
@@ -282,10 +283,10 @@ class FrmEvent(QtWidgets.QDialog):
                         basemaps.append(basemap)
                         break
 
-        if self.event is not None:
+        if self.the_event is not None:
             # Check if any GIS data might be lost
-            for original_layer in self.event.layers:
-                if original_layer not in layers_in_use:
+            for event_layer in self.the_event.event_layers:
+                if event_layer.layer not in layers_in_use:
                     response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
                                                               """One or more layers that were part of this data capture event are no longer associated with the event.
                         Continuing might lead to the loss of geospatial data. Do you want to continue?
@@ -294,11 +295,11 @@ class FrmEvent(QtWidgets.QDialog):
                     if response == QtWidgets.QMessageBox.No:
                         return
 
-            self.event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
+            self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
             super().accept()
         else:
             try:
-                self.event = insert_event(
+                self.the_event = insert_event(
                     self.qris_project.project_file,
                     self.txtName.text(),
                     self.txtDescription.toPlainText(),
@@ -312,7 +313,7 @@ class FrmEvent(QtWidgets.QDialog):
                     self.metadata
                 )
 
-                self.qris_project.events[self.event.id] = self.event
+                self.qris_project.events[self.the_event.id] = self.the_event
                 super().accept()
 
             except Exception as ex:

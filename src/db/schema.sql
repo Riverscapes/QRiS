@@ -256,11 +256,11 @@ INSERT INTO lkp_platform (id, name) VALUES (1, 'Desktop');
 INSERT INTO lkp_platform (id, name) VALUES (2, 'Field');
 
 CREATE TABLE event_layers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
-
-    CONSTRAINT pk_event_layers PRIMARY KEY (event_id, layer_id)
+    layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE
 );
+CREATE UNIQUE index ux_event_layers ON event_layers(event_id, layer_id);
 
 CREATE TABLE lkp_raster_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

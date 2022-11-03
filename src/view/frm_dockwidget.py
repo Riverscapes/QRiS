@@ -296,7 +296,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Raster):
             build_basemap_layer(self.project, db_item)
         elif isinstance(db_item, Event):
-            [build_event_single_layer(self.project, db_item, layer) for layer in db_item.layers]
+            [build_event_single_layer(self.project, db_item, layer) for layer in db_item.event_layers]
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
@@ -304,7 +304,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             for event_layer in event.event_layers:
                 if event_layer.layer in db_item.layers:
                     build_event_single_layer(self.project, event_layer)
-        elif isinstance(db_item, Layer):
+        elif isinstance(db_item, EventLayer):
             # determine parent node
             event_node = tree_node.parent()
             event = event_node.data(QtCore.Qt.UserRole)
@@ -456,9 +456,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
         # for method in event.methods:
         #     protocol_node = self.add_child_to_project_tree(event_node, method, add_to_map)
-        for layer in event.layers:
-            if layer.is_lookup is False:
-                self.add_child_to_project_tree(event_node, layer, add_to_map)
+        for event_layer in event.event_layers:
+            if event_layer.layer.is_lookup is False:
+                self.add_child_to_project_tree(event_node, event_layer, add_to_map)
 
     def add_basemap(self, parent_node: QtGui.QStandardItem, raster_type_id: int):
         """Initiates adding a new base map to the project"""
