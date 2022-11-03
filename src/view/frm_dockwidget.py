@@ -414,7 +414,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         The data_item can either be a DBItem object or a string for group nodes
         """
 
-        # Search for a child node of the parent with the specified data attached
+        # Search for a child node under the parent with the specified data attached
         target_node = None
         for row in range(0, parent_node.rowCount()):
             child_node = parent_node.child(row)

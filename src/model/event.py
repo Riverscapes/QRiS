@@ -74,7 +74,7 @@ class Event(DBItem):
                 self.name = name
                 self.description = description
                 self.basemaps = basemaps
-                self.event_layers = save_event_layers(curs, self.id, layers)
+                save_event_layers(curs, self.id, layers, self.event_layers)
                 self.start = start_date
                 self.end = end_date
                 self.platform = platform
@@ -166,7 +166,10 @@ def insert(db_path: str,
 
             curs.executemany('INSERT INTO event_basemaps (event_id, basemap_id) VALUES (?, ?)', [(event_id, basemap.id) for basemap in basemaps])
 
-            event_layers = save_event_layers(curs, event_id, layers)
+            event_layers = []
+            for layer in layers:
+                curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?)', [event_id, layer.id])
+                event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
 
             event = Event(event_id, name, description, start, end, date_text, event_type, platform, event_layers, basemaps, metadata)
             conn.commit()
@@ -178,12 +181,12 @@ def insert(db_path: str,
     return event
 
 
-def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer]) -> List[EventLayer]:
+def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer], event_layers: List[EventLayer]) -> None:
     """ Used by both the INSERT and UPDATE operations
     When used from INSERT it obviously should not find any existing event layers."""
 
     # Identify unused layers
-    unused_ids = []
+    unused_event_layers = []
     curs.execute('SELECT id, layer_id FROM event_layers WHERE event_id = ?', [event_id])
     for row in curs.fetchall():
         in_use = False
@@ -193,14 +196,16 @@ def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer]) 
                 break
 
         if in_use is False:
-            unused_ids.append(row['event_id'])
+            for event_layer in event_layers:
+                if event_layer.id == row['id']:
+                    unused_event_layers.append(event_layer)
 
-    curs.executemany('DELETE FROM Event_layers WHERE id = ?', unused_ids)
+    # Finally delete the event layer from the database and remove it from the events list of event layers
+    curs.executemany('DELETE FROM Event_layers WHERE id = ?', [event_layer.id for event_layer in unused_event_layers])
+    [event_layers.remove(event_layer) for event_layer in unused_event_layers]
 
-    # Upsert event layers
-    event_layers = []
+    # Upsert new event layers and add any new ones to the list
     for layer in layers:
-        curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?) ON CONFLICT (event_id, layer_id) DO NOTHING', (event_id, layer.id))
-        event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
-
-    return event_layers
+        curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?) ON CONFLICT (event_id, layer_id) DO NOTHING', [event_id, layer.id])
+        if curs.lastrowid != 0:
+            event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
