@@ -283,22 +283,22 @@ class FrmEvent(QtWidgets.QDialog):
                         basemaps.append(basemap)
                         break
 
-        if self.the_event is not None:
-            # Check if any GIS data might be lost
-            for event_layer in self.the_event.event_layers:
-                if event_layer.layer not in layers_in_use:
-                    response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
-                                                              """One or more layers that were part of this data capture event are no longer associated with the event.
-                        Continuing might lead to the loss of geospatial data. Do you want to continue?
-                        "Click Yes to proceed and delete all data associated with layers that are no longer used by the
-                        current data capture event protocols. Click No to stop and avoid any data loss.""")
-                    if response == QtWidgets.QMessageBox.No:
-                        return
+        try:
+            if self.the_event is not None:
+                # Check if any GIS data might be lost
+                for event_layer in self.the_event.event_layers:
+                    if event_layer.layer not in layers_in_use:
+                        response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
+                                                                  """One or more layers that were part of this data capture event are no longer associated with the event.
+                            Continuing might lead to the loss of geospatial data. Do you want to continue?
+                            "Click Yes to proceed and delete all data associated with layers that are no longer used by the
+                            current data capture event protocols. Click No to stop and avoid any data loss.""")
+                        if response == QtWidgets.QMessageBox.No:
+                            return
 
-            self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
-            super().accept()
-        else:
-            try:
+                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
+                super().accept()
+            else:
                 self.the_event = insert_event(
                     self.qris_project.project_file,
                     self.txtName.text(),
@@ -316,12 +316,12 @@ class FrmEvent(QtWidgets.QDialog):
                 self.qris_project.events[self.the_event.id] = self.the_event
                 super().accept()
 
-            except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A data capture event with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
-                    self.txtName.setFocus()
-                else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
+        except Exception as ex:
+            if 'unique' in str(ex).lower():
+                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A data capture event with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                self.txtName.setFocus()
+            else:
+                QtWidgets.QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
 
     def setupUi(self):
 

@@ -188,12 +188,12 @@ def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer]) 
     for row in curs.fetchall():
         in_use = False
         for layer in layers:
-            if row[1] == layer.id:
+            if row['layer_id'] == layer.id:
                 in_use = True
                 break
 
         if in_use is False:
-            unused_ids.append(row[0])
+            unused_ids.append(row['event_id'])
 
     curs.executemany('DELETE FROM Event_layers WHERE id = ?', unused_ids)
 

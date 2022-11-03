@@ -224,7 +224,7 @@ def build_event_single_layer(project: Project, event: Event, event_layer: EventL
     # handle the DCE group
     events_group_group_layer = get_group_layer(EVENT_MACHINE_CODE + 'S', 'Data Capture Events', project_group, True)
     # handle the individual DCE group
-    event_group_layer = get_group_layer(EVENT_MACHINE_CODE + str(event.id), event.name, events_group_group_layer, True)
+    event_group_layer = get_group_layer(event.map_guid, event.name, events_group_group_layer, True)
 
     feature_layer = get_db_item_layer(event_layer, event_group_layer)
     if feature_layer is not None:

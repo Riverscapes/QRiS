@@ -349,7 +349,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = self.frm_event.exec_()
         if result is not None and result != 0:
-            self.add_event_to_project_tree(parent_node, self.frm_event.event, self.frm_event.chkAddToMap.isChecked())
+            self.add_event_to_project_tree(parent_node, self.frm_event.the_event, self.frm_event.chkAddToMap.isChecked())
 
     def add_analysis(self, parent_node):
 
@@ -430,6 +430,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             elif data_item == STREAM_GAGE_MACHINE_CODE:
                 icon = 'database'
 
+            print(data_item)
             target_node = QtGui.QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])
             target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
             target_node.setData(data_item, QtCore.Qt.UserRole)
