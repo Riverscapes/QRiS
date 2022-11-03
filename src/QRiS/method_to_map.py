@@ -212,16 +212,16 @@ def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
 #             build_event_protocol_single_layer(project, event_layer)
 
 
-def build_event_single_layer(project: Project, event_layer: EventLayer) -> None:
+def build_event_single_layer(project: Project, event: Event, layer: Layer) -> None:
     """
     Add a single layer for an event
     """
     # if lookup table then forget about it
-    if event_layer.layer.is_lookup:
+    if layer.is_lookup:
         return
 
     # The ID of the event layer is actually the event ID!
-    event = project.events[event_layer.id]
+    # event = project.events[event_layer.id]
 
     project_group = get_project_group(project)
     # handle the DCE group
@@ -229,17 +229,17 @@ def build_event_single_layer(project: Project, event_layer: EventLayer) -> None:
     # handle the individual DCE group
     event_group_layer = get_group_layer(EVENT_MACHINE_CODE + str(event.id), event.name, events_group_group_layer, True)
 
-    event_method_layer = get_db_item_layer(event_layer, event_group_layer)
-    if event_method_layer is not None:
-        return
+    # event_method_layer = get_db_item_layer(event_layer, event_group_layer)
+    # if event_method_layer is not None:
+    #     return
 
     # Create a layer from the table
-    fc_path = project.project_file + '|layername=' + event_layer.layer.name
-    feature_layer = QgsVectorLayer(fc_path, event_layer.layer.display_name, 'ogr')
+    fc_path = project.project_file + '|layername=' + layer.fc_name
+    feature_layer = QgsVectorLayer(fc_path, layer.name, 'ogr')
     QgsProject.instance().addMapLayer(feature_layer, False)
 
     # hit it with qml
-    qml = os.path.join(symbology_path, 'symbology', event_layer.layer.qml)
+    qml = os.path.join(symbology_path, 'symbology', layer.qml)
     feature_layer.loadNamedStyle(qml)
     # set the substring
     feature_layer.setSubsetString('event_id = ' + str(event.id))
@@ -250,9 +250,9 @@ def build_event_single_layer(project: Project, event_layer: EventLayer) -> None:
     feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("@event_id"))
 
     tree_layer_node = event_group_layer.addLayer(feature_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, event_layer.map_guid)
+    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, f'{event.id}_{layer.map_guid}')
     # send to layer specific field handlers
-    layer_name = event_layer.layer.name
+    layer_name = layer.name
     if layer_name == 'dam_crests':
         configure_dam_crests(project, feature_layer)
     elif layer_name == 'thalwegs':

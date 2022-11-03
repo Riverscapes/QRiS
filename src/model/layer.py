@@ -9,8 +9,9 @@ class Layer(DBItem):
     the event id definition query filter."""
 
     def __init__(self, id: int, fc_name: str, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str):
-        super().__init__('layers', id, fc_name)
-        self.display_name = display_name
+        # Must use the display name as the official db_item name so that it is the string displayed in UI
+        super().__init__('layers', id, display_name)
+        self.fc_name = fc_name
         self.qml = qml
         self.is_lookup = is_lookup
         self.geom_type = geom_type
@@ -25,7 +26,7 @@ def load_layers(curs: sqlite3.Cursor) -> dict:
         row['fc_name'],
         row['display_name'],
         row['qml'],
-        row['is_lookup'],
+        row['is_lookup'] != 0,
         row['geom_type'],
         row['description']
     ) for row in curs.fetchall()}

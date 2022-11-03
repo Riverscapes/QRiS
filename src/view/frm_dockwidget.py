@@ -47,6 +47,7 @@ from ..model.protocol import Protocol
 from ..model.method import Method
 from ..model.pour_point import PourPoint, CONTEXT_NODE_TAG
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
+from ..model.event_layer import EventLayer
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
@@ -295,7 +296,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Raster):
             build_basemap_layer(self.project, db_item)
         elif isinstance(db_item, Event):
-            [build_event_single_layer(self.project, event_layer) for event_layer in db_item.event_layers]
+            [build_event_single_layer(self.project, db_item, layer) for layer in db_item.layers]
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
@@ -305,11 +306,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     build_event_single_layer(self.project, event_layer)
         elif isinstance(db_item, Layer):
             # determine parent node
-            event_node = tree_node.parent().parent()
+            event_node = tree_node.parent()
             event = event_node.data(QtCore.Qt.UserRole)
-            for event_layer in event.event_layers:
-                if event_layer.layer == db_item:
-                    build_event_single_layer(self.project, event_layer)
+            build_event_single_layer(self.project, event, db_item)
         elif isinstance(db_item, Project):
             [build_mask_layer(mask) for mask in self.project.masks.values()]
             [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps().values()]
@@ -455,16 +454,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Event, protocols and layers
         event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
-        for method in event.methods:
-            protocol_node = self.add_child_to_project_tree(event_node, method, add_to_map)
-            for layer in method.layers:
-                if layer.is_lookup is False:
-                    self.add_child_to_project_tree(protocol_node, layer, add_to_map)
-
-        # # Basemaps
-        # if len(event.basemaps) > 0:
-        #     basemap_group_node = self.add_child_to_project_tree(event_node, PROTOCOL_BASEMAP_MACHINE_CODE)
-        #     [self.add_child_to_project_tree(basemap_group_node, basemap) for basemap in event.basemaps]
+        # for method in event.methods:
+        #     protocol_node = self.add_child_to_project_tree(event_node, method, add_to_map)
+        for layer in event.layers:
+            if layer.is_lookup is False:
+                self.add_child_to_project_tree(event_node, layer, add_to_map)
 
     def add_basemap(self, parent_node: QtGui.QStandardItem, raster_type_id: int):
         """Initiates adding a new base map to the project"""

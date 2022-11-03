@@ -250,19 +250,12 @@ CREATE TABLE lkp_platform (
 INSERT INTO lkp_platform (id, name) VALUES (1, 'Desktop');
 INSERT INTO lkp_platform (id, name) VALUES (2, 'Field');
 
--- This table is used to reconstruct the tree in the event propeerties form.
--- Note that the protocol ID can be NULL for layers that are associated with
--- methods that do not belong to any protocol.
 CREATE TABLE event_layers (
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    protocol_id INTEGER REFERENCES protocols(id) ON DELETE CASCADE,
-    method_id INTEGER REFERENCES methods(id) ON DELETE CASCADE,
     layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
 
-    CONSTRAINT pk_event_layers PRIMARY KEY (event_id, protocol_id, method_id, layer_id)
+    CONSTRAINT pk_event_layers PRIMARY KEY (event_id, layer_id)
 );
--- Useful index for determining DISTINCT layers in an event
-CREATE INDEX ix_event_layers ON event_layers(layer_id);
 
 CREATE TABLE lkp_raster_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
