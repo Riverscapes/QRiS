@@ -2,7 +2,7 @@ import os
 import sqlite3
 import json
 
-from PyQt5.QtCore import pyqtSlot
+from ..QRiS.settings import CONSTANTS
 
 from qgis.core import (
     QgsField,
@@ -36,7 +36,9 @@ from qgis.core import (
     QgsEditFormConfig,
     QgsAttributeEditorField,
     QgsPalLayerSettings,
-    QgsVectorLayerSimpleLabeling
+    QgsVectorLayerSimpleLabeling,
+    QgsAction,
+    QgsAttributeEditorAction
 )
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
@@ -530,6 +532,10 @@ def add_brat_cis(project: Project, feature_layer: QgsVectorLayer) -> None:
     comb_expression = 'get_comb_dam_density(veg_density_id, base_streampower_id, high_streampower_id, slope_id,  @lkp_brat_combined_cis)'
     set_value_map_expression(project, feature_layer, 'combined_density_id', 'lkp_brat_dam_density', 'Combined Dam Density', comb_expression, parent_container=comb_container, display_index=3)
     editFormConfig.addTab(comb_container)
+
+    # Add Help Button to Form
+    add_help_action(feature_layer, 'brat_cis', rootContainer)
+
     feature_layer.setEditFormConfig(editFormConfig)
 
 
@@ -754,6 +760,22 @@ def set_alias(feature_layer: QgsVectorLayer, field_name: str, field_alias: str, 
         feature_layer.setEditFormConfig(form_config)
 
 
+# ----- LAYER ACTION BUTTONS -----------
+def add_help_action(feature_layer: QgsVectorLayer, help_slug: str, parent_container: QgsAttributeEditorContainer):
+
+    help_action_text = """
+import webbrowser
+help_url = "[% @help_url %]"
+webbrowser.open(help_url, new=2)
+"""
+    help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') + '.html' if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+    QgsExpressionContextUtils.setLayerVariable(feature_layer, 'help_url', help_url)
+    helpAction = QgsAction(1, 'Open Help URL', help_action_text, None, capture=False, shortTitle='Help', actionScopes={'Layer'})
+    feature_layer.actions().addAction(helpAction)
+    editorAction = QgsAttributeEditorAction(helpAction, parent_container)
+    parent_container.addChildElement(editorAction)
+
+
 # ----- CREATING VIRTUAL FIELDS --------
 def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None:
     """dimension should be 'area' or 'length'
@@ -858,5 +880,4 @@ def set_value_map_expression(project: Project, feature_layer: QgsVectorLayer, fi
     if parent_container is not None and display_index is not None:
         editor_field = QgsAttributeEditorField(field_name, display_index, parent_container)
         parent_container.addChildElement(editor_field)
-    feature_layer.setEditFormConfig(form_config)
     feature_layer.setEditFormConfig(form_config)
