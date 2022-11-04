@@ -23,7 +23,6 @@
 """
 
 import os
-from matplotlib.style import context
 from osgeo import ogr
 from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes, QgsProject
 from qgis.utils import iface

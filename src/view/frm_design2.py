@@ -1,7 +1,6 @@
 
 import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
-from matplotlib.pyplot import table
 
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.project import Project
