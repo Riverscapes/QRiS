@@ -1,31 +1,26 @@
-from qgis.core import QgsTask, QgsMessageLog, Qgis
-from qgis.PyQt.QtCore import pyqtSignal
+import os
+import sqlite3
+
+from .qris_task import QRiSTask
+from .new_project import NewProject
 
 
-MESSAGE_CATEGORY = 'QRiS_EventExportTask'
+class EventExportTask(QRiSTask):
 
-
-class EventExportTask(QgsTask):
-    """
-    https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
-    """
-
-    # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    on_complete = pyqtSignal(bool)
-
-    def __init__(self, iface, db_path: str, event_id: int, output_path: str, project_type: str):
+    def __init__(self, iface, db_path: str, event_id: int, output_project_name: str, output_path: str, project_type: str):
         """
         iface: QGIS interface
-        db_path: Full absolute path to the QRiS GeoPackage 
+        db_path: Full absolute path to the QRiS GeoPackage
         event_id: the ID of the event to be exported
+        output_project_name: name for the output riverscapes project based on the QRiS DCE.
         output_path: folder where the riverscapes project should be created.
         project_type: String representing the project type that should be used in <ProjectType></ProjectType>
         """
 
-        super().__init__(f'Export Event Task', QgsTask.CanCancel)
+        super().__init__(iface, 'Export Event Task', 'QRiS_EventExportTask')
 
-        self.iface = iface
         self.db_path = db_path
+        self.output_project_name = output_project_name
         self.event_id = event_id
         self.output_path = output_path
         self.project_type = project_type
@@ -35,51 +30,27 @@ class EventExportTask(QgsTask):
         Export Event
         """
         try:
-            self.perform_export()
+
+            # 1. Create Riverscapes Project output Geopackage (using QRiS schema.sql?)
+            output_gpkg = os.path.join(self.output_path, 'outputs', 'qris_dce.gpkg')
+            task = NewProject(self.iface, output_gpkg, self.output_project_name, None)
+            task.on_complete.connect(self.on_project_created)
+            QgsApplication.taskManager().addTask(task)
+
+            # 2. See which layers are in use by event
+            with sqlite3.connect(self.db_path) as conn:
+                curs = conn.cursor()
+                curs.execute('SELECT * FROM event_layers WHERE event_id = ?', [self.event_id])
+                layers = []
+
+            # 3. Loop over each layer and copy features for the layers into the Riverscapes GeoPackage
+
+            # 4. Copy any basemaps
+
+            # 5. Write project XML
+
         except Exception as ex:
             self.exception = ex
             return False
 
         return True
-
-    def perform_export(self):
-        print('Not implemented')
-
-        # 1. Create Riverscapes Project output Geopackage (using QRiS schema.sql?)
-
-        # 2. See which layers are in use by event
-        # SELECT * FROM event_layers WHERE event_id = ?
-
-        # 3. Loop over each layer and copy features for the layers into the Riverscapes GeoPackage
-
-        # 4. Copy any basemaps
-
-        # 5. Write project XML
-
-    def finished(self, result: bool):
-        """
-        This function is automatically called when the task has completed (successfully or not).
-        You implement finished() to do whatever follow-up stuff should happen after the task is complete.
-        finished is always called from the main thread, so it's safe to do GUI operations and raise Python exceptions here.
-        result is the return value from self.run.
-        """
-
-        if result:
-            self.iface.messageBar().pushMessage('Event Export Complete.', self.output_path, level=Qgis.Info, duration=5)
-            QgsMessageLog.logMessage('Event Export Complete', MESSAGE_CATEGORY, Qgis.Success)
-        else:
-            if self.exception is None:
-                self.iface.messageBar().pushMessage('Event Export Error', 'See log for details.', level=Qgis.Error, duration=5)
-                QgsMessageLog.logMessage(
-                    'Event Export was unsuccessful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
-            else:
-                self.iface.messageBar().pushMessage('Event Export Error', 'See log for details.', level=Qgis.Error, duration=5)
-                QgsMessageLog.logMessage(f'Event Export exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
-                raise self.exception
-
-        self.on_complete.emit(result)
-
-    def cancel(self):
-        QgsMessageLog.logMessage(
-            'Event Export was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
-        super().cancel()

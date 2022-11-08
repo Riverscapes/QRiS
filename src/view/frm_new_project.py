@@ -1,43 +1,14 @@
 import os
 import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsField, QgsVectorLayer, QgsVectorFileWriter
+from qgis.core import QgsField, QgsVectorLayer, QgsVectorFileWriter, QgsApplication
 
 from ..model.project import Project
 from .utilities import validate_name, add_standard_form_buttons
+from ..controller.new_project import NewProject
 
 # all spatial layers
 # feature class, layer name, geometry
-layers = [
-    ('aoi_features', 'AOI Features', 'Polygon'),
-    ('mask_features', 'Mask Features', 'Polygon'),
-    ('dam_crests', 'Dam Crests', 'Linestring'),
-    ('dams', 'Dam Points', 'Point'),
-    ('jams', 'Jam Points', 'Point'),
-    ('thalwegs', 'Thalwegs', 'Linestring'),
-    ('active_extents', 'Active Extents', 'Polygon'),
-    ('centerlines', 'Centerlines', 'Linestring'),
-    ('inundation_extents', 'Inundation Extents', 'Polygon'),
-    ('valley_bottoms', 'Valley Bottoms', 'Polygon'),
-    ('junctions', 'Junctions', 'Point'),
-    ('geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon'),
-    ('geomorphic_units', 'Geomorphic Unit Points', 'Point'),
-    ('geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point'),
-    ('cem_phases', 'Channel Evolution Model Stages', 'Polygon'),
-    ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
-    ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
-    ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
-    ('zoi', 'Zones of Influence', 'Polygon'),
-    ('complexes', 'Complexes', 'Polygon'),
-    ('structure_points', 'Structure Points', 'Point'),
-    ('structure_lines', 'Structure Lines', 'Linestring'),
-    ('channel_unit_points', 'Channel Unit Points', 'Point'),
-    ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
-    ('brat_cis', 'BRAT CIS', 'Point'),
-    ('pour_points', 'Pour Points', 'Point'),
-    ('catchments', 'Catchments', 'Polygon'),
-    ('stream_gages', 'Stream Gages', 'Point')
-]
 
 
 class FrmNewProject(QtWidgets.QDialog):
@@ -45,9 +16,10 @@ class FrmNewProject(QtWidgets.QDialog):
     closingPlugin = QtCore.pyqtSignal()
     dataChange = QtCore.pyqtSignal(Project)
 
-    def __init__(self, root_project_folder: str, parent, project: Project = None):
+    def __init__(self, iface, root_project_folder: str, parent, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
         self.setupUi()
+        self.iface = iface
 
         # Save the original folder that the user selected so that it can be reused
         self.root_path = root_project_folder
@@ -101,32 +73,11 @@ class FrmNewProject(QtWidgets.QDialog):
                                               'The specified directory already exists. Choose a different root directory or change the project name.')
                 return
 
-            os.makedirs(self.project_dir)
-            # qris_project = QRiSProject(self.project_name)
-            # qris_project.project_path = self.project_folder
+        task = NewProject(self.iface, self.txtPath.text(), self.txtName.text(), self.txtDescription.toPlainText())
+        task.on_complete.connect(self.on_project_created)
+        QgsApplication.taskManager().addTask(task)
 
-            # Create the geopackage feature classes that will in turn cause the project geopackage to get created
-            for fc_name, layer_name, geometry_type in layers:
-                features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
-                create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), features_path, None)
-
-            # Run the schema DDL migrations to create lookup tables and relationships
-            conn = sqlite3.connect(self.txtPath.text())
-            conn.execute('PRAGMA foreign_keys = ON;')
-            curs = conn.cursor()
-
-            schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
-            schema_file = open(schema_path, 'r')
-            sql_commands = schema_file.read()
-            curs.executescript(sql_commands)
-
-            # Create the project
-            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtName.text(), description])
-            conn.commit()
-            conn.close()
-            schema_file.close()
-
+    def on_project_created(self, bool):
         super(FrmNewProject, self).accept()
 
     def setupUi(self):
@@ -165,34 +116,3 @@ class FrmNewProject(QtWidgets.QDialog):
         self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'projects'))
-
-
-def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
-    """
-        Creates tables in existing or new geopackages
-        geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
-        table_name (string): Name for the new table
-        geopackage_path (string): full path to the geopackage i.e., dir/package.gpkg
-        full_path (string): full path including the layer i.e., dir/package.gpkg|layername=layer
-        field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
-        """
-    memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
-    if field_tuple_list:
-        fields = []
-        for field_tuple in field_tuple_list:
-            field = QgsField(field_tuple[0], field_tuple[1])
-            fields.append(field)
-        memory_layer.dataProvider().addAttributes(fields)
-        memory_layer.updateFields()
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.layerName = table_name
-    options.driverName = 'GPKG'
-    if os.path.exists(geopackage_path):
-        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-    QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
-
-
-def format_layer_name(input_text):
-    """Takes raw text from an input and field and returns a GIS friendly text string suitable for naming layers"""
-    valid_text = ''.join(e for e in input_text.replace(" ", "_") if e.isalnum() or e == "_")
-    return valid_text
