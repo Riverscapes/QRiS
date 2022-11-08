@@ -7,6 +7,7 @@ from ..model.event import Event
 from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..model.event import Event
+from ..model.method import Method
 
 from .utilities import validate_name, add_standard_form_buttons
 
@@ -61,7 +62,9 @@ class FrmEventExport(QtWidgets.QDialog):
                 return
 
         try:
-            task = EventExportTask(self.project.project_file, self.the_event.id, self.txtPath.text())
+            method: Method = self.cboProjectType.currentData()
+
+            task = EventExportTask(self.project.project_file, self.the_event.id, self.txtPath.text(), method.rs_project_type_code)
             task.on_complete.connect(self.on_export_complete)
 
             # Call the run command directly during development to run the process synchronousely.

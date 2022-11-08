@@ -13,13 +13,22 @@ class EventExportTask(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     on_complete = pyqtSignal(bool)
 
-    def __init__(self, iface, db_path: str, event_id: int, output_path: str):
+    def __init__(self, iface, db_path: str, event_id: int, output_path: str, project_type: str):
+        """
+        iface: QGIS interface
+        db_path: Full absolute path to the QRiS GeoPackage 
+        event_id: the ID of the event to be exported
+        output_path: folder where the riverscapes project should be created.
+        project_type: String representing the project type that should be used in <ProjectType></ProjectType>
+        """
+
         super().__init__(f'Export Event Task', QgsTask.CanCancel)
 
         self.iface = iface
         self.db_path = db_path
         self.event_id = event_id
         self.output_path = output_path
+        self.project_type = project_type
 
     def run(self):
         """
