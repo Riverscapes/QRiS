@@ -12,6 +12,7 @@
         <file alias="detrend">../Images/detrend.png</file>
         <file alias="event">../Images/event.png</file>
         <file alias="expand">../Images/expand.png</file>
+        <file alias="export">../Images/export.png</file>
         <file alias="folder">../Images/folder.png</file>
         <file alias="gis">../Images/gis.png</file>
         <file alias="help">../Images/help.png</file>

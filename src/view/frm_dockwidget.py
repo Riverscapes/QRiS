@@ -51,6 +51,7 @@ from ..model.event_layer import EventLayer
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
 from .frm_event import FrmEvent
+from .frm_event_export import FrmEventExport
 from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
 from .frm_analysis_properties import FrmAnalysisProperties
@@ -261,6 +262,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     or isinstance(model_data, PourPoint) \
                     or isinstance(model_data, Analysis):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
+
+            if isinstance(model_data, Event):
+                self.add_context_menu_item(self.menu, 'Export to Riverscapes Project', 'export', lambda: self.export_event(model_item, model_data))
 
             if isinstance(model_data, Mask):
                 self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
@@ -609,6 +613,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
                 else:
                     self.add_child_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
+
+    def export_event(self, model_item: QtGui.QStandardItem, db_item: DBItem):
+
+        frm = FrmEventExport(self.iface, self, self.project, db_item, None, None)
+        frm.exec_()
 
     def geospatial_summary(self, model_item, model_data: Mask):
 

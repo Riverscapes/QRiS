@@ -27,15 +27,17 @@ CREATE TABLE methods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     machine_code TEXT UNIQUE NOT NULL,
+    rs_project_type_code TEXT,
+    rs_project_type_name TEXT,
     description TEXT,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO methods (id, name, machine_code) VALUES (1, 'Dam / Jam Survey', 'DAMJAMS');
-INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
-INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
-INSERT INTO methods (id, name, machine_code) VALUES (4, 'BRAT CIS', 'BRATCIS');
+INSERT INTO methods (id, name, machine_code, rs_project_type_code, rs_project_type_name) VALUES (1, 'Dam / Jam Survey', 'DAMJAMS', 'DamJamSurvey', 'Dam Jam Survey');
+INSERT INTO methods (id, name, machine_code, rs_project_type_code, rs_project_type_name) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT', NULL, NULL);
+INSERT INTO methods (id, name, machine_code, rs_project_type_code, rs_project_type_name) VALUES (3, 'Test Orphaned Method', 'WEIRDO', NULL, NULL);
+INSERT INTO methods (id, name, machine_code, rs_project_type_code, rs_project_type_name) VALUES (4, 'BRAT CIS', 'BRATCIS', NULL, NULL);
 
 CREATE TABLE protocol_methods (
     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
