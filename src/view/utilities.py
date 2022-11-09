@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ..QRiS.settings import CONSTANTS
@@ -58,3 +59,26 @@ def add_help_button(form: QtWidgets.QDialog, help_slug: str) -> QtWidgets.QHBoxL
     form.horiz.addWidget(form.cmdHelp)
 
     return form.horiz
+
+
+def safe_makedirs(dir_create_path):
+    """safely, recursively make a directory
+
+    Arguments:
+        dir_create_path {[type]} -- [description]
+    """
+
+    # Safety check on path lengths
+    if len(dir_create_path) < 5 or len(dir_create_path.split(os.path.sep)) <= 2:
+        raise Exception('Invalid path: {}'.format(dir_create_path))
+
+    if os.path.exists(dir_create_path) and os.path.isfile(dir_create_path):
+        raise Exception('Can\'t create directory if there is a file of the same name: {}'.format(dir_create_path))
+
+    if not os.path.exists(dir_create_path):
+        try:
+            os.makedirs(dir_create_path)
+        except Exception as e:
+            # Possible that something else made the folder while we were trying
+            if not os.path.exists(dir_create_path):
+                raise e

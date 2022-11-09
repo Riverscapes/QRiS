@@ -3,16 +3,16 @@ import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication
 
-from ..model.event import Event
 from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..model.event import Event
 from ..model.method import Method
+from ..model.basemap import BASEMAP_PARENT_FOLDER
 
 from .utilities import validate_name, add_standard_form_buttons
 
 from ..controller.event_export import EventExportTask
-
+from ..gp.copy_raster import CopyRaster
 
 LAST_EXPORT_FOLDER = 'LAST_EXPORT_FOLDER'
 
@@ -24,7 +24,7 @@ class FrmEventExport(QtWidgets.QDialog):
         self.setupUi()
 
         self.setWindowTitle('Export Data Capture Event to Riverscapes Project')
-
+        self.iface = iface
         self.project = project
         self.the_event = event
 
@@ -64,8 +64,19 @@ class FrmEventExport(QtWidgets.QDialog):
         try:
             method: Method = self.cboProjectType.currentData()
 
-            task = EventExportTask(self.project.project_file, self.the_event.id, self.txtPath.text(), method.rs_project_type_code)
+            # Build a list of asynchronous tasks to copy the raster basemaps
+            basemap_raster_paths = {}
+            basemap_copy_tasks = {}
+            for basemap in self.the_event.basemaps:
+                new_raster_path = os.path.join(os.path.dirname(self.txtPath.text()), BASEMAP_PARENT_FOLDER, os.path.basename(basemap.path))
+                basemap_copy_tasks[basemap.id] = CopyRaster(basemap.path, None, new_raster_path)
+                basemap_raster_paths[basemap.id] = new_raster_path
+
+            task = EventExportTask(self.iface, self.project.project_file, self.the_event.id, self.txtName.text(), self.txtPath.text(), method.id, basemap_raster_paths)
             task.on_complete.connect(self.on_export_complete)
+
+            # Add the raster copy subtasks
+            [task.addSubTask(raster_copy_task) for raster_copy_task in basemap_copy_tasks.values()]
 
             # Call the run command directly during development to run the process synchronousely.
             # DO NOT DEPLOY WITH run() UNCOMMENTED
@@ -90,6 +101,10 @@ class FrmEventExport(QtWidgets.QDialog):
 
         # TODO: open the project in QRAVE
         super().accept()
+
+    @QtCore.pyqtSlot(bool)
+    def on_complete(self, result: bool):
+        print('here')
 
     def on_browse_output_folder(self):
 
