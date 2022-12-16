@@ -61,8 +61,17 @@ class CopyFeatureClass(QgsTask):
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.driverName = 'GPKG'
             options.layerName = self.output_fc_name
-            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            # options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
+
+            # Logic to set the write/update mode depending on if data source and/or layers are present
+            if options.driverName == 'GPKG':
+                if os.path.exists(self.output_path):
+                    options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
+                    if source_layer.dataProvider().subLayerCount() > 0:
+                        options.EditionCapability = QgsVectorFileWriter.CanAddNewLayer
+                else:
+                    options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
+            else:  # likely shapefile. Need to test for other formats and modify if needed.
+                options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 
             error = QgsVectorFileWriter.writeAsVectorFormatV3(source_layer, self.output_path, context, options)
 
