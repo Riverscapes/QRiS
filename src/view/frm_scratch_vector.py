@@ -178,9 +178,9 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.txtSourcePath.setReadOnly(True)
         self.grid.addWidget(self.txtSourcePath, 1, 1, 1, 1)
 
-        self.lblRasterType = QtWidgets.QLabel()
-        self.lblRasterType.setText('Raster Type')
-        self.grid.addWidget(self.lblRasterType, 2, 0, 1, 1)
+        self.lblScratchLayerType = QtWidgets.QLabel()
+        self.lblScratchLayerType.setText('Scratch Layer Type')
+        self.grid.addWidget(self.lblScratchLayerType, 2, 0, 1, 1)
 
         self.cboVectorType = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboVectorType, 2, 1, 1, 1)
