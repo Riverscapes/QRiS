@@ -229,15 +229,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif model_data == BASEMAP_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_BASEMAP))
                 elif model_data == MASK_MACHINE_CODE:
+                    import_mask_menu = self.menu.addMenu('Import Existing')
+                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
+
                     add_mask_menu = self.menu.addMenu('Create New')
                     self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
                     self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_CREATE))
                     self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
 
-                    import_mask_menu = self.menu.addMenu('Import Existing')
-                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == SCRATCH_NODE_TAG:
