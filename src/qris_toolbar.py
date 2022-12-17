@@ -92,8 +92,8 @@ class QRiSToolbar:
         self.pluginIsActive = False
         self.dockwidget = None
 
-
     # noinspection PyMethodMayBeStatic
+
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -338,13 +338,11 @@ class QRiSToolbar:
         if qris_project_path is not None and len(qris_project_path) > 0 and os.path.exists(qris_project_path):
             self.open_qris_project(qris_project_path)
 
-     
     def project_homePathChanged(self):
         """Trigger an event before saving the project so we have an opportunity to corrent the paths
         """
         proj_path = self.get_project_path_settings()
         self.set_project_path_settings(proj_path)
-
 
     def set_project_path_settings(self, project_file: str):
         """Write the QRiS project filepath to the QgsProject file
@@ -427,7 +425,7 @@ class QRiSToolbar:
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         last_parent_folder = os.path.dirname(settings.value(LAST_PROJECT_FOLDER)) if settings.value(LAST_PROJECT_FOLDER) is not None else None
 
-        dialog_return = QtWidgets.QFileDialog.getExistingDirectory(self.dockwidget, 'Create New QRiS Project', last_parent_folder)
+        dialog_return = QtWidgets.QFileDialog.getExistingDirectory(self.dockwidget, 'Select QRiS Project Parent Folder', last_parent_folder)
         if len(dialog_return) > 0:
             self.save_folder = dialog_return
             self.frm_new_project = FrmNewProject(dialog_return, self.iface.mainWindow())
