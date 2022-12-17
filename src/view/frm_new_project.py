@@ -70,7 +70,7 @@ class FrmNewProject(QtWidgets.QDialog):
         clean_name = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
 
         if len(clean_name) > 0:
-            self.project_folder = os.path.join(self.root_path, clean_name, 'qris_project.gpkg')
+            self.project_folder = os.path.join(self.root_path, clean_name, f'{clean_name}.gpkg')
             self.txtPath.setText(self.project_folder)
 
     # def save_new_project(self):
