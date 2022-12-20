@@ -396,7 +396,7 @@ class QRiSToolbar:
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         last_project_folder = settings.value(LAST_PROJECT_FOLDER)
 
-        dialog_return = QtWidgets.QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (qris_project.gpkg)"))
+        dialog_return = QtWidgets.QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (*.gpkg)"))
         if dialog_return is not None and dialog_return[0] != '' and os.path.isfile(dialog_return[0]):
             self.open_qris_project(dialog_return[0])
 
@@ -429,19 +429,20 @@ class QRiSToolbar:
         if len(dialog_return) > 0:
             self.save_folder = dialog_return
             self.frm_new_project = FrmNewProject(dialog_return, self.iface.mainWindow())
+            self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
             result = self.frm_new_project.exec_()
-            if result == QtWidgets.QDialog.Accepted:
-                settings.setValue(LAST_PROJECT_FOLDER, self.frm_new_project.project_dir)
-                settings.sync()
 
-                db_path = self.frm_new_project.txtPath.text()
+    def on_new_project_complete(self, project_dir: str, db_path: str):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue(LAST_PROJECT_FOLDER, project_dir)
+        settings.sync()
 
-                # Apply database migrations to ensure latest schema
-                self.update_database(db_path)
+        # Apply database migrations to ensure latest schema
+        self.update_database(db_path)
 
-                self.toggle_widget(forceOn=True)
-                self.set_project_path_settings(db_path)
-                self.dockwidget.build_tree_view(db_path)
+        self.toggle_widget(forceOn=True)
+        self.set_project_path_settings(db_path)
+        self.dockwidget.build_tree_view(db_path)
 
     def activate_html_watershed_attributes(self):
 

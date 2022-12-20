@@ -7,6 +7,7 @@
 - Mask menu order
 - New project browser folder title
 - Custom project file name
+- Create new project as QTask, additional user feedback during new project creation
 
 ## 0.0.1
 

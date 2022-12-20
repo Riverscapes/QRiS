@@ -1,11 +1,15 @@
 import os
 import uuid
 import sqlite3
+
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsField, QgsVectorLayer, QgsVectorFileWriter
+# from qgis.PyQt.QtWidgets import QProgressBar
+from qgis.utils import iface
+from qgis.core import QgsApplication
 
 from ..model.project import Project
 from .utilities import validate_name, add_standard_form_buttons
+from ..gp.new_project import NewProjectTask
 
 # all spatial layers
 # feature class, layer name, geometry
@@ -45,6 +49,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
     closingPlugin = QtCore.pyqtSignal()
     dataChange = QtCore.pyqtSignal(Project)
+    newProjectComplete = QtCore.pyqtSignal(str, str)
 
     def __init__(self, root_project_folder: str, parent, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
@@ -103,32 +108,25 @@ class FrmNewProject(QtWidgets.QDialog):
                 return
 
             os.makedirs(self.project_dir)
-            # qris_project = QRiSProject(self.project_name)
-            # qris_project.project_path = self.project_folder
 
-            # Create the geopackage feature classes that will in turn cause the project geopackage to get created
-            for fc_name, layer_name, geometry_type in layers:
-                features_path = '{}|layername={}'.format(self.txtPath.text(), layer_name)
-                create_geopackage_table(geometry_type, fc_name, self.txtPath.text(), features_path, None)
+            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), layers)
+            new_project_task.project_complete.connect(self.on_complete)
+            new_project_task.project_create_layers.connect(self.on_creating_layers)
+            new_project_task.project_create_schema.connect(self.on_creating_schema)
 
-            # Run the schema DDL migrations to create lookup tables and relationships
-            conn = sqlite3.connect(self.txtPath.text())
-            conn.execute('PRAGMA foreign_keys = ON;')
-            curs = conn.cursor()
+            QgsApplication.taskManager().addTask(new_project_task)
+            super(FrmNewProject, self).accept()
 
-            schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
-            schema_file = open(schema_path, 'r')
-            sql_commands = schema_file.read()
-            curs.executescript(sql_commands)
+    def on_complete(self, result):
+        if result is True:
+            iface.mainWindow().statusBar().showMessage(None)
+            self.newProjectComplete.emit(self.project_dir, self.txtPath.text())
 
-            # Create the project
-            description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            curs.execute('INSERT INTO projects (name, description, map_guid) VALUES (?, ?, ?)', [self.txtName.text(), description, str(uuid.uuid4())])
-            conn.commit()
-            conn.close()
-            schema_file.close()
+    def on_creating_layers(self, layer_number, count_layers):
+        iface.mainWindow().statusBar().showMessage('New QRIS Project: creating layer {} of {} layers in project.'.format(layer_number, count_layers))
 
-        super(FrmNewProject, self).accept()
+    def on_creating_schema(self):
+        iface.mainWindow().statusBar().showMessage('New QRIS Project: applying project schema (this may take several moments...)')
 
     def setupUi(self):
 
@@ -166,31 +164,6 @@ class FrmNewProject(QtWidgets.QDialog):
         self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'projects'))
-
-
-def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
-    """
-        Creates tables in existing or new geopackages
-        geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
-        table_name (string): Name for the new table
-        geopackage_path (string): full path to the geopackage i.e., dir/package.gpkg
-        full_path (string): full path including the layer i.e., dir/package.gpkg|layername=layer
-        field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
-        """
-    memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
-    if field_tuple_list:
-        fields = []
-        for field_tuple in field_tuple_list:
-            field = QgsField(field_tuple[0], field_tuple[1])
-            fields.append(field)
-        memory_layer.dataProvider().addAttributes(fields)
-        memory_layer.updateFields()
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.layerName = table_name
-    options.driverName = 'GPKG'
-    if os.path.exists(geopackage_path):
-        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-    QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
 
 
 def format_layer_name(input_text):
