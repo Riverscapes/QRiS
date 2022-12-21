@@ -1,3 +1,5 @@
+import os
+
 from osgeo import ogr
 from osgeo import osr
 from shapely.wkb import loads as wkbload, dumps as wkbdumps
@@ -8,6 +10,8 @@ from qgis.core import QgsVectorLayer
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer, QgsWkbTypes
 
+from ..model.mask import REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
+
 
 def check_geometry_type(path) -> int:
 
@@ -16,7 +20,7 @@ def check_geometry_type(path) -> int:
     return layer.GetGeomType()
 
 
-def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict = {}) -> None:
+def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict = {}, mask_type=REGULAR_MASK_TYPE_ID, clip_mask_id: int = None) -> None:
     """
     Copy the features from a source feature class to a destination mask feature class.
     The mask record must already exist. The attributes is a dictionary of source column
@@ -25,7 +29,12 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
 
     ogr.UseExceptions()
 
-    src_path, src_layer_name = source_path.split('|layername=')
+    mask_layer_name = 'aoi_features' if mask_type.id == AOI_MASK_TYPE_ID else 'mask_features'
+    if os.path.splitext(source_path)[1].lower() == ".shp":
+        src_path = source_path
+        src_layer_name = None
+    else:
+        src_path, src_layer_name = source_path.split('|layername=')
     src_dataset = ogr.Open(src_path)
     src_layer = src_dataset.GetLayer(src_layer_name if src_layer_name is not None else 0)
     src_srs = src_layer.GetSpatialRef()
@@ -33,16 +42,26 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
 
     gpkg_driver = ogr.GetDriverByName('GPKG')
     dst_dataset = gpkg_driver.Open(dest_path, 1)
-    dst_layer = dst_dataset.GetLayerByName('mask_features')
+    dst_layer = dst_dataset.GetLayerByName(mask_layer_name)
     dst_srs = dst_layer.GetSpatialRef()
     dst_layer_def = dst_layer.GetLayerDefn()
+
+    clip_geom = None
+    if clip_mask_id is not None:
+        clip_layer = dst_dataset.GetLayer('aoi_features')
+        clip_layer.SetAttributeFilter(f'mask_id = {clip_mask_id}')
+        clip_feat = clip_layer.GetNextFeature()
+        clip_geom = clip_feat.GetGeometryRef()
 
     transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
     for src_feature in src_layer:
         geom = src_feature.GetGeometryRef()
         geom.Transform(transform)
-        # print(geom.ExportToJson())
+        if clip_geom is not None:
+            geom = clip_geom.Intersection(geom)
+            if geom.IsEmpty() or geom.GetArea() == 0.0:
+                raise Exception("Clipping mask has produced an empty geometry.")
 
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)

@@ -4,7 +4,7 @@ from qgis.core import QgsVectorLayer
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
-from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID
+from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_mask
 from .utilities import validate_name, add_standard_form_buttons
@@ -29,6 +29,10 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
 
+        show_mask_clip = import_source_path is not None and mask_type.id == REGULAR_MASK_TYPE_ID
+        self.lblMaskClip.setVisible(show_mask_clip)
+        self.cboMaskClip.setVisible(show_mask_clip)
+
         if import_source_path is not None:
             self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
             self.txtName.selectAll()
@@ -39,6 +43,15 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
                 # self.cboAttribute.setModelColumn(1)
+            if show_mask_clip:
+                # Masks (filtered to just AOI)
+                self.masks = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+                no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+                self.masks[0] = no_clipping
+                self.masks_model = DBItemModel(self.masks)
+                self.cboMaskClip.setModel(self.masks_model)
+                # Default to no mask clipping
+                self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
 
         if self.mask is not None:
             self.txtName.setText(mask.name)
@@ -78,9 +91,12 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
             if self.import_source_path is not None:
                 try:
-
+                    clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+                    clip_mask_id = None
+                    if clip_mask is not None:
+                        clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
                     attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    import_mask(self.import_source_path, self.qris_project.project_file, self.mask.id, attributes)
+                    import_mask(self.import_source_path, self.qris_project.project_file, self.mask.id, attributes, self.mask_type, clip_mask_id)
                 except Exception as ex:
                     try:
                         self.mask.delete(self.qris_project.project_file)
@@ -118,9 +134,16 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.cboAttribute = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
 
+        self.lblMaskClip = QtWidgets.QLabel()
+        self.lblMaskClip.setText('Clip to Mask')
+        self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
+
+        self.cboMaskClip = QtWidgets.QComboBox()
+        self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
+
         self.lblDescription = QtWidgets.QLabel()
         self.lblDescription.setText('Description')
-        self.grid.addWidget(self.lblDescription, 2, 0, 1, 1)
+        self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription)
@@ -128,6 +151,6 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setChecked(True)
         self.chkAddToMap.setText('Add to Map')
-        self.grid.addWidget(self.chkAddToMap, 3, 1, 1, 1)
+        self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'masks'))
