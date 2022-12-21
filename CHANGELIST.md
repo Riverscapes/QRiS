@@ -2,6 +2,7 @@
 
 ### Added
 - Most Recently Used (MRU) Project Menu
+- Add Google Satellite basemap on project load if ToC is empty
 
 ### Fixed
 - Copy feature class bug when output geopackage already exists
