@@ -5,6 +5,7 @@
 
 ### Fixed
 - Copy feature class bug when output geopackage already exists
+- vertical spacing in Data Capture Events form
 
 ### Changed
 - Mask menu order

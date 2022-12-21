@@ -424,6 +424,9 @@ class FrmEvent(QtWidgets.QDialog):
         self.cboPlatform = QtWidgets.QComboBox()
         self.tabGrid.addWidget(self.cboPlatform, 2, 1, 1, 1)
 
+        verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.tabGrid.addItem(verticalSpacer)
+
         # self.lblProtocols = QtWidgets.QLabel()
         # self.lblProtocols.setText('Protocols')
         # self.tabGrid.addWidget(self.lblProtocols, 3, 0, 1, 1)
