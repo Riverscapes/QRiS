@@ -25,7 +25,7 @@ import os.path
 import requests
 from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsRasterLayer, QgsMessageLog
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsRasterLayer, QgsMessageLog, QgsRectangle
 from qgis.gui import QgsMapToolEmitPoint
 
 # TODO fix this
@@ -429,7 +429,9 @@ class QRiSToolbar:
                 QgsProject.instance().addMapLayer(rlayer, False)
                 baselayer_group.addLayer(rlayer)
                 canvas = self.iface.mapCanvas()
-                extent = rlayer.extent()
+                canvas.refreshAllLayers()
+                canvas.refresh()
+                extent = QgsRectangle(-14746044, 1945739, -6403040, 7205585)  # CONUS
                 canvas.setExtent(extent)
                 canvas.refresh()
             else:
