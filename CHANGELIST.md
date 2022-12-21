@@ -1,5 +1,8 @@
 ## [Unreleased] 
 
+### Added
+- Most Recently Used (MRU) Project Menu
+
 ### Fixed
 - Copy feature class bug when output geopackage already exists
 

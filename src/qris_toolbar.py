@@ -48,6 +48,7 @@ from .gp.watershed_attributes import WatershedAttributes
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 LAST_PROJECT_FOLDER = 'last_project_folder'
+RECENT_PROJECT_LIST = 'recent_projects'
 
 
 class QRiSToolbar:
@@ -208,7 +209,9 @@ class QRiSToolbar:
         project_menu = self.add_toolbar_menu('Project')
         self.add_menu_action(project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
         self.add_menu_action(project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
+        self.mru_menu = project_menu.addMenu('Recent QRiS Projects')
         self.add_menu_action(project_menu, 'collapse', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
+        self.load_mru_projects()
 
         # --- HELP MENU --
         help_menu = self.add_toolbar_menu('Help')
@@ -412,6 +415,7 @@ class QRiSToolbar:
         self.toggle_widget(forceOn=True)
         self.set_project_path_settings(db_path)
         self.dockwidget.build_tree_view(db_path)
+        self.add_project_to_mru_list(db_path)
 
         # We set the project path in the project settings. This way it will be saved with the QgsProject file
         # if self.dockwidget is None or self.dockwidget.isHidden() is True:
@@ -419,6 +423,27 @@ class QRiSToolbar:
         #     project = QRiSProject()
         #     project.load_project_file(dialog_return[0])
         #     self.open_project(project)
+
+    def load_mru_projects(self):
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        mrus = settings.value(RECENT_PROJECT_LIST, [])
+        self.mru_menu.clear()
+        self.mru_actions = []
+        for mru in mrus:
+            if os.path.exists(mru):
+                self.add_menu_action(self.mru_menu, 'folder', mru, (lambda mru: lambda: self.open_qris_project(mru))(mru), True, '')
+
+    def add_project_to_mru_list(self, db_path):
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        mrus = settings.value(RECENT_PROJECT_LIST, [])
+        if db_path in mrus:
+            mrus.remove(db_path)
+        if os.path.exists(db_path):
+            mrus.insert(0, db_path)
+        settings.setValue(RECENT_PROJECT_LIST, mrus[:10])
+        self.load_mru_projects()
 
     def create_new_project_dialog(self):
 
@@ -443,6 +468,7 @@ class QRiSToolbar:
         self.toggle_widget(forceOn=True)
         self.set_project_path_settings(db_path)
         self.dockwidget.build_tree_view(db_path)
+        self.add_project_to_mru_list(db_path)
 
     def activate_html_watershed_attributes(self):
 
