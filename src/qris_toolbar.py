@@ -323,7 +323,7 @@ class QRiSToolbar:
                 settings = QtCore.QSettings(ORGANIZATION, APPNAME)
                 last_project_folder = settings.value(LAST_PROJECT_FOLDER)
                 if last_project_folder is not None and os.path.isdir(last_project_folder):
-                    project_file = os.path.join(last_project_folder, 'qris_project.gpkg')
+                    project_file = os.path.join(last_project_folder, f'{os.path.basename(last_project_folder)}.gpkg')
                     if os.path.isfile(project_file):
                         self.open_qris_project(project_file)
 
