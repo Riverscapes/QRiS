@@ -29,11 +29,12 @@ class Project(DBItem):
             conn.row_factory = dict_factory
             curs = conn.cursor()
 
-            curs.execute('SELECT id, name, description FROM projects LIMIT 1')
+            curs.execute('SELECT id, name, description, map_guid FROM projects LIMIT 1')
             project_row = curs.fetchone()
             self.name = project_row['name']
             self.id = project_row['id']
             self.description = project_row['description']
+            self.map_guid = project_row['map_guid']
 
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in [
                 'lkp_mask_types',

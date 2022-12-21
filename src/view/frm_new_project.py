@@ -1,4 +1,5 @@
 import os
+import uuid
 import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsField, QgsVectorLayer, QgsVectorFileWriter
@@ -122,7 +123,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
             # Create the project
             description = self.txtDescription.toPlainText() if len(self.txtDescription.toPlainText()) > 0 else None
-            curs.execute('INSERT INTO projects (name, description) VALUES (?, ?)', [self.txtName.text(), description])
+            curs.execute('INSERT INTO projects (name, description, map_guid) VALUES (?, ?, ?)', [self.txtName.text(), description, uuid.uuid4()])
             conn.commit()
             conn.close()
             schema_file.close()

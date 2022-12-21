@@ -210,6 +210,7 @@ CREATE TABLE context_layers (
 
 CREATE TABLE projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    map_guid TEXT UNIQUE NOT NULL,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     metadata TEXT,

@@ -2,6 +2,10 @@ import os
 import sqlite3
 import json
 
+from qgis.PyQt.QtGui import QStandardItem, QColor
+from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.PyQt.QtXml import QDomDocument
+
 from ..QRiS.settings import CONSTANTS
 
 from ..model.db_item import DBItem
@@ -55,7 +59,7 @@ class RiverscapesMapManager():
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
         return f'{self.product_key}::{project_key}::{db_item.id}'
 
-    def __get_group_custom_property(self, project_key: str, machine_code: str) -> str:
+    def __get_machine_code_custom_property(self, project_key: str, machine_code: str) -> str:
         return f'{self.product_key}::{project_key}::{machine_code}'
 
     def get_db_item_layer(self, project_key: str, db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeNode:
@@ -78,6 +82,25 @@ class RiverscapesMapManager():
 
         return None
 
+    # method to get a layer based on its machine code custom property
+    def get_machine_code_layer(self, project_key: str, machine_code: str, layer: QgsLayerTreeNode) -> QgsLayerTreeNode:
+
+        if layer is None:
+            layer = QgsProject.instance().layerTreeRoot()
+
+        target_custom_property = self.__get_machine_code_custom_property(project_key, machine_code)
+        layer_custom_property = layer.customProperty(self.product_key)
+        if isinstance(layer_custom_property, str) and layer_custom_property == target_custom_property:
+            return layer
+
+        if isinstance(layer, QgsLayerTreeGroup):
+            for child in layer.children():
+                result = self.get_machine_code_layer(project_key, machine_code, child)
+                if isinstance(result, QgsLayerTreeNode):
+                    return result
+
+        return None
+
     def get_group_layer(self, project_key: str, machine_code, group_label, parent: QgsLayerTreeGroup, add_missing=False) -> QgsLayerTreeGroup:
         """
         Finds a group layer directly underneath "parent" with the specified
@@ -87,7 +110,7 @@ class RiverscapesMapManager():
         When add_missing is True, the group will be created if it can't be found.
         """
 
-        target_custom_property = self.__get_group_custom_property(project_key, machine_code)
+        target_custom_property = self.__get_machine_code_custom_property(project_key, machine_code)
 
         for child_layer in parent.children():
             custom_property = child_layer.customProperty(self.product_key)
@@ -132,7 +155,7 @@ class RiverscapesMapManager():
             parent_group.removeChildNode(layer)
             self.remove_empty_groups(parent_group)
 
-    def create_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, db_item: DBItem, id_field: str, symbology_key: str) -> QgsVectorLayer:
+    def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified DBItem and adds it to the map.
         args:
@@ -145,8 +168,7 @@ class RiverscapesMapManager():
             return layer
 
         # Create a layer from the table
-        path = project.project_file + '|layername=' + 'mask_features'
-        layer = QgsVectorLayer(path, db_item.name, 'ogr')
+        layer = QgsVectorLayer(fc_path, db_item.name, 'ogr')
         QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
@@ -163,8 +185,35 @@ class RiverscapesMapManager():
         layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue(f'@{id_field}'))
 
         # Finally add the new layer here
+        QgsProject.instance().addMapLayer(layer, False)
         tree_layer_node = parent_group.addLayer(layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, db_item))
+
+        return layer
+
+    def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: str) -> QgsVectorLayer:
+        """
+        Creates a new feature layer for the specified machine code and adds it to the map.
+        args:
+            project_key: The project key
+                db_item: The DBItem to create a layer for
+                symbology: The symbology to apply to the layer. File name only. No folder or extension."""
+
+        layer = self.get_machine_code_layer(project_key, machine_code, None)
+        if layer is not None:
+            return layer
+
+        # Create a layer from the table
+        layer = QgsVectorLayer(fc_path, display_label, 'ogr')
+        QgsProject.instance().addMapLayer(layer, False)
+
+        # Apply symbology
+        qml = os.path.join(self.symbology_folder, 'symbology', f'{symbology_key}.qml')
+        layer.loadNamedStyle(qml)
+
+        # Finally add the new layer here
+        tree_layer_node = parent_group.addLayer(layer)
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
 
         return layer
 
@@ -208,6 +257,7 @@ class RiverscapesMapManager():
         aliases the field as Length (m)
         sets the widget type to text
         sets default value to the dimension expression"""
+
         field_name = 'vrt_' + dimension
         field_alias = dimension.capitalize() + ' (m)'
         field_expression = 'round(${}, 0)'.format(dimension)
@@ -222,6 +272,7 @@ class RiverscapesMapManager():
 
     def set_created_datetime(self, feature_layer: QgsVectorLayer) -> None:
         """Will set a date time created field to a default value of now() and also set it to read only"""
+
         fields = feature_layer.fields()
         field_index = fields.indexFromName('created')
         feature_layer.setFieldAlias(field_index, 'Created')
@@ -229,3 +280,14 @@ class RiverscapesMapManager():
         form_config = feature_layer.editFormConfig()
         form_config.setReadOnly(field_index, True)
         feature_layer.setEditFormConfig(form_config)
+
+    def set_label(self, feature_layer: QgsVectorLayer, label_field: str) -> None:
+        """Sets the label field for the layer
+        Labeling learned here:
+        https://gis.stackexchange.com/questions/273266/reading-and-setting-label-settings-in-pyqgis/273268#273268
+        """
+        layer_settings = QgsPalLayerSettings()
+        layer_settings.fieldName = label_field
+        layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
+        feature_layer.setLabelsEnabled(True)
+        feature_layer.setLabeling(layer_settings)
