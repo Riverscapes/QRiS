@@ -27,6 +27,7 @@ class Event(DBItem):
                  date_text: str,
                  event_type: DBItem,
                  platform: DBItem,
+                 representation: DBItem,
                  event_layers: List[EventLayer],
                  basemaps: List[Raster],
                  metadata: dict):
@@ -38,13 +39,14 @@ class Event(DBItem):
         self.date_text = date_text
         self.event_type = event_type
         self.platform = platform
+        self.representation = representation
         self.event_layers = event_layers
         self.basemaps = basemaps.copy() if basemaps else []
         self.metadata = metadata
 
         self.icon = 'design' if self.event_type.id == DESIGN_EVENT_TYPE_ID else 'event'
 
-    def update(self, db_path: str, name: str, description: str, layers: List[Layer], basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, metadata: dict) -> None:
+    def update(self, db_path: str, name: str, description: str, layers: List[Layer], basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, representation: DBItem, metadata: dict) -> None:
 
         sql_description = description if description is not None and len(description) > 0 else None
         sql_metadata = json.dumps(metadata) if metadata is not None else None
@@ -59,6 +61,7 @@ class Event(DBItem):
                     name = ?,
                     description = ?,
                     platform_id = ?,
+                    representation_id = ?,
                     start_year = ?,
                     start_month = ?,
                     start_day = ?,
@@ -67,7 +70,7 @@ class Event(DBItem):
                     end_day = ?,
                     metadata = ?
                 WHERE id = ?""",
-                             [name, sql_description, platform.id, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
+                             [name, sql_description, platform.id, representation.id, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
 
                 update_intersect_table(curs, 'event_basemaps', 'event_id', 'basemap_id', self.id, [item.id for item in basemaps])
 
@@ -78,6 +81,7 @@ class Event(DBItem):
                 self.start = start_date
                 self.end = end_date
                 self.platform = platform
+                self.representation = representation
                 self.metadata = metadata
                 conn.commit()
 
@@ -107,6 +111,7 @@ def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, loo
         row['date_text'],
         lookups['lkp_event_types'][row['event_type_id']],
         lookups['lkp_platform'][row['platform_id']],
+        lookups['lkp_representation'][row['representation_id']],
         [event_layer for event_layer in event_layers if event_layer.event_id == row['id']],
         [basemap for event_id, basemap in event_basemaps if event_id == row['id']],
         json.loads(row['metadata']) if row['metadata'] else None
@@ -121,6 +126,7 @@ def insert(db_path: str,
            date_text: str,
            event_type: DBItem,
            platform: DBItem,
+           representation: DBItem,
            layers: List[Layer],
            basemaps: list,
            metadata: dict) -> Event:
@@ -140,6 +146,7 @@ def insert(db_path: str,
                 description,
                 event_type_id,
                 platform_id,
+                representation_id,
                 metadata,
                 date_text,
                 start_year,
@@ -148,11 +155,12 @@ def insert(db_path: str,
                 end_year,
                 end_month,
                 end_day
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", [
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", [
                 name,
                 description,
                 event_type.id,
                 platform.id,
+                representation.id,
                 json.dumps(metadata) if metadata else None,
                 date_text if date_text else None,
                 start.year,
@@ -171,7 +179,7 @@ def insert(db_path: str,
                 curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?)', [event_id, layer.id])
                 event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
 
-            event = Event(event_id, name, description, start, end, date_text, event_type, platform, event_layers, basemaps, metadata)
+            event = Event(event_id, name, description, start, end, date_text, event_type, platform, representation, event_layers, basemaps, metadata)
             conn.commit()
 
         except Exception as ex:

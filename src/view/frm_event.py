@@ -52,15 +52,23 @@ class FrmEvent(QtWidgets.QDialog):
         self.vwBasemaps.setModelColumn(1)
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
+        self.representation_model = DBItemModel(qris_project.lookup_tables['lkp_representation'])
+        self.representation_model._data.sort(key=lambda a: a[0])
         self.cboPlatform.setModel(self.platform_model)
+        self.cboRepresentation.setModel(self.representation_model)
+
+        self.optSingleDate.toggled.connect(self.on_opt_date_change)
 
         if event is not None:
             self.txtName.setText(event.name)
             self.txtDescription.setPlainText(event.description)
             self.cboPlatform.setCurrentIndex(event.platform.id - 1)
+            self.cboRepresentation.setCurrentIndex(event.representation.id - 1)
 
             self.uc_start.set_date_spec(event.start)
             self.uc_end.set_date_spec(event.end)
+            if any(date is not None for date in [event.end.day, event.end.year, event.end.month]):
+                self.optDateRange.setChecked(True)
 
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
@@ -251,6 +259,16 @@ class FrmEvent(QtWidgets.QDialog):
         for index in self.layer_list.selectedIndexes():
             self.layers_model.removeRow(index.row())
 
+    def on_opt_date_change(self):
+        if self.optSingleDate.isChecked():
+            self.lblEndDate.setVisible(False)
+            self.uc_end.setVisible(False)
+            self.lblStartDate.setText('Date')
+        else:
+            self.lblEndDate.setVisible(True)
+            self.uc_end.setVisible(True)
+            self.lblStartDate.setText('Start Date')
+
     def accept(self):
         start_date_valid, start_date_error_msg = self.uc_start.validate()
         if not start_date_valid:
@@ -305,7 +323,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.metadata)
+                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.cboRepresentation.currentData(QtCore.Qt.UserRole), self.metadata)
                 super().accept()
             else:
                 self.the_event = insert_event(
@@ -317,6 +335,7 @@ class FrmEvent(QtWidgets.QDialog):
                     '',
                     self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
                     self.cboPlatform.currentData(QtCore.Qt.UserRole),
+                    self.cboRepresentation.currentData(QtCore.Qt.UserRole),
                     layers_in_use,
                     basemaps,
                     self.metadata
@@ -412,26 +431,41 @@ class FrmEvent(QtWidgets.QDialog):
         self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
         self.tab.addTab(self.tabGridWidget, 'Basic Properties')
 
+        self.optSingleDate = QtWidgets.QRadioButton('Single Point in Time')
+        self.optSingleDate.setChecked(True)
+        self.tabGrid.addWidget(self.optSingleDate, 0, 0, 1, 1)
+
+        self.optDateRange = QtWidgets.QRadioButton('Date Range')
+        self.tabGrid.addWidget(self.optDateRange, 1, 0, 1, 1)
+
         self.lblStartDate = QtWidgets.QLabel()
-        self.lblStartDate.setText('Start Date')
-        self.tabGrid.addWidget(self.lblStartDate, 0, 0, 1, 1)
+        self.lblStartDate.setText('Date')
+        self.tabGrid.addWidget(self.lblStartDate, 2, 0, 1, 1)
 
         self.uc_start = FrmDatePicker(self)
-        self.tabGrid.addWidget(self.uc_start, 0, 1, 1, 1)
+        self.tabGrid.addWidget(self.uc_start, 2, 1, 1, 1)
 
         self.lblEndDate = QtWidgets.QLabel()
         self.lblEndDate.setText('End Date')
-        self.tabGrid.addWidget(self.lblEndDate, 1, 0, 1, 1)
+        self.lblEndDate.setVisible(False)
+        self.tabGrid.addWidget(self.lblEndDate, 3, 0, 1, 1)
 
         self.uc_end = FrmDatePicker(self)
-        self.tabGrid.addWidget(self.uc_end, 1, 1, 1, 1)
+        self.uc_end.setVisible(False)
+        self.tabGrid.addWidget(self.uc_end, 3, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel()
         self.lblPlatform.setText('Event completed at')
-        self.tabGrid.addWidget(self.lblPlatform, 2, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblPlatform, 4, 0, 1, 1)
 
         self.cboPlatform = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboPlatform, 2, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboPlatform, 4, 1, 1, 1)
+
+        self.lblRepresentation = QtWidgets.QLabel("Representation")
+        self.tabGrid.addWidget(self.lblRepresentation, 5, 0, 1, 1)
+
+        self.cboRepresentation = QtWidgets.QComboBox()
+        self.tabGrid.addWidget(self.cboRepresentation, 5, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)

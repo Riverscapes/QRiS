@@ -123,6 +123,8 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (129, 'lkp_brat_vegetation_cis', 'BRAT Vegetation CIS', 'NoGeometry', 1, 'none.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
 
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (131, 'lkp_representation', 'Representation', 'NoGeometry', 1, 'temp.qml', NULL);
+
 CREATE TABLE method_layers (
     method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
     layer_id INTEGER NOT NULL REFERENCES layers(id) ON DELETE CASCADE,
@@ -234,6 +236,7 @@ CREATE TABLE events (
     description TEXT,
     event_type_id INT REFERENCES lkp_event_types(id),
     platform_id INTEGER REFERENCES lkp_platform(id),
+    representation_id INTEGER REFERENCES lkp_representation(id),
     metadata TEXT,
     date_text TEXT,
     start_year INT,
@@ -254,6 +257,17 @@ CREATE TABLE lkp_platform (
 
 INSERT INTO lkp_platform (id, name) VALUES (1, 'Desktop');
 INSERT INTO lkp_platform (id, name) VALUES (2, 'Field');
+
+CREATE TABLE lkp_representation (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_representation (id, name) VALUES (1, 'Current');
+INSERT INTO lkp_representation (id, name) VALUES (2, 'Historic');
+INSERT INTO lkp_representation (id, name) VALUES (3, 'Future');
 
 CREATE TABLE event_layers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1104,24 +1118,35 @@ CREATE INDEX fx_stream_gage_discharges ON stream_gage_discharges(stream_gage_id)
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('analyses', 'attributes', 'analyses', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('analysis_metrics', 'attributes', 'analysis_metrics', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocols', 'attributes', 'protocols', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocol_methods', 'attributes', 'protocol_methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('methods', 'attributes', 'methods', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('method_layers', 'attributes', 'method_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('layers', 'attributes', 'layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('context_layers', 'attributes', 'context_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocol_layers', 'attributes', 'protocol_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('projects', 'attributes', 'projects', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('events', 'attributes', 'events', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_layers', 'attributes', 'event_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('basemaps', 'attributes', 'basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_basemaps', 'attributes', 'event_basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metrics', 'attributes', 'metrics', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metric_levels', 'attributes', 'metric_levels', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metric_values', 'attributes', 'metric_values', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('scratch_vectors', 'attributes', 'scratch_vectors', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('stream_gage_discharges', 'attributes', 'stream_gage_discharges', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('rasters', 'attributes', 'rasters', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('migrations', 'attributes', 'migrations', 0);
 
 -- LOOKUP TABLES
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_metric_sources', 'attributes', 'lkp_metric_sources', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_platform', 'attributes', 'lkp_platform', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_representation', 'attributes', 'lkp_representation', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_mask_types', 'attributes', 'lkp_mask_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_source', 'attributes', 'lkp_structure_source', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_dam_integrity', 'attributes', 'lkp_dam_integrity', 0);

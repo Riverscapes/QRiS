@@ -42,7 +42,8 @@ class Project(DBItem):
                 'lkp_event_types',
                 'lkp_design_status',
                 'lkp_raster_types',
-                'lkp_scratch_vector_types'
+                'lkp_scratch_vector_types',
+                'lkp_representation'
             ]}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
