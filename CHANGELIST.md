@@ -4,6 +4,7 @@
 - Most Recently Used (MRU) Project Menu
 - Add Google Satellite basemap on project load if ToC is empty
 - user can clip regular mask by aoi when importing existing regular mask
+- double click layer adds method to Data Capture Event
 
 ### Fixed
 - Copy feature class bug when output geopackage already exists

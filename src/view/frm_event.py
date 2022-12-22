@@ -5,6 +5,7 @@ from ..model.event import Event, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
+from ..model.layer import Layer
 
 from .frm_date_picker import FrmDatePicker
 
@@ -117,6 +118,7 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.layer_tree.setModel(self.tree_model)
         self.layer_tree.expandAll()
+        self.layer_tree.doubleClicked.connect(self.on_double_click_tree)
 
     # def load_alphabetical_tree(self):
 
@@ -209,6 +211,13 @@ class FrmEvent(QtWidgets.QDialog):
     #         child = item.child(i)
     #         child.setCheckState(itemCheckState)
     #         self.check_children(child)
+
+    def on_double_click_tree(self, index):
+
+        item = self.layer_tree.model().itemFromIndex(index)
+        layer = item.data(QtCore.Qt.UserRole)
+        if isinstance(layer, Layer):
+            self.add_selected_layers(item)
 
     def on_add_layer_clicked(self):
 
