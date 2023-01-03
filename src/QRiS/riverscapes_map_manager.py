@@ -54,7 +54,7 @@ class RiverscapesMapManager():
     def __init__(self, product_key) -> None:
         super().__init__()
         self.product_key = product_key
-        self.symbology_folder = os.path.join(CONSTANTS['symbology_path'], 'symbology')
+        self.symbology_folder = os.path.join(os.path.dirname(__file__), CONSTANTS['symbologyDir'])
 
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
         return f'{self.product_key}::{project_key}::{db_item.id}'

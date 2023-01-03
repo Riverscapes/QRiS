@@ -67,6 +67,7 @@ from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
 from ..QRiS.method_to_map import build_event_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer, build_stream_gage_layer
+from ..QRiS.qris_map_manager import QRisMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
@@ -110,6 +111,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.settings = Settings()
 
         self.qris_project = None
+        self.map_manager = None
         self.menu = QtWidgets.QMenu()
 
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -133,6 +135,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         Builds the project tree from scratch for the first time
         """
         self.project = Project(project_file)
+        self.map_manager = QRisMapManager(self.project)
 
         self.model = QtGui.QStandardItemModel()
         self.treeView.setModel(self.model)
@@ -291,7 +294,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_db_item_to_map(self, tree_node: QtGui.QStandardItem, db_item: DBItem):
 
         if isinstance(db_item, Mask):
-            build_mask_layer(self.project, db_item)
+            # build_mask_layer(self.project, db_item)
+            self.map_manager.build_mask_layer(db_item)
         elif isinstance(db_item, Raster):
             build_basemap_layer(self.project, db_item)
         elif isinstance(db_item, Event):
