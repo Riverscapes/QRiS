@@ -55,6 +55,10 @@ class QRisMapManager(RiverscapesMapManager):
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         group_layer = self.get_group_layer(self.project.map_guid, MASK_MACHINE_CODE, 'Masks', project_group, True)
 
+        existing_layer = self.get_db_item_layer(self.project.map_guid, mask, group_layer)
+        if existing_layer is not None:
+            return existing_layer
+
         fc_path = self.project.project_file + '|layername=' + 'mask_features'
         feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, mask, 'mask_id', 'mask')
 

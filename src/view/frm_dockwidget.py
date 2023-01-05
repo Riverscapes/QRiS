@@ -65,8 +65,8 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
-from ..QRiS.method_to_map import build_basemap_layer, remove_db_item_layer, check_for_existing_layer, build_scratch_vector
-from ..QRiS.method_to_map import build_event_single_layer, build_basemap_layer, build_mask_layer, build_pour_point_map_layer, build_stream_gage_layer
+from ..QRiS.method_to_map import build_basemap_layer, build_scratch_vector
+from ..QRiS.method_to_map import build_event_single_layer, build_basemap_layer, build_pour_point_map_layer, build_stream_gage_layer
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
@@ -313,7 +313,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             event = event_node.data(QtCore.Qt.UserRole)
             build_event_single_layer(self.project, event, db_item)
         elif isinstance(db_item, Project):
-            [build_mask_layer(mask) for mask in self.project.masks.values()]
+            [self.map_manager.build_mask_layer(mask) for mask in self.project.masks.values()]
             [build_basemap_layer(db_item, basemap) for basemap in self.project.basemaps().values()]
             [[build_event_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
@@ -446,7 +446,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             target_node.setText(data_item.name)
 
             # Check if the item is in the map and update its name if it is
-            check_for_existing_layer(self.project, data_item, add_to_map)
+            _layer = self.map_manager.get_db_item_layer(self.project.map_guid, data_item, None)
 
         return target_node
 
@@ -630,7 +630,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         # Remove the layer from the map first
-        remove_db_item_layer(self.project, db_item)
+        self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
 
         # Remove the item from the project tree
         model_item.parent().removeRow(model_item.row())

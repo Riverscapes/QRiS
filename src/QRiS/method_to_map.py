@@ -335,41 +335,41 @@ def build_stream_gage_layer(project: Project) -> QgsMapLayer:
     return feature_layer
 
 
-def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
+# def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:
 
-    if check_for_existing_layer(project, mask) is not None:
-        return
+#     if check_for_existing_layer(project, mask) is not None:
+#         return
 
-    # Create a layer from the table
-    mask_feature_path = project.project_file + '|layername=' + 'mask_features'
-    mask_feature_layer = QgsVectorLayer(mask_feature_path, mask.name, 'ogr')
-    QgsProject.instance().addMapLayer(mask_feature_layer, False)
+#     # Create a layer from the table
+#     mask_feature_path = project.project_file + '|layername=' + 'mask_features'
+#     mask_feature_layer = QgsVectorLayer(mask_feature_path, mask.name, 'ogr')
+#     QgsProject.instance().addMapLayer(mask_feature_layer, False)
 
-    # hit it with qml
-    qml = os.path.join(symbology_path, 'symbology', 'masks.qml')
-    mask_feature_layer.loadNamedStyle(qml)
-    # set the substring
-    mask_feature_layer.setSubsetString('mask_id = ' + str(mask.id))
-    # Set a parent assessment variable
-    QgsExpressionContextUtils.setLayerVariable(mask_feature_layer, 'mask_id', mask.id)
-    # Set the default value from the variable
-    mask_field_index = mask_feature_layer.fields().indexFromName('mask_id')
-    mask_feature_layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue("@mask_id"))
-    # setup fields
-    set_hidden(mask_feature_layer, 'fid', 'Mask Feature ID')
-    set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
-    set_alias(mask_feature_layer, 'position', 'Position')
-    set_multiline(mask_feature_layer, 'description', 'Description')
-    set_hidden(mask_feature_layer, 'metadata', 'Metadata')
-    set_virtual_dimension(mask_feature_layer, 'area')
+#     # hit it with qml
+#     qml = os.path.join(symbology_path, 'symbology', 'masks.qml')
+#     mask_feature_layer.loadNamedStyle(qml)
+#     # set the substring
+#     mask_feature_layer.setSubsetString('mask_id = ' + str(mask.id))
+#     # Set a parent assessment variable
+#     QgsExpressionContextUtils.setLayerVariable(mask_feature_layer, 'mask_id', mask.id)
+#     # Set the default value from the variable
+#     mask_field_index = mask_feature_layer.fields().indexFromName('mask_id')
+#     mask_feature_layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue("@mask_id"))
+#     # setup fields
+#     set_hidden(mask_feature_layer, 'fid', 'Mask Feature ID')
+#     set_hidden(mask_feature_layer, 'mask_id', 'Mask ID')
+#     set_alias(mask_feature_layer, 'position', 'Position')
+#     set_multiline(mask_feature_layer, 'description', 'Description')
+#     set_hidden(mask_feature_layer, 'metadata', 'Metadata')
+#     set_virtual_dimension(mask_feature_layer, 'area')
 
-    # Finally add the new layer here
-    project_group = get_project_group(project, True)
-    group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
-    tree_layer_node = group_layer.addLayer(mask_feature_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask.map_guid)
+#     # Finally add the new layer here
+#     project_group = get_project_group(project, True)
+#     group_layer = get_group_layer(MASK_MACHINE_CODE, 'Masks', project_group, True)
+#     tree_layer_node = group_layer.addLayer(mask_feature_layer)
+#     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, mask.map_guid)
 
-    return mask_feature_layer
+#     return mask_feature_layer
 
 
 def build_scratch_vector(project: Project, vector: ScratchVector):

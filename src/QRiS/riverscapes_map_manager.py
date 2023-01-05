@@ -57,7 +57,7 @@ class RiverscapesMapManager():
         self.symbology_folder = os.path.join(os.path.dirname(__file__), CONSTANTS['symbologyDir'])
 
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
-        return f'{self.product_key}::{project_key}::{db_item.id}'
+        return f'{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}'
 
     def __get_machine_code_custom_property(self, project_key: str, machine_code: str) -> str:
         return f'{self.product_key}::{project_key}::{machine_code}'
@@ -101,7 +101,7 @@ class RiverscapesMapManager():
 
         return None
 
-    def get_group_layer(self, project_key: str, machine_code, group_label, parent: QgsLayerTreeGroup, add_missing=False) -> QgsLayerTreeGroup:
+    def get_group_layer(self, project_key: str, machine_code, group_label, parent: QgsLayerTreeGroup = None, add_missing: bool = False) -> QgsLayerTreeGroup:
         """
         Finds a group layer directly underneath "parent" with the specified
         machine code as the custom property. No string matching with group
@@ -110,11 +110,14 @@ class RiverscapesMapManager():
         When add_missing is True, the group will be created if it can't be found.
         """
 
+        if parent is None:
+            parent = QgsProject.instance().layerTreeRoot()
+
         target_custom_property = self.__get_machine_code_custom_property(project_key, machine_code)
 
         for child_layer in parent.children():
             custom_property = child_layer.customProperty(self.product_key)
-            if isinstance(custom_property, str) and machine_code == target_custom_property:
+            if isinstance(custom_property, str) and custom_property == target_custom_property:
                 return child_layer
 
         if add_missing:
