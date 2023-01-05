@@ -220,6 +220,18 @@ class RiverscapesMapManager():
 
         return layer
 
+    def create_db_item_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, symbology_key: str = None):
+
+        raster_layer = QgsRasterLayer(raster_path, raster.name)
+        QgsProject.instance().addMapLayer(raster_layer, False)
+        if symbology_key is not None:
+            qml = os.path.join(self.symbology_folder, 'symbology', f'{symbology_key}.qml')
+            raster_layer.loadNamedStyle(qml)
+        tree_layer_node = parent_group.addLayer(raster_layer)
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, raster))
+
+        return raster_layer
+
     def set_multiline(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)

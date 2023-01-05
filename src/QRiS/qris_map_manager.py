@@ -1,3 +1,5 @@
+import os
+
 from .riverscapes_map_manager import RiverscapesMapManager
 
 from ..model.project import Project, PROJECT_MACHINE_CODE
@@ -5,6 +7,7 @@ from ..model.mask import Mask, MASK_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
+from ..model.basemap import Raster, BASEMAP_MACHINE_CODE
 
 from qgis.core import (
     QgsField,
@@ -132,3 +135,17 @@ class QRisMapManager(RiverscapesMapManager):
     #     pour_point_group_layer.addLayer(catchment_feature_layer)
 
     #     return point_feature_layer, catchment_feature_layer
+
+    def build_basemap_layer(self, basemap: Raster) -> QgsMapLayer:
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        group_layer = self.get_group_layer(self.project.map_guid, BASEMAP_MACHINE_CODE, 'Basemaps', project_group, True)
+
+        existing_layer = self.get_db_item_layer(self.project.map_guid, basemap, None)  # TODO search entire toc or just project??
+        if existing_layer is not None:
+            return existing_layer
+
+        raster_path = os.path.join(os.path.dirname(self.project.project_file), basemap.path)
+        raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, basemap)
+
+        return raster_layer

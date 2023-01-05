@@ -420,21 +420,21 @@ def build_pour_point_map_layer(project: Project, pour_point: PourPoint):
     return point_feature_layer, catchment_feature_layer
 
 
-def build_basemap_layer(project: Project, basemap: Raster) -> QgsMapLayer:
+# def build_basemap_layer(project: Project, basemap: Raster) -> QgsMapLayer:
 
-    if check_for_existing_layer(project, basemap) is not None:
-        return
+#     if check_for_existing_layer(project, basemap) is not None:
+#         return
 
-    raster_path = os.path.join(os.path.dirname(project.project_file), basemap.path)
-    raster_layer = QgsRasterLayer(raster_path, basemap.name)
-    QgsProject.instance().addMapLayer(raster_layer, False)
-    # TODO: raster symbology?
-    # Finally add the new layer here
-    project_group = get_project_group(project, True)
-    group_layer = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', project_group, True)
-    tree_layer_node = group_layer.addLayer(raster_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap.map_guid)
-    return raster_layer
+#     raster_path = os.path.join(os.path.dirname(project.project_file), basemap.path)
+#     raster_layer = QgsRasterLayer(raster_path, basemap.name)
+#     QgsProject.instance().addMapLayer(raster_layer, False)
+#     # TODO: raster symbology?
+#     # Finally add the new layer here
+#     project_group = get_project_group(project, True)
+#     group_layer = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', project_group, True)
+#     tree_layer_node = group_layer.addLayer(raster_layer)
+#     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, basemap.map_guid)
+#     return raster_layer
 
 
 def build_raster_slider_layer(project: Project, raster: Raster) -> QgsMapLayer:
