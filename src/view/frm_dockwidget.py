@@ -24,11 +24,11 @@
 
 import os
 from osgeo import ogr
-from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes, QgsProject
+from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QVariant, QDate
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
@@ -74,6 +74,9 @@ from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.metrics_task import MetricsTask
 
+ORGANIZATION = 'Riverscapes'
+APPNAME = 'QRiS'
+LAST_PROJECT_FOLDER = 'last_project_folder'
 SCRATCH_NODE_TAG = 'SCRATCH'
 
 # Name of the icon PNG file used for group folders in the QRiS project tree
@@ -280,6 +283,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
                 self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
 
+            if isinstance(model_data, EventLayer):
+                if model_data.name == 'BRAT CIS (Capacity Inference System)':
+                    self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
+
             else:
                 self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
@@ -377,6 +384,65 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
         self.stream_gage_doc_widget.show()
+
+    def export_brat_cis(self, event_layer: EventLayer):
+
+        # TODO find a better place for this whole mess!
+        class BratCISFieldValueConverter(QgsVectorFileWriter.FieldValueConverter):
+
+            def __init__(self, layer):
+                QgsVectorFileWriter.FieldValueConverter.__init__(self)
+                self.layer = layer
+
+            def fieldDefinition(self, field):
+                """Sets up field definitions for output fields. Use existing if not a special case"""
+                idx = self.layer.fields().indexFromName(field.name())
+                editorWidget = self.layer.editorWidgetSetup(idx)
+                if editorWidget.type() == 'ValueMap':
+                    return QgsField(field.displayName(), QVariant.String)
+                elif field.name() == 'observation_date':
+                    return QgsField(field.displayName(), QVariant.String)
+                else:
+                    return self.layer.fields()[idx]
+
+            def convert(self, idx, value):
+                """modify the output value here"""
+                editorWidget = self.layer.editorWidgetSetup(idx)
+                if editorWidget.type() == 'ValueMap':
+                    valueMap = editorWidget.config()['map']
+                    dictValueMapWithKeyValueSwapped = {v: k for d in valueMap for k, v in d.items()}
+                    return dictValueMapWithKeyValueSwapped.get(value)
+                elif isinstance(value, QDate):
+                    return value.toString('yyyy-MM-dd')
+                else:
+                    return value
+
+        # Select output csv file
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        last_project_folder = settings.value(LAST_PROJECT_FOLDER)  # TODO where is the export folder?
+        out_csv = QtWidgets.QFileDialog.getSaveFileName(self, "Open Existing QRiS Project", last_project_folder, self.tr("Comma Separated Values(*.csv)"))[0]
+
+        # TODO delete file if already exists, or handle with vector file writer options...
+
+        if out_csv != "":  # TODO better file name validation here
+            cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.fc_name}')
+            add_brat_cis(self.project, cis_layer)  # This sets up the required aliases, and lookup values
+            cis_layer.setSubsetString('event_id = ' + str(event_layer.event_id))  # filter to the capture event
+            options = QgsVectorFileWriter.SaveVectorOptions()
+            # Filter and order the fields. This does not affect the X, Y columns, which are prepended and cannot be renamed by the VectorFileWriter
+            # fields = ['fid', 'streamside_veg_id', 'observer_name', 'reach_id', 'observation_date', 'reach_length', 'notes']
+            # options.attributes = list(cis_layer.fields().indexFromName(name) for name in fields)
+            options.driverName = 'CSV'
+            options.layerOptions = ["STRING_QUOTING=IF_NEEDED", "GEOMETRY=AS_XY"]
+            options.fieldNameSource = QgsVectorFileWriter.FieldNameSource.PreferAlias
+            converter = BratCISFieldValueConverter(cis_layer)
+            options.fieldValueConverter = converter
+            context = QgsCoordinateTransformContext()
+            result = QgsVectorFileWriter.writeAsVectorFormatV3(cis_layer, out_csv, context, options)
+
+            # TODO error checking and message logging here
+
+            # TODO any cleanup of lat/long header names and field order?
 
     def raster_slider(self, db_item: DBItem):
 
