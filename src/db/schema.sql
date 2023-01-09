@@ -1126,12 +1126,12 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('m
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('method_layers', 'attributes', 'method_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('layers', 'attributes', 'layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('context_layers', 'attributes', 'context_layers', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocol_layers', 'attributes', 'protocol_layers', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('protocol_layers', 'attributes', 'protocol_layers', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('projects', 'attributes', 'projects', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('events', 'attributes', 'events', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_layers', 'attributes', 'event_layers', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('basemaps', 'attributes', 'basemaps', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('basemaps', 'attributes', 'basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_basemaps', 'attributes', 'event_basemaps', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
