@@ -65,7 +65,7 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
-from ..QRiS.method_to_map import build_scratch_vector
+from ..QRiS.method_to_map import build_scratch_vector, add_brat_cis
 from ..QRiS.method_to_map import build_event_single_layer, build_pour_point_map_layer, build_stream_gage_layer
 from ..QRiS.qris_map_manager import QRisMapManager
 
