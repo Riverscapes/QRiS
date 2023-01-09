@@ -109,7 +109,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
             os.makedirs(self.project_dir)
 
-            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), layers)
+            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), str(uuid.uuid4()), layers)
             new_project_task.project_complete.connect(self.on_complete)
             new_project_task.project_create_layers.connect(self.on_creating_layers)
             new_project_task.project_create_schema.connect(self.on_creating_schema)
