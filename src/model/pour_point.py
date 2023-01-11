@@ -5,7 +5,7 @@ from osgeo import ogr
 from .db_item import DBItem
 
 POUR_POINTS_MACHINE_CODE = 'Pour Points'
-CONTEXT_NODE_TAG = 'CONTEXT'
+CATCHMENTS_MACHINE_CODE = 'CATCHMENTS'
 
 
 class PourPoint(DBItem):

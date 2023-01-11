@@ -33,24 +33,19 @@ from PyQt5.QtCore import pyqtSlot, QVariant, QDate
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project
-from ..model.event import DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
-from ..model.event import EVENT_MACHINE_CODE, Event
-from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, RASTER_TYPE_BASEMAP, Raster
-from ..model.mask import MASK_MACHINE_CODE
+from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
+from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
-from ..model.event import EVENT_MACHINE_CODE, Event
-from ..model.basemap import BASEMAP_MACHINE_CODE, Raster
-from ..model.mask import MASK_MACHINE_CODE, Mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID
+from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
 from ..model.protocol import Protocol
 from ..model.method import Method
-from ..model.pour_point import PourPoint, CONTEXT_NODE_TAG
+from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
 from ..model.event_layer import EventLayer
 
 from .frm_design2 import FrmDesign
-from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID
-from .frm_event import FrmEvent
+from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
 from .frm_analysis_properties import FrmAnalysisProperties
@@ -77,7 +72,8 @@ from ..gp.metrics_task import MetricsTask
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 LAST_PROJECT_FOLDER = 'last_project_folder'
-SCRATCH_NODE_TAG = 'SCRATCH'
+CONTEXT_NODE_TAG = 'CONTEXT'
+INPUTS_NODE_TAG = 'INPUTS'
 
 # Name of the icon PNG file used for group folders in the QRiS project tree
 # /Images/folder.png
@@ -85,13 +81,16 @@ FOLDER_ICON = 'folder'
 
 # These are the labels used for displaying the group nodes in the QRiS project tree
 GROUP_FOLDER_LABELS = {
+    INPUTS_NODE_TAG: 'Inputs',
+    SURFACE_MACHINE_CODE: 'Surfaces',
+    AOI_MACHINE_CODE: 'AOIs',
+    MASK_MACHINE_CODE: 'Sampling Frames',
     EVENT_MACHINE_CODE: 'Data Capture Events',
     BASEMAP_MACHINE_CODE: 'Basemaps',
-    MASK_MACHINE_CODE: 'Masks',
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
     ANALYSIS_MACHINE_CODE: 'Analyses',
+    CATCHMENTS_MACHINE_CODE: 'Watershed Catchments',
     CONTEXT_NODE_TAG: 'Context',
-    SCRATCH_NODE_TAG: 'Scratch',
     STREAM_GAGE_MACHINE_CODE: 'Stream Gages'
 }
 
@@ -147,27 +146,36 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # set the project root
         project_node = self.add_child_to_project_tree(rootNode, self.project)
+        inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+
+        surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
+        [self.add_child_to_project_tree(surfaces_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_SURFACE]
+
+        aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
+        [self.add_child_to_project_tree(aoi_node, item) for item in self.project.masks.values() if item.mask_type.id == AOI_MASK_TYPE_ID]
+
+        sampling_frames_node = self.add_child_to_project_tree(inputs_node, MASK_MACHINE_CODE)
+        [self.add_child_to_project_tree(sampling_frames_node, item) for item in self.project.masks.values() if item.mask_type.id != AOI_MASK_TYPE_ID]
+
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
         [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
 
-        basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
-        [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps().values()]
+        context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
+        [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_rasters().values()]
+        [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_vectors.values()]
 
-        masks_node = self.add_child_to_project_tree(project_node, MASK_MACHINE_CODE)
-        [self.add_child_to_project_tree(masks_node, item) for item in self.project.masks.values()]
-
-        context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
-        [self.add_child_to_project_tree(context_node, item) for item in self.project.pour_points.values()]
-
-        gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
+        # TODO fix stream gauges, then turn back on
+        # gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
         # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
+
+        catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
+        [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        scratch_node = self.add_child_to_project_tree(project_node, SCRATCH_NODE_TAG)
-        [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_rasters().values()]
-        [self.add_child_to_project_tree(scratch_node, item) for item in self.project.scratch_vectors.values()]
+        basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
+        [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps().values()]
 
         self.treeView.expandAll()
         return
@@ -229,25 +237,31 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'new', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
                     self.menu.addMenu(ltpbr_menu)
 
+                elif model_data == SURFACE_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_SURFACE))
+
                 elif model_data == BASEMAP_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_BASEMAP))
+
+                elif model_data == AOI_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(self.menu, 'Create New AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
+
                 elif model_data == MASK_MACHINE_CODE:
                     import_mask_menu = self.menu.addMenu('Import Existing')
-                    self.add_context_menu_item(import_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
 
                     add_mask_menu = self.menu.addMenu('Create New')
-                    self.add_context_menu_item(add_mask_menu, 'Area of Interest', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
                     self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_CREATE))
                     self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
 
-                elif model_data == CONTEXT_NODE_TAG:
+                elif model_data == CATCHMENTS_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
-                elif model_data == SCRATCH_NODE_TAG:
+                elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
-                    self.add_context_menu_item(self.menu, 'Import Existing Scratch Raster', 'new', lambda: self.add_basemap(model_item, -1))
-                    self.add_context_menu_item(self.menu, 'Import Existing Scratch Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
+                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_basemap(model_item, -1))
+                    self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
 
@@ -625,7 +639,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             rootNode = self.model.invisibleRootItem()
             project_node = self.add_child_to_project_tree(rootNode, self.project)
-            context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
+            context_node = self.add_child_to_project_tree(project_node, CATCHMENTS_MACHINE_CODE)
             self.add_child_to_project_tree(context_node, pour_point, add_to_map)
 
         else:

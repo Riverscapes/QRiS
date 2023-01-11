@@ -48,7 +48,7 @@ from qgis.PyQt.QtXml import QDomDocument
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 
 from ..model.pour_point import PourPoint
-from ..model.pour_point import CONTEXT_NODE_TAG
+from ..model.pour_point import CATCHMENTS_MACHINE_CODE
 
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
@@ -395,7 +395,7 @@ def build_pour_point_map_layer(project: Project, pour_point: PourPoint):
         return
 
     project_group = get_project_group(project)
-    context_group_layer = get_group_layer(CONTEXT_NODE_TAG, 'Context', project_group, True)
+    context_group_layer = get_group_layer(CATCHMENTS_MACHINE_CODE, 'Context', project_group, True)
     pour_point_group_layer = get_group_layer(pour_point, pour_point.name, context_group_layer, True)
 
     # Create a layer from the pour point

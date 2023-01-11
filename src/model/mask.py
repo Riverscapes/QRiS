@@ -2,6 +2,7 @@ import sqlite3
 from .db_item import DBItem
 
 MASK_MACHINE_CODE = 'Mask'
+AOI_MACHINE_CODE = 'AOI'
 
 AOI_MASK_TYPE_ID = 1
 REGULAR_MASK_TYPE_ID = 2
