@@ -52,7 +52,7 @@ from ..model.pour_point import CATCHMENTS_MACHINE_CODE
 
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.mask import MASK_MACHINE_CODE, Mask
-from ..model.basemap import BASEMAP_MACHINE_CODE, Raster, RASTER_SLIDER_MACHINE_CODE
+from ..model.raster import BASEMAP_MACHINE_CODE, Raster, RASTER_SLIDER_MACHINE_CODE
 from ..model.db_item import DBItem, load_lookup_table
 from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.project import Project, PROJECT_MACHINE_CODE

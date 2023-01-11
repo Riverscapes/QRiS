@@ -34,7 +34,7 @@ from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
-from ..model.basemap import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, Raster
+from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHNINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
@@ -319,7 +319,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # build_mask_layer(self.project, db_item)
             self.map_manager.build_mask_layer(db_item)
         elif isinstance(db_item, Raster):
-            self.map_manager.build_basemap_layer(db_item)
+            raster_machine_code = SURFACE_MACHINE_CODE if db_item.raster_type_id == RASTER_TYPE_SURFACE else CONTEXT_MACHNINE_CODE
+            self.map_manager.build_raster_layer(db_item, raster_machine_code)
         elif isinstance(db_item, Event):
             [build_event_single_layer(self.project, db_item, layer) for layer in db_item.event_layers]
         elif isinstance(db_item, Protocol):
@@ -336,7 +337,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             build_event_single_layer(self.project, event, db_item)
         elif isinstance(db_item, Project):
             [self.map_manager.build_mask_layer(mask) for mask in self.project.masks.values()]
-            [self.map_manager.build_basemap_layer(basemap) for basemap in self.project.basemaps().values()]
+            [self.map_manager.build_raster_layer(basemap) for basemap in self.project.basemaps().values()]
             [[build_event_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             build_pour_point_map_layer(self.project, db_item)

@@ -9,7 +9,7 @@ from qgis.PyQt.QtXml import QDomDocument
 from ..QRiS.settings import CONSTANTS
 
 from ..model.db_item import DBItem
-from ..model.basemap import BASEMAP_MACHINE_CODE
+from ..model.raster import BASEMAP_MACHINE_CODE
 
 from qgis.core import (
     QgsField,

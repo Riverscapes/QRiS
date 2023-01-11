@@ -7,7 +7,7 @@ from .db_item import DBItem, dict_factory, update_intersect_table
 from .datespec import DateSpec
 from .layer import Layer
 from .event_layer import EventLayer
-from .basemap import Raster
+from .raster import Raster
 EVENT_MACHINE_CODE = 'Event'
 
 # Database ID of the design event type. Used to determine which icon to use

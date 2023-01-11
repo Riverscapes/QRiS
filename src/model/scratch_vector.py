@@ -3,7 +3,7 @@ import sqlite3
 from .db_item import DBItem
 from osgeo import ogr
 
-from .basemap import SCRATCH_PARENT_FOLDER
+from .raster import SCRATCH_PARENT_FOLDER
 
 from qgis.core import QgsMessageLog, Qgis
 

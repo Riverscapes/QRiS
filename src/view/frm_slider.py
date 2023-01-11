@@ -3,7 +3,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.scratch_vector import ScratchVector
 
-from ..model.basemap import Raster
+from ..model.raster import Raster
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector

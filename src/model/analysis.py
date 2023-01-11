@@ -1,7 +1,7 @@
 from email.mime import base
 import sqlite3
 from .db_item import DBItem
-from .basemap import Raster
+from .raster import Raster
 from .mask import Mask
 from .analysis_metric import AnalysisMetric, store_analysis_metrics
 

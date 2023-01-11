@@ -6,7 +6,7 @@ from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
-from .basemap import Raster, load_rasters, RASTER_TYPE_BASEMAP
+from .raster import Raster, load_rasters, RASTER_TYPE_BASEMAP
 from .event import Event, load as load_events
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
