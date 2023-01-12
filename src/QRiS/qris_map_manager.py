@@ -100,7 +100,7 @@ class QRisMapManager(RiverscapesMapManager):
     def build_scratch_vector(self, vector: ScratchVector):
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(SCRATCH_VECTOR_MACHINE_CODE, 'Scratch Vectors', project_group, True)
+        group_layer = self.get_group_layer(self.project.map_guid, SCRATCH_VECTOR_MACHINE_CODE, 'Context', project_group, True)
         fc_path: str = vector.gpkg_path + '|layername=' + vector.fc_name
         layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, vector, 'vector_id', 'vector')
 

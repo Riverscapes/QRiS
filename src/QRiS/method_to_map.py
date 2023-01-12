@@ -372,21 +372,21 @@ def build_stream_gage_layer(project: Project) -> QgsMapLayer:
 #     return mask_feature_layer
 
 
-def build_scratch_vector(project: Project, vector: ScratchVector):
+# def build_scratch_vector(project: Project, vector: ScratchVector):
 
-    if check_for_existing_layer(project, vector) is not None:
-        return
+#     if check_for_existing_layer(project, vector) is not None:
+#         return
 
-    project_group = get_project_group(project)
-    group_layer = get_group_layer(SCRATCH_VECTOR_MACHINE_CODE, 'Scratch Vectors', project_group, True)
-    feature_path = vector.gpkg_path + '|layername=' + vector.fc_name
-    feature_layer = QgsVectorLayer(feature_path, vector.name, 'ogr')
+#     project_group = get_project_group(project)
+#     group_layer = get_group_layer(SCRATCH_VECTOR_MACHINE_CODE, 'Scratch Vectors', project_group, True)
+#     feature_path = vector.gpkg_path + '|layername=' + vector.fc_name
+#     feature_layer = QgsVectorLayer(feature_path, vector.name, 'ogr')
 
-    QgsProject.instance().addMapLayer(feature_layer, False)
-    tree_layer_node = group_layer.addLayer(feature_layer)
-    tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, vector.map_guid)
+#     QgsProject.instance().addMapLayer(feature_layer, False)
+#     tree_layer_node = group_layer.addLayer(feature_layer)
+#     tree_layer_node.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, vector.map_guid)
 
-    return feature_layer
+#     return feature_layer
 
 
 def build_pour_point_map_layer(project: Project, pour_point: PourPoint):

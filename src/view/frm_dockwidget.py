@@ -60,7 +60,7 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
-from ..QRiS.method_to_map import build_scratch_vector, add_brat_cis
+from ..QRiS.method_to_map import add_brat_cis
 from ..QRiS.method_to_map import build_event_single_layer, build_pour_point_map_layer, build_stream_gage_layer
 from ..QRiS.qris_map_manager import QRisMapManager
 
@@ -342,7 +342,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, PourPoint):
             build_pour_point_map_layer(self.project, db_item)
         elif isinstance(db_item, ScratchVector):
-            build_scratch_vector(self.project, db_item)
+            self.map_manager.build_scratch_vector(db_item)
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
         """Add all children of a group node to the map ToC
