@@ -1,4 +1,5 @@
 import os
+import json
 
 from .riverscapes_map_manager import RiverscapesMapManager
 
@@ -7,7 +8,9 @@ from ..model.mask import Mask, MASK_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
-from ..model.raster import Raster, BASEMAP_MACHINE_CODE, RASTER_TYPE_SURFACE
+from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_TYPE_SURFACE
+from ..model.event import EVENT_MACHINE_CODE, Event
+from ..model.event_layer import EventLayer
 
 from qgis.core import (
     QgsField,
@@ -75,10 +78,10 @@ class QRisMapManager(RiverscapesMapManager):
 
         return feature_layer
 
-    def get_stream_gage_layer(self) -> QgsMapLayer:
-        """Returns the stream gage layer if it exists. Otherwise returns None"""
+    # def get_stream_gage_layer(self) -> QgsMapLayer:
+    #     """Returns the stream gage layer if it exists. Otherwise returns None"""
 
-        return self.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+    #     return self.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
 
     def build_stream_gage_layer(self, project: Project) -> QgsMapLayer:
 
@@ -136,8 +139,9 @@ class QRisMapManager(RiverscapesMapManager):
 
     #     return point_feature_layer, catchment_feature_layer
 
-    def build_raster_layer(self, raster: Raster, raster_machine_code) -> QgsMapLayer:
+    def build_raster_layer(self, raster: Raster) -> QgsMapLayer:
 
+        raster_machine_code = SURFACE_MACHINE_CODE if raster.raster_type_id == RASTER_TYPE_SURFACE else CONTEXT_MACHINE_CODE
         group_layer_name = 'Surfaces' if raster.raster_type_id == RASTER_TYPE_SURFACE else 'Context'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
@@ -151,3 +155,238 @@ class QRisMapManager(RiverscapesMapManager):
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster)
 
         return raster_layer
+
+    def build_event_single_layer(self, event: Event, event_layer: EventLayer) -> None:
+        """
+        Add a single layer for an event
+        """
+        # if lookup table then forget about it
+        if event_layer.layer.is_lookup:
+            return
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        events_group_layer = self.get_group_layer(self.project.map_guid, EVENT_MACHINE_CODE + "_ROOT", 'Data Capture Events', project_group, True)
+        event_group_layer = self.get_group_layer(self.project.map_guid, EVENT_MACHINE_CODE + "_" + str(event.id), event.name, events_group_layer, True)
+
+        existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, event_group_layer)
+        if existing_layer is not None:
+            return
+
+        fc_path = self.project.project_file + '|layername=' + event_layer.layer.fc_name
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, event_group_layer, fc_path, event_layer, 'event_id', event_layer.layer.qml)
+
+        # send to layer specific field handlers
+        layer_name = event_layer.layer.fc_name
+        if layer_name == 'dam_crests':
+            self.configure_dam_crests(feature_layer)
+        elif layer_name == 'thalwegs':
+            self.configure_thalwegs(feature_layer)
+        elif layer_name == 'inundation_extents':
+            self.configure_inundation_extents(feature_layer)
+        elif layer_name == 'dams':
+            self.configure_dams(feature_layer)
+        elif layer_name == 'jams':
+            self.configure_jams(feature_layer)
+        elif layer_name == 'channel_unit_points':
+            self.configure_channel_unit_points(feature_layer)
+        elif layer_name == 'channel_unit_polygons':
+            self.configure_channel_unit_polygons(feature_layer)
+        elif layer_name == 'active_extents':
+            self.configure_active_extents(feature_layer)
+        elif layer_name == 'zoi':
+            self.configure_zoi(feature_layer)
+        elif layer_name == 'structure_points':
+            self.configure_structure_points(feature_layer)
+        elif layer_name == 'structure_lines':
+            self.configure_structure_lines(feature_layer)
+        elif layer_name == 'complexes':
+            self.configure_complexes(feature_layer)
+        elif layer_name == 'brat_cis':
+            self.add_brat_cis(feature_layer)
+        else:
+            # TODO: Should probably have a notification for layers not found....
+            pass
+
+    def add_brat_cis(self, feature_layer: QgsVectorLayer) -> None:
+        # first read and set the lookup tables
+        self.set_table_as_layer_variable(feature_layer, self.project.project_file, "lkp_brat_vegetation_cis")
+        self.set_table_as_layer_variable(feature_layer, self.project.project_file, "lkp_brat_combined_cis")
+
+        # attribute form containers: https://gis.stackexchange.com/questions/310287/qgis-editform-layout-settings-in-python
+        editFormConfig = feature_layer.editFormConfig()
+        editFormConfig.setLayout(1)
+        rootContainer = editFormConfig.invisibleRootContainer()
+        rootContainer.clear()
+
+        # FID and Event ID will not show up on the form since we cleared them from the root container, but need to set alias for attribute table.
+        self.set_hidden(feature_layer, 'fid', 'Brat Cis ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+
+        # Info Group Box
+        info_container = QgsAttributeEditorContainer('BRAT Observation Event', rootContainer)
+        self.set_alias(feature_layer, 'reach_id', 'Reach ID', info_container, 0)
+        self.set_alias(feature_layer, 'observation_date', 'Observation Date', info_container, 1)
+        self.set_alias(feature_layer, 'reach_length', 'Reach Length (m)', info_container, 2)
+        self.set_alias(feature_layer, 'notes', 'Notes', info_container, 3)
+        self.set_alias(feature_layer, 'observer_name', 'Observer Name', info_container, 4)
+        editFormConfig.addTab(info_container)
+
+        # Vegetation Evidence Group Box
+        veg_container = QgsAttributeEditorContainer('Vegetation Evidence CIS', rootContainer)
+        self.set_value_map(feature_layer, 'streamside_veg_id', self.project.project_file, 'lkp_brat_vegetation_types', 'Streamside Vegetation', parent_container=veg_container, display_index=0)
+        self.set_value_map(feature_layer, 'riparian_veg_id', self.project.project_file, 'lkp_brat_vegetation_types', 'Riparian Vegetation', parent_container=veg_container, display_index=1)
+        veg_expression = 'get_veg_dam_density(streamside_veg_id, riparian_veg_id, @lkp_brat_vegetation_cis)'
+        self.set_value_map(feature_layer, 'veg_density_id', self.project.project_file, 'lkp_brat_dam_density', 'Vegetation Dam Density', expression=veg_expression, parent_container=veg_container, display_index=2)
+        editFormConfig.addTab(veg_container)
+
+        # Combined Evidence Group Box
+        comb_container = QgsAttributeEditorContainer('Combined Evidence CIS', rootContainer)
+        self.set_value_map(feature_layer, 'base_streampower_id', self.project.project_file, 'lkp_brat_base_streampower', 'Base Streampower', parent_container=comb_container, display_index=0)
+        self.set_value_map(feature_layer, 'high_streampower_id', self.project.project_file, 'lkp_brat_high_streampower', 'High Streampower', parent_container=comb_container, display_index=1)
+        self.set_value_map(feature_layer, 'slope_id', self.project.project_file, 'lkp_brat_slope', 'Slope', parent_container=comb_container, display_index=2)
+        comb_expression = 'get_comb_dam_density(veg_density_id, base_streampower_id, high_streampower_id, slope_id,  @lkp_brat_combined_cis)'
+        self.set_value_map(feature_layer, 'combined_density_id', self.project.project_file, 'lkp_brat_dam_density', 'Combined Dam Density', expression=comb_expression, parent_container=comb_container, display_index=3)
+        editFormConfig.addTab(comb_container)
+
+        # Add Help Button to Form
+        self.add_help_action(feature_layer, 'brat_cis', rootContainer)
+
+        feature_layer.setEditFormConfig(editFormConfig)
+
+    def configure_dam_crests(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Dam Crests ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'structure_source_id', self.project.project_file, 'lkp_structure_source', 'Structure Source')
+        self.set_value_map(feature_layer, 'dam_integrity_id', self.project.project_file, 'lkp_dam_integrity', 'Dam Integrity')
+        self.set_value_map(feature_layer, 'beaver_maintenance_id', self.project.project_file, 'lkp_beaver_maintenance', 'Beaver Maintenance')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_virtual_dimension(feature_layer, 'length')
+
+    def configure_dams(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Dam ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'structure_source_id', self.project.project_file, 'lkp_structure_source', 'Structure Source')
+        self.set_value_map(feature_layer, 'dam_integrity_id', self.project.project_file, 'lkp_dam_integrity', 'Dam Integrity')
+        self.set_value_map(feature_layer, 'beaver_maintenance_id', self.project.project_file, 'lkp_beaver_maintenance', 'Beaver Maintenance')
+        self.set_alias(feature_layer, 'length', 'Dam Length')
+        self.set_alias(feature_layer, 'height', 'Dam Height')
+
+    def configure_jams(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Jam ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'structure_source_id', self.project.project_file, 'lkp_structure_source', 'Structure Source')
+        self.set_value_map(feature_layer, 'beaver_maintenance_id', self.project.project_file, 'lkp_beaver_maintenance', 'Beaver Maintenance')
+        self.set_alias(feature_layer, 'wood_count', 'Wood Count')
+        self.set_alias(feature_layer, 'length', 'Jam Length')
+        self.set_alias(feature_layer, 'width', 'Jam Width')
+        self.set_alias(feature_layer, 'height', 'Jam Height')
+        self.set_multiline(feature_layer, 'description', 'Description')
+
+    def configure_inundation_extents(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Extent ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'type_id', self.project.project_file, 'lkp_inundation_extent_types', 'Extent Type')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_virtual_dimension(feature_layer, 'area')
+
+    def configure_thalwegs(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Thalweg ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'type_id', self.project.project_file, 'lkp_thalweg_types', 'Thalweg Type')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_virtual_dimension(feature_layer, 'length')
+
+    def configure_channel_unit_points(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_hidden(feature_layer, 'fid', 'Channel Unit ID')
+        self.set_value_map(feature_layer, 'unit_type_id', self.project.project_file, 'lkp_channel_unit_types', 'Unit Type')
+        self.set_value_map(feature_layer, 'structure_forced_id', self.project.project_file, 'lkp_structure_forced', 'Structure Forced')
+        self.set_value_map(feature_layer, 'primary_channel_id', self.project.project_file, 'lkp_primary_channel', 'Primary Channel')
+        self.set_value_map(feature_layer, 'primary_unit_id', self.project.project_file, 'lkp_primary_unit', 'Primary Unit')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_alias(feature_layer, 'length', 'Length')
+        self.set_alias(feature_layer, 'width', 'Width')
+        self.set_alias(feature_layer, 'depth', 'Depth')
+        self.set_alias(feature_layer, 'percent_wetted', 'Percent Wetted')
+        self.set_multiline(feature_layer, 'description', 'Description')
+
+    def configure_channel_unit_polygons(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_hidden(feature_layer, 'fid', 'Channel Unit ID')
+        self.set_value_map(feature_layer, 'unit_type_id', self.project.project_file, 'lkp_channel_unit_types', 'Unit Type')
+        self.set_value_map(feature_layer, 'structure_forced_id', self.project.project_file, 'lkp_structure_forced', 'Structure Forced')
+        self.set_value_map(feature_layer, 'primary_channel_id', self.project.project_file, 'lkp_primary_channel', 'Primary Channel')
+        self.set_value_map(feature_layer, 'primary_unit_id', self.project.project_file, 'lkp_primary_unit', 'Primary Unit')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_alias(feature_layer, 'percent_wetted', 'Percent Wetted')
+        self.set_multiline(feature_layer, 'description', 'Description')
+
+    def configure_active_extents(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Extent ID')
+        # We may consider adding a value map for the event ID,
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'type_id', self.project.project_file, 'lkp_active_extent_types', 'Extent Type')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_virtual_dimension(feature_layer, 'area')
+
+    def configure_zoi(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'ZOI ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'type_id', self.project.project_file, 'zoi_types', 'ZOI Type')
+        self.set_value_map(feature_layer, 'stage_id', self.project.project_file, 'lkp_zoi_stage', 'ZOI Stage')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_field_constraint_not_null(feature_layer, 'type_id', 1)
+        self.set_field_constraint_not_null(feature_layer, 'stage_id', 1)
+        self.set_virtual_dimension(feature_layer, 'area')
+        self.set_created_datetime(feature_layer)
+
+    def configure_structure_points(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Structure ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'structure_type_id', self.project.project_file, 'structure_types', 'Structure Type')
+        self.set_alias(feature_layer, 'name', 'Structure Name')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_alias(feature_layer, 'created', 'Created')
+        self.set_field_constraint_not_null(feature_layer, 'structure_type_id', 1)
+        self.set_created_datetime(feature_layer)
+
+    def configure_structure_lines(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Structure ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_value_map(feature_layer, 'structure_type_id', self.project.project_file, 'structure_types', 'Structure Type')
+        self.set_alias(feature_layer, 'name', 'Structure Name')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_virtual_dimension(feature_layer, 'length')
+        self.set_alias(feature_layer, 'created', 'Created')
+        self.set_field_constraint_not_null(feature_layer, 'structure_type_id', 1)
+        self.set_created_datetime(feature_layer)
+
+    def configure_complexes(self, feature_layer: QgsVectorLayer) -> None:
+        self.set_hidden(feature_layer, 'fid', 'Structure ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.set_alias(feature_layer, 'name', 'Complex Name')
+        self.set_multiline(feature_layer, 'initial_condition', 'Initial Conditions')
+        self.set_multiline(feature_layer, 'target_condition', 'Target Condition')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_virtual_dimension(feature_layer, 'area')
+        self.set_created_datetime(feature_layer)
+
+# QGSfunctions for field expressions
+
+
+@qgsfunction(args='auto', group='QRIS', referenced_columns=[])
+def get_veg_dam_density(stream_veg, riparian_veg, rules_string, feature, parent):
+    rules = json.loads(rules_string)
+    for rule in rules:
+        if stream_veg == rule[1] and riparian_veg == rule[2]:
+            return rule[3]
+    return 1
+
+
+@qgsfunction(args='auto', group='QRIS', referenced_columns=[])
+def get_comb_dam_density(veg_density, base_power, high_power, slope, cis_rules, feature, parent):
+    combined_rules = json.loads(cis_rules)
+    for rule in combined_rules:
+        if veg_density == rule[1] and base_power == rule[2] and high_power == rule[3] and slope == rule[4]:
+            return rule[5]
+    return 1  # Default output is None if not in rules table

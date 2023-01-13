@@ -184,8 +184,8 @@ class RiverscapesMapManager():
         # Set a parent assessment variable
         QgsExpressionContextUtils.setLayerVariable(layer, id_field, db_item.id)
         # Set the default value from the variable
-        mask_field_index = layer.fields().indexFromName(id_field)
-        layer.setDefaultValueDefinition(mask_field_index, QgsDefaultValue(f'@{id_field}'))
+        field_index = layer.fields().indexFromName(id_field)
+        layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
 
         # Finally add the new layer here
         QgsProject.instance().addMapLayer(layer, False)
@@ -232,6 +232,7 @@ class RiverscapesMapManager():
 
         return raster_layer
 
+    # Set Fields
     def set_multiline(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
@@ -263,6 +264,68 @@ class RiverscapesMapManager():
             editor_field = QgsAttributeEditorField(field_name, display_index, parent_container)
             parent_container.addChildElement(editor_field)
             feature_layer.setEditFormConfig(form_config)
+
+    def set_table_as_layer_variable(self, feature_layer: QgsVectorLayer, database: str, table: str):
+        conn = sqlite3.connect(database)
+        curs = conn.cursor()
+        curs.execute("SELECT * FROM {};".format(table))
+        lookup_collection = curs.fetchall()
+        conn.commit()
+        conn.close()
+        QgsExpressionContextUtils.setLayerVariable(feature_layer, table, json.dumps(lookup_collection))
+
+    def set_value_map(self, feature_layer: QgsVectorLayer, field_name: str, database: str, lookup_table_name: str, field_alias: str, parent_container=None, display_index=None, expression=None) -> None:
+
+        desc_position = 1
+        value_position = 0
+        reuse_last = True
+        """Will set a Value Map widget drop down list from the lookup database table"""
+        conn = sqlite3.connect(database)
+        curs = conn.cursor()
+        curs.execute("SELECT * FROM {};".format(lookup_table_name))
+        lookup_collection = curs.fetchall()
+        conn.commit()
+        conn.close()
+        # make a dictionary from the returned values
+        lookup_list = []
+        for row in lookup_collection:
+            key = str(row[desc_position])
+            value = row[value_position]
+            lookup_list.append({key: value})
+        lookup_config = {
+            'map': lookup_list
+        }
+        fields = feature_layer.fields()
+        field_index = fields.indexFromName(field_name)
+        if expression is not None:
+            # Set field to display vegetation dam density based on values in other fields
+            virtual_field = QgsField(field_name, QVariant.Int)
+            feature_layer.addExpressionField(expression, virtual_field)
+            feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(expression))
+        widget_setup = QgsEditorWidgetSetup('ValueMap', lookup_config)
+        feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+        feature_layer.setFieldAlias(field_index, field_alias)
+        form_config = feature_layer.editFormConfig()
+        form_config.setReuseLastValue(field_index, reuse_last)
+        if parent_container is not None and display_index is not None:
+            editor_field = QgsAttributeEditorField(field_name, display_index, parent_container)
+            parent_container.addChildElement(editor_field)
+        feature_layer.setEditFormConfig(form_config)
+
+    # ----- LAYER ACTION BUTTONS -----------
+    def add_help_action(self, feature_layer: QgsVectorLayer, help_slug: str, parent_container: QgsAttributeEditorContainer):
+
+        help_action_text = """
+    import webbrowser
+    help_url = "[% @help_url %]"
+    webbrowser.open(help_url, new=2)
+    """
+        help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') + '.html' if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+        QgsExpressionContextUtils.setLayerVariable(feature_layer, 'help_url', help_url)
+        helpAction = QgsAction(1, 'Open Help URL', help_action_text, None, capture=False, shortTitle='Help', actionScopes={'Layer'})
+        feature_layer.actions().addAction(helpAction)
+        editorAction = QgsAttributeEditorAction(helpAction, parent_container)
+        parent_container.addChildElement(editorAction)
 
     # ----- CREATING VIRTUAL FIELDS --------
 
@@ -306,3 +369,13 @@ class RiverscapesMapManager():
         layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
         feature_layer.setLabelsEnabled(True)
         feature_layer.setLabeling(layer_settings)
+
+    def set_field_constraint_not_null(self, feature_layer: QgsVectorLayer, field_name: str, constraint_strength: int) -> None:
+        """Sets a not null constraint and strength"""
+        if constraint_strength == 1:
+            strength = QgsFieldConstraints.ConstraintStrengthSoft
+        elif constraint_strength == 2:
+            strength = QgsFieldConstraints.ConstraintStrengthHard
+        fields = feature_layer.fields()
+        field_index = fields.indexFromName(field_name)
+        feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)

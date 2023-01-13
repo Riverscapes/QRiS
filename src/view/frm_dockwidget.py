@@ -34,7 +34,7 @@ from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
-from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHNINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, Raster
+from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
@@ -60,8 +60,7 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
-from ..QRiS.method_to_map import add_brat_cis
-from ..QRiS.method_to_map import build_event_single_layer, build_pour_point_map_layer, build_stream_gage_layer
+from ..QRiS.method_to_map import build_pour_point_map_layer, build_stream_gage_layer
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
@@ -319,26 +318,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # build_mask_layer(self.project, db_item)
             self.map_manager.build_mask_layer(db_item)
         elif isinstance(db_item, Raster):
-            raster_machine_code = SURFACE_MACHINE_CODE if db_item.raster_type_id == RASTER_TYPE_SURFACE else CONTEXT_MACHNINE_CODE
-            self.map_manager.build_raster_layer(db_item, raster_machine_code)
+            self.map_manager.build_raster_layer(db_item)
         elif isinstance(db_item, Event):
-            [build_event_single_layer(self.project, db_item, layer) for layer in db_item.event_layers]
+            [self.map_manager.build_event_single_layer(db_item, layer) for layer in db_item.event_layers]
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
             event = event_node.data(QtCore.Qt.UserRole)
             for event_layer in event.event_layers:
                 if event_layer.layer in db_item.layers:
-                    build_event_single_layer(self.project, event_layer)
+                    self.map_manager.build_event_single_layer(event, event_layer)
         elif isinstance(db_item, EventLayer):
             # determine parent node
             event_node = tree_node.parent()
             event = event_node.data(QtCore.Qt.UserRole)
-            build_event_single_layer(self.project, event, db_item)
+            self.map_manager.build_event_single_layer(event, db_item)
         elif isinstance(db_item, Project):
             [self.map_manager.build_mask_layer(mask) for mask in self.project.masks.values()]
-            [self.map_manager.build_raster_layer(basemap) for basemap in self.project.basemaps().values()]
-            [[build_event_single_layer(self.project, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
+            [self.map_manager.build_raster_layer(raster) for raster in self.project.basemaps().values()]
+            [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             build_pour_point_map_layer(self.project, db_item)
         elif isinstance(db_item, ScratchVector):
@@ -441,7 +439,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if out_csv != "":  # TODO better file name validation here
             cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.fc_name}')
-            add_brat_cis(self.project, cis_layer)  # This sets up the required aliases, and lookup values
+            self.map_manager.add_brat_cis(cis_layer)  # This sets up the required aliases, and lookup values
             cis_layer.setSubsetString('event_id = ' + str(event_layer.event_id))  # filter to the capture event
             options = QgsVectorFileWriter.SaveVectorOptions()
             # Filter and order the fields. This does not affect the X, Y columns, which are prepended and cannot be renamed by the VectorFileWriter
