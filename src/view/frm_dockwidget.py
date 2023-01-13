@@ -60,7 +60,6 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
-from ..QRiS.method_to_map import build_pour_point_map_layer
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
@@ -337,7 +336,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             [self.map_manager.build_raster_layer(raster) for raster in self.project.basemaps().values()]
             [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
-            build_pour_point_map_layer(self.project, db_item)
+            self.map_manager.build_pour_point_map_layer(db_item)
         elif isinstance(db_item, ScratchVector):
             self.map_manager.build_scratch_vector(db_item)
 

@@ -389,35 +389,35 @@ def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=Fals
 #     return feature_layer
 
 
-def build_pour_point_map_layer(project: Project, pour_point: PourPoint):
+# def build_pour_point_map_layer(project: Project, pour_point: PourPoint):
 
-    if check_for_existing_layer(project, pour_point) is not None:
-        return
+#     if check_for_existing_layer(project, pour_point) is not None:
+#         return
 
-    project_group = get_project_group(project)
-    context_group_layer = get_group_layer(CATCHMENTS_MACHINE_CODE, 'Context', project_group, True)
-    pour_point_group_layer = get_group_layer(pour_point, pour_point.name, context_group_layer, True)
+#     project_group = get_project_group(project)
+#     context_group_layer = get_group_layer(CATCHMENTS_MACHINE_CODE, 'Context', project_group, True)
+#     pour_point_group_layer = get_group_layer(pour_point, pour_point.name, context_group_layer, True)
 
-    # Create a layer from the pour point
-    point_feature_path = project.project_file + '|layername=' + 'pour_points'
-    point_feature_layer = QgsVectorLayer(point_feature_path, 'Pour Point', 'ogr')
-    point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
-    QgsProject.instance().addMapLayer(point_feature_layer, False)
-    pour_point_group_layer.addLayer(point_feature_layer)
-    qml = os.path.join(symbology_path, 'symbology', 'pour_point.qml')
-    point_feature_layer.loadNamedStyle(qml)
+#     # Create a layer from the pour point
+#     point_feature_path = project.project_file + '|layername=' + 'pour_points'
+#     point_feature_layer = QgsVectorLayer(point_feature_path, 'Pour Point', 'ogr')
+#     point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
+#     QgsProject.instance().addMapLayer(point_feature_layer, False)
+#     pour_point_group_layer.addLayer(point_feature_layer)
+#     qml = os.path.join(symbology_path, 'symbology', 'pour_point.qml')
+#     point_feature_layer.loadNamedStyle(qml)
 
-    catchment_feature_path = project.project_file + '|layername=' + 'catchments'
-    catchment_feature_layer = QgsVectorLayer(catchment_feature_path, 'Catchment', 'ogr')
-    catchment_feature_layer.setSubsetString('pour_point_id = ' + str(pour_point.id))
-    QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
-    qml = os.path.join(symbology_path, 'symbology', 'catchment.qml')
-    catchment_feature_layer.loadNamedStyle(qml)
+#     catchment_feature_path = project.project_file + '|layername=' + 'catchments'
+#     catchment_feature_layer = QgsVectorLayer(catchment_feature_path, 'Catchment', 'ogr')
+#     catchment_feature_layer.setSubsetString('pour_point_id = ' + str(pour_point.id))
+#     QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
+#     qml = os.path.join(symbology_path, 'symbology', 'catchment.qml')
+#     catchment_feature_layer.loadNamedStyle(qml)
 
-    QgsProject.instance().addMapLayer(catchment_feature_layer, False)
-    pour_point_group_layer.addLayer(catchment_feature_layer)
+#     QgsProject.instance().addMapLayer(catchment_feature_layer, False)
+#     pour_point_group_layer.addLayer(catchment_feature_layer)
 
-    return point_feature_layer, catchment_feature_layer
+#     return point_feature_layer, catchment_feature_layer
 
 
 # def build_basemap_layer(project: Project, basemap: Raster) -> QgsMapLayer:

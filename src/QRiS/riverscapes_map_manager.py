@@ -54,7 +54,7 @@ class RiverscapesMapManager():
     def __init__(self, product_key) -> None:
         super().__init__()
         self.product_key = product_key
-        self.symbology_folder = os.path.join(os.path.dirname(__file__), CONSTANTS['symbologyDir'])
+        self.symbology_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), CONSTANTS['symbologyDir'])
 
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
         return f'{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}'
@@ -175,7 +175,8 @@ class RiverscapesMapManager():
         QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
-        qml = os.path.join(self.symbology_folder, 'symbology', f'{symbology_key}.qml')
+        symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+        qml = os.path.join(self.symbology_folder, symbology_filename)
         layer.loadNamedStyle(qml)
 
         # Filter to just the features for this item
@@ -211,7 +212,8 @@ class RiverscapesMapManager():
         QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
-        qml = os.path.join(self.symbology_folder, 'symbology', f'{symbology_key}.qml')
+        symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+        qml = os.path.join(self.symbology_folder, symbology_filename)
         layer.loadNamedStyle(qml)
 
         # Finally add the new layer here
@@ -225,7 +227,8 @@ class RiverscapesMapManager():
         raster_layer = QgsRasterLayer(raster_path, raster.name)
         QgsProject.instance().addMapLayer(raster_layer, False)
         if symbology_key is not None:
-            qml = os.path.join(self.symbology_folder, 'symbology', f'{symbology_key}.qml')
+            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+            qml = os.path.join(self.symbology_folder, symbology_filename)
             raster_layer.loadNamedStyle(qml)
         tree_layer_node = parent_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, raster))
