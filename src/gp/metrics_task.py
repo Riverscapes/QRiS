@@ -9,8 +9,8 @@ from ..model.mask import Mask
 from .metrics import Metrics
 from ..model.raster import SCRATCH_PARENT_FOLDER
 import webbrowser
-from ..QRiS.method_to_map import QRIS_MAP_LAYER_MACHINE_CODE
 
+QRIS_MAP_LAYER_MACHINE_CODE = 'QRIS_MAP_LAYER_MACHINE_CODE'
 MESSAGE_CATEGORY = 'QRiS_CopyFeatureClassTask'
 
 

@@ -61,85 +61,85 @@ from ..model.event_layer import EventLayer
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
 
 # path to symbology directory
-symbology_path = os.path.dirname(os.path.dirname(__file__))
+# symbology_path = os.path.dirname(os.path.dirname(__file__))
 
 # TODO consider moving this somewhere more universal for use in other modules
 
-QRIS_MAP_LAYER_MACHINE_CODE = 'QRIS_MAP_LAYER_MACHINE_CODE'
+# QRIS_MAP_LAYER_MACHINE_CODE = 'QRIS_MAP_LAYER_MACHINE_CODE'
 
 
-def get_db_item_layer(db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeNode:
-    """
-    Finds the tree item that represents the db_item. Returns None if it cannot be found.
-    The function first checks if the layer argument represents db_item
-    and then recursively searches all of the children of layer.
+# def get_db_item_layer(db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeNode:
+#     """
+#     Finds the tree item that represents the db_item. Returns None if it cannot be found.
+#     The function first checks if the layer argument represents db_item
+#     and then recursively searches all of the children of layer.
 
-    layer should either be the QRiS project node, or a node within the project.
-    """
+#     layer should either be the QRiS project node, or a node within the project.
+#     """
 
-    # Handles a completely empty map
-    if layer is None:
-        return None
+#     # Handles a completely empty map
+#     if layer is None:
+#         return None
 
-    # Check whether the node that was passed in possesses the correct custom property
-    custom_property = layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
-    if isinstance(custom_property, str) and db_item.map_guid == custom_property:
-        return layer
+#     # Check whether the node that was passed in possesses the correct custom property
+#     custom_property = layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+#     if isinstance(custom_property, str) and db_item.map_guid == custom_property:
+#         return layer
 
-    # If the layer is a group then search it's children
-    if isinstance(layer, QgsLayerTreeGroup):
-        for child_layer in layer.children():
-            result = get_db_item_layer(db_item, child_layer)
-            if isinstance(result, QgsLayerTreeNode):
-                return result
+#     # If the layer is a group then search it's children
+#     if isinstance(layer, QgsLayerTreeGroup):
+#         for child_layer in layer.children():
+#             result = get_db_item_layer(db_item, child_layer)
+#             if isinstance(result, QgsLayerTreeNode):
+#                 return result
 
-    return None
-
-
-def get_group_layer(machine_code, group_label, parent: QgsLayerTreeGroup, add_missing=False) -> QgsLayerTreeGroup:
-    """
-    Finds a group layer directly underneath "parent" with the specified
-    machine code as the custom property. No string matching with group
-    label is performed.
-
-    When add_missing is True, the group will be created if it can't be found.
-    """
-
-    for child_layer in parent.children():
-        custom_property = child_layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
-        if isinstance(custom_property, str) and machine_code == custom_property:
-            return child_layer
-
-    if add_missing:
-
-        # Find the basemaps group layer. If it is already in the map then
-        # insert the new group layer ABOVE it rather than just add it (which
-        # will cause it to get added below the basemaps).
-        basemap_group_index = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', parent, False)
-
-        if basemap_group_index is None:
-            # No basemaps under this parent. Add the new group. It will get added last.
-            group_layer = parent.addGroup(group_label)
-        else:
-            # Basemap group node exists. Add the new group as penultimate group.
-            group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
-
-        group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, machine_code)
-        return group_layer
-
-    return None
+#     return None
 
 
-def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
+# def get_group_layer(machine_code, group_label, parent: QgsLayerTreeGroup, add_missing=False) -> QgsLayerTreeGroup:
+#     """
+#     Finds a group layer directly underneath "parent" with the specified
+#     machine code as the custom property. No string matching with group
+#     label is performed.
 
-    root = QgsProject.instance().layerTreeRoot()
-    project_group_layer = get_db_item_layer(project, root)
+#     When add_missing is True, the group will be created if it can't be found.
+#     """
 
-    if project_group_layer is None and add_missing is True:
-        project_group_layer = root.insertGroup(0, project.name)
-        project_group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, project.map_guid)
+#     for child_layer in parent.children():
+#         custom_property = child_layer.customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+#         if isinstance(custom_property, str) and machine_code == custom_property:
+#             return child_layer
 
-    return project_group_layer
+#     if add_missing:
+
+#         # Find the basemaps group layer. If it is already in the map then
+#         # insert the new group layer ABOVE it rather than just add it (which
+#         # will cause it to get added below the basemaps).
+#         basemap_group_index = get_group_layer(BASEMAP_MACHINE_CODE, 'Basemaps', parent, False)
+
+#         if basemap_group_index is None:
+#             # No basemaps under this parent. Add the new group. It will get added last.
+#             group_layer = parent.addGroup(group_label)
+#         else:
+#             # Basemap group node exists. Add the new group as penultimate group.
+#             group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
+
+#         group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, machine_code)
+#         return group_layer
+
+#     return None
+
+
+# def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
+
+#     root = QgsProject.instance().layerTreeRoot()
+#     project_group_layer = get_db_item_layer(project, root)
+
+#     if project_group_layer is None and add_missing is True:
+#         project_group_layer = root.insertGroup(0, project.name)
+#         project_group_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, project.map_guid)
+
+#     return project_group_layer
 
 
 # def add_root_map_item(project: Project, db_item: DBItem) -> QgsLayerTreeNode:
@@ -169,17 +169,17 @@ def get_project_group(project: Project, add_missing=True) -> QgsLayerTreeGroup:
 #         build_event_layer(project, db_item)
 
 
-def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
+# def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
 
-    parent_node = group_node.parent()
-    if parent_node is None:
-        return
+#     parent_node = group_node.parent()
+#     if parent_node is None:
+#         return
 
-    if len(group_node.children()) < 1:
-        parent_node.removeChildNode(group_node)
+#     if len(group_node.children()) < 1:
+#         parent_node.removeChildNode(group_node)
 
-    if isinstance(parent_node, QgsLayerTreeGroup):
-        remove_empty_groups(parent_node)
+#     if isinstance(parent_node, QgsLayerTreeGroup):
+#         remove_empty_groups(parent_node)
 
 
 # def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
@@ -283,16 +283,16 @@ def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
 #         pass
 
 
-def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=False):
+# def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=False):
 
-    project_group = get_project_group(project, add_missing)
-    existing_layer = get_db_item_layer(db_item, project_group)
-    if existing_layer is not None:
-        # Ensure it has the latest name (in case this method is called after an edit)
-        existing_layer.setName(db_item.name)
-        return existing_layer
+#     project_group = get_project_group(project, add_missing)
+#     existing_layer = get_db_item_layer(db_item, project_group)
+#     if existing_layer is not None:
+#         # Ensure it has the latest name (in case this method is called after an edit)
+#         existing_layer.setName(db_item.name)
+#         return existing_layer
 
-    return None
+#     return None
 
 
 # def get_stream_gage_layer(project: Project) -> QgsMapLayer:
@@ -437,59 +437,59 @@ def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=Fals
 #     return raster_layer
 
 
-def build_raster_slider_layer(project: Project, raster: Raster) -> QgsMapLayer:
+# def build_raster_slider_layer(project: Project, raster: Raster) -> QgsMapLayer:
 
-    project_group_layer = get_project_group(project)
-    raster_slider_group = get_group_layer(RASTER_SLIDER_MACHINE_CODE, 'Raster Slider', project_group_layer, True)
-    raster_layer = get_db_item_layer(raster, raster_slider_group)
-    if raster_layer is not None:
-        return raster_layer
+#     project_group_layer = get_project_group(project)
+#     raster_slider_group = get_group_layer(RASTER_SLIDER_MACHINE_CODE, 'Raster Slider', project_group_layer, True)
+#     raster_layer = get_db_item_layer(raster, raster_slider_group)
+#     if raster_layer is not None:
+#         return raster_layer
 
-    # Remove any existing raster layer in this group
-    raster_slider_group.removeAllChildren()
+#     # Remove any existing raster layer in this group
+#     raster_slider_group.removeAllChildren()
 
-    raster_path = os.path.join(os.path.dirname(project.project_file), raster.path)
-    raster_layer = QgsRasterLayer(raster_path, raster.name + ' (Raster Slider)')
-    raster_slider_group.addLayer(raster_layer)
-    raster_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, raster.map_guid)
-    # qml = os.path.join(symbology_path, 'symbology', 'hand.qml')
-    # raster_layer.loadNamedStyle(qml)
-    QgsProject.instance().addMapLayer(raster_layer, False)
-    return raster_layer
-
-
-def get_raster_statistics(project: Project, raster: Raster):
-
-    raster_layer = build_raster_slider_layer(project, raster)
-    statistics = raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.All, raster_layer.extent(), 0)
-    return statistics.minimumValue, statistics.maximumValue
+#     raster_path = os.path.join(os.path.dirname(project.project_file), raster.path)
+#     raster_layer = QgsRasterLayer(raster_path, raster.name + ' (Raster Slider)')
+#     raster_slider_group.addLayer(raster_layer)
+#     raster_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, raster.map_guid)
+#     # qml = os.path.join(symbology_path, 'symbology', 'hand.qml')
+#     # raster_layer.loadNamedStyle(qml)
+#     QgsProject.instance().addMapLayer(raster_layer, False)
+#     return raster_layer
 
 
-def apply_raster_slider_value(project: Project, raster: Raster, raster_value: float) -> None:
+# def get_raster_statistics(project: Project, raster: Raster):
 
-    raster_layer = build_raster_slider_layer(project, raster)
+#     raster_layer = build_raster_slider_layer(project, raster)
+#     statistics = raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.All, raster_layer.extent(), 0)
+#     return statistics.minimumValue, statistics.maximumValue
 
-    fcn = QgsColorRampShader()
-    fcn.setColorRampType(QgsColorRampShader.Discrete)
-    fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
-    shader = QgsRasterShader()
-    shader.setRasterShaderFunction(fcn)
 
-    renderer = QgsSingleBandPseudoColorRenderer(raster_layer.dataProvider(), 1, shader)
-    raster_layer.setRenderer(renderer)
-    raster_layer.triggerRepaint()
+# def apply_raster_slider_value(project: Project, raster: Raster, raster_value: float) -> None:
+
+#     raster_layer = build_raster_slider_layer(project, raster)
+
+#     fcn = QgsColorRampShader()
+#     fcn.setColorRampType(QgsColorRampShader.Discrete)
+#     fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
+#     shader = QgsRasterShader()
+#     shader.setRasterShaderFunction(fcn)
+
+#     renderer = QgsSingleBandPseudoColorRenderer(raster_layer.dataProvider(), 1, shader)
+#     raster_layer.setRenderer(renderer)
+#     raster_layer.triggerRepaint()
 
 
 # -------- LAYER SPECIFIC ADD TO MAP FUNCTIONS ---------
-def add_lookup_table(layer: dict) -> None:
-    """Checks if a lookup table has been added as private in the current QGIS session"""
-    # Check if the lookup table has been added
-    # TODO make sure the lookup tables are actually from the correct project geopackage
-    # TODO Use custom properties to double check that the correct layers are being used
-    if len(QgsProject.instance().mapLayersByName(layer['fc_name'])) == 0:
-        lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
-        # TODO consider adding and then marking as private instead of using the False flag
-        QgsProject.instance().addMapLayer(lookup_layer, False)
+# def add_lookup_table(layer: dict) -> None:
+#     """Checks if a lookup table has been added as private in the current QGIS session"""
+#     # Check if the lookup table has been added
+#     # TODO make sure the lookup tables are actually from the correct project geopackage
+#     # TODO Use custom properties to double check that the correct layers are being used
+#     if len(QgsProject.instance().mapLayersByName(layer['fc_name'])) == 0:
+#         lookup_layer = QgsVectorLayer(layer['path'], layer['fc_name'], 'ogr')
+#         # TODO consider adding and then marking as private instead of using the False flag
+#         QgsProject.instance().addMapLayer(lookup_layer, False)
 
 
 # def add_brat_cis(project: Project, feature_layer: QgsVectorLayer) -> None:
@@ -670,29 +670,29 @@ def add_lookup_table(layer: dict) -> None:
 
 
 # ------ SETTING FIELD AND FORM PROPERTIES -------
-def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True) -> None:
-    """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
-    # value relation widget configuration. Just add the Layer name
-    lookup_config = {
-        'AllowMulti': False,
-        'AllowNull': False,
-        'Key': 'fid',
-        'Layer': '',
-        'NofColumns': 1,
-        'OrderByValue': False,
-        'UseCompleter': False,
-        'Value': 'name'
-    }
-    # TODO this lookup needs to check custom property and should also have try except block
-    lookup_config['Layer'] = feature_layer.id()
-    fields = feature_layer.fields()
-    field_index = fields.indexFromName(field_name)
-    widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
-    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
-    feature_layer.setFieldAlias(field_index, field_alias)
-    form_config = feature_layer.editFormConfig()
-    form_config.setReuseLastValue(field_index, reuse_last)
-    feature_layer.setEditFormConfig(form_config)
+# def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, reuse_last: bool = True) -> None:
+#     """Adds a Value Relation widget to the QGIS entry form. Note that at this time it assumes a Key of fid and value of name"""
+#     # value relation widget configuration. Just add the Layer name
+#     lookup_config = {
+#         'AllowMulti': False,
+#         'AllowNull': False,
+#         'Key': 'fid',
+#         'Layer': '',
+#         'NofColumns': 1,
+#         'OrderByValue': False,
+#         'UseCompleter': False,
+#         'Value': 'name'
+#     }
+#     # TODO this lookup needs to check custom property and should also have try except block
+#     lookup_config['Layer'] = feature_layer.id()
+#     fields = feature_layer.fields()
+#     field_index = fields.indexFromName(field_name)
+#     widget_setup = QgsEditorWidgetSetup('ValueRelation', lookup_config)
+#     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+#     feature_layer.setFieldAlias(field_index, field_alias)
+#     form_config = feature_layer.editFormConfig()
+#     form_config.setReuseLastValue(field_index, reuse_last)
+#     feature_layer.setEditFormConfig(form_config)
 
 
 # def set_value_map(project: Project, feature_layer: QgsVectorLayer, field_name: str, lookup_table_name: str, field_alias: str, desc_position: int = 1, value_position: int = 0, reuse_last: bool = True, parent_container=None, display_index=None) -> None:
@@ -725,15 +725,15 @@ def set_value_relation(feature_layer: QgsVectorLayer, field_name: str, lookup_ta
 #     feature_layer.setEditFormConfig(form_config)
 
 
-def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
-    fields = feature_layer.fields()
-    field_index = fields.indexFromName(field_name)
-    widget_setup = QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False})
-    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
-    feature_layer.setFieldAlias(field_index, field_alias)
-    form_config = feature_layer.editFormConfig()
-    form_config.setLabelOnTop(field_index, True)
-    feature_layer.setEditFormConfig(form_config)
+# def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
+#     fields = feature_layer.fields()
+#     field_index = fields.indexFromName(field_name)
+#     widget_setup = QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False})
+#     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+#     feature_layer.setFieldAlias(field_index, field_alias)
+#     form_config = feature_layer.editFormConfig()
+#     form_config.setLabelOnTop(field_index, True)
+#     feature_layer.setEditFormConfig(form_config)
 
 
 # def set_hidden(feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
@@ -777,34 +777,34 @@ def set_multiline(feature_layer: QgsVectorLayer, field_name: str, field_alias: s
 
 
 # ----- CREATING VIRTUAL FIELDS --------
-def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None:
-    """dimension should be 'area' or 'length'
-    sets a virtual length field named vrt_length
-    aliases the field as Length (m)
-    sets the widget type to text
-    sets default value to the dimension expression"""
-    field_name = 'vrt_' + dimension
-    field_alias = dimension.capitalize() + ' (m)'
-    field_expression = 'round(${}, 0)'.format(dimension)
-    virtual_field = QgsField(field_name, QVariant.Int)
-    feature_layer.addExpressionField(field_expression, virtual_field)
-    fields = feature_layer.fields()
-    field_index = fields.indexFromName(field_name)
-    feature_layer.setFieldAlias(field_index, field_alias)
-    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
-    widget_setup = QgsEditorWidgetSetup('TextEdit', {})
-    feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+# def set_virtual_dimension(feature_layer: QgsVectorLayer, dimension: str) -> None:
+#     """dimension should be 'area' or 'length'
+#     sets a virtual length field named vrt_length
+#     aliases the field as Length (m)
+#     sets the widget type to text
+#     sets default value to the dimension expression"""
+#     field_name = 'vrt_' + dimension
+#     field_alias = dimension.capitalize() + ' (m)'
+#     field_expression = 'round(${}, 0)'.format(dimension)
+#     virtual_field = QgsField(field_name, QVariant.Int)
+#     feature_layer.addExpressionField(field_expression, virtual_field)
+#     fields = feature_layer.fields()
+#     field_index = fields.indexFromName(field_name)
+#     feature_layer.setFieldAlias(field_index, field_alias)
+#     feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+#     widget_setup = QgsEditorWidgetSetup('TextEdit', {})
+#     feature_layer.setEditorWidgetSetup(field_index, widget_setup)
 
 
-def set_created_datetime(feature_layer: QgsVectorLayer) -> None:
-    """Will set a date time created field to a default value of now() and also set it to read only"""
-    fields = feature_layer.fields()
-    field_index = fields.indexFromName('created')
-    feature_layer.setFieldAlias(field_index, 'Created')
-    feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("now()"))
-    form_config = feature_layer.editFormConfig()
-    form_config.setReadOnly(field_index, True)
-    feature_layer.setEditFormConfig(form_config)
+# def set_created_datetime(feature_layer: QgsVectorLayer) -> None:
+#     """Will set a date time created field to a default value of now() and also set it to read only"""
+#     fields = feature_layer.fields()
+#     field_index = fields.indexFromName('created')
+#     feature_layer.setFieldAlias(field_index, 'Created')
+#     feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("now()"))
+#     form_config = feature_layer.editFormConfig()
+#     form_config.setReadOnly(field_index, True)
+#     feature_layer.setEditFormConfig(form_config)
 
 
 # def set_field_constraint_not_null(feature_layer: QgsVectorLayer, field_name: str, constraint_strength: int) -> None:
