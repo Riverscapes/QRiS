@@ -458,7 +458,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def raster_slider(self, db_item: DBItem):
 
         if self.slider_doc_widget is None:
-            self.slider_doc_widget = FrmSlider(self, self.project)
+            self.slider_doc_widget = FrmSlider(self, self.project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.slider_doc_widget)
 
         self.slider_doc_widget.export_complete.connect(self.raster_slider_export_complete)

@@ -8,7 +8,7 @@ from ..model.mask import Mask, MASK_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
-from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_TYPE_SURFACE
+from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_TYPE_SURFACE, RASTER_SLIDER_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.event_layer import EventLayer
 
@@ -146,6 +146,23 @@ class QRisMapManager(RiverscapesMapManager):
         existing_layer = self.get_db_item_layer(self.project.map_guid, raster, None)  # TODO search entire toc or just project??
         if existing_layer is not None:
             return existing_layer
+
+        raster_path = os.path.join(os.path.dirname(self.project.project_file), raster.path)
+        raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster)
+
+        return raster_layer
+
+    def build_raster_slider_layer(self, raster: Raster) -> QgsMapLayer:
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        group_layer = self.get_group_layer(self.project.map_guid, RASTER_SLIDER_MACHINE_CODE, 'Raster Slider', project_group, True)
+
+        existing_layer = self.get_db_item_layer(self.project.map_guid, raster, group_layer)
+        if existing_layer is not None:
+            return existing_layer
+
+        # Remove any existing raster layer in this group
+        group_layer.removeAllChildren()
 
         raster_path = os.path.join(os.path.dirname(self.project.project_file), raster.path)
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster)

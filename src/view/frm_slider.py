@@ -1,6 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal
 
+from qgis.core import QgsRasterBandStats
+
 from ..model.scratch_vector import ScratchVector
 
 from ..model.raster import Raster
@@ -8,27 +10,30 @@ from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
 
-from ..QRiS.method_to_map import build_raster_slider_layer, apply_raster_slider_value, get_raster_statistics
+from ..QRiS.qris_map_manager import QRisMapManager
 
 
 class FrmSlider(QtWidgets.QDockWidget):
 
     export_complete = pyqtSignal(ScratchVector or None, bool)
 
-    def __init__(self, parent, project: Project):
+    def __init__(self, parent, project: Project, map_manager: QRisMapManager):
         super().__init__(parent)
         self.setupUi()
 
         self.project = project
+        self.map_manager = map_manager
         self.raster = None
+        self.raster_layer = None
         self.scratch_vector = None
 
     def configure_raster(self, raster: Raster):
 
         self.raster = raster
         self.txtSurface.setText(raster.name)
-        build_raster_slider_layer(self.project, raster)
-        min, max = get_raster_statistics(self.project, raster)
+        self.raster_layer = self.map_manager.build_raster_slider_layer(raster)
+        min = self.raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.Min, self.raster_layer.extent(), 0).minimumValue
+        max = self.raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.Max, self.raster_layer.extent(), 0).maximumValue
 
         self.valElevation.setMinimum(min)
         self.valElevation.setMaximum(max)
@@ -37,11 +42,11 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.slider.setMaximum(max)
 
     def sliderElevationChange(self, value: float):
-        apply_raster_slider_value(self.project, self.raster, value)
+        self.map_manager.apply_raster_single_value(self.raster_layer, value)
         self.valElevation.setValue(value)
 
     def spinBoxElevationChange(self, value: float):
-        apply_raster_slider_value(self.project, self.raster, value)
+        self.map_manager.apply_raster_single_value(self.raster_layer, value)
         self.slider.setValue(int(value))
 
     def cmdSelect_click(self):

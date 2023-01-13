@@ -235,6 +235,18 @@ class RiverscapesMapManager():
 
         return raster_layer
 
+    def apply_raster_single_value(self, raster_layer: QgsRasterLayer, raster_value: float) -> None:
+
+        fcn = QgsColorRampShader()
+        fcn.setColorRampType(QgsColorRampShader.Discrete)
+        fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
+        shader = QgsRasterShader()
+        shader.setRasterShaderFunction(fcn)
+
+        renderer = QgsSingleBandPseudoColorRenderer(raster_layer.dataProvider(), 1, shader)
+        raster_layer.setRenderer(renderer)
+        raster_layer.triggerRepaint()
+
     # Set Fields
     def set_multiline(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
         fields = feature_layer.fields()
