@@ -182,18 +182,18 @@ def remove_empty_groups(group_node: QgsLayerTreeGroup) -> None:
         remove_empty_groups(parent_node)
 
 
-def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
+# def remove_db_item_layer(project: Project, db_item: DBItem) -> None:
 
-    project_group = get_project_group(project, False)
-    if project_group is not None:
-        tree_layer_node = get_db_item_layer(db_item, project_group)
-        if tree_layer_node is not None:
-            # QgsProject.removeMapLayer()
-            # QgsProject.instance().removeMapLayer(lyr)
-            parent_node = tree_layer_node.parent()
-            parent_node.removeChildNode(tree_layer_node)
+#     project_group = get_project_group(project, False)
+#     if project_group is not None:
+#         tree_layer_node = get_db_item_layer(db_item, project_group)
+#         if tree_layer_node is not None:
+#             # QgsProject.removeMapLayer()
+#             # QgsProject.instance().removeMapLayer(lyr)
+#             parent_node = tree_layer_node.parent()
+#             parent_node.removeChildNode(tree_layer_node)
 
-            remove_empty_groups(parent_node)
+#             remove_empty_groups(parent_node)
 
 
 # def build_event_layer(project: Project, event: Event) -> None:
@@ -295,44 +295,44 @@ def check_for_existing_layer(project: Project, db_item: DBItem, add_missing=Fals
     return None
 
 
-def get_stream_gage_layer(project: Project) -> QgsMapLayer:
+# def get_stream_gage_layer(project: Project) -> QgsMapLayer:
 
-    project_group = get_project_group(project, False)
-    if project_group is not None:
-        for child_layer in project_group.children():
-            if isinstance(child_layer.layer(), QgsVectorLayer):
-                custom_property = child_layer.layer().customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
-                if custom_property is not None and custom_property == STREAM_GAGE_MACHINE_CODE:
-                    return child_layer.layer()
+#     project_group = get_project_group(project, False)
+#     if project_group is not None:
+#         for child_layer in project_group.children():
+#             if isinstance(child_layer.layer(), QgsVectorLayer):
+#                 custom_property = child_layer.layer().customProperty(QRIS_MAP_LAYER_MACHINE_CODE)
+#                 if custom_property is not None and custom_property == STREAM_GAGE_MACHINE_CODE:
+#                     return child_layer.layer()
 
 
-def build_stream_gage_layer(project: Project) -> QgsMapLayer:
+# def build_stream_gage_layer(project: Project) -> QgsMapLayer:
 
-    feature_layer = get_stream_gage_layer(project)
-    if feature_layer is not None:
-        return feature_layer
+#     feature_layer = get_stream_gage_layer(project)
+#     if feature_layer is not None:
+#         return feature_layer
 
-    feature_path = project.project_file + '|layername=' + 'stream_gages'
-    feature_layer = QgsVectorLayer(feature_path, 'Stream Gages', 'ogr')
-    feature_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, STREAM_GAGE_MACHINE_CODE)
+#     feature_path = project.project_file + '|layername=' + 'stream_gages'
+#     feature_layer = QgsVectorLayer(feature_path, 'Stream Gages', 'ogr')
+#     feature_layer.setCustomProperty(QRIS_MAP_LAYER_MACHINE_CODE, STREAM_GAGE_MACHINE_CODE)
 
-    qml = os.path.join(symbology_path, 'symbology', 'stream_gages.qml')
-    feature_layer.loadNamedStyle(qml)
+#     qml = os.path.join(symbology_path, 'symbology', 'stream_gages.qml')
+#     feature_layer.loadNamedStyle(qml)
 
-    # Labeling learned here:
-    # https://gis.stackexchange.com/questions/273266/reading-and-setting-label-settings-in-pyqgis/273268#273268
-    layer_settings = QgsPalLayerSettings()
-    layer_settings.fieldName = "site_code"
-    layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
-    feature_layer.setLabelsEnabled(True)
-    feature_layer.setLabeling(layer_settings)
+#     # Labeling learned here:
+#     # https://gis.stackexchange.com/questions/273266/reading-and-setting-label-settings-in-pyqgis/273268#273268
+#     layer_settings = QgsPalLayerSettings()
+#     layer_settings.fieldName = "site_code"
+#     layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
+#     feature_layer.setLabelsEnabled(True)
+#     feature_layer.setLabeling(layer_settings)
 
-    # Finally add the new layer here
-    QgsProject.instance().addMapLayer(feature_layer, False)
-    project_group = get_project_group(project, True)
-    project_group.addLayer(feature_layer)
+#     # Finally add the new layer here
+#     QgsProject.instance().addMapLayer(feature_layer, False)
+#     project_group = get_project_group(project, True)
+#     project_group.addLayer(feature_layer)
 
-    return feature_layer
+#     return feature_layer
 
 
 # def build_mask_layer(project: Project, mask: Mask) -> QgsMapLayer:

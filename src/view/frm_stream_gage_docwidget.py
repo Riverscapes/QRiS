@@ -36,23 +36,24 @@ except ImportError:
 # Help on selection changed event
 # https://stackoverflow.com/questions/10156842/howto-get-the-selectionchanged-signal
 
-from ..QRiS.method_to_map import get_stream_gage_layer, build_stream_gage_layer
+from ..QRiS.qris_map_manager import QRisMapManager
 
 
 class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
-    def __init__(self, iface, project: Project, parent=None):
+    def __init__(self, iface, project: Project, map_manager: QRisMapManager, parent=None):
 
         super(FrmStreamGageDocWidget, self).__init__(parent)
         self.iface = iface
         self.project = project
+        self.map_manager = map_manager
         self.setupUi()
         self.load_stream_gages()
 
         self.dtStart.setDate(date(date.today().year - 1, date.today().month, date.today().day))
         self.dtEnd.setDate(date.today())
 
-        map_layer = build_stream_gage_layer(self.project)
+        map_layer = self.map_manager.build_stream_gage_layer()
         map_layer.selectionChanged.connect(self.on_map_selection_changed)
 
     def load_stream_gages(self):
@@ -81,7 +82,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.load_discharge_plot()
         self.load_metadata()
 
-        map_layer = get_stream_gage_layer(self.project)
+        map_layer = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
         if map_layer is None:
             return
 

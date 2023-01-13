@@ -60,7 +60,7 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 
 from ..QRiS.settings import Settings, CONSTANTS
-from ..QRiS.method_to_map import build_pour_point_map_layer, build_stream_gage_layer
+from ..QRiS.method_to_map import build_pour_point_map_layer
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector
@@ -163,9 +163,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_rasters().values()]
         [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_vectors.values()]
 
-        # TODO fix stream gauges, then turn back on
-        # gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
-        # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
+        gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
+        [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
         [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
@@ -348,7 +347,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         machine_code = model_item.data(QtCore.Qt.UserRole)
         if machine_code == STREAM_GAGE_MACHINE_CODE:
-            build_stream_gage_layer(self.project)
+            self.map_manager.build_stream_gage_layer()
         else:
             for row in range(0, model_item.rowCount()):
                 child_item = model_item.child(row)
@@ -392,7 +391,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def stream_gage_explorer(self):
 
         if self.stream_gage_doc_widget is None:
-            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.project)
+            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.map_manager, self.project)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.stream_gage_doc_widget)
 
         # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)

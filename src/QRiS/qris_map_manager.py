@@ -78,22 +78,16 @@ class QRisMapManager(RiverscapesMapManager):
 
         return feature_layer
 
-    # def get_stream_gage_layer(self) -> QgsMapLayer:
-    #     """Returns the stream gage layer if it exists. Otherwise returns None"""
+    def build_stream_gage_layer(self) -> QgsMapLayer:
 
-    #     return self.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+        existing_layer = self.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+        if existing_layer is not None:
+            return existing_layer
 
-    def build_stream_gage_layer(self, project: Project) -> QgsMapLayer:
-
-        feature_layer = self.get_stream_gage_layer()
-        if feature_layer is not None:
-            return feature_layer
-
-        project_group = self.get_group_layer(project.map_guid, PROJECT_MACHINE_CODE, project.name, None, True)
-
-        fc_path = project.project_file + '|layername=' + 'stream_gages'
-
-        self.create_machine_code_feature_layer(project.map_guid, project_group, fc_path, STREAM_GAGE_MACHINE_CODE, 'Stream Gages', 'stream_gages')
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        # TODO Do stream guages need a Group layer?
+        fc_path = self.project.project_file + '|layername=' + 'stream_gages'
+        feature_layer = self.create_machine_code_feature_layer(self.project.map_guid, project_group, fc_path, STREAM_GAGE_MACHINE_CODE, 'Stream Gages', 'stream_gages')
 
         # Apply labels
         self.set_label(feature_layer, 'site_code')
