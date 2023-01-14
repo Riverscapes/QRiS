@@ -4,7 +4,6 @@ import json
 
 from qgis.PyQt.QtGui import QStandardItem, QColor
 from qgis.PyQt.QtCore import Qt, QVariant
-from qgis.PyQt.QtXml import QDomDocument
 
 from ..QRiS.settings import CONSTANTS
 
@@ -17,30 +16,15 @@ from qgis.core import (
     QgsLayerTreeNode,
     QgsVectorLayer,
     QgsRasterLayer,
-    QgsLayerTree,
     QgsDefaultValue,
     QgsEditorWidgetSetup,
-    QgsMapLayer,
-    QgsFeatureRequest,
-    QgsSymbol,
-    QgsRendererCategory,
-    QgsMarkerSymbol,
-    QgsLineSymbol,
-    QgsFillSymbol,
-    QgsSimpleFillSymbolLayer,
-    QgsCategorizedSymbolRenderer,
     QgsProject,
     QgsExpressionContextUtils,
     QgsFieldConstraints,
-    qgsfunction,
     QgsColorRampShader,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
-    QgsRasterBandStats,
     QgsAttributeEditorContainer,
-    QgsAttributeEditorElement,
-    QgsReadWriteContext,
-    QgsEditFormConfig,
     QgsAttributeEditorField,
     QgsPalLayerSettings,
     QgsVectorLayerSimpleLabeling,

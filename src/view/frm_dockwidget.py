@@ -34,7 +34,7 @@ from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
-from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, Raster
+from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, RASTER_TYPE_CONTEXT, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
@@ -159,7 +159,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
 
         context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
-        [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_rasters().values()]
+        [self.add_child_to_project_tree(context_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_CONTEXT]
         [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_vectors.values()]
 
         gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
@@ -257,13 +257,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
-                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_basemap(model_item, -1))
+                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_CONTEXT))
                     self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
 
-                # self.add_context_menu_item(self.menu, 'Create New Empty Mask', 'new', lambda: self.add_mask(model_item, DB_MODE_CREATE))
-                # self.add_context_menu_item(self.menu, 'Import Existing Mask Feature Class', 'new', lambda: self.add_mask(model_item, DB_MODE_IMPORT))
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
