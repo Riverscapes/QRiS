@@ -4,7 +4,7 @@ import json
 from .riverscapes_map_manager import RiverscapesMapManager
 
 from ..model.project import Project, PROJECT_MACHINE_CODE
-from ..model.mask import Mask, MASK_MACHINE_CODE
+from ..model.mask import Mask, MASK_MACHINE_CODE, AOI_MACHINE_CODE, AOI_MASK_TYPE_ID
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
@@ -30,15 +30,26 @@ class QRisMapManager(RiverscapesMapManager):
 
     def build_mask_layer(self, mask: Mask) -> QgsMapLayer:
 
+        if mask.mask_type.id == AOI_MASK_TYPE_ID:
+            group_layer_name = 'AOIs'
+            mask_machine_code = AOI_MACHINE_CODE
+            symbology = 'mask'  # TODO do aois need a different mask type? make the reference here...
+            layer_name = 'aoi_features'
+        else:
+            group_layer_name = 'Sampling Frames'
+            mask_machine_code = MASK_MACHINE_CODE
+            symbology = 'mask'
+            layer_name = 'mask_features'
+
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(self.project.map_guid, MASK_MACHINE_CODE, 'Masks', project_group, True)
+        group_layer = self.get_group_layer(self.project.map_guid, mask_machine_code, group_layer_name, project_group, True)
 
         existing_layer = self.get_db_item_layer(self.project.map_guid, mask, group_layer)
         if existing_layer is not None:
             return existing_layer
 
-        fc_path = self.project.project_file + '|layername=' + 'mask_features'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, mask, 'mask_id', 'mask')
+        fc_path = f'{self.project.project_file}|layername={layer_name}'
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, mask, 'mask_id', symbology)
 
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'Mask Feature ID')
