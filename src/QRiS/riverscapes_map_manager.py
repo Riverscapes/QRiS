@@ -163,14 +163,15 @@ class RiverscapesMapManager():
         qml = os.path.join(self.symbology_folder, symbology_filename)
         layer.loadNamedStyle(qml)
 
-        # Filter to just the features for this item
-        layer.setSubsetString(f'{id_field} = ' + str(db_item.id))
+        if id_field is not None:
+            # Filter to just the features for this item
+            layer.setSubsetString(f'{id_field} = ' + str(db_item.id))
 
-        # Set a parent assessment variable
-        QgsExpressionContextUtils.setLayerVariable(layer, id_field, db_item.id)
-        # Set the default value from the variable
-        field_index = layer.fields().indexFromName(id_field)
-        layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
+            # Set a parent assessment variable
+            QgsExpressionContextUtils.setLayerVariable(layer, id_field, db_item.id)
+            # Set the default value from the variable
+            field_index = layer.fields().indexFromName(id_field)
+            layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
 
         # Finally add the new layer here
         QgsProject.instance().addMapLayer(layer, False)
