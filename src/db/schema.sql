@@ -1139,13 +1139,6 @@ ALTER TABLE profile_centerlines ADD COLUMN profile_id INTEGER REFERENCES profile
 ALTER TABLE profile_centerlines ADD COLUMN display_label TEXT;
 ALTER TABLE profile_centerlines ADD COLUMN description TEXT;
 ALTER TABLE profile_centerlines ADD COLUMN metadata TEXT;
-ALTER TABLE profile_centerlines ADD COLUMN start_line TEXT;
-ALTER TABLE profile_centerlines ADD COLUMN end_line TEXT;
-ALTER TABLE profile_centerlines ADD COLUMN densify_distance REAL;
-ALTER TABLE profile_centerlines ADD COLUMN smoothing_iterations INTEGER;
-ALTER TABLE profile_centerlines ADD COLUMN smoothing_offset REAL;
-ALTER TABLE profile_centerlines ADD COLUMN smoothing_min_distance REAL;
-ALTER TABLE profile_centerlines ADD COLUMN smoothing_max_angle REAL;
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.
@@ -1173,6 +1166,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('s
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('stream_gage_discharges', 'attributes', 'stream_gage_discharges', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('rasters', 'attributes', 'rasters', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('migrations', 'attributes', 'migrations', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('profiles', 'attributes', 'profies', 0)
 
 -- LOOKUP TABLES
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_metric_sources', 'attributes', 'lkp_metric_sources', 0);
