@@ -66,7 +66,7 @@ class QRisMapManager(RiverscapesMapManager):
 
         if profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE:
             symbology = 'centerline'
-            layer_name = 'centerline_features'
+            layer_name = 'profile_centerlines'
         else:
             symbology = 'profile'
             layer_name = 'profile_features'
@@ -79,7 +79,7 @@ class QRisMapManager(RiverscapesMapManager):
             return existing_layer
 
         fc_path = f'{self.project.project_file}|layername={layer_name}'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, profile, profile.id_column_name, symbology)
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, profile, 'profile_id', symbology)
 
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'Profile Feature ID')

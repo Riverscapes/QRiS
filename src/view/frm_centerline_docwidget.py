@@ -3,7 +3,7 @@ Doc Widget for building centerlines
 
 """
 from PyQt5 import Qt, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot, QVariant
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from qgis.PyQt.QtGui import QColor
 from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsField, QgsMapLayer, QgsDistanceArea, QgsPointXY
@@ -11,6 +11,8 @@ from qgis.gui import QgsMapToolIdentifyFeature
 
 from ..gp.centerlines import CenterlineTask
 from ..model.project import Project
+from ..model.db_item import DBItem
+from ..model.profile import Profile
 
 from .capture_line_segment import LineSegmentMapTool
 from .utilities import add_help_button
@@ -19,10 +21,12 @@ from .frm_save_centerline import FrmSaveCenterline
 
 class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
+    export_complete = pyqtSignal(Profile or None, bool)
+
     def __init__(self, parent, project: Project, iface):
 
         super(FrmCenterlineDocWidget, self).__init__(parent)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WA_QuitOnClose)
         self.setupUi()
 
         self.project = project
@@ -70,7 +74,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         QgsProject.instance().addMapLayers([self.layer_centerline, self.layer_start_line, self.layer_end_line])
 
-    def configure_polygon(self, polygon_layer):
+    def configure_polygon(self, polygon_layer: DBItem):
 
         self.polygon_layer = polygon_layer
         self.txtLayer.setText(polygon_layer.name)
@@ -152,16 +156,12 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         sline_length = self.d.measureLine(QgsPointXY(geom_centerline.get().points()[0]), QgsPointXY(geom_centerline.get().points()[-1]))
         geom_length = self.d.measureLength(geom_centerline)
         metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
-        frm_save_centerline = FrmSaveCenterline(self, self.iface, self.project)
-        frm_save_centerline.add_metrics(metrics)
-        frm_save_centerline.add_fields(self.fields)
-        frm_save_centerline.add_centerline(self.feat_centerline)
+        frm_save_centerline = FrmSaveCenterline(self, self.project, self.feat_centerline, metrics, self.fields)
         result = frm_save_centerline.exec_()
 
-        if result is True:
-            # TODO add to map
+        if result == QtWidgets.QDialog.Accepted:
             self.centerline_setup()  # Reset the map
-
+            self.export_complete.emit(frm_save_centerline.profile, True)
         return
 
     def cmdReset_click(self):
@@ -222,14 +222,18 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         geom = QgsGeometry(self.geom_centerline)
         self.feat_centerline.setGeometry(geom)
 
-        self.fields = {'start_line': self.geom_start,
-                       'end_line': self.geom_start,
-                       'densify_distance': self.densify_distance,
-                       'smoothing_iterations': smoothing_iter,
-                       'smoothing_offset': smoothing_offset,
-                       'smoothing_min_distance': smoothing_dist,
-                       'smoothing_max_angle': smoothing_angle
-                       }
+        self.fields = {
+            'parent_polygon_type': self.polygon_layer.db_table_name,
+            'parent_polygon_id': self.polygon_layer.id,
+            'parent_polygon_fid': self.txtPolygon.text(),
+            'start_line': self.geom_start.asWkt(),
+            'end_line': self.geom_start.asWkt(),
+            'densify_distance': self.densify_distance,
+            'smoothing_iterations': smoothing_iter,
+            'smoothing_offset': smoothing_offset,
+            'smoothing_min_distance': smoothing_dist,
+            'smoothing_max_angle': smoothing_angle
+        }
 
         self.layer_centerline.dataProvider().addFeature(self.feat_centerline)
         self.layer_centerline.commitChanges()

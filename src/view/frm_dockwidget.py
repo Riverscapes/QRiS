@@ -284,6 +284,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     or isinstance(model_data, Mask) \
                     or isinstance(model_data, Profile) \
                     or isinstance(model_data, PourPoint) \
+                    or isinstance(model_data, ScratchVector) \
                     or isinstance(model_data, Analysis):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
@@ -479,10 +480,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def generate_centerline(self, db_item: DBItem):
 
+        self.add_db_item_to_map(None, db_item)
+
         if self.centerline_doc_widget is None:
             self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.project, self.iface)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.centerline_doc_widget)
 
+        self.centerline_doc_widget.export_complete.connect(self.centerline_save_complete)
         self.centerline_doc_widget.configure_polygon(db_item)
         self.centerline_doc_widget.show()
 
@@ -677,6 +681,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.iface.messageBar().pushMessage('Export Polygon Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
+    @pyqtSlot(Profile, bool)
+    def centerline_save_complete(self, centerline: Profile, add_to_map: bool):
+
+        if isinstance(centerline, Profile):
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            self.add_child_to_project_tree(project_node, centerline, add_to_map)
+        else:
+            self.iface.messageBar().pushMessage('Add Centerline to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+
     def edit_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
         frm = None
@@ -693,6 +707,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmProfile(self, self.project, None, db_item)
         elif isinstance(db_item, Raster):
             frm = FrmRaster(self, self.iface, self.project, None, db_item.raster_type_id, db_item)
+        elif isinstance(db_item, ScratchVector):
+            frm = FrmScratchVector(self, self.iface, self.project, None, None, db_item)
         elif isinstance(db_item, PourPoint):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):

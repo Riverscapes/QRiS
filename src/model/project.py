@@ -86,6 +86,8 @@ class Project(DBItem):
             self.analyses.pop(db_item.id)
         elif isinstance(db_item, ScratchVector):
             self.scratch_vectors.pop(db_item.id)
+        elif isinstance(db_item, Profile):
+            self.profiles.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
