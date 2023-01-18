@@ -2,18 +2,16 @@
 Doc Widget for building centerlines
 
 """
-from operator import length_hint
 from PyQt5 import Qt, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QVariant
 
 from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsMapLayer, QgsDistanceArea, QgsPointXY
+from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsField, QgsMapLayer, QgsDistanceArea, QgsPointXY
 from qgis.gui import QgsMapToolIdentifyFeature
-
-from shapely.geometry import LineString
 
 from ..gp.centerlines import CenterlineTask
 from ..model.project import Project
+
 from .capture_line_segment import LineSegmentMapTool
 from .utilities import add_help_button
 from .frm_save_centerline import FrmSaveCenterline
@@ -47,6 +45,8 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.geom_polygon = None
         self.geom_start = None
         self.geom_end = None
+        self.densify_distance = None
+        self.fields = None
 
         self.txtEnd.setText("")
         self.txtStart.setText("")
@@ -128,9 +128,9 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         length = geom_polygon.get().perimeter()
         length_measure = self.d.measurePerimeter(geom_polygon)
-        densify_distance = (self.dblDensity.value() / length_measure) * length
+        self.densify_distance = (self.dblDensity.value() / length_measure) * length
 
-        centerline_task = CenterlineTask(geom_polygon, geom_start, geom_end, densify_distance)
+        centerline_task = CenterlineTask(geom_polygon, geom_start, geom_end, self.densify_distance)
         # DEBUG
         # result = centerline_task.run()
         # if result is True:
@@ -154,7 +154,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
         frm_save_centerline = FrmSaveCenterline(self, self.iface, self.project)
         frm_save_centerline.add_metrics(metrics)
-
+        frm_save_centerline.add_fields(self.fields)
         frm_save_centerline.add_centerline(self.feat_centerline)
         result = frm_save_centerline.exec_()
 
@@ -207,19 +207,30 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         geom_centerline_raw = QgsGeometry(centerline)
         smoothing_iter = self.dblSmoothingIter.value()
+        length = geom_centerline_raw.length()
+        length_measure = self.d.measureLength(geom_centerline_raw)
+        smoothing_dist = (self.dblSmoothingMin.value() / length_measure) * length
+        smoothing_offset = self.dblSmoothingOffset.value()
+        smoothing_angle = self.dblSmoothingAngle.value()
+
         if smoothing_iter == 0:
             self.geom_centerline = QgsGeometry(geom_centerline_raw)
         else:
-            length = geom_centerline_raw.length()
-            length_measure = self.d.measureLength(geom_centerline_raw)
-            smoothing_dist = (self.dblSmoothingMin.value() / length_measure) * length
-            smoothing_offset = self.dblSmoothingOffset.value()
-            smoothing_angle = self.dblSmoothingAngle.value()
             self.geom_centerline = QgsGeometry(geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle))
 
         self.feat_centerline = QgsFeature()
         geom = QgsGeometry(self.geom_centerline)
         self.feat_centerline.setGeometry(geom)
+
+        self.fields = {'start_line': self.geom_start,
+                       'end_line': self.geom_start,
+                       'densify_distance': self.densify_distance,
+                       'smoothing_iterations': smoothing_iter,
+                       'smoothing_offset': smoothing_offset,
+                       'smoothing_min_distance': smoothing_dist,
+                       'smoothing_max_angle': smoothing_angle
+                       }
+
         self.layer_centerline.dataProvider().addFeature(self.feat_centerline)
         self.layer_centerline.commitChanges()
         self.canvas.refreshAllLayers()

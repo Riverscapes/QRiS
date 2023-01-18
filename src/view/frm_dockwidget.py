@@ -43,6 +43,7 @@ from ..model.method import Method
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
 from ..model.event_layer import EventLayer
+from ..model.profile import Profile
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
@@ -58,6 +59,7 @@ from .frm_geospatial_metrics import FrmGeospatialMetrics
 from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
 from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
+from .frm_profile import FrmProfile
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -89,7 +91,8 @@ GROUP_FOLDER_LABELS = {
     ANALYSIS_MACHINE_CODE: 'Analyses',
     CATCHMENTS_MACHINE_CODE: 'Watershed Catchments',
     CONTEXT_NODE_TAG: 'Context',
-    STREAM_GAGE_MACHINE_CODE: 'Stream Gages'
+    STREAM_GAGE_MACHINE_CODE: 'Stream Gages',
+    Profile.PROFILE_MACHINE_CODE: 'Profiles'
 }
 
 
@@ -155,8 +158,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         sampling_frames_node = self.add_child_to_project_tree(inputs_node, MASK_MACHINE_CODE)
         [self.add_child_to_project_tree(sampling_frames_node, item) for item in self.project.masks.values() if item.mask_type.id != AOI_MASK_TYPE_ID]
 
-        events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
-        [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
+        profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
+        [self.add_child_to_project_tree(profiles_node, item) for item in self.project.profiles.values()]
 
         context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_CONTEXT]
@@ -167,6 +170,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
         [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
+
+        events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
+        [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
@@ -261,7 +267,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
-
+                elif model_data == Profile.PROFILE_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Import Existing Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(self.menu, 'Create New (manually digitized) Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_CREATE))
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
@@ -274,6 +282,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     or isinstance(model_data, Event) \
                     or isinstance(model_data, Raster) \
                     or isinstance(model_data, Mask) \
+                    or isinstance(model_data, Profile) \
                     or isinstance(model_data, PourPoint) \
                     or isinstance(model_data, Analysis):
                 self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
@@ -286,6 +295,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if isinstance(model_data, ScratchVector):
                 self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+
+            if isinstance(model_data, Profile):
                 self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
 
             if isinstance(model_data, Project):
@@ -337,6 +348,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_pour_point_map_layer(db_item)
         elif isinstance(db_item, ScratchVector):
             self.map_manager.build_scratch_vector(db_item)
+        elif isinstance(db_item, Profile):
+            self.map_manager.build_profile_layer(db_item)
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
         """Add all children of a group node to the map ToC
@@ -577,6 +590,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.mask, frm.chkAddToMap.isChecked())
 
+    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int):
+
+        import_source_path = None
+        if mode == DB_MODE_IMPORT:
+            import_source_path = browse_vector(self, 'Select a polygon dataset to import as a new mask.', QgsWkbTypes.GeometryType.LineGeometry)
+            if import_source_path is None:
+                return
+
+        frm = FrmProfile(self, self.project, import_source_path)
+        result = frm.exec_()
+        if result != 0:
+            self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
+
     def add_pour_point(self, parent_node):
 
         QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.' +
@@ -663,6 +689,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm = FrmDesign(self, self.project, db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
+        elif isinstance(db_item, Profile):
+            frm = FrmProfile(self, self.project, None, db_item)
         elif isinstance(db_item, Raster):
             frm = FrmRaster(self, self.iface, self.project, None, db_item.raster_type_id, db_item)
         elif isinstance(db_item, PourPoint):
@@ -674,7 +702,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.analysis_doc_widget.configure_analysis(self.project, db_item, None)
             self.analysis_doc_widget.show()
         else:
-            QtWidgets.QMessageBox.warning(self, 'Delete', 'Editing items is not yet implemented.')
+            QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
         if frm is not None:
             result = frm.exec_()

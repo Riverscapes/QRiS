@@ -124,6 +124,7 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
 
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (131, 'lkp_representation', 'Representation', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (132, 'lkp_profiles', 'Profiles', 'NoGeometry', 1, 'none.qml', NULL);
 
 CREATE TABLE method_layers (
     method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
@@ -1115,6 +1116,36 @@ CREATE TABLE stream_gage_discharges
 );
 CREATE INDEX fx_stream_gage_discharges ON stream_gage_discharges(stream_gage_id);
 -- CREATE INDEX ux_stream_gage_discharges ON stream_gage_discharges(stream_gage_id, measurement_date);
+
+-- Profiles
+CREATE TABLE profiles
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    profile_type_id INTEGER NOT NULL,-- REFERENCES lkp_mask_types(id),
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- profile features refer to the profile that they belong to
+ALTER TABLE profile_features ADD COLUMN profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE;
+ALTER TABLE profile_features ADD COLUMN display_label TEXT;
+ALTER TABLE profile_features ADD COLUMN description TEXT;
+ALTER TABLE profile_features ADD COLUMN metadata TEXT;
+
+-- centerlines are generated from the centerline tool
+ALTER TABLE profile_centerlines ADD COLUMN profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE;
+ALTER TABLE profile_centerlines ADD COLUMN display_label TEXT;
+ALTER TABLE profile_centerlines ADD COLUMN description TEXT;
+ALTER TABLE profile_centerlines ADD COLUMN metadata TEXT;
+ALTER TABLE profile_centerlines ADD COLUMN start_line TEXT;
+ALTER TABLE profile_centerlines ADD COLUMN end_line TEXT;
+ALTER TABLE profile_centerlines ADD COLUMN densify_distance REAL;
+ALTER TABLE profile_centerlines ADD COLUMN smoothing_iterations INTEGER;
+ALTER TABLE profile_centerlines ADD COLUMN smoothing_offset REAL;
+ALTER TABLE profile_centerlines ADD COLUMN smoothing_min_distance REAL;
+ALTER TABLE profile_centerlines ADD COLUMN smoothing_max_angle REAL;
 
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.

@@ -41,7 +41,9 @@ layers = [
     ('brat_cis', 'BRAT CIS', 'Point'),
     ('pour_points', 'Pour Points', 'Point'),
     ('catchments', 'Catchments', 'Polygon'),
-    ('stream_gages', 'Stream Gages', 'Point')
+    ('stream_gages', 'Stream Gages', 'Point'),
+    ('profile_centerlines', 'Centerlines', 'Linestring'),
+    ('profile_features', 'Profiles', 'Linestring')
 ]
 
 

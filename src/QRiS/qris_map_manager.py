@@ -11,6 +11,7 @@ from ..model.pour_point import PourPoint
 from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_TYPE_SURFACE, RASTER_SLIDER_MACHINE_CODE, RASTER_TYPE_CONTEXT
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.event_layer import EventLayer
+from ..model.profile import Profile
 
 from qgis.core import (
     QgsVectorLayer,
@@ -58,6 +59,35 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'area')
+
+        return feature_layer
+
+    def build_profile_layer(self, profile: Profile) -> QgsMapLayer:
+
+        if profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE:
+            symbology = 'centerline'
+            layer_name = 'centerline_features'
+        else:
+            symbology = 'profile'
+            layer_name = 'profile_features'
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        group_layer = self.get_group_layer(self.project.map_guid, Profile.PROFILE_MACHINE_CODE, 'Profiles', project_group, True)
+
+        existing_layer = self.get_db_item_layer(self.project.map_guid, profile, group_layer)
+        if existing_layer is not None:
+            return existing_layer
+
+        fc_path = f'{self.project.project_file}|layername={layer_name}'
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, profile, profile.id_column_name, symbology)
+
+        # setup fields
+        self.set_hidden(feature_layer, 'fid', 'Profile Feature ID')
+        self.set_hidden(feature_layer, 'profile_id', 'Profile ID')
+        self.set_alias(feature_layer, 'position', 'Position')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_hidden(feature_layer, 'metadata', 'Metadata')
+        self.set_virtual_dimension(feature_layer, 'length')
 
         return feature_layer
 

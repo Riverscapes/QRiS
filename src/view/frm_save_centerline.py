@@ -1,10 +1,9 @@
-import os
-import re
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsFeature
 
 from ..model.project import Project
+from ..model.profile import Profile, insert_profile
 
 from .utilities import validate_name, add_standard_form_buttons
 
@@ -18,10 +17,11 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         self.setupUi()
         self.setWindowTitle('Create Centerline')
 
-        self.iface = iface
+        # self.iface = iface
         self.project = project
 
         self.metrics = None
+        self.fields = None
         self.geom_centerline = None
 
     def add_metrics(self, metrics: dict):
@@ -35,6 +35,9 @@ class FrmSaveCenterline(QtWidgets.QDialog):
             self.tableMetrics.setItem(row, 1, QtWidgets.QTableWidgetItem(str(value)))
             row += 1
 
+    def add_fields(self, fields: dict):
+        self.fields = fields
+
     def add_centerline(self, centerline):
 
         self.centerline_feat = centerline
@@ -44,13 +47,28 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        project_path = self.project.project_file
-        out_layer = QgsVectorLayer(f'{project_path}|layername=centerlines')
-        out_layer.dataProvider().addFeature(self.centerline_feat)
-        out_layer.commitChanges()
+        try:
+            profile = insert_profile(self.project.project_file, self.txtName, Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, self.txtDescription)
+            out_layer = QgsVectorLayer(f'{self.project.project_file}|layername=profile_centerlines')
+            out_feature = QgsFeature()
+            out_feature.setFields(out_layer.fields())
+            out_feature[profile.id_column_name] = profile.id
+            if self.fields is not None:
+                for field, value in self.fields.items():
+                    out_feature[field] = value
+            # TODO save metrics somewhere
+            out_layer.dataProvider().addFeature(out_feature)
+            out_layer.commitChanges()
+
+        except Exception as ex:
+            try:
+                profile.delete(self.project.project_file)
+            except Exception as ex2:
+                QtWidgets.QMessageBox.warning(self, 'Error attempting to delete centerline after the saving of features failed.', str(ex2))
+            QtWidgets.QMessageBox.warning(self, 'Error Saving Centerline Feature', str(ex))
+            return False
 
         super(FrmSaveCenterline, self).accept()
-        return True
 
     def setupUi(self):
 
