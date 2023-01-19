@@ -124,7 +124,7 @@ def import_existing(source_path: str, dest_path: str, db_item: DBItem, dest_laye
 
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
-        dst_feature.SetField(db_item.id_column_name, db_item.id)
+        dst_feature.SetField(db_item.id_column_name, db_item.id)  # TODO FIX THIS!
         for src_field, dst_field in attributes.items():
             # Retrieve the field value differently if the feature ID is being used
             value = str(src_feature.GetFID()) if src_field == fid_field_name else src_feature.GetField(src_field)

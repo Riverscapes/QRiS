@@ -44,6 +44,7 @@ from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
+from ..model.cross_sections import CrossSections
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
@@ -60,6 +61,7 @@ from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
 from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
+from .frm_cross_sections import FrmCrossSections
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -92,7 +94,8 @@ GROUP_FOLDER_LABELS = {
     CATCHMENTS_MACHINE_CODE: 'Watershed Catchments',
     CONTEXT_NODE_TAG: 'Context',
     STREAM_GAGE_MACHINE_CODE: 'Stream Gages',
-    Profile.PROFILE_MACHINE_CODE: 'Profiles'
+    Profile.PROFILE_MACHINE_CODE: 'Profiles',
+    CrossSections.CROSS_SECTIONS_MACHINE_CODE: 'Cross Sections'
 }
 
 
@@ -160,6 +163,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
         [self.add_child_to_project_tree(profiles_node, item) for item in self.project.profiles.values()]
+
+        cross_sections_node = self.add_child_to_project_tree(inputs_node, CrossSections.CROSS_SECTIONS_MACHINE_CODE)
+        [self.add_child_to_project_tree(cross_sections_node, item) for item in self.project.cross_sections.values()]
 
         context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(context_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_CONTEXT]
@@ -270,6 +276,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(self.menu, 'Create New (manually digitized) Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_CREATE))
+                elif model_data == CrossSections.CROSS_SECTIONS_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Import Existing Cross Sections', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(self.menu, 'Create New (manually digitized) Cross Sections', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_CREATE))
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
@@ -283,6 +292,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     or isinstance(model_data, Raster) \
                     or isinstance(model_data, Mask) \
                     or isinstance(model_data, Profile) \
+                    or isinstance(model_data, CrossSections) \
                     or isinstance(model_data, PourPoint) \
                     or isinstance(model_data, ScratchVector) \
                     or isinstance(model_data, Analysis):
@@ -299,6 +309,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if isinstance(model_data, Profile):
                 self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
+
+            if isinstance(model_data, CrossSections):
+                self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
+                self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
 
             if isinstance(model_data, Project):
                 self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
@@ -351,6 +365,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_scratch_vector(db_item)
         elif isinstance(db_item, Profile):
             self.map_manager.build_profile_layer(db_item)
+        elif isinstance(db_item, CrossSections):
+            self.map_manager.build_cross_section_layer(db_item)
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
         """Add all children of a group node to the map ToC
@@ -499,6 +515,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.cross_sections_doc_widget.configure_polygon(db_item)
         self.cross_sections_doc_widget.show()
 
+    def generate_transect(self, db_item: DBItem):
+
+        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
+
+    def generate_sampling_frame(self, db_item: DBItem):
+
+        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating sampling frame from cross sections is not yet implemented.')
+
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False) -> QtGui.QStandardItem:
         """
         Looks at all child nodes of the parent_node and returns the existing QStandardItem
@@ -607,6 +631,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
 
+    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int):
+
+        import_source_path = None
+        if mode == DB_MODE_IMPORT:
+            import_source_path = browse_vector(self, 'Select a line dataset to import as a new cross section layer.', QgsWkbTypes.GeometryType.LineGeometry)
+            if import_source_path is None:
+                return
+
+        frm = FrmCrossSections(self, self.project, import_source_path)
+        result = frm.exec_()
+        if result != 0:
+            self.add_child_to_project_tree(parent_node, frm.cross_sections, frm.chkAddToMap.isChecked())
+
     def add_pour_point(self, parent_node):
 
         QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.' +
@@ -705,6 +742,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, Profile):
             frm = FrmProfile(self, self.project, None, db_item)
+        elif isinstance(db_item, CrossSections):
+            frm = FrmCrossSections(self, self.project, None, db_item)
         elif isinstance(db_item, Raster):
             frm = FrmRaster(self, self.iface, self.project, None, db_item.raster_type_id, db_item)
         elif isinstance(db_item, ScratchVector):

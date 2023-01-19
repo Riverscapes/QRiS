@@ -43,7 +43,8 @@ layers = [
     ('catchments', 'Catchments', 'Polygon'),
     ('stream_gages', 'Stream Gages', 'Point'),
     ('profile_centerlines', 'Centerlines', 'Linestring'),
-    ('profile_features', 'Profiles', 'Linestring')
+    ('profile_features', 'Profiles', 'Linestring'),
+    ('cross_section_features', 'Cross Sections', 'Linestring')
 ]
 
 

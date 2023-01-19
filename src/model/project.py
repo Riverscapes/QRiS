@@ -13,6 +13,7 @@ from .pour_point import PourPoint, load_pour_points
 from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
 from .profile import Profile, load_profiles
+from .cross_sections import CrossSections, load_cross_sections
 from .db_item import DBItem, dict_factory, load_lookup_table
 
 from pathlib import Path, PurePosixPath
@@ -59,6 +60,7 @@ class Project(DBItem):
             self.pour_points = load_pour_points(curs)
             self.stream_gages = load_stream_gages(curs)
             self.profiles = load_profiles(curs)
+            self.cross_sections = load_cross_sections(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))
@@ -88,6 +90,8 @@ class Project(DBItem):
             self.scratch_vectors.pop(db_item.id)
         elif isinstance(db_item, Profile):
             self.profiles.pop(db_item.id)
+        elif isinstance(db_item, CrossSections):
+            self.cross_sections.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 

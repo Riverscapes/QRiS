@@ -1140,6 +1140,22 @@ ALTER TABLE profile_centerlines ADD COLUMN display_label TEXT;
 ALTER TABLE profile_centerlines ADD COLUMN description TEXT;
 ALTER TABLE profile_centerlines ADD COLUMN metadata TEXT;
 
+-- Cross Sections
+CREATE TABLE cross_sections
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- profile features refer to the profile that they belong to
+ALTER TABLE cross_section_features ADD COLUMN cross_section_id INTEGER REFERENCES cross_sections(id) ON DELETE CASCADE;
+ALTER TABLE cross_section_features ADD COLUMN display_label TEXT;
+ALTER TABLE cross_section_features ADD COLUMN description TEXT;
+ALTER TABLE cross_section_features ADD COLUMN metadata TEXT;
+
 -- add to geopackage contents
 -- this is only necessary for non-spatial tables created using ddl.
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('analyses', 'attributes', 'analyses', 0);
@@ -1166,7 +1182,8 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('s
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('stream_gage_discharges', 'attributes', 'stream_gage_discharges', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('rasters', 'attributes', 'rasters', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('migrations', 'attributes', 'migrations', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('profiles', 'attributes', 'profies', 0)
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('profiles', 'attributes', 'profiles', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('cross_sections', 'attributes', 'cross_sections', 0);
 
 -- LOOKUP TABLES
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_metric_sources', 'attributes', 'lkp_metric_sources', 0);

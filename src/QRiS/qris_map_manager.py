@@ -12,6 +12,7 @@ from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, C
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
+from ..model.cross_sections import CrossSections
 
 from qgis.core import (
     QgsVectorLayer,
@@ -84,6 +85,28 @@ class QRisMapManager(RiverscapesMapManager):
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'Profile Feature ID')
         self.set_hidden(feature_layer, 'profile_id', 'Profile ID')
+        self.set_alias(feature_layer, 'position', 'Position')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_hidden(feature_layer, 'metadata', 'Metadata')
+        self.set_virtual_dimension(feature_layer, 'length')
+
+        return feature_layer
+
+    def build_cross_section_layer(self, cross_sections: CrossSections) -> QgsMapLayer:
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        group_layer = self.get_group_layer(self.project.map_guid, CrossSections.CROSS_SECTIONS_MACHINE_CODE, 'Cross Sections', project_group, True)
+
+        existing_layer = self.get_db_item_layer(self.project.map_guid, cross_sections, group_layer)
+        if existing_layer is not None:
+            return existing_layer
+
+        fc_path = f'{self.project.project_file}|layername=cross_section_features'
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, cross_sections, 'cross_section_id', 'cross_sections')
+
+        # setup fields
+        self.set_hidden(feature_layer, 'fid', 'Cross Section Feature ID')
+        self.set_hidden(feature_layer, 'cross_section_id', 'Cross Sections ID')
         self.set_alias(feature_layer, 'position', 'Position')
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
