@@ -97,7 +97,7 @@ class FrmProfile(QtWidgets.QDialog):
                     if clip_mask is not None:
                         clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
                     attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    import_existing(self.import_source_path, self.qris_project.project_file, self.profile, 'profile_features', attributes, clip_mask_id)
+                    import_existing(self.import_source_path, self.qris_project.project_file, 'profile_features', self.profile.id, 'profile_id', attributes, clip_mask_id)
                 except Exception as ex:
                     try:
                         self.profile.delete(self.qris_project.project_file)

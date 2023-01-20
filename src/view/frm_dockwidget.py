@@ -509,10 +509,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def generate_xsections(self, db_item: DBItem):
 
         if self.cross_sections_doc_widget is None:
-            self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.project, self.iface)
+            self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.project, self.iface, db_item)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.cross_sections_doc_widget)
 
-        self.cross_sections_doc_widget.configure_polygon(db_item)
+        self.cross_sections_doc_widget.export_complete.connect(self.save_complete)
         self.cross_sections_doc_widget.show()
 
     def generate_transect(self, db_item: DBItem):
@@ -622,7 +622,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         import_source_path = None
         if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, 'Select a polygon dataset to import as a new mask.', QgsWkbTypes.GeometryType.LineGeometry)
+            import_source_path = browse_vector(self, 'Select a line dataset to import as a new profile.', QgsWkbTypes.GeometryType.LineGeometry)
             if import_source_path is None:
                 return
 
@@ -727,6 +727,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.add_child_to_project_tree(project_node, centerline, add_to_map)
         else:
             self.iface.messageBar().pushMessage('Add Centerline to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+
+    @pyqtSlot(DBItem, bool)
+    def save_complete(self, item: DBItem, add_to_map: bool):
+
+        if isinstance(item, DBItem):
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            self.add_child_to_project_tree(project_node, item, add_to_map)
+        else:
+            self.iface.messageBar().pushMessage('Add to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
     def edit_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 

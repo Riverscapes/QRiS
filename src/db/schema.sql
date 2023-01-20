@@ -1152,6 +1152,8 @@ CREATE TABLE cross_sections
 
 -- profile features refer to the profile that they belong to
 ALTER TABLE cross_section_features ADD COLUMN cross_section_id INTEGER REFERENCES cross_sections(id) ON DELETE CASCADE;
+ALTER TABLE cross_section_features ADD COLUMN sequence INTEGER;
+ALTER TABLE cross_section_features ADD COLUMN distance REAL;
 ALTER TABLE cross_section_features ADD COLUMN display_label TEXT;
 ALTER TABLE cross_section_features ADD COLUMN description TEXT;
 ALTER TABLE cross_section_features ADD COLUMN metadata TEXT;

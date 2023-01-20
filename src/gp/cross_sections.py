@@ -1,9 +1,8 @@
 
-from distutils import extension
 import math
 
-from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsDistanceArea, QgsFeature, QgsGeometry, QgsPointXY, QgsLineString, QgsPolygon
-from qgis.PyQt.QtCore import pyqtSignal
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsFields, QgsFeature, QgsField, QgsGeometry, QgsPointXY, QgsLineString
+from qgis.PyQt.QtCore import pyqtSignal, QVariant
 
 
 MESSAGE_CATEGORY = 'CrossSectionsTask'
@@ -13,7 +12,7 @@ class CrossSectionsTask(QgsTask):
 
     cross_sections_complete = pyqtSignal(QgsGeometry)
 
-    def __init__(self, in_polygon: QgsGeometry, in_centerline: QgsLineString, offset: float, spacing: float, extension: float) -> None:
+    def __init__(self, in_centerline: QgsLineString, offset: float, spacing: float, extension: float, in_polygon: QgsGeometry = None) -> None:
         super().__init__('Generate Cross Sections Task', QgsTask.CanCancel)
 
         self.polygon = in_polygon
@@ -36,8 +35,9 @@ class CrossSectionsTask(QgsTask):
         # Lay out points along line
         # methodology based on https://gis.stackexchange.com/questions/302802/create-points-along-line-and-apply-a-90-offset-to-them-pyqgis
 
-        self.xsections = []
+        self.xsections = {}
         dist = 0.0
+        sequence = 0
 
         while dist < self.centerline.length():
 
@@ -57,10 +57,9 @@ class CrossSectionsTask(QgsTask):
             geom.extend(self.extension, 0.0)
             #clipped_geom = self.polygon.intersection(geom)
 
-            # TODO add attributes
             feat.setGeometry(geom)
-            self.xsections.append(feat)
-
+            self.xsections[sequence] = feat
+            sequence += 1
             dist += self.spacing
 
         return True

@@ -80,7 +80,7 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
     dst_dataset = None
 
 
-def import_existing(source_path: str, dest_path: str, db_item: DBItem, dest_layer_name: str, attributes: dict = {}, clip_mask_id: int = None) -> None:
+def import_existing(source_path: str, dest_path: str, dest_layer_name: str, output_id: int, output_id_field: str, attributes: dict = {}, clip_mask_id: int = None) -> None:
     """
     Copy the features from a source feature class to a destination mask feature class.
     The mask record must already exist. The attributes is a dictionary of source column
@@ -124,7 +124,7 @@ def import_existing(source_path: str, dest_path: str, db_item: DBItem, dest_laye
 
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
-        dst_feature.SetField(db_item.id_column_name, db_item.id)  # TODO FIX THIS!
+        dst_feature.SetField(output_id_field, output_id)
         for src_field, dst_field in attributes.items():
             # Retrieve the field value differently if the feature ID is being used
             value = str(src_feature.GetFID()) if src_field == fid_field_name else src_feature.GetField(src_field)

@@ -3,7 +3,7 @@ import sqlite3
 
 from osgeo import ogr
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext
 from qgis.PyQt.QtCore import pyqtSignal
 
 MESSAGE_CATEGORY = 'QRiS_NewProjectTask'
@@ -116,6 +116,7 @@ class NewProjectTask(QgsTask):
         options = QgsVectorFileWriter.SaveVectorOptions()
         options.layerName = table_name
         options.driverName = 'GPKG'
+        transform = QgsCoordinateTransformContext()
         if os.path.exists(geopackage_path):
             options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        QgsVectorFileWriter.writeAsVectorFormat(memory_layer, geopackage_path, options)
+        QgsVectorFileWriter.writeAsVectorFormatV3(memory_layer, geopackage_path, transform, options)
