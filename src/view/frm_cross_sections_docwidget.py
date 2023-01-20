@@ -34,7 +34,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.profile = profile
         self.clip_polygon = None
 
-        # self.polygon_layer = None
+        self.polygon_layer = None
         self.layer_preview_cl = None
         self.layer_preview_xs = None
 
@@ -44,16 +44,12 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.d.setEllipsoid('WGS84')
 
         self.cross_sections_setup()
-
-        # self.cmbCenterline.currentIndexChanged.connect(self.on_centerline_change)
+        # self.cmbPolygonLayer.currentIndexChanged.connect(self.on_polygon_change)
 
     def cross_sections_setup(self):
 
         self.txtProfile.setText(self.profile.name)
-
-        # self.feat_centerline = None
         self.geom_centerline = None
-        # self.geom_polygon = None
         if self.profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE:
             layer_name = 'profile_centerlines'
         else:
@@ -64,7 +60,6 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         feat = QgsFeature()
         feats.nextFeature(feat)
         self.geom_centerline = feat.geometry()
-        # self.txtPolygon.setText("")
 
         self.remove_cl_temp_layers()
         self.canvas.refresh()
@@ -86,6 +81,9 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.canvas.refreshAllLayers()
 
         QgsProject.instance().addMapLayers([self.layer_preview_cl, self.layer_preview_xs])
+
+        # items = [(polygon.name, polygon.tab )for polygon in self.project.masks]
+        # self.cmbPolygonLayer.addItems()
 
     # def configure_polygon(self, polygon_layer):
 
@@ -222,8 +220,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.txtProfile.setReadOnly(True)
         self.grid.addWidget(self.txtProfile, 0, 1, 1, 1)
 
-        # self.lblPolygon = QtWidgets.QLabel()
-        # self.lblPolygon.setText('Polygon')
+        # self.lblPolygon = QtWidgets.QLabel('Clip Layer')
         # self.grid.addWidget(self.lblPolygon, 1, 0, 1, 1)
 
         # self.horizPoly = QtWidgets.QHBoxLayout()
@@ -245,17 +242,18 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         # self.horizCL = QtWidgets.QHBoxLayout()
         # self.grid.addLayout(self.horizCL, 2, 1, 1, 1)
 
-        # self.cmbCenterline = QtWidgets.QComboBox()
-        # self.horizCL.addWidget(self.cmbCenterline)
+        # self.cmbPolygonLayer = QtWidgets.QComboBox()
+        # self.horizPoly.addWidget(self.cmbPolygonLayer)
 
         self.lblOffset = QtWidgets.QLabel('Offset (m)')
+        self.lblOffset.setVisible(False)
         self.grid.addWidget(self.lblOffset, 4, 0, 1, 1)
 
         self.dblOffset = QtWidgets.QDoubleSpinBox()
         self.dblOffset.setDecimals(1)
         self.dblOffset.setValue(10)
         self.dblOffset.setRange(0, 500)
-        self.dblOffset.setReadOnly(True)
+        self.dblOffset.setVisible(False)
         self.grid.addWidget(self.dblOffset, 4, 1, 1, 1)
 
         self.lblSpacing = QtWidgets.QLabel('Spacing (m)')

@@ -35,7 +35,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
 
-        show_mask_clip = import_source_path is not None
+        show_mask_clip = import_source_path is not None or output_features is not None
         self.lblMaskClip.setVisible(show_mask_clip)
         self.cboMaskClip.setVisible(show_mask_clip)
 
@@ -49,15 +49,15 @@ class FrmCrossSections(QtWidgets.QDialog):
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
                 # self.cboAttribute.setModelColumn(1)
-            if show_mask_clip:
-                # Masks (filtered to just AOI)
-                self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
-                no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-                self.masks[0] = no_clipping
-                self.masks_model = DBItemModel(self.masks)
-                self.cboMaskClip.setModel(self.masks_model)
-                # Default to no mask clipping
-                self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
+        if show_mask_clip:
+            # Masks (filtered to just AOI)
+            self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+            no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+            self.masks[0] = no_clipping
+            self.masks_model = DBItemModel(self.masks)
+            self.cboMaskClip.setModel(self.masks_model)
+            # Default to no mask clipping
+            self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
 
         if self.cross_sections is not None:
             self.txtName.setText(cross_sections.name)
@@ -107,12 +107,22 @@ class FrmCrossSections(QtWidgets.QDialog):
                     import_existing(self.import_source_path, self.project.project_file, 'cross_section_features', self.cross_sections.id, 'cross_section_id', attributes, clip_mask_id)
                 elif self.output_features is not None:
                     out_layer = QgsVectorLayer(f'{self.project.project_file}|layername=cross_section_features')
+                    clip_geom = None
+                    if clip_mask_id is not None:
+                        clip_layer = QgsVectorLayer(f'{self.project.project_file}|layername=aoi_features')
+                        clip_layer.setSubsetString(f'mask_id = {clip_mask_id}')
+                        clip_feats = clip_layer.getFeatures()
+                        clip_feat = QgsFeature()
+                        clip_feats.nextFeature(clip_feat)
+                        clip_geom = clip_feat.geometry()
                     for sequence, out_feature in self.output_features.items():
                         out_feature.setFields(out_layer.fields())
                         out_feature['sequence'] = sequence
                         out_feature['cross_section_id'] = self.cross_sections.id
-                        # if self.metadata is not None:
-                        #     out_feature.setAttribute('metadata', json.dumps(self.metadata))
+                        if clip_geom is not None:
+                            geom = out_feature.geometry()
+                            out_geom = geom.intersection(clip_geom)
+                            out_feature.setGeometry(out_geom)
                         out_layer.dataProvider().addFeature(out_feature)
                     out_layer.commitChanges()
             except Exception as ex:
