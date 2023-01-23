@@ -6,7 +6,7 @@ from PyQt5 import Qt, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsField, QgsMapLayer, QgsDistanceArea, QgsPointXY
+from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsMapLayer, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.gui import QgsMapToolIdentifyFeature
 
 from ..gp.centerlines import CenterlineTask
@@ -34,7 +34,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.parent = parent
         self.canvas = self.iface.mapCanvas()
         self.get_linestring = None
-        self.get_linestring = None
+        # self.get_linestring = None
         self.polygon_layer = None
 
         self.d = QgsDistanceArea()
@@ -51,6 +51,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.geom_end = None
         self.densify_distance = None
         self.fields = None
+        self.transform = None
 
         self.txtEnd.setText("")
         self.txtStart.setText("")
@@ -82,11 +83,16 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         # Initially choose first feature here
         layer = QgsVectorLayer(fc_path, polygon_layer.fc_name, 'ogr')
+        self.polygon_crs = layer.crs()
         feats = layer.getFeatures()
         feat = QgsFeature()
         feats.nextFeature(feat)
         self.geom_polygon = QgsGeometry(feat.geometry())
         self.txtPolygon.setText(f'FeatureID: {feat.id()}')
+
+        epgs_canvas = self.canvas.mapSettings().destinationCrs().authid()
+        sourceCrs = QgsCoordinateReferenceSystem(epgs_canvas)
+        self.transform = QgsCoordinateTransform(sourceCrs, self.polygon_crs, QgsProject.instance())
 
     def remove_cl_temp_layers(self):
         map_layers = QgsProject.instance().mapLayers()
@@ -180,6 +186,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def capture_start(self, line_string):
 
         self.geom_start = line_string
+        self.geom_start.transform(self.transform)
         self.txtStart.setText(self.geom_start.asWkt())
         feat = QgsFeature()
         feat.setGeometry(self.geom_start)
@@ -193,6 +200,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def capture_end(self, line_string):
 
         self.geom_end = line_string
+        self.geom_end.transform(self.transform)
         self.txtEnd.setText(self.geom_end.asWkt())
         feat = QgsFeature()
         feat.setGeometry(self.geom_end)
