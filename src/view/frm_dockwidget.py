@@ -66,7 +66,7 @@ from .frm_cross_sections import FrmCrossSections
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
 
-from ..gp.feature_class_functions import browse_raster, browse_vector
+from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.metrics_task import MetricsTask
@@ -308,6 +308,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
 
             if isinstance(model_data, Profile):
+                self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
                 self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
 
             if isinstance(model_data, CrossSections):
@@ -505,6 +506,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.centerline_doc_widget.export_complete.connect(self.centerline_save_complete)
         self.centerline_doc_widget.configure_polygon(db_item)
         self.centerline_doc_widget.show()
+
+    def flip_line(self, db_item: DBItem):
+        flip_line_geometry(self.project, db_item)
+        self.iface.mapCanvas().refreshAllLayers()
 
     def generate_xsections(self, db_item: DBItem):
 

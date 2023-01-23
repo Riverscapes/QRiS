@@ -5,12 +5,15 @@ from osgeo import osr
 from shapely.wkb import loads as wkbload, dumps as wkbdumps
 from osgeo.gdal import Warp, WarpOptions
 from qgis.PyQt.QtWidgets import QMessageBox
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsGeometry
 
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer, QgsWkbTypes
+from qgis.utils import iface
 
 from ..model.db_item import DBItem
+from ..model.profile import Profile
+from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
 
 
@@ -19,6 +22,26 @@ def check_geometry_type(path) -> int:
     ds = ogr.Open(path)
     layer = ds.GetLayer(0)
     return layer.GetGeomType()
+
+
+def flip_line_geometry(project: Project, profile: Profile):
+
+    if profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE:
+        layer_name = 'profile_centerlines'
+    else:
+        layer_name = 'profile_features'
+
+    feature_layer = QgsVectorLayer(f'{project.project_file}|layername={layer_name}')
+    feature_layer.setSubsetString(f'profile_id = {profile.id}')
+    feature_layer.startEditing()
+    feats = feature_layer.getFeatures()
+    for feat in feats:
+        fid = feat.id()
+        pts = feat.geometry().asPolyline()
+        pts.reverse()
+        out_geom = QgsGeometry.fromPolylineXY(pts)
+        feature_layer.changeGeometry(fid, out_geom)
+    feature_layer.commitChanges()
 
 
 def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict = {}, mask_type=REGULAR_MASK_TYPE_ID, clip_mask_id: int = None) -> None:
