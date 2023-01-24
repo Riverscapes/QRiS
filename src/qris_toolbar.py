@@ -419,24 +419,7 @@ class QRiSToolbar:
 
         # Add basemap to ToC if empty
         if len(QgsProject.instance().mapLayers().values()) == 0:
-            service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-            service_uri = "type=xyz&zmin=0&zmax=21&url=https://" + requests.utils.quote(service_url)
-            rlayer = QgsRasterLayer(service_uri, 'Google Satellite', 'wms')
-            if rlayer.isValid():
-                # QgsProject.instance().addMapLayer(rlayer)
-                root = QgsProject.instance().layerTreeRoot()
-                baselayer_group = root.addGroup("QRiS Base Maps")
-                QgsProject.instance().addMapLayer(rlayer, False)
-                baselayer_group.addLayer(rlayer)
-                canvas = self.iface.mapCanvas()
-                canvas.refreshAllLayers()
-                canvas.refresh()
-                extent = QgsRectangle(-14746044, 1945739, -6403040, 7205585)  # CONUS
-                canvas.setExtent(extent)
-                canvas.refresh()
-            else:
-                QgsMessageLog.logMessage(
-                    'Unable to add basemap to empty project.', 'QRiS', Qgis.Warning)
+            self.dockwidget.setup_blank_map()
         # We set the project path in the project settings. This way it will be saved with the QgsProject file
         # if self.dockwidget is None or self.dockwidget.isHidden() is True:
         #     # self.toggle_widget(forceOn=True)

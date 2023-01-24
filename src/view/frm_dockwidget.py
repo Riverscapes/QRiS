@@ -23,8 +23,9 @@
 """
 
 import os
+import requests
 from osgeo import ogr
-from qgis.core import QgsMapLayer, QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
@@ -32,7 +33,7 @@ from PyQt5.QtCore import pyqtSlot, QVariant, QDate
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
-from ..model.project import Project
+from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, RASTER_TYPE_CONTEXT, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
@@ -188,6 +189,28 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.treeView.expandAll()
         return
+
+    def setup_blank_map(self):
+        # TODO placeholder until this gets moved into riverscapes map manager as a proper basemap
+        service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+        service_uri = "type=xyz&zmin=0&zmax=21&url=https://" + requests.utils.quote(service_url)
+        project_group = self.map_manager.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+
+        rlayer = QgsRasterLayer(service_uri, 'Google Satellite', 'wms')
+        if rlayer.isValid():
+            baselayer_group = project_group.addGroup("QRiS Base Maps")
+            QgsProject.instance().addMapLayer(rlayer, False)
+            baselayer_group.addLayer(rlayer)
+            baselayer_group.setCustomProperty(self.map_manager.product_key, f'{self.map_manager.product_key}::{self.project.map_guid}::{BASEMAP_MACHINE_CODE}')
+            canvas = self.iface.mapCanvas()
+            canvas.refreshAllLayers()
+            canvas.refresh()
+            extent = QgsRectangle(-14746044, 1945739, -6403040, 7205585)  # CONUS
+            canvas.setExtent(extent)
+            canvas.refresh()
+        else:
+            QgsMessageLog.logMessage(
+                'Unable to add basemap to empty project.', 'QRiS', Qgis.Warning)
 
     def closeEvent(self, event):
 
