@@ -8,11 +8,13 @@
 - Add Representation to events (includes lookup table and event table schema update)
 
 ### Fixed
+- Spatial refrence for centerline preview layers
 - Copy feature class bug when output geopackage already exists
 - vertical spacing in Data Capture Events form
 - added missing non-spatial tables to gpkg_contents
 
 ### Changed
+- Reorganzie Tree menu
 - Mask menu order
 - New project browser folder title
 - Custom project file name

@@ -94,6 +94,10 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         sourceCrs = QgsCoordinateReferenceSystem(epgs_canvas)
         self.transform = QgsCoordinateTransform(sourceCrs, self.polygon_crs, QgsProject.instance())
 
+        self.layer_centerline.setCrs(self.polygon_crs)
+        self.layer_start_line.setCrs(self.polygon_crs)
+        self.layer_end_line.setCrs(self.polygon_crs)
+
     def remove_cl_temp_layers(self):
         map_layers = QgsProject.instance().mapLayers()
         for layer in map_layers:
