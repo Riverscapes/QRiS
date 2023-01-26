@@ -729,6 +729,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             rootNode = self.model.invisibleRootItem()
             project_node = self.add_child_to_project_tree(rootNode, self.project)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+            context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             context_node = self.add_child_to_project_tree(project_node, CATCHMENTS_MACHINE_CODE)
             self.add_child_to_project_tree(context_node, pour_point, add_to_map)
 
@@ -741,7 +743,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if isinstance(scratch_vector, ScratchVector):
             rootNode = self.model.invisibleRootItem()
             project_node = self.add_child_to_project_tree(rootNode, self.project)
-            context_node = self.add_child_to_project_tree(project_node, CONTEXT_NODE_TAG)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+            context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             self.add_child_to_project_tree(context_node, scratch_vector, add_to_map)
         else:
             self.iface.messageBar().pushMessage('Export Polygon Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
@@ -752,7 +755,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if isinstance(centerline, Profile):
             rootNode = self.model.invisibleRootItem()
             project_node = self.add_child_to_project_tree(rootNode, self.project)
-            self.add_child_to_project_tree(project_node, centerline, add_to_map)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+            profile_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
+            self.add_child_to_project_tree(profile_node, centerline, add_to_map)
         else:
             self.iface.messageBar().pushMessage('Add Centerline to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
