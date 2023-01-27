@@ -40,6 +40,7 @@ layers = [
     ('channel_unit_points', 'Channel Unit Points', 'Point'),
     ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
     ('brat_cis', 'BRAT CIS', 'Point'),
+    ('brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring'),
     ('pour_points', 'Pour Points', 'Point'),
     ('catchments', 'Catchments', 'Polygon'),
     ('stream_gages', 'Stream Gages', 'Point'),

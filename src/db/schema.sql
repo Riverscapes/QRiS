@@ -89,7 +89,7 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL);
-
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL);
 -- Lookup Tables
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (101, 'lkp_platform', 'Platform', 'NoGeometry', 1, 'temp.qml', NULL);
@@ -142,13 +142,13 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
 INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
+INSERT INTO method_layers (method_id, layer_id) VALUES (4, 26);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 22);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 5);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 7);
-
 
 -- CREATE TABLE protocol_layers (
 --     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
@@ -924,6 +924,24 @@ ALTER TABLE brat_cis ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
 
 ALTER TABLE brat_cis ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
 
+-- Alter the Brat CIS Reaches feature class
+ALTER TABLE brat_cis_reaches ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE brat_cis_reaches ADD COLUMN observer_name TEXT;
+ALTER TABLE brat_cis_reaches ADD COLUMN reach_id TEXT;
+ALTER TABLE brat_cis_reaches ADD COLUMN observation_date DATE;
+ALTER TABLE brat_cis_reaches ADD COLUMN reach_length FLOAT;
+ALTER TABLE brat_cis_reaches ADD COLUMN notes TEXT;
+
+ALTER TABLE brat_cis_reaches ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+ALTER TABLE brat_cis_reaches ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+ALTER TABLE brat_cis_reaches ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
+
+ALTER TABLE brat_cis_reaches ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base_streampower(id);
+ALTER TABLE brat_cis_reaches ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
+
+ALTER TABLE brat_cis_reaches ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
+
+ALTER TABLE brat_cis_reaches ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
 ----------------------------------------------------------------------------------------------------------------
 
 -- channel unit layers

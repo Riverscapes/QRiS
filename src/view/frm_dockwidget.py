@@ -68,7 +68,7 @@ from .frm_sampleframe import FrmSampleFrame
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
 
-from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry
+from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.metrics_task import MetricsTask
@@ -369,6 +369,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(model_data, EventLayer):
                 if model_data.name == 'BRAT CIS (Capacity Inference System)':
                     self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
+                elif model_data.name == 'BRAT CIS Reaches':
+                    self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', None, lambda: self.import_brat_results(model_data))
 
             else:
                 self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
@@ -542,6 +544,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # TODO error checking and message logging here
 
             # TODO any cleanup of lat/long header names and field order?
+
+    def import_brat_results(self, db_item: DBItem):
+
+        import_source_path = browse_vector(self, 'Select sql brat feature class to import.', QgsWkbTypes.GeometryType.LineGeometry)
+        if import_source_path is None:
+            return
+
+        attributes = {'ReachID': 'reach_id'}
+        import_existing(import_source_path, self.project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
+
+        #self.add_child_to_project_tree(parent_node, db_item, True)
 
     def raster_slider(self, db_item: DBItem):
 

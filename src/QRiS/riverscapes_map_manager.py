@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import json
+from textwrap import dedent
 
 from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
 from qgis.PyQt.QtCore import Qt, QVariant
@@ -395,11 +396,11 @@ class RiverscapesMapManager():
     # ----- LAYER ACTION BUTTONS -----------
     def add_help_action(self, feature_layer: QgsVectorLayer, help_slug: str, parent_container: QgsAttributeEditorContainer):
 
-        help_action_text = """
-    import webbrowser
-    help_url = "[% @help_url %]"
-    webbrowser.open(help_url, new=2)
-    """
+        help_action_text = dedent("""
+                           import webbrowser
+                           help_url = "[% @help_url %]"
+                           webbrowser.open(help_url, new=2)
+                           """).strip("\n")
         help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') + '.html' if help_slug is not None and len(help_slug) > 0 else CONSTANTS
         QgsExpressionContextUtils.setLayerVariable(feature_layer, 'help_url', help_url)
         helpAction = QgsAction(1, 'Open Help URL', help_action_text, None, capture=False, shortTitle='Help', actionScopes={'Layer'})

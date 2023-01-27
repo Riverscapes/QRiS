@@ -1,5 +1,6 @@
 import os
 import json
+from textwrap import dedent
 
 from .riverscapes_map_manager import RiverscapesMapManager
 
@@ -23,6 +24,8 @@ from qgis.core import (
     QgsExpressionContextUtils,
     qgsfunction,
     QgsAttributeEditorContainer,
+    QgsAction,
+    QgsAttributeEditorAction
 )
 
 
@@ -282,7 +285,7 @@ class QRisMapManager(RiverscapesMapManager):
             self.configure_structure_lines(feature_layer)
         elif layer_name == 'complexes':
             self.configure_complexes(feature_layer)
-        elif layer_name == 'brat_cis':
+        elif layer_name in ['brat_cis', 'brat_cis_reaches']:
             self.add_brat_cis(feature_layer)
         else:
             # TODO: Should probably have a notification for layers not found....
@@ -311,6 +314,9 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_alias(feature_layer, 'notes', 'Notes', info_container, 3)
         self.set_alias(feature_layer, 'observer_name', 'Observer Name', info_container, 4)
         editFormConfig.addTab(info_container)
+
+        # Add buffer button
+        self.add_buffer_action(feature_layer, rootContainer)
 
         # Vegetation Evidence Group Box
         veg_container = QgsAttributeEditorContainer('Vegetation Evidence CIS', rootContainer)
@@ -452,9 +458,55 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_virtual_dimension(feature_layer, 'area')
         self.set_created_datetime(feature_layer)
 
+    # QgsActions
+    def add_buffer_action(self, feature_layer: QgsVectorLayer, parent_container: QgsAttributeEditorContainer):
+
+        action_text = dedent("""
+                            from PyQt5 import QtCore
+                            from qgis.PyQt.QtGui import QColor
+
+                            buffers = {"Small":0.0001,
+                                    "Large":0.00025}
+                            buffer_color = {"Small":QColor(237,10,10,255),
+                                            "Large":QColor(237,10,10,255)}
+                            preview_layers = {}
+                            feats = {}
+
+                            canvas = qgis.utils.iface.mapCanvas()
+                            brat_layer = QgsProject.instance().mapLayer('[% @layer_id %]')
+                            fid = [% $id %]
+                            feature = brat_layer.getFeature(fid)
+                            base_geom = feature.geometry()
+
+                            for buffer, size in buffers.items():
+                                for layer in QgsProject.instance().mapLayersByName(f"QRIS BRAT CIS {buffer} Buffer Context"):
+                                    QgsProject.instance().removeMapLayer(layer.id())
+                                preview_layers[buffer] = QgsVectorLayer('polygon', f"QRIS BRAT CIS {buffer} Buffer Context", 'memory')
+                                preview_layers[buffer].setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
+                                preview_layers[buffer].renderer().symbol().symbolLayer(0).setColor(QColor(0,0,0,0))
+                                preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeColor(buffer_color[buffer])
+                                preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeStyle(QtCore.Qt.DashLine)
+                                preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeWidth(0.5)
+
+                                buffer_geom = base_geom.buffer(size, 10, QgsGeometry.CapFlat, QgsGeometry.JoinStyleRound, 0.0)
+
+                                feat[buffer] = QgsFeature()
+                                feat[buffer].setGeometry(buffer_geom)
+                                preview_layers[buffer].dataProvider().addFeature(feat[buffer])
+                                preview_layers[buffer].commitChanges()
+
+                            QgsProject.instance().addMapLayers([layer for layer in preview_layers.values()])
+                            # canvas.setExtent(feat['Large'].geometry().boundingBox())
+                            # canvas.refreshAllLayers()
+                      """).strip("\n")
+
+        action = QgsAction(1, 'Generate Brat CIS Context Buffers', action_text, None, capture=False, shortTitle='Generate Context', actionScopes={'Feature', 'Layer'})
+        feature_layer.actions().addAction(action)
+        editorAction = QgsAttributeEditorAction(action, parent_container)
+        parent_container.addChildElement(editorAction)
+
+
 # QGSfunctions for field expressions
-
-
 @qgsfunction(args='auto', group='QRIS', referenced_columns=[])
 def get_veg_dam_density(stream_veg, riparian_veg, rules_string, feature, parent):
     rules = json.loads(rules_string)
