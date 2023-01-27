@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication
 
-from ..model.raster import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP, SCRATCH_PARENT_FOLDER
+from ..model.raster import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP, SURFACES_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
@@ -41,7 +41,7 @@ class FrmRaster(QtWidgets.QDialog):
 
             self.setWindowTitle('Create New Basemap' if self.raster is None else 'Edit Basemap Properties')
         else:
-            self.setWindowTitle('Create New Scratch Space Raster' if self.raster is None else 'Edit Scratch Space Raster Properties')
+            self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
 
         if raster is None:
             self.txtName.textChanged.connect(self.on_name_changed)
@@ -157,7 +157,7 @@ class FrmRaster(QtWidgets.QDialog):
 
         if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
-            parent_folder = BASEMAP_PARENT_FOLDER if self.raster_type_id == RASTER_TYPE_BASEMAP else SCRATCH_PARENT_FOLDER
+            parent_folder = BASEMAP_PARENT_FOLDER if self.raster_type_id == RASTER_TYPE_BASEMAP else SURFACES_PARENT_FOLDER
             self.txtProjectPath.setText(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext)))
         else:
             self.txtProjectPath.setText('')
@@ -206,7 +206,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.grid.addWidget(self.txtProjectPath, 3, 1, 1, 1)
 
         self.lblMask = QtWidgets.QLabel()
-        self.lblMask.setText('Clip to Mask')
+        self.lblMask.setText('Clip to AOI')
         self.grid.addWidget(self.lblMask, 4, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()

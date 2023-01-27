@@ -184,8 +184,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
-        [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps().values()]
+        # basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
+        # [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps().values()]
 
         self.treeView.expandAll()
         return

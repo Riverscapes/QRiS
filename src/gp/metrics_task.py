@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 from ..model.project import Project
 from ..model.mask import Mask
 from .metrics import Metrics
-from ..model.raster import SCRATCH_PARENT_FOLDER
+from ..model.raster import SURFACES_PARENT_FOLDER
 import webbrowser
 
 QRIS_MAP_LAYER_MACHINE_CODE = 'QRIS_MAP_LAYER_MACHINE_CODE'
@@ -79,7 +79,7 @@ class MetricsTask(QgsTask):
             QgsMessageLog.logMessage('Metrics Complete', MESSAGE_CATEGORY, Qgis.Success)
 
             base_name = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            output_json = os.path.join(os.path.dirname(self.project.project_file), SCRATCH_PARENT_FOLDER, f'geospatial_metric_summary_{base_name}.json')
+            output_json = os.path.join(os.path.dirname(self.project.project_file), SURFACES_PARENT_FOLDER, f'geospatial_metric_summary_{base_name}.json')
             with open(output_json, 'w') as f:
                 json.dump(self.data, f, indent=4)
             webbrowser.open('file://' + output_json)

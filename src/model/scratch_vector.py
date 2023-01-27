@@ -3,11 +3,10 @@ import sqlite3
 from .db_item import DBItem
 from osgeo import ogr
 
-from .raster import SCRATCH_PARENT_FOLDER
-
 from qgis.core import QgsMessageLog, Qgis
 
 SCRATCH_VECTOR_MACHINE_CODE = 'Scratch Vectors'
+CONTEXT_PARENT_FOLDER = 'context'
 
 
 class ScratchVector(DBItem):
@@ -133,7 +132,7 @@ def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str,
 
 def scratch_gpkg_path(project_file: str) -> str:
 
-    return os.path.join(os.path.dirname(project_file), SCRATCH_PARENT_FOLDER, 'feature_classes.gpkg')
+    return os.path.join(os.path.dirname(project_file), CONTEXT_PARENT_FOLDER, 'feature_classes.gpkg')
 
 
 def get_unique_scratch_fc_name(project_file: str, fc_seed_name: str):
