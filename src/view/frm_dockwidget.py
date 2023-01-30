@@ -819,12 +819,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def geospatial_summary(self, model_item, model_data: Mask):
 
-        task = MetricsTask(self.project, model_data)
-        result = task.run()
+        metrics_task = MetricsTask(self.project, model_data)
+        metrics_task.run()
+        metrics_task.on_complete.connect(self.geospatial_summary_complete)
+        QgsApplication.taskManager().addTask(metrics_task)
+
+    @pyqtSlot(bool, Mask, dict or None, dict or None)
+    def geospatial_summary_complete(self, result, model_data, polygons, data):
 
         if result is True:
-            frm = FrmGeospatialMetrics(self, self.project, model_data, task.polygons, task.data)
+            frm = FrmGeospatialMetrics(self, self.project, model_data, polygons, data)
             frm.exec_()
+        else:
+            self.iface.messageBar().pushMessage('Zonal Statistics Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
     def delete_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 

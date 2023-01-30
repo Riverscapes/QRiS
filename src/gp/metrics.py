@@ -7,27 +7,30 @@ from osgeo import ogr, gdal, osr
 from shapely.wkb import load, loads as wkbload, dumps as wkbdumps
 from osgeo import gdal
 from shapely.geometry import mapping
+
+from ..model.mask import Mask
 from .zonal_statistics import zonal_statistics
 
 
 class Metrics:
 
-    def __init__(self, project_file: str, mask_id: int, layers: list):
+    def __init__(self, project_file: str, mask_id: int, layers: list, mask_layer='mask_features'):
 
         self.config = {'vector': {}, 'raster': {}}
         self.project_file = project_file
         self.mask_id = mask_id
         self.layers = layers
+        self.mask_layer = mask_layer
         self.metrics = {}
-        self.polygons, self.utm_epsg = self.load_polygons(project_file, mask_id)
+        self.polygons, self.utm_epsg = self.load_polygons(project_file, mask_id, self.mask_layer)
         # print(json.dumps(mapping(self.polygons[2]['geometry'])))
 
-    def load_polygons(self, project_file: str, mask_id: int) -> dict:
+    def load_polygons(self, project_file: str, mask: Mask, mask_layer: str = 'mask_features') -> dict:
 
         driver = ogr.GetDriverByName("GPKG")
         ds = driver.Open(project_file)
-        layer = ds.GetLayerByName('mask_features')
-        layer.SetAttributeFilter(f'mask_id = {mask_id}')
+        layer = ds.GetLayerByName(mask_layer)
+        layer.SetAttributeFilter(f'mask_id = {mask.id}')
         src_srs = layer.GetSpatialRef()
 
         # Target transform to most appropriate UTM zone
@@ -58,7 +61,7 @@ class Metrics:
                 geom.FlattenTo2D()
             polygons[feature.GetFID()] = {
                 'geometry': wkbload(bytes(geom.ExportToWkb())),
-                'display_label': feature.GetField('display_label')
+                'display_label': feature.GetField('display_label') if mask_layer == 'mask_features' else f'AOI {mask.name}'
             }
 
         layer = None
@@ -89,7 +92,9 @@ class Metrics:
             if layer['type'] == 'vector':
                 metrics[layer['name']] = self.process_vector(layer)
             else:
-                metrics[layer['name']] = self.process_raster(layer)
+                metric = self.process_raster(layer)
+                if metric is not None:
+                    metrics[layer['name']] = metric
 
         return metrics
 
@@ -144,7 +149,8 @@ class Metrics:
     def process_raster(self, layer_def):
 
         raster = gdal.Open(layer_def['url'])
-        # src_srs = raster.GetProjection()
+        if raster is None:
+            return None
         src_srs = osr.SpatialReference()
         src_srs.ImportFromWkt(raster.GetProjection())
 
