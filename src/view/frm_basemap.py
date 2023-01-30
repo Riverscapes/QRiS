@@ -1,7 +1,7 @@
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from qgis.core import Qgis, QgsApplication
+from qgis.core import Qgis, QgsApplication, QgsMessageLog
 
 from ..model.raster import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP, SURFACES_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
@@ -140,15 +140,21 @@ class FrmRaster(QtWidgets.QDialog):
                 self.project.rasters[self.raster.id] = self.raster
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Raster', str(ex))
                 return
 
             super(FrmRaster, self).accept()
         else:
             self.iface.messageBar().pushMessage('Raster Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            try:
+                self.raster.delete(self.project.project_file)
+            except Exception as ex:
+                QgsMessageLog.logMessage(f'Error attempting to delete raster after the importing raster failed.: {ex}', 'QRiS_CopyRaster Task', Qgis.Critical)
+            self.raster = None
+
             self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):
