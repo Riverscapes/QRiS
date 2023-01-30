@@ -133,7 +133,7 @@ class FrmRaster(QtWidgets.QDialog):
     def on_raster_copy_complete(self, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage('Raster Copy Complete.', 'self.txt.', level=Qgis.Info, duration=5)
+            self.iface.messageBar().pushMessage('Raster Copy Complete.', f'Raster {self.txtName.text()} added to project', level=Qgis.Info, duration=5)
 
             try:
                 self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.raster_type_id, self.txtDescription.toPlainText())
