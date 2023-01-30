@@ -6,7 +6,7 @@ from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
-from .raster import Raster, load_rasters, RASTER_TYPE_BASEMAP
+from .raster import Raster, load_rasters, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE
 from .event import Event, load as load_events
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
@@ -54,7 +54,7 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.methods)
             self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
-            self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.basemaps())
+            self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.surface_rasters())
             self.metrics = load_metrics(curs)
             self.analyses = load_analyses(curs, self.masks, self.metrics)
             self.pour_points = load_pour_points(curs)
@@ -104,6 +104,11 @@ class Project(DBItem):
         """ Returns a dictionary of all project rasters EXCEPT basemaps"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id != RASTER_TYPE_BASEMAP}
+
+    def surface_rasters(self) -> dict:
+        """ Returns a dictionary of all project surface rasters"""
+
+        return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id == RASTER_TYPE_SURFACE}
 
 
 def apply_db_migrations(db_path: str):

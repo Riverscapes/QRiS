@@ -327,11 +327,11 @@ CREATE TABLE scratch_vectors (
 CREATE INDEX fx_scratch_vectors_vector_type_id ON scratch_vectors(vector_type_id);
 
 
-CREATE TABLE event_basemaps (
+CREATE TABLE event_rasters (
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
-    basemap_id INTEGER REFERENCES rasters(id) ON DELETE CASCADE,
+    raster_id INTEGER REFERENCES rasters(id) ON DELETE CASCADE,
     
-    CONSTRAINT pk_event_basemaps PRIMARY KEY (event_id, basemap_id)
+    CONSTRAINT pk_event_rasters PRIMARY KEY (event_id, raster_id)
 );
 
 CREATE TABLE lkp_mask_types (
@@ -1173,8 +1173,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('p
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('events', 'attributes', 'events', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_layers', 'attributes', 'event_layers', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
--- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('basemaps', 'attributes', 'basemaps', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_basemaps', 'attributes', 'event_basemaps', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_rasters', 'attributes', 'event_rasters', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metrics', 'attributes', 'metrics', 0);

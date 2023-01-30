@@ -37,19 +37,19 @@ class FrmEvent(QtWidgets.QDialog):
         self.layers_model = QtGui.QStandardItemModel()
         self.layer_list.setModel(self.layers_model)
 
-        # Basemaps
-        self.basemap_model = QtGui.QStandardItemModel()
-        for basemap in qris_project.basemaps().values():
-            item = QtGui.QStandardItem(basemap.name)
+        # Surface Rasters
+        self.surface_raster_model = QtGui.QStandardItemModel()
+        for surface in qris_project.surface_rasters().values():
+            item = QtGui.QStandardItem(surface.name)
             item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-            item.setData(basemap, QtCore.Qt.UserRole)
-            self.basemap_model.appendRow(item)
+            item.setData(surface, QtCore.Qt.UserRole)
+            self.surface_raster_model.appendRow(item)
 
-            checked_state = QtCore.Qt.Checked if event is not None and basemap in event.basemaps else QtCore.Qt.Unchecked
+            checked_state = QtCore.Qt.Checked if event is not None and surface in event.basemaps else QtCore.Qt.Unchecked
             item.setData(QtCore.QVariant(checked_state), QtCore.Qt.CheckStateRole)
 
-        self.vwBasemaps.setModel(self.basemap_model)
-        self.vwBasemaps.setModelColumn(1)
+        self.vwRasterSurfaces.setModel(self.surface_raster_model)
+        self.vwRasterSurfaces.setModelColumn(1)
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.representation_model = DBItemModel(qris_project.lookup_tables['lkp_representation'])
@@ -300,14 +300,14 @@ class FrmEvent(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
             return
 
-        basemaps = []
-        for row in range(self.basemap_model.rowCount()):
-            index = self.basemap_model.index(row, 0)
-            check = self.basemap_model.data(index, QtCore.Qt.CheckStateRole)
+        surface_rasters = []
+        for row in range(self.surface_raster_model.rowCount()):
+            index = self.surface_raster_model.index(row, 0)
+            check = self.surface_raster_model.data(index, QtCore.Qt.CheckStateRole)
             if check == QtCore.Qt.Checked:
-                for basemap in self.qris_project.basemaps().values():
-                    if basemap == self.basemap_model.data(index, QtCore.Qt.UserRole):
-                        basemaps.append(basemap)
+                for raster in self.qris_project.surface_rasters().values():
+                    if raster == self.surface_raster_model.data(index, QtCore.Qt.UserRole):
+                        surface_rasters.append(raster)
                         break
 
         try:
@@ -323,7 +323,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, basemaps, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.cboRepresentation.currentData(QtCore.Qt.UserRole), self.metadata)
+                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.cboRepresentation.currentData(QtCore.Qt.UserRole), self.metadata)
                 super().accept()
             else:
                 self.the_event = insert_event(
@@ -337,7 +337,7 @@ class FrmEvent(QtWidgets.QDialog):
                     self.cboPlatform.currentData(QtCore.Qt.UserRole),
                     self.cboRepresentation.currentData(QtCore.Qt.UserRole),
                     layers_in_use,
-                    basemaps,
+                    surface_rasters,
                     self.metadata
                 )
 
@@ -482,9 +482,9 @@ class FrmEvent(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.vert.addWidget(self.chkAddToMap)
 
-        # Basemaps
-        self.vwBasemaps = QtWidgets.QListView()
-        self.tab.addTab(self.vwBasemaps, 'Basemaps')
+        # Surface Rasters
+        self.vwRasterSurfaces = QtWidgets.QListView()
+        self.tab.addTab(self.vwRasterSurfaces, 'Surfaces')
 
         # Description
         self.txtDescription = QtWidgets.QPlainTextEdit()

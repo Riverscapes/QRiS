@@ -367,6 +367,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_raster_layer(db_item)
         elif isinstance(db_item, Event):
             [self.map_manager.build_event_single_layer(db_item, layer) for layer in db_item.event_layers]
+            [self.map_manager.build_raster_layer(raster) for raster in db_item.rasters]
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
@@ -381,7 +382,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_event_single_layer(event, db_item)
         elif isinstance(db_item, Project):
             [self.map_manager.build_mask_layer(mask) for mask in self.project.masks.values()]
-            [self.map_manager.build_raster_layer(raster) for raster in self.project.basemaps().values()]
+            [self.map_manager.build_raster_layer(raster) for raster in self.project.surface_rasters().values()]
             [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             self.map_manager.build_pour_point_map_layer(db_item)

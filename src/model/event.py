@@ -29,7 +29,7 @@ class Event(DBItem):
                  platform: DBItem,
                  representation: DBItem,
                  event_layers: List[EventLayer],
-                 basemaps: List[Raster],
+                 rasters: List[Raster],
                  metadata: dict):
 
         super().__init__('events', id, name)
@@ -41,12 +41,12 @@ class Event(DBItem):
         self.platform = platform
         self.representation = representation
         self.event_layers = event_layers
-        self.basemaps = basemaps.copy() if basemaps else []
+        self.rasters = rasters.copy() if rasters else []
         self.metadata = metadata
 
         self.icon = 'design' if self.event_type.id == DESIGN_EVENT_TYPE_ID else 'event'
 
-    def update(self, db_path: str, name: str, description: str, layers: List[Layer], basemaps: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, representation: DBItem, metadata: dict) -> None:
+    def update(self, db_path: str, name: str, description: str, layers: List[Layer], rasters: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, representation: DBItem, metadata: dict) -> None:
 
         sql_description = description if description is not None and len(description) > 0 else None
         sql_metadata = json.dumps(metadata) if metadata is not None else None
@@ -72,11 +72,11 @@ class Event(DBItem):
                 WHERE id = ?""",
                              [name, sql_description, platform.id, representation.id, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
 
-                update_intersect_table(curs, 'event_basemaps', 'event_id', 'basemap_id', self.id, [item.id for item in basemaps])
+                update_intersect_table(curs, 'event_rasters', 'event_id', 'raster_id', self.id, [item.id for item in rasters])
 
                 self.name = name
                 self.description = description
-                self.basemaps = basemaps
+                self.basemaps = rasters
                 save_event_layers(curs, self.id, layers, self.event_layers)
                 self.start = start_date
                 self.end = end_date
@@ -90,13 +90,13 @@ class Event(DBItem):
                 raise ex
 
 
-def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, lookups: dict, basemaps: dict) -> Dict[int, Event]:
+def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, lookups: dict, rasters: dict) -> Dict[int, Event]:
 
     # curs.execute('SELECT * FROM event_protocols')
     # event_protocols = [(row['event_id'], protocols[row['protocol_id']]) for row in curs.fetchall()]
 
-    curs.execute('SELECT * FROM event_basemaps')
-    event_basemaps = [(row['event_id'], basemaps[row['basemap_id']]) for row in curs.fetchall()]
+    curs.execute('SELECT * FROM event_rasters')
+    event_basemaps = [(row['event_id'], rasters[row['raster_id']]) for row in curs.fetchall()]
 
     curs.execute('SELECT * FROM event_layers')
     event_layers = [EventLayer(row['id'], row['event_id'], layers[row['layer_id']]) for row in curs.fetchall()]
@@ -128,13 +128,13 @@ def insert(db_path: str,
            platform: DBItem,
            representation: DBItem,
            layers: List[Layer],
-           basemaps: list,
+           rasters: list,
            metadata: dict) -> Event:
     """
     Layers is a list of Layers objects that are in use for this event"""
 
     description = description if description and len(description) > 0 else None
-    basemaps = basemaps or []
+    rasters = rasters or []
 
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = dict_factory
@@ -172,14 +172,14 @@ def insert(db_path: str,
             ])
             event_id = curs.lastrowid
 
-            curs.executemany('INSERT INTO event_basemaps (event_id, basemap_id) VALUES (?, ?)', [(event_id, basemap.id) for basemap in basemaps])
+            curs.executemany('INSERT INTO event_rasters (event_id, raster_id) VALUES (?, ?)', [(event_id, raster.id) for raster in rasters])
 
             event_layers = []
             for layer in layers:
                 curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?)', [event_id, layer.id])
                 event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
 
-            event = Event(event_id, name, description, start, end, date_text, event_type, platform, representation, event_layers, basemaps, metadata)
+            event = Event(event_id, name, description, start, end, date_text, event_type, platform, representation, event_layers, rasters, metadata)
             conn.commit()
 
         except Exception as ex:
