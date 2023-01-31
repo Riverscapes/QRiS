@@ -39,6 +39,7 @@ class RiverscapesMapManager():
         super().__init__()
         self.product_key = product_key
         self.symbology_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), CONSTANTS['symbologyDir'])
+        self.layer_order = ['Basemaps']
 
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
         return f'{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}'
@@ -105,17 +106,31 @@ class RiverscapesMapManager():
                 return child_layer
 
         if add_missing:
-            # Find the basemaps group layer. If it is already in the map then
-            # insert the new group layer ABOVE it rather than just add it (which
-            # will cause it to get added below the basemaps).
-            basemap_group_index = self.get_group_layer(project_key, BASEMAP_MACHINE_CODE, 'Basemaps', parent, False)
 
-            if basemap_group_index is None:
-                # No basemaps under this parent. Add the new group. It will get added last.
-                group_layer = parent.addGroup(group_label)
-            else:
-                # Basemap group node exists. Add the new group as penultimate group.
-                group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
+            target_index = 0
+            for group_layer_machine_code in self.layer_order:
+                if group_layer_machine_code == machine_code:
+                    break
+                group_index = self.get_group_layer(project_key, group_layer_machine_code, None, parent, False)
+                if group_index is not None:
+                    target_index += 1
+
+            # if target_index == 0:
+            #     group_layer = parent.addGroup(group_label)
+            # else:
+            group_layer = parent.insertGroup(target_index, group_label)
+
+            # # Find the basemaps group layer. If it is already in the map then
+            # # insert the new group layer ABOVE it rather than just add it (which
+            # # will cause it to get added below the basemaps).
+            # basemap_group_index = self.get_group_layer(project_key, BASEMAP_MACHINE_CODE, 'Basemaps', parent, False)
+
+            # if basemap_group_index is None:
+            #     # No basemaps under this parent. Add the new group. It will get added last.
+            #     group_layer = parent.addGroup(group_label)
+            # else:
+            #     # Basemap group node exists. Add the new group as penultimate group.
+            #     group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
 
             group_layer.setCustomProperty(self.product_key, target_custom_property)
             return group_layer

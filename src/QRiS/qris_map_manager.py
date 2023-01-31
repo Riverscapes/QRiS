@@ -29,6 +29,18 @@ class QRisMapManager(RiverscapesMapManager):
     def __init__(self, project: Project) -> None:
         super().__init__('QRiS')
         self.project = project
+        self.layer_order = [
+            AOI_MACHINE_CODE,
+            MASK_MACHINE_CODE,
+            'Event_ROOT',
+            CrossSections.CROSS_SECTIONS_MACHINE_CODE,
+            Profile.PROFILE_MACHINE_CODE,
+            RASTER_SLIDER_MACHINE_CODE,
+            STREAM_GAGE_MACHINE_CODE,
+            SURFACE_MACHINE_CODE,
+            CONTEXT_MACHINE_CODE,
+            'QRiS Base Maps',
+            BASEMAP_MACHINE_CODE]
 
     def build_mask_layer(self, mask: Mask) -> QgsMapLayer:
 
