@@ -9,6 +9,7 @@ from ..model.raster import Raster
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
+from .double_slider import DoubleSlider
 
 from ..QRiS.qris_map_manager import QRisMapManager
 
@@ -47,7 +48,7 @@ class FrmSlider(QtWidgets.QDockWidget):
 
     def spinBoxElevationChange(self, value: float):
         self.map_manager.apply_raster_single_value(self.raster_layer, value)
-        self.slider.setValue(int(value))
+        self.slider.setValue(value)
 
     def cmdSelect_click(self):
         frm = FrmLayerPicker(self, 'Select raster', [])
@@ -103,18 +104,22 @@ class FrmSlider(QtWidgets.QDockWidget):
         # self.valElevation.setSuffix('m')
         # self.valElevation.setMinimum(0)
         # self.valElevation.setMaximum(100)
-        # self.valElevation.setSingleStep(0.1)
+        self.valElevation.setSingleStep(0.1)
         self.valElevation.setDecimals(1)
         self.valElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.grid.addWidget(self.valElevation, 1, 1, 1, 1)
 
-        self.slider = QtWidgets.QSlider()
-        self.slider.setMaximum(1000)
+        self.slider = DoubleSlider(decimals=2)
+        # self.slider = QtWidgets.QSlider()
+        # self.slider.setMaximum(1000)
         self.slider.setOrientation(QtCore.Qt.Horizontal)
         self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
-        self.slider.setTickInterval(100)
-        self.slider.valueChanged.connect(self.sliderElevationChange)
+        self.slider.setSingleStep(0.1)
+        # self.slider.setTickInterval(100)
+        self.slider.doubleValueChanged.connect(self.sliderElevationChange)
         self.grid.addWidget(self.slider, 2, 1, 1, 1)
+
+        self.precision = QtWidgets
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export')
