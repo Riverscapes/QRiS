@@ -1,4 +1,4 @@
-## [Unreleased] 
+## [0.1.10] 
 
 ### Added
 - Most Recently Used (MRU) Project Menu
@@ -8,12 +8,15 @@
 - Add Representation to events (includes lookup table and event table schema update)
 
 ### Fixed
+- Clip rasters with aoi mask when copying
 - Spatial refrence for centerline preview layers
 - Copy feature class bug when output geopackage already exists
 - vertical spacing in Data Capture Events form
 - added missing non-spatial tables to gpkg_contents
 
 ### Changed
+- Basemaps node removed for now (will add back in with riverscapes map manager integration)
+- Reorganize toc layer order
 - Reorganzie Tree menu
 - Mask menu order
 - New project browser folder title
