@@ -5,6 +5,7 @@
 3. DOUBLE CHECK that QgsTasks have `run()` commented out and are asynchronous.
 4. Increment `__version__.py`.
 5. Navigate to QGIS plugin folder and delete existing deployment copy of plugin.
+     (go to source code folder and click on the symbolic link)
 6. Run `deploy.py` using `Python: Current File (QRiS) debug menu.
 7. Open QGIS.
 8. Turn on deployment copy of QRiS.
