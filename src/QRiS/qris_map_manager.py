@@ -340,6 +340,9 @@ class QRisMapManager(RiverscapesMapManager):
 
         feature_layer.setEditFormConfig(editFormConfig)
 
+        feature_layer.editingStarted.connect(self.stop_brat_edit)
+        feature_layer.editingStopped.connect(self.stop_brat_edit)
+
     def configure_dam_crests(self, feature_layer: QgsVectorLayer) -> None:
         self.set_hidden(feature_layer, 'fid', 'Dam Crests ID')
         self.set_hidden(feature_layer, 'event_id', 'Event ID')
@@ -465,8 +468,8 @@ class QRisMapManager(RiverscapesMapManager):
                             from PyQt5 import QtCore
                             from qgis.PyQt.QtGui import QColor
 
-                            buffers = {"Small":0.0001,
-                                    "Large":0.00025}
+                            buffers = {"Small":15,
+                                    "Large":50}
                             buffer_color = {"Small":QColor(237,10,10,255),
                                             "Large":QColor(237,10,10,255)}
                             preview_layers = {}
@@ -476,13 +479,15 @@ class QRisMapManager(RiverscapesMapManager):
                             brat_layer = QgsProject.instance().mapLayer('[% @layer_id %]')
                             fid = [% $id %]
                             feature = brat_layer.getFeature(fid)
+                            tr = QgsCoordinateTransform(brat_layer.sourceCrs(), QgsCoordinateReferenceSystem("ESRI:102008"), QgsProject.instance())
                             base_geom = feature.geometry()
+                            base_geom.transform(tr)
 
                             for buffer, size in buffers.items():
                                 for layer in QgsProject.instance().mapLayersByName(f"QRIS BRAT CIS {buffer} Buffer Context"):
                                     QgsProject.instance().removeMapLayer(layer.id())
-                                preview_layers[buffer] = QgsVectorLayer('polygon', f"QRIS BRAT CIS {buffer} Buffer Context", 'memory')
-                                preview_layers[buffer].setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
+                                preview_layers[buffer] = QgsVectorLayer('polygon?crs=esri:102008', f"QRIS BRAT CIS {buffer} Buffer Context", 'memory')
+                                # preview_layers[buffer].setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
                                 preview_layers[buffer].renderer().symbol().symbolLayer(0).setColor(QColor(0,0,0,0))
                                 preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeColor(buffer_color[buffer])
                                 preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeStyle(QtCore.Qt.DashLine)
@@ -490,20 +495,30 @@ class QRisMapManager(RiverscapesMapManager):
 
                                 buffer_geom = base_geom.buffer(size, 10, QgsGeometry.CapFlat, QgsGeometry.JoinStyleRound, 0.0)
 
-                                feat[buffer] = QgsFeature()
-                                feat[buffer].setGeometry(buffer_geom)
-                                preview_layers[buffer].dataProvider().addFeature(feat[buffer])
+                                feats[buffer] = QgsFeature()
+                                feats[buffer].setGeometry(buffer_geom)
+                                preview_layers[buffer].dataProvider().addFeature(feats[buffer])
                                 preview_layers[buffer].commitChanges()
 
                             QgsProject.instance().addMapLayers([layer for layer in preview_layers.values()])
-                            # canvas.setExtent(feat['Large'].geometry().boundingBox())
-                            # canvas.refreshAllLayers()
+                            tr_extent = QgsCoordinateTransform(QgsCoordinateReferenceSystem("ESRI:102008"),canvas.mapSettings().destinationCrs(), QgsProject.instance())
+                            extent_geom = feats['Large'].geometry()
+                            extent_geom.transform(tr_extent)
+                            canvas.setExtent(extent_geom.boundingBox())
+                            canvas.refresh()
                       """).strip("\n")
 
         action = QgsAction(1, 'Generate Brat CIS Context Buffers', action_text, None, capture=False, shortTitle='Generate Context', actionScopes={'Feature', 'Layer'})
         feature_layer.actions().addAction(action)
         editorAction = QgsAttributeEditorAction(action, parent_container)
         parent_container.addChildElement(editorAction)
+
+    def stop_brat_edit(self):
+        buffers = {"Small": 0.0001,
+                   "Large": 0.00025}
+        for buffer, size in buffers.items():
+            for layer in QgsProject.instance().mapLayersByName(f"QRIS BRAT CIS {buffer} Buffer Context"):
+                QgsProject.instance().removeMapLayer(layer.id())
 
 
 # QGSfunctions for field expressions
