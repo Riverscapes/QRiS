@@ -36,6 +36,7 @@ INSERT INTO methods (id, name, machine_code) VALUES (1, 'Dam / Jam Survey', 'DAM
 INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
 INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
 INSERT INTO methods (id, name, machine_code) VALUES (4, 'BRAT CIS', 'BRATCIS');
+INSERT INTO methods (id, name, machine_code) VALUES (5, 'LT-PBR Design', 'LTPBRDESIGN');
 
 CREATE TABLE protocol_methods (
     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
@@ -48,6 +49,7 @@ INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 1);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (2, 2);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (7, 4);
+INSERT INTO protocol_methods (protocol_id, method_id) VALUES (4, 5);
 
 
 CREATE TABLE layers (
@@ -139,6 +141,10 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
 INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
 INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 19);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 20);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 21);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 22);
 
 
 -- CREATE TABLE protocol_layers (

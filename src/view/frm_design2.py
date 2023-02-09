@@ -19,23 +19,22 @@ class FrmDesign(FrmEvent):
         self.lblPlatform.setText('Design completed at')
 
         self.lblStatus = QtWidgets.QLabel('Design Status', self)
-        self.tabGrid.addWidget(self.lblStatus, 4, 0)
+        self.tabGrid.addWidget(self.lblStatus, 6, 0)
 
         statuses = qris_project.lookup_tables['lkp_design_status']
         self.cboStatus = QtWidgets.QComboBox(self)
         self.status_model = DBItemModel(statuses)
         self.cboStatus.setModel(self.status_model)
-        self.tabGrid.addWidget(self.cboStatus, 4, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboStatus, 6, 1, 1, 1)
 
-        self.vwProtocols.setVisible(False)
-        self.lblProtocols.setVisible(False)
+        self.tab.setTabEnabled(0, False)
 
         self.lblDesigners = QtWidgets.QLabel(self)
         self.lblDesigners.setText('Designers')
-        self.tabGrid.addWidget(self.lblDesigners, 5, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblDesigners, 7, 0, 1, 1)
 
         self.txtDesigners = QtWidgets.QPlainTextEdit(self)
-        self.tabGrid.addWidget(self.txtDesigners, 5, 1, 1, 1)
+        self.tabGrid.addWidget(self.txtDesigners, 7, 1, 1, 1)
 
         # Create a checkbox widget for each design source
         self.design_source_widgets, self.design_sources = add_checkbox_widgets(
@@ -44,7 +43,7 @@ class FrmDesign(FrmEvent):
         # Add the checkboxes to the form
         self.lblDesignSources = QtWidgets.QLabel(self)
         self.lblDesignSources.setText('Design Sources')
-        self.tabGrid.addWidget(self.lblDesignSources, 6, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblDesignSources, 8, 0, 1, 1)
         [self.tabGrid.addWidget(widget, self.tabGrid.rowCount(), 1, 1, 1) for widget in self.design_source_widgets]
 
         if event is not None:
@@ -80,7 +79,14 @@ class FrmDesign(FrmEvent):
         if len(design_source_ids) > 0:
             self.metadata['designSourceIds'] = design_source_ids
 
-        self.protocols = [self.qris_project.protocols[3]]
+        self.protocols = [self.qris_project.protocols[4]]
+        for protocol in self.protocols:
+            for method in protocol.methods:
+                for layer in method.layers:
+                    layer_si = QtGui.QStandardItem(layer.name)
+                    layer_si.setEditable(False)
+                    layer_si.setData(layer, QtCore.Qt.UserRole)
+                    self.layers_model.appendRow(layer_si)
 
         super().accept()
 

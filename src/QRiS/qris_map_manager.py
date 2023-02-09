@@ -9,7 +9,7 @@ from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
 from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_TYPE_SURFACE, RASTER_SLIDER_MACHINE_CODE, RASTER_TYPE_CONTEXT
-from ..model.event import EVENT_MACHINE_CODE, Event
+from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, Event
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
@@ -32,7 +32,8 @@ class QRisMapManager(RiverscapesMapManager):
         self.layer_order = [
             AOI_MACHINE_CODE,
             MASK_MACHINE_CODE,
-            'Event_ROOT',
+            f'{EVENT_MACHINE_CODE}_ROOT',
+            f'{DESIGN_MACHINE_CODE}_ROOT',
             CrossSections.CROSS_SECTIONS_MACHINE_CODE,
             Profile.PROFILE_MACHINE_CODE,
             RASTER_SLIDER_MACHINE_CODE,
@@ -235,9 +236,12 @@ class QRisMapManager(RiverscapesMapManager):
         if event_layer.layer.is_lookup:
             return
 
+        machine_code = DESIGN_MACHINE_CODE if event.event_type.id == DESIGN_EVENT_TYPE_ID else EVENT_MACHINE_CODE
+        group_name = 'Designs' if event.event_type.id == DESIGN_EVENT_TYPE_ID else 'Data Capture Events'
+
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        events_group_layer = self.get_group_layer(self.project.map_guid, EVENT_MACHINE_CODE + "_ROOT", 'Data Capture Events', project_group, True)
-        event_group_layer = self.get_group_layer(self.project.map_guid, EVENT_MACHINE_CODE + "_" + str(event.id), event.name, events_group_layer, True)
+        events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code=}_ROOT', group_name, project_group, True)
+        event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True)
 
         existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, event_group_layer)
         if existing_layer is not None:
