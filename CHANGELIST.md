@@ -1,3 +1,11 @@
+## [0.1.11] 09 FEB 2023 
+
+### Fixed
+- Desgin Form bug fixed
+
+### Changed
+- Schema updated to support design layers
+
 ## [0.1.10] 
 
 ### Added
