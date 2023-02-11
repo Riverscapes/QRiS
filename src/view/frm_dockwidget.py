@@ -63,6 +63,7 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
+from .frm_sampleframe import FrmSampleFrame
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -550,7 +551,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def generate_sampling_frame(self, db_item: DBItem):
 
-        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating sampling frame from cross sections is not yet implemented.')
+        frm = FrmSampleFrame(self, self.project)
+        result = frm.exec_()
+        # if result is not None and result != 0:
+        #     self.add_child_to_project_tree(frm.sample_frame, True)
+
+        # QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating sampling frame from cross sections is not yet implemented.')
 
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False) -> QtGui.QStandardItem:
         """
