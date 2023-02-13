@@ -324,6 +324,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if isinstance(model_data, Mask):
                 self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
+                if model_data.mask_type.id == AOI_MASK_TYPE_ID:
+                    self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
 
             if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                 self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -545,18 +547,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.cross_sections_doc_widget.export_complete.connect(self.save_complete)
         self.cross_sections_doc_widget.show()
 
-    def generate_transect(self, db_item: DBItem):
+    def generate_transect(self):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
 
     def generate_sampling_frame(self, db_item: DBItem):
 
         frm = FrmSampleFrame(self, self.project)
-        result = frm.exec_()
-        # if result is not None and result != 0:
-        #     self.add_child_to_project_tree(frm.sample_frame, True)
-
-        # QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating sampling frame from cross sections is not yet implemented.')
+        frm.export_complete.connect(self.save_complete)
+        frm.exec_()
 
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False) -> QtGui.QStandardItem:
         """
@@ -768,13 +767,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.iface.messageBar().pushMessage('Add Centerline to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
-    @pyqtSlot(DBItem, bool)
-    def save_complete(self, item: DBItem, add_to_map: bool):
+    @pyqtSlot(DBItem, str, bool, bool)
+    def save_complete(self, item: DBItem, machine_code: str, is_input_node: bool, add_to_map: bool):
 
         if isinstance(item, DBItem):
             rootNode = self.model.invisibleRootItem()
             project_node = self.add_child_to_project_tree(rootNode, self.project)
-            self.add_child_to_project_tree(project_node, item, add_to_map)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG) if is_input_node else project_node
+            out_node = self.add_child_to_project_tree(inputs_node, machine_code)
+            self.add_child_to_project_tree(out_node, item, add_to_map)
         else:
             self.iface.messageBar().pushMessage('Add to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 

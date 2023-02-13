@@ -1,13 +1,12 @@
-import os
-from functools import partial
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSignal
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsVectorLayer
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.scratch_vector import ScratchVector
-from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
+from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, MASK_MACHINE_CODE
 from ..model.cross_sections import CrossSections
 
 from ..gp.feature_class_functions import import_mask
@@ -18,6 +17,8 @@ MESSAGE_CATEGORY = "SampleFrame"
 
 
 class FrmSampleFrame(QtWidgets.QDialog):
+
+    export_complete = pyqtSignal(Mask or None, str, bool, bool)
 
     def __init__(self, parent, project: Project, polygon_init: ScratchVector = None, cross_sections_init: CrossSections = None):
 
@@ -30,6 +31,8 @@ class FrmSampleFrame(QtWidgets.QDialog):
         self.setupUi()
 
         self.setWindowTitle(f'Create New Sample Frame')
+
+        # TODO set initial cross section or polygon if provided
 
         # Set Cross Sections, set init if exists
         self.cross_sections = {id: xsection for id, xsection in self.qris_project.cross_sections.items()}
@@ -80,13 +83,12 @@ class FrmSampleFrame(QtWidgets.QDialog):
                 polygon_layer.setSubsetString(f'mask_id = {polygon.id}')
                 cross_sections = self.cboCrossSections.currentData(QtCore.Qt.UserRole)
                 cross_sections_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
-                polygon_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
-                out_path = os.path.join(self.qris_project.project_file)
-
-                task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path)
+                cross_sections_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
+                out_path = f'{self.qris_project.project_file}|layername=mask_features'
+                task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
                 task.sample_frame_complete.connect(self.on_complete)
-                # QgsApplication.taskManager().addTask(task)
-                task.run()
+                QgsApplication.taskManager().addTask(task)
+                # task.run()
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
@@ -99,7 +101,7 @@ class FrmSampleFrame(QtWidgets.QDialog):
 
     def on_complete(self):
 
-        self.sample_frame
+        self.export_complete.emit(self.sample_frame, MASK_MACHINE_CODE, True, True)
 
     def setupUi(self):
 

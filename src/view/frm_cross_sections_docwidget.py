@@ -20,7 +20,7 @@ from .frm_cross_sections import FrmCrossSections
 
 class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
-    export_complete = pyqtSignal(CrossSections or None, bool)
+    export_complete = pyqtSignal(CrossSections or None, str, bool, bool)
 
     def __init__(self, parent, project: Project, iface: QgisInterface, profile: Profile):
 
@@ -179,7 +179,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
         if result == QtWidgets.QDialog.Accepted:
             self.cross_sections_setup()  # Reset the map
-            self.export_complete.emit(frm_x_sections.cross_sections, True)
+            self.export_complete.emit(frm_x_sections.cross_sections, CrossSections.CROSS_SECTIONS_MACHINE_CODE, True, True)
         return
 
     def cmdReset_click(self):

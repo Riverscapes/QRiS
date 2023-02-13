@@ -1,6 +1,6 @@
 from PyQt5.QtGui import *
 from qgis.PyQt.QtCore import pyqtSignal, QVariant
-from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsFields, QgsFeature, QgsField, QgsGeometry, QgsPointXY, QgsLineString
+from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFields, QgsFeature, QgsField
 from qgis.analysis import QgsNativeAlgorithms
 
 # Initialize QGIS Application
@@ -19,7 +19,7 @@ class SampleFrameTask(QgsTask):
     sample_frame_complete = pyqtSignal()
 
     def __init__(self, polygon, cross_sections, out_path, id) -> None:
-        super().__init__('Generate Cross Sections Task', QgsTask.CanCancel)
+        super().__init__('Generate Sample Frames Task', QgsTask.CanCancel)
 
         self.polygon = polygon
         self.cross_sections = cross_sections
@@ -50,8 +50,15 @@ class SampleFrameTask(QgsTask):
         }
         gp_split = processing.run('qgis:splitwithlines', split_params)
 
+        out_layer = QgsVectorLayer(self.sample_frame)
         for feat in gp_split['OUTPUT'].getFeatures():
             geom = feat.geometry()
+            out_feature = QgsFeature()
+            out_feature.setFields(out_layer.fields())
+            out_feature.setGeometry(geom)
+            out_feature['mask_id'] = self.id
+            out_layer.dataProvider().addFeature(out_feature)
+        out_layer.commitChanges()
 
         return True
 
