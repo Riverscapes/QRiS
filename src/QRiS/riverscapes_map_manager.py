@@ -2,7 +2,7 @@ import os
 import sqlite3
 import json
 
-from qgis.PyQt.QtGui import QStandardItem, QColor
+from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
 from qgis.PyQt.QtCore import Qt, QVariant
 
 from ..QRiS.settings import CONSTANTS
@@ -235,11 +235,15 @@ class RiverscapesMapManager():
 
         return raster_layer
 
-    def apply_raster_single_value(self, raster_layer: QgsRasterLayer, raster_value: float) -> None:
+    def apply_raster_single_value(self, raster_layer: QgsRasterLayer, raster_value: float, max, inverse=False) -> None:
 
         fcn = QgsColorRampShader()
         fcn.setColorRampType(QgsColorRampShader.Discrete)
-        fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
+        if inverse is True:
+            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(QColorConstants.Transparent), ''),
+                                      QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225), f'Threshold {raster_value}')])
+        else:
+            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
         shader = QgsRasterShader()
         shader.setRasterShaderFunction(fcn)
 

@@ -15,7 +15,7 @@ from ..gp.vectorize_task import VectorizeTask
 
 class FrmSliderScratchVector(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, raster_path, threshold_value) -> None:
+    def __init__(self, parent, project: Project, raster_path, threshold_value, inverse: bool = False) -> None:
         super().__init__(parent)
         self.setupUi()
 
@@ -23,6 +23,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         self.raster_path = raster_path
         self.threshold_value = threshold_value
         self.scratch_vector = None
+        self.inverse = inverse
 
         self.setWindowTitle('Export Polygon to Scratch Vector')
 
@@ -62,7 +63,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
             min_area_value = self.dbsMinPolygonSize.value()
             gpkg = os.path.dirname(self.txtProjectPath.text())
 
-            vectorize_task = VectorizeTask(self.raster_path, gpkg, self.fc_name, self.threshold_value, simplify_value, smoothing_value, min_area_value)
+            vectorize_task = VectorizeTask(self.raster_path, gpkg, self.fc_name, self.threshold_value, simplify_value, smoothing_value, min_area_value, self.inverse)
             vectorize_task.on_complete.connect(self.on_complete)
 
             self.buttonBox.setEnabled(False)

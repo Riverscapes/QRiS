@@ -27,6 +27,9 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.raster = None
         self.raster_layer = None
         self.scratch_vector = None
+        self.max = None
+
+        self.optAbove.toggled.connect(self.invert_values)
 
     def configure_raster(self, raster: Raster):
 
@@ -35,7 +38,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.raster_layer = self.map_manager.build_raster_slider_layer(raster)
         min = self.raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.Min, self.raster_layer.extent(), 0).minimumValue
         max = self.raster_layer.dataProvider().bandStatistics(1, QgsRasterBandStats.Max, self.raster_layer.extent(), 0).maximumValue
-
+        self.max = max
         self.valElevation.setMinimum(min)
         self.valElevation.setMaximum(max)
 
@@ -43,12 +46,16 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.slider.setMaximum(max)
 
     def sliderElevationChange(self, value: float):
-        self.map_manager.apply_raster_single_value(self.raster_layer, value)
+        self.map_manager.apply_raster_single_value(self.raster_layer, value, self.max, self.optAbove.isChecked())
         self.valElevation.setValue(value)
 
     def spinBoxElevationChange(self, value: float):
-        self.map_manager.apply_raster_single_value(self.raster_layer, value)
+        self.map_manager.apply_raster_single_value(self.raster_layer, value, self.max, self.optAbove.isChecked())
         self.slider.setValue(value)
+
+    def invert_values(self):
+        value = self.valElevation.value()
+        self.map_manager.apply_raster_single_value(self.raster_layer, value, self.max, self.optAbove.isChecked())
 
     def cmdSelect_click(self):
         frm = FrmLayerPicker(self, 'Select raster', [])
@@ -61,7 +68,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         raster_path = self.project.get_absolute_path(self.raster.path)
         threshold_value = self.valElevation.value()
 
-        frm = FrmSliderScratchVector(self, self.project, raster_path, threshold_value)
+        frm = FrmSliderScratchVector(self, self.project, raster_path, threshold_value, self.optAbove.isChecked())
         frm.exec_()
 
         self.add_to_map = frm.chkAddToMap.isChecked()
@@ -96,9 +103,21 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.cmdSurface.clicked.connect(self.cmdSelect_click)
         self.horiz.addWidget(self.cmdSurface)
 
+        self.lblSliderType = QtWidgets.QLabel('Threshold')
+        self.grid.addWidget(self.lblSliderType, 1, 0, 1, 1)
+
+        self.horizOptions = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horizOptions, 1, 1, 1, 1)
+
+        self.optAbove = QtWidgets.QRadioButton('Above Value')
+        self.horizOptions.addWidget(self.optAbove)
+        self.optBelow = QtWidgets.QRadioButton('Below Value')
+        self.optBelow.setChecked(True)
+        self.horizOptions.addWidget(self.optBelow)
+
         self.lblElevation = QtWidgets.QLabel()
         self.lblElevation.setText('Surface Value')
-        self.grid.addWidget(self.lblElevation, 1, 0, 1, 1)
+        self.grid.addWidget(self.lblElevation, 2, 0, 1, 1)
 
         self.valElevation = QtWidgets.QDoubleSpinBox()
         # self.valElevation.setSuffix('m')
@@ -107,7 +126,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.valElevation.setSingleStep(0.1)
         self.valElevation.setDecimals(1)
         self.valElevation.valueChanged.connect(self.spinBoxElevationChange)
-        self.grid.addWidget(self.valElevation, 1, 1, 1, 1)
+        self.grid.addWidget(self.valElevation, 2, 1, 1, 1)
 
         self.slider = DoubleSlider(decimals=2)
         # self.slider = QtWidgets.QSlider()
@@ -117,7 +136,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.slider.setSingleStep(0.1)
         # self.slider.setTickInterval(100)
         self.slider.doubleValueChanged.connect(self.sliderElevationChange)
-        self.grid.addWidget(self.slider, 2, 1, 1, 1)
+        self.grid.addWidget(self.slider, 3, 1, 1, 1)
 
         self.precision = QtWidgets
 
