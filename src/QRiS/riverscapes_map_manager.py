@@ -240,10 +240,10 @@ class RiverscapesMapManager():
         fcn = QgsColorRampShader()
         fcn.setColorRampType(QgsColorRampShader.Discrete)
         if inverse is True:
-            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(QColorConstants.Transparent), ''),
-                                      QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225), f'Threshold {raster_value}')])
+            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(0, 0, 255, 0), ''),  # QColorConstants.Transparent
+                                      QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225, 255), f'Threshold {raster_value}')])
         else:
-            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225), f'Threshold {raster_value}')])
+            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225, 255), f'Threshold {raster_value}')])
         shader = QgsRasterShader()
         shader.setRasterShaderFunction(fcn)
 
