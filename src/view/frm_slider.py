@@ -41,6 +41,8 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.max = max
         self.valElevation.setMinimum(min)
         self.valElevation.setMaximum(max)
+        self.valElevation.setValue(min)
+        self.sliderElevationChange(self.valElevation.value())
 
         self.slider.setMinimum(min)
         self.slider.setMaximum(max)
@@ -124,21 +126,15 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.grid.addWidget(self.lblElevation, 2, 0, 1, 1)
 
         self.valElevation = QtWidgets.QDoubleSpinBox()
-        # self.valElevation.setSuffix('m')
-        # self.valElevation.setMinimum(0)
-        # self.valElevation.setMaximum(100)
         self.valElevation.setSingleStep(0.1)
         self.valElevation.setDecimals(2)
         self.valElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.grid.addWidget(self.valElevation, 2, 1, 1, 1)
 
         self.slider = DoubleSlider(decimals=2)
-        # self.slider = QtWidgets.QSlider()
-        # self.slider.setMaximum(1000)
         self.slider.setOrientation(QtCore.Qt.Horizontal)
         self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
         self.slider.setSingleStep(0.1)
-        # self.slider.setTickInterval(100)
         self.slider.doubleValueChanged.connect(self.sliderElevationChange)
         self.grid.addWidget(self.slider, 3, 1, 1, 1)
 
