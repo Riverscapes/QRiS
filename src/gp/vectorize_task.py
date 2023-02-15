@@ -1,5 +1,4 @@
 import os
-import tempfile
 
 from qgis.core import (
     QgsApplication,
@@ -8,7 +7,7 @@ from qgis.core import (
     QgsField,
     QgsExpressionContext,
     QgsExpressionContextUtils,
-    QgsExpression,
+    QgsExpression, QgsCoordinateTransformContext,
     QgsVectorFileWriter,
     QgsVectorDataProvider, QgsTask, QgsMessageLog, Qgis,
     edit)
@@ -70,19 +69,16 @@ class VectorizeTask(QgsTask):
         """
         try:
             # --------- PROCESSING -------------
-
-            # -- DEM --
-            tempdir = tempfile.TemporaryDirectory()
-            temp_raster = os.path.join(tempdir.name, "less_than.tif")
+            raster_layer = QgsRasterLayer(self.raster_path)
+            ref_crs = raster_layer.crs()
 
             surface_name = os.path.splitext(os.path.basename(self.raster_path))[0]
-
             threshold_type = '<=' if self.inverse is False else '>='
 
             gp_calc = processing.run('gdal:rastercalculator', {'INPUT_A': self.raster_path,
                                                                'BAND_A': 1,
                                                                'FORMULA': f'(A {threshold_type} {self.raster_value})',
-                                                               'OUTPUT': temp_raster})
+                                                               'OUTPUT': 'TEMPORARY_OUTPUT'})
 
             thresholded_raster = QgsRasterLayer(gp_calc['OUTPUT'])
 
@@ -103,14 +99,14 @@ class VectorizeTask(QgsTask):
             pv = raw_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField('raw_area_m', QVariant.Double), QgsField(
-                'max_elev_m', QVariant.Double), QgsField('surface_name', QVariant.String)])
+            pv.addAttributes([QgsField('raw_area_m', QVariant.Double),
+                              QgsField('max_elev_m', QVariant.Double),
+                              QgsField('surface_name', QVariant.String)])
             raw_vector.updateFields()
 
             # Create a context and scope
             context = QgsExpressionContext()
-            context.appendScopes(
-                QgsExpressionContextUtils.globalProjectLayerScopes(raw_vector))
+            context.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(raw_vector))
 
             # Loop through and add the areas
             delete_features = []
@@ -174,8 +170,7 @@ class VectorizeTask(QgsTask):
 
             # Create a context and scope
             context = QgsExpressionContext()
-            context.appendScopes(
-                QgsExpressionContextUtils.globalProjectLayerScopes(final_vector))
+            context.appendScopes(QgsExpressionContextUtils.globalProjectLayerScopes(final_vector))
 
             # add an area attribute
             pv = final_vector.dataProvider()
@@ -212,20 +207,31 @@ class VectorizeTask(QgsTask):
                         delete_features.append(feature.id())
                 final_vector.dataProvider().deleteFeatures(delete_features)
 
-            # TODO fix final data export
+            # Export final layer
+            tc = QgsCoordinateTransformContext()
+            tc.addCoordinateOperation(ref_crs, ref_crs, "")
+
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.layerName = self.out_layer_name
             options.driverName = 'GPKG'
             if os.path.exists(self.out_gpkg):
                 options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-            QgsVectorFileWriter.writeAsVectorFormat(
-                final_vector, self.out_gpkg, options)  # final_vector
+                options.EditionCapability = QgsVectorFileWriter.CanAddNewLayer
+            else:
+                output_dir = os.path.dirname(self.out_gpkg)
+                if not os.path.isdir(output_dir):
+                    os.makedirs(output_dir)
+                options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
+            result = QgsVectorFileWriter.writeAsVectorFormatV3(final_vector, self.out_gpkg, tc, options)
 
+            if result[0] == QgsVectorFileWriter.NoError:
+                return True
+            else:
+                self.exception = Exception(str(result))
+                return False
         except Exception as ex:
             self.exception = ex
             return False
-
-        return True
 
     def finished(self, result: bool):
         """
