@@ -36,10 +36,10 @@ class QRisMapManager(RiverscapesMapManager):
             f'{DESIGN_MACHINE_CODE}_ROOT',
             CrossSections.CROSS_SECTIONS_MACHINE_CODE,
             Profile.PROFILE_MACHINE_CODE,
-            RASTER_SLIDER_MACHINE_CODE,
             STREAM_GAGE_MACHINE_CODE,
-            SURFACE_MACHINE_CODE,
+            f'{RASTER_SLIDER_MACHINE_CODE}_ROOT',
             CONTEXT_MACHINE_CODE,
+            SURFACE_MACHINE_CODE,
             'QRiS Base Maps',
             BASEMAP_MACHINE_CODE]
 
@@ -146,7 +146,7 @@ class QRisMapManager(RiverscapesMapManager):
     def build_scratch_vector(self, vector: ScratchVector):
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(self.project.map_guid, SCRATCH_VECTOR_MACHINE_CODE, 'Context', project_group, True)
+        group_layer = self.get_group_layer(self.project.map_guid, CONTEXT_MACHINE_CODE, 'Context', project_group, True)
         fc_path: str = vector.gpkg_path + '|layername=' + vector.fc_name
         existing_layer = self.get_db_item_layer(self.project.map_guid, vector, None)
         if existing_layer is not None:
@@ -213,18 +213,17 @@ class QRisMapManager(RiverscapesMapManager):
 
     def build_raster_slider_layer(self, raster: Raster) -> QgsMapLayer:
 
-        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(self.project.map_guid, RASTER_SLIDER_MACHINE_CODE, 'Raster Slider', project_group, True)
+        # Add raster normally as a contextual layer
+        self.build_raster_layer(raster)
 
-        existing_layer = self.get_db_item_layer(self.project.map_guid, raster, group_layer)
-        if existing_layer is not None:
-            return existing_layer
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        group_layer = self.get_group_layer(self.project.map_guid, f'{RASTER_SLIDER_MACHINE_CODE}_ROOT', 'Raster Slider', project_group, True)
 
         # Remove any existing raster layer in this group
         group_layer.removeAllChildren()
 
         raster_path = os.path.join(os.path.dirname(self.project.project_file), raster.path)
-        raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster)
+        raster_layer = self.create_machine_code_raster_layer(self.project.map_guid, group_layer, raster_path, raster, RASTER_SLIDER_MACHINE_CODE)
 
         return raster_layer
 

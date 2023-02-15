@@ -5,7 +5,7 @@ from qgis.core import QgsRasterBandStats
 
 from ..model.scratch_vector import ScratchVector
 
-from ..model.raster import Raster
+from ..model.raster import Raster, RASTER_SLIDER_MACHINE_CODE
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
@@ -76,6 +76,10 @@ class FrmSlider(QtWidgets.QDockWidget):
 
         self.export_complete.emit(self.scratch_vector, self.add_to_map)
 
+    def closeEvent(self, event):
+        self.map_manager.remove_machine_code_layer(self.project.map_guid, RASTER_SLIDER_MACHINE_CODE)
+        QtWidgets.QDockWidget.closeEvent(self, event)
+
     def setupUi(self):
 
         self.setWindowTitle('Raster Slider')
@@ -124,7 +128,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         # self.valElevation.setMinimum(0)
         # self.valElevation.setMaximum(100)
         self.valElevation.setSingleStep(0.1)
-        self.valElevation.setDecimals(1)
+        self.valElevation.setDecimals(2)
         self.valElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.grid.addWidget(self.valElevation, 2, 1, 1, 1)
 

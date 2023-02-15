@@ -157,6 +157,14 @@ class RiverscapesMapManager():
             parent_group.removeChildNode(layer)
             self.remove_empty_groups(parent_group)
 
+    def remove_machine_code_layer(self, project_key: str, machine_code: str) -> None:
+
+        layer = self.get_machine_code_layer(project_key, machine_code, None)
+        if layer is not None:
+            parent_group = layer.parent()
+            parent_group.removeChildNode(layer)
+            self.remove_empty_groups(parent_group)
+
     def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified DBItem and adds it to the map.
@@ -235,15 +243,28 @@ class RiverscapesMapManager():
 
         return raster_layer
 
+    def create_machine_code_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, machine_code, symbology_key: str = None):
+
+        raster_layer = QgsRasterLayer(raster_path, raster.name)
+        QgsProject.instance().addMapLayer(raster_layer, False)
+        if symbology_key is not None:
+            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+            qml = os.path.join(self.symbology_folder, symbology_filename)
+            raster_layer.loadNamedStyle(qml)
+        tree_layer_node = parent_group.addLayer(raster_layer)
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
+
+        return raster_layer
+
     def apply_raster_single_value(self, raster_layer: QgsRasterLayer, raster_value: float, max, inverse=False) -> None:
 
         fcn = QgsColorRampShader()
         fcn.setColorRampType(QgsColorRampShader.Discrete)
         if inverse is True:
             fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(0, 0, 255, 0), ''),  # QColorConstants.Transparent
-                                      QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225, 255), f'Threshold {raster_value}')])
+                                      QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225, 200), f'Threshold {raster_value}')])
         else:
-            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225, 255), f'Threshold {raster_value}')])
+            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225, 200), f'Threshold {raster_value}')])
         shader = QgsRasterShader()
         shader.setRasterShaderFunction(fcn)
 
