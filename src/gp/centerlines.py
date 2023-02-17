@@ -122,11 +122,15 @@ class CenterlineTask(QgsTask):
         centerline_raw = QgsGeometry.mergeLines(m_centerline_raw)
         g_centerline_intersected = centerline_raw.intersection(g_single_main_poly)
 
-        # TODO: Find the main centerline after clipping the boundary
-        # if g_centerline_intersected.isMultipart():
-        #     g_centerline_out = QgsGeometry([line.clone() for line in g_centerline_intersected.parts() if QgsGeometry(line.clone()).intersects(g_startline) and QgsGeometry(line.clone()).intersects(g_endline)][0])
-        # else:
-        g_centerline_out = QgsGeometry(g_centerline_intersected)
+        # Find the main centerline after clipping the boundary
+        if g_centerline_intersected.isMultipart():
+            for line in g_centerline_intersected.parts():
+                g_line = QgsGeometry(line.clone())
+                if g_line.intersects(g_startline) and g_line.intersects(g_endline):
+                    g_centerline_out = QgsGeometry(g_line)
+                    break
+        else:
+            g_centerline_out = QgsGeometry(g_centerline_intersected)
 
         if g_centerline_out.isEmpty():
             self.exception = Exception('Centerline task has produced empty centerline polygon.')
