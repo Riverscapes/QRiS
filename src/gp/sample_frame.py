@@ -51,12 +51,13 @@ class SampleFrameTask(QgsTask):
         gp_split = processing.run('qgis:splitwithlines', split_params)
 
         out_layer = QgsVectorLayer(self.sample_frame)
-        for feat in gp_split['OUTPUT'].getFeatures():
+        for i, feat in enumerate(gp_split['OUTPUT'].getFeatures(), 1):
             geom = feat.geometry()
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())
             out_feature.setGeometry(geom)
             out_feature['mask_id'] = self.id
+            out_feature['display_label'] = str(i)
             out_layer.dataProvider().addFeature(out_feature)
         out_layer.commitChanges()
 

@@ -53,7 +53,7 @@ class QRisMapManager(RiverscapesMapManager):
         else:
             group_layer_name = 'Sampling Frames'
             mask_machine_code = MASK_MACHINE_CODE
-            symbology = 'mask'
+            symbology = 'sampling_frames'
             layer_name = 'mask_features'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
@@ -73,6 +73,10 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'area')
+
+        if not mask.mask_type.id == AOI_MASK_TYPE_ID:
+            feature_layer.setLabelsEnabled(True)
+            feature_layer.setCustomProperty("labeling/fieldName", 'display_label')
 
         return feature_layer
 

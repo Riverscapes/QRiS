@@ -15,17 +15,17 @@ class FrmMaskAOI(QtWidgets.QDialog):
     def __init__(self, parent, project: Project, import_source_path: str, mask_type: DBItem, mask: Mask = None):
 
         self.qris_project = project
-        self.mask = mask
+        self.qris_mask = mask
         self.import_source_path = import_source_path
         self.mask_type = mask_type
 
         super(FrmMaskAOI, self).__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle(f'Create New {mask_type.name}' if self.mask is None else f'Edit {mask_type.name} Properties')
+        self.setWindowTitle(f'Create New {mask_type.name}' if self.qris_mask is None else f'Edit {mask_type.name} Properties')
 
         # The attribute picker is only visible when creating a new regular mask
-        show_attribute_filter = import_source_path is not None and mask_type.id == REGULAR_MASK_TYPE_ID
+        show_attribute_filter = mask_type.id == REGULAR_MASK_TYPE_ID
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
 
@@ -43,6 +43,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
                 # self.cboAttribute.setModelColumn(1)
+
             if show_mask_clip:
                 # Masks (filtered to just AOI)
                 self.masks = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
@@ -53,7 +54,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 # Default to no mask clipping
                 self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
 
-        if self.mask is not None:
+        if self.qris_mask is not None:
             self.txtName.setText(mask.name)
             self.txtDescription.setPlainText(mask.description)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
@@ -67,9 +68,9 @@ class FrmMaskAOI(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        if self.mask is not None:
+        if self.qris_mask is not None:
             try:
-                self.mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.qris_mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -79,8 +80,8 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText())
-                self.qris_project.masks[self.mask.id] = self.mask
+                self.qris_mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText())
+                self.qris_project.masks[self.qris_mask.id] = self.qris_mask
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -96,10 +97,10 @@ class FrmMaskAOI(QtWidgets.QDialog):
                     if clip_mask is not None:
                         clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
                     attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    import_mask(self.import_source_path, self.qris_project.project_file, self.mask.id, attributes, self.mask_type, clip_mask_id)
+                    import_mask(self.import_source_path, self.qris_project.project_file, self.qris_mask.id, attributes, self.mask_type, clip_mask_id)
                 except Exception as ex:
                     try:
-                        self.mask.delete(self.qris_project.project_file)
+                        self.qris_mask.delete(self.qris_project.project_file)
                     except Exception as ex:
                         print('Error attempting to delete mask after the importing of features failed.')
                     QtWidgets.QMessageBox.warning(self, 'Error Importing Mask Features', str(ex))
@@ -127,8 +128,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblAttribute = QtWidgets.QLabel()
-        self.lblAttribute.setText('Attribute')
+        self.lblAttribute = QtWidgets.QLabel('Sample Frame Labels')
         self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()

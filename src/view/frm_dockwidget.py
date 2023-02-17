@@ -661,7 +661,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmMaskAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
         result = frm.exec_()
         if result != 0:
-            self.add_child_to_project_tree(parent_node, frm.mask, frm.chkAddToMap.isChecked())
+            self.add_child_to_project_tree(parent_node, frm.qris_mask, frm.chkAddToMap.isChecked())
 
     def add_profile(self, parent_node: QtGui.QStandardItem, mode: int):
 
