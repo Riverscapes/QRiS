@@ -13,7 +13,7 @@ class CenterlineTask(QgsTask):
 
     centerline_complete = pyqtSignal(QgsGeometry)
 
-    def __init__(self, in_polygon: QgsGeometry, start_clipline: QgsLineString, end_clipline: QgsLineString, densify_distance=None) -> None:
+    def __init__(self, in_polygon: QgsGeometry, start_clipline: QgsLineString, end_clipline: QgsLineString, densify_distance=None, islands: QgsGeometry = None) -> None:
         super().__init__('Generate Centerline Task', QgsTask.CanCancel)
 
         # Try to make deep copies of geometries so gui/parent changes don't cause issues?
@@ -21,6 +21,7 @@ class CenterlineTask(QgsTask):
         self.start_clipline = start_clipline.clone()
         self.end_clipline = end_clipline.clone()
         self.densify_distance = densify_distance
+        self.islands = islands.clone() if islands is not None else None
         self.centerline = None
 
     def run(self):
@@ -48,6 +49,9 @@ class CenterlineTask(QgsTask):
         else:
             g_single_main_poly = QgsGeometry(self.in_polygon)
 
+        # Get perimeter only
+        g_single_main_poly = g_single_main_poly.removeInteriorRings()
+
         g_inner_startline = QgsGeometry(g_startline.intersection(g_single_main_poly))
         g_inner_endline = QgsGeometry(g_endline.intersection(g_single_main_poly))
 
@@ -63,7 +67,6 @@ class CenterlineTask(QgsTask):
         g_inner_startline = None
         g_inner_endline = None
 
-        # TODO Get perimeter only
         # TODO Donut Routing
         if self.densify_distance is not None:
             g_clipping_poly = QgsGeometry(g_single_main_poly.densifyByDistance(self.densify_distance))
@@ -145,7 +148,7 @@ class CenterlineTask(QgsTask):
 
         if result:
             QgsMessageLog.logMessage(
-                'CenterlineTask completed\n',
+                'Centerline Task completed',
                 MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
