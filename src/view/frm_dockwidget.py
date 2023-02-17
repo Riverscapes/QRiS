@@ -527,7 +527,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.add_db_item_to_map(None, db_item)
 
         if self.centerline_doc_widget is None:
-            self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.project, self.iface)
+            self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.centerline_doc_widget)
 
         self.centerline_doc_widget.export_complete.connect(self.centerline_save_complete)

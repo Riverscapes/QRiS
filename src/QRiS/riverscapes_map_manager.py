@@ -29,7 +29,8 @@ from qgis.core import (
     QgsPalLayerSettings,
     QgsVectorLayerSimpleLabeling,
     QgsAction,
-    QgsAttributeEditorAction
+    QgsAttributeEditorAction,
+    QgsMapLayer
 )
 
 
@@ -203,7 +204,7 @@ class RiverscapesMapManager():
 
         return layer
 
-    def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: str) -> QgsVectorLayer:
+    def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: str = None, driver: str = 'ogr') -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified machine code and adds it to the map.
         args:
@@ -216,16 +217,49 @@ class RiverscapesMapManager():
             return layer
 
         # Create a layer from the table
-        layer = QgsVectorLayer(fc_path, display_label, 'ogr')
+        layer = QgsVectorLayer(fc_path, display_label, driver)
         QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
-        symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
-        qml = os.path.join(self.symbology_folder, symbology_filename)
-        layer.loadNamedStyle(qml)
+        if symbology_key is not None:
+            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+            qml = os.path.join(self.symbology_folder, symbology_filename)
+            layer.loadNamedStyle(qml)
 
         # Finally add the new layer here
         tree_layer_node = parent_group.addLayer(layer)
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
+
+        return layer
+
+    def create_temporary_feature_layer(self, project_key: str, fc_path: str, machine_code: str, display_label: str, symbology_key: str = None, driver: str = 'ogr', private_layer=True) -> QgsVectorLayer:
+        """
+        Creates a new feature layer for the specified machine code and adds it to the top of the map.
+        args:
+            project_key: The project key
+                db_item: The DBItem to create a layer for
+                symbology: The symbology to apply to the layer. File name only. No folder or extension."""
+
+        layer = self.get_machine_code_layer(project_key, machine_code, None)
+        if layer is not None:
+            return layer
+
+        parent_group = QgsProject.instance().layerTreeRoot()
+
+        # Create a layer from the table
+        layer = QgsVectorLayer(fc_path, display_label, driver)
+        QgsProject.instance().addMapLayer(layer, False)
+        if private_layer:
+            layer.setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
+
+        # Apply symbology
+        if symbology_key is not None:
+            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+            qml = os.path.join(self.symbology_folder, symbology_filename)
+            layer.loadNamedStyle(qml)
+
+        # Finally add the new layer here
+        tree_layer_node = parent_group.insertLayer(0, layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
 
         return layer

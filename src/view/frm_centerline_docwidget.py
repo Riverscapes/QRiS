@@ -8,39 +8,45 @@ from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsMapLayer, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.gui import QgsMapToolIdentifyFeature
+from qgis.utils import iface
 
 from ..gp.centerlines import CenterlineTask
-from ..model.project import Project
+from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.db_item import DBItem
 from ..model.profile import Profile
 
 from .capture_line_segment import LineSegmentMapTool
 from .utilities import add_help_button
 from .frm_save_centerline import FrmSaveCenterline
+from ..QRiS.qris_map_manager import QRisMapManager
+
+PREVIEW_STARTLINE_MACHINE_CODE = "Startline Preview"
+PREVIEW_ENDLINE_MACHINE_CODE = "Endline Preview"
+PREVIEW_CENTERTLINE_MACHINE_CODE = "Centerline Preview"
 
 
 class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     export_complete = pyqtSignal(Profile or None, bool)
 
-    def __init__(self, parent, project: Project, iface):
+    def __init__(self, parent, project: Project, map_manager: QRisMapManager):
 
         super(FrmCenterlineDocWidget, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_QuitOnClose)
         self.setupUi()
 
         self.project = project
-        self.iface = iface
-        self.parent = parent
-        self.canvas = self.iface.mapCanvas()
+        self.map_manager = map_manager
         self.get_linestring = None
-        # self.get_linestring = None
-        self.polygon_layer = None
+        self.polygon_source = None
+
+        self.get_startline = LineSegmentMapTool(iface.mapCanvas())
+        self.get_endline = LineSegmentMapTool(iface.mapCanvas())
+        self.get_startline.line_captured.connect(self.capture_start)
+        self.get_endline.line_captured.connect(self.capture_end)
 
         self.d = QgsDistanceArea()
         self.d.setEllipsoid('WGS84')
-
-        self.centerline_setup()
 
     def centerline_setup(self):
 
@@ -57,40 +63,36 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.txtStart.setText("")
         self.txtPolygon.setText("")
 
-        self.remove_cl_temp_layers()
-        self.canvas.refresh()
+        self.remove_preview_layers()
+        iface.mapCanvas().refresh()
+        epgs_canvas = iface.mapCanvas().mapSettings().destinationCrs().authid()
+        layer_uri = f'linestring?crs={epgs_canvas}'
 
-        self.layer_centerline = QgsVectorLayer('linestring', "QRIS Centerline Preview", 'memory')
-        self.layer_start_line = QgsVectorLayer('linestring', "QRIS Centerline Start Preview", 'memory')
-        self.layer_end_line = QgsVectorLayer('linestring', "QRIS Centerline End Preview", 'memory')
-
-        self.layer_centerline.setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
-        self.layer_start_line.setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
-        self.layer_end_line.setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
+        self.layer_centerline = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CENTERTLINE_MACHINE_CODE, "QRIS Centerline Preview", driver='memory')
+        self.layer_start_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_STARTLINE_MACHINE_CODE, "QRIS Centerline Start Preview", driver='memory')
+        self.layer_end_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_ENDLINE_MACHINE_CODE, "QRIS Centerline End Preview", driver='memory')
 
         self.layer_centerline.renderer().symbol().symbolLayer(0).setColor(QColor('darkblue'))
         self.layer_centerline.renderer().symbol().symbolLayer(0).setWidth(0.66)
         self.layer_start_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
         self.layer_end_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
 
-        QgsProject.instance().addMapLayers([self.layer_centerline, self.layer_start_line, self.layer_end_line])
+        self.layer_centerline.triggerRepaint()
+        self.layer_start_line.triggerRepaint()
+        self.layer_end_line.triggerRepaint()
 
-    def configure_polygon(self, polygon_layer: DBItem):
+        iface.mapCanvas().refresh()
 
-        self.polygon_layer = polygon_layer
-        self.txtLayer.setText(polygon_layer.name)
-        fc_path = f'{polygon_layer.gpkg_path}|layername={polygon_layer.fc_name}'
+    def configure_polygon(self, polygon_source: DBItem):
 
-        # Initially choose first feature here
-        layer = QgsVectorLayer(fc_path, polygon_layer.fc_name, 'ogr')
-        self.polygon_crs = layer.crs()
-        feats = layer.getFeatures()
-        feat = QgsFeature()
-        feats.nextFeature(feat)
-        self.geom_polygon = QgsGeometry(feat.geometry())
-        self.txtPolygon.setText(f'FeatureID: {feat.id()}')
+        self.centerline_setup()
 
-        epgs_canvas = self.canvas.mapSettings().destinationCrs().authid()
+        self.polygon_source = polygon_source
+        self.txtLayer.setText(polygon_source.name)
+        self.polygon_layer = self.map_manager.get_db_item_layer(self.project.map_guid, self.polygon_source, None).layer()
+
+        self.polygon_crs = self.polygon_layer.crs()
+        epgs_canvas = iface.mapCanvas().mapSettings().destinationCrs().authid()
         sourceCrs = QgsCoordinateReferenceSystem(epgs_canvas)
         self.transform = QgsCoordinateTransform(sourceCrs, self.polygon_crs, QgsProject.instance())
 
@@ -98,37 +100,35 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.layer_start_line.setCrs(self.polygon_crs)
         self.layer_end_line.setCrs(self.polygon_crs)
 
-    def remove_cl_temp_layers(self):
-        map_layers = QgsProject.instance().mapLayers()
-        for layer in map_layers:
-            if map_layers[layer].name() in ["QRIS Centerline Preview", "QRIS Centerline Start Preview", "QRIS Centerline End Preview"]:
-                QgsProject.instance().removeMapLayer(map_layers[layer].id())
+        self.cmdSelectPolygon_click()
 
-    def cmdSelect_click(self):
-        layers = QgsProject.instance().mapLayersByName(self.polygon_layer.name)
-        layer = layers[0]
-        self.get_polygon = QgsMapToolIdentifyFeature(self.canvas, layer)
-        self.canvas.setMapTool(self.get_polygon)
-        self.get_polygon.featureIdentified.connect(self.capture_polygon)
+    def remove_preview_layers(self):
+        for machine_code in [PREVIEW_STARTLINE_MACHINE_CODE, PREVIEW_CENTERTLINE_MACHINE_CODE, PREVIEW_ENDLINE_MACHINE_CODE]:
+            self.map_manager.remove_machine_code_layer(self.project.map_guid, machine_code)
+
+    def cmdSelectPolygon_click(self):
+        iface.setActiveLayer(self.polygon_layer)
+        iface.mapCanvas().selectionChanged.connect(self.capture_polygon)
+        self.action = iface.actionSelect()
+        self.action.trigger()
 
     def cmdCaptureStart_click(self):
         self.layer_start_line.dataProvider().truncate()
-        self.get_linestring = LineSegmentMapTool(self.canvas)
-        self.canvas.setMapTool(self.get_linestring)
-        self.get_linestring.line_captured.connect(self.capture_start)
+        iface.mapCanvas().setMapTool(self.get_startline)
 
     def cmdCaptureEnd_click(self):
         self.layer_end_line.dataProvider().truncate()
-        self.get_linestring = LineSegmentMapTool(self.canvas)
-        self.canvas.setMapTool(self.get_linestring)
-        self.get_linestring.line_captured.connect(self.capture_end)
+        iface.mapCanvas().setMapTool(self.get_endline)
 
     def cmdGenerateCl_click(self):
         if self.geom_start is None or self.geom_end is None:
             QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Capture the start and end of the polygon before generating centerline.')
             return
         if self.geom_polygon is None:
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Load the polygon before generating centerline.')
+            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Select one and only one polygon feature before generating centerline.')
+            return
+        if not all([self.geom_polygon.intersects(QgsGeometry().fromPolyline(self.geom_start)), self.geom_polygon.intersects(QgsGeometry().fromPolyline(self.geom_end))]):
+            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Make sure both start and stop lines intersect the polygon.')
             return
 
         self.layer_centerline.dataProvider().truncate()
@@ -156,7 +156,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         return
 
-    def cmdSaveCl_click(self):
+    def cmdSaveCenterline_click(self):
 
         if self.feat_centerline is None:
             QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Generate the centerline before saving.')
@@ -178,17 +178,24 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.centerline_setup()
         return
 
-    @pyqtSlot(QgsFeature)
-    def capture_polygon(self, selected_polygon_feature):
+    @pyqtSlot()
+    def capture_polygon(self):
 
-        self.geom_polygon = selected_polygon_feature.geometry()
-        self.txtPolygon.setText(f'FeatureID: {selected_polygon_feature.id()}')
-        self.canvas.unsetMapTool(self.get_polygon)
-        self.get_polygon = None
+        layer = iface.activeLayer()
+        features = layer.selectedFeatures()
+
+        if len(features) == 1:
+            self.geom_polygon = features[0].geometry()
+            self.txtPolygon.setText(f'FeatureID: {features[0].id()}')
+        elif len(features) == 0:
+            self.geom_polygon = None
+            self.txtPolygon.setText(f'No Features Selected')
+        else:
+            self.geom_polygon = None
+            self.txtPolygon.setText(f'Multiple Features Selected')
 
     @pyqtSlot(QgsLineString)
     def capture_start(self, line_string):
-
         self.geom_start = line_string
         self.geom_start.transform(self.transform)
         self.txtStart.setText(self.geom_start.asWkt())
@@ -196,13 +203,11 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         feat.setGeometry(self.geom_start)
         self.layer_start_line.dataProvider().addFeature(feat)
         self.layer_start_line.commitChanges()
-        self.canvas.refreshAllLayers()
-        self.canvas.unsetMapTool(self.get_linestring)
-        self.get_linestring = None
+        self.layer_start_line.triggerRepaint()
+        iface.mapCanvas().unsetMapTool(self.get_startline)
 
     @pyqtSlot(QgsLineString)
     def capture_end(self, line_string):
-
         self.geom_end = line_string
         self.geom_end.transform(self.transform)
         self.txtEnd.setText(self.geom_end.asWkt())
@@ -210,9 +215,8 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         feat.setGeometry(self.geom_end)
         self.layer_end_line.dataProvider().addFeature(feat)
         self.layer_end_line.commitChanges()
-        self.canvas.refreshAllLayers()
-        self.canvas.unsetMapTool(self.get_linestring)
-        self.get_linestring = None
+        self.layer_end_line.triggerRepaint()
+        iface.mapCanvas().unsetMapTool(self.get_endline)
 
     @pyqtSlot(QgsGeometry)
     def centerline_complete(self, centerline):
@@ -235,8 +239,8 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.feat_centerline.setGeometry(geom)
 
         self.fields = {
-            'parent_polygon_type': self.polygon_layer.db_table_name,
-            'parent_polygon_id': self.polygon_layer.id,
+            'parent_polygon_type': self.polygon_source.db_table_name,
+            'parent_polygon_id': self.polygon_source.id,
             'parent_polygon_fid': self.txtPolygon.text(),
             'start_line': self.geom_start.asWkt(),
             'end_line': self.geom_start.asWkt(),
@@ -249,7 +253,12 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.layer_centerline.dataProvider().addFeature(self.feat_centerline)
         self.layer_centerline.commitChanges()
-        self.canvas.refreshAllLayers()
+        self.layer_centerline.triggerRepaint()
+        iface.mapCanvas().refresh()
+
+    def closeEvent(self, event):
+        self.remove_preview_layers()
+        QtWidgets.QDockWidget.closeEvent(self, event)
 
     def setupUi(self):
 
@@ -282,7 +291,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.cmdPolygon = QtWidgets.QPushButton()
         self.cmdPolygon.setText('Select')
-        self.cmdPolygon.clicked.connect(self.cmdSelect_click)
+        self.cmdPolygon.clicked.connect(self.cmdSelectPolygon_click)
         self.horizPoly.addWidget(self.cmdPolygon)
 
         self.lblStart = QtWidgets.QLabel()
@@ -386,7 +395,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.cmdSaveCl = QtWidgets.QPushButton()
         self.cmdSaveCl.setText('Save Centerline')
-        self.cmdSaveCl.clicked.connect(self.cmdSaveCl_click)
+        self.cmdSaveCl.clicked.connect(self.cmdSaveCenterline_click)
         self.horizBottom.addWidget(self.cmdSaveCl)
 
         self.cmdReset = QtWidgets.QPushButton()
