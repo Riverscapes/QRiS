@@ -30,12 +30,12 @@ class QRisMapManager(RiverscapesMapManager):
         super().__init__('QRiS')
         self.project = project
         self.layer_order = [
+            CrossSections.CROSS_SECTIONS_MACHINE_CODE,
+            Profile.PROFILE_MACHINE_CODE,
             AOI_MACHINE_CODE,
             MASK_MACHINE_CODE,
             f'{EVENT_MACHINE_CODE}_ROOT',
             f'{DESIGN_MACHINE_CODE}_ROOT',
-            CrossSections.CROSS_SECTIONS_MACHINE_CODE,
-            Profile.PROFILE_MACHINE_CODE,
             STREAM_GAGE_MACHINE_CODE,
             f'{RASTER_SLIDER_MACHINE_CODE}_ROOT',
             CONTEXT_MACHINE_CODE,

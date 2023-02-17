@@ -1,7 +1,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
-from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsVectorLayer
+from qgis.core import QgsApplication, QgsVectorLayer, QgsWkbTypes
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
@@ -23,8 +23,6 @@ class FrmSampleFrame(QtWidgets.QDialog):
     def __init__(self, parent, project: Project, polygon_init: ScratchVector = None, cross_sections_init: CrossSections = None):
 
         self.qris_project = project
-        self.polygon_init = polygon_init
-        self.cross_sections_init = cross_sections_init
         self.sample_frame = None
 
         super(FrmSampleFrame, self).__init__(parent)
@@ -32,20 +30,23 @@ class FrmSampleFrame(QtWidgets.QDialog):
 
         self.setWindowTitle(f'Create New Sample Frame')
 
-        # TODO set initial cross section or polygon if provided
-
         # Set Cross Sections, set init if exists
-        self.cross_sections = {id: xsection for id, xsection in self.qris_project.cross_sections.items()}
-        self.cross_sections_model = DBItemModel(self.cross_sections)
+        cross_sections = {id: xsection for id, xsection in self.qris_project.cross_sections.items()}
+        self.cross_sections_model = DBItemModel(cross_sections)
         self.cboCrossSections.setModel(self.cross_sections_model)
-        # self.cboAttribute.setModelColumn(1)
+        if cross_sections_init is not None:
+            self.cboCrossSections.setCurrentIndex(self.cross_sections_model.getItemIndex(cross_sections_init))
 
         # Masks (filtered to just AOI)
-        self.polygons = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+        masks = {f'mask_{id}': mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+        context = {f'context_{id}': layer for id, layer in self.qris_project.scratch_vectors.items() if QgsVectorLayer(f'{layer.gpkg_path}|layername={layer.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry}
+        self.polygons = {**masks, **context}
         self.polygons_model = DBItemModel(self.polygons)
         self.cboFramePolygon.setModel(self.polygons_model)
-        # Default to no mask clipping
-        # self.cboFramePolygon.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
+        if polygon_init is not None:
+            index = self.polygons_model.getItemIndex(polygon_init)
+            if index is not None:
+                self.cboFramePolygon.setCurrentIndex(index)
 
         self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
@@ -78,17 +79,25 @@ class FrmSampleFrame(QtWidgets.QDialog):
                 return
 
             try:
-                polygon = self.cboFramePolygon.currentData(QtCore.Qt.UserRole)
-                polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features')
-                polygon_layer.setSubsetString(f'mask_id = {polygon.id}')
+                db_item_polygon = self.cboFramePolygon.currentData(QtCore.Qt.UserRole)
+                if isinstance(db_item_polygon, Mask):
+                    polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features')
+                    polygon_layer.setSubsetString(f'mask_id = {db_item_polygon.id}')
+                else:
+                    polygon_layer = QgsVectorLayer(f'{db_item_polygon.gpkg_path}|layername={db_item_polygon.fc_name}')
                 cross_sections = self.cboCrossSections.currentData(QtCore.Qt.UserRole)
                 cross_sections_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
                 cross_sections_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
                 out_path = f'{self.qris_project.project_file}|layername=mask_features'
                 task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
+
+                # -- PRODUCTION --
                 task.sample_frame_complete.connect(self.on_complete)
                 QgsApplication.taskManager().addTask(task)
+
+                # -- DEBUG --
                 # task.run()
+
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)

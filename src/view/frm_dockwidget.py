@@ -325,6 +325,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(model_data, Mask):
                 self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
                 if model_data.mask_type.id == AOI_MASK_TYPE_ID:
+                    self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
 
             if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
@@ -332,6 +333,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if isinstance(model_data, ScratchVector):
                 self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
+                    self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
 
             if isinstance(model_data, Profile):
                 self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
@@ -553,7 +556,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def generate_sampling_frame(self, db_item: DBItem):
 
-        frm = FrmSampleFrame(self, self.project)
+        cross_sections = None
+        polygon = None
+
+        if isinstance(db_item, CrossSections):
+            cross_sections = db_item
+        if isinstance(db_item, Mask) or isinstance(db_item, ScratchVector):
+            polygon = db_item
+
+        frm = FrmSampleFrame(self, self.project, polygon, cross_sections)
         frm.export_complete.connect(self.save_complete)
         frm.exec_()
 
