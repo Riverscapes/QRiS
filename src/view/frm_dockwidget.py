@@ -531,7 +531,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.centerline_doc_widget)
 
         self.centerline_doc_widget.export_complete.connect(self.centerline_save_complete)
-        self.centerline_doc_widget.configure_polygon(db_item)
+        self.centerline_doc_widget.centerline_setup(db_item)
         self.centerline_doc_widget.show()
 
     def flip_line(self, db_item: DBItem):
