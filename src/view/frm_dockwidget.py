@@ -237,6 +237,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.centerline_doc_widget.close()
             self.centerline_doc_widget = None
 
+        if self.cross_sections_doc_widget is not None:
+            self.cross_sections_doc_widget.close()
+            self.cross_sections_doc_widget = None
+
         # Remove project from map
         # remove_db_item_layer(self.project, self.project)
         self.model = None
@@ -551,7 +555,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def generate_xsections(self, db_item: DBItem):
 
         if self.cross_sections_doc_widget is None:
-            self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.project, self.iface, db_item)
+            self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.project, db_item, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.cross_sections_doc_widget)
 
         self.cross_sections_doc_widget.export_complete.connect(self.save_complete)

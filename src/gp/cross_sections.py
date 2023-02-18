@@ -10,7 +10,7 @@ MESSAGE_CATEGORY = 'CrossSectionsTask'
 
 class CrossSectionsTask(QgsTask):
 
-    cross_sections_complete = pyqtSignal(QgsGeometry)
+    cross_sections_complete = pyqtSignal(dict)
 
     def __init__(self, in_centerline: QgsLineString, offset: float, spacing: float, extension: float, in_polygon: QgsGeometry = None) -> None:
         super().__init__('Generate Cross Sections Task', QgsTask.CanCancel)
