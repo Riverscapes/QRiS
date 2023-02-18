@@ -755,8 +755,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             project_node = self.add_child_to_project_tree(rootNode, self.project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
             context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
-            context_node = self.add_child_to_project_tree(project_node, CATCHMENTS_MACHINE_CODE)
-            self.add_child_to_project_tree(context_node, pour_point, add_to_map)
+            catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
+            self.add_child_to_project_tree(catchments_node, pour_point, add_to_map)
 
         else:
             self.iface.messageBar().pushMessage('Stream Stats Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
