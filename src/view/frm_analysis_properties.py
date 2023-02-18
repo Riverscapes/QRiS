@@ -22,9 +22,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.setupUi()
 
         # Masks (filtered to just regular masks )
-        self.masks = {id: mask for id, mask in project.masks.items() if mask.mask_type.id == REGULAR_MASK_TYPE_ID}
-        self.masks_model = DBItemModel(self.masks)
-        self.cboMask.setModel(self.masks_model)
+        self.sampling_frames = {id: mask for id, mask in project.masks.items() if mask.mask_type.id == REGULAR_MASK_TYPE_ID}
+        self.sampling_frames_model = DBItemModel(self.sampling_frames)
+        self.cboSampleFrame.setModel(self.sampling_frames_model)
 
         # self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
         metrics = list(project.metrics.values())
@@ -71,7 +71,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             # TODO: Set dropdowns when existing analysis
 
             # User cannot reassign mask once the analysis is created!
-            self.cboMask.setEnabled(False)
+            self.cboSampleFrame.setEnabled(False)
         else:
             self.setWindowTitle('Create New Analysis')
 
@@ -86,25 +86,23 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.grdLayout1 = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grdLayout1)
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Name')
+        self.lblName = QtWidgets.QLabel('Name')
         self.grdLayout1.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
         self.grdLayout1.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblMask = QtWidgets.QLabel()
-        self.lblMask.setText('Sample Frame')
-        self.grdLayout1.addWidget(self.lblMask, 1, 0, 1, 1)
+        self.lblSampleFrame = QtWidgets.QLabel('Sample Frame')
+        self.grdLayout1.addWidget(self.lblSampleFrame, 1, 0, 1, 1)
 
-        self.cboMask = QtWidgets.QComboBox()
-        self.grdLayout1.addWidget(self.cboMask, 1, 1, 1, 1)
+        self.cboSampleFrame = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboSampleFrame, 1, 1, 1, 1)
 
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
 
         self.metricsTable = QtWidgets.QTableWidget(0, 2)
-        self.tabWidget.addTab(self.metricsTable, 'Analysis Metrics')
+        self.tabWidget.addTab(self.metricsTable, 'Metrics and Indicators')
         # self.metricsTable.horizontalHeader().setStretchLastSection(True)
         self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status'])
 
@@ -122,10 +120,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        mask = self.cboMask.currentData(QtCore.Qt.UserRole)
+        mask = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         if mask is None:
             QtWidgets.QMessageBox.warning(self, 'Missing Mask', 'You must select a mask to continue.')
-            self.cboMask.setFocus()
+            self.cboSampleFrame.setFocus()
             return
 
         # Must include at least one metric!

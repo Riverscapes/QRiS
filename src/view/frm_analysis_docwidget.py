@@ -33,13 +33,12 @@ from .frm_analysis_properties import FrmAnalysisProperties
 # from qgis.utils import iface
 
 from ..model.project import Project
-from ..model.mask import MASK_MACHINE_CODE
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.analysis_metric import AnalysisMetric
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
-from ..model.mask import MASK_MACHINE_CODE, Mask
+from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask
 from ..model.metric_value import MetricValue, load_metric_values
 
 from .frm_metric_value import FrmMetricValue
@@ -58,12 +57,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.analyis = analysis
         self.txtName.setText(analysis.name)
 
-        with sqlite3.connect(project.project_file) as conn:
-            curs = conn.cursor()
-            curs.execute('SELECT DISTINCT fid, display_label FROM mask_features WHERE mask_id = ?', [analysis.mask.id])
-            segments = {row[0]: DBItem('None', row[0], row[1]) for row in curs.fetchall()}
-            self.segments_model = DBItemModel(segments)
-            self.cboSegment.setModel(self.segments_model)
+        # Set Sample Frames
+        self.sample_frame_model = DBItemModel({name: sampling_frame for name, sampling_frame in self.project.masks.items() if sampling_frame.mask_type.id != AOI_MASK_TYPE_ID})
+        self.cboSampleFrame.setModel(self.sample_frame_model)
 
         # Events
         self.events_model = DBItemModel(project.events)
@@ -111,7 +107,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def load_table_values(self):
 
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        mask_feature_id = self.cboSegment.currentData(QtCore.Qt.UserRole).id
+        mask_feature_id = self.cboSampleFrame.currentData(QtCore.Qt.UserRole).id
 
         if event is not None and mask_feature_id is not None:
             # Load latest metric values from DB
@@ -132,7 +128,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 self.table.item(row, 1).setText(metric_value_text)
                 self.table.item(row, 2).setText(uncertainty_text)
 
-    def cmdCalculate_clicked(self, row, col):
+    def cmdCalculate_clicked(self):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Calculation of metrics from event layers is not yet implemented.')
 
@@ -149,7 +145,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
         metric = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole)
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        mask_feature = self.cboSegment.currentData(QtCore.Qt.UserRole)
+        mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
 
         if metric_value is None:
             metric_value = MetricValue(metric.metric, None, None, True, None, None, {})
@@ -207,8 +203,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.lblSegment.setText('Sample Frame')
         self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
 
-        self.cboSegment = QtWidgets.QComboBox()
-        self.grid.addWidget(self.cboSegment, 2, 1, 1, 1)
+        self.cboSampleFrame = QtWidgets.QComboBox()
+        self.grid.addWidget(self.cboSampleFrame, 2, 1, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz)

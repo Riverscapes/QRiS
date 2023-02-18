@@ -63,7 +63,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         try:
             self.metric_value.save(self.project.project_file, self.analysis, self.data_capture_event, self.mask_feature_id)
         except Exception as ex:
-            QtWidgets.QMessageBox.warning('Error Saving Metric Value', str(ex))
+            QtWidgets.QMessageBox.warning(self, 'Error Saving Metric Value', str(ex))
             return
 
         super().accept()

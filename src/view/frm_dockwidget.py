@@ -434,6 +434,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_analysis(self, parent_node):
 
+        if len([sampling_frame for sampling_frame in self.project.masks.values() if sampling_frame.mask_type.id != AOI_MASK_TYPE_ID]) == 0:
+            QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No sampling frames were found in the current QRiS Project.\n\nPlease prepare a sampling frame before running an analysis.')
+            return
+        if len(self.project.events) == 0:
+            QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No data capture events were found in the current QRiS Project.\n\nPlease prepare a data capture or design event before running an analysis.')
+            return
+
         frm = FrmAnalysisProperties(self, self.project)
         result = frm.exec_()
         if result is not None and result != 0:

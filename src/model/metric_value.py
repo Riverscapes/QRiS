@@ -36,7 +36,7 @@ class MetricValue():
                         , metadata
                         , description
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT (analyis_id, event_id, mask_feature_id, metric_id) DO UPDATE SET
+                    ON CONFLICT (analysis_id, event_id, mask_feature_id, metric_id) DO UPDATE SET
                         manual_value = excluded.manual_value
                         , automated_value = excluded.automated_value
                         , is_manual = excluded.is_manual
