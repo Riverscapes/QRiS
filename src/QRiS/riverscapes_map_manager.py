@@ -104,6 +104,8 @@ class RiverscapesMapManager():
         for child_layer in parent.children():
             custom_property = child_layer.customProperty(self.product_key)
             if isinstance(custom_property, str) and custom_property == target_custom_property:
+                child_layer.setExpanded(False)
+                child_layer.setExpanded(True)
                 return child_layer
 
         if add_missing:
@@ -134,6 +136,8 @@ class RiverscapesMapManager():
             #     group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
 
             group_layer.setCustomProperty(self.product_key, target_custom_property)
+            group_layer.setExpanded(False)
+            group_layer.setExpanded(True)
             return group_layer
 
         return None
