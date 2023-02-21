@@ -243,7 +243,7 @@ class QRisMapManager(RiverscapesMapManager):
         group_name = 'Designs' if event.event_type.id == DESIGN_EVENT_TYPE_ID else 'Data Capture Events'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code=}_ROOT', group_name, project_group, True)
+        events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_ROOT', group_name, project_group, True)
         event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True)
 
         existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, event_group_layer)
