@@ -849,7 +849,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def geospatial_summary(self, model_item, model_data: Mask):
 
         metrics_task = MetricsTask(self.project, model_data)
-        metrics_task.run()
+        # -- DEBUG --
+        # metrics_task.run()
+        # -- PRODUCTION --
         metrics_task.on_complete.connect(self.geospatial_summary_complete)
         QgsApplication.taskManager().addTask(metrics_task)
 
