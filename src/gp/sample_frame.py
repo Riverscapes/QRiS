@@ -1,6 +1,6 @@
 from PyQt5.QtGui import *
-from qgis.PyQt.QtCore import pyqtSignal, QVariant
-from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFields, QgsFeature, QgsField
+from qgis.PyQt.QtCore import pyqtSignal
+from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFeature, QgsProject, QgsCoordinateTransform
 from qgis.analysis import QgsNativeAlgorithms
 
 # Initialize QGIS Application
@@ -16,13 +16,13 @@ MESSAGE_CATEGORY = 'SampleFrameTask'
 
 class SampleFrameTask(QgsTask):
 
-    sample_frame_complete = pyqtSignal()
+    sample_frame_complete = pyqtSignal(bool)
 
-    def __init__(self, polygon, cross_sections, out_path, id) -> None:
+    def __init__(self, polygon: QgsVectorLayer, cross_sections: QgsVectorLayer, out_path: str, id: int) -> None:
         super().__init__('Generate Sample Frames Task', QgsTask.CanCancel)
 
-        self.polygon = polygon
-        self.cross_sections = cross_sections
+        self.polygon_layer = polygon
+        self.cross_sections_layer = cross_sections
         self.id = id
         self.sample_frame = out_path
 
@@ -36,7 +36,7 @@ class SampleFrameTask(QgsTask):
         """
 
         extend_params = {
-            'INPUT': self.cross_sections,
+            'INPUT': self.cross_sections_layer,
             'START_DISTANCE': 0.000001,
             'END_DISTANCE': 0.000001,
             'OUTPUT': "TEMPORARY_OUTPUT"
@@ -44,15 +44,18 @@ class SampleFrameTask(QgsTask):
         gp_extend = processing.run('native:extendlines', extend_params)
 
         split_params = {
-            'INPUT': self.polygon,
+            'INPUT': self.polygon_layer,
             'LINES': gp_extend['OUTPUT'],
             'OUTPUT': "TEMPORARY_OUTPUT"
         }
         gp_split = processing.run('qgis:splitwithlines', split_params)
 
         out_layer = QgsVectorLayer(self.sample_frame)
+        transform = QgsCoordinateTransform(self.polygon_layer.crs(), out_layer.crs(), QgsProject.instance())
+
         for i, feat in enumerate(gp_split['OUTPUT'].getFeatures(), 1):
             geom = feat.geometry()
+            geom.transform(transform)
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())
             out_feature.setGeometry(geom)
@@ -76,7 +79,7 @@ class SampleFrameTask(QgsTask):
 
         if result:
             QgsMessageLog.logMessage(
-                'Sample Frame completed\n',
+                'Sample Frame completed',
                 MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
@@ -92,7 +95,8 @@ class SampleFrameTask(QgsTask):
                     MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
-        self.sample_frame_complete.emit()
+        self.sample_frame_complete.emit(result)
+        self.cancel()
 
     def cancel(self):
         QgsMessageLog.logMessage(

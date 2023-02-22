@@ -1,9 +1,9 @@
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import pyqtSignal
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from qgis.core import QgsApplication, QgsVectorLayer, QgsWkbTypes
 
-from ..model.db_item import DBItem, DBItemModel
+from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..model.scratch_vector import ScratchVector
 from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, MASK_MACHINE_CODE
@@ -91,12 +91,14 @@ class FrmSampleFrame(QtWidgets.QDialog):
                 out_path = f'{self.qris_project.project_file}|layername=mask_features'
                 task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
 
+                # TODO task complete signal not firing in production mode...
                 # -- PRODUCTION --
-                task.sample_frame_complete.connect(self.on_complete)
-                QgsApplication.taskManager().addTask(task)
+                # task.sample_frame_complete.connect(self.frame_complete)
+                # QgsApplication.taskManager().addTask(task)
 
                 # -- DEBUG --
-                # task.run()
+                task.run()
+                self.frame_complete(True)
 
             except Exception as ex:
                 try:
@@ -108,9 +110,11 @@ class FrmSampleFrame(QtWidgets.QDialog):
 
         super(FrmSampleFrame, self).accept()
 
-    def on_complete(self):
+    @pyqtSlot(bool)
+    def frame_complete(self, result: bool):
 
-        self.export_complete.emit(self.sample_frame, MASK_MACHINE_CODE, True, True)
+        if result is True:
+            self.export_complete.emit(self.sample_frame, MASK_MACHINE_CODE, True, True)
 
     def setupUi(self):
 
