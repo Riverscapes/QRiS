@@ -2,7 +2,7 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from qgis.core import QgsVectorLayer, QgsFeature
+from qgis.core import QgsVectorLayer, QgsFeature, QgsGeometry
 
 from ..model.project import Project
 from ..model.profile import Profile, insert_profile
@@ -12,7 +12,7 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmSaveCenterline(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, centerline: QgsFeature, metrics: dict = None, metadata: dict = None):
+    def __init__(self, parent, project: Project, centerline_geom: QgsGeometry, metrics: dict = None, metadata: dict = None):
 
         super(FrmSaveCenterline, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -22,7 +22,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         self.project = project
         self.metrics = metrics
         self.metadata = metadata
-        self.centerline_feat = centerline
+        self.centerline_geom = centerline_geom
         self.profile = None
 
         self.add_metrics()
@@ -48,7 +48,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
             out_layer = QgsVectorLayer(f'{self.project.project_file}|layername=profile_centerlines')
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())
-            out_feature.setGeometry(self.centerline_feat.geometry())
+            out_feature.setGeometry(self.centerline_geom)
             out_feature['profile_id'] = self.profile.id
             if self.metadata is not None:
                 out_feature.setAttribute('metadata', json.dumps(self.metadata))

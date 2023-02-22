@@ -6,12 +6,11 @@ from PyQt5 import Qt, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsMapLayer, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.gui import QgsMapToolIdentifyFeature
+from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.utils import iface
 
 from ..gp.centerlines import CenterlineTask
-from ..model.project import Project, PROJECT_MACHINE_CODE
+from ..model.project import Project
 from ..model.db_item import DBItem
 from ..model.profile import Profile
 
@@ -162,10 +161,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Unable to save a multipart centerline.')
             return
 
+        transform = QgsCoordinateTransform(self.polygon_crs, QgsCoordinateReferenceSystem('EPSG:4326'), QgsProject.instance())
+        geom_centerline.transform(transform)
+
         sline_length = self.d.measureLine(QgsPointXY(geom_centerline.get().points()[0]), QgsPointXY(geom_centerline.get().points()[-1]))
         geom_length = self.d.measureLength(geom_centerline)
         metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
-        frm_save_centerline = FrmSaveCenterline(self, self.project, self.feat_centerline, metrics, self.fields)
+        frm_save_centerline = FrmSaveCenterline(self, self.project, geom_centerline, metrics, self.fields)
         result = frm_save_centerline.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
