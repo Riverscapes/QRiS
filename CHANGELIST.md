@@ -1,3 +1,35 @@
+# QRiS Plugin
+
+## [0.1.12] 2023 FEB 21
+
+### Added
+- Generate sample frames from Cross Sections
+- Inverse Value option for Raster Slider
+- Centerline tool for AOI polygons
+- Sample frames for context polygons
+- Labels for Sample Frames
+
+### Fixed
+- Save Raster Slider polygon bug
+- Centerline Reset button fix
+- bug with catchments node placement in project tree
+- Analysis panel bugs
+- Group layers expand when adding layers to map
+- bug with DCE node placement in project tree
+- bug with centerline and sample frame coordinate systems
+
+### Changed
+- Map manager improvements for raster slider
+- Map manager improvements for centerline tool
+- Centerline tool polygon selection tool
+- Centerline tool ignores interior rings in polygon
+- Centerline tool only retains the continuous section between the clip lines
+- Map manager improvements for Cross Sections
+
+### Removed
+- method_to_map.py
+- vectorize.py
+
 ## [0.1.11] 09 FEB 2023 
 
 ### Fixed
