@@ -4,6 +4,7 @@ import json
 from .metric import Metric
 from .event import Event
 from .analysis import Analysis
+from .db_item import dict_factory
 
 
 class MetricValue():
@@ -51,7 +52,8 @@ class MetricValue():
                     self.automated_value,
                     self.is_manual,
                     self.uncertainty,
-                    json.dumps(self.metadata) if self.metadata is not None and len(self.metadata) > 0 else None
+                    json.dumps(self.metadata) if self.metadata is not None and len(self.metadata) > 0 else None,
+                    self.description
                 ])
                 conn.commit()
             except Exception as ex:
@@ -64,6 +66,7 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, mask_feat
     """
 
     with sqlite3.connect(db_path) as conn:
+        conn.row_factory = dict_factory
         curs = conn.cursor()
         curs.execute('SELECT * FROM metric_values WHERE (analysis_id = ?) AND (event_id = ?) AND (mask_feature_id = ?)',
                      [analysis.id, event.id, mask_feature_id])
@@ -75,7 +78,7 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, mask_feat
                 row['is_manual'],
                 row['uncertainty'],
                 row['description'],
-                json.loads(row['metadata']) if row.IsDBNull(row) else {}
+                json.loads(row['metadata']) if row['metadata'] is not None else {}
             )
             for row in curs.fetchall()
         }

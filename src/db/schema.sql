@@ -436,10 +436,10 @@ CREATE TABLE metric_values (
     is_manual INT NOT NULL DEFAULT 1,
     metadata TEXT,
     description TEXT,
-    Uncertainty NUMERIC,
+    uncertainty NUMERIC,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id)
+    CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id, metric_id)
 );
 
 CREATE INDEX fx_metric_values_analysis_id ON metric_values(analysis_id);

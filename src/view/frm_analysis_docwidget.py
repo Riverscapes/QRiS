@@ -120,13 +120,13 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 metric_value_text = ''
                 uncertainty_text = ''
                 if metric.metric.id in metric_values:
-                    metric_value = metric_values[metric.id]
+                    metric_value = metric_values[metric.metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
                     uncertainty_text = metric_value.uncertainty
                     self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
                     # TODO: cell formatting
-                self.table.item(row, 1).setText(metric_value_text)
-                self.table.item(row, 2).setText(uncertainty_text)
+                self.table.item(row, 1).setText(str(metric_value_text))
+                self.table.item(row, 2).setText(str(uncertainty_text))
 
     def cmdCalculate_clicked(self):
 
@@ -153,7 +153,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         frm = FrmMetricValue(self, self.project, self.project.metrics, self.analyis, event, mask_feature.id, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:
-            QtWidgets.QMessageBox.information('Not Implemented', 'TODO: refresh grid')
+            QtWidgets.QMessageBox.information(self, 'Not Implemented', 'TODO: refresh grid')
 
     def setupUi(self):
 

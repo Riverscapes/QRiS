@@ -51,6 +51,11 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         self.ManualUncertaintyChange()
 
+        if metric_value.is_manual:
+            self.valManual.setFocus()
+        else:
+            self.txtAutomated.setFocus()
+
     def rdoManual_checkchanged(self):
         self.valManual.setEnabled(self.rdoManual.isChecked())
 
