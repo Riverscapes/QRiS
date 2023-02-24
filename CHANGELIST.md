@@ -1,5 +1,12 @@
 # QRiS Plugin
 
+## [0.1.13] 2023 FEB 24
+
+### Fixed
+- bug when saving manual analysis values (schema change)
+- event id incorrectly set for event layers
+- bug with edit event form
+
 ## [0.1.12] 2023 FEB 21
 
 ### Added
