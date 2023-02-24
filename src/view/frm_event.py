@@ -45,7 +45,7 @@ class FrmEvent(QtWidgets.QDialog):
             item.setData(surface, QtCore.Qt.UserRole)
             self.surface_raster_model.appendRow(item)
 
-            checked_state = QtCore.Qt.Checked if event is not None and surface in event.basemaps else QtCore.Qt.Unchecked
+            checked_state = QtCore.Qt.Checked if event is not None and surface in event.rasters else QtCore.Qt.Unchecked
             item.setData(QtCore.QVariant(checked_state), QtCore.Qt.CheckStateRole)
 
         self.vwRasterSurfaces.setModel(self.surface_raster_model)
