@@ -42,6 +42,7 @@ from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
 
 from .model.project import apply_db_migrations, safe_make_abspath, safe_make_relpath
+from .QRiS.qrave_integration import QRaveIntegration
 
 from .gp.watershed_attributes import WatershedAttributes
 
@@ -64,6 +65,7 @@ class QRiSToolbar:
         """
         # Save reference to the QGIS interface
         self.iface = iface
+        self.qrave = None
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
@@ -196,6 +198,10 @@ class QRiSToolbar:
         # Listen for the signal when a project is being loaded
         # so we can try and reload the relevant QRiS project
         self.qproject.readProject.connect(self.onProjectLoad)
+
+        # Load a version of the QRave code we can use for cross-plugin integration
+        self.qrave = QRaveIntegration()
+        self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
 
         # Trigger the check for relative paths on whether the homePath has changed
         self.qproject.homePathChanged.connect(self.project_homePathChanged)

@@ -5,7 +5,7 @@ import json
 from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
 from qgis.PyQt.QtCore import Qt, QVariant
 
-from ..QRiS.settings import CONSTANTS
+from ..QRiS.settings import Settings, CONSTANTS
 
 from ..model.db_item import DBItem
 from ..model.raster import BASEMAP_MACHINE_CODE
@@ -39,7 +39,8 @@ class RiverscapesMapManager():
     def __init__(self, product_key) -> None:
         super().__init__()
         self.product_key = product_key
-        self.symbology_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), CONSTANTS['symbologyDir'])
+        settings = Settings()
+        self.symbology_folder = settings.getValue('symbologyDir')
         self.layer_order = ['Basemaps']
 
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
