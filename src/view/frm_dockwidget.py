@@ -169,14 +169,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         cross_sections_node = self.add_child_to_project_tree(inputs_node, CrossSections.CROSS_SECTIONS_MACHINE_CODE)
         [self.add_child_to_project_tree(cross_sections_node, item) for item in self.project.cross_sections.values()]
 
-        context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
-        [self.add_child_to_project_tree(context_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_CONTEXT]
-        [self.add_child_to_project_tree(context_node, item) for item in self.project.scratch_vectors.values()]
+        self.context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
+        [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_CONTEXT]
+        [self.add_child_to_project_tree(self.context_node, item) for item in self.project.scratch_vectors.values()]
 
-        gage_node = self.add_child_to_project_tree(context_node, STREAM_GAGE_MACHINE_CODE)
+        gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
         [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
-        catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
+        catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
         [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
 
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
@@ -249,16 +249,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     @pyqtSlot(str, str)
     def qris_from_qrave(self, layer_path, layer_type):
 
-        if layer_type == 'polygon':
-            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
-        elif layer_type == 'line':
-            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
-        elif layer_type == 'point':
-            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
-        elif layer_type == 'raster':
-            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+        if layer_type == 'raster':
+            self.add_raster(self.context_node, RASTER_TYPE_CONTEXT, layer_path)
         else:
-            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+            self.add_context_vector(self.context_node, layer_path)
 
     def open_menu(self, position):
         """Connects signals as context menus to items in the tree"""
@@ -289,10 +283,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.menu.addMenu(ltpbr_menu)
 
                 elif model_data == SURFACE_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_SURFACE))
+                    self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_SURFACE))
 
                 elif model_data == BASEMAP_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_BASEMAP))
+                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_BASEMAP))
 
                 elif model_data == AOI_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
@@ -311,8 +305,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
-                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_basemap(model_item, RASTER_TYPE_CONTEXT))
-                    self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_scratch_vector(model_item))
+                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_CONTEXT))
+                    self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_context_vector(model_item))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
@@ -651,23 +645,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if event_layer.layer.is_lookup is False:
                 self.add_child_to_project_tree(event_node, event_layer, add_to_map)
 
-    def add_basemap(self, parent_node: QtGui.QStandardItem, raster_type_id: int):
+    def add_raster(self, parent_node: QtGui.QStandardItem, raster_type_id: int, import_source_path: str = None):
         """Initiates adding a new base map to the project"""
 
-        import_source_path = browse_raster(self, 'Select a raster dataset to import.')
         if import_source_path is None:
-            return
+            import_source_path = browse_raster(self, 'Select a raster dataset to import.')
+            if import_source_path is None:
+                return
 
         frm = FrmRaster(self, self.iface, self.project, import_source_path, raster_type_id)
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
 
-    def add_scratch_vector(self, parent_node: QtGui.QStandardItem):
+    def add_context_vector(self, parent_node: QtGui.QStandardItem, import_source_path: str = None):
 
-        import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
         if import_source_path is None:
-            return
+            import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
+            if import_source_path is None:
+                return
 
         frm = FrmScratchVector(self, self.iface, self.project, import_source_path, None, None)
         result = frm.exec_()

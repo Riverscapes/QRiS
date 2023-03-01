@@ -53,5 +53,8 @@ class QRaveIntegration(QObject):
         """
 
         layer = item.data(Qt.UserRole).data
-        path = f'{layer.layer_uri}|layername={layer.layer_name}'
+        if layer.layer_type == 'raster':
+            path = layer.layer_uri
+        else:
+            path = f'{layer.layer_uri}|layername={layer.layer_name}'
         self.qrave_to_qris.emit(path, layer.layer_type)
