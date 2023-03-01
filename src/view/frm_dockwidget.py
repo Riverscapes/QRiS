@@ -246,6 +246,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.model = None
         self.qris_project = None
 
+    @pyqtSlot(str, str)
+    def qris_from_qrave(self, layer_path, layer_type):
+
+        if layer_type == 'polygon':
+            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+        elif layer_type == 'line':
+            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+        elif layer_type == 'point':
+            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+        elif layer_type == 'raster':
+            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+        else:
+            QtWidgets.QMessageBox.information(self, 'Not Implemented', f'Importing {layer_type} from QRave not yet implemented.')
+
     def open_menu(self, position):
         """Connects signals as context menus to items in the tree"""
         self.menu.clear()

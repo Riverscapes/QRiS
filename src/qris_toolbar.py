@@ -200,7 +200,7 @@ class QRiSToolbar:
         self.qproject.readProject.connect(self.onProjectLoad)
 
         # Load a version of the QRave code we can use for cross-plugin integration
-        self.qrave = QRaveIntegration()
+        self.qrave = QRaveIntegration(self.toolbar)
         self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
 
         # Trigger the check for relative paths on whether the homePath has changed
@@ -421,6 +421,7 @@ class QRiSToolbar:
         self.toggle_widget(forceOn=True)
         self.set_project_path_settings(db_path)
         self.dockwidget.build_tree_view(db_path)
+        self.qrave.qrave_to_qris.connect(self.dockwidget.qris_from_qrave)
         self.add_project_to_mru_list(db_path)
 
         # Add basemap to ToC if empty

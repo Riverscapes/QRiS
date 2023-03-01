@@ -1,7 +1,7 @@
 import os
 import importlib
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal
 from qgis.utils import plugins
 from qgis.PyQt.QtGui import QStandardItem, QIcon
 
@@ -10,9 +10,12 @@ from qgis.PyQt.QtGui import QStandardItem, QIcon
 NAMES = ['qrave_toolbar_dev', 'qrave_toolbar']
 
 
-class QRaveIntegration():
+class QRaveIntegration(QObject):
 
-    def __init__(self):
+    qrave_to_qris = pyqtSignal(str, str)
+
+    def __init__(self, parent):
+        super(QRaveIntegration, self).__init__(parent)
         # from https://gis.stackexchange.com/questions/403501/using-qgis-plugin-from-another-plugin
         self.name = next((pname for pname in NAMES if pname in plugins), None)
         self.plugin_instance = plugins[self.name] if self.name is not None else None
@@ -24,6 +27,9 @@ class QRaveIntegration():
             self.symbology_folder = os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS')
 
         if self.plugin_instance and self.plugin_instance.dockwidget:
+            # Check if the signal is already connected
+            if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:
+                self.plugin_instance.dockwidget.layerMenuOpen.disconnect()
             self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
 
     def qrave_add_to_map_menu_item(self, menu, item: QStandardItem, data):
@@ -35,17 +41,17 @@ class QRaveIntegration():
             data (ProjectTreeData): ProjectTreeData (QRave)
         """
 
-        # TODO: We get a new menu item every time we reload this code. Do we need a singleton?
         menu.addSeparator()
-        menu.addCustomAction(QIcon(f':/plugins/qris_toolbar/add_to_map'), "Add to QRiS", lambda: self.import_to_qris(item, data))
+        menu.addCustomAction(QIcon(f':/plugins/qris_toolbar/add_to_map'), "Add to QRiS", lambda: self.add_to_qris(item, data))
 
-    def import_to_qris(self, item, data):
+    def add_to_qris(self, item, data):
         """_summary_
 
         Args:
             item (QStandardItem): QStandardItem (PyQt)
             data (ProjectTreeData): ProjectTreeData (QRave)
         """
-        # find the symbology for this layer
-        symbology = self.qrave_map_layer.QRaveMapLayer.find_layer_symbology(item)
-        print('DO WORK HERE')
+
+        layer = item.data(Qt.UserRole).data
+        path = f'{layer.layer_uri}|layername={layer.layer_name}'
+        self.qrave_to_qris.emit(path, layer.layer_type)
