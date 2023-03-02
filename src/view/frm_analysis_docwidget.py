@@ -49,6 +49,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def __init__(self, parent):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_QuitOnClose)
         self.setupUi()
 
     def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
@@ -153,7 +154,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         frm = FrmMetricValue(self, self.project, self.project.metrics, self.analyis, event, mask_feature.id, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:
-            QtWidgets.QMessageBox.information(self, 'Not Implemented', 'TODO: refresh grid')
+            self.load_table_values()
+
+    def closeEvent(self, event):
+        self.table.doubleClicked.disconnect()
+        QtWidgets.QDockWidget.closeEvent(self, event)
 
     def setupUi(self):
 

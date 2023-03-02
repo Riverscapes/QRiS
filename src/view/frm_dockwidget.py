@@ -319,7 +319,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
             if isinstance(model_data, DBItem):
-                self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                if isinstance(model_data, Analysis):
+                    self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
+                else:
+                    self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
             else:
                 raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
@@ -457,13 +460,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result is not None and result != 0:
             self.add_child_to_project_tree(parent_node, frm.analysis, True)
+            self.open_analysis(frm.analysis)
 
-            if self.analysis_doc_widget is None:
-                self.analysis_doc_widget = FrmAnalysisDocWidget(self)
-                self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_doc_widget)
+    def open_analysis(self, analysis: Analysis):
 
-            self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
-            self.analysis_doc_widget.show()
+        if self.analysis_doc_widget is None:
+            self.analysis_doc_widget = FrmAnalysisDocWidget(self)
+            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_doc_widget)
+
+        self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
+        self.analysis_doc_widget.show()
 
     def stream_gage_explorer(self):
 
