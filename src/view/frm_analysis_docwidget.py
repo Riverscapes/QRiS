@@ -156,8 +156,14 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         if result is not None and result != 0:
             self.load_table_values()
 
+    def resizeEvent(self, event):
+        if self.table.columnWidth(0) > self.table.width():
+            self.table.setColumnWidth(0, self.table.width() * 0.8)
+        QtWidgets.QDockWidget.resizeEvent(self, event)
+
     def closeEvent(self, event):
-        self.table.doubleClicked.disconnect()
+        if self.table.receivers(self.table.doubleClicked) > 0:
+            self.table.doubleClicked.disconnect()
         QtWidgets.QDockWidget.closeEvent(self, event)
 
     def setupUi(self):
