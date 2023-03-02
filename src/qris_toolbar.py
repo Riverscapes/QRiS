@@ -201,7 +201,12 @@ class QRiSToolbar:
 
         # Load a version of the QRave code we can use for cross-plugin integration
         self.qrave = QRaveIntegration(self.toolbar)
-        self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
+        if self.qrave.name is not None:
+            self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
+        else:
+            QgsMessageLog.logMessage('Unable to load QRave plugin.', 'QRiS', Qgis.Critical)
+            self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load QRave plugin.', level=Qgis.Critical, duration=5)
+            self.iface.mainWindow().repaint()
 
         # Trigger the check for relative paths on whether the homePath has changed
         self.qproject.homePathChanged.connect(self.project_homePathChanged)
