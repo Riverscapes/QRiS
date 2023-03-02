@@ -224,6 +224,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horiz.addItem(self.spacerItem)
 
         self.table = QtWidgets.QTableWidget(0, 3)
+        self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
