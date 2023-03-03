@@ -2,8 +2,7 @@
 title: QRiS for QGIS
 weight: 2
 ---
-# Depencies
-QRiS requires [QGIS](https://qgis.org/) from the latest LTR (Long Term Release) or more recent (currently LTR is 3.22.16) 
+
 # Install Plugin From Q Plugin Library
 QRiS is a [QGIS Plugin](https://plugins.qgis.org/) and functions within [QGIS](https://www.qgis.org/). To install QRiS for the first time to [QGIS](https://qgis.org/): 
 
@@ -21,7 +20,7 @@ At any time after it is installed, you can update QRiS by simply choosing `Upgra
 
 ## Minimum Requirements
 
-QRAVE requires QGIS 3.16 or newer.
+QRAVE requires [QGIS](https://qgis.org/) from the latest LTR (Long Term Release) or more recent (last LTR for development was 3.22.16) 
 
 ---------
 # QGIS - Need to get GIS?
