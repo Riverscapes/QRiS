@@ -2,9 +2,10 @@
 title: QRiS for QGIS
 weight: 2
 ---
-
+# Depencies
+QRiS requires [QGIS](https://qgis.org/) from the latest LTR (Long Term Release) or more recent (currently LTR is 3.22.16) 
 # Install Plugin From Q Plugin Library
-QRiS is a [QGIS Plugin](https://plugins.qgis.org/) and functions within [QGIS](https://www.qgis.org/). To install QRiS for the first time to [QGIS](https://qgis.org/) 3.16 or later: 
+QRiS is a [QGIS Plugin](https://plugins.qgis.org/) and functions within [QGIS](https://www.qgis.org/). To install QRiS for the first time to [QGIS](https://qgis.org/): 
 
 1. From the main QGIS menu choose `Plugins → Manage and Install Plugins`.
 2. Search Plugins for `QRiS` (make sure that under `Settings` → the `Show also experimental plugins` is checked on: <img src="https://rave.riverscapes.net/assets/images/QRaveExperimental.png">
