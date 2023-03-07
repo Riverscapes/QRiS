@@ -1,6 +1,10 @@
 import plistlib
+import traceback
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.core import Qgis, QgsMessageLog
+from qgis.utils import iface
+
 from ..model.project import Project
 from ..model.metric_value import MetricValue
 from ..model.metric import Metric
@@ -106,7 +110,15 @@ class FrmMetricValue(QtWidgets.QDialog):
             return
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
-        result = metric_calculation(self.project.project_file, self.mask_feature_id, self.metric_value.metric.metric_params)
+        try:
+            result = metric_calculation(self.project.project_file, self.mask_feature_id, self.metric_value.metric.metric_params)
+        except Exception as ex:
+            QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
+            QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)
+            self.txtAutomated.setText(None)
+            self.rdoManual.setChecked(True)
+            self.rdoAutomated.setEnabled(False)
+            return
 
         self.txtAutomated.setText(f'{result: .2f}'if isinstance(result, float) else str(result))
         self.rdoAutomated.setChecked(True)
