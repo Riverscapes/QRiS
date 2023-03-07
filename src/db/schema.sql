@@ -378,9 +378,13 @@ CREATE TABLE calculations (
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    metric_function TEXT
 );
 
+INSERT INTO calculations (id, name, metric_function) VALUES (1, 'count', 'count');
+INSERT INTO calculations (id, name, metric_function) VALUES (2, 'length', 'length');
+INSERT INTO calculations (id, name, metric_function) VALUES (3, 'area', 'area');
 
 CREATE TABLE metric_levels (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -399,12 +403,15 @@ CREATE TABLE metrics (
     description TEXT,
     definition_url TEXT,
     metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    metric_params TEXT
 );
 
-INSERT INTO metrics (id, name, default_level_id) VALUES (1, 'dam and jam count', 1);
-INSERT INTO metrics (id, name, default_level_id) VALUES (2, 'Percent Active Floddplain', 1);
-INSERT INTO metrics (id, name, default_level_id) VALUES (3, 'Gradient', 2);
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (1, 1, 'dam and jam count', 1, '{"layers": ["dams","jams"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (2, NULL, 'Percent Active Floddplain', 1, NULL);
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (3, NULL, 'Gradient', 2, NULL);
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (4, 2, 'Dam Crest Length', 1, '{"layers": ["dam_crests"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (5, 3, 'Valley Bottom Area', 1, '{"layers": ["valley_bottoms"]}');
 
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

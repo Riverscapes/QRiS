@@ -1,5 +1,5 @@
 import plistlib
-from re import T
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ..model.project import Project
 from ..model.metric_value import MetricValue
@@ -7,6 +7,7 @@ from ..model.metric import Metric
 from ..model.analysis import Analysis
 from ..model.event import Event
 from .utilities import add_standard_form_buttons
+from ..gp import analysis_metrics
 
 UNCERTAINTY_NONE = 'None'
 UNCERTAINTY_PLUS_MINUS = 'Plus/Minus'
@@ -31,7 +32,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.analysis = analysis
         self.data_capture_event = event
         self.mask_feature_id = mask_feature_id
-        self.metrics = metrics
+        # self.metrics = metrics
 
         self.txtMetric.setText(metric_value.metric.name)
 
@@ -42,7 +43,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.valManual.setEnabled(self.rdoManual.isChecked())
 
         if metric_value.automated_value is not None:
-            self.txtAutomated.setText(metric_value.automated_value)
+            self.txtAutomated.setText(str(metric_value.automated_value))
         self.rdoAutomated.setEnabled(metric_value.automated_value is not None)
 
         self.rdoAutomated.setChecked(not metric_value.is_manual)
@@ -97,6 +98,19 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.ValManualUncertaintyLabelMax.setVisible(plus_minus)
 
             self.ValManualPlusMinus.setVisible(not plus_minus)
+
+    def cmd_calculate_metric_clicked(self):
+
+        if self.metric_value.metric.metric_function is None:
+            QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', 'No metric calculation function defined.')
+            return
+
+        metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
+        result = metric_calculation(self.project.project_file, self.mask_feature_id, self.metric_value.metric.metric_params)
+
+        self.txtAutomated.setText(f'{result: .2f}'if isinstance(result, float) else str(result))
+        self.rdoAutomated.setChecked(True)
+        self.rdoAutomated.setEnabled(True)
 
     def setupUi(self):
 
@@ -188,6 +202,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.cmdCalculate.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/gis'))
         self.cmdCalculate.setToolTip('Calculate Metric From GIS')
         self.cmdCalculate.setSizePolicy(sizePolicy)
+        self.cmdCalculate.clicked.connect(self.cmd_calculate_metric_clicked)
         self.grid.addWidget(self.cmdCalculate, 2, 2, 1, 1)
 
         # self.lblUncertainty = QtWidgets.QLabel()
