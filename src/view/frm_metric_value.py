@@ -1,5 +1,7 @@
+import os
 import plistlib
 import traceback
+import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
@@ -109,9 +111,22 @@ class FrmMetricValue(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', 'No metric calculation function defined.')
             return
 
+        # modify metric params as needed.
+        metric_params = json.loads(self.metric_value.metric.metric_params)
+        if 'rasters' in metric_params:
+            rasters = {}
+            for raster_name in metric_params['rasters']:
+                raster_id = [k for k, v in self.project.lookup_tables['lkp_raster_types'].items() if v.name == raster_name][0]
+                project_rasters = [r for r in self.data_capture_event.rasters if r.raster_type_id == raster_id]
+                if len(project_rasters) == 0:
+                    QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', f'No raster found for {raster_name}.')
+                    return
+                rasters[raster_name] = {'path': os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path)}
+            metric_params['rasters'] = rasters
+
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
-            result = metric_calculation(self.project.project_file, self.mask_feature_id, self.metric_value.metric.metric_params)
+            result = metric_calculation(self.project.project_file, self.mask_feature_id, metric_params)
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
             QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)

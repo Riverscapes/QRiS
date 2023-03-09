@@ -6,7 +6,7 @@ from .mask import Mask, load_masks
 from .layer import Layer, load_layers
 from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
-from .raster import Raster, load_rasters, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE
+from .raster import Raster, load_rasters
 from .event import Event, load as load_events
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
@@ -95,20 +95,20 @@ class Project(DBItem):
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
-    def basemaps(self) -> dict:
-        """ Returns a dictionary of just those rasters that are basemaps"""
+    # def basemaps(self) -> dict:
+    #     """ Returns a dictionary of just those rasters that are basemaps"""
 
-        return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id == RASTER_TYPE_BASEMAP}
+    #     return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id == RASTER_TYPE_BASEMAP}
 
     def scratch_rasters(self) -> dict:
         """ Returns a dictionary of all project rasters EXCEPT basemaps"""
 
-        return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id != RASTER_TYPE_BASEMAP}
+        return {id: raster for id, raster in self.rasters.items() if raster.is_context is True}
 
     def surface_rasters(self) -> dict:
         """ Returns a dictionary of all project surface rasters"""
 
-        return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id == RASTER_TYPE_SURFACE}
+        return {id: raster for id, raster in self.rasters.items() if raster.is_context is False}
 
 
 def apply_db_migrations(db_path: str):

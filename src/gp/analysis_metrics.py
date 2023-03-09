@@ -42,18 +42,16 @@ def get_mask_geom(project_file: str, mask_feature_id: int) -> ogr.Geometry:
     return mask_geom
 
 
-def count(project_file: str, mask_feature_id: int, inputs: str) -> int:
+def count(project_file: str, mask_feature_id: int, metric_params: dict) -> int:
     """Count the number of features in the specified layers that intersect the mask feature.
 
        CalculationID: 1
     """
 
-    metric_layers = json.loads(inputs)
-
     mask_geom = get_mask_geom(project_file, mask_feature_id)
 
     feature_count = 0
-    for layer_name in metric_layers['layers']:
+    for layer_name in metric_params['layers']:
         ds = ogr.Open(project_file)
         layer = ds.GetLayerByName(layer_name)
         layer.SetSpatialFilter(mask_geom)
@@ -62,13 +60,11 @@ def count(project_file: str, mask_feature_id: int, inputs: str) -> int:
     return feature_count
 
 
-def length(project_file: str, mask_feature_id: int, inputs: str):
+def length(project_file: str, mask_feature_id: int, metric_params: dict):
     """Get the total length of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 2
     """
-
-    metric_params = json.loads(inputs)
 
     mask_geom = get_mask_geom(project_file, mask_feature_id)
 
@@ -90,18 +86,16 @@ def length(project_file: str, mask_feature_id: int, inputs: str):
     return total_length
 
 
-def area(project_file: str, mask_feature_id: int, inputs: str):
+def area(project_file: str, mask_feature_id: int, metric_params: dict):
     """Get the total area of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 3
     """
 
-    metric_layers = json.loads(inputs)
-
     mask_geom = get_mask_geom(project_file, mask_feature_id)
 
     total_area = 0
-    for layer_name in metric_layers['layers']:
+    for layer_name in metric_params['layers']:
         ds = ogr.Open(project_file)
         layer = ds.GetLayerByName(layer_name)
         layer.SetSpatialFilter(mask_geom)
@@ -118,17 +112,15 @@ def area(project_file: str, mask_feature_id: int, inputs: str):
     return total_area
 
 
-def sinuosity(project_file: str, mask_feature_id: int, inputs: str):
+def sinuosity(project_file: str, mask_feature_id: int, metric_params: str):
     """Get the sinuosity of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 4
     """
 
-    metric_layers = json.loads(inputs)
-
     mask_geom = get_mask_geom(project_file, mask_feature_id)
 
-    layer_name = metric_layers['layers'][0]
+    layer_name = metric_params['layers'][0]
     ds = ogr.Open(project_file)
     layer = ds.GetLayerByName(layer_name)
     layer.SetSpatialFilter(mask_geom)
@@ -153,15 +145,13 @@ def sinuosity(project_file: str, mask_feature_id: int, inputs: str):
     return length / distance
 
 
-def gradient(project_file: str, mask_feature_id: int, inputs: str):
+def gradient(project_file: str, mask_feature_id: int, metric_params: dict):
     """Get the gradient of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 5
     """
 
-    metric_params = json.loads(inputs)
-
-    raster_layer = os.path.join(project_file, metric_params['rasters'][0])
+    raster_layer = metric_params['rasters']['Digital Elevation Model (DEM)']['path']
     if not os.path.exists(raster_layer):
         raise Exception(f'Expected Raster layer {raster_layer} does not exist.')
 
@@ -194,4 +184,4 @@ def gradient(project_file: str, mask_feature_id: int, inputs: str):
     stats_start = zonal_statistics(raster_layer, buffer_start)
     stats_end = zonal_statistics(raster_layer, buffer_end)
 
-    return (stats_end['min'] - stats_start['min']) / length
+    return (stats_end['minimum'] - stats_start['minimum']) / length

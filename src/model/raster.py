@@ -1,5 +1,7 @@
 import os
 import sqlite3
+from enum import Enum
+
 from qgis.core import QgsRasterLayer
 from .db_item import DBItem
 
@@ -8,22 +10,23 @@ BASEMAP_MACHINE_CODE = 'BASEMAP'
 PROTOCOL_BASEMAP_MACHINE_CODE = 'PROTOCOL_BASEMAP'
 SURFACE_MACHINE_CODE = 'SURFACE'
 CONTEXT_MACHINE_CODE = 'CONTEXT'
-BASEMAP_PARENT_FOLDER = 'basemaps'
+CONTEXT_PARENT_FOLDER = 'context'
 SURFACES_PARENT_FOLDER = 'surfaces'
 
-RASTER_TYPE_BASEMAP = 2
-RASTER_TYPE_SURFACE = 3
-RASTER_TYPE_CONTEXT = 4
+# RASTER_TYPE_BASEMAP = 2
+# RASTER_TYPE_SURFACE = 3
+# RASTER_TYPE_CONTEXT = 4
 
 RASTER_SLIDER_MACHINE_CODE = 'RASTER_SLIDER'
 
 
 class Raster(DBItem):
 
-    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str):
+    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str, is_context=False):
         super().__init__('rasters', id, name)
         self.path = relative_project_path
         self.raster_type_id = raster_type_id
+        self.is_context = is_context
         self.description = description
         self.icon = 'basemap'
 
@@ -62,17 +65,18 @@ def load_rasters(curs: sqlite3.Cursor) -> dict:
         row['name'],
         row['path'],
         row['raster_type_id'],
-        row['description']
+        row['description'],
+        bool(row['is_context'])
     ) for row in curs.fetchall()}
 
 
-def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str) -> Raster:
+def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str, is_context: bool) -> Raster:
 
     result = None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO rasters (name, path, raster_type_id, description) VALUES (?, ?, ?, ?)', [name, path, raster_type_id, description])
+            curs.execute('INSERT INTO rasters (name, path, raster_type_id, description, is_context) VALUES (?, ?, ?, ?, ?)', [name, path, raster_type_id, description, int(is_context)])
             id = curs.lastrowid
             result = Raster(id, name, path, raster_type_id, description)
             conn.commit()

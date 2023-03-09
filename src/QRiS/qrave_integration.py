@@ -7,7 +7,7 @@ from qgis.PyQt.QtGui import QStandardItem, QIcon
 
 
 # Try to load these plugin names in priority order
-NAMES = ['qrave_toolbar_dev', 'qrave_toolbar']
+NAMES = ['qrave_toolbar_dev', 'qrave_toolbar','QRAVEPlugin-qrave_integration']
 
 
 class QRaveIntegration(QObject):

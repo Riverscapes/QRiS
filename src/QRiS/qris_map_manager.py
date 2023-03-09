@@ -8,7 +8,7 @@ from ..model.mask import Mask, MASK_MACHINE_CODE, AOI_MACHINE_CODE, AOI_MASK_TYP
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
-from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_TYPE_SURFACE, RASTER_SLIDER_MACHINE_CODE, RASTER_TYPE_CONTEXT
+from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, Event
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
@@ -193,15 +193,15 @@ class QRisMapManager(RiverscapesMapManager):
 
     def build_raster_layer(self, raster: Raster) -> QgsMapLayer:
 
-        if raster.raster_type_id == RASTER_TYPE_SURFACE:
+        if raster.is_context is False:
             raster_machine_code = SURFACE_MACHINE_CODE
             group_layer_name = 'Surfaces'
-        elif raster.raster_type_id == RASTER_TYPE_CONTEXT:
+        else:
             raster_machine_code = CONTEXT_MACHINE_CODE
             group_layer_name = 'Context'
-        else:
-            raster_machine_code = BASEMAP_MACHINE_CODE
-            group_layer_name = 'Basemaps'
+        # else:
+        #     raster_machine_code = BASEMAP_MACHINE_CODE
+        #     group_layer_name = 'Basemaps'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         group_layer = self.get_group_layer(self.project.map_guid, raster_machine_code, group_layer_name, project_group, True)

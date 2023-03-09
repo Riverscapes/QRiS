@@ -145,6 +145,8 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (5, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 22);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 5);
+INSERT INTO method_layers (method_id, layer_id) VALUES (3, 7);
 
 
 -- CREATE TABLE protocol_layers (
@@ -300,6 +302,7 @@ INSERT INTO lkp_raster_types (id, name) VALUES (5, 'Valley Bottom Evidence');
 CREATE TABLE rasters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     raster_type_id INTEGER REFERENCES lkp_raster_types(id),
+    is_context Boolean DEFAULT 0,
     name TEXT UNIQUE NOT NULL,
     path TEXT UNIQUE NOT NULL,
     -- type will likely be populated from a lookup. e.g., imagery, dem, lidar, etc....
@@ -411,10 +414,10 @@ CREATE TABLE metrics (
 
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (1, 1, 'dam and jam count', 1, '{"layers": ["dams","jams"]}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL);
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, '{"layers": ["profile_centerlines"], "rasters": ["dem"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, '{"layers": ["centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (4, 2, 'Dam Crest Length', 1, '{"layers": ["dam_crests"]}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (5, 3, 'Valley Bottom Area', 1, '{"layers": ["valley_bottoms"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1, '{"layers": ["profile_centerlines"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1, '{"layers": ["centerlines"]}');
 
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

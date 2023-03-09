@@ -35,7 +35,7 @@ from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
-from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, RASTER_TYPE_BASEMAP, RASTER_TYPE_SURFACE, RASTER_TYPE_CONTEXT, Raster
+from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
 from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
@@ -155,7 +155,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
 
         surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
-        [self.add_child_to_project_tree(surfaces_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_SURFACE]
+        [self.add_child_to_project_tree(surfaces_node, item) for item in self.project.rasters.values() if item.is_context is False]
 
         aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
         [self.add_child_to_project_tree(aoi_node, item) for item in self.project.masks.values() if item.mask_type.id == AOI_MASK_TYPE_ID]
@@ -170,7 +170,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(cross_sections_node, item) for item in self.project.cross_sections.values()]
 
         self.context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
-        [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.raster_type_id == RASTER_TYPE_CONTEXT]
+        [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.is_context is True]
         [self.add_child_to_project_tree(self.context_node, item) for item in self.project.scratch_vectors.values()]
 
         gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
@@ -250,7 +250,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def qris_from_qrave(self, layer_path, layer_type):
 
         if layer_type == 'raster':
-            self.add_raster(self.context_node, RASTER_TYPE_CONTEXT, layer_path)
+            self.add_raster(self.context_node, True, layer_path)
         else:
             self.add_context_vector(self.context_node, layer_path)
 
@@ -283,10 +283,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.menu.addMenu(ltpbr_menu)
 
                 elif model_data == SURFACE_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_SURFACE))
+                    self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
 
-                elif model_data == BASEMAP_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_BASEMAP))
+                # elif model_data == BASEMAP_MACHINE_CODE:
+                #     self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_BASEMAP))
 
                 elif model_data == AOI_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
@@ -305,7 +305,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
-                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_CONTEXT))
+                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, True))
                     self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_context_vector(model_item))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
@@ -343,7 +343,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
 
-            if isinstance(model_data, Raster) and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
+            if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                 self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
 
             if isinstance(model_data, ScratchVector):
@@ -651,7 +651,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if event_layer.layer.is_lookup is False:
                 self.add_child_to_project_tree(event_node, event_layer, add_to_map)
 
-    def add_raster(self, parent_node: QtGui.QStandardItem, raster_type_id: int, import_source_path: str = None):
+    def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: str = None):
         """Initiates adding a new base map to the project"""
 
         if import_source_path is None:
@@ -659,7 +659,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmRaster(self, self.iface, self.project, import_source_path, raster_type_id)
+        frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context)
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())

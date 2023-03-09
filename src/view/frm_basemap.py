@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication, QgsMessageLog
 
-from ..model.raster import BASEMAP_PARENT_FOLDER, Raster, insert_raster, RASTER_TYPE_BASEMAP, SURFACES_PARENT_FOLDER
+from ..model.raster import Raster, insert_raster, SURFACES_PARENT_FOLDER, CONTEXT_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
@@ -14,11 +14,11 @@ from .utilities import validate_name_unique, validate_name, add_standard_form_bu
 
 class FrmRaster(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface, project: Project, import_source_path: str, raster_type_id: int, raster: Raster = None):
+    def __init__(self, parent, iface, project: Project, import_source_path: str, is_context: bool, raster: Raster = None):
 
         self.iface = iface
         self.project = project
-        self.raster_type_id = raster_type_id
+        self.is_context = is_context
         self.raster = raster
 
         super(FrmRaster, self).__init__(parent)
@@ -27,21 +27,21 @@ class FrmRaster(QtWidgets.QDialog):
         raster_types = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_types'].items()}
 
         # If scratch raster then exclude BaseMaps
-        if raster_type_id != RASTER_TYPE_BASEMAP:
-            raster_types.pop(RASTER_TYPE_BASEMAP)
+        # if self.is_context is True:
+        #     raster_types.pop(RASTER_TYPE_BASEMAP)
 
         self.raster_types_model = DBItemModel(raster_types)
         self.cboRasterType.setModel(self.raster_types_model)
 
-        if raster_type_id == RASTER_TYPE_BASEMAP:
-            # Select and lock in the rsater type for basemaps
-            self.cboRasterType.setEnabled(False)
-            basemap_raster_type = self.raster_types_model.getItemIndexById(RASTER_TYPE_BASEMAP)
-            self.cboRasterType.setCurrentIndex(basemap_raster_type)
+        # if raster_type_id == RASTER_TYPE_BASEMAP:
+        #     # Select and lock in the rsater type for basemaps
+        #     self.cboRasterType.setEnabled(False)
+        #     basemap_raster_type = self.raster_types_model.getItemIndexById(RASTER_TYPE_BASEMAP)
+        #     self.cboRasterType.setCurrentIndex(basemap_raster_type)
 
-            self.setWindowTitle('Create New Basemap' if self.raster is None else 'Edit Basemap Properties')
-        else:
-            self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
+        #     self.setWindowTitle('Create New Basemap' if self.raster is None else 'Edit Basemap Properties')
+        # else:
+        self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
 
         if raster is None:
             self.txtName.textChanged.connect(self.on_name_changed)
@@ -83,10 +83,10 @@ class FrmRaster(QtWidgets.QDialog):
                 self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Basemap', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving raster', str(ex))
                 return
 
             super(FrmRaster, self).accept()
@@ -94,7 +94,7 @@ class FrmRaster(QtWidgets.QDialog):
         else:
             # Inserting a new raster. Check name uniqueness before copying the raster file
             if validate_name_unique(self.project.project_file, 'rasters', 'name', self.txtName.text()) is False:
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A basemap with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
                 return
 
@@ -124,9 +124,9 @@ class FrmRaster(QtWidgets.QDialog):
                 try:
                     self.raster.delete(self.project.project_file)
                 except Exception as ex:
-                    print('Error attempting to delete basemap after the importing raster failed.')
+                    print('Error attempting to delete raster after the importing raster failed.')
                 self.raster = None
-                QtWidgets.QMessageBox.warning(self, 'Error Importing Basemap', str(ex))
+                QtWidgets.QMessageBox.warning(self, 'Error Importing raster', str(ex))
                 return
 
     @pyqtSlot(bool)
@@ -136,7 +136,9 @@ class FrmRaster(QtWidgets.QDialog):
             self.iface.messageBar().pushMessage('Raster Copy Complete.', f'Raster {self.txtName.text()} added to project', level=Qgis.Info, duration=5)
 
             try:
-                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), self.raster_type_id, self.txtDescription.toPlainText())
+                raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
+
+                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context)
                 self.project.rasters[self.raster.id] = self.raster
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -163,7 +165,7 @@ class FrmRaster(QtWidgets.QDialog):
 
         if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
-            parent_folder = BASEMAP_PARENT_FOLDER if self.raster_type_id == RASTER_TYPE_BASEMAP else SURFACES_PARENT_FOLDER
+            parent_folder = CONTEXT_PARENT_FOLDER if self.is_context else SURFACES_PARENT_FOLDER
             self.txtProjectPath.setText(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext)))
         else:
             self.txtProjectPath.setText('')
