@@ -39,8 +39,9 @@ class FrmEvent(QtWidgets.QDialog):
 
         # Surface Rasters
         self.surface_raster_model = QtGui.QStandardItemModel()
+        rtypes = self.qris_project.lookup_tables['lkp_raster_types']
         for surface in qris_project.surface_rasters().values():
-            item = QtGui.QStandardItem(surface.name)
+            item = QtGui.QStandardItem(f'{surface.name} ({rtypes[surface.raster_type_id].name})')
             item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
             item.setData(surface, QtCore.Qt.UserRole)
             self.surface_raster_model.appendRow(item)
@@ -269,7 +270,24 @@ class FrmEvent(QtWidgets.QDialog):
             self.uc_end.setVisible(True)
             self.lblStartDate.setText('Start Date')
 
+    def check_surface_types(self):
+        """check that only one surface type of id == 4 is checked"""
+
+        checked_dems = 0
+        for i in range(self.surface_raster_model.rowCount()):
+            item = self.surface_raster_model.item(i)
+            if item.checkState() == QtCore.Qt.Checked:
+                raster = item.data(QtCore.Qt.UserRole)
+                if raster.raster_type_id == 4:
+                    checked_dems += 1
+        return False if checked_dems > 1 else True
+
     def accept(self):
+
+        if not self.check_surface_types():
+            QtWidgets.QMessageBox.warning(self, 'Invalid Surface Types', 'Only one DEM can be selected')
+            return
+
         start_date_valid, start_date_error_msg = self.uc_start.validate()
         if not start_date_valid:
             QtWidgets.QMessageBox.warning(self, 'Invalid Start Date', start_date_error_msg)
