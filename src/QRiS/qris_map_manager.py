@@ -211,7 +211,8 @@ class QRisMapManager(RiverscapesMapManager):
             return existing_layer
 
         raster_path = os.path.join(os.path.dirname(self.project.project_file), raster.path)
-        raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster)
+        symbology = None
+        raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster, symbology)
 
         return raster_layer
 

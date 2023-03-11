@@ -663,6 +663,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
+            if frm.hillshade is not None:
+                self.add_child_to_project_tree(parent_node, frm.hillshade, frm.chkAddToMap.isChecked())
 
     def add_context_vector(self, parent_node: QtGui.QStandardItem, import_source_path: str = None):
 

@@ -1,7 +1,7 @@
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from qgis.core import Qgis, QgsApplication, QgsMessageLog
+from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
 
 from ..model.raster import Raster, insert_raster, SURFACES_PARENT_FOLDER, CONTEXT_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
@@ -9,6 +9,7 @@ from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.copy_raster import CopyRaster
+from ..gp.create_hillshade import Hillshade
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 
 
@@ -20,6 +21,8 @@ class FrmRaster(QtWidgets.QDialog):
         self.project = project
         self.is_context = is_context
         self.raster = raster
+        self.hillshade_raster_path = None
+        self.hillshade = None
 
         super(FrmRaster, self).__init__(parent)
         self.setupUi()
@@ -28,20 +31,20 @@ class FrmRaster(QtWidgets.QDialog):
 
         # If scratch raster then exclude BaseMaps
         # if self.is_context is True:
-        #     raster_types.pop(RASTER_TYPE_BASEMAP)
+        raster_types.pop(2)  # Remove type basemap
 
         self.raster_types_model = DBItemModel(raster_types)
         self.cboRasterType.setModel(self.raster_types_model)
 
-        # if raster_type_id == RASTER_TYPE_BASEMAP:
-        #     # Select and lock in the rsater type for basemaps
-        #     self.cboRasterType.setEnabled(False)
-        #     basemap_raster_type = self.raster_types_model.getItemIndexById(RASTER_TYPE_BASEMAP)
-        #     self.cboRasterType.setCurrentIndex(basemap_raster_type)
+        if is_context is True:
+            #     # Select and lock in the rsater type for basemaps
+            #     self.cboRasterType.setEnabled(False)
+            #     basemap_raster_type = self.raster_types_model.getItemIndexById(RASTER_TYPE_BASEMAP)
+            #     self.cboRasterType.setCurrentIndex(basemap_raster_type)
 
-        #     self.setWindowTitle('Create New Basemap' if self.raster is None else 'Edit Basemap Properties')
+            self.setWindowTitle('Create New Context Raster' if self.raster is None else 'Edit Context Raster Properties')
         # else:
-        self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
+            self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
 
         if raster is None:
             self.txtName.textChanged.connect(self.on_name_changed)
@@ -57,6 +60,7 @@ class FrmRaster(QtWidgets.QDialog):
             self.cboMask.setModel(self.masks_model)
             # Default to no mask clipping
             self.cboMask.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
+            self.cboRasterType.currentIndexChanged.connect(self.set_hillshade)
         else:
             self.txtName.setText(raster.name)
             self.txtDescription.setPlainText(raster.description)
@@ -65,6 +69,8 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtSourcePath.setVisible(False)
             self.lblMask.setVisible(False)
             self.cboMask.setVisible(False)
+            self.chkHillshade.setChecked(False)
+            self.chkHillshade.setVisible(False)
 
             self.txtProjectPath.setText(project.get_absolute_path(raster.path))
 
@@ -81,6 +87,7 @@ class FrmRaster(QtWidgets.QDialog):
         if self.raster is not None:
             try:
                 self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                # TODO update hillshade if exists
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -108,23 +115,31 @@ class FrmRaster(QtWidgets.QDialog):
                     os.makedirs(os.path.dirname(project_path))
 
                 copy_raster = CopyRaster(self.txtSourcePath.text(), mask_tuple, project_path)
-                copy_raster.copy_raster_complete.connect(self.on_raster_copy_complete)
+
+                self.buttonBox.setEnabled(False)
+
+                if self.chkHillshade.isChecked() is True:
+                    self.hillshade_raster_name = f'{self.txtName.text()} hillshade'
+                    hillshade_path = self.project.get_absolute_path(self.hillshade_project_path)
+                    hillshade_task = Hillshade(project_path, hillshade_path)
+                    hillshade_task.addSubTask(copy_raster, [], QgsTask.ParentDependsOnSubTask)
+                    hillshade_task.hillshade_complete.connect(self.on_raster_copy_complete)
+                    QgsApplication.taskManager().addTask(hillshade_task)
+                else:
+                    copy_raster.copy_raster_complete.connect(self.on_raster_copy_complete)
+                    QgsApplication.taskManager().addTask(copy_raster)
 
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
                 # copy_raster.run()
-
-                # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
-                self.buttonBox.setEnabled(False)
-                QgsApplication.taskManager().addTask(copy_raster)
 
             except Exception as ex:
                 self.buttonBox.setEnabled(True)
 
                 try:
                     self.raster.delete(self.project.project_file)
-                except Exception as ex:
-                    print('Error attempting to delete raster after the importing raster failed.')
+                except Exception as ex2:
+                    QgsMessageLog.logMessage(f'Error attempting to delete raster after the importing raster failed.\n{ex2}', 'Copy Raster', Qgis.Critical)
                 self.raster = None
                 QtWidgets.QMessageBox.warning(self, 'Error Importing raster', str(ex))
                 return
@@ -140,6 +155,13 @@ class FrmRaster(QtWidgets.QDialog):
 
                 self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context)
                 self.project.rasters[self.raster.id] = self.raster
+                if self.chkHillshade.isChecked() is True:
+                    hillshade_metadata = {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}
+                    self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
+                    self.project.rasters[hillshade.id] = hillshade
+                    raster_metadata = {'hillsahde_raster': self.hillshade_project_path, 'hillshade_raster_id': hillshade.id}
+                    self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=raster_metadata)
+
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -162,13 +184,26 @@ class FrmRaster(QtWidgets.QDialog):
     def on_name_changed(self, new_name):
         project_name = self.txtName.text().strip()
         clean_name = ''.join(e for e in project_name.replace(" ", "_") if e.isalnum() or e == "_")
+        clean_name_hillshade = f'{clean_name}_hillshade'
 
         if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
             parent_folder = CONTEXT_PARENT_FOLDER if self.is_context else SURFACES_PARENT_FOLDER
             self.txtProjectPath.setText(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext)))
+            self.hillshade_project_path = os.path.join(parent_folder, self.project.get_safe_file_name(clean_name_hillshade, ext))
         else:
             self.txtProjectPath.setText('')
+            self.hillshade_project_path = None
+
+    def set_hillshade(self):
+        """check hillshade if raster type is dem"""
+        raster = self.cboRasterType.currentData(QtCore.Qt.UserRole)
+        if raster.id == 4:
+            self.chkHillshade.setEnabled(True)
+            self.chkHillshade.setChecked(True)
+        else:
+            self.chkHillshade.setEnabled(False)
+            self.chkHillshade.setChecked(False)
 
     def setupUi(self):
 
@@ -227,9 +262,14 @@ class FrmRaster(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription, 5, 1, 1, 1)
 
+        self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
+        self.chkHillshade.setChecked(False)
+        self.chkHillshade.setEnabled(False)
+        self.grid.addWidget(self.chkHillshade, 6, 1, 1, 1)
+
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setText('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
+        self.grid.addWidget(self.chkAddToMap, 7, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'basemaps'))

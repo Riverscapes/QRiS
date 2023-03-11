@@ -297,6 +297,7 @@ INSERT INTO lkp_raster_types (id, name) VALUES (2, 'Basemap');
 INSERT INTO lkp_raster_types (id, name) VALUES (3, 'Detrended Surface');
 INSERT INTO lkp_raster_types (id, name) VALUES (4, 'Digital Elevation Model (DEM)');
 INSERT INTO lkp_raster_types (id, name) VALUES (5, 'Valley Bottom Evidence');
+INSERT INTO lkp_raster_types (id, name) VALUES (6, 'Hillshade');
 
 
 CREATE TABLE rasters (

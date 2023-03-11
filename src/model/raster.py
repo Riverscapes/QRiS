@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 from enum import Enum
 
@@ -22,21 +23,23 @@ RASTER_SLIDER_MACHINE_CODE = 'RASTER_SLIDER'
 
 class Raster(DBItem):
 
-    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str, is_context=False):
+    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str, is_context=False, metadata=None):
         super().__init__('rasters', id, name)
         self.path = relative_project_path
         self.raster_type_id = raster_type_id
         self.is_context = is_context
         self.description = description
         self.icon = 'basemap'
+        self.metadata = metadata
 
-    def update(self, db_path: str, name: str, description: str) -> None:
+    def update(self, db_path: str, name: str, description: str, metadata=None) -> None:
 
+        metadata_str = json.dumps(metadata) if metadata else None
         description = description if len(description) > 0 else None
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE rasters SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
+                curs.execute('UPDATE rasters SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
                 conn.commit()
 
                 self.name = name
@@ -66,17 +69,20 @@ def load_rasters(curs: sqlite3.Cursor) -> dict:
         row['path'],
         row['raster_type_id'],
         row['description'],
-        bool(row['is_context'])
+        bool(row['is_context']),
+        json.loads(row['metadata']) if row['metadata'] else None
     ) for row in curs.fetchall()}
 
 
-def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str, is_context: bool) -> Raster:
+def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str, is_context: bool, metadata=None) -> Raster:
+
+    metadata_str = json.dumps(metadata) if metadata else None
 
     result = None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO rasters (name, path, raster_type_id, description, is_context) VALUES (?, ?, ?, ?, ?)', [name, path, raster_type_id, description, int(is_context)])
+            curs.execute('INSERT INTO rasters (name, path, raster_type_id, description, is_context, metadata) VALUES (?, ?, ?, ?, ?, ?)', [name, path, raster_type_id, description, int(is_context), metadata_str])
             id = curs.lastrowid
             result = Raster(id, name, path, raster_type_id, description)
             conn.commit()
