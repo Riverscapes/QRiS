@@ -90,6 +90,15 @@ class DBItemModel(QAbstractListModel):
                 return row
         return None
 
+    def getItemIndexByName(self, name: str) -> int:
+
+        for row in range(self.rowCount(None)):
+            index = self.index(row)
+            db_item = self.data(index, Qt.UserRole)
+            if db_item.name == name:
+                return row
+        return None
+
     def rowCount(self, index):
         return len(self._data)
 

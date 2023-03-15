@@ -52,6 +52,19 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtSourcePath.setText(import_source_path)
             self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
 
+            # Attempt to parse the raster type from the source raster name
+            if 'dem' in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Digital Elevation Model (DEM)'))
+            elif 'vbet' in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Valley Bottom Evidence'))
+            elif 'detrended' in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Detrended Surface'))
+            elif 'hillshade' in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Hillshade'))
+            else:
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Other'))
+            self.set_hillshade()
+
             # Masks (filtered to just AOI)
             self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
             no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
@@ -158,8 +171,8 @@ class FrmRaster(QtWidgets.QDialog):
                 if self.chkHillshade.isChecked() is True:
                     hillshade_metadata = {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}
                     self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
-                    self.project.rasters[hillshade.id] = hillshade
-                    raster_metadata = {'hillsahde_raster': self.hillshade_project_path, 'hillshade_raster_id': hillshade.id}
+                    self.project.rasters[self.hillshade.id] = self.hillshade
+                    raster_metadata = {'hillsahde_raster': self.hillshade_project_path, 'hillshade_raster_id': self.hillshade.id}
                     self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=raster_metadata)
 
             except Exception as ex:
