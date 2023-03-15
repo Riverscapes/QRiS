@@ -575,7 +575,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.cross_sections_doc_widget.export_complete.connect(self.save_complete)
         self.cross_sections_doc_widget.show()
 
-    def generate_transect(self):
+    def generate_transect(self, db_item: DBItem):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
 
