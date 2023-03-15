@@ -45,3 +45,4 @@ class FrmLayerPicker(QtWidgets.QDialog):
     def accept(self):
 
         self.layer = self.cboLayers.currentData(QtCore.Qt.UserRole)
+        super(FrmLayerPicker, self).accept()

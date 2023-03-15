@@ -60,10 +60,11 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.map_manager.apply_raster_single_value(self.raster_layer, value, self.max, self.optAbove.isChecked())
 
     def cmdSelect_click(self):
-        frm = FrmLayerPicker(self, 'Select raster', [])
+        rasters = list(self.project.rasters.values())
+        frm = FrmLayerPicker(self, 'Select raster', rasters)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.raster = frm.layer
+            self.configure_raster(frm.layer)
 
     def cmdExport_click(self):
 
