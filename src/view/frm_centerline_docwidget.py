@@ -69,6 +69,8 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         canvas_crs = QgsCoordinateReferenceSystem(iface.mapCanvas().mapSettings().destinationCrs().authid())
         self.transform = QgsCoordinateTransform(canvas_crs, self.polygon_crs, QgsProject.instance())
 
+        self.d.setSourceCrs(self.polygon_crs, QgsProject.instance().transformContext())
+
         # Set up the Preview Layers
         self.remove_preview_layers()
         iface.mapCanvas().refresh()
@@ -125,6 +127,9 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         if not all([self.geom_polygon.intersects(QgsGeometry().fromPolyline(self.geom_start)), self.geom_polygon.intersects(QgsGeometry().fromPolyline(self.geom_end))]):
             QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Make sure both start and stop lines intersect the polygon.')
             return
+        if not self.geom_polygon.isGeosValid():
+            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'The polygon is not GEOS valid. Please fix it before generating centerline.')
+            return
 
         self.layer_centerline.dataProvider().truncate()
 
@@ -141,13 +146,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         centerline_task = CenterlineTask(geom_polygon, geom_start, geom_end, self.densify_distance)
         # DEBUG
-        # result = centerline_task.run()
-        # if result is True:
-        #     cl = QgsGeometry(centerline_task.centerline)
-        #     self.centerline_complete(cl)
+        result = centerline_task.run()
+        if result is True:
+            cl = QgsGeometry(centerline_task.centerline)
+            self.centerline_complete(cl)
         # PRODUCTION
-        centerline_task.centerline_complete.connect(self.centerline_complete)
-        QgsApplication.taskManager().addTask(centerline_task)
+        # centerline_task.centerline_complete.connect(self.centerline_complete)
+        # QgsApplication.taskManager().addTask(centerline_task)
 
         return
 
