@@ -77,7 +77,7 @@ class Event(DBItem):
 
                 self.name = name
                 self.description = description
-                self.basemaps = rasters
+                self.rasters = rasters
                 save_event_layers(curs, self.id, layers, self.event_layers)
                 self.start = start_date
                 self.end = end_date
@@ -210,11 +210,11 @@ def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer], 
                     unused_event_layers.append(event_layer)
 
     # Finally delete the event layer from the database and remove it from the events list of event layers
-    curs.executemany('DELETE FROM Event_layers WHERE id = ?', [event_layer.id for event_layer in unused_event_layers])
+    curs.executemany('DELETE FROM Event_layers WHERE id = ?', [(event_layer.id,) for event_layer in unused_event_layers])
     [event_layers.remove(event_layer) for event_layer in unused_event_layers]
 
     # Upsert new event layers and add any new ones to the list
     for layer in layers:
         curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?) ON CONFLICT (event_id, layer_id) DO NOTHING', [event_id, layer.id])
-        if curs.lastrowid != 0:
+        if curs.rowcount != 0:
             event_layers.append(EventLayer(curs.lastrowid, event_id, layer))

@@ -645,6 +645,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Event, protocols and layers
         event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
+        
+        # remove event layers that no longer exist in the event
+        row_adjustment = 0
+        for row in range(0, event_node.rowCount()):
+            row = row + row_adjustment
+            child_node = event_node.child(row)
+            layer = child_node.data(QtCore.Qt.UserRole)
+            if layer not in event.event_layers:
+                self.map_manager.remove_db_item_layer(self.project.map_guid, layer)
+                event_node.removeRow(row)
+                row_adjustment -= 1
+
         # for method in event.methods:
         #     protocol_node = self.add_child_to_project_tree(event_node, method, add_to_map)
         for event_layer in event.event_layers:
