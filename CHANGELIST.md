@@ -1,5 +1,28 @@
 # QRiS Plugin
 
+## [0.1.14] 2023 MAR 21
+
+## Added
+- QRave plugin dependency
+- Import Riverscapes Layer from QRave into QRiS as Context layers
+- Open an existing Analysis
+- Automated metrics (Sinuosity, Gradient)
+- Add hillshade to DEM
+- Initial raster type dropdown is derived from raster tname when importing
+- Limit one DEM per DCE
+
+## Fixed
+- Analysis column size on window resize
+- Analysis Table read-only
+- Centerline error when polygon projection is not EPSG 4326
+- Not implemented message when adding transect profiles
+- Raster Slider layer picker window bug
+- Event layers duplicated when editing surfaces in event properties
+- Event layers in project tree removed when removed from event properties
+
+## Changed
+- Symbology now coming from QRave
+
 ## [0.1.13] 2023 FEB 24
 
 ### Fixed
