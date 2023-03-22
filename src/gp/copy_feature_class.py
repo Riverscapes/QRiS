@@ -1,7 +1,7 @@
 import os
 from osgeo import ogr
 import re
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsCoordinateReferenceSystem
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
 from ..model.db_item import DBItem
 
@@ -46,17 +46,9 @@ class CopyFeatureClass(QgsTask):
                 os.makedirs(output_dir)
 
             source_layer = QgsVectorLayer(self.source_path)
-            source_layer.crs
 
-            if self.mask_tuple is not None:
-                # TODO clip layer features by mask here
-                pass
-
-            # TODO review how we want to handle crs
-            context = QgsCoordinateTransformContext()
-            ref_crs = source_layer.sourceCrs()
-            dest_crs = source_layer.sourceCrs()  # QgsCoordinateReferenceSystem("EPSG:4326")
-            context.addCoordinateOperation(ref_crs, dest_crs, "")
+            # Set up Transform Context
+            context = QgsProject.instance().transformContext()
 
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.driverName = 'GPKG'
@@ -73,13 +65,42 @@ class CopyFeatureClass(QgsTask):
             else:  # likely shapefile. Need to test for other formats and modify if needed.
                 options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 
-            error = QgsVectorFileWriter.writeAsVectorFormatV3(source_layer, self.output_path, context, options)
+            if self.mask_tuple is not None:
+                clip_path = self.mask_tuple[0]
+                clip_mask_id = self.mask_tuple[1]
+                clip_layer = QgsVectorLayer(f'{clip_path}|layername=aoi_features')
+                clip_layer.setSubsetString(f'mask_id = {clip_mask_id}')
+                clip_transform = QgsCoordinateTransform(clip_layer.sourceCrs(), source_layer.sourceCrs(), QgsProject.instance().transformContext())
+                clip_feat = clip_layer.getFeatures()
+                clip_feat = next(clip_feat)
+                clip_geom = clip_feat.geometry()
+                clip_geom.transform(clip_transform)
 
-            if error[0] == QgsVectorFileWriter.NoError:
-                return True
+                fields = source_layer.fields()
+                writer = QgsVectorFileWriter.create(self.output_path, fields, source_layer.wkbType(), source_layer.sourceCrs(), context, options)
+
+                for feat in source_layer.getFeatures():
+                    if feat.geometry().intersects(clip_geom):
+                        geom = feat.geometry()
+                        geom = geom.intersection(clip_geom)
+                        feat.setGeometry(geom)
+                        writer.addFeature(feat)
+
+                if writer.hasError() != QgsVectorFileWriter.NoError:
+                    self.exception = Exception(str(writer.errorMessage()))
+                    return False
+
+                # Flush to disk
+                del writer
+
             else:
-                self.exception = Exception(str(error))
-                return False
+                # Write vector layer to file
+                error = QgsVectorFileWriter.writeAsVectorFormatV3(source_layer, self.output_path, context, options)
+
+                if error[0] != QgsVectorFileWriter.NoError:
+                    self.exception = Exception(str(error))
+                    return False
+            return True
 
         except Exception as ex:
             self.exception = ex

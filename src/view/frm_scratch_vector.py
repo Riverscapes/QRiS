@@ -29,7 +29,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.vector_types_model = DBItemModel(project.lookup_tables['lkp_scratch_vector_types'])
         self.cboVectorType.setModel(self.vector_types_model)
 
-        self.setWindowTitle('Create New Scratch Space Vector' if self.scratch_vector is None else 'Edit Scratch Space Vector Properties')
+        self.setWindowTitle('Create New Context Vector' if self.scratch_vector is None else 'Edit Context Vector Properties')
 
         if scratch_vector is None:
 
@@ -72,10 +72,10 @@ class FrmScratchVector(QtWidgets.QDialog):
                 self.scratch_vector.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A scratch vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A context vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Scratch Vector', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Context Vector', str(ex))
                 return
 
             super().accept()
@@ -83,7 +83,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         else:
             # Inserting a new item. Check name uniqueness before copying the dataset
             if validate_name_unique(self.project.project_file, 'scratch_vectors', 'name', self.txtName.text()) is False:
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A scratch vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A context vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
                 return
 
@@ -96,7 +96,6 @@ class FrmScratchVector(QtWidgets.QDialog):
                 self.fc_name = get_unique_scratch_fc_name(self.project.project_file, self.txtName.text())
 
                 copy_vector = CopyFeatureClass(self.txtSourcePath.text(), mask_tuple, os.path.dirname(self.txtProjectPath.text()), self.fc_name)
-                copy_vector.copy_complete.connect(self.on_copy_complete)
 
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
@@ -105,12 +104,13 @@ class FrmScratchVector(QtWidgets.QDialog):
 
                 # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
                 self.buttonBox.setEnabled(False)
+                copy_vector.copy_complete.connect(self.on_copy_complete)
                 QgsApplication.taskManager().addTask(copy_vector)
 
             except Exception as ex:
                 self.buttonBox.setEnabled(True)
                 self.scratch_vector = None
-                QtWidgets.QMessageBox.warning(self, 'Error Importing Scratch Vector', str(ex))
+                QtWidgets.QMessageBox.warning(self, 'Error Importing Context Vector', str(ex))
                 return
 
     @pyqtSlot(bool)
@@ -131,10 +131,10 @@ class FrmScratchVector(QtWidgets.QDialog):
 
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A scratch vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A context vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Scratch Vector', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Context Vector', str(ex))
                 return
 
             super(FrmScratchVector, self).accept()
@@ -179,7 +179,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.txtSourcePath, 1, 1, 1, 1)
 
         self.lblScratchLayerType = QtWidgets.QLabel()
-        self.lblScratchLayerType.setText('Scratch Layer Type')
+        self.lblScratchLayerType.setText('Context Layer Type')
         self.grid.addWidget(self.lblScratchLayerType, 2, 0, 1, 1)
 
         self.cboVectorType = QtWidgets.QComboBox()
