@@ -1,8 +1,14 @@
 # QRiS Plugin
 
+## [0.1.15] 2023 MAR 22
+
+### Fixed
+- Clipping vector on import bug
+- Set Qrave dependency in metatdata.txt
+
 ## [0.1.14] 2023 MAR 21
 
-## Added
+### Added
 - QRave plugin dependency
 - Import Riverscapes Layer from QRave into QRiS as Context layers
 - Open an existing Analysis
@@ -11,7 +17,7 @@
 - Initial raster type dropdown is derived from raster tname when importing
 - Limit one DEM per DCE
 
-## Fixed
+### Fixed
 - Analysis column size on window resize
 - Analysis Table read-only
 - Centerline error when polygon projection is not EPSG 4326
@@ -20,7 +26,7 @@
 - Event layers duplicated when editing surfaces in event properties
 - Event layers in project tree removed when removed from event properties
 
-## Changed
+### Changed
 - Symbology now coming from QRave
 
 ## [0.1.13] 2023 FEB 24
