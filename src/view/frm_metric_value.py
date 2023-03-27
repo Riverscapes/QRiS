@@ -126,7 +126,7 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
-            result = metric_calculation(self.project.project_file, self.mask_feature_id, metric_params)
+            result = metric_calculation(self.project.project_file, self.mask_feature_id, self.data_capture_event.id, metric_params)
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
             QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)

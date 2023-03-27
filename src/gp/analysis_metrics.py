@@ -36,13 +36,13 @@ def get_mask_geom(project_file: str, mask_feature_id: int) -> ogr.Geometry:
     """
     ds = ogr.Open(project_file)
     mask_layer = ds.GetLayerByName('mask_features')
-    mask_layer.SetAttributeFilter(f"mask_id = {mask_feature_id}")
+    mask_layer.SetAttributeFilter(f"fid = {mask_feature_id}")
     mask_feature = mask_layer.GetNextFeature()
     mask_geom = mask_feature.GetGeometryRef().Clone()
     return mask_geom
 
 
-def count(project_file: str, mask_feature_id: int, metric_params: dict) -> int:
+def count(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict) -> int:
     """Count the number of features in the specified layers that intersect the mask feature.
 
        CalculationID: 1
@@ -54,13 +54,14 @@ def count(project_file: str, mask_feature_id: int, metric_params: dict) -> int:
     for layer_name in metric_params['layers']:
         ds = ogr.Open(project_file)
         layer = ds.GetLayerByName(layer_name)
+        layer.SetAttributeFilter(f"event_id = {event_id}")
         layer.SetSpatialFilter(mask_geom)
         feature_count += layer.GetFeatureCount()
 
     return feature_count
 
 
-def length(project_file: str, mask_feature_id: int, metric_params: dict):
+def length(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
     """Get the total length of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 2
@@ -72,6 +73,7 @@ def length(project_file: str, mask_feature_id: int, metric_params: dict):
     for layer_name in metric_params['layers']:
         ds = ogr.Open(project_file)
         layer = ds.GetLayerByName(layer_name)
+        layer.SetAttributeFilter(f"event_id = {event_id}")
         layer.SetSpatialFilter(mask_geom)
         for feature in layer:
             geom = feature.GetGeometryRef().Clone()
@@ -86,7 +88,7 @@ def length(project_file: str, mask_feature_id: int, metric_params: dict):
     return total_length
 
 
-def area(project_file: str, mask_feature_id: int, metric_params: dict):
+def area(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
     """Get the total area of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 3
@@ -98,6 +100,7 @@ def area(project_file: str, mask_feature_id: int, metric_params: dict):
     for layer_name in metric_params['layers']:
         ds = ogr.Open(project_file)
         layer = ds.GetLayerByName(layer_name)
+        layer.SetAttributeFilter(f"event_id = {event_id}")
         layer.SetSpatialFilter(mask_geom)
         for feature in layer:
             geom = feature.GetGeometryRef()
@@ -112,17 +115,20 @@ def area(project_file: str, mask_feature_id: int, metric_params: dict):
     return total_area
 
 
-def sinuosity(project_file: str, mask_feature_id: int, metric_params: str):
+def sinuosity(project_file: str, mask_feature_id: int, event_id: int, metric_params: str):
     """Get the sinuosity of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 4
     """
+
+    # TODO Note that centerlines are not currently associated with an event_id, so the event_id is not used in this calculation.
 
     mask_geom = get_mask_geom(project_file, mask_feature_id)
 
     layer_name = metric_params['layers'][0]
     ds = ogr.Open(project_file)
     layer = ds.GetLayerByName(layer_name)
+    # layer.SetAttributeFilter(f"event_id = {event_id}")
     layer.SetSpatialFilter(mask_geom)
     feature = layer.GetNextFeature()
     if feature is None:
@@ -145,7 +151,7 @@ def sinuosity(project_file: str, mask_feature_id: int, metric_params: str):
     return length / distance
 
 
-def gradient(project_file: str, mask_feature_id: int, metric_params: dict):
+def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
     """Get the gradient of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 5

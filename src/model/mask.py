@@ -1,4 +1,6 @@
 import sqlite3
+from typing import Dict
+
 from .db_item import DBItem
 
 MASK_MACHINE_CODE = 'Mask'
@@ -63,3 +65,18 @@ def insert_mask(db_path: str, name: str, mask_type: DBItem, description: str) ->
             raise ex
 
     return mask
+
+
+def get_sample_frame_ids(db_path: str, mask_id: int) -> Dict[int, DBItem]:
+
+    labels = None
+    try:
+        with sqlite3.connect(db_path) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT DISTINCT fid, display_label FROM mask_features WHERE mask_id = ?', [mask_id])
+            labels = {row[1]: DBItem('None', row[0], row[1]) for row in curs.fetchall()}
+    except Exception as ex:
+        labels = []
+        raise ex
+
+    return labels

@@ -415,10 +415,10 @@ CREATE TABLE metrics (
 
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (1, 1, 'dam and jam count', 1, '{"layers": ["dams","jams"]}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL);
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, '{"layers": ["centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, '{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (4, 2, 'Dam Crest Length', 1, '{"layers": ["dam_crests"]}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (5, 3, 'Valley Bottom Area', 1, '{"layers": ["valley_bottoms"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1, '{"layers": ["centerlines"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1, '{"layers": ["profile_centerlines"]}');
 
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

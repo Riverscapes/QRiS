@@ -38,7 +38,7 @@ from ..model.analysis_metric import AnalysisMetric
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
-from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask
+from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask, get_sample_frame_ids
 from ..model.metric_value import MetricValue, load_metric_values
 
 from .frm_metric_value import FrmMetricValue
@@ -59,8 +59,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.txtName.setText(analysis.name)
 
         # Set Sample Frames
-        self.sample_frame_model = DBItemModel({name: sampling_frame for name, sampling_frame in self.project.masks.items() if sampling_frame.mask_type.id != AOI_MASK_TYPE_ID})
-        self.cboSampleFrame.setModel(self.sample_frame_model)
+        frame_ids = get_sample_frame_ids(self.project.project_file, self.analyis.mask.id)
+        self.segments_model = DBItemModel(frame_ids)
+        self.cboSampleFrame.setModel(self.segments_model)
 
         # Events
         self.events_model = DBItemModel(project.events)
@@ -202,6 +203,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.grid.addLayout(self.horizEvent, 1, 1, 1, 1)
 
         self.cboEvent = QtWidgets.QComboBox()
+        self.cboEvent.currentIndexChanged.connect(self.load_table_values)
         self.horizEvent.addWidget(self.cboEvent)
 
         self.cmdCalculate = QtWidgets.QPushButton()
@@ -215,6 +217,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
 
         self.cboSampleFrame = QtWidgets.QComboBox()
+        self.cboSampleFrame.currentIndexChanged.connect(self.load_table_values)
         self.grid.addWidget(self.cboSampleFrame, 2, 1, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
