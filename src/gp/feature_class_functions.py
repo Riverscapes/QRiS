@@ -79,13 +79,15 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
 
     transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
+    feats = 0
     for src_feature in src_layer:
         geom = src_feature.GetGeometryRef()
         geom.Transform(transform)
         if clip_geom is not None:
             geom = clip_geom.Intersection(geom)
             if geom.IsEmpty() or geom.GetArea() == 0.0:
-                raise Exception("Clipping mask has produced an empty geometry.")
+                continue
+            #     raise Exception("Clipping mask has produced an empty geometry.")
 
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
@@ -96,11 +98,14 @@ def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict
             dst_feature.SetField(dst_field, value)
 
         err = dst_layer.CreateFeature(dst_feature)
-
         dst_feature = None
+        feats += 1
 
     src_dataset = None
     dst_dataset = None
+
+    if feats == 0:
+        raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
 
 
 def import_existing(source_path: str, dest_path: str, dest_layer_name: str, output_id: int, output_id_field: str, attributes: dict = {}, clip_mask_id: int = None) -> None:
@@ -137,13 +142,14 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
 
     transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
+    feats = 0
     for src_feature in src_layer:
         geom = src_feature.GetGeometryRef()
         geom.Transform(transform)
         if clip_geom is not None:
             geom = clip_geom.Intersection(geom)
             if geom.IsEmpty() or geom.GetArea() == 0.0:
-                raise Exception("Clipping mask has produced an empty geometry.")
+                continue
 
         dst_feature = ogr.Feature(dst_layer_def)
         dst_feature.SetGeometry(geom)
@@ -154,11 +160,13 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
             dst_feature.SetField(dst_field, value)
 
         err = dst_layer.CreateFeature(dst_feature)
-
         dst_feature = None
 
     src_dataset = None
     dst_dataset = None
+
+    if feats == 0:
+        raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
 
 
 def browse_raster(parent, description: str) -> str:

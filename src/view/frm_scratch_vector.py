@@ -29,7 +29,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.vector_types_model = DBItemModel(project.lookup_tables['lkp_scratch_vector_types'])
         self.cboVectorType.setModel(self.vector_types_model)
 
-        self.setWindowTitle('Create New Context Vector' if self.scratch_vector is None else 'Edit Context Vector Properties')
+        self.setWindowTitle('Import Existing Context Vector' if self.scratch_vector is None else 'Edit Context Vector Properties')
 
         if scratch_vector is None:
 
