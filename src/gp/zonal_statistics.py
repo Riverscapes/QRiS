@@ -46,7 +46,9 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     ogr_mem_lyr = ogr_mem_ds.CreateLayer('polygons', None, ogr.wkbPolygon)
     featureDefn = ogr_mem_lyr.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
-    outFeature.SetGeometry(geom.Clone())
+    out_geom = geom.Clone()
+    out_geom.TransformTo(raster_ds.GetSpatialRef())
+    outFeature.SetGeometry(out_geom)
     ogr_mem_lyr.CreateFeature(outFeature)
 
     # Set bounding box as intersection of raster extent and polygon extent
@@ -54,7 +56,7 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     r_maxY = raster_gt[3]
     r_maxX = r_minX + raster_gt[1] * raster_ds.RasterXSize
     r_minY = r_maxY + raster_gt[5] * raster_ds.RasterYSize
-    (g_minX, g_maxX, g_minY, g_maxY) = geom.GetEnvelope()
+    (g_minX, g_maxX, g_minY, g_maxY) = out_geom.GetEnvelope()
     extents = (max([g_minX, r_minX]), min([g_maxX, r_maxX]), max([g_minY, r_minY]), min([g_maxY, r_maxY]))
 
     # Convert the polygon bounding box to cell offset coordinates

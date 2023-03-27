@@ -172,22 +172,27 @@ def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_para
         raise Exception(f'No features found in {layer_name} that intersect the mask feature.')
     geom = feature.GetGeometryRef().Clone()
 
-    clipped_geom = geom.Intersection(mask_geom)
     epsg = get_utm_zone_epsg(geom.Centroid().GetX())
     utm_srs = osr.SpatialReference()
     utm_srs.ImportFromEPSG(epsg)
+
+    clipped_geom = geom.Intersection(mask_geom)
     clipped_geom.TransformTo(utm_srs)
-    length = clipped_geom.Length()
     start_pt = clipped_geom.GetPoint(0)
     end_pt = clipped_geom.GetPoint(clipped_geom.GetPointCount() - 1)
     point_start = ogr.Geometry(ogr.wkbPoint)
+    point_start.AssignSpatialReference(utm_srs)
     point_start.AddPoint(start_pt[0], start_pt[1])
     point_end = ogr.Geometry(ogr.wkbPoint)
+    point_end.AssignSpatialReference(utm_srs)
     point_end.AddPoint(end_pt[0], end_pt[1])
+
     buffer_start = point_start.Buffer(10)
     buffer_end = point_end.Buffer(10)
 
     stats_start = zonal_statistics(raster_layer, buffer_start)
     stats_end = zonal_statistics(raster_layer, buffer_end)
+
+    length = clipped_geom.Length()
 
     return (stats_end['minimum'] - stats_start['minimum']) / length
