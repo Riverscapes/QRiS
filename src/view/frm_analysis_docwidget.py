@@ -121,6 +121,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 metric = self.table.item(row, 0).data(QtCore.Qt.UserRole)
                 metric_value_text = ''
                 uncertainty_text = ''
+                self.table.item(row, 1).setData(QtCore.Qt.UserRole, None)
                 if metric.metric.id in metric_values:
                     metric_value = metric_values[metric.metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
