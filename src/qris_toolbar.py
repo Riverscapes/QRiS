@@ -199,15 +199,6 @@ class QRiSToolbar:
         # so we can try and reload the relevant QRiS project
         self.qproject.readProject.connect(self.onProjectLoad)
 
-        # Load a version of the QRave code we can use for cross-plugin integration
-        self.qrave = QRaveIntegration(self.toolbar)
-        if self.qrave.name is not None:
-            self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
-        else:
-            QgsMessageLog.logMessage('Unable to load QRave plugin.', 'QRiS', Qgis.Critical)
-            self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load QRave plugin.', level=Qgis.Critical, duration=5)
-            self.iface.mainWindow().repaint()
-
         # Trigger the check for relative paths on whether the homePath has changed
         self.qproject.homePathChanged.connect(self.project_homePathChanged)
         # Close project when the project is cleared
@@ -312,11 +303,15 @@ class QRiSToolbar:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-            # print "** STARTING RIPT"
+            # Load a version of the QRave code we can use for cross-plugin integration
+            self.qrave = QRaveIntegration(self.toolbar)
+            if self.qrave.name is not None:
+                self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
+            else:
+                QgsMessageLog.logMessage('Unable to load Required QRave plugin. Some functions in QRiS may be disabled, including layer symbology.', 'QRiS', Qgis.Critical)
+                self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load QRave plugin.', level=Qgis.Critical, duration=5)
+                self.iface.mainWindow().repaint()
 
-            # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = QRiSDockWidget(self.iface)
@@ -473,17 +468,8 @@ class QRiSToolbar:
             result = self.frm_new_project.exec_()
 
     def on_new_project_complete(self, project_dir: str, db_path: str):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        settings.setValue(LAST_PROJECT_FOLDER, project_dir)
-        settings.sync()
 
-        # Apply database migrations to ensure latest schema
-        self.update_database(db_path)
-
-        self.toggle_widget(forceOn=True)
-        self.set_project_path_settings(db_path)
-        self.dockwidget.build_tree_view(db_path)
-        self.add_project_to_mru_list(db_path)
+        self.open_qris_project(db_path)
 
     def activate_html_watershed_attributes(self):
 
