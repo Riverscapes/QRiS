@@ -73,17 +73,18 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # Build the metric table (this will also load the metric values)
         self.build_table()
 
-    # def cmdProperties_clicked(self):
-
-    #     frm = FrmAnalysisProperties(self, self, self.project, self.analyis)
-    #     result = frm.exec_()
-    #     if result is not None and result != 0:
-    #         self.txtName.setText(self.analyis.name)
-
     def build_table(self):
 
+        self.table.clearContents()
+        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
+        self.table.setColumnWidth(0, self.table.width() * 0.8)
+        self.table.setColumnWidth(1, 100)
+        self.table.setColumnWidth(2, 100)
+        self.table.setColumnWidth(3, 50)
+        self.table.setIconSize(QtCore.QSize(32, 16))
+
         self.table.setRowCount(0)
-        analysis_metrics = list(self.analysis.analysis_metrics.values())
+        analysis_metrics = list(metric for metric in self.analysis.analysis_metrics.values() if metric.level_id == 1) if self.rdoMetrics.isChecked() else list(self.analysis.analysis_metrics.values())
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
             metric = analysis_metrics[row]
@@ -102,19 +103,10 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
             status_item = QtWidgets.QTableWidgetItem()
             self.table.setItem(row, 3, status_item)
-            self.set_status(row)
 
         self.table.doubleClicked.connect(self.edit_metric_value)
-        # ui.tableWidget, signal(cellDoubleClicked(int,int)), this, SLOT(tableItemClicked(int,int)));
 
         self.load_table_values()
-
-        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
-        self.table.setColumnWidth(0, self.table.width() * 0.8)
-        self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(2, 100)
-        self.table.setColumnWidth(3, 50)
-        self.table.setIconSize(QtCore.QSize(32, 16))
 
     def load_table_values(self):
 
@@ -308,6 +300,23 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cboSampleFrame = QtWidgets.QComboBox()
         self.cboSampleFrame.currentIndexChanged.connect(self.load_table_values)
         self.grid.addWidget(self.cboSampleFrame, 2, 1, 1, 1)
+
+        self.lblDisplay = QtWidgets.QLabel('Display values')
+        self.grid.addWidget(self.lblDisplay, 3, 0, 1, 1)
+
+        self.layoutDisplay = QtWidgets.QHBoxLayout()
+
+        self.rdoAll = QtWidgets.QRadioButton('Metrics and Indicators')
+        self.rdoAll.setChecked(True)
+        self.rdoAll.toggled.connect(self.build_table)
+        self.layoutDisplay.addWidget(self.rdoAll)
+
+        self.rdoMetrics = QtWidgets.QRadioButton('Metrics Only')
+        self.rdoMetrics.setChecked(False)
+        self.layoutDisplay.addWidget(self.rdoMetrics)
+
+        self.layoutDisplay.addStretch(1)
+        self.grid.addLayout(self.layoutDisplay, 3, 1, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz)
