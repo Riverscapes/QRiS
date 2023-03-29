@@ -41,7 +41,8 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.mask_feature_id = mask_feature_id
         # self.metrics = metrics
 
-        self.txtMetric.setText(metric_value.metric.name)
+        metric_name_text = f'{metric_value.metric.name} ({self.project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
+        self.txtMetric.setText(metric_name_text)
 
         if metric_value.manual_value is not None:
             self.valManual.setValue(metric_value.manual_value)
