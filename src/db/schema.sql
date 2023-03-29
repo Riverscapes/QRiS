@@ -406,7 +406,7 @@ CREATE TABLE metrics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     calculation_id INTEGER REFERENCES calculations(id),
     default_level_id INTEGER REFERENCES metric_levels(id),
-    unit_id INTEGER REFERENCES units(id),
+    unit_id INTEGER REFERENCES lkp_units(id),
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     definition_url TEXT,
