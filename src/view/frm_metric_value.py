@@ -1,7 +1,6 @@
 import os
 import plistlib
 import traceback
-import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
@@ -114,7 +113,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             return
 
         # modify metric params as needed.
-        metric_params = json.loads(self.metric_value.metric.metric_params)
+        metric_params = self.metric_value.metric.metric_params
         if 'rasters' in metric_params:
             rasters = {}
             for raster_name in metric_params['rasters']:

@@ -1,4 +1,6 @@
 import sqlite3
+import json
+
 from .db_item import DBItem
 
 
@@ -26,6 +28,6 @@ def load_metrics(curs: sqlite3.Cursor) -> dict:
         row['description'],
         row['default_level_id'],
         metric_functions.get(row['calculation_id'], None),
-        row['metric_params'],
+        json.loads(row['metric_params']) if row['metric_params'] else None,
         row['unit_id']
     ) for row in curs.fetchall()}

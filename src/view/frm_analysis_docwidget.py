@@ -22,9 +22,11 @@
  ***************************************************************************/
 """
 
+import os
 import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis import core, gui, utils
+from qgis.core import Qgis, QgsMessageLog
+from qgis.utils import iface
 
 from .frm_analysis_properties import FrmAnalysisProperties
 
@@ -40,6 +42,7 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask, get_sample_frame_ids
 from ..model.metric_value import MetricValue, load_metric_values
+from ..gp import analysis_metrics
 
 from .frm_metric_value import FrmMetricValue
 
@@ -55,11 +58,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
 
         self.project = project
-        self.analyis = analysis
+        self.analysis = analysis
         self.txtName.setText(analysis.name)
 
         # Set Sample Frames
-        frame_ids = get_sample_frame_ids(self.project.project_file, self.analyis.mask.id)
+        frame_ids = get_sample_frame_ids(self.project.project_file, self.analysis.mask.id)
         self.segments_model = DBItemModel(frame_ids)
         self.cboSampleFrame.setModel(self.segments_model)
 
@@ -70,17 +73,17 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # Build the metric table (this will also load the metric values)
         self.build_table()
 
-    def cmdProperties_clicked(self):
+    # def cmdProperties_clicked(self):
 
-        frm = FrmAnalysisProperties(self, self, self.project, self.analyis)
-        result = frm.exec_()
-        if result is not None and result != 0:
-            self.txtName.setText(self.analyis.name)
+    #     frm = FrmAnalysisProperties(self, self, self.project, self.analyis)
+    #     result = frm.exec_()
+    #     if result is not None and result != 0:
+    #         self.txtName.setText(self.analyis.name)
 
     def build_table(self):
 
         self.table.setRowCount(0)
-        analysis_metrics = list(self.analyis.analysis_metrics.values())
+        analysis_metrics = list(self.analysis.analysis_metrics.values())
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
             metric = analysis_metrics[row]
@@ -120,7 +123,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         if event is not None and mask_feature_id is not None:
             # Load latest metric values from DB
-            metric_values = load_metric_values(self.project.project_file, self.analyis, event, mask_feature_id, self.project.metrics)
+            metric_values = load_metric_values(self.project.project_file, self.analysis, event, mask_feature_id, self.project.metrics)
 
             # Loop over active metrics and load values into grid
             for row in range(self.table.rowCount()):
@@ -136,7 +139,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                     uncertainty_text = metric_value.uncertainty
                     self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
                     self.set_status(row, metric_value)
-                self.table.item(row, 1).setText(str(metric_value_text))
+                self.table.item(row, 1).setText(f'{metric_value_text: .2f}'if isinstance(metric_value_text, float) else str(metric_value_text))
                 self.table.item(row, 2).setText(str(uncertainty_text))
 
     def set_status(self, row, metric_value: MetricValue = None):
@@ -177,11 +180,52 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def cmdCalculate_clicked(self):
 
-        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Calculation of metrics from event layers is not yet implemented.')
+        mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        data_capture_event = self.cboEvent.currentData(QtCore.Qt.UserRole)
+        errors = False
+
+        # calcuate automated metrics for each row in the table if empty
+        for row in range(self.table.rowCount()):
+
+            try:
+                metric_value_item = self.table.item(row, 1)
+                if metric_value_item.data(QtCore.Qt.UserRole) is not None:
+                    # Metric value already exists. continue
+                    continue
+
+                metric = self.table.item(row, 0).data(QtCore.Qt.UserRole).metric
+                if metric.metric_function is None:
+                    # Metric is not defined in database. continue
+                    continue
+
+                if 'rasters' in metric.metric_params:
+                    rasters = {}
+                    for raster_name in metric.metric_params['rasters']:
+                        raster_id = [k for k, v in self.project.lookup_tables['lkp_raster_types'].items() if v.name == raster_name][0]
+                        project_rasters = [r for r in data_capture_event.rasters if r.raster_type_id == raster_id]
+                        if len(project_rasters) == 0:
+                            raise Exception(f'Required raster {raster_name} for {metric.name} not found in project')
+                        rasters[raster_name] = {'path': os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path)}
+                    metric.metric_params['rasters'] = rasters
+
+                metric_calculation = getattr(analysis_metrics, metric.metric_function)
+                result = metric_calculation(self.project.project_file, mask_feature.id, data_capture_event.id, metric.metric_params)
+                metric_value = MetricValue(metric, None, result, False, None, None, metric.default_unit_id, None)
+                metric_value.save(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, metric.default_unit_id)
+                QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {mask_feature.id}', 'QRiS_Metrics', Qgis.Info)
+            except Exception as ex:
+                errors = True
+                QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
+                continue
+        if errors is False:
+            iface.messageBar().pushMessage('Metrics', 'Metrics successfully calculated', level=Qgis.Success)
+        else:
+            iface.messageBar().pushMessage('Metrics', 'Metrics calculated with error(s). See log for details.', level=Qgis.Warning)
+        self.load_table_values()
 
     def cmdProperties_clicked(self):
 
-        frm = FrmAnalysisProperties(self, self.project, self.analyis)
+        frm = FrmAnalysisProperties(self, self.project, self.analysis)
         result = frm.exec_()
         if result is not None and result != 0:
             self.txtName.setText(frm.analysis.name)
@@ -197,7 +241,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         if metric_value is None:
             metric_value = MetricValue(metric.metric, None, None, True, None, None, metric.metric.default_unit_id, {})
 
-        frm = FrmMetricValue(self, self.project, self.project.metrics, self.analyis, event, mask_feature.id, metric_value)
+        frm = FrmMetricValue(self, self.project, self.project.metrics, self.analysis, event, mask_feature.id, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:
             self.load_table_values()
@@ -252,7 +296,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horizEvent.addWidget(self.cboEvent)
 
         self.cmdCalculate = QtWidgets.QPushButton()
-        self.cmdCalculate.setText('Calculate')
+        self.cmdCalculate.setText('Calculate All')
         self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
         self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.horizEvent.addWidget(self.cmdCalculate, 0)
