@@ -127,6 +127,7 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (131, 'lkp_representation', 'Representation', 'NoGeometry', 1, 'temp.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (132, 'lkp_profiles', 'Profiles', 'NoGeometry', 1, 'none.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (133, 'lkp_units', 'Unit Types', 'NoGeometry', 1, 'none.qml', NULL);
 
 CREATE TABLE method_layers (
     method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
@@ -405,6 +406,7 @@ CREATE TABLE metrics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     calculation_id INTEGER REFERENCES calculations(id),
     default_level_id INTEGER REFERENCES metric_levels(id),
+    unit_id INTEGER REFERENCES units(id),
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     definition_url TEXT,
@@ -413,12 +415,12 @@ CREATE TABLE metrics (
     metric_params TEXT
 );
 
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (1, 1, 'dam and jam count', 1, '{"layers": ["dams","jams"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL);
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, '{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (4, 2, 'Dam Crest Length', 1, '{"layers": ["dam_crests"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (5, 3, 'Valley Bottom Area', 1, '{"layers": ["valley_bottoms"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1, '{"layers": ["profile_centerlines"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (1, 1, 'dam and jam count', 1, NULL, '{"layers": ["dams","jams"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL, NULL);
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, NULL, '{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (4, 2, 'Dam Crest Length', 1, 1, '{"layers": ["dam_crests"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (5, 3, 'Valley Bottom Area', 1, 2, '{"layers": ["valley_bottoms"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1,  NULL, '{"layers": ["profile_centerlines"]}');
 
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -451,6 +453,7 @@ CREATE TABLE metric_values (
     metadata TEXT,
     description TEXT,
     uncertainty NUMERIC,
+    unit_id INTEGER REFERENCES lkp_units(id),
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id, metric_id)
@@ -543,7 +546,26 @@ ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE
 ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
 ALTER TABLE thalwegs ADD description TEXT;
 
+-- units
+CREATE TABLE lkp_units (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL UNIQUE,
+	display_name TEXT NOT NULL UNIQUE,
+	conversion REAL,
+	conversion_unit_id INTEGER,
+	dimension TEXT,
+	description TEXT,
+	created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+)
 
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (1, 'Meters', 'm', NULL, , 'length');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (2, 'Square Meters', '㎡', NULL, NULL, 'area');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (3, 'Cubic Meters', 'm³', NULL, NULL, 'volume');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (4, 'Feet', 'ft', 0.3048, 1, 'length');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (5, 'Square Feet', 'sqft', 0.092903, 2, 'area');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (6, 'Cubic Feet', 'ft³', 0.0283168, 3, 'volume');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (7, 'Hectares', 'ha', 10000, 2, 'area');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (8, 'Acres', 'ac', 4046.86, 2, 'area');
 
 -- active extents
 CREATE TABLE lkp_active_extent_types (

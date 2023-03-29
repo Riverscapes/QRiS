@@ -85,7 +85,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         for row in range(len(analysis_metrics)):
             metric = analysis_metrics[row]
             label_metric = QtWidgets.QTableWidgetItem()
-            label_metric.setText(metric.metric.name)
+            metric_text = f'{metric.metric.name} ({self.project.units[metric.metric.default_unit_id].display})' if metric.metric.default_unit_id is not None else f'{metric.metric.name}'
+            label_metric.setText(metric_text)
             self.table.setItem(row, 0, label_metric)
             label_metric.setData(QtCore.Qt.UserRole, metric)
             label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -151,7 +152,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
 
         if metric_value is None:
-            metric_value = MetricValue(metric.metric, None, None, True, None, None, {})
+            metric_value = MetricValue(metric.metric, None, None, True, None, None, metric.metric.default_unit_id, {})
 
         frm = FrmMetricValue(self, self.project, self.project.metrics, self.analyis, event, mask_feature.id, metric_value)
         result = frm.exec_()

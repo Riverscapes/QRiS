@@ -9,18 +9,19 @@ from .db_item import dict_factory
 
 class MetricValue():
 
-    def __init__(self, metric: Metric, manual_value: float, automated_value: float, is_manual: bool, uncertainty: float, description: str, metadata: dict):
+    def __init__(self, metric: Metric, manual_value: float, automated_value: float, is_manual: bool, uncertainty: float, description: str, unit_id: int, metadata: dict):
 
         self.metric = metric
         self.manual_value = manual_value
         self.automated_value = automated_value
         self.is_manual = is_manual
         self.uncertainty = uncertainty
+        self.unit_id = unit_id
 
         self.metadata = metadata
         self.description = description
 
-    def save(self, db_path: str, analysis: Analysis, event: Event, mask_feature_id: int):
+    def save(self, db_path: str, analysis: Analysis, event: Event, mask_feature_id: int, unit_id: int = None):
 
         with sqlite3.connect(db_path) as conn:
             curs = conn.cursor()
@@ -34,9 +35,10 @@ class MetricValue():
                         , automated_value
                         , is_manual
                         , uncertainty
+                        , unit_id
                         , metadata
                         , description
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT (analysis_id, event_id, mask_feature_id, metric_id) DO UPDATE SET
                         manual_value = excluded.manual_value
                         , automated_value = excluded.automated_value
@@ -52,6 +54,7 @@ class MetricValue():
                     self.automated_value,
                     self.is_manual,
                     self.uncertainty,
+                    unit_id,
                     json.dumps(self.metadata) if self.metadata is not None and len(self.metadata) > 0 else None,
                     self.description
                 ])
@@ -78,6 +81,7 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, mask_feat
                 row['is_manual'],
                 row['uncertainty'],
                 row['description'],
+                row['unit_id'],
                 json.loads(row['metadata']) if row['metadata'] is not None else {}
             )
             for row in curs.fetchall()

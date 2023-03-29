@@ -14,6 +14,7 @@ from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
 from .profile import Profile, load_profiles
 from .cross_sections import CrossSections, load_cross_sections
+from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
 from pathlib import Path, PurePosixPath
@@ -45,7 +46,8 @@ class Project(DBItem):
                 'lkp_design_status',
                 'lkp_raster_types',
                 'lkp_scratch_vector_types',
-                'lkp_representation'
+                'lkp_representation',
+                'lkp_units'
             ]}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
@@ -61,6 +63,8 @@ class Project(DBItem):
             self.stream_gages = load_stream_gages(curs)
             self.profiles = load_profiles(curs)
             self.cross_sections = load_cross_sections(curs)
+
+            self.units = load_units(curs)
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))
