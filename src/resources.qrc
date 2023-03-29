@@ -31,6 +31,13 @@
         <file alias="riverscapes_logo">../Images/riverscapes_logo.png</file>
         <file alias="slider">../Images/slider.png</file>
         <file alias="vector">../Images/vector.png</file>
-        <file alias="watershed">../Images/watershed.png</file> 
+        <file alias="watershed">../Images/watershed.png</file>
+        <file alias="manual_none">../Images/manual_none.png</file>
+        <file alias="manual_exists">../Images/manual_exists.png</file>
+        <file alias="manual_selected">../Images/manual_selected.png</file>
+        <file alias="manual_selected_warning">../Images/manual_selected_warning.png</file>
+        <file alias="auto_none">../Images/auto_none.png</file>
+        <file alias="auto_exists">../Images/auto_exists.png</file>
+        <file alias="auto_selected">../Images/auto_selected.png</file>
     </qresource>
 </RCC>

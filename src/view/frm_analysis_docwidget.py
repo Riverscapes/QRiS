@@ -97,15 +97,21 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             label_uncertainty = QtWidgets.QTableWidgetItem()
             self.table.setItem(row, 2, label_uncertainty)
 
+            status_item = QtWidgets.QTableWidgetItem()
+            self.table.setItem(row, 3, status_item)
+            self.set_status(row)
+
         self.table.doubleClicked.connect(self.edit_metric_value)
         # ui.tableWidget, signal(cellDoubleClicked(int,int)), this, SLOT(tableItemClicked(int,int)));
 
         self.load_table_values()
 
-        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty'])
+        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
         self.table.setColumnWidth(0, self.table.width() * 0.8)
         self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(1, 100)
+        self.table.setColumnWidth(2, 100)
+        self.table.setColumnWidth(3, 50)
+        self.table.setIconSize(QtCore.QSize(32, 16))
 
     def load_table_values(self):
 
@@ -122,15 +128,52 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 metric = self.table.item(row, 0).data(QtCore.Qt.UserRole)
                 metric_value_text = ''
                 uncertainty_text = ''
+                self.set_status(row)
                 self.table.item(row, 1).setData(QtCore.Qt.UserRole, None)
                 if metric.metric.id in metric_values:
                     metric_value = metric_values[metric.metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
                     uncertainty_text = metric_value.uncertainty
                     self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
-                    # TODO: cell formatting
+                    self.set_status(row, metric_value)
                 self.table.item(row, 1).setText(str(metric_value_text))
                 self.table.item(row, 2).setText(str(uncertainty_text))
+
+    def set_status(self, row, metric_value: MetricValue = None):
+
+        status_item = self.table.item(row, 3)
+        # Default Status none exists or selected
+        status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_none')
+        status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_none')
+
+        if metric_value is not None:
+            # set icons for value existence
+            if metric_value.manual_value is not None:
+                status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_exists')
+            if metric_value.automated_value is not None:
+                status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_exists')
+            # set icons for value selection
+            if metric_value.is_manual and metric_value.manual_value is not None:
+                status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_selected')
+                if metric_value.automated_value is not None:
+                    # set warining icon if manual value is more than 10% different from automated value
+                    if abs(metric_value.manual_value - metric_value.automated_value) > 0.1 * metric_value.automated_value:
+                        status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_selected_warning')
+            if not metric_value.is_manual and metric_value.automated_value is not None:
+                status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_selected')
+
+        icon = QtGui.QIcon()
+        icon.actualSize(QtCore.QSize(32, 16))
+        pixmap = QtGui.QPixmap(32, 16)
+        pixmap.fill(QtCore.Qt.transparent)
+        painter = QtGui.QPainter()
+        painter.begin(pixmap)
+        painter.setBackgroundMode(QtCore.Qt.TransparentMode)
+        painter.drawPixmap(0, 0, status_manual_icon)
+        painter.drawPixmap(16, 0, status_auto_icon)
+        icon.addPixmap(pixmap)
+        status_item.setIcon(icon)
+        painter = None
 
     def cmdCalculate_clicked(self):
 
@@ -228,7 +271,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horiz.addItem(self.spacerItem)
 
-        self.table = QtWidgets.QTableWidget(0, 3)
+        self.table = QtWidgets.QTableWidget(0, 4)
         self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
