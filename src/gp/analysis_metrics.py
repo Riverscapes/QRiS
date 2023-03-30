@@ -2,12 +2,16 @@
 
 import os
 import math
-import json
 
 import osgeo
 from osgeo import ogr, gdal, osr
 
 from .zonal_statistics import zonal_statistics
+
+
+class MetricInputMissingError(Exception):
+    """Raised when a metric input is missing."""
+    pass
 
 
 def get_utm_zone_epsg(longitude: float) -> int:
@@ -132,7 +136,7 @@ def sinuosity(project_file: str, mask_feature_id: int, event_id: int, metric_par
     layer.SetSpatialFilter(mask_geom)
     feature = layer.GetNextFeature()
     if feature is None:
-        raise Exception(f'No features found in {layer_name} that intersect the mask feature.')
+        raise MetricInputMissingError(f'No features found in {layer_name} that intersect the mask feature.')
     geom = feature.GetGeometryRef().Clone()
 
     clipped_geom = geom.Intersection(mask_geom)
@@ -169,7 +173,7 @@ def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_para
     layer.SetSpatialFilter(mask_geom)
     feature = layer.GetNextFeature()
     if feature is None:
-        raise Exception(f'No features found in {layer_name} that intersect the mask feature.')
+        raise MetricInputMissingError(f'No features found in {layer_name} that intersect the mask feature.')
     geom = feature.GetGeometryRef().Clone()
 
     epsg = get_utm_zone_epsg(geom.Centroid().GetX())

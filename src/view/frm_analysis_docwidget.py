@@ -43,8 +43,10 @@ from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask, get_sample_frame_ids
 from ..model.metric_value import MetricValue, load_metric_values, print_uncertanty
 from ..gp import analysis_metrics
+from ..gp.analysis_metrics import MetricInputMissingError
 
 from .frm_metric_value import FrmMetricValue
+from .frm_calculate_all_metrics import FrmCalculateAllMetrics
 
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
@@ -172,48 +174,60 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def cmdCalculate_clicked(self):
 
-        mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
-        data_capture_event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        errors = False
+        frm = FrmCalculateAllMetrics(self)
+        result = frm.exec_()
 
-        # calcuate automated metrics for each row in the table if empty
-        for row in range(self.table.rowCount()):
+        if result == QtWidgets.QDialog.Accepted:
+            mask_features = [self.cboSampleFrame.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(QtCore.Qt.UserRole)]
+            data_capture_events = [self.cboEvent.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboEvent.count())] if frm.rdoAllDCE.isChecked() else [self.cboEvent.currentData(QtCore.Qt.UserRole)]
 
-            try:
-                metric_value_item = self.table.item(row, 1)
-                if metric_value_item.data(QtCore.Qt.UserRole) is not None:
-                    # Metric value already exists. continue
-                    continue
+            errors = False
+            missing_data = False
+            for mask_feature in mask_features:
+                for data_capture_event in data_capture_events:
+                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, self.project.metrics)
+                    for analysis_metric in self.analysis.analysis_metrics.values():
+                        metric = analysis_metric.metric
+                        metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
+                        if metric_value.automated_value is not None and not frm.chkOverwrite.isChecked():
+                            continue
+                        if metric.metric_function is None:
+                            # Metric is not defined in database. continue
+                            continue
+                        try:
+                            if 'rasters' in metric.metric_params:
+                                rasters = {}
+                                for raster_name in metric.metric_params['rasters']:
+                                    raster_id = [k for k, v in self.project.lookup_tables['lkp_raster_types'].items() if v.name == raster_name][0]
+                                    project_rasters = [r for r in data_capture_event.rasters if r.raster_type_id == raster_id]
+                                    if len(project_rasters) == 0:
+                                        raise MetricInputMissingError(f'Required raster {raster_name} for {metric.name} not found in project')
+                                    rasters[raster_name] = {'path': os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path)}
+                                metric.metric_params['rasters'] = rasters
 
-                metric = self.table.item(row, 0).data(QtCore.Qt.UserRole).metric
-                if metric.metric_function is None:
-                    # Metric is not defined in database. continue
-                    continue
-
-                if 'rasters' in metric.metric_params:
-                    rasters = {}
-                    for raster_name in metric.metric_params['rasters']:
-                        raster_id = [k for k, v in self.project.lookup_tables['lkp_raster_types'].items() if v.name == raster_name][0]
-                        project_rasters = [r for r in data_capture_event.rasters if r.raster_type_id == raster_id]
-                        if len(project_rasters) == 0:
-                            raise Exception(f'Required raster {raster_name} for {metric.name} not found in project')
-                        rasters[raster_name] = {'path': os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path)}
-                    metric.metric_params['rasters'] = rasters
-
-                metric_calculation = getattr(analysis_metrics, metric.metric_function)
-                result = metric_calculation(self.project.project_file, mask_feature.id, data_capture_event.id, metric.metric_params)
-                metric_value = MetricValue(metric, None, result, False, None, None, metric.default_unit_id, None)
-                metric_value.save(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, metric.default_unit_id)
-                QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {mask_feature.id}', 'QRiS_Metrics', Qgis.Info)
-            except Exception as ex:
-                errors = True
-                QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
-                continue
-        if errors is False:
-            iface.messageBar().pushMessage('Metrics', 'Metrics successfully calculated', level=Qgis.Success)
-        else:
-            iface.messageBar().pushMessage('Metrics', 'Metrics calculated with error(s). See log for details.', level=Qgis.Warning)
-        self.load_table_values()
+                            metric_calculation = getattr(analysis_metrics, metric.metric_function)
+                            result = metric_calculation(self.project.project_file, mask_feature.id, data_capture_event.id, metric.metric_params)
+                            metric_value.automated_value = result
+                            if frm.chkForceActive.isChecked():
+                                metric_value.is_manual = False
+                            metric_value.save(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, metric.default_unit_id)
+                            QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {mask_feature.id}', 'QRiS_Metrics', Qgis.Info)
+                        except MetricInputMissingError as ex:
+                            missing_data = True
+                            QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
+                            continue
+                        except Exception as ex:
+                            errors = True
+                            QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
+                            continue
+            if errors is False and missing_data is False:
+                iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
+            else:
+                if missing_data is True:
+                    iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to missing data requirements. See log for details.', level=Qgis.Success)
+                if errors is True:
+                    iface.messageBar().pushMessage('Metrics', 'Onr or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
+            self.load_table_values()
 
     def cmdProperties_clicked(self):
 
