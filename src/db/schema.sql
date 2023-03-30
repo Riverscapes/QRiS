@@ -377,6 +377,26 @@ ALTER TABLE mask_features ADD COLUMN position INTEGER;
 ALTER TABLE mask_features ADD COLUMN description TEXT;
 ALTER TABLE mask_features ADD COLUMN metadata TEXT;
 
+-- units
+CREATE TABLE lkp_units (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL UNIQUE,
+	display_name TEXT NOT NULL UNIQUE,
+	conversion REAL,
+	conversion_unit_id INTEGER,
+	dimension TEXT,
+	description TEXT,
+	created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (1, 'Meters', 'm', NULL, NULL, 'length');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (2, 'Square Meters', '㎡', NULL, NULL, 'area');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (3, 'Cubic Meters', 'm³', NULL, NULL, 'volume');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (4, 'Feet', 'ft', 0.3048, 1, 'length');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (5, 'Square Feet', 'sqft', 0.092903, 2, 'area');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (6, 'Cubic Feet', 'ft³', 0.0283168, 3, 'volume');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (7, 'Hectares', 'ha', 10000, 2, 'area');
+INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (8, 'Acres', 'ac', 4046.86, 2, 'area');
 
 CREATE TABLE calculations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -545,27 +565,6 @@ INSERT INTO lkp_thalweg_types (id, name) VALUES (2, 'Non-Primary');
 ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
 ALTER TABLE thalwegs ADD description TEXT;
-
--- units
-CREATE TABLE lkp_units (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	name TEXT NOT NULL UNIQUE,
-	display_name TEXT NOT NULL UNIQUE,
-	conversion REAL,
-	conversion_unit_id INTEGER,
-	dimension TEXT,
-	description TEXT,
-	created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
-)
-
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (1, 'Meters', 'm', NULL, , 'length');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (2, 'Square Meters', '㎡', NULL, NULL, 'area');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (3, 'Cubic Meters', 'm³', NULL, NULL, 'volume');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (4, 'Feet', 'ft', 0.3048, 1, 'length');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (5, 'Square Feet', 'sqft', 0.092903, 2, 'area');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (6, 'Cubic Feet', 'ft³', 0.0283168, 3, 'volume');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (7, 'Hectares', 'ha', 10000, 2, 'area');
-INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (8, 'Acres', 'ac', 4046.86, 2, 'area');
 
 -- active extents
 CREATE TABLE lkp_active_extent_types (
