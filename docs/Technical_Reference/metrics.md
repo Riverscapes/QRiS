@@ -2,7 +2,9 @@
 title: QRiS Metric Definitions
 ---
 
-## dam and jam count
+QRiS supports the following indicators of river health.
+
+# dam and jam count
 
 ## Percent Active Floodplain
 
