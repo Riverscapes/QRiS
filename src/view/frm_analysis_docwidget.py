@@ -41,7 +41,7 @@ from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask, get_sample_frame_ids
-from ..model.metric_value import MetricValue, load_metric_values
+from ..model.metric_value import MetricValue, load_metric_values, print_uncertanty
 from ..gp import analysis_metrics
 
 from .frm_metric_value import FrmMetricValue
@@ -128,7 +128,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 if metric.metric.id in metric_values:
                     metric_value = metric_values[metric.metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
-                    uncertainty_text = metric_value.uncertainty
+                    uncertainty_text = print_uncertanty(metric_value.uncertainty) if metric_value.is_manual else None
                     self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
                     self.set_status(row, metric_value)
                 self.table.item(row, 1).setText(f'{metric_value_text: .2f}'if isinstance(metric_value_text, float) else str(metric_value_text))

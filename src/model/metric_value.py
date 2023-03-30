@@ -53,7 +53,7 @@ class MetricValue():
                     self.manual_value,
                     self.automated_value,
                     self.is_manual,
-                    self.uncertainty,
+                    json.dumps(self.uncertainty),
                     unit_id,
                     json.dumps(self.metadata) if self.metadata is not None and len(self.metadata) > 0 else None,
                     self.description
@@ -79,10 +79,24 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, mask_feat
                 row['manual_value'],
                 row['automated_value'],
                 row['is_manual'],
-                row['uncertainty'],
+                json.loads(row['uncertainty']) if row['uncertainty'] is not None else None,
                 row['description'],
                 row['unit_id'],
                 json.loads(row['metadata']) if row['metadata'] is not None else {}
             )
             for row in curs.fetchall()
         }
+
+
+def print_uncertanty(uncertainty: dict):
+
+    if uncertainty is None:
+        return 'None'
+    elif uncertainty.get('Plus/Minus') is not None:
+        return f"+/- {uncertainty['Plus/Minus']:.2f}"
+    elif uncertainty.get('Percent') is not None:
+        return f"+/- {uncertainty['Percent']:.2f}%"
+    elif uncertainty.get('Min/Max') is not None:
+        return f"Range: {uncertainty['Min/Max'][0]:.2f} - {uncertainty['Min/Max'][1]:.2f}"
+    else:
+        return 'Undefined'

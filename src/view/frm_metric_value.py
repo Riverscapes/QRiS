@@ -57,6 +57,8 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         self.txtDescription.setPlainText(metric_value.description)
 
+        if self.metric_value.uncertainty is not None:
+            self.load_uncertainty()
         self.ManualUncertaintyChange()
 
         if metric_value.is_manual:
@@ -73,6 +75,21 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.metric_value.automated_value = float(self.txtAutomated.text()) if len(self.txtAutomated.text()) > 0 else None
         self.metric_value.is_manual = self.rdoManual.isChecked()
         self.metric_value.description = self.txtDescription.toPlainText()
+
+        # Save manual unertainty, even if automated metrics are selected
+        if self.cboManualUncertainty.currentText() == UNCERTAINTY_NONE:
+            self.metric_value.uncertainty = None
+        elif self.cboManualUncertainty.currentText() == UNCERTAINTY_MINMAX:
+            if self.ValManualUncertaintyMin.value() > self.ValManualUncertaintyMax.value():
+                QtWidgets.QMessageBox.warning(self, 'Error Saving Metric Value', 'Min uncertainty value cannot be greater than max uncertainty value')
+                return
+            if self.metric_value.manual_value is not None and (self.metric_value.manual_value < self.ValManualUncertaintyMin.value() or self.metric_value.manual_value > self.ValManualUncertaintyMax.value()):
+                QtWidgets.QMessageBox.warning(self, 'Error Saving Metric Value', 'Manual value must be within the uncertainty range')
+                return
+            self.metric_value.uncertainty = {self.cboManualUncertainty.currentText(): (self.ValManualUncertaintyMin.value(), self.ValManualUncertaintyMax.value())}
+        else:
+            self.metric_value.uncertainty = {self.cboManualUncertainty.currentText(): self.ValManualPlusMinus.value()}
+
         try:
             self.metric_value.save(self.project.project_file, self.analysis, self.data_capture_event, self.mask_feature_id)
         except Exception as ex:
@@ -105,6 +122,23 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.ValManualUncertaintyLabelMax.setVisible(plus_minus)
 
             self.ValManualPlusMinus.setVisible(not plus_minus)
+
+    def load_uncertainty(self):
+
+        if self.metric_value.uncertainty is None:
+            self.cboManualUncertainty.setCurrentText(UNCERTAINTY_NONE)
+        elif self.metric_value.uncertainty.get('Min/Max') is not None:
+            self.cboManualUncertainty.setCurrentText(UNCERTAINTY_MINMAX)
+            self.ValManualUncertaintyMin.setValue(self.metric_value.uncertainty['Min/Max'][0])
+            self.ValManualUncertaintyMax.setValue(self.metric_value.uncertainty['Min/Max'][1])
+        elif self.metric_value.uncertainty.get('Plus/Minus') is not None:
+            self.cboManualUncertainty.setCurrentText(UNCERTAINTY_PLUS_MINUS)
+            self.ValManualPlusMinus.setValue(self.metric_value.uncertainty['Plus/Minus'])
+        elif self.metric_value.uncertainty.get('Percent') is not None:
+            self.cboManualUncertainty.setCurrentText(UNCERTAINTY_PERCENT)
+            self.ValManualPlusMinus.setValue(self.metric_value.uncertainty['Percent'])
+        else:
+            self.cboManualUncertainty.setCurrentText(UNCERTAINTY_NONE)
 
     def cmd_calculate_metric_clicked(self):
 
