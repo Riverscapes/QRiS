@@ -386,6 +386,7 @@ CREATE TABLE lkp_units (
 	conversion_unit_id INTEGER,
 	dimension TEXT,
 	description TEXT,
+    metatdata TEXT,
 	created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

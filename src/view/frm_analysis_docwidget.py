@@ -301,7 +301,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cboSampleFrame.currentIndexChanged.connect(self.load_table_values)
         self.grid.addWidget(self.cboSampleFrame, 2, 1, 1, 1)
 
-        self.lblDisplay = QtWidgets.QLabel('Display values')
+        self.lblDisplay = QtWidgets.QLabel('Display Values')
         self.grid.addWidget(self.lblDisplay, 3, 0, 1, 1)
 
         self.layoutDisplay = QtWidgets.QHBoxLayout()

@@ -645,7 +645,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Event, protocols and layers
         event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
-        
+
         # remove event layers that no longer exist in the event
         row_adjustment = 0
         for row in range(0, event_node.rowCount()):
@@ -854,11 +854,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, PourPoint):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):
-            if self.analysis_doc_widget is None:
-                self.analysis_doc_widget = FrmAnalysisDocWidget(self)
-                self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_doc_widget)
-            self.analysis_doc_widget.configure_analysis(self.project, db_item, None)
-            self.analysis_doc_widget.show()
+            frm = FrmAnalysisProperties(self, self.project, db_item)
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
@@ -871,6 +867,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 # map table of contents item is renamed.
                 if isinstance(db_item, Project):
                     self.add_child_to_project_tree(self.model.invisibleRootItem(), db_item, False)
+                elif isinstance(db_item, Analysis):
+                    self.add_child_to_project_tree(model_item.parent(), db_item, False)
                 elif isinstance(db_item, Event):
                     self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
                 else:

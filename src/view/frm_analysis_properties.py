@@ -51,7 +51,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.metricsTable.setCellWidget(row, 1, cboStatus)
 
         self.metricsTable.setColumnWidth(0, self.metricsTable.width() / 2)
-        self.metricsTable.setColumnWidth(1, self.metricsTable.width() / 2)
+        # self.metricsTable.setColumnWidth(1, self.metricsTable.width() / 2)
 
         # https://wiki.qt.io/How_to_Use_QTableWidget
         # m_pTableWidget -> setEditTriggers(QAbstractItemView: : NoEditTriggers);
@@ -102,8 +102,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.vert.addWidget(self.tabWidget)
 
         self.metricsTable = QtWidgets.QTableWidget(0, 2)
+        self.metricsTable.resize(500, 500)
+        self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.metricsTable.resizeColumnsToContents()
         self.tabWidget.addTab(self.metricsTable, 'Metrics and Indicators')
-        # self.metricsTable.horizontalHeader().setStretchLastSection(True)
+        self.metricsTable.horizontalHeader().setStretchLastSection(True)
         self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status'])
 
         self.metricsTable.verticalHeader().setVisible(False)
