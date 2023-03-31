@@ -18,20 +18,28 @@ class QRaveIntegration(QObject):
     def __init__(self, parent):
         super(QRaveIntegration, self).__init__(parent)
         # from https://gis.stackexchange.com/questions/403501/using-qgis-plugin-from-another-plugin
-        self.name = next((pname for pname in NAMES if pname in plugins), None)
-        self.plugin_instance = plugins[self.name] if self.name is not None else None
+
+        self.name = None
+        self.plugin_instance = None
+        self.symbology_folder = None
         self.qrave_map_layer = None
 
-        # This is how we pull uninstantiated code from QRave. We need to load it as a module
-        if self.name:
+        # Attemp to find RAVE plugin using lower case names
+        plugins_lower_case = {k.lower(): k for k in plugins.keys()}
+        rave_names_lower_case = [name.lower() for name in NAMES]
+        matched_lower_case_name = next((pname for pname in rave_names_lower_case if pname in plugins_lower_case), None)
+        if matched_lower_case_name is not None:
+
+            self.name = plugins_lower_case[matched_lower_case_name]
+            self.plugin_instance = plugins[self.name]
             self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
             self.symbology_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS'))
 
-        if self.plugin_instance and self.plugin_instance.dockwidget:
-            # Check if the signal is already connected
-            if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:
-                self.plugin_instance.dockwidget.layerMenuOpen.disconnect()
-            self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
+            if self.plugin_instance.dockwidget:
+                # Check if the signal is already connected
+                if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:
+                    self.plugin_instance.dockwidget.layerMenuOpen.disconnect()
+                self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
 
     def qrave_add_to_map_menu_item(self, menu, item: QStandardItem, data):
         """Custom menu to show at the bottom of the QRave context menu
