@@ -5,6 +5,7 @@ from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal
 from qgis.utils import plugins
 from qgis.PyQt.QtGui import QStandardItem, QIcon
 
+from .path_utilities import parse_posix_path
 
 # Try to load these plugin names in priority order
 NAMES = ['qrave_toolbar_dev', 'qrave_toolbar', 'QRAVEPlugin-qrave_integration']
@@ -24,7 +25,7 @@ class QRaveIntegration(QObject):
         # This is how we pull uninstantiated code from QRave. We need to load it as a module
         if self.name:
             self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
-            self.symbology_folder = os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS')
+            self.symbology_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS'))
 
         if self.plugin_instance and self.plugin_instance.dockwidget:
             # Check if the signal is already connected

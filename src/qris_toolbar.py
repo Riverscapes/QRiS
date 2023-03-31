@@ -41,8 +41,9 @@ from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
 
-from .model.project import apply_db_migrations, safe_make_abspath, safe_make_relpath
+from .model.project import apply_db_migrations
 from .QRiS.qrave_integration import QRaveIntegration
+from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
 
 from .gp.watershed_attributes import WatershedAttributes
 

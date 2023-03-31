@@ -912,15 +912,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def browse_item(self, db_item: DBItem, folder_path):
 
-        # folder_path = None
-        # if isinstance(db_item, Raster):
-        #     folder_path = os.path.join(os.path.dirname(self.project.project_file), db_item.path)
-        # else:
-        #     folder_path = self.project.project_file
-
-        # while not os.path.isdir(folder_path):
-        #     folder_path = os.path.dirname(folder_path)
-
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
 

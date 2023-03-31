@@ -14,6 +14,8 @@ from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 
+from .path_utilities import parse_posix_path
+
 from qgis.core import (
     QgsVectorLayer,
     QgsMapLayer,
@@ -176,7 +178,7 @@ class QRisMapManager(RiverscapesMapManager):
         point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
         QgsProject.instance().addMapLayer(point_feature_layer, False)
         pour_point_group_layer.addLayer(point_feature_layer)
-        qml = os.path.join(self.symbology_folder, 'pour_point.qml')
+        qml = parse_posix_path(os.path.join(self.symbology_folder, 'pour_point.qml'))
         point_feature_layer.loadNamedStyle(qml)
 
         catchment_fc_path = self.project.project_file + '|layername=' + 'catchments'
@@ -184,7 +186,7 @@ class QRisMapManager(RiverscapesMapManager):
         catchment_feature_layer = QgsVectorLayer(catchment_fc_path, 'Catchment', 'ogr')
         catchment_feature_layer.setSubsetString('pour_point_id = ' + str(pour_point.id))
         QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
-        qml = os.path.join(self.symbology_folder, 'catchment.qml')
+        qml = parse_posix_path(os.path.join(self.symbology_folder, 'catchment.qml'))
         catchment_feature_layer.loadNamedStyle(qml)
         QgsProject.instance().addMapLayer(catchment_feature_layer, False)
         pour_point_group_layer.addLayer(catchment_feature_layer)
@@ -210,7 +212,7 @@ class QRisMapManager(RiverscapesMapManager):
         if existing_layer is not None:
             return existing_layer
 
-        raster_path = os.path.join(os.path.dirname(self.project.project_file), raster.path)
+        raster_path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
         symbology = None
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster, symbology)
 
@@ -227,7 +229,7 @@ class QRisMapManager(RiverscapesMapManager):
         # Remove any existing raster layer in this group
         group_layer.removeAllChildren()
 
-        raster_path = os.path.join(os.path.dirname(self.project.project_file), raster.path)
+        raster_path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
         raster_layer = self.create_machine_code_raster_layer(self.project.map_guid, group_layer, raster_path, raster, RASTER_SLIDER_MACHINE_CODE)
 
         return raster_layer

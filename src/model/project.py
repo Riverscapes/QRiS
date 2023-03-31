@@ -17,7 +17,7 @@ from .cross_sections import CrossSections, load_cross_sections
 from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
-from pathlib import Path, PurePosixPath
+from ..QRiS.path_utilities import parse_posix_path
 
 PROJECT_MACHINE_CODE = 'Project'
 
@@ -27,7 +27,7 @@ class Project(DBItem):
     def __init__(self, project_file: str):
         super().__init__('projects', 1, 'Placeholder')
 
-        self.project_file = project_file
+        self.project_file = parse_posix_path(project_file)
         with sqlite3.connect(self.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
@@ -70,7 +70,7 @@ class Project(DBItem):
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))
 
     def get_absolute_path(self, relative_path: str) -> str:
-        return os.path.join(os.path.dirname(self.project_file), relative_path)
+        return parse_posix_path(os.path.join(os.path.dirname(self.project_file), relative_path))
 
     def get_safe_file_name(self, raw_name: str, ext: str = None):
         name = raw_name.strip().replace(' ', '_').replace('__', '_')
@@ -140,49 +140,3 @@ def apply_db_migrations(db_path: str):
     except Exception as ex:
         conn.rollback()
         raise ex
-
-
-def parse_posix_path(path: str) -> str:
-    """This method returns a posix path no matter if you pass it a windows or a linux path
-
-    Args:
-        path ([type]): [description]
-    """
-    new_path = PurePosixPath(path.replace('\\', '/'))
-    return str(new_path)
-
-
-def safe_make_relpath(in_path: str, cwd_path: str) -> str:
-    """ Safely create an absolute path from a relative path
-
-    if this fails then just return the input
-
-    Args:
-        in_path (str): _description_
-        cwd_path (str): _description_
-
-    Returns:
-        str: _description_
-    """
-    if in_path and len(in_path) > 0 and os.path.isabs(in_path):
-        return os.path.relpath(in_path, cwd_path)
-    else:
-        return in_path
-
-
-def safe_make_abspath(in_path: str, cwd_path: str) -> str:
-    """ Safely create an absolute path from a relative path
-
-    if this fails then just return the input
-
-    Args:
-        in_path (str): _description_
-        cwd_path (str): _description_
-
-    Returns:
-        str: _description_
-    """
-    if in_path and len(in_path) > 0 and not os.path.isabs(in_path):
-        return os.path.abspath(os.path.join(cwd_path, in_path))
-    else:
-        return in_path

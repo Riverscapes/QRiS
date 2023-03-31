@@ -7,6 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.utils import iface
 from qgis.core import QgsApplication
 
+from ..QRiS.path_utilities import parse_posix_path
 from ..model.project import Project
 from .utilities import validate_name, add_standard_form_buttons
 from ..gp.new_project import NewProjectTask
@@ -78,7 +79,7 @@ class FrmNewProject(QtWidgets.QDialog):
         clean_name = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
 
         if len(clean_name) > 0:
-            self.project_folder = os.path.join(self.root_path, clean_name, f'{clean_name}.gpkg')
+            self.project_folder = parse_posix_path(os.path.join(self.root_path, clean_name, f'{clean_name}.gpkg'))
             self.txtPath.setText(self.project_folder)
 
     # def save_new_project(self):

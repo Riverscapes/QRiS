@@ -5,12 +5,11 @@ from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication
 from qgis.utils import iface
 
+from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 from ..model.scratch_vector import ScratchVector, insert_scratch_vector, scratch_gpkg_path, get_unique_scratch_fc_name
 from ..model.db_item import DBItemModel
 from ..model.project import Project
-
-from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
-
+from ..QRiS.path_utilities import parse_posix_path
 from ..gp.vectorize_task import VectorizeTask
 
 
@@ -113,7 +112,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
 
         clean_name = re.sub('[^A-Za-z0-9]+', '', self.txtName.text())
         if len(clean_name) > 0:
-            self.txtProjectPath.setText(os.path.join(scratch_gpkg_path(self.project.project_file), clean_name))
+            self.txtProjectPath.setText(parse_posix_path(os.path.join(scratch_gpkg_path(self.project.project_file), clean_name)))
         else:
             self.txtProjectPath.setText('')
 

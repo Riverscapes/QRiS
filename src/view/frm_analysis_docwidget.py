@@ -44,6 +44,7 @@ from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask, get_sample_f
 from ..model.metric_value import MetricValue, load_metric_values, print_uncertanty
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError
+from ..QRiS.path_utilities import parse_posix_path
 
 from .frm_metric_value import FrmMetricValue
 from .frm_calculate_all_metrics import FrmCalculateAllMetrics
@@ -205,7 +206,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                                     project_rasters = [r for r in data_capture_event.rasters if r.raster_type_id == raster_id]
                                     if len(project_rasters) == 0:
                                         raise MetricInputMissingError(f'Required raster {raster_name} for {metric.name} not found in project')
-                                    rasters[raster_name] = {'path': os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path)}
+                                    rasters[raster_name] = {'path': parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path))}
                                 metric.metric_params['rasters'] = rasters
 
                             metric_calculation = getattr(analysis_metrics, metric.metric_function)

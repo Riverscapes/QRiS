@@ -14,6 +14,7 @@ from ..model.event import Event
 from .utilities import add_standard_form_buttons
 from ..gp import analysis_metrics
 from ..QRiS.settings import CONSTANTS
+from ..QRiS.path_utilities import parse_posix_path
 
 UNCERTAINTY_NONE = 'None'
 UNCERTAINTY_PLUS_MINUS = 'Plus/Minus'
@@ -161,7 +162,7 @@ class FrmMetricValue(QtWidgets.QDialog):
                 if len(project_rasters) == 0:
                     QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', f'No raster found for {raster_name}.')
                     return
-                rasters[raster_name] = {'path': os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path)}
+                rasters[raster_name] = {'path': parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path))}
             metric_params['rasters'] = rasters
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)

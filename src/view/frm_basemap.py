@@ -11,6 +11,7 @@ from ..model.mask import AOI_MASK_TYPE_ID
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
+from ..QRiS.path_utilities import parse_posix_path
 
 
 class FrmRaster(QtWidgets.QDialog):
@@ -202,8 +203,8 @@ class FrmRaster(QtWidgets.QDialog):
         if len(project_name) > 0:
             _name, ext = os.path.splitext(self.txtSourcePath.text())
             parent_folder = CONTEXT_PARENT_FOLDER if self.is_context else SURFACES_PARENT_FOLDER
-            self.txtProjectPath.setText(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext)))
-            self.hillshade_project_path = os.path.join(parent_folder, self.project.get_safe_file_name(clean_name_hillshade, ext))
+            self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext))))
+            self.hillshade_project_path = parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name_hillshade, ext)))
         else:
             self.txtProjectPath.setText('')
             self.hillshade_project_path = None
