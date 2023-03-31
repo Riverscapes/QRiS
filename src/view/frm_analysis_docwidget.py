@@ -89,12 +89,13 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         analysis_metrics = list(metric for metric in self.analysis.analysis_metrics.values() if metric.level_id == 1) if self.rdoMetrics.isChecked() else list(self.analysis.analysis_metrics.values())
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
-            metric = analysis_metrics[row]
+            analysis_metric = analysis_metrics[row]
+            metric = analysis_metric.metric
             label_metric = QtWidgets.QTableWidgetItem()
-            metric_text = f'{metric.metric.name} ({self.project.units[metric.metric.default_unit_id].display})' if metric.metric.default_unit_id is not None else f'{metric.metric.name}'
+            metric_text = f'{metric.name} ({self.project.units[metric.default_unit_id].display})' if metric.default_unit_id is not None else f'{metric.name}'
             label_metric.setText(metric_text)
             self.table.setItem(row, 0, label_metric)
-            label_metric.setData(QtCore.Qt.UserRole, metric)
+            label_metric.setData(QtCore.Qt.UserRole, analysis_metric)
             label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
 
             label_value = QtWidgets.QTableWidgetItem()
@@ -122,23 +123,25 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             # Loop over active metrics and load values into grid
             for row in range(self.table.rowCount()):
 
-                metric = self.table.item(row, 0).data(QtCore.Qt.UserRole)
+                metric = self.table.item(row, 0).data(QtCore.Qt.UserRole).metric
                 metric_value_text = ''
                 uncertainty_text = ''
                 self.set_status(row)
                 self.table.item(row, 1).setData(QtCore.Qt.UserRole, None)
-                if metric.metric.id in metric_values:
-                    metric_value = metric_values[metric.metric.id]
+                if metric.id in metric_values:
+                    metric_value = metric_values[metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
                     uncertainty_text = print_uncertanty(metric_value.uncertainty) if metric_value.is_manual else None
                     self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
                     self.set_status(row, metric_value)
-                self.table.item(row, 1).setText(f'{metric_value_text: .2f}'if isinstance(metric_value_text, float) else str(metric_value_text))
-                self.table.item(row, 2).setText(str(uncertainty_text))
+                self.table.item(row, 1).setText(f'{metric_value_text: .{metric.precision}f}'if isinstance(metric_value_text, float) and metric.precision is not None else str(metric_value_text))
+                self.table.item(row, 2).setText(str(uncertainty_text) if uncertainty_text is not None else '')
 
     def set_status(self, row, metric_value: MetricValue = None):
 
         status_item = self.table.item(row, 3)
+        metric = self.table.item(row, 0).data(QtCore.Qt.UserRole).metric
+
         # Default Status none exists or selected
         status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_none')
         status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_none')
@@ -154,7 +157,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_selected')
                 if metric_value.automated_value is not None:
                     # set warining icon if manual value is more than 10% different from automated value
-                    if abs(metric_value.manual_value - metric_value.automated_value) > 0.1 * metric_value.automated_value:
+                    if metric.tolerance is not None and abs(metric_value.manual_value - metric_value.automated_value) > metric.tolerance * metric_value.automated_value:
                         status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_selected_warning')
             if not metric_value.is_manual and metric_value.automated_value is not None:
                 status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_selected')
@@ -240,12 +243,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def edit_metric_value(self, mi):
 
         metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
-        metric = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole)
+        metric = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole).metric
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
 
         if metric_value is None:
-            metric_value = MetricValue(metric.metric, None, None, True, None, None, metric.metric.default_unit_id, {})
+            metric_value = MetricValue(metric, None, None, True, None, None, metric.default_unit_id, {})
 
         frm = FrmMetricValue(self, self.project, self.project.metrics, self.analysis, event, mask_feature.id, metric_value)
         result = frm.exec_()

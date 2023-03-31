@@ -436,12 +436,12 @@ CREATE TABLE metrics (
     metric_params TEXT
 );
 
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (1, 1, 'dam and jam count', 1, NULL, '{"layers": ["dams","jams"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL, NULL);
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (3, 5, 'Centerline Gradient', 2, NULL, '{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (4, 2, 'Dam Crest Length', 1, 1, '{"layers": ["dam_crests"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (5, 3, 'Valley Bottom Area', 1, 2, '{"layers": ["valley_bottoms"]}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params) VALUES (6, 4, 'Centelrine Sinuosity', 1,  NULL, '{"layers": ["profile_centerlines"]}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (1, 1, 'dam and jam count', 1, NULL, '{"layers": ["dams","jams"]}', '{"min_value": 0}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL, NULL, '{"min_value": 0, "max_value": 100, "tolerance": 0.25}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (3, 5, 'Centerline Gradient', 2, NULL, '{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}', '{"precision": 4, "tolerance": 0.1}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (4, 2, 'Dam Crest Length', 1, 1, '{"layers": ["dam_crests"]}', '{"min_value": 0, "max_value": 10000, "precision": 2, "tolerance": 0.1}');
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (5, 3, 'Valley Bottom Area', 1, 2, '{"layers": ["valley_bottoms"]}', NULL);
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (6, 4, 'Centelrine Sinuosity', 1,  NULL, '{"layers": ["profile_centerlines"]}', '{"min_value": 1, "precision": 4, "tolerance": 0.1}');
 
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

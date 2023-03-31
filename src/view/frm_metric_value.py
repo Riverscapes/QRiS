@@ -43,6 +43,11 @@ class FrmMetricValue(QtWidgets.QDialog):
         metric_name_text = f'{metric_value.metric.name} ({self.project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
         self.txtMetric.setText(metric_name_text)
 
+        if metric_value.metric.min_value is not None:
+            self.valManual.setMinimum(metric_value.metric.min_value)
+        if metric_value.metric.max_value is not None:
+            self.valManual.setMaximum(metric_value.metric.max_value)
+
         if metric_value.manual_value is not None:
             self.valManual.setValue(metric_value.manual_value)
 
@@ -50,7 +55,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.valManual.setEnabled(self.rdoManual.isChecked())
 
         if metric_value.automated_value is not None:
-            self.txtAutomated.setText(str(metric_value.automated_value))
+            self.txtAutomated.setText(f'{metric_value.automated_value: .{self.metric_value.metric.precision}f}'if isinstance(metric_value.automated_value, float) and self.metric_value.metric.precision is not None else str(metric_value.automated_value))
         self.rdoAutomated.setEnabled(metric_value.automated_value is not None)
 
         self.rdoAutomated.setChecked(not metric_value.is_manual)
@@ -72,7 +77,7 @@ class FrmMetricValue(QtWidgets.QDialog):
     def accept(self):
 
         self.metric_value.manual_value = self.valManual.value()
-        self.metric_value.automated_value = float(self.txtAutomated.text()) if len(self.txtAutomated.text()) > 0 else None
+        # self.metric_value.automated_value = float(self.txtAutomated.text()) if len(self.txtAutomated.text()) > 0 else None
         self.metric_value.is_manual = self.rdoManual.isChecked()
         self.metric_value.description = self.txtDescription.toPlainText()
 
@@ -162,6 +167,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
             result = metric_calculation(self.project.project_file, self.mask_feature_id, self.data_capture_event.id, metric_params)
+            self.metric_value.automated_value = result
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
             QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)
@@ -170,7 +176,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.rdoAutomated.setEnabled(False)
             return
 
-        self.txtAutomated.setText(f'{result: .2f}'if isinstance(result, float) else str(result))
+        self.txtAutomated.setText(f'{result: .{self.metric_value.metric.precision}f}'if isinstance(result, float) and self.metric_value.metric.precision is not None else str(result))
         self.rdoAutomated.setChecked(True)
         self.rdoAutomated.setEnabled(True)
 

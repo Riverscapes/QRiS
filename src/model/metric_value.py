@@ -91,7 +91,7 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, mask_feat
 def print_uncertanty(uncertainty: dict):
 
     if uncertainty is None:
-        return 'None'
+        return None
     elif uncertainty.get('Plus/Minus') is not None:
         return f"+/- {uncertainty['Plus/Minus']:.2f}"
     elif uncertainty.get('Percent') is not None:
