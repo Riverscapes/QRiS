@@ -31,6 +31,7 @@ class Analysis(DBItem):
 
                 self.name = name
                 self.description = description
+                self.analysis_metrics = analysis_metrics
 
             except Exception as ex:
                 conn.rollback()

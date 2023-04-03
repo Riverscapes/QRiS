@@ -79,15 +79,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def build_table(self):
 
         self.table.clearContents()
-        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
-        self.table.setColumnWidth(0, self.table.width() * 0.8)
-        self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(2, 100)
-        self.table.setColumnWidth(3, 50)
-        self.table.setIconSize(QtCore.QSize(32, 16))
 
         self.table.setRowCount(0)
-        analysis_metrics = list(metric for metric in self.analysis.analysis_metrics.values() if metric.level_id == 1) if self.rdoMetrics.isChecked() else list(self.analysis.analysis_metrics.values())
+        analysis_metrics = list(metric for metric in self.analysis.analysis_metrics.values() if metric.level_id == 2) if self.rdoIndicators.isChecked() else list(self.analysis.analysis_metrics.values())
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
             analysis_metric = analysis_metrics[row]
@@ -239,6 +233,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result is not None and result != 0:
             self.txtName.setText(frm.analysis.name)
+            self.configure_analysis(self.project, frm.analysis, None)
             self.build_table()
 
     def edit_metric_value(self, mi):
@@ -329,9 +324,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.rdoAll.toggled.connect(self.build_table)
         self.layoutDisplay.addWidget(self.rdoAll)
 
-        self.rdoMetrics = QtWidgets.QRadioButton('Metrics Only')
-        self.rdoMetrics.setChecked(False)
-        self.layoutDisplay.addWidget(self.rdoMetrics)
+        self.rdoIndicators = QtWidgets.QRadioButton('Indicators Only')
+        self.rdoIndicators.setChecked(False)
+        self.layoutDisplay.addWidget(self.rdoIndicators)
 
         self.layoutDisplay.addStretch(1)
         self.grid.addLayout(self.layoutDisplay, 3, 1, 1, 1)
@@ -347,6 +342,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
+        self.table.setColumnWidth(0, self.table.width() * 0.8)
+        self.table.setColumnWidth(1, 100)
+        self.table.setColumnWidth(2, 100)
+        self.table.setColumnWidth(3, 50)
+        self.table.setIconSize(QtCore.QSize(32, 16))
         self.vert.addWidget(self.table)
 
         self.setWidget(self.dockWidgetContents)

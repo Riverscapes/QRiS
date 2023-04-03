@@ -466,7 +466,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.analysis_doc_widget is None:
             self.analysis_doc_widget = FrmAnalysisDocWidget(self)
-            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_doc_widget)
+            self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
 
         self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
         self.analysis_doc_widget.show()

@@ -35,7 +35,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
             level_id = metrics[row].default_level_id
             if analysis is not None:
-                print('TODO: load initial metric state from analysis')
+                if metrics[row].id in analysis.analysis_metrics:
+                    level_id = analysis.analysis_metrics[metrics[row].id].level_id
 
             label_item = QtWidgets.QTableWidgetItem()
             label_item.setText(metrics[row].name)
