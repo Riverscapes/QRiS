@@ -48,6 +48,10 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.valManual.setMinimum(metric_value.metric.min_value)
         if metric_value.metric.max_value is not None:
             self.valManual.setMaximum(metric_value.metric.max_value)
+        if metric_value.metric.precision is not None:
+            self.valManual.setDecimals(metric_value.metric.precision)
+        else:
+            self.valManual.setDecimals(0)
 
         if metric_value.manual_value is not None:
             self.valManual.setValue(metric_value.manual_value)
