@@ -3,7 +3,7 @@ import sqlite3
 
 from .analysis import Analysis, load_analyses
 from .mask import Mask, load_masks
-from .layer import Layer, load_layers
+from .layer import Layer, load_layers, load_non_method_layers
 from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
 from .raster import Raster, load_rasters
@@ -52,6 +52,7 @@ class Project(DBItem):
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)
+            self.non_method_layers = load_non_method_layers(curs)
             self.methods = load_methods(curs, self.layers)
             self.protocols = load_protocols(curs, self.methods)
             self.rasters = load_rasters(curs)

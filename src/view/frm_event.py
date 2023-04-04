@@ -95,6 +95,8 @@ class FrmEvent(QtWidgets.QDialog):
         self.tree_model = QtGui.QStandardItemModel(self)
         for protocol in self.qris_project.protocols.values():
             protocol_si = QtGui.QStandardItem(protocol.name)
+            if protocol.has_custom_ui == 1 and self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
+                continue
             protocol_si.setData(protocol, QtCore.Qt.UserRole)
             protocol_si.setEditable(False)
             # protocol_si.setCheckable(True)
@@ -125,8 +127,20 @@ class FrmEvent(QtWidgets.QDialog):
                 # if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or protocol_si.hasChildren():
                 self.tree_model.appendRow(protocol_si)
 
+        non_method_si = QtGui.QStandardItem('Layers without a method')
+        non_method_si.setEditable(False)
+        non_method_si.setData(None, QtCore.Qt.UserRole)
+        for non_method_layer in self.qris_project.non_method_layers.values():
+            layer_si = QtGui.QStandardItem(non_method_layer.name)
+            layer_si.setEditable(False)
+            layer_si.setData(non_method_layer, QtCore.Qt.UserRole)
+            non_method_si.appendRow(layer_si)
+        self.tree_model.appendRow(non_method_si)
+
         self.layer_tree.setModel(self.tree_model)
         self.layer_tree.expandAll()
+        self.layer_tree.setExpanded(self.tree_model.indexFromItem(non_method_si), False)
+
         self.layer_tree.doubleClicked.connect(self.on_double_click_tree)
 
     # def load_alphabetical_tree(self):

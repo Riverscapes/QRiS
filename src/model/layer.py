@@ -31,3 +31,17 @@ def load_layers(curs: sqlite3.Cursor) -> dict:
         row['geom_type'],
         row['description']
     ) for row in curs.fetchall()}
+
+
+def load_non_method_layers(curs: sqlite3.Cursor) -> dict:
+
+    curs.execute('SELECT l.*FROM layers l LEFT JOIN method_layers m on l.id = m.layer_id WHERE m.method_id IS NULL AND l.is_lookup = 0')
+    return {row['id']: Layer(
+        row['id'],
+        row['fc_name'],
+        row['display_name'],
+        row['qml'],
+        row['is_lookup'] != 0,
+        row['geom_type'],
+        row['description']
+    ) for row in curs.fetchall()}
