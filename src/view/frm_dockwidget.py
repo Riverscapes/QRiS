@@ -221,9 +221,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def destroy_docwidget(self):
 
-        if self.analysis_doc_widget is not None:
-            self.analysis_doc_widget.close()
-            self.analysis_doc_widget = None
+        self.destroy_analysis_doc_widget()
 
         if self.slider_doc_widget is not None:
             self.slider_doc_widget.close()
@@ -245,6 +243,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # remove_db_item_layer(self.project, self.project)
         self.model = None
         self.qris_project = None
+
+    def destroy_analysis_doc_widget(self):
+        if self.analysis_doc_widget is not None:
+            self.analysis_doc_widget.close()
+            self.analysis_doc_widget = None
 
     @pyqtSlot(str, str)
     def qris_from_qrave(self, layer_path, layer_type):
@@ -467,6 +470,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.analysis_doc_widget is None:
             self.analysis_doc_widget = FrmAnalysisDocWidget(self)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
+            self.analysis_doc_widget.visibilityChanged.connect(self.destroy_analysis_doc_widget)
 
         self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
         self.analysis_doc_widget.show()

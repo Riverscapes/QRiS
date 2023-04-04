@@ -259,6 +259,16 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def closeEvent(self, event):
         if self.table.receivers(self.table.doubleClicked) > 0:
             self.table.doubleClicked.disconnect()
+        if self.cmdProperties.receivers(self.cmdProperties.clicked) > 0:
+            self.cmdProperties.clicked.disconnect()
+        if self.cboEvent.receivers(self.cboEvent.currentIndexChanged) > 0:
+            self.cboEvent.currentIndexChanged.disconnect()
+        if self.cboSampleFrame.receivers(self.cboSampleFrame.currentIndexChanged) > 0:
+            self.cboSampleFrame.currentIndexChanged.disconnect()
+        if self.cmdCalculate.receivers(self.cmdCalculate.clicked) > 0:
+            self.cmdCalculate.clicked.disconnect()
+        if self.rdoAll.receivers(self.rdoAll.toggled) > 0:
+            self.rdoAll.toggled.disconnect()
         QtWidgets.QDockWidget.closeEvent(self, event)
 
     def setupUi(self):
