@@ -1,8 +1,6 @@
 ---
-title: Masks
+title: Sampling Frames
 ---
-
-# Area of Interest Masks
 
 # Regular Masks
 
