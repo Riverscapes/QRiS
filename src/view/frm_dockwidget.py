@@ -371,6 +371,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
                 elif model_data.name == 'BRAT CIS Reaches':
                     self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', None, lambda: self.import_brat_results(model_data))
+                    # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
 
             else:
                 self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
@@ -555,6 +556,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         import_existing(import_source_path, self.project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
 
         #self.add_child_to_project_tree(parent_node, db_item, True)
+
+    def validate_brat_cis(self, db_item: DBItem):
+
+        QtWidgets.QMessageBox.information(self, "Validate BRAT", "Not implemented yet.")
+        # brat_layer = db_item.event_layer
 
     def raster_slider(self, db_item: DBItem):
 
