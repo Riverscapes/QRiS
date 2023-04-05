@@ -13,7 +13,7 @@ NAMES = ['qrave_toolbar_dev', 'qrave_toolbar', 'QRAVEPlugin-qrave_integration']
 
 class QRaveIntegration(QObject):
 
-    qrave_to_qris = pyqtSignal(str, str)
+    qrave_to_qris = pyqtSignal(str, str, dict)
 
     def __init__(self, parent):
         super(QRaveIntegration, self).__init__(parent)
@@ -62,8 +62,11 @@ class QRaveIntegration(QObject):
         """
 
         layer = item.data(Qt.UserRole).data
+        project_meta = data.project.meta
+        layer_meta = data.data.meta
+        out_meta = {'project_metadata': project_meta, 'layer_metadata': layer_meta}
         if layer.layer_type == 'raster':
             path = layer.layer_uri
         else:
             path = f'{layer.layer_uri}|layername={layer.layer_name}'
-        self.qrave_to_qris.emit(path, layer.layer_type)
+        self.qrave_to_qris.emit(path, layer.layer_type, out_meta)

@@ -249,13 +249,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.analysis_doc_widget.close()
             self.analysis_doc_widget = None
 
-    @pyqtSlot(str, str)
-    def qris_from_qrave(self, layer_path, layer_type):
+    @pyqtSlot(str, str, dict)
+    def qris_from_qrave(self, layer_path, layer_type, metadata):
 
         if layer_type == 'raster':
-            self.add_raster(self.context_node, True, layer_path)
+            self.add_raster(self.context_node, True, layer_path, meta=metadata)
         else:
-            self.add_context_vector(self.context_node, layer_path)
+            self.add_context_vector(self.context_node, layer_path, meta=metadata)
 
     def open_menu(self, position):
         """Connects signals as context menus to items in the tree"""
@@ -555,7 +555,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         attributes = {'ReachID': 'reach_id'}
         import_existing(import_source_path, self.project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
 
-        #self.add_child_to_project_tree(parent_node, db_item, True)
+        # self.add_child_to_project_tree(parent_node, db_item, True)
 
     def validate_brat_cis(self, db_item: DBItem):
 
@@ -686,7 +686,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if event_layer.layer.is_lookup is False:
                 self.add_child_to_project_tree(event_node, event_layer, add_to_map)
 
-    def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: str = None):
+    def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new base map to the project"""
 
         if import_source_path is None:
@@ -695,13 +695,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context)
+        if meta is not None:
+            frm.metadata = meta
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
             if frm.hillshade is not None:
                 self.add_child_to_project_tree(parent_node, frm.hillshade, frm.chkAddToMap.isChecked())
 
-    def add_context_vector(self, parent_node: QtGui.QStandardItem, import_source_path: str = None):
+    def add_context_vector(self, parent_node: QtGui.QStandardItem, import_source_path: str = None, meta: dict = None):
 
         if import_source_path is None:
             import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
@@ -709,6 +711,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmScratchVector(self, self.iface, self.project, import_source_path, None, None)
+        if meta is not None:
+            frm.metadata = meta
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())

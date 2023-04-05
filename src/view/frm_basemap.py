@@ -24,6 +24,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.raster = raster
         self.hillshade_raster_path = None
         self.hillshade = None
+        self.metadata = dict()
 
         super(FrmRaster, self).__init__(parent)
         self.setupUi()
@@ -167,14 +168,15 @@ class FrmRaster(QtWidgets.QDialog):
             try:
                 raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
 
-                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context)
+                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, self.metadata)
                 self.project.rasters[self.raster.id] = self.raster
                 if self.chkHillshade.isChecked() is True:
                     hillshade_metadata = {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}
                     self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
                     self.project.rasters[self.hillshade.id] = self.hillshade
-                    raster_metadata = {'hillsahde_raster': self.hillshade_project_path, 'hillshade_raster_id': self.hillshade.id}
-                    self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=raster_metadata)
+                    self.metadata['hillsahde_raster'] = self.hillshade_project_path
+                    self.metadata['hillshade_raster_id'] = self.hillshade.id
+                    self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=self.metadata)
 
             except Exception as ex:
                 if 'unique' in str(ex).lower():

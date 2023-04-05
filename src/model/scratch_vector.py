@@ -1,10 +1,11 @@
 import os
 import sqlite3
+import json
+
 from .db_item import DBItem
 from osgeo import ogr
 
 from qgis.core import QgsMessageLog, Qgis
-
 from ..QRiS.path_utilities import parse_posix_path
 
 SCRATCH_VECTOR_MACHINE_CODE = 'Scratch Vectors'
@@ -113,13 +114,14 @@ def load_scratch_vectors(curs: sqlite3.Cursor, project_file: str) -> dict:
     return scratch_vectors
 
 
-def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str) -> ScratchVector:
+def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: dict = None) -> ScratchVector:
 
     result = None
+    metadata_json = json.dumps(metadata) if metadata is not None else None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO scratch_vectors (name, fc_name, vector_type_id, description) VALUES (?, ?, ?, ?)', [name, fc_name, vector_type_id, description])
+            curs.execute('INSERT INTO scratch_vectors (name, fc_name, vector_type_id, description, metadata) VALUES (?, ?, ?, ?, ?)', [name, fc_name, vector_type_id, description, metadata_json])
             id = curs.lastrowid
             result = ScratchVector(id, name, fc_name, gpkg_path, vector_type_id, description)
             conn.commit()

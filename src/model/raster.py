@@ -74,7 +74,7 @@ def load_rasters(curs: sqlite3.Cursor) -> dict:
     ) for row in curs.fetchall()}
 
 
-def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str, is_context: bool, metadata=None) -> Raster:
+def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, description: str, is_context: bool, metadata: dict = None) -> Raster:
 
     metadata_str = json.dumps(metadata) if metadata else None
 

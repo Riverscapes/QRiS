@@ -21,6 +21,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.project = project
         self.vector_type_id = vector_type_id
         self.scratch_vector = scratch_vector
+        self.metadata = None
 
         super(FrmScratchVector, self).__init__(parent)
         self.setupUi()
@@ -125,7 +126,8 @@ class FrmScratchVector(QtWidgets.QDialog):
                     self.fc_name,
                     os.path.dirname(self.txtProjectPath.text()),
                     self.cboVectorType.currentData(QtCore.Qt.UserRole).id,
-                    self.txtDescription.toPlainText())
+                    self.txtDescription.toPlainText(),
+                    self.metadata)
                 self.project.scratch_vectors[self.scratch_vector.id] = self.scratch_vector
 
             except Exception as ex:
