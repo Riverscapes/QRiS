@@ -74,6 +74,9 @@ class FrmSlider(QtWidgets.QDockWidget):
         frm = FrmSliderScratchVector(self, self.project, raster_path, threshold_value, self.optAbove.isChecked())
         frm.exec_()
 
+        if frm.result() == QtWidgets.QDialog.Rejected:
+            return
+
         self.add_to_map = frm.chkAddToMap.isChecked()
         self.scratch_vector = frm.scratch_vector
 
