@@ -1,3 +1,3 @@
 ---
-title: Area of Interest (AOI) Masks
+title: Area of Interest (AOI)
 ---
