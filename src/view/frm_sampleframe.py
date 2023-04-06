@@ -61,10 +61,10 @@ class FrmSampleFrame(QtWidgets.QDialog):
                 self.sample_frame.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A sample frame with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Mask', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Sample Frame', str(ex))
                 return
         else:
             try:
@@ -72,10 +72,10 @@ class FrmSampleFrame(QtWidgets.QDialog):
                 self.qris_project.masks[self.sample_frame.id] = self.sample_frame
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A sample frame with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Mask', str(ex))
+                    QtWidgets.QMessageBox.warning(self, 'Error Saving Sample Frame', str(ex))
                 return
 
             try:
@@ -104,8 +104,8 @@ class FrmSampleFrame(QtWidgets.QDialog):
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
                 except Exception as ex:
-                    print('Error attempting to delete mask after the importing of features failed.')
-                QtWidgets.QMessageBox.warning(self, 'Error Importing Mask Features', str(ex))
+                    print('Error attempting to delete sample frame after the importing of features failed.')
+                QtWidgets.QMessageBox.warning(self, 'Error Importing Sample Frame Features', str(ex))
                 return
 
         super(FrmSampleFrame, self).accept()
@@ -160,4 +160,4 @@ class FrmSampleFrame(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'masks'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'sampling_frames'))

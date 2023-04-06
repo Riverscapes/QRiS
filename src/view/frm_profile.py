@@ -136,7 +136,7 @@ class FrmProfile(QtWidgets.QDialog):
         self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
 
         self.lblMaskClip = QtWidgets.QLabel()
-        self.lblMaskClip.setText('Clip to Mask')
+        self.lblMaskClip.setText('Clip to AOI')
         self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()

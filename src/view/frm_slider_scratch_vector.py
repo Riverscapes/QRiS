@@ -173,7 +173,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.dbsMinPolygonSize, 5, 1, 1, 1)
 
         # self.lblMask = QtWidgets.QLabel()
-        # self.lblMask.setText('Clip to Mask')
+        # self.lblMask.setText('Clip to AOI')
         # self.grid.addWidget(self.lblMask, 4, 0, 1, 1)
 
         # self.cboMask = QtWidgets.QComboBox()

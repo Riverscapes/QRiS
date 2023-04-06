@@ -140,7 +140,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         mask = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         if mask is None:
-            QtWidgets.QMessageBox.warning(self, 'Missing Mask', 'You must select a mask to continue.')
+            QtWidgets.QMessageBox.warning(self, 'Missing Sample Frame', 'You must select a sample frame to continue.')
             self.cboSampleFrame.setFocus()
             return
 

@@ -297,12 +297,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 elif model_data == MASK_MACHINE_CODE:
                     import_mask_menu = self.menu.addMenu('Import Existing')
-                    self.add_context_menu_item(import_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
+                    self.add_context_menu_item(import_mask_menu, 'Regular Sample Frames', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_mask_menu, 'Directional Sample Frames', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
 
                     add_mask_menu = self.menu.addMenu('Create New')
-                    self.add_context_menu_item(add_mask_menu, 'Regular Masks', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_CREATE))
-                    self.add_context_menu_item(add_mask_menu, 'Directional Masks', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
+                    self.add_context_menu_item(add_mask_menu, 'Regular Sample Frames', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_CREATE))
+                    self.add_context_menu_item(add_mask_menu, 'Directional Sample Frames', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
 
                 elif model_data == CATCHMENTS_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
@@ -720,9 +720,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_mask(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
         """Initiates adding a new mask"""
 
+        str_type = "AOI" if mask_type_id == AOI_MASK_TYPE_ID else "Sample Frame"
         import_source_path = None
         if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, 'Select a polygon dataset to import as a new mask.', QgsWkbTypes.GeometryType.PolygonGeometry)
+            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new {str_type}.', QgsWkbTypes.GeometryType.PolygonGeometry)
             if import_source_path is None:
                 return
 

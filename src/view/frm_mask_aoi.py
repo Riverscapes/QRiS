@@ -18,6 +18,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.qris_mask = mask
         self.import_source_path = import_source_path
         self.mask_type = mask_type
+        self.str_mask_type = "AOI" if self.mask_type.id == AOI_MASK_TYPE_ID else "Sample Frame"
 
         super(FrmMaskAOI, self).__init__(parent)
         self.setupUi()
@@ -73,10 +74,10 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 self.qris_mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Mask', str(ex))
+                    QtWidgets.QMessageBox.warning(self, f'Error Saving {self.str_mask_type}', str(ex))
                 return
         else:
             try:
@@ -84,10 +85,10 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 self.qris_project.masks[self.qris_mask.id] = self.qris_mask
             except Exception as ex:
                 if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A mask with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Mask', str(ex))
+                    QtWidgets.QMessageBox.warning(self, f'Error Saving {self.str_mask_type}', str(ex))
                 return
 
             if self.import_source_path is not None:
@@ -102,8 +103,8 @@ class FrmMaskAOI(QtWidgets.QDialog):
                     try:
                         self.qris_mask.delete(self.qris_project.project_file)
                     except Exception as ex:
-                        print('Error attempting to delete mask after the importing of features failed.')
-                    QtWidgets.QMessageBox.warning(self, 'Error Importing Mask Features', str(ex))
+                        print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
+                    QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(ex))
                     return
 
         super(FrmMaskAOI, self).accept()
@@ -135,7 +136,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
 
         self.lblMaskClip = QtWidgets.QLabel()
-        self.lblMaskClip.setText('Clip to Mask')
+        self.lblMaskClip.setText('Clip to AOI')
         self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
@@ -153,4 +154,5 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'masks'))
+        help = 'aoi' if self.mask_type == AOI_MASK_TYPE_ID else 'sampling_frame'
+        self.vert.addLayout(add_standard_form_buttons(self, help))
