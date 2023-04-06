@@ -180,4 +180,4 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'masks'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'cross_sections'))

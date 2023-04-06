@@ -53,4 +53,4 @@ class FrmCalculateAllMetrics(QtWidgets.QDialog):
 
         self.vert.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'metrics'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'analysis'))

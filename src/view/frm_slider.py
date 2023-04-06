@@ -10,7 +10,7 @@ from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
 from .double_slider import DoubleSlider
-
+from .utilities import add_help_button
 from ..QRiS.qris_map_manager import QRisMapManager
 
 
@@ -143,6 +143,8 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.grid.addWidget(self.slider, 3, 1, 1, 1)
 
         self.precision = QtWidgets
+
+        self.vert.addLayout(add_help_button(self, 'raster_slider'))
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export')

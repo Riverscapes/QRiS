@@ -120,4 +120,4 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         self.tree = QtWidgets.QTreeView()
         self.vert.addWidget(self.tree)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'masks'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'zonal_statistics'))

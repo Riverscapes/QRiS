@@ -65,4 +65,4 @@ class FrmOptions(QtWidgets.QDialog):
         self.cboArea = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboArea, 1, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'options'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'zonal_statistics'))

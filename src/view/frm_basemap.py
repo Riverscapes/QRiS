@@ -288,4 +288,5 @@ class FrmRaster(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.grid.addWidget(self.chkAddToMap, 7, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'basemaps'))
+        help_page = 'context_layers' if self.is_context else 'surfaces'
+        self.vert.addLayout(add_standard_form_buttons(self, help_page))

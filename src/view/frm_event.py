@@ -522,7 +522,8 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tab.addTab(self.txtDescription, 'Description')
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'events'))
+        help_text = 'events' if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'designs'
+        self.vert.addLayout(add_standard_form_buttons(self, help_text))
 
 
 def check_if_date_order_valid(start_date: DateSpec, end_date: DateSpec):

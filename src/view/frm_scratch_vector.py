@@ -213,4 +213,4 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'basemaps'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'context_layers'))
