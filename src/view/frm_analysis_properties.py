@@ -9,6 +9,7 @@ from ..model.project import Project
 from ..model.mask import REGULAR_MASK_TYPE_ID
 from ..model.analysis_metric import AnalysisMetric
 from .utilities import validate_name, add_standard_form_buttons
+from ..QRiS.settings import CONSTANTS
 
 
 class FrmAnalysisProperties(QtWidgets.QDialog):
@@ -51,8 +52,12 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             cboStatus.setCurrentIndex(level_id)
             self.metricsTable.setCellWidget(row, 1, cboStatus)
 
-        self.metricsTable.setColumnWidth(0, self.metricsTable.width() / 2)
-        # self.metricsTable.setColumnWidth(1, self.metricsTable.width() / 2)
+            cmdHelp = QtWidgets.QPushButton()
+            cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
+            cmdHelp.setToolTip('Metric Definition')
+            name = metrics[row].name
+            cmdHelp.clicked.connect(self.help(name))
+            self.metricsTable.setCellWidget(row, 2, cmdHelp)
 
         # https://wiki.qt.io/How_to_Use_QTableWidget
         # m_pTableWidget -> setEditTriggers(QAbstractItemView: : NoEditTriggers);
@@ -75,6 +80,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboSampleFrame.setEnabled(False)
         else:
             self.setWindowTitle('Create New Analysis')
+
+    def help(self, metric_name):
+
+        return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics.html#{metric_name.replace(' ', '-')}"))
 
     def setupUi(self):
 
@@ -102,13 +111,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
 
-        self.metricsTable = QtWidgets.QTableWidget(0, 2)
+        self.metricsTable = QtWidgets.QTableWidget(0, 3)
         self.metricsTable.resize(500, 500)
         self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.metricsTable.resizeColumnsToContents()
         self.tabWidget.addTab(self.metricsTable, 'Metrics and Indicators')
-        self.metricsTable.horizontalHeader().setStretchLastSection(True)
-        self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status'])
+        # self.metricsTable.horizontalHeader().setStretchLastSection(True)
+        self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status', None])
+        header = self.metricsTable.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
+        header.resizeSection(2, 10)
 
         self.metricsTable.verticalHeader().setVisible(False)
         self.metricsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
