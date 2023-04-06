@@ -246,7 +246,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def destroy_analysis_doc_widget(self):
         if self.analysis_doc_widget is not None:
-            self.analysis_doc_widget.close()
+            # self.analysis_doc_widget.close()
+            self.iface.removeDockWidget(self.analysis_doc_widget)
             self.analysis_doc_widget = None
 
     @pyqtSlot(str, str, dict)

@@ -253,9 +253,10 @@ class QRiSToolbar:
 
     def close_project(self):
         if self.dockwidget is not None:
-            self.dockwidget.destroy_docwidget()
+            # self.dockwidget.destroy_docwidget()
             self.dockwidget.close()
-            self.dockwidget = None
+            self.iface.removeDockWidget(self.dockwidget)
+            # self.dockwidget = None
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed.
@@ -264,6 +265,7 @@ class QRiSToolbar:
 
         # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
+        self.close_project()
 
         # remove this statement if dockwidget is to remain
         # for reuse if plugin is reopened
