@@ -5,6 +5,7 @@ from textwrap import dedent
 
 from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
 from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.utils import iface
 
 from ..QRiS.settings import Settings, CONSTANTS
 
@@ -160,6 +161,17 @@ class RiverscapesMapManager():
             parent_group.removeChildNode(layer)
             self.remove_empty_groups(parent_group)
 
+    def test_for_zoom(self) -> bool:
+        """Returns True if the map should zoom to the new layer."""
+
+        # get number of layers in the invisible root node do this before we add new layers to the map
+        layers = QgsProject.instance().layerTreeRoot().findLayers()
+        layer_count = len(layers)
+        count_basemaps = len([layer for layer in layers if layer.customProperty('Basemaps') is not None])
+        zoom = True if layer_count - count_basemaps == 0 else False
+
+        return zoom
+
     def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified DBItem and adds it to the map.
@@ -167,6 +179,8 @@ class RiverscapesMapManager():
             project_key: The project key
                 db_item: The DBItem to create a layer for
                 symbology: The symbology to apply to the layer. File name only. No folder or extension."""
+
+        zoom = self.test_for_zoom()
 
         layer = self.get_db_item_layer(project_key, db_item, None)
         if layer is not None:
@@ -197,6 +211,10 @@ class RiverscapesMapManager():
         tree_layer_node = parent_group.addLayer(layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, db_item))
 
+        if zoom:
+            iface.setActiveLayer(layer)
+            iface.zoomToActiveLayer()
+
         return layer
 
     def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: str = None, driver: str = 'ogr') -> QgsVectorLayer:
@@ -206,6 +224,8 @@ class RiverscapesMapManager():
             project_key: The project key
                 db_item: The DBItem to create a layer for
                 symbology: The symbology to apply to the layer. File name only. No folder or extension."""
+
+        zoom = self.test_for_zoom()
 
         layer = self.get_machine_code_layer(project_key, machine_code, None)
         if layer is not None:
@@ -224,6 +244,10 @@ class RiverscapesMapManager():
         # Finally add the new layer here
         tree_layer_node = parent_group.addLayer(layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
+
+        if zoom:
+            iface.setActiveLayer(layer)
+            iface.zoomToActiveLayer()
 
         return layer
 
@@ -261,6 +285,8 @@ class RiverscapesMapManager():
 
     def create_db_item_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, symbology_key: str = None):
 
+        zoom = self.test_for_zoom()
+
         raster_layer = QgsRasterLayer(raster_path, raster.name)
         QgsProject.instance().addMapLayer(raster_layer, False)
         if symbology_key is not None:
@@ -270,9 +296,15 @@ class RiverscapesMapManager():
         tree_layer_node = parent_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, raster))
 
+        if zoom:
+            iface.setActiveLayer(raster_layer)
+            iface.zoomToActiveLayer()
+
         return raster_layer
 
     def create_machine_code_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, machine_code, symbology_key: str = None):
+
+        zoom = self.test_for_zoom()
 
         raster_layer = QgsRasterLayer(raster_path, raster.name)
         QgsProject.instance().addMapLayer(raster_layer, False)
@@ -282,6 +314,10 @@ class RiverscapesMapManager():
             raster_layer.loadNamedStyle(qml)
         tree_layer_node = parent_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
+
+        if zoom:
+            iface.setActiveLayer(raster_layer)
+            iface.zoomToActiveLayer()
 
         return raster_layer
 
