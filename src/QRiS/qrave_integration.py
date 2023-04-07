@@ -35,6 +35,12 @@ class QRaveIntegration(QObject):
             self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
             self.symbology_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS'))
 
+            self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
+            self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
+            self.QRaveBaseMap = self.basemaps_module.QRaveBaseMap
+            self.BaseMaps = self.basemaps_module.BaseMaps()
+            self.BaseMaps.load()
+
             if self.plugin_instance.dockwidget:
                 # Check if the signal is already connected
                 if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:

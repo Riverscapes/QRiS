@@ -318,6 +318,8 @@ class QRiSToolbar:
             if self.dockwidget is None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = QRiSDockWidget(self.iface)
+                if self.qrave.name is not None:
+                    self.dockwidget.qrave = self.qrave
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)

@@ -89,13 +89,14 @@ class RiverscapesMapManager():
 
         return None
 
-    def get_group_layer(self, project_key: str, machine_code, group_label, parent: QgsLayerTreeGroup = None, add_missing: bool = False) -> QgsLayerTreeGroup:
+    def get_group_layer(self, project_key: str, machine_code, group_label, parent: QgsLayerTreeGroup = None, add_missing: bool = False, add_to_bottom=False) -> QgsLayerTreeGroup:
         """
         Finds a group layer directly underneath "parent" with the specified
         machine code as the custom property. No string matching with group
         label is performed.
 
         When add_missing is True, the group will be created if it can't be found.
+        When add_to_bottom is True, the group will be added to the bottom of the parent group.
         """
 
         if parent is None:
@@ -112,31 +113,18 @@ class RiverscapesMapManager():
 
         if add_missing:
 
-            target_index = 0
-            for group_layer_machine_code in self.layer_order:
-                if group_layer_machine_code == machine_code:
-                    break
-                group_index = self.get_group_layer(project_key, group_layer_machine_code, None, parent, False)
-                if group_index is not None:
-                    target_index += 1
+            if add_to_bottom:
+                target_index = len(parent.children())
+            else:
+                target_index = 0
+                for group_layer_machine_code in self.layer_order:
+                    if group_layer_machine_code == machine_code:
+                        break
+                    group_index = self.get_group_layer(project_key, group_layer_machine_code, None, parent, False)
+                    if group_index is not None:
+                        target_index += 1
 
-            # if target_index == 0:
-            #     group_layer = parent.addGroup(group_label)
-            # else:
             group_layer = parent.insertGroup(target_index, group_label)
-
-            # # Find the basemaps group layer. If it is already in the map then
-            # # insert the new group layer ABOVE it rather than just add it (which
-            # # will cause it to get added below the basemaps).
-            # basemap_group_index = self.get_group_layer(project_key, BASEMAP_MACHINE_CODE, 'Basemaps', parent, False)
-
-            # if basemap_group_index is None:
-            #     # No basemaps under this parent. Add the new group. It will get added last.
-            #     group_layer = parent.addGroup(group_label)
-            # else:
-            #     # Basemap group node exists. Add the new group as penultimate group.
-            #     group_layer = parent.insertGroup(len(parent.children()) - 1, group_label)
-
             group_layer.setCustomProperty(self.product_key, target_custom_property)
             group_layer.setExpanded(False)
             group_layer.setExpanded(True)
@@ -294,6 +282,17 @@ class RiverscapesMapManager():
             raster_layer.loadNamedStyle(qml)
         tree_layer_node = parent_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
+
+        return raster_layer
+
+    def create_basemap_raster_layer(self, basemap_name: str, basemap_path: str, provider: str):
+
+        basemap_group = self.get_group_layer('Basemaps', 'Basemaps', 'Riverscapes Basemaps', add_missing=True, add_to_bottom=True)
+        raster_layer = QgsRasterLayer(basemap_path, basemap_name, provider)
+        QgsProject.instance().addMapLayer(raster_layer, False)
+
+        tree_layer_node = basemap_group.addLayer(raster_layer)
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property('Basemaps', basemap_name))
 
         return raster_layer
 

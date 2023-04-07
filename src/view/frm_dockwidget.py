@@ -25,11 +25,12 @@
 import os
 import requests
 from osgeo import ogr
+
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
-from PyQt5.QtCore import pyqtSlot, QVariant, QDate
+from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
@@ -67,6 +68,7 @@ from .frm_sampleframe import FrmSampleFrame
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
+from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
@@ -120,6 +122,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.qris_project = None
         self.map_manager = None
+        self.basemap_manager = None
         self.menu = QtWidgets.QMenu()
 
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -137,6 +140,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
+
+        self.qrave = None
 
     def build_tree_view(self, project_file, new_item=None):
         """
@@ -185,33 +190,52 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        # basemaps_node = self.add_child_to_project_tree(project_node, BASEMAP_MACHINE_CODE)
-        # [self.add_child_to_project_tree(basemaps_node, item) for item in self.project.basemaps().values()]
-
         self.treeView.expandAll()
+        if self.qrave is not None:
+            if self.qrave.BaseMaps is not None:
+                region = self.settings.getValue('basemapRegion')
+                self.model.appendRow(self.qrave.BaseMaps.regions[region])
+                self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
+                self.basemap_manager = RiverscapesMapManager('Basemaps')
+                self.treeView.expanded.connect(self.expand_tree_item)
+
         return
 
+    def expand_tree_item(self, idx: QModelIndex):
+        item = self.model.itemFromIndex(idx)
+        item_data = item.data(QtCore.Qt.UserRole)
+        if isinstance(item_data, self.qrave.ProjectTreeData):
+            if item_data and item_data.data and isinstance(item_data.data, self.qrave.QRaveBaseMap):
+                item_data.data.load_layers()
+
     def setup_blank_map(self):
+
+        if self.qrave is not None:
+            if self.qrave.BaseMaps is not None:
+                # add the first basemap to the basemap manager
+                region = self.settings.getValue('basemapRegion')
+                data = self.qrave.BaseMaps.regions[region].child(0).child(0).data(QtCore.Qt.UserRole)
+                self.add_basemap_to_map(data)
         # TODO placeholder until this gets moved into riverscapes map manager as a proper basemap
         service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
         service_uri = "type=xyz&zmin=0&zmax=21&url=https://" + requests.utils.quote(service_url)
-        project_group = self.map_manager.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        # project_group = self.map_manager.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
 
-        rlayer = QgsRasterLayer(service_uri, 'Google Satellite', 'wms')
-        if rlayer.isValid():
-            baselayer_group = project_group.addGroup("QRiS Base Maps")
-            QgsProject.instance().addMapLayer(rlayer, False)
-            baselayer_group.addLayer(rlayer)
-            baselayer_group.setCustomProperty(self.map_manager.product_key, f'{self.map_manager.product_key}::{self.project.map_guid}::{BASEMAP_MACHINE_CODE}')
-            canvas = self.iface.mapCanvas()
-            canvas.refreshAllLayers()
-            canvas.refresh()
-            extent = QgsRectangle(-14746044, 1945739, -6403040, 7205585)  # CONUS
-            canvas.setExtent(extent)
-            canvas.refresh()
-        else:
-            QgsMessageLog.logMessage(
-                'Unable to add basemap to empty project.', 'QRiS', Qgis.Warning)
+        # rlayer = QgsRasterLayer(service_uri, 'Google Satellite', 'wms')
+        # if rlayer.isValid():
+        #     baselayer_group = project_group.addGroup("QRiS Base Maps")
+        #     QgsProject.instance().addMapLayer(rlayer, False)
+        #     baselayer_group.addLayer(rlayer)
+        #     baselayer_group.setCustomProperty(self.map_manager.product_key, f'{self.map_manager.product_key}::{self.project.map_guid}::{BASEMAP_MACHINE_CODE}')
+        #     canvas = self.iface.mapCanvas()
+        #     canvas.refreshAllLayers()
+        #     canvas.refresh()
+        #     extent = QgsRectangle(-14746044, 1945739, -6403040, 7205585)  # CONUS
+        #     canvas.setExtent(extent)
+        #     canvas.refresh()
+        # else:
+        #     QgsMessageLog.logMessage(
+        #         'Unable to add basemap to empty project.', 'QRiS', Qgis.Warning)
 
     def closeEvent(self, event):
 
@@ -289,9 +313,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif model_data == SURFACE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
 
-                # elif model_data == BASEMAP_MACHINE_CODE:
-                #     self.add_context_menu_item(self.menu, 'Import Existing Basemap Dataset', 'new', lambda: self.add_raster(model_item, RASTER_TYPE_BASEMAP))
-
                 elif model_data == AOI_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
                     self.add_context_menu_item(self.menu, 'Create New AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
@@ -322,60 +343,63 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
         else:
-            if isinstance(model_data, DBItem):
-                if isinstance(model_data, Analysis):
-                    self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
+            if self.qrave is not None and isinstance(model_data, self.qrave.ProjectTreeData):
+                self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_basemap_to_map(model_data))
+            else:
+                if isinstance(model_data, DBItem):
+                    if isinstance(model_data, Analysis):
+                        self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
+                    else:
+                        self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
-                    self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
-            else:
-                raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
+                    raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-            if isinstance(model_data, Project) \
-                    or isinstance(model_data, Event) \
-                    or isinstance(model_data, Raster) \
-                    or isinstance(model_data, Mask) \
-                    or isinstance(model_data, Profile) \
-                    or isinstance(model_data, CrossSections) \
-                    or isinstance(model_data, PourPoint) \
-                    or isinstance(model_data, ScratchVector) \
-                    or isinstance(model_data, Analysis):
-                self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
+                if isinstance(model_data, Project) \
+                        or isinstance(model_data, Event) \
+                        or isinstance(model_data, Raster) \
+                        or isinstance(model_data, Mask) \
+                        or isinstance(model_data, Profile) \
+                        or isinstance(model_data, CrossSections) \
+                        or isinstance(model_data, PourPoint) \
+                        or isinstance(model_data, ScratchVector) \
+                        or isinstance(model_data, Analysis):
+                    self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
 
-            if isinstance(model_data, Mask):
-                self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
-                if model_data.mask_type.id == AOI_MASK_TYPE_ID:
+                if isinstance(model_data, Mask):
+                    self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
+                    if model_data.mask_type.id == AOI_MASK_TYPE_ID:
+                        self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                        self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
+
+                if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
+                    self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
+
+                if isinstance(model_data, ScratchVector):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                    if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
+                        self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
+
+                if isinstance(model_data, Profile):
+                    self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
+                    self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
+
+                if isinstance(model_data, CrossSections):
+                    self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
 
-            if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
-                self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
+                if isinstance(model_data, Project):
+                    self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
+                    self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
 
-            if isinstance(model_data, ScratchVector):
-                self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
-                    self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
+                if isinstance(model_data, EventLayer):
+                    if model_data.name == 'BRAT CIS (Capacity Inference System)':
+                        self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
+                    elif model_data.name == 'BRAT CIS Reaches':
+                        self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', None, lambda: self.import_brat_results(model_data))
+                        # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
 
-            if isinstance(model_data, Profile):
-                self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
-                self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
-
-            if isinstance(model_data, CrossSections):
-                self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
-                self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
-
-            if isinstance(model_data, Project):
-                self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
-                self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
-
-            if isinstance(model_data, EventLayer):
-                if model_data.name == 'BRAT CIS (Capacity Inference System)':
-                    self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
-                elif model_data.name == 'BRAT CIS Reaches':
-                    self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', None, lambda: self.import_brat_results(model_data))
-                    # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
-
-            else:
-                self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
+                else:
+                    self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -420,6 +444,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_profile_layer(db_item)
         elif isinstance(db_item, CrossSections):
             self.map_manager.build_cross_section_layer(db_item)
+
+    def add_basemap_to_map(self, model_item):
+
+        basemap_name = model_item.data.label
+        basemap_uri = model_item.data.layer_uri
+        basemap_provider = 'wms'  # model_item.data.tile_type
+        self.basemap_manager.create_basemap_raster_layer(basemap_name, basemap_uri, basemap_provider)
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
         """Add all children of a group node to the map ToC
