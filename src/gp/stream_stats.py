@@ -89,7 +89,7 @@ class StreamStats(QgsTask):
         finished is always called from the main thread, so it's safe to do GUI operations and raise Python exceptions here.
         result is the return value from self.run.
         """
-        if result:
+        if result is True:
             QgsMessageLog.logMessage(
                 'Stream Stats API call "{name}" completed\n'
                 'RandomTotal: {total} (with {iterations} '
@@ -98,6 +98,7 @@ class StreamStats(QgsTask):
                     total=self.total,
                     iterations=self.iterations),
                 MESSAGE_CATEGORY, Qgis.Success)
+            self.stream_stats_successfully_complete.emit(self.pour_point, self.add_to_map)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
@@ -112,9 +113,7 @@ class StreamStats(QgsTask):
                         name=self.description(),
                         exception=self.exception),
                     MESSAGE_CATEGORY, Qgis.Critical)
-                raise self.exception
-
-        self.stream_stats_successfully_complete.emit(self.pour_point, self.add_to_map)
+                # raise self.exception
 
     def cancel(self):
         QgsMessageLog.logMessage(

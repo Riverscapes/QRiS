@@ -109,6 +109,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         self.chkFlowStats = QtWidgets.QCheckBox()
         self.chkFlowStats.setText('Calculate Flow Statistics (additional 60 secs)')
+        self.chkFlowStats.setEnabled(False)
         self.vert.addWidget(self.chkFlowStats)
 
         self.tabWidget = QtWidgets.QTabWidget()
