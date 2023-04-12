@@ -43,7 +43,7 @@ from .view.frm_about import FrmAboutDialog
 
 from .model.project import apply_db_migrations
 from .QRiS.qrave_integration import QRaveIntegration
-from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
+from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
 
 from .gp.watershed_attributes import WatershedAttributes
 
@@ -303,44 +303,50 @@ class QRiSToolbar:
     def run(self):
         """Run method that loads and starts the plugin"""
 
+        self.prepare_widget()
+
+        # Only attempt to load the last used project for developers when the special text file is present.
+        load_last_project_key = os.path.join(os.path.dirname(__file__), '..', 'load_last_project.txt')
+        if os.path.isfile(load_last_project_key):
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            last_project_folder = settings.value(LAST_PROJECT_FOLDER)
+            if last_project_folder is not None and os.path.isdir(last_project_folder):
+                project_file = os.path.join(last_project_folder, f'{os.path.basename(last_project_folder)}.gpkg')
+                if os.path.isfile(project_file):
+                    self.open_qris_project(project_file)
+
+    def prepare_widget(self):
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-            # Load a version of the QRave code we can use for cross-plugin integration
-            self.qrave = QRaveIntegration(self.toolbar)
-            if self.qrave.name is not None:
-                self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
-            else:
-                QgsMessageLog.logMessage('Unable to load Required QRave plugin. Some functions in QRiS may be disabled, including layer symbology.', 'QRiS', Qgis.Critical)
-                self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load QRave plugin.', level=Qgis.Critical, duration=5)
-                self.iface.mainWindow().repaint()
+        if self.dockwidget is not None:
+            self.close_project()
 
-            if self.dockwidget is None:
-                # Create the dockwidget (after translation) and keep reference
-                self.dockwidget = QRiSDockWidget(self.iface)
-                if self.qrave.name is not None:
-                    self.dockwidget.qrave = self.qrave
+        # Load a version of the QRave code we can use for cross-plugin integration
+        # if self.qrave is None:
+        self.qrave = QRaveIntegration(self.toolbar)
+        if self.qrave.name is not None:
+            self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
+        else:
+            QgsMessageLog.logMessage('Unable to load Required QRave plugin. Some functions in QRiS may be disabled, including layer symbology.', 'QRiS', Qgis.Critical)
+            self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load QRave plugin.', level=Qgis.Critical, duration=5)
+            self.iface.mainWindow().repaint()
 
-            # connect to provide cleanup on closing of dockwidget
-            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+        # Create the dockwidget (after translation) and keep reference
+        self.dockwidget = QRiSDockWidget(self.iface)
+        if self.qrave.name is not None:
+            self.dockwidget.qrave = self.qrave
 
-            # show the dockwidget
-            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
-            self.dockwidget.show()
+        # connect to provide cleanup on closing of dockwidget
+        self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
-            # Only attempt to load the last used project for developers when the special text file is present.
-            load_last_project_key = os.path.join(os.path.dirname(__file__), '..', 'load_last_project.txt')
-            if os.path.isfile(load_last_project_key):
-                settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-                last_project_folder = settings.value(LAST_PROJECT_FOLDER)
-                if last_project_folder is not None and os.path.isdir(last_project_folder):
-                    project_file = os.path.join(last_project_folder, f'{os.path.basename(last_project_folder)}.gpkg')
-                    if os.path.isfile(project_file):
-                        self.open_qris_project(project_file)
+        # show the dockwidget
+        self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
+        self.dockwidget.show()
 
     def toggle_widget(self, forceOn=False):
 
-        self.run()
+        self.prepare_widget()
         if self.dockwidget.isHidden() and forceOn is True:
             self.dockwidget.show()
 
@@ -421,6 +427,7 @@ class QRiSToolbar:
         settings.sync()
 
         # Apply database migrations to ensure latest schema
+        db_path = parse_posix_path(db_path)
         self.update_database(db_path)
 
         self.toggle_widget(forceOn=True)
