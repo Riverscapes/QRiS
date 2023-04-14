@@ -547,7 +547,8 @@ class QRiSToolbar:
         try:
             apply_db_migrations(db_path)
         except Exception as ex:
-            QtWidgets.QMessageBox.warning(self, 'Error Appling QRiS Database Migrations', str(ex))
+            QtWidgets.QMessageBox.warning(None, 'QRiS Database Migration Error', 'Error Appling QRiS Database Migrations check the QGIS log for details.')
+            QgsMessageLog.logMessage(f'Error Appling QRiS Database Migrations: {str(ex)}', 'QRiS', Qgis.Critical)
 
     def configure_watershed_attribute_menu(self):
 

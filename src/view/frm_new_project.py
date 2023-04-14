@@ -61,7 +61,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.setupUi()
 
         # Save the original folder that the user selected so that it can be reused
-        self.root_path = root_project_folder
+        self.root_path = parse_posix_path(root_project_folder)
         self.txtPath.setText(root_project_folder)
         self.project = project
 

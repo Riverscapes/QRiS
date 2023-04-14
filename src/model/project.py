@@ -135,7 +135,9 @@ def apply_db_migrations(db_path: str):
                         curs.executescript(sql_commands)
                     curs.execute('INSERT INTO migrations (file_name) VALUES (?)', [migration_file])
                 except Exception as ex:
-                    raise Exception('Error applying migration from file {}'.format(os.path.basename(migration_path)), inner=ex)
+                    conn.rollback()
+                    raise ex
+                    # raise Exception('Error applying migration from file {}'.format(os.path.basename(migration_path)), inner=ex)
 
         conn.commit()
     except Exception as ex:

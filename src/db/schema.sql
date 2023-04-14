@@ -5,6 +5,11 @@ CREATE TABLE migrations (
   created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO migrations (file_name) VALUES ('001_initial_schema.sql');
+INSERT INTO migrations (file_name) VALUES ('002_raster_change.sql');
+INSERT INTO migrations (file_name) VALUES ('003_add_project_id_to_rasters.sql');
+INSERT INTO migrations (file_name) VALUES ('004_metadata.sql');
+
 -- LOOKUP TABLES
 CREATE TABLE protocols (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
