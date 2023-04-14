@@ -93,3 +93,15 @@ def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, descr
             raise ex
 
     return result
+
+
+def get_raster_symbology(db_path: str, raster_type_id: int) -> dict:
+
+    with sqlite3.connect(db_path) as conn:
+        curs = conn.cursor()
+        curs.execute('SELECT symbology FROM lkp_raster_types WHERE id = ?', [raster_type_id, ])
+        result = curs.fetchone()
+        if result:
+            return result[0]
+        else:
+            return None

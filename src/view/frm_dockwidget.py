@@ -417,6 +417,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_mask_layer(db_item)
         elif isinstance(db_item, Raster):
             self.map_manager.build_raster_layer(db_item)
+            # check if raster is a dem, and if there is an associated hillshade in the metadata. if so, add both to map
+            if db_item.raster_type_id == 4:
+                if db_item.metadata is not None and 'hillshade_raster_id' in db_item.metadata:
+                    self.map_manager.build_raster_layer(self.project.rasters[db_item.metadata['hillshade_raster_id']])
         elif isinstance(db_item, Event):
             [self.map_manager.build_event_single_layer(db_item, layer) for layer in db_item.event_layers]
             [self.map_manager.build_raster_layer(raster) for raster in db_item.rasters]

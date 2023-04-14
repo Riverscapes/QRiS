@@ -9,7 +9,7 @@ from ..model.mask import Mask, MASK_MACHINE_CODE, AOI_MACHINE_CODE, AOI_MASK_TYP
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
-from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE
+from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE, get_raster_symbology
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, Event
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
@@ -217,6 +217,9 @@ class QRisMapManager(RiverscapesMapManager):
 
         raster_path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
         symbology = None
+        symbology_key = get_raster_symbology(self.project.project_file, raster.raster_type_id)
+        if symbology_key is not None:
+            symbology = parse_posix_path(os.path.join(os.path.dirname(self.symbology_folder), symbology_key))
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster, symbology)
 
         return raster_layer

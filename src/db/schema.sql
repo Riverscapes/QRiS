@@ -9,6 +9,7 @@ INSERT INTO migrations (file_name) VALUES ('001_initial_schema.sql');
 INSERT INTO migrations (file_name) VALUES ('002_raster_change.sql');
 INSERT INTO migrations (file_name) VALUES ('003_add_project_id_to_rasters.sql');
 INSERT INTO migrations (file_name) VALUES ('004_metadata.sql');
+INSERT INTO migrations (file_name) VALUES ('005_raster_symbology.sql');
 
 -- LOOKUP TABLES
 CREATE TABLE protocols (
@@ -201,17 +202,18 @@ CREATE TABLE lkp_context_layer_types (
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     metadata TEXT,
+    symbology TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_context_layer_types (id, name) VALUES (1, 'Aerial imagery');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (2, 'DEM');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (3, 'Detrended DEM');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (4, 'Geomorphic Change Detection (GCD)');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (5, 'Hillshade');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (6, 'Slope Raster');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (7, 'VBET Evidence');
-INSERT INTO lkp_context_layer_types (id, name) VALUES (8, 'Other');
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (1, 'Aerial imagery', NULL);
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (2, 'DEM', 'Shared/dem.qml');
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (3, 'Detrended DEM', NULL);
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (4, 'Geomorphic Change Detection (GCD)',NULL);
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (5, 'Hillshade', 'Shared/Hillshade.qml');
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (6, 'Slope Raster','Shared/slope.qml');
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (7, 'VBET Evidence','VBET/vbetLikelihood.qml');
+INSERT INTO lkp_context_layer_types (id, name, symbology) VALUES (8, 'Other', NULL);
 
 -- so, can these be vector and raster? does it matter?
 CREATE TABLE context_layers (
@@ -295,15 +297,16 @@ CREATE TABLE lkp_raster_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
     description TEXT,
+    symbology TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO lkp_raster_types (id, name) VALUES (1, 'Other');
-INSERT INTO lkp_raster_types (id, name) VALUES (2, 'Basemap');
-INSERT INTO lkp_raster_types (id, name) VALUES (3, 'Detrended Surface');
-INSERT INTO lkp_raster_types (id, name) VALUES (4, 'Digital Elevation Model (DEM)');
-INSERT INTO lkp_raster_types (id, name) VALUES (5, 'Valley Bottom Evidence');
-INSERT INTO lkp_raster_types (id, name) VALUES (6, 'Hillshade');
+INSERT INTO lkp_raster_types (id, name, symbology) VALUES (1, 'Other', NULL);
+INSERT INTO lkp_raster_types (id, name, symbology) VALUES (2, 'Basemap', NULL);
+INSERT INTO lkp_raster_types (id, name, symbology) VALUES (3, 'Detrended Surface', NULL);
+INSERT INTO lkp_raster_types (id, name, symbology) VALUES (4, 'Digital Elevation Model (DEM)', 'Shared/dem.qml');
+INSERT INTO lkp_raster_types (id, name, symbology) VALUES (5, 'Valley Bottom Evidence', 'VBET/vbetLikelihood.qml');
+INSERT INTO lkp_raster_types (id, name, symbology) VALUES (6, 'Hillshade', 'Shared/Hillshade.qml');
 
 
 CREATE TABLE rasters (
