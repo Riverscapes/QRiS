@@ -367,6 +367,7 @@ CREATE TABLE masks (
 
 -- AOI features refer to the AOI mask that they belong to
 ALTER TABLE aoi_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
+ALTER TABLE aoi_features ADD COLUMN metadata TEXT;
 
 -- Regular masks refer to the mask that they belong to and have a display label
 ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
@@ -531,7 +532,7 @@ ALTER TABLE dam_crests ADD COLUMN structure_source_id INTEGER REFERENCES lkp_str
 ALTER TABLE dam_crests ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
 ALTER TABLE dam_crests ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
 ALTER TABLE dam_crests ADD description TEXT;
-
+ALTER TABLE dam_crests ADD COLUMN metadata TEXT;
 
 -- dam points
 ALTER TABLE dams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -541,6 +542,7 @@ ALTER TABLE dams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_
 ALTER TABLE dams ADD COLUMN length NUMERIC;
 ALTER TABLE dams ADD COLUMN height NUMERIC;
 ALTER TABLE dams ADD description TEXT;
+ALTER TABLE dams ADD COLUMN metadata TEXT;
 
 -- jam points
 ALTER TABLE jams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -551,6 +553,7 @@ ALTER TABLE jams ADD COLUMN width NUMERIC;
 ALTER TABLE jams ADD COLUMN height NUMERIC;
 ALTER TABLE jams ADD COLUMN wood_count INTEGER;
 ALTER TABLE jams ADD description TEXT;
+ALTER TABLE jams ADD COLUMN metadata TEXT;
 
 -- thalwegs
 CREATE TABLE lkp_thalweg_types (
@@ -581,11 +584,13 @@ INSERT INTO lkp_active_extent_types (id, name) VALUES (2, 'Inactive');
 ALTER TABLE active_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE active_extents ADD COLUMN type_id INTEGER REFERENCES lkp_active_extent_types(id);
 ALTER TABLE active_extents ADD description TEXT;
-
+ALTER TABLE active_extents ADD metadata TEXT;
 
 -- centerlines
 ALTER TABLE centerlines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE centerlines ADD COLUMN metadata TEXT;
 
+-- inundation
 CREATE TABLE lkp_inundation_extent_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
@@ -597,17 +602,14 @@ INSERT INTO lkp_inundation_extent_types (id, name) VALUES (1, 'Free Flowing');
 INSERT INTO lkp_inundation_extent_types (id, name) VALUES (2, 'Ponded');
 INSERT INTO lkp_inundation_extent_types (id, name) VALUES (3, 'Overflow');
 
-
--- inundation
 ALTER TABLE inundation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE inundation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_inundation_extent_types(id);
 ALTER TABLE inundation_extents ADD description TEXT;
-
-
+ALTER TABLE inundation_extents ADD metadata TEXT;
 
 -- valley bottoms
 ALTER TABLE valley_bottoms ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-
+ALTER TABLE valley_bottoms ADD COLUMN metadata TEXT;
 
 -- junctions
 CREATE TABLE lkp_junction_types (
@@ -620,10 +622,9 @@ CREATE TABLE lkp_junction_types (
 INSERT INTO lkp_junction_types (id, name) VALUES (1, 'Confluence');
 INSERT INTO lkp_junction_types (id, name) VALUES (2, 'Diffluence');
 
-
 ALTER TABLE junctions ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE junctions ADD COLUMN type_id INTEGER REFERENCES lkp_junction_types(id) ON DELETE CASCADE;
-
+ALTER TABLE junctions ADD COLUMN metadata TEXT;
 
 -- geomorphic units
 CREATE TABLE lkp_geomorphic_unit_types (
@@ -640,10 +641,13 @@ INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (4, 'Pond');
 
 ALTER TABLE geomorphic_units ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE geomorphic_units ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
-
+ALTER TABLE geomorphic_units ADD COLUMN metadata TEXT;
 
 ALTER TABLE geomorphic_unit_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE geomorphic_unit_extents ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
+ALTER TABLE geomorphic_unit_extents ADD COLUMN metadata TEXT;
+
+ALTER TABLE geomorphic_units_tier3 ADD COLUMN metadata TEXT;
 
 -- cem phases
 CREATE TABLE lkp_cem_phase_types (
@@ -657,9 +661,9 @@ INSERT INTO lkp_cem_phase_types (id, name) VALUES (1, 'Stage-1');
 INSERT INTO lkp_cem_phase_types (id, name) VALUES (2, 'Stage-5');
 INSERT INTO lkp_cem_phase_types (id, name) VALUES (3, 'Stage-0');
 
-
 ALTER TABLE cem_phases ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE cem_phases ADD COLUMN type_id INTEGER REFERENCES lkp_cem_phase_types(id);
+ALTER TABLE cem_phases ADD COLUMN metadata TEXT;
 
 -- vegetation extents
 CREATE TABLE lkp_vegetation_extent_types (
@@ -676,6 +680,7 @@ INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (4, 'Other');
 
 ALTER TABLE vegetation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE vegetation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_vegetation_extent_types(id);
+ALTER TABLE vegetation_extents ADD COLUMN metadata TEXT;
 
 -- floodplain acessibility
 CREATE TABLE lkp_floodplain_accessibility_types (
@@ -692,6 +697,7 @@ INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (4, 'Fully Acce
 
 ALTER TABLE floodplain_accessibilities ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE floodplain_accessibilities ADD COLUMN type_id INTEGER REFERENCES lkp_floodplain_accessibility_types(id);
+ALTER TABLE floodplain_accessibilities ADD COLUMN metadata TEXT;
 
 -- brat vegetation
 CREATE TABLE lkp_brat_vegetation_types (
@@ -707,9 +713,9 @@ INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (3, 'Moderately Suitable
 INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (4, 'Barely Suitable');
 INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (5, 'Unsuitable');
 
-
 ALTER TABLE brat_vegetation ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_vegetation_types(id) ON DELETE CASCADE;
+ALTER TABLE brat_vegetation ADD COLUMN metadata TEXT;
 
 -- BRAT base Stream power
 CREATE TABLE lkp_brat_base_streampower (
@@ -912,6 +918,7 @@ ALTER TABLE brat_cis ADD COLUMN reach_id TEXT;
 ALTER TABLE brat_cis ADD COLUMN observation_date DATE;
 ALTER TABLE brat_cis ADD COLUMN reach_length FLOAT;
 ALTER TABLE brat_cis ADD COLUMN notes TEXT;
+ALTER TABLE brat_cis ADD COLUMN metadata TEXT;
 
 ALTER TABLE brat_cis ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
 ALTER TABLE brat_cis ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
@@ -931,6 +938,7 @@ ALTER TABLE brat_cis_reaches ADD COLUMN reach_id TEXT;
 ALTER TABLE brat_cis_reaches ADD COLUMN observation_date DATE;
 ALTER TABLE brat_cis_reaches ADD COLUMN reach_length FLOAT;
 ALTER TABLE brat_cis_reaches ADD COLUMN notes TEXT;
+ALTER TABLE brat_cis_reaches ADD COLUMN metadata TEXT;
 
 ALTER TABLE brat_cis_reaches ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
 ALTER TABLE brat_cis_reaches ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
@@ -1009,6 +1017,7 @@ ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
 ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
+ALTER TABLE channel_unit_points ADD COLUMN metadata TEXT;
 
 
 ALTER TABLE channel_unit_polygons ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -1018,7 +1027,7 @@ ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES 
 ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
 ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
 ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
-
+ALTER TABLE channel_unit_polygons ADD COLUMN metadata TEXT;
 
 
 -- Design Lookup Tables
@@ -1081,6 +1090,7 @@ CREATE TABLE structure_types (
     typical_length NUMERIC,
     typical_width NUMERIC,
     typical_height NUMERIC,
+    metadata TEXT,
     created DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1114,7 +1124,7 @@ ALTER TABLE zoi ADD COLUMN type_id INTEGER REFERENCES zoi_types(id);
 ALTER TABLE zoi ADD COLUMN stage_id INTEGER REFERENCES lkp_zoi_stage(id);
 ALTER TABLE zoi ADD COLUMN description TEXT;
 ALTER TABLE zoi ADD COLUMN created DATETIME;
-
+ALTER TABLE zoi ADD COLUMN metadata TEXT;
 
 ALTER TABLE complexes ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE complexes ADD COLUMN name TEXT;
@@ -1122,20 +1132,21 @@ ALTER TABLE complexes ADD COLUMN initial_condition TEXT;
 ALTER TABLE complexes ADD COLUMN target_condition TEXT;
 ALTER TABLE complexes ADD COLUMN description TEXT;
 ALTER TABLE complexes ADD COLUMN created DATETIME;
-
+ALTER TABLE complexes ADD COLUMN metadata TEXT;
 
 ALTER TABLE structure_lines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE structure_lines ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(id);
 ALTER TABLE structure_lines ADD COLUMN name TEXT;
 ALTER TABLE structure_lines ADD COLUMN description TEXT;
 ALTER TABLE structure_lines ADD COLUMN created DATETIME;
-
+ALTER TABLE structure_lines ADD COLUMN metadata TEXT;
 
 ALTER TABLE structure_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE structure_points ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(id);
 ALTER TABLE structure_points ADD COLUMN name TEXT;
 ALTER TABLE structure_points ADD COLUMN description TEXT;
 ALTER TABLE structure_points ADD COLUMN created DATETIME;
+ALTER TABLE structure_points ADD COLUMN metadata TEXT;
 
 -- pour points and catchments
 ALTER TABLE pour_points ADD COLUMN name TEXT;
@@ -1144,7 +1155,10 @@ ALTER TABLE pour_points ADD COLUMN latitude FLOAT;
 ALTER TABLE pour_points ADD COLUMN longitude FLOAT;
 ALTER TABLE pour_points ADD COLUMN basin_characteristics TEXT;
 ALTER TABLE pour_points ADD COLUMN flow_statistics TEXT;
+ALTER TABLE pour_points ADD COLUMN metadata TEXT;
+
 ALTER TABLE catchments ADD COLUMN pour_point_id INT REFERENCES pour_points(fid) ON DELETE CASCADE;
+ALTER TABLE catchments ADD COLUMN metadata TEXT;
 
 -- stream gages
 ALTER TABLE stream_gages ADD COLUMN site_code TEXT;
@@ -1161,7 +1175,6 @@ CREATE INDEX ix_stream_gages_site_name ON stream_gages(site_name);
 CREATE INDEX ix_stream_gages_huc_cd ON stream_gages(huc);
 
 -- stream gage discharge
-
 CREATE TABLE stream_gage_discharges
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1171,6 +1184,7 @@ CREATE TABLE stream_gage_discharges
     discharge_code TEXT,
     gage_height REAL,
     gage_height_code TEXT,
+    metadata TEXT,
 
     UNIQUE (stream_gage_id, measurement_date)
 );
