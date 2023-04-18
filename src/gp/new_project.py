@@ -6,6 +6,8 @@ from osgeo import ogr
 from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..model.project import create_geopackage_table
+
 MESSAGE_CATEGORY = 'QRiS_NewProjectTask'
 
 
@@ -41,7 +43,7 @@ class NewProjectTask(QgsTask):
             for fc_name, layer_name, geometry_type in self.layers:
                 self.project_create_layers.emit(i, len(self.layers))
                 features_path = '{}|layername={}'.format(self.output_gpkg, layer_name)
-                self.create_geopackage_table(geometry_type, fc_name, self.output_gpkg, features_path, None)
+                create_geopackage_table(geometry_type, fc_name, self.output_gpkg, features_path, None)
                 i += 1
             # self.setProgress(50)
 
@@ -95,28 +97,3 @@ class NewProjectTask(QgsTask):
         QgsMessageLog.logMessage(
             'Create New QRIS Project was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()
-
-    def create_geopackage_table(self, geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
-        """
-            Creates tables in existing or new geopackages
-            geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
-            table_name (string): Name for the new table
-            geopackage_path (string): full path to the geopackage i.e., dir/package.gpkg
-            full_path (string): full path including the layer i.e., dir/package.gpkg|layername=layer
-            field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
-            """
-        memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
-        if field_tuple_list:
-            fields = []
-            for field_tuple in field_tuple_list:
-                field = QgsField(field_tuple[0], field_tuple[1])
-                fields.append(field)
-            memory_layer.dataProvider().addAttributes(fields)
-            memory_layer.updateFields()
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.layerName = table_name
-        options.driverName = 'GPKG'
-        transform = QgsCoordinateTransformContext()
-        if os.path.exists(geopackage_path):
-            options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
-        QgsVectorFileWriter.writeAsVectorFormatV3(memory_layer, geopackage_path, transform, options)

@@ -8,46 +8,9 @@ from qgis.utils import iface
 from qgis.core import QgsApplication
 
 from ..QRiS.path_utilities import parse_posix_path
-from ..model.project import Project
+from ..model.project import Project, project_layers
 from .utilities import validate_name, add_standard_form_buttons
 from ..gp.new_project import NewProjectTask
-
-# all spatial layers
-# feature class, layer name, geometry
-layers = [
-    ('aoi_features', 'AOI Features', 'Polygon'),
-    ('mask_features', 'Mask Features', 'Polygon'),
-    ('dam_crests', 'Dam Crests', 'Linestring'),
-    ('dams', 'Dam Points', 'Point'),
-    ('jams', 'Jam Points', 'Point'),
-    ('thalwegs', 'Thalwegs', 'Linestring'),
-    ('active_extents', 'Active Extents', 'Polygon'),
-    ('centerlines', 'Centerlines', 'Linestring'),
-    ('inundation_extents', 'Inundation Extents', 'Polygon'),
-    ('valley_bottoms', 'Valley Bottoms', 'Polygon'),
-    ('junctions', 'Junctions', 'Point'),
-    ('geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon'),
-    ('geomorphic_units', 'Geomorphic Unit Points', 'Point'),
-    ('geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point'),
-    ('cem_phases', 'Channel Evolution Model Stages', 'Polygon'),
-    ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
-    ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
-    ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
-    ('zoi', 'Zones of Influence', 'Polygon'),
-    ('complexes', 'Complexes', 'Polygon'),
-    ('structure_points', 'Structure Points', 'Point'),
-    ('structure_lines', 'Structure Lines', 'Linestring'),
-    ('channel_unit_points', 'Channel Unit Points', 'Point'),
-    ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
-    ('brat_cis', 'BRAT CIS', 'Point'),
-    ('brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring'),
-    ('pour_points', 'Pour Points', 'Point'),
-    ('catchments', 'Catchments', 'Polygon'),
-    ('stream_gages', 'Stream Gages', 'Point'),
-    ('profile_centerlines', 'Centerlines', 'Linestring'),
-    ('profile_features', 'Profiles', 'Linestring'),
-    ('cross_section_features', 'Cross Sections', 'Linestring')
-]
 
 
 class FrmNewProject(QtWidgets.QDialog):
@@ -114,7 +77,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
             os.makedirs(self.project_dir)
 
-            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), str(uuid.uuid4()), layers)
+            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), str(uuid.uuid4()), project_layers)
             new_project_task.project_complete.connect(self.on_complete)
             new_project_task.project_create_layers.connect(self.on_creating_layers)
             new_project_task.project_create_schema.connect(self.on_creating_schema)

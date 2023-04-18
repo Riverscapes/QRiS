@@ -22,10 +22,9 @@ INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, d
 INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (8, 'Acres', 'ac', 4046.86, 2, 'area');
 
 ALTER TABLE metric_values ADD COLUMN unit_id INTEGER REFERENCES lkp_units(id);
-ALTER TABLE metric_values ADD CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id, metric_id);
+--ALTER TABLE metric_values ADD CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id, metric_id);
 
-ALTER TABLE calculations ADD COLUMN created_on DATETIME DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE claculations ADD COLUMN metric_function TEXT;
+ALTER TABLE calculations ADD COLUMN metric_function TEXT;
 
 INSERT INTO calculations (id, name, metric_function) VALUES (1, 'count', 'count');
 INSERT INTO calculations (id, name, metric_function) VALUES (2, 'length', 'length');
@@ -33,13 +32,12 @@ INSERT INTO calculations (id, name, metric_function) VALUES (3, 'area', 'area');
 INSERT INTO calculations (id, name, metric_function) VALUES (4, 'sinuosity', 'sinuosity');
 INSERT INTO calculations (id, name, metric_function) VALUES (5, 'gradient', 'gradient');
 
-ALTER TABLE metrics ADD COLUMN created_on DATETIME DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE metrics ADD COLUMN unit_id INTEGER REFERENCES lkp_units(id);
 ALTER TABLE metrics ADD COLUMN metric_params TEXT;
 
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (1, 1, 'dam and jam count', 1, NULL, '{"layers": ["dams","jams"]}', '{"min_value": 0}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (2, NULL, 'Percent Active Floodplain', 1, NULL, NULL, '{"min_value": 0, "max_value": 100, "tolerance": 0.25}');
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (3, 5, 'Centerline Gradient', 2, NULL, '{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}', '{"precision": 4, "tolerance": 0.1}');
+UPDATE metrics SET calculation_id=1, metadata='{"min_value": 0}', metric_params='{"layers": ["dams","jams"]}' WHERE id = 1;
+UPDATE metrics SET name='Percent Active Floodplain', metadata='{"min_value": 0, "max_value": 100, "tolerance": 0.25}' WHERE id = 2;
+UPDATE metrics SET calculation_id=5, name='Centerline Gradient', metadata='{"precision": 4, "tolerance": 0.1}', metric_params='{"layers": ["profile_centerlines"], "rasters": ["Digital Elevation Model (DEM)"]}' WHERE id = 3;
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (4, 2, 'Dam Crest Length', 1, 1, '{"layers": ["dam_crests"]}', '{"min_value": 0, "max_value": 10000, "precision": 2, "tolerance": 0.1}');
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (5, 3, 'Valley Bottom Area', 1, 2, '{"layers": ["valley_bottoms"]}', NULL);
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (6, 4, 'Centelrine Sinuosity', 1,  NULL, '{"layers": ["profile_centerlines"]}', '{"min_value": 1, "precision": 4, "tolerance": 0.1}');
