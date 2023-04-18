@@ -21,8 +21,37 @@ INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, d
 INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (7, 'Hectares', 'ha', 10000, 2, 'area');
 INSERT INTO lkp_units (id, name, display_name, conversion, conversion_unit_id, dimension) VALUES (8, 'Acres', 'ac', 4046.86, 2, 'area');
 
-ALTER TABLE metric_values ADD COLUMN unit_id INTEGER REFERENCES lkp_units(id);
+--ALTER TABLE metric_values ADD COLUMN unit_id INTEGER REFERENCES lkp_units(id);
 --ALTER TABLE metric_values ADD CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id, metric_id);
+ALTER TABLE metric_values RENAME TO metric_values_old;
+CREATE TABLE metric_values (
+    analysis_id INTEGER REFERENCES analyses(id) ON DELETE CASCADE,
+    mask_feature_id INTEGER REFERENCES mask_features(fid) ON DELETE CASCADE,
+    metric_id INTEGER REFERENCES metrics(id) ON DELETE CASCADE,
+    event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+--     metric_source_id INTEGER REFERENCES metric_sources(id) ON DELETE CASCADE,
+    manual_value NUMERIC,
+    automated_value NUMERIC,
+    is_manual INT NOT NULL DEFAULT 1,
+    metadata TEXT,
+    description TEXT,
+    uncertainty NUMERIC,
+    unit_id INTEGER REFERENCES lkp_units(id),
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_metric_values PRIMARY KEY (analysis_id, event_id, mask_feature_id, metric_id)
+);
+
+INSERT INTO metric_values (analysis_id, mask_feature_id, metric_id, event_id, manual_value, automated_value, is_manual, metadata, description, uncertainty, created_on)
+SELECT analysis_id, mask_feature_id, metric_id, event_id, manual_value, automated_value, is_manual, metadata, description, uncertainty, created_on
+FROM metric_values_old;
+
+DROP TABLE metric_values_old;
+
+CREATE INDEX fx_metric_values_analysis_id ON metric_values(analysis_id);
+CREATE INDEX fx_metric_values_mask_feature_id ON metric_values(mask_feature_id);
+CREATE INDEX fx_metric_values_metric_id ON metric_values(metric_id);
+CREATE INDEX fx_metric_values_event_id ON metric_values(event_id);
 
 ALTER TABLE calculations ADD COLUMN metric_function TEXT;
 

@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext
+from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
 
 from .analysis import Analysis, load_analyses
 from .mask import Mask, load_masks
@@ -193,6 +193,7 @@ def apply_db_migrations(db_path: str):
         if fc_name not in existing_layers:
             features_path = '{}|layername={}'.format(db_path, layer_name)
             create_geopackage_table(geometry_type, fc_name, db_path, features_path, None)
+            QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: create feature class {layer_name}', 'QRiS', Qgis.Info)
 
     try:
         migrations_dir = os.path.join(os.path.dirname(__file__), '..', 'db', 'migrations')
@@ -206,6 +207,7 @@ def apply_db_migrations(db_path: str):
                         sql_commands = f.read()
                         curs.executescript(sql_commands)
                     curs.execute('INSERT INTO migrations (file_name) VALUES (?)', [migration_file])
+                    QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: {migration_file}', 'QRiS', Qgis.Info)
                 except Exception as ex:
                     conn.rollback()
                     raise ex
