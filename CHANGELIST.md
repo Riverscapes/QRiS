@@ -1,5 +1,44 @@
 # QRiS Plugin
 
+## [0.5.0] 2023 APR 21
+
+### Added
+- Help button and description for Metrics
+- Units to metric values (as lookup table)
+- Status icons for analysis table
+- Calcuate all button and logic form
+- Metric vs Indicator filter on analysis Form
+- Tolerance and display settings for metric values
+- Brat CIS schema and model
+- Import Riverscapes Metadata from QRave
+- Documentation buttons added to Metric selection from 
+- metadata field added to all tables in gpkg
+- QRIS project Database migration versioning
+- Raster Symbology added to qris
+
+### Changed
+- Qrave (QRV) integration
+- Moved analysis table to the right side dock
+- More explicit closing of dock widgets
+- Added orphaned layers and hid design layers from DCE form
+- All forms have help button with web documentation stubbed out
+- Remove 'mask' terminology from qrs
+- Basemaps now derived from QRave
+- zoom to layer extent if no other layers are in map (other than basemap)
+- Disabled Stream Flow Stats (temporarily)
+- Adding DEM to map will automatically add hillshade if it exists
+
+### Fixed
+- Clip raster to AOI when importing
+- Analysis Frame and event fixes
+- Clear metic values when sample frame is changed 
+- Gradient metric bug with spatial reference
+- Bug when importing sampling frame with aoi mask
+- Saving and Loading metric value uncertainty
+- Cleaned up windows paths
+- Improved Brat CIS context buffer
+- bug when rejecting export raster slider
+
 ## [0.1.15] 2023 MAR 22
 
 ### Fixed
