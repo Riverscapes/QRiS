@@ -1,7 +1,8 @@
-import math
+import os
+
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
-from osgeo.gdal import Warp, WarpOptions
+from osgeo.gdal import Warp, Translate
 from ..model.db_item import DBItem
 
 MESSAGE_CATEGORY = 'QRiS_CopyRasterTask'
@@ -26,12 +27,11 @@ class CopyRaster(QgsTask):
         """
         https://gdal.org/python/osgeo.gdal-module.html#WarpOptions
         https://gis.stackexchange.com/questions/278627/using-gdal-warp-and-gdal-warpoptions-of-gdal-python-api
+
+        Compression Steps:
+        https://trac.osgeo.org/gdal/wiki/UserDocs/GdalWarp#GeoTIFFoutput-coCOMPRESSisbroken
         """
 
-        # You can use this WarpOptions to get a list of the possible options
-        # wo = WarpOptions(format: 'GTiff', cutl)
-
-        # user defined callback object
         es_obj = {}
 
         kwargs = {
@@ -39,6 +39,8 @@ class CopyRaster(QgsTask):
             'callback': self.progress_callback,
             'callback_data': es_obj
         }
+
+        temp_path = self.output_path + '.temp'
 
         if self.mask_tuple is not None:
             kwargs['cutlineDSName'] = self.mask_tuple[0]
@@ -51,7 +53,9 @@ class CopyRaster(QgsTask):
         self.setProgress(0)
 
         try:
-            Warp(self.output_path, self.source_path, **kwargs)
+            Warp(temp_path, self.source_path, **kwargs)
+            Translate(self.output_path, temp_path, format='GTiff', creationOptions=['COMPRESS=LZW'])
+            os.remove(temp_path)
 
         except Exception as ex:
             self.exception = ex
