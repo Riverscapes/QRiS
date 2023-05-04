@@ -198,14 +198,17 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.grid.addLayout(self.horizBottom, 8, 1, 1, 1)
 
         self.cmdGenerateXS = QtWidgets.QPushButton('Generate')
+        self.cmdGenerateXS.setToolTip('Generate a preview of the cross sections')
         self.cmdGenerateXS.clicked.connect(self.cmdGenerateXS_click)
         self.horizBottom.addWidget(self.cmdGenerateXS)
 
-        self.cmdExportXS = QtWidgets.QPushButton('Export')
+        self.cmdExportXS = QtWidgets.QPushButton('Save Cross Sections')
+        self.cmdExportXS.setToolTip('Save cross sections to the project, with an option to clip to a polygon mask')
         self.cmdExportXS.clicked.connect(self.cmdExportXS_click)
         self.horizBottom.addWidget(self.cmdExportXS)
 
         self.cmdReset = QtWidgets.QPushButton('Reset')
+        self.cmdReset.setToolTip('Reset the cross sections tool')
         self.cmdReset.clicked.connect(self.cmdReset_click)
         self.grid.addWidget(self.cmdReset, 7, 0, 1, 1)
 

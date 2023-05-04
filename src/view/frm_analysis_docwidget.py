@@ -297,6 +297,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdProperties = QtWidgets.QPushButton()
         self.cmdProperties.setText('Properties')
         self.cmdProperties.clicked.connect(self.cmdProperties_clicked)
+        self.cmdProperties.setToolTip('Edit analysis properties, indcluding metrics and indicators')
+        self.cmdProperties.setToolTipDuration(2000)
         self.horizName.addWidget(self.cmdProperties)
 
         self.lblEvent = QtWidgets.QLabel()
@@ -314,6 +316,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdCalculate.setText('Calculate All')
         self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
         self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.cmdCalculate.setToolTip('Options to calculate metrics and indicators for the selected event and sample frame')
+        self.cmdCalculate.setToolTipDuration(2000)
         self.horizEvent.addWidget(self.cmdCalculate, 0)
 
         self.lblSegment = QtWidgets.QLabel()

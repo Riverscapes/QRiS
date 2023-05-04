@@ -296,6 +296,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.cmdPolygon = QtWidgets.QPushButton()
         self.cmdPolygon.setText('Select')
+        self.cmdPolygon.setToolTip('Select Polygon on map')
         self.cmdPolygon.clicked.connect(self.cmdSelectPolygon_click)
         self.horizPoly.addWidget(self.cmdPolygon)
 
@@ -312,6 +313,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.cmdCaptureS = QtWidgets.QPushButton()
         self.cmdCaptureS.setText('Capture')
+        self.cmdCaptureS.setToolTip('Manually capture the transect across the polygon at the start of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.')
         self.cmdCaptureS.clicked.connect(self.cmdCaptureStart_click)
         self.horizStart.addWidget(self.cmdCaptureS)
 
@@ -328,6 +330,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.cmdCaptureE = QtWidgets.QPushButton()
         self.cmdCaptureE.setText('Capture')
+        self.cmdCaptureE.setToolTip('Manually capture the transect across the polygon at the end of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.')
         self.cmdCaptureE.clicked.connect(self.cmdCaptureEnd_click)
         self.horizEnd.addWidget(self.cmdCaptureE)
 
@@ -395,16 +398,19 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.cmdGenerateCl = QtWidgets.QPushButton()
         self.cmdGenerateCl.setText('Generate Centerline')
+        self.cmdGenerateCl.setToolTip('Generate a preview the centerline')
         self.cmdGenerateCl.clicked.connect(self.cmdGenerateCl_click)
         self.horizBottom.addWidget(self.cmdGenerateCl)
 
         self.cmdSaveCl = QtWidgets.QPushButton()
         self.cmdSaveCl.setText('Save Centerline')
+        self.cmdSaveCl.setToolTip('Save the centerline to the project')
         self.cmdSaveCl.clicked.connect(self.cmdSaveCenterline_click)
         self.horizBottom.addWidget(self.cmdSaveCl)
 
         self.cmdReset = QtWidgets.QPushButton()
         self.cmdReset.setText('Reset')
+        self.cmdReset.setToolTip('Reset the centerline tool polygon, transects, and parameters')
         self.cmdReset.clicked.connect(self.cmdReset_click)
         self.grid.addWidget(self.cmdReset, 10, 0, 1, 1)
 
