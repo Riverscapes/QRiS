@@ -44,6 +44,7 @@ class Raster(DBItem):
 
                 self.name = name
                 self.description = description
+                self.metadata = metadata
 
             except Exception as ex:
                 conn.rollback()

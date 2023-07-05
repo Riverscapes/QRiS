@@ -1,4 +1,6 @@
 import os
+import json
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
@@ -10,6 +12,7 @@ from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
+from .metadata import MetadataWidget
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 from ..QRiS.path_utilities import parse_posix_path
 
@@ -24,9 +27,12 @@ class FrmRaster(QtWidgets.QDialog):
         self.raster = raster
         self.hillshade_raster_path = None
         self.hillshade = None
-        self.metadata = dict()
 
         super(FrmRaster, self).__init__(parent)
+        new_keys = ['source', 'aquisition date'] if self.raster is None else None
+        metadata_json = json.dumps(raster.metadata) if raster is not None else None
+        self.metadata_widget = MetadataWidget(self, metadata_json, new_keys)
+
         self.setupUi()
 
         raster_types = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_types'].items()}
@@ -79,6 +85,7 @@ class FrmRaster(QtWidgets.QDialog):
         else:
             self.txtName.setText(raster.name)
             self.txtDescription.setPlainText(raster.description)
+            self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexById(raster.raster_type_id))
 
             self.lblSourcePath.setVisible(False)
             self.txtSourcePath.setVisible(False)
@@ -99,9 +106,15 @@ class FrmRaster(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
+        if not self.metadata_widget.validate():
+            return
+
+        metadata_json = self.metadata_widget.get_json()
+        metadata = json.loads(metadata_json) if metadata_json is not None else None
+
         if self.raster is not None:
             try:
-                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=metadata)
                 # TODO update hillshade if exists
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -167,16 +180,17 @@ class FrmRaster(QtWidgets.QDialog):
 
             try:
                 raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
-
-                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, self.metadata)
+                metadata_json = self.metadata_widget.get_json()
+                metadata = json.loads(metadata_json) if metadata_json is not None else None
+                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, metadata)
                 self.project.rasters[self.raster.id] = self.raster
                 if self.chkHillshade.isChecked() is True:
                     hillshade_metadata = {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}
                     self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
                     self.project.rasters[self.hillshade.id] = self.hillshade
-                    self.metadata['hillsahde_raster'] = self.hillshade_project_path
-                    self.metadata['hillshade_raster_id'] = self.hillshade.id
-                    self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=self.metadata)
+                    metadata['hillsahde_raster'] = self.hillshade_project_path
+                    metadata['hillshade_raster_id'] = self.hillshade.id
+                    self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=metadata)
 
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -229,9 +243,11 @@ class FrmRaster(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
 
+        # Basic Properties Tab
         self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
 
         self.lblName = QtWidgets.QLabel()
         self.lblName.setText('Name')
@@ -277,6 +293,13 @@ class FrmRaster(QtWidgets.QDialog):
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription, 5, 1, 1, 1)
+
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabProperties.setLayout(self.grid)
+
+        # Metadata Tab
+        self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
         self.chkHillshade.setChecked(False)

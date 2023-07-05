@@ -1,0 +1,110 @@
+import json
+
+from PyQt5 import QtWidgets
+
+
+class MetadataWidget(QtWidgets.QWidget):
+
+    def __init__(self, parent: QtWidgets.QDialog, json_meta: str = None, new_keys: list = None):
+
+        super().__init__(parent)
+        self.json_meta = None
+        self.new_keys = new_keys
+        self.metadata = dict()
+        self.table = None
+
+        if json_meta is not None:
+            self.load_json(json_meta)
+
+        self.create_table_ui()
+
+    def load_json(self, json_meta: str):
+
+        self.json_meta = json_meta
+        self.metadata = json.loads(self.json_meta)
+
+    def create_table_ui(self):
+
+        self.horiz = QtWidgets.QHBoxLayout()
+        self.setLayout(self.horiz)
+
+        self.table = QtWidgets.QTableWidget()
+        self.table.setColumnCount(2)
+        self.table.setRowCount(0)
+        self.table.setHorizontalHeaderLabels(['Key', 'Value'])
+        self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked | QtWidgets.QAbstractItemView.SelectedClicked | QtWidgets.QAbstractItemView.EditKeyPressed)
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.table.setAlternatingRowColors(True)
+        self.table.setSortingEnabled(True)
+
+        if self.metadata is not None:
+            for key, value in self.metadata.items():
+                self.table.insertRow(self.table.rowCount())
+                self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+                self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
+
+        if self.new_keys is not None:
+            for key in self.new_keys:
+                self.table.insertRow(self.table.rowCount())
+                self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+
+        self.cmdAdd = QtWidgets.QPushButton()
+        self.cmdAdd.setText('Add')
+        self.cmdAdd.setToolTip('Add a new key/value pair')
+        self.cmdAdd.setToolTipDuration(2000)
+        self.cmdAdd.clicked.connect(self.add_row)
+
+        self.cmdDelete = QtWidgets.QPushButton()
+        self.cmdDelete.setText('Delete')
+        self.cmdDelete.setToolTip('Delete the selected key/value pair')
+        self.cmdDelete.setToolTipDuration(2000)
+        self.cmdDelete.clicked.connect(self.delete_row)
+
+        # add buttons to layout on left side, then table on right side
+        self.vert = QtWidgets.QVBoxLayout()
+        self.vert.addWidget(self.cmdAdd)
+        self.vert.addWidget(self.cmdDelete)
+        self.vert.addStretch()
+
+        self.horiz.addLayout(self.vert)
+        self.horiz.addWidget(self.table)
+
+    def add_row(self):
+
+        self.table.insertRow(self.table.rowCount())
+
+    def delete_row(self):
+
+        self.table.removeRow(self.table.currentRow())
+
+    def validate(self) -> bool:
+
+        for row in range(self.table.rowCount()):
+            if self.table.item(row, 0) is None or self.table.item(row, 0).text().strip() == '':
+                QtWidgets.QMessageBox.warning(self, 'Missing Key', 'You must provide a key to continue.')
+                return False
+
+            if self.table.item(row, 1) is None or self.table.item(row, 1).text().strip() == '':
+                QtWidgets.QMessageBox.warning(self, 'Missing Value', 'You must provide a value to continue.')
+                return False
+
+        # check for dupicate keys
+        for row in range(self.table.rowCount()):
+            for row2 in range(self.table.rowCount()):
+                if row != row2 and self.table.item(row, 0).text() == self.table.item(row2, 0).text():
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Key', 'You cannot have duplicate keys.')
+                    return False
+
+        return True
+
+    def get_json(self) -> str:
+
+        self.metadata = dict()
+        for row in range(self.table.rowCount()):
+            self.metadata[self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+
+        return json.dumps(self.metadata)
