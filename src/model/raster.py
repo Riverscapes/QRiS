@@ -32,19 +32,26 @@ class Raster(DBItem):
         self.icon = 'basemap'
         self.metadata = metadata
 
-    def update(self, db_path: str, name: str, description: str, metadata=None) -> None:
+    def update(self, db_path: str, name: str, description: str = None, metadata=None, raster_type_id=None) -> None:
 
-        metadata_str = json.dumps(metadata) if metadata else None
-        description = description if len(description) > 0 else None
+        # setup the output data. Do not change the raster object until the transaction is successful
+        out_metadata = metadata if metadata is not None else self.metadata
+        out_raster_type_id = raster_type_id if raster_type_id else self.raster_type_id
+        metadata_str = json.dumps(out_metadata)
+        out_description = description if len(description) > 0 else self.description
+
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE rasters SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
+                curs.execute('UPDATE rasters SET name = ?, description = ?, metadata = ?, raster_type_id = ? WHERE id = ?', [
+                    name, out_description, metadata_str, out_raster_type_id, self.id])
                 conn.commit()
 
+                # Now update the raster object
                 self.name = name
-                self.description = description
-                self.metadata = metadata
+                self.description = out_description
+                self.metadata = out_metadata
+                self.raster_type_id = out_raster_type_id
 
             except Exception as ex:
                 conn.rollback()

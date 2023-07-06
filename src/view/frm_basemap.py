@@ -114,7 +114,8 @@ class FrmRaster(QtWidgets.QDialog):
 
         if self.raster is not None:
             try:
-                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=metadata)
+                raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
+                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=metadata, raster_type_id=raster_type)
                 # TODO update hillshade if exists
             except Exception as ex:
                 if 'unique' in str(ex).lower():
