@@ -39,6 +39,7 @@ def copy_plugin():
         ['README.md'],
         ['config.json'],
         ['secrets.json'],
+        ['wheels', '**', '*.whl'],
         ['src', '**', '*.py'],
         ['src', '**', '*.json'],
         ['src', '**', '*.css'],

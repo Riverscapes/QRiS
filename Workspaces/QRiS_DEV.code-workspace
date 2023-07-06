@@ -39,7 +39,7 @@
 			// "editor.background": "#1c2c2a"
 		},
 		"terminal.integrated.env.osx": {
-			"PYTHONPATH": "${env:QGIS_PATH}/Contents/Resources/python:${env:QGIS_PATH}/Contents/Resources/python/site-packages:${env:QGIS_PATH}/Contents/Resources/python/site-packages/PyQt5",
+			"PYTHONPATH": "${env:QGIS_PATH}/Contents/Resources/python:${env:QGIS_PATH}/Contents/Resources/python/site-packages:${env:QGIS_PATH}/Contents/Resources/python/site-packages/PyQt5:${workspaceFolder}/wheels",
 			"PATH": "${env:PATH}:${env:QGIS_PATH}/Contents/MacOS/bin"
 		},
 		// NOTE: For this to work you need an env file with "QGIS_PATH=/Applications/QGIS-LTR.app/Contents" or whatever your path is
