@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [0.2.0] 2023 JUL 14
+
+### Added
+- Compression for copy rasters
+- Tool Tips for analysis, centerlines and cross sections
+- Metadata widget for raster import
+
+### Fixed
+- Bug with path utilities import
+- Able to change raster type after import
+
 ## [0.5.0] 2023 APR 21
 
 ### Added
