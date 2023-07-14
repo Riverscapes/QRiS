@@ -44,6 +44,18 @@ def flip_line_geometry(project: Project, profile: Profile):
     feature_layer.commitChanges()
 
 
+def layer_path_parser(path: str) -> tuple[str, str, object]:
+    """
+    Parse a layer path into a path, layer name, and identifier (for ogr GetLayer). 
+    """
+
+    if os.path.splitext(path)[1].lower() == ".shp":
+        return path, os.path.splitext(os.path.basename(path))[0], 0
+    else:
+        path, layer_name = path.split('|layername=')
+        return path, layer_name, layer_name
+
+
 def import_mask(source_path: str, dest_path: str, mask_id: int, attributes: dict = {}, mask_type=REGULAR_MASK_TYPE_ID, clip_mask_id: int = None) -> None:
     """
     Copy the features from a source feature class to a destination mask feature class.
@@ -167,6 +179,38 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
 
     if feats == 0:
         raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
+
+
+def get_field_names(path: str) -> tuple[list, list]:
+
+    path, _name, identifier = layer_path_parser(path)
+
+    ds = ogr.Open(path)
+    layer = ds.GetLayer(identifier)
+    layer_defintion = layer.GetLayerDefn()
+    field_names = []
+    field_types = []
+    for i in range(layer_defintion.GetFieldCount()):
+        field_defintion = layer_defintion.GetFieldDefn(i)
+        field_names.append(field_defintion.GetName())
+        field_types.append(field_defintion.GetTypeName())
+    return field_names, field_types
+
+
+def get_field_values(path: str, field_name: str) -> list:
+
+    path, _name, identifier = layer_path_parser(path)
+
+    ds = ogr.Open(path)
+    layer = ds.GetLayer(identifier)
+    layer_defintion = layer.GetLayerDefn()
+    field_index = layer_defintion.GetFieldIndex(field_name)
+    field_values = []
+    for feature in layer:
+        value = feature.GetField(field_index)
+        if value not in field_values:
+            field_values.append(value)
+    return field_values
 
 
 def browse_raster(parent, description: str) -> str:

@@ -65,6 +65,8 @@ from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
 from .frm_sampleframe import FrmSampleFrame
+# from .frm_import_dce_layer import FrmImportDceLayer
+from .frm_import_dce_layer_2 import FrmImportDceLayer
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -394,10 +396,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, EventLayer):
                     if model_data.name == 'BRAT CIS (Capacity Inference System)':
                         self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
-                    elif model_data.name == 'BRAT CIS Reaches':
+                    if model_data.name == 'BRAT CIS Reaches':
                         self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', None, lambda: self.import_brat_results(model_data))
                         # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
-
+                    else:
+                        self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', None, lambda: self.import_dce(model_data))
                 else:
                     self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
@@ -592,6 +595,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         import_existing(import_source_path, self.project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
 
         # self.add_child_to_project_tree(parent_node, db_item, True)
+
+    def import_dce(self, db_item: DBItem):
+
+        import_source_path = browse_vector(self, 'Select feature class to import.', Layer.GEOMETRY_TYPES[db_item.layer.geom_type])
+        # 'D:/NAR_Data/QRIS/test_line.shp'  #
+        if import_source_path is None:
+            return
+
+        frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
+        frm.exec_()
 
     def validate_brat_cis(self, db_item: DBItem):
 

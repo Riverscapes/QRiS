@@ -1,4 +1,7 @@
 import sqlite3
+
+from qgis.core import QgsWkbTypes
+
 from .db_item import DBItem
 
 
@@ -7,6 +10,10 @@ class Layer(DBItem):
 
     This class possesses the properties needed to add the layer to the map (with the addition of
     the event id definition query filter."""
+
+    GEOMETRY_TYPES = {'Point': QgsWkbTypes.GeometryType.PointGeometry,
+                      'Linestring': QgsWkbTypes.GeometryType.LineGeometry,
+                      'Polygon': QgsWkbTypes.GeometryType.PolygonGeometry}
 
     def __init__(self, id: int, fc_name: str, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str):
         # Must use the display name as the official db_item name so that it is the string displayed in UI
