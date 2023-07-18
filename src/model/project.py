@@ -78,16 +78,14 @@ class Project(DBItem):
             self.description = project_row['description']
             self.map_guid = project_row['map_guid']
 
-            self.lookup_tables = {table: load_lookup_table(curs, table) for table in [
-                'lkp_mask_types',
-                'lkp_platform',
-                'lkp_event_types',
-                'lkp_design_status',
-                'lkp_raster_types',
-                'lkp_scratch_vector_types',
-                'lkp_representation',
-                'lkp_units'
-            ]}
+            # get list of lookup tables from layers where is_lookup = 1
+            lkp_tables = [row['fc_name'] for row in curs.execute('SELECT DISTINCT fc_name FROM layers WHERE is_lookup = 1').fetchall()]
+            # TODO clean up the schema to avoid this hack
+            for table in ['lkp_brat_combined_cis', 'lkp_brat_vegetation_cis', 'lkp_units']:
+                lkp_tables.remove(table)
+            lkp_tables.append('lkp_event_types')
+            lkp_tables.append('lkp_raster_types')
+            self.lookup_tables = {table: load_lookup_table(curs, table) for table in lkp_tables}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
             self.layers = load_layers(curs)

@@ -8,8 +8,9 @@ class FrmFieldValueMap(QtWidgets.QDialog):
     # signal to send field value map to parent
     field_value_map = QtCore.pyqtSignal(dict)
 
-    def __init__(self, parent, values: list, fields: dict):
+    def __init__(self, parent, field: str, values: list, fields: dict):
 
+        self.field = field
         self.values = values
         self.fields = fields
 
@@ -17,6 +18,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
         self.setupUi()
 
         self.setWindowTitle('Field Value Map')
+        self.txtField.setText(self.field)
 
         self.load_fields()
 
@@ -31,7 +33,11 @@ class FrmFieldValueMap(QtWidgets.QDialog):
             # add drop down to each column with the values in self.fields
             for j, field in enumerate(self.fields.keys()):
                 combo = QtWidgets.QComboBox()
-                combo.addItems(['-- Do Not Import --'] + list(self.fields[field]))
+                combo.addItem('- Do Not Import -', None)
+                for value, display in self.fields[field].items():
+                    # add the value and display name to the combo box
+                    combo.addItem(display, value)
+
                 self.tblFields.setCellWidget(i, j + 1, combo)
                 combo.setCurrentIndex(0)
 
@@ -42,20 +48,45 @@ class FrmFieldValueMap(QtWidgets.QDialog):
             field_value_map[value] = {}
             for j, field in enumerate(self.fields.keys()):
                 combo = self.tblFields.cellWidget(i, j + 1)
-                field_value_map[value][field] = combo.currentText()
+                field_value_map[value][field] = combo.currentData()
 
         return field_value_map
 
+    def load_field_value_map(self, field_value_map: dict) -> None:
+
+        for i, value in enumerate(self.values):
+            for j, field in enumerate(self.fields.keys()):
+                combo = self.tblFields.cellWidget(i, j + 1)
+                combo.setCurrentIndex(combo.findData(field_value_map[value][field]))
+
     def accept(self) -> None:
 
-        self.field_value_map.emit(self.get_field_value_map())
+        field_map = self.get_field_value_map()
+        out_map = {self.field: field_map}
+        self.field_value_map.emit(out_map)
 
         return super().accept()
 
     def setupUi(self):
 
+        # set size
+        self.resize(800, 600)
+
         # vertical layout
         self.vLayout = QtWidgets.QVBoxLayout(self)
+
+        # horizontal layout for field name
+        self.hLayout = QtWidgets.QHBoxLayout()
+        self.vLayout.addLayout(self.hLayout)
+
+        # label for field name
+        self.lblField = QtWidgets.QLabel('Input Field')
+        self.hLayout.addWidget(self.lblField)
+
+        # text box for field name
+        self.txtField = QtWidgets.QLineEdit()
+        self.txtField.setReadOnly(True)
+        self.hLayout.addWidget(self.txtField)
 
         # new table with 1 + number of fields columns
         self.tblFields = QtWidgets.QTableWidget()

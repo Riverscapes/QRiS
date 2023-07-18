@@ -2,8 +2,9 @@ from PyQt5 import QtWidgets
 
 from ..model.project import Project
 from ..model.db_item import DBItem
-from ..gp.feature_class_functions import get_field_names
+from ..gp.feature_class_functions import get_field_names, get_field_values
 
+from .frm_field_value_map import FrmFieldValueMap
 from .utilities import add_standard_form_buttons
 
 
@@ -17,6 +18,10 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.target_path = f'{project.project_file}|layername={db_item.layer.fc_name}'
         self.qris_event = next(event for event in self.qris_project.events.values() if event.id == db_item.event_id)
         self.field_status = None
+        self.field_maps = {}
+
+        self.input_fields, self.input_field_types = get_field_names(self.import_path)
+        self.target_fields, self.target_field_types = get_field_names(self.target_path)
 
         super(FrmImportDceLayer, self).__init__(parent)
         self.setupUi()
@@ -32,28 +37,89 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         self.tblFields.clearContents()
 
-        input_fields, input_field_types = get_field_names(self.import_path)
-        target_fields, target_field_types = get_field_names(self.target_path)
-
         # create a row for each target field and load the field name
-        self.tblFields.setRowCount(len(target_fields))
-        for i, field in enumerate(target_fields):
+        self.tblFields.setRowCount(len(self.input_fields))
+        for i, field in enumerate(self.input_fields):
             self.tblFields.setItem(i, 0, QtWidgets.QTableWidgetItem(field))
-            self.tblFields.setItem(i, 1, QtWidgets.QTableWidgetItem(target_field_types[i]))
+            self.tblFields.setItem(i, 1, QtWidgets.QTableWidgetItem(self.input_field_types[i]))
             # create a combo box and load the input fields
             combo = QtWidgets.QComboBox()
-            filtered_input_fields = [field for field, field_type in zip(input_fields, input_field_types) if field_type == target_field_types[i]]
-            combo.addItems(['-- Do Not Import --'] + filtered_input_fields)
+            # filtered_input_fields = [field for field, field_type in zip(input_fields, input_field_types) if field_type == target_field_types[i]]
+            combo.addItems(['-- Do Not Import --', 'Add to Metadata'])
+            items = {}
+            for target_field, target_field_type in zip(self.target_fields, self.target_field_types):
+                if target_field in ['event_id', 'metadata']:
+                    continue
+                if target_field_type == self.input_field_types[i]:
+                    item = f'Direct Copy to {target_field}'
+                    # else:
+                    #     item = f'Map values to {target_field}'
+                    items[field] = item
+                    combo.addItem(item)
+            combo.addItem('Map Values')
             self.tblFields.setCellWidget(i, 2, combo)
             if self.field_status is not None:
                 combo.setCurrentIndex(self.field_status[i])
             else:
                 # if the target field name matches the input field name then select it
-                if field in filtered_input_fields:
-                    combo.setCurrentIndex(combo.findText(field))
+                if field in items.keys():
+                    combo.setCurrentIndex(combo.findText(items[field]))
                 else:
                     combo.setCurrentIndex(0)
-            combo.currentIndexChanged.connect(self.validate_fields)
+            # add button to open value map dialog
+            btn = QtWidgets.QPushButton('Map Values...')
+            btn.clicked.connect(self.on_btn_clicked)
+            self.tblFields.setCellWidget(i, 3, btn)
+
+            combo.currentIndexChanged.connect(self.combo_changed)
+
+        self.combo_changed()
+
+    def on_btn_clicked(self):
+
+        # get the row and column of the button that was clicked
+        btn = self.sender()
+        row = self.tblFields.indexAt(btn.pos()).row()
+
+        # get the field name
+        input_field = self.tblFields.item(row, 0).text()
+
+        # get the field values
+        values = get_field_values(self.import_path, input_field)
+        # get dict of target fields and values
+        fields = {}
+        for target_field in self.target_fields:
+            if target_field in ['event_id', 'metadata']:
+                continue
+            if self.db_item.layer.metadata is not None:
+                if 'fields' in self.db_item.layer.metadata.keys():
+                    if target_field in self.db_item.layer.metadata['fields'].keys():
+                        # find the lookup table in the project that matches the field name
+                        lookup_table_name = self.db_item.layer.metadata['fields'][target_field]['lookup']
+                        fields[target_field] = {id: value.name for id, value in self.qris_project.lookup_tables[lookup_table_name].items()}
+
+        # open the value map dialog
+        frm = FrmFieldValueMap(self, input_field, values, fields)
+        if input_field in self.field_maps.keys():
+            frm.load_field_value_map(self.field_maps[input_field])
+        frm.field_value_map.connect(self.on_field_value_map)
+        frm.exec_()
+
+    def on_field_value_map(self, field_value_map: dict):
+
+        # add or replace the field value map for the field
+        self.field_maps.update(field_value_map)
+
+    def combo_changed(self):
+
+        # disable button if Map Values is not is selected for each row
+        for i in range(self.tblFields.rowCount()):
+            combo = self.tblFields.cellWidget(i, 2)
+            btn = self.tblFields.cellWidget(i, 3)
+            if combo.currentText() == 'Map Values':
+                btn.setEnabled(True)
+            else:
+                btn.setEnabled(False)
 
     def validate_fields(self):
 
@@ -152,8 +218,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.horiz.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
 
         self.tblFields = QtWidgets.QTableWidget()
-        self.tblFields.setColumnCount(3)
-        self.tblFields.setHorizontalHeaderLabels(['Target Fields', 'Data Type', 'Input Fields'])
+        self.tblFields.setColumnCount(4)
+        self.tblFields.setHorizontalHeaderLabels(['Input Fields', 'Data Type', 'Actions', ""])
         self.tblFields.horizontalHeader().setStretchLastSection(True)
         self.tblFields.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.tblFields.verticalHeader().setVisible(False)
