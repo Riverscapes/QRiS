@@ -33,7 +33,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
             # add drop down to each column with the values in self.fields
             for j, field in enumerate(self.fields.keys()):
                 combo = QtWidgets.QComboBox()
-                combo.addItem('- Do Not Import -', None)
+                combo.addItem('- NULL -', None)
                 for value, display in self.fields[field].items():
                     # add the value and display name to the combo box
                     combo.addItem(display, value)

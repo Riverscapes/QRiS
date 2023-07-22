@@ -1,8 +1,11 @@
 from PyQt5 import QtWidgets
+from qgis.core import Qgis
+from qgis.utils import iface
 
 from ..model.project import Project
 from ..model.db_item import DBItem
 from ..gp.feature_class_functions import get_field_names, get_field_values
+from ..gp.import_feature_class import ImportFeatureClass
 
 from .frm_field_value_map import FrmFieldValueMap
 from .utilities import add_standard_form_buttons
@@ -73,6 +76,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
             combo.currentIndexChanged.connect(self.combo_changed)
 
+        self.tblFields.resizeColumnsToContents()
         self.combo_changed()
 
     def on_btn_clicked(self):
@@ -128,7 +132,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         valid = True
         for i in range(self.tblFields.rowCount()):
             combo = self.tblFields.cellWidget(i, 2)
-            if combo.currentText() != '-- Do Not Import --':
+            if combo.currentText() not in ['-- Do Not Import --', 'Add to Metadata']:
                 input_fields.append(combo.currentText())
 
         for i in range(self.tblFields.rowCount()):
@@ -154,7 +158,38 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         if not self.validate_fields():
             return
 
-        super(FrmImportDceLayer, self).accept()
+        # get list of fields where the combo box is set to add to metadata
+        for i in range(self.tblFields.rowCount()):
+            combo = self.tblFields.cellWidget(i, 2)
+            if combo.currentText() == 'Add to Metadata':
+                self.field_maps.update({self.tblFields.item(i, 0).text(): "- METADATA -"})
+            if "Direct Copy to " in combo.currentText():
+                self.field_maps.update({self.tblFields.item(i, 0).text(): combo.currentText().replace("Direct Copy to ", "")})
+
+        try:
+
+            import_task = ImportFeatureClass(self.import_path, self.target_path, 'event_id', self.db_item.event_id, self.field_maps)
+            self.buttonBox.setEnabled(False)
+            # DEBUG
+            result = import_task.run()
+            self.on_import_complete(result)
+            # PRODUCTION
+            # import_task.import_complete.connect(self.on_import_complete)
+            # QgsApplication.taskManager().addTask(import_task)
+        except Exception as ex:
+            self.exception = ex
+            self.buttonBox.setEnabled(True)
+            return False
+
+    def on_import_complete(self, result: bool):
+
+        if result is True:
+            iface.messageBar().pushMessage('Import Feature Class Complete.', f"Import of {self.import_path} into {self.db_item.layer.fc_name} completed successfully.", level=Qgis.Info, duration=5)
+
+            super(FrmImportDceLayer, self).accept()
+        else:
+            iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            self.buttonBox.setEnabled(True)
 
     def on_rdoImport_clicked(self):
 
@@ -220,8 +255,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.tblFields = QtWidgets.QTableWidget()
         self.tblFields.setColumnCount(4)
         self.tblFields.setHorizontalHeaderLabels(['Input Fields', 'Data Type', 'Actions', ""])
-        self.tblFields.horizontalHeader().setStretchLastSection(True)
-        self.tblFields.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        # self.tblFields.horizontalHeader().setStretchLastSection(True)
+        # self.tblFields.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.tblFields.verticalHeader().setVisible(False)
         self.tblFields.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.tblFields.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)

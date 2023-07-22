@@ -17,7 +17,7 @@ class CopyFeatureClass(QgsTask):
     copy_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, mask_tuple, output_ds: str, output_fc_name: str):
-        super().__init__(f'Copy Raster Task', QgsTask.CanCancel)
+        super().__init__(f'Copy Feature Task', QgsTask.CanCancel)
 
         self.source_path = source_path
         self.mask_tuple = mask_tuple

@@ -597,8 +597,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def import_dce(self, db_item: DBItem):
 
-        # import_source_path = browse_vector(self, 'Select feature class to import.', Layer.GEOMETRY_TYPES[db_item.layer.geom_type])
-        import_source_path = 'D:/NAR_Data/QRIS/_imports/Template/Structure-Crests.shp'
+        import_source_path = browse_vector(self, 'Select feature class to import.', Layer.GEOMETRY_TYPES[db_item.layer.geom_type])
         if import_source_path is None:
             return
 
