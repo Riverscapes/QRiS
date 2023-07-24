@@ -16,7 +16,7 @@ class ImportFeatureClass(QgsTask):
     """
 
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    import_complete = pyqtSignal(bool)
+    import_complete = pyqtSignal(bool, int, int)
 
     def __init__(self, source_path: str, dest_path: str, output_id_field: str, output_id: int, field_map: dict = None, clip_mask_id=None):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
@@ -27,6 +27,8 @@ class ImportFeatureClass(QgsTask):
         self.field_map = field_map
         self.output_id_field = output_id_field
         self.output_id = output_id
+        self.in_feats = 0
+        self.out_feats = 0
 
     def run(self):
 
@@ -38,6 +40,7 @@ class ImportFeatureClass(QgsTask):
             src_layer = src_dataset.GetLayer(src_layer_id)
             src_srs = src_layer.GetSpatialRef()
             src_fid_field_name = src_layer.GetFIDColumn()
+            self.in_feats = src_layer.GetFeatureCount()
 
             dst_path, dst_layer_name, _dst_layer_id = layer_path_parser(self.output_path)
             gpkg_driver = ogr.GetDriverByName('GPKG')
@@ -55,7 +58,7 @@ class ImportFeatureClass(QgsTask):
 
             transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
-            feats = 0
+            self.out_feats = 0
             for src_feature in src_layer:
                 geom = src_feature.GetGeometryRef()
                 geom.Transform(transform)
@@ -75,7 +78,7 @@ class ImportFeatureClass(QgsTask):
                 # if the geometry has more than one part, it needs to be split into multiple features
                 count = geom.GetGeometryCount()
                 single = False
-                if count == 0:
+                if count == 0 or count == 1:
                     count = 1
                     single = True
 
@@ -122,12 +125,12 @@ class ImportFeatureClass(QgsTask):
                         fid = src_feature.GetFID()
                         raise Exception(f'Error creating feature {fid}: {err}')
                     else:
-                        feats += 1
+                        self.out_feats += 1
 
             src_dataset = None
             dst_dataset = None
 
-            if feats == 0:
+            if self.out_feats == 0:
                 raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
 
             return True
@@ -157,7 +160,7 @@ class ImportFeatureClass(QgsTask):
                 QgsMessageLog.logMessage(f'Feature Class Import exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
-        self.import_complete.emit(result)
+        self.import_complete.emit(result, self.in_feats, self.out_feats)
 
     def cancel(self):
         QgsMessageLog.logMessage(

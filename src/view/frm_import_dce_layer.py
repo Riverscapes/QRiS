@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from qgis.core import Qgis
+from qgis.core import Qgis, QgsApplication
 from qgis.utils import iface
 
 from ..model.project import Project
@@ -171,21 +171,23 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             import_task = ImportFeatureClass(self.import_path, self.target_path, 'event_id', self.db_item.event_id, self.field_maps)
             self.buttonBox.setEnabled(False)
             # DEBUG
-            result = import_task.run()
-            self.on_import_complete(result)
+            # result = import_task.run()
+            # source_feats = import_task.in_feats
+            # out_feats = import_task.out_feats
+            # self.on_import_complete(result, source_feats, out_feats)
             # PRODUCTION
-            # import_task.import_complete.connect(self.on_import_complete)
-            # QgsApplication.taskManager().addTask(import_task)
+            import_task.import_complete.connect(self.on_import_complete)
+            QgsApplication.taskManager().addTask(import_task)
         except Exception as ex:
             self.exception = ex
             self.buttonBox.setEnabled(True)
             return False
 
-    def on_import_complete(self, result: bool):
+    def on_import_complete(self, result: bool, source_feats: int, out_feats: int):
 
         if result is True:
-            iface.messageBar().pushMessage('Import Feature Class Complete.', f"Import of {self.import_path} into {self.db_item.layer.fc_name} completed successfully.", level=Qgis.Info, duration=5)
-
+            extra_message = '' if source_feats == out_feats else f' (additional features were created due to exploding multi-part geometries.)'
+            iface.messageBar().pushMessage('Import Feature Class Complete.', f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.fc_name}.{extra_message}", level=Qgis.Info, duration=5)
             super(FrmImportDceLayer, self).accept()
         else:
             iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
