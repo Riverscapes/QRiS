@@ -83,7 +83,7 @@ class FrmNewProject(QtWidgets.QDialog):
             new_project_task.project_create_schema.connect(self.on_creating_schema)
 
             QgsApplication.taskManager().addTask(new_project_task)
-            super(FrmNewProject, self).accept()
+        super(FrmNewProject, self).accept()
 
     def on_complete(self, result):
         if result is True:
