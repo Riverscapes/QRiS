@@ -1,12 +1,13 @@
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsApplication, QgsVectorLayer
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
+from ..model.pour_point import PourPoint
 
-from ..gp.feature_class_functions import import_mask
+from ..gp.import_feature_class import ImportFeatureClass
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -17,13 +18,19 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.qris_project = project
         self.qris_mask = mask
         self.import_source_path = import_source_path
+        self.attribute_filter = None
         self.mask_type = mask_type
         self.str_mask_type = "AOI" if self.mask_type.id == AOI_MASK_TYPE_ID else "Sample Frame"
 
         super(FrmMaskAOI, self).__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle(f'Create New {mask_type.name}' if self.qris_mask is None else f'Edit {mask_type.name} Properties')
+        if self.qris_mask is not None:
+            self.setWindowTitle(f'Edit {mask_type.name} Properties')
+        elif import_source_path is not None:
+            self.setWindowTitle(f'Import {mask_type.name} Features')
+        else:
+            self.setWindowTitle(f'Create New {mask_type.name}')
 
         # The attribute picker is only visible when creating a new regular mask
         show_attribute_filter = mask_type.id == REGULAR_MASK_TYPE_ID
@@ -64,50 +71,73 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
 
+    def promote_to_aoi(self, db_item: DBItem):
+
+        self.txtName.setText(db_item.name)
+        self.setWindowTitle(f'Promote {db_item.name} to AOI')
+        if isinstance(db_item, PourPoint):
+            layer_name = 'catchments'
+            id_field = 'pour_point_id'
+        else:
+            layer_name = db_item.db_table_name
+            id_field = db_item.id_column_name
+        self.import_source_path = f'{self.qris_project.project_file}|layername={layer_name}'
+        self.attribute_filter = f'{id_field} = {db_item.id}'
+
     def accept(self):
 
         if not validate_name(self, self.txtName):
             return
 
-        if self.qris_mask is not None:
-            try:
+        try:
+            if self.qris_mask is not None:
                 self.qris_mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
-            except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
-                    self.txtName.setFocus()
-                else:
-                    QtWidgets.QMessageBox.warning(self, f'Error Saving {self.str_mask_type}', str(ex))
-                return
-        else:
-            try:
+            else:
                 self.qris_mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText())
                 self.qris_project.masks[self.qris_mask.id] = self.qris_mask
+        except Exception as ex:
+            if 'unique' in str(ex).lower():
+                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+                self.txtName.setFocus()
+            else:
+                QtWidgets.QMessageBox.warning(self, f'Error Saving {self.str_mask_type}', str(ex))
+            return
+
+        if self.import_source_path is not None:
+            try:
+                clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+                clip_mask_id = None
+                if clip_mask is not None:
+                    clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
+                attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
+                # import_mask(self.import_source_path, self.qris_project.project_file, self.qris_mask.id, attributes, self.mask_type, clip_mask_id)
+                mask_path = f'{self.qris_project.project_file}|layername={"aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "sampling_frame"}'
+                import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, 'mask_id', self.qris_mask.id, attributes, clip_mask_id, self.attribute_filter)
+                # DEBUG
+                result = import_mask_task.run()
+                self.on_import_complete(result)
+                # PRODUCTION
+                # import_mask_task.import_complete.connect(self.on_import_complete)
+                # QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
-                    self.txtName.setFocus()
-                else:
-                    QtWidgets.QMessageBox.warning(self, f'Error Saving {self.str_mask_type}', str(ex))
+                try:
+                    self.qris_mask.delete(self.qris_project.project_file)
+                except Exception as ex:
+                    print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
+                QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(ex))
                 return
 
-            if self.import_source_path is not None:
-                try:
-                    clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
-                    clip_mask_id = None
-                    if clip_mask is not None:
-                        clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
-                    attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    import_mask(self.import_source_path, self.qris_project.project_file, self.qris_mask.id, attributes, self.mask_type, clip_mask_id)
-                except Exception as ex:
-                    try:
-                        self.qris_mask.delete(self.qris_project.project_file)
-                    except Exception as ex:
-                        print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
-                    QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(ex))
-                    return
-
         super(FrmMaskAOI, self).accept()
+
+    def on_import_complete(self, result: bool):
+
+        if not result:
+            QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(self.exception))
+            try:
+                self.qris_mask.delete(self.qris_project.project_file)
+            except Exception as ex:
+                print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
+            return
 
     def setupUi(self):
 

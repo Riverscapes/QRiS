@@ -38,7 +38,7 @@ from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem
+from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_PROMOTE, DBItem
 from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
 from ..model.protocol import Protocol
 from ..model.method import Method
@@ -400,6 +400,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
                     else:
                         self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', None, lambda: self.import_dce(model_data))
+                if isinstance(model_data, PourPoint):
+                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
                 else:
                     self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
@@ -775,6 +777,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmMaskAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
+        if mode == DB_MODE_PROMOTE:
+            db_item = parent_node.data(QtCore.Qt.UserRole)
+            frm.promote_to_aoi(db_item)
+
+            # find the AOIs Node in the model
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+            aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
+            parent_node = aoi_node
+
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.qris_mask, frm.chkAddToMap.isChecked())

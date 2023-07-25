@@ -5,6 +5,7 @@ import sqlite3
 
 DB_MODE_CREATE = 'create'
 DB_MODE_IMPORT = 'import'
+DB_MODE_PROMOTE = 'promote'
 
 
 class DBItem():

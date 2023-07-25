@@ -18,7 +18,7 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, output_id_field: str, output_id: int, field_map: dict = None, clip_mask_id=None):
+    def __init__(self, source_path: str, dest_path: str, output_id_field: str, output_id: int, field_map: dict = None, clip_mask_id=None, attribute_filter: str = None):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
 
         self.source_path = source_path
@@ -27,6 +27,7 @@ class ImportFeatureClass(QgsTask):
         self.field_map = field_map
         self.output_id_field = output_id_field
         self.output_id = output_id
+        self.attribute_filter = attribute_filter
         self.in_feats = 0
         self.out_feats = 0
 
@@ -39,6 +40,8 @@ class ImportFeatureClass(QgsTask):
             src_dataset = ogr.Open(src_path)
             src_layer = src_dataset.GetLayer(src_layer_id)
             src_srs = src_layer.GetSpatialRef()
+            if self.attribute_filter is not None:
+                src_layer.SetAttributeFilter(self.attribute_filter)
             src_fid_field_name = src_layer.GetFIDColumn()
             self.in_feats = src_layer.GetFeatureCount()
 
