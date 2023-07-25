@@ -9,7 +9,6 @@ from ..model.scratch_vector import ScratchVector
 from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, MASK_MACHINE_CODE
 from ..model.cross_sections import CrossSections
 
-from ..gp.feature_class_functions import import_mask
 from ..gp.sample_frame import SampleFrameTask
 from .utilities import validate_name, add_standard_form_buttons
 

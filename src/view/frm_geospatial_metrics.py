@@ -1,16 +1,12 @@
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsVectorLayer
 
 from .frm_options import FrmOptions
 
-from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
-from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID
+from ..model.mask import Mask
 
-from ..gp.feature_class_functions import import_mask
-from .utilities import validate_name, add_standard_form_buttons
-from scipy import constants
+from .utilities import add_standard_form_buttons
 
 
 class FrmGeospatialMetrics(QtWidgets.QDialog):
