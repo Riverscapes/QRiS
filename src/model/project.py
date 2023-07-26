@@ -1,4 +1,5 @@
 import os
+import json
 import sqlite3
 
 from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
@@ -71,12 +72,13 @@ class Project(DBItem):
             conn.row_factory = dict_factory
             curs = conn.cursor()
 
-            curs.execute('SELECT id, name, description, map_guid FROM projects LIMIT 1')
+            curs.execute('SELECT id, name, description, map_guid, metadata FROM projects LIMIT 1')
             project_row = curs.fetchone()
             self.name = project_row['name']
             self.id = project_row['id']
             self.description = project_row['description']
             self.map_guid = project_row['map_guid']
+            self.metadata = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
 
             # get list of lookup tables from layers where is_lookup = 1
             lkp_tables = [row['fc_name'] for row in curs.execute('SELECT DISTINCT fc_name FROM layers WHERE is_lookup = 1').fetchall()]
@@ -136,6 +138,13 @@ class Project(DBItem):
             self.cross_sections.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
+
+    def update_metadata(self, metadata: dict):
+
+        self.metadata.update(metadata)
+
+        with sqlite3.connect(self.project_file) as conn:
+            conn.execute('UPDATE projects SET metadata = ? WHERE id = ?', [json.dumps(self.metadata), self.id])
 
     # def basemaps(self) -> dict:
     #     """ Returns a dictionary of just those rasters that are basemaps"""

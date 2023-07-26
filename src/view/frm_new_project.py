@@ -1,9 +1,9 @@
 import os
+import json
 import uuid
 import sqlite3
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-# from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.utils import iface
 from qgis.core import QgsApplication
 
@@ -11,6 +11,7 @@ from ..QRiS.path_utilities import parse_posix_path
 from ..model.project import Project, project_layers
 from .utilities import validate_name, add_standard_form_buttons
 from ..gp.new_project import NewProjectTask
+from .metadata import MetadataWidget
 
 
 class FrmNewProject(QtWidgets.QDialog):
@@ -21,6 +22,9 @@ class FrmNewProject(QtWidgets.QDialog):
 
     def __init__(self, root_project_folder: str, parent, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
+
+        metadata_json = json.dumps(project.metadata) if project is not None else None
+        self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
         # Save the original folder that the user selected so that it can be reused
@@ -53,15 +57,22 @@ class FrmNewProject(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
+        if not self.metadata_widget.validate():
+            return
+
+        metadata_json = self.metadata_widget.get_json()
+        metadata = json.loads(metadata_json) if metadata_json is not None else None
+
         if isinstance(self.project, Project):
             # Update the existing project
             conn = sqlite3.connect(self.project.project_file)
             cursor = conn.cursor()
             try:
-                cursor.execute('UPDATE projects SET name = ?, description = ? WHERE id = ?', [self.txtName.text(), self.txtDescription.toPlainText(), self.project.id])
+                cursor.execute('UPDATE projects SET name = ?, description = ?, metadata = ? WHERE id = ?', [self.txtName.text(), self.txtDescription.toPlainText(), metadata_json, self.project.id])
                 conn.commit()
                 self.project.name = self.txtName.text()
                 self.project.description = self.txtDescription.toPlainText()
+                self.project.metadata = metadata
             except Exception as ex:
                 conn.rollback()
                 QtWidgets.QMessageBox.warning(self, 'Error Updating Project', str(ex))
@@ -77,7 +88,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
             os.makedirs(self.project_dir)
 
-            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), str(uuid.uuid4()), project_layers)
+            new_project_task = NewProjectTask(self.txtName.text(), self.txtPath.text(), self.txtDescription.toPlainText(), str(uuid.uuid4()), project_layers, metadata)
             new_project_task.project_complete.connect(self.on_complete)
             new_project_task.project_create_layers.connect(self.on_creating_layers)
             new_project_task.project_create_schema.connect(self.on_creating_schema)
@@ -104,9 +115,10 @@ class FrmNewProject(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
 
         self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
 
         self.lblName = QtWidgets.QLabel()
         self.lblName.setText('Name')
@@ -130,6 +142,13 @@ class FrmNewProject(QtWidgets.QDialog):
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
+
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Project Properties')
+        self.tabProperties.setLayout(self.grid)
+
+        # metadata Tab
+        self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.vert.addLayout(add_standard_form_buttons(self, 'projects'))
 

@@ -21,7 +21,7 @@ class NewProjectTask(QgsTask):
     project_create_layers = pyqtSignal(int, int)
     project_create_schema = pyqtSignal()
 
-    def __init__(self, project_name: str, output_gpkg: str, description: str, map_guid: str, layers: dict):
+    def __init__(self, project_name: str, output_gpkg: str, description: str, map_guid: str, layers: dict, metadata=None):
         super().__init__('New QRIS Project Task', QgsTask.CanCancel)
 
         self.project_name = project_name
@@ -29,6 +29,7 @@ class NewProjectTask(QgsTask):
         self.map_guid = map_guid
         self.output_gpkg = output_gpkg
         self.layers = layers
+        self.metadata = metadata
 
     def run(self):
         """
@@ -60,7 +61,8 @@ class NewProjectTask(QgsTask):
 
             # Create the project
             description = self.project_description if len(self.project_description) > 0 else None
-            curs.execute('INSERT INTO projects (name, description, map_guid) VALUES (?, ?, ?)', [self.project_name, description, self.map_guid])
+            metadata = json.dumps(self.metadata) if self.metadata is not None else None
+            curs.execute('INSERT INTO projects (name, description, map_guid, metadata) VALUES (?, ?, ?, ?)', [self.project_name, description, self.map_guid, metadata])
             conn.commit()
             conn.close()
             schema_file.close()
