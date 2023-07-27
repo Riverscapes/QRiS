@@ -25,6 +25,7 @@ import os.path
 import requests
 from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import QSettings
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsRasterLayer, QgsMessageLog, QgsRectangle
 from qgis.gui import QgsMapToolEmitPoint
 
@@ -436,9 +437,32 @@ class QRiSToolbar:
         self.qrave.qrave_to_qris.connect(self.dockwidget.qris_from_qrave)
         self.add_project_to_mru_list(db_path)
 
-        # Add basemap to ToC if empty
-        if len(QgsProject.instance().mapLayers().values()) == 0:
-            self.dockwidget.setup_blank_map()
+        # Set the map canvas to the project SRS
+        default_crs = QSettings().value('Projections/layerDefaultCrs')
+        default_crs_behavior = QSettings().value('app/projections/newProjectCrsBehavior')
+        project_srs = self.dockwidget.project.metadata.get('project_srs', None)
+        trigger_repaint = False
+        try:
+            if project_srs is not None:
+                QSettings().setValue('Projections/layerDefaultCrs', project_srs)
+                QSettings().setValue('app/projections/newProjectCrsBehavior', 'usePresetCrs')
+                # get map crs from project_srs id
+                crs = QgsCoordinateReferenceSystem(project_srs)
+                if crs is not None:
+                    self.iface.mapCanvas().setDestinationCrs(crs)
+                    self.qproject.setCrs(crs)
+                    self.iface.mapCanvas().refresh()
+                    self.iface.messageBar().pushMessage('QRiS', f'Map CRS set to {crs.description()}')
+                    trigger_repaint = True
+
+            # Add basemap to ToC if empty
+            if len(QgsProject.instance().mapLayers().values()) == 0:
+                self.dockwidget.setup_blank_map(trigger_repaint=trigger_repaint)
+        finally:
+            # restore default crs
+            QSettings().setValue('Projections/layerDefaultCrs', default_crs)
+            QSettings().setValue('app/projections/newProjectCrsBehavior', default_crs_behavior)
+
         # We set the project path in the project settings. This way it will be saved with the QgsProject file
         # if self.dockwidget is None or self.dockwidget.isHidden() is True:
         #     # self.toggle_widget(forceOn=True)

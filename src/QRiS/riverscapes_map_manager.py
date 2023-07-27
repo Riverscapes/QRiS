@@ -326,6 +326,7 @@ class RiverscapesMapManager():
         basemap_group = self.get_group_layer('Basemaps', 'Basemaps', 'Riverscapes Basemaps', add_missing=True, add_to_bottom=True)
         raster_layer = QgsRasterLayer(basemap_path, basemap_name, provider)
         QgsProject.instance().addMapLayer(raster_layer, False)
+        raster_layer.triggerRepaint()
 
         tree_layer_node = basemap_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property('Basemaps', basemap_name))

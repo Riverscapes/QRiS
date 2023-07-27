@@ -209,34 +209,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if item_data and item_data.data and isinstance(item_data.data, self.qrave.QRaveBaseMap):
                 item_data.data.load_layers()
 
-    def setup_blank_map(self):
+    def setup_blank_map(self, trigger_repaint=False):
 
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
                 # add the first basemap to the basemap manager
                 region = self.settings.getValue('basemapRegion')
                 data = self.qrave.BaseMaps.regions[region].child(0).child(0).data(QtCore.Qt.UserRole)
-                self.add_basemap_to_map(data)
-        # TODO placeholder until this gets moved into riverscapes map manager as a proper basemap
-        service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-        service_uri = "type=xyz&zmin=0&zmax=21&url=https://" + requests.utils.quote(service_url)
-        # project_group = self.map_manager.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-
-        # rlayer = QgsRasterLayer(service_uri, 'Google Satellite', 'wms')
-        # if rlayer.isValid():
-        #     baselayer_group = project_group.addGroup("QRiS Base Maps")
-        #     QgsProject.instance().addMapLayer(rlayer, False)
-        #     baselayer_group.addLayer(rlayer)
-        #     baselayer_group.setCustomProperty(self.map_manager.product_key, f'{self.map_manager.product_key}::{self.project.map_guid}::{BASEMAP_MACHINE_CODE}')
-        #     canvas = self.iface.mapCanvas()
-        #     canvas.refreshAllLayers()
-        #     canvas.refresh()
-        #     extent = QgsRectangle(-14746044, 1945739, -6403040, 7205585)  # CONUS
-        #     canvas.setExtent(extent)
-        #     canvas.refresh()
-        # else:
-        #     QgsMessageLog.logMessage(
-        #         'Unable to add basemap to empty project.', 'QRiS', Qgis.Warning)
+                self.add_basemap_to_map(data, trigger_repaint=trigger_repaint)
+                self.iface.mapCanvas().refresh()
+                self.iface.mapCanvas().refreshAllLayers()
 
     def closeEvent(self, event):
 
@@ -390,6 +372,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
+                    self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
 
                 if isinstance(model_data, EventLayer):
@@ -453,12 +436,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, CrossSections):
             self.map_manager.build_cross_section_layer(db_item)
 
-    def add_basemap_to_map(self, model_item):
+    def add_basemap_to_map(self, model_item, trigger_repaint=False):
 
         basemap_name = model_item.data.label
         basemap_uri = model_item.data.layer_uri
         basemap_provider = 'wms'  # model_item.data.tile_type
-        self.basemap_manager.create_basemap_raster_layer(basemap_name, basemap_uri, basemap_provider)
+        raster_layer = self.basemap_manager.create_basemap_raster_layer(basemap_name, basemap_uri, basemap_provider)
+        # if trigger_repaint is True:
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
         """Add all children of a group node to the map ToC
@@ -479,6 +463,31 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def collapse_tree(self):
         self.treeView.collapseAll()
         return
+
+    def set_project_srs(self, project: Project):
+
+        # Get the current map CRS
+        canvas = self.iface.mapCanvas()
+        map_crs = canvas.mapSettings().destinationCrs()
+        map_crs_id = map_crs.authid()
+
+        # Get the project srs from metadata, if it exists
+        project_srs = self.project.metadata.get('project_srs', None)
+
+        if map_crs_id == project_srs:
+            QtWidgets.QMessageBox.information(self, 'Qris Project SRS', f'The current map SRS is the same as the Qris project SRS.\n\nCurrent Map SRS: {map_crs_id}\n\nCurrent Qris Project SRS: {project_srs}')
+            return
+
+        # prompt the user if they want to change the project srs to the map srs
+        result = QtWidgets.QMessageBox.question(self, 'Set Qris Project SRS', f'Would you like to set the change the Qris project SRS?\n\nCurrent Map SRS: {map_crs_id}\n\nCurrent Qris Project SRS: {project_srs}\n\nOr click "Reset" to clear the Qris project SRS.',
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Reset, QtWidgets.QMessageBox.No)
+        if result == QtWidgets.QMessageBox.Yes:
+            self.project.metadata['project_srs'] = map_crs_id
+            self.project.update_metadata()
+
+        if result == QtWidgets.QMessageBox.Reset:
+            self.project.metadata['project_srs'] = None
+            self.project.update_metadata()
 
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
