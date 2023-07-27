@@ -139,9 +139,10 @@ class Project(DBItem):
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
-    def update_metadata(self, metadata: dict):
+    def update_metadata(self, metadata: dict = None):
 
-        self.metadata.update(metadata)
+        if metadata is not None:
+            self.metadata.update(metadata)
 
         with sqlite3.connect(self.project_file) as conn:
             conn.execute('UPDATE projects SET metadata = ? WHERE id = ?', [json.dumps(self.metadata), self.id])
