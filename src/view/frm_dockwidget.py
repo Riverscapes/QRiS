@@ -372,7 +372,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
-                    self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
+                    # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
 
                 if isinstance(model_data, EventLayer):
