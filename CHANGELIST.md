@@ -1,5 +1,19 @@
 # QRiS Plugin
 
+## [0.2.1] 2023 JUL 28
+
+### Added
+- Import Feature Class to Data Capture Event
+- Promote Watershed Catchment to AOI mask
+- View and edit project metadata in project properties form
+
+### Fixed
+- Window does not close when editing project properties
+
+### Changed
+- Depricated import mask function (replaced with import feature class task)
+- Relaxed rules for empty values in suggested metadata
+
 ## [0.2.0] 2023 JUL 14
 
 ### Added
