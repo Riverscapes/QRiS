@@ -83,13 +83,32 @@ class MetadataWidget(QtWidgets.QWidget):
 
     def validate(self) -> bool:
 
+        missing_keys = []
+
         for row in range(self.table.rowCount()):
             if self.table.item(row, 0) is None or self.table.item(row, 0).text().strip() == '':
-                QtWidgets.QMessageBox.warning(self, 'Missing Key', 'You must provide a key to continue.')
+                QtWidgets.QMessageBox.warning(self, 'Missing Metadata Key', 'Please check the metadata table for any empty or missing keys.')
                 return False
 
             if self.table.item(row, 1) is None or self.table.item(row, 1).text().strip() == '':
-                QtWidgets.QMessageBox.warning(self, 'Missing Value', 'You must provide a value to continue.')
+                # if the key is in the new_keys list and the value is empty, remove it
+                if self.new_keys is not None and self.table.item(row, 0).text() in self.new_keys:
+                    missing_keys.append(self.table.item(row, 0).text())
+                else:
+                    QtWidgets.QMessageBox.warning(self, 'Missing Metadata Value', 'Please check the metadata table for any empty or missing values.')
+                    return False
+
+        if len(missing_keys) > 0:
+            s = 's' if len(missing_keys) > 1 else ''
+            result = QtWidgets.QMessageBox.question(self, f'Missing Metadata Value{s}', f'You have not provided a value for the following suggested metadata:\n\n{", ".join(missing_keys)}.\n\nDo you want to remove them and continue?',
+                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if result == QtWidgets.QMessageBox.Yes:
+                for key in missing_keys:
+                    for row in range(self.table.rowCount()):
+                        if self.table.item(row, 0).text() == key:
+                            self.table.removeRow(row)
+                            break
+            else:
                 return False
 
         # check for dupicate keys
