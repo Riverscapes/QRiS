@@ -29,7 +29,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
 
         # add values to first column
         for i, value in enumerate(self.values):
-            self.tblFields.setItem(i, 0, QtWidgets.QTableWidgetItem(value))
+            self.tblFields.setItem(i, 0, QtWidgets.QTableWidgetItem(str(value)))
             # add drop down to each column with the values in self.fields
             for j, field in enumerate(self.fields.keys()):
                 combo = QtWidgets.QComboBox()
