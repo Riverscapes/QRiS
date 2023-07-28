@@ -36,7 +36,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
                 combo.addItem('- NULL -', None)
                 for value, display in self.fields[field].items():
                     # add the value and display name to the combo box
-                    combo.addItem(display, value)
+                    combo.addItem(str(display), value)
 
                 self.tblFields.setCellWidget(i, j + 1, combo)
                 combo.setCurrentIndex(0)

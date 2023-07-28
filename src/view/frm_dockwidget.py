@@ -612,6 +612,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if import_source_path is None:
             return
 
+        # Get feature count of import source
+        import_source_layer = QgsVectorLayer(import_source_path, 'import_source')
+        import_source_count = import_source_layer.featureCount()
+        import_source_crs = import_source_layer.crs().authid()
+        del import_source_layer
+        if import_source_count == 0:
+            QtWidgets.QMessageBox.information(self, 'Import DCE', 'No features found in the selected feature class.')
+            return
+        if import_source_crs is None or import_source_crs == '':
+            QtWidgets.QMessageBox.information(self, 'Import DCE', 'The selected feature class does not have a valid coordinate reference system.')
+            return
         frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
         frm.exec_()
 

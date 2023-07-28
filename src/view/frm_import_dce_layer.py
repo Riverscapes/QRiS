@@ -29,7 +29,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         super(FrmImportDceLayer, self).__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle('Import DCE Layer')
+        self.setWindowTitle('Import DCE Layer From Existing Feature Class')
         self.txtInputFC.setText(self.import_path)
         self.txtTargetFC.setText(self.db_item.layer.fc_name)
         self.txtEvent.setText(self.qris_event.name)
@@ -59,7 +59,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
                     #     item = f'Map values to {target_field}'
                     items[field] = item
                     combo.addItem(item)
-            combo.addItem('Map Values')
+            # add map values option for string or integer types
+            if self.input_field_types[i] in ['String', 'Integer']:
+                values = list(set(get_field_values(self.import_path, field)))
+                if not(len(values) == 1 and values[0] is None):
+                    combo.addItem('Map Values')
             self.tblFields.setCellWidget(i, 2, combo)
             if self.field_status is not None:
                 combo.setCurrentIndex(self.field_status[i])
@@ -132,7 +136,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         valid = True
         for i in range(self.tblFields.rowCount()):
             combo = self.tblFields.cellWidget(i, 2)
-            if combo.currentText() not in ['-- Do Not Import --', 'Add to Metadata']:
+            if combo.currentText() not in ['-- Do Not Import --', 'Add to Metadata', "Map Values"]:
                 input_fields.append(combo.currentText())
 
         for i in range(self.tblFields.rowCount()):
@@ -225,23 +229,23 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.txtInputFC.setReadOnly(True)
         self.grid.addWidget(self.txtInputFC, 0, 1)
 
-        self.lblEvent = QtWidgets.QLabel('Event')
+        self.lblEvent = QtWidgets.QLabel('Data Capture Event')
         self.grid.addWidget(self.lblEvent, 1, 0)
         self.txtEvent = QtWidgets.QLineEdit()
         self.txtEvent.setReadOnly(True)
         self.grid.addWidget(self.txtEvent, 1, 1)
 
-        self.lblTargetFC = QtWidgets.QLabel('Target Feature Class')
+        self.lblTargetFC = QtWidgets.QLabel('Target Layer')
         self.grid.addWidget(self.lblTargetFC, 2, 0)
         self.txtTargetFC = QtWidgets.QLineEdit()
         self.txtTargetFC.setReadOnly(True)
         self.grid.addWidget(self.txtTargetFC, 2, 1)
 
         self.lblFields = QtWidgets.QLabel('Fields')
-        self.vert.addWidget(self.lblFields)
+        self.grid.addWidget(self.lblFields, 3, 0)
 
         self.horiz = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horiz)
+        self.grid.addLayout(self.horiz, 3, 1)
 
         self.rdoImport = QtWidgets.QRadioButton('Import Fields')
         self.rdoImport.setChecked(True)
