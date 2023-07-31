@@ -87,6 +87,7 @@ class Project(DBItem):
                 lkp_tables.remove(table)
             lkp_tables.append('lkp_event_types')
             lkp_tables.append('lkp_raster_types')
+            lkp_tables.append('lkp_scratch_vector_types')
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in lkp_tables}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])

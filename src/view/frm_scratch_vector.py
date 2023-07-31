@@ -10,7 +10,7 @@ from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
 from ..QRiS.path_utilities import parse_posix_path
-from ..gp.copy_feature_class import CopyFeatureClass
+from ..gp.import_feature_class import ImportFeatureClass
 
 
 class FrmScratchVector(QtWidgets.QDialog):
@@ -89,14 +89,12 @@ class FrmScratchVector(QtWidgets.QDialog):
 
             try:
                 mask = self.cboMask.currentData(QtCore.Qt.UserRole)
-                mask_tuple = (self.project.project_file, mask.id) if mask.id > 0 else None
 
                 # Ensure that the scratch feature class name doesn't exist in scratch geopackage
                 # Do this because an error might have left a lingering feature class table etc
                 self.fc_name = get_unique_scratch_fc_name(self.project.project_file, self.txtName.text())
 
-                copy_vector = CopyFeatureClass(self.txtSourcePath.text(), mask_tuple, os.path.dirname(self.txtProjectPath.text()), self.fc_name)
-
+                copy_vector = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=mask.id, proj_gpkg=self.project.project_file)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
                 # self.on_copy_complete(copy_vector.run())
@@ -104,7 +102,7 @@ class FrmScratchVector(QtWidgets.QDialog):
 
                 # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
                 self.buttonBox.setEnabled(False)
-                copy_vector.copy_complete.connect(self.on_copy_complete)
+                copy_vector.import_complete.connect(self.on_copy_complete)
                 QgsApplication.taskManager().addTask(copy_vector)
 
             except Exception as ex:
@@ -124,7 +122,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                     self.project.project_file,
                     self.txtName.text(),
                     self.fc_name,
-                    os.path.dirname(self.txtProjectPath.text()),
+                    scratch_gpkg_path(self.project.project_file),
                     self.cboVectorType.currentData(QtCore.Qt.UserRole).id,
                     self.txtDescription.toPlainText(),
                     self.metadata)
@@ -147,7 +145,7 @@ class FrmScratchVector(QtWidgets.QDialog):
 
         clean_name = re.sub('[^A-Za-z0-9]+', '', self.txtName.text())
         if len(clean_name) > 0:
-            self.txtProjectPath.setText(parse_posix_path(os.path.join(scratch_gpkg_path(self.project.project_file), clean_name)))
+            self.txtProjectPath.setText(f'{scratch_gpkg_path(self.project.project_file)}|layername={clean_name}')
         else:
             self.txtProjectPath.setText('')
 

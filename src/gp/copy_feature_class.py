@@ -10,6 +10,8 @@ MESSAGE_CATEGORY = 'QRiS_CopyFeatureClassTask'
 
 class CopyFeatureClass(QgsTask):
     """
+    Depreciated. Use ImportFeatureClass instead.
+
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
     """
 

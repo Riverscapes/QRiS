@@ -1,3 +1,4 @@
+import os
 import json
 
 from osgeo import ogr, osr
@@ -18,7 +19,7 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, output_id_field: str, output_id: int, field_map: dict = None, clip_mask_id=None, attribute_filter: str = None):
+    def __init__(self, source_path: str, dest_path: str, output_id_field: str = None, output_id: int = None, field_map: dict = None, clip_mask_id=None, attribute_filter: str = None, proj_gpkg=None):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
 
         self.source_path = source_path
@@ -30,10 +31,13 @@ class ImportFeatureClass(QgsTask):
         self.attribute_filter = attribute_filter
         self.in_feats = 0
         self.out_feats = 0
+        self.proj_gpkg = proj_gpkg
 
     def run(self):
 
         self.setProgress(0)
+
+        copy_fields = False
 
         try:
             src_path, _src_layer_name, src_layer_id = layer_path_parser(self.source_path)
@@ -46,30 +50,56 @@ class ImportFeatureClass(QgsTask):
             self.in_feats = src_layer.GetFeatureCount()
 
             dst_path, dst_layer_name, _dst_layer_id = layer_path_parser(self.output_path)
+
             gpkg_driver = ogr.GetDriverByName('GPKG')
+            if not os.path.exists(dst_path):
+                gpkg_driver.CreateDataSource(dst_path)
+
             dst_dataset = gpkg_driver.Open(dst_path, 1)
             dst_layer = dst_dataset.GetLayerByName(dst_layer_name)
+
+            if dst_layer is None:
+                copy_fields = True
+                # create the layer based on the source layer
+                dst_layer = dst_dataset.CreateLayer(dst_layer_name, src_srs, src_layer.GetGeomType())
+                # add the fields from the source layer
+                src_layer_def = src_layer.GetLayerDefn()
+                for i in range(src_layer_def.GetFieldCount()):
+                    src_field = src_layer_def.GetFieldDefn(i)
+                    dst_layer.CreateField(src_field)
+
             dst_srs = dst_layer.GetSpatialRef()
             dst_layer_def = dst_layer.GetLayerDefn()
 
             clip_geom = None
             if self.clip_mask_id is not None:
-                clip_layer = dst_dataset.GetLayer('aoi_features')
+                if self.proj_gpkg is not None:
+                    mask_dataset = ogr.Open(self.proj_gpkg)
+                else:
+                    mask_dataset = dst_dataset
+                clip_layer = mask_dataset.GetLayer('aoi_features')
                 clip_layer.SetAttributeFilter(f'mask_id = {self.clip_mask_id}')
-                clip_feat = clip_layer.GetNextFeature()
-                clip_geom = clip_feat.GetGeometryRef()
+                # Gather all of the geoms and merge into a multipart geometry
+                clip_geom = ogr.Geometry(ogr.wkbMultiPolygon)
+                for clip_feat in clip_layer:
+                    clip_geom.AddGeometry(clip_feat.GetGeometryRef())
+                # clip_geom = clip_geom.UnionCascaded()
+                clip_transform = osr.CoordinateTransformation(clip_layer.GetSpatialRef(), src_srs)
+                clip_geom.Transform(clip_transform)
 
             transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
             self.out_feats = 0
             for src_feature in src_layer:
+
                 geom = src_feature.GetGeometryRef()
-                geom.Transform(transform)
+
                 if clip_geom is not None:
                     geom = clip_geom.Intersection(geom)
-                    if geom.IsEmpty() or geom.GetArea() == 0.0:
+                    if geom.IsEmpty():
                         continue
 
+                geom.Transform(transform)
                 # Remove M and Z values
                 if geom.Is3D():
                     geom.FlattenTo2D()
@@ -92,7 +122,8 @@ class ImportFeatureClass(QgsTask):
                         g = geom.GetGeometryRef(i)
                     dst_feature = ogr.Feature(dst_layer_def)
                     dst_feature.SetGeometry(g)
-                    dst_feature.SetField(self.output_id_field, self.output_id)
+                    if self.output_id_field is not None and self.output_id is not None:
+                        dst_feature.SetField(self.output_id_field, self.output_id)
 
                     # Field Mapping
                     if self.field_map is not None:
@@ -122,6 +153,13 @@ class ImportFeatureClass(QgsTask):
                         # add metadata field if it is not empty
                         if metadata:
                             dst_feature.SetField('metadata', json.dumps(metadata))
+
+                    if copy_fields is True:
+                        # copy the field values from the source layer
+                        for i in range(src_feature.GetFieldCount()):
+                            src_field = src_feature.GetFieldDefnRef(i)
+                            dst_feature.SetField(src_field.GetNameRef(), src_feature.GetField(i))
+
                     err = dst_layer.CreateFeature(dst_feature)
                     dst_feature = None
                     if err != 0:
