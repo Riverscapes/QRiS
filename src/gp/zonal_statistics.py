@@ -5,7 +5,7 @@ Code adapted from Konrad Hafen's tutorial here
 https://opensourceoptions.com/blog/zonal-statistics-algorithm-with-python-in-4-steps/
 
 Note that the OGR polygon passed in MUST be in the same coordinate reference system
-as the raster dataset. It is the caller's responsibility to reproject it before 
+as the raster dataset. It is the caller's responsibility to reproject it before
 calling this function.
 
 Other Resources:

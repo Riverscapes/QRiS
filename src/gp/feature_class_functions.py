@@ -45,7 +45,7 @@ def flip_line_geometry(project: Project, profile: Profile):
 
 def layer_path_parser(path: str) -> tuple[str, str, object]:
     """
-    Parse a layer path into a path, layer name, and identifier (for ogr GetLayer). 
+    Parse a layer path into a path, layer name, and identifier (for ogr GetLayer).
     """
 
     if os.path.splitext(path)[1].lower() == ".shp":

@@ -840,9 +840,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_pour_point(self, parent_node):
 
-        QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.' +
-                                          '  Be sure to click on the precise stream location.' +
-                                          '  A form will appear where you can provide a name and description for the point.' +
+        QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.'
+                                          '  Be sure to click on the precise stream location.'
+                                          '  A form will appear where you can provide a name and description for the point.'
                                           '  After you click OK, the pour point location will be transmitted to Stream Stats.'
                                           '  This process can take from a few seconds to a few minutes depending on the size of the catchment.')
 

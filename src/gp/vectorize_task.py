@@ -15,7 +15,6 @@ from PyQt5.QtGui import *
 from qgis.PyQt.QtCore import QVariant, pyqtSignal
 from qgis.analysis import QgsNativeAlgorithms
 
-Path = str
 
 # Initialize QGIS Application
 from qgis import processing
@@ -28,15 +27,15 @@ QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 # simplify tolerance
 # use 0.00008 for most 1m LiDAR
 # try 0.0001 for 10 m elevation data
-#simplify_tolerance = 0.00008
+# simplify_tolerance = 0.00008
 
 # smoothing parameter
 # use from 0.25 to 0.5. Use higher value for 10 m DEM
-#smoothing_offset = 0.25
+# smoothing_offset = 0.25
 
 # small polygon removal area in meters
 # generally been using 9 meters as a cutoff to remove small islands
-#polygon_min_size = 9
+# polygon_min_size = 9
 
 Path = str
 
