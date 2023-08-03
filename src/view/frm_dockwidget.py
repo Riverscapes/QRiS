@@ -361,6 +361,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
                         self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
+                        self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
 
                 if isinstance(model_data, Profile):
                     self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
@@ -886,7 +887,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
             QgsApplication.taskManager().addTask(stream_stats)
 
-    @pyqtSlot(PourPoint or None, bool)
+    @ pyqtSlot(PourPoint or None, bool)
     def stream_stats_complete(self, pour_point: PourPoint, add_to_map: bool):
 
         if isinstance(pour_point, PourPoint):
@@ -903,7 +904,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.iface.messageBar().pushMessage('Stream Stats Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
-    @pyqtSlot(ScratchVector, bool)
+    @ pyqtSlot(ScratchVector, bool)
     def raster_slider_export_complete(self, scratch_vector: ScratchVector, add_to_map: bool):
 
         if isinstance(scratch_vector, ScratchVector):
@@ -915,7 +916,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.iface.messageBar().pushMessage('Export Polygon Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
-    @pyqtSlot(Profile, bool)
+    @ pyqtSlot(Profile, bool)
     def centerline_save_complete(self, centerline: Profile, add_to_map: bool):
 
         if isinstance(centerline, Profile):
@@ -927,7 +928,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.iface.messageBar().pushMessage('Add Centerline to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
-    @pyqtSlot(DBItem, str, bool, bool)
+    @ pyqtSlot(DBItem, str, bool, bool)
     def save_complete(self, item: DBItem, machine_code: str, is_input_node: bool, add_to_map: bool):
 
         if isinstance(item, DBItem):
@@ -991,7 +992,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         metrics_task.on_complete.connect(self.geospatial_summary_complete)
         QgsApplication.taskManager().addTask(metrics_task)
 
-    @pyqtSlot(bool, Mask, dict or None, dict or None)
+    @ pyqtSlot(bool, Mask, dict or None, dict or None)
     def geospatial_summary_complete(self, result, model_data, polygons, data):
 
         if result is True:

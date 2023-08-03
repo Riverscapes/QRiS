@@ -38,6 +38,9 @@ class ImportFeatureClass(QgsTask):
         self.setProgress(0)
 
         copy_fields = False
+        src_dataset = None
+        dst_dataset = None
+        result = True
 
         try:
             src_path, _src_layer_name, src_layer_id = layer_path_parser(self.source_path)
@@ -174,11 +177,16 @@ class ImportFeatureClass(QgsTask):
             if self.out_feats == 0:
                 raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
 
-            return True
-
         except Exception as ex:
             self.exception = ex
-            return False
+            result = False
+
+        finally:
+            if src_dataset is not None:
+                src_dataset = None
+            if dst_dataset is not None:
+                dst_dataset = None
+            return result
 
     def progress_callback(self, complete, message, unknown):
         self.setProgress(complete * 100)

@@ -6,6 +6,7 @@ from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
 from ..model.pour_point import PourPoint
+from ..model.scratch_vector import ScratchVector
 
 from ..gp.import_feature_class import ImportFeatureClass
 from .utilities import validate_name, add_standard_form_buttons
@@ -75,14 +76,20 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
         self.txtName.setText(db_item.name)
         self.setWindowTitle(f'Promote {db_item.name} to AOI')
+
+        db_path = self.qris_project.project_file
+        id_field = None
         if isinstance(db_item, PourPoint):
             layer_name = 'catchments'
             id_field = 'pour_point_id'
+        elif isinstance(db_item, ScratchVector):
+            layer_name = db_item.fc_name
+            db_path = db_item.gpkg_path
         else:
             layer_name = db_item.db_table_name
             id_field = db_item.id_column_name
-        self.import_source_path = f'{self.qris_project.project_file}|layername={layer_name}'
-        self.attribute_filter = f'{id_field} = {db_item.id}'
+        self.import_source_path = f'{db_path}|layername={layer_name}'
+        self.attribute_filter = f'{id_field} = {db_item.id}' if id_field is not None else None
 
     def accept(self):
 
@@ -114,17 +121,17 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 mask_path = f'{self.qris_project.project_file}|layername={"aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "sampling_frame"}'
                 import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, 'mask_id', self.qris_mask.id, attributes, clip_mask_id, self.attribute_filter)
                 # DEBUG
-                result = import_mask_task.run()
-                self.on_import_complete(result)
+                # result = import_mask_task.run()
+                # self.on_import_complete(result)
                 # PRODUCTION
-                # import_mask_task.import_complete.connect(self.on_import_complete)
-                # QgsApplication.taskManager().addTask(import_mask_task)
+                import_mask_task.import_complete.connect(self.on_import_complete)
+                QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
                     self.qris_mask.delete(self.qris_project.project_file)
                 except Exception as ex:
                     print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
-                QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(ex))
+                    QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(ex))
                 return
 
         super(FrmMaskAOI, self).accept()
