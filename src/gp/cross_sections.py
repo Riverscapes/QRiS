@@ -36,7 +36,7 @@ class CrossSectionsTask(QgsTask):
         # methodology based on https://gis.stackexchange.com/questions/302802/create-points-along-line-and-apply-a-90-offset-to-them-pyqgis
 
         self.xsections = {}
-        dist = 0.0
+        dist = self.spacing  # intial distance from start of line
         sequence = 0
 
         while dist < self.centerline.length():
