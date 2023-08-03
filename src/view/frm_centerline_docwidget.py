@@ -6,14 +6,17 @@ from PyQt5 import Qt, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 
 from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsMarkerLineSymbolLayer, QgsSimpleMarkerSymbolLayer
 from qgis.utils import iface
 
 from ..gp.centerlines import CenterlineTask
 from ..model.project import Project
 from ..model.db_item import DBItem
 from ..model.profile import Profile
+from ..model.layer import Layer
+from ..model.mask import AOI_MASK_TYPE_ID
 
+from .frm_layer_picker import FrmLayerPicker
 from .capture_line_segment import LineSegmentMapTool
 from .utilities import add_help_button
 from .frm_save_centerline import FrmSaveCenterline
@@ -80,8 +83,21 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.layer_start_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_STARTLINE_MACHINE_CODE, "QRIS Centerline Start Preview", driver='memory')
         self.layer_end_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_ENDLINE_MACHINE_CODE, "QRIS Centerline End Preview", driver='memory')
 
-        self.layer_centerline.renderer().symbol().symbolLayer(0).setColor(QColor('darkblue'))
-        self.layer_centerline.renderer().symbol().symbolLayer(0).setWidth(0.66)
+        # set centerline symboloyg to a dark blue line with an arrowhead at the last vertex
+        self.layer_centerline.renderer().symbol().setColor(QColor('darkblue'))
+        self.layer_centerline.renderer().symbol().setWidth(0.66)
+
+        arrowhead = QgsSimpleMarkerSymbolLayer().create({'name': 'arrowhead', 'color': 'darkblue', 'size': '6.0', 'stroke_width': '3.0', 'angle': '0.0', 'offset': '0.0', 'horizontal_anchor_point': '1', 'vertical_anchor_point': '1', 'placement': 'centralpoint', 'shape': 'marker', 'marker': 'arrowhead', 'marker_width': '0.75',
+                                                         'marker_height': '0.75', 'marker_only_for_endpoints': '0', 'use_custom_symbol_size': '0', 'scale_method': 'diameter', 'scale_factor': '1', 'outline_width': '0', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_join_style': 'miter', 'outline_cap_style': 'square'})
+
+        # set stroke width to 0.66
+        arrowhead.setStrokeWidth(0.66)
+
+        main_symbol = QgsMarkerLineSymbolLayer().create()
+        main_symbol.setPlacement(QgsMarkerLineSymbolLayer.LastVertex)
+        main_symbol.subSymbol().changeSymbolLayer(0, arrowhead)
+        self.layer_centerline.renderer().symbol().appendSymbolLayer(main_symbol)
+
         self.layer_start_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
         self.layer_end_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
 
@@ -95,6 +111,18 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def remove_preview_layers(self):
         for machine_code in [PREVIEW_STARTLINE_MACHINE_CODE, PREVIEW_CENTERTLINE_MACHINE_CODE, PREVIEW_ENDLINE_MACHINE_CODE]:
             self.map_manager.remove_machine_code_layer(self.project.map_guid, machine_code)
+
+    def cmdSelectLayer_click(self):
+
+        sv_layers = list(sv for sv in self.project.scratch_vectors.values() if QgsVectorLayer(f'{sv.gpkg_path}|layername={sv.fc_name}').geometryType() == Layer.GEOMETRY_TYPES['Polygon'])
+        aoi_layers = list(layer for layer in self.project.masks.values() if layer.mask_type.id == AOI_MASK_TYPE_ID)
+        layers = sv_layers + aoi_layers
+        frm_layer_picker = FrmLayerPicker(self, "Select Polygon Layer", layers)
+        result = frm_layer_picker.exec_()
+
+        if result == QtWidgets.QDialog.Accepted:
+            self.centerline_setup(frm_layer_picker.layer)
+        return
 
     def cmdSelectPolygon_click(self):
         iface.setActiveLayer(self.polygon_layer)
@@ -146,13 +174,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         centerline_task = CenterlineTask(geom_polygon, geom_start, geom_end, self.densify_distance)
         # DEBUG
-        result = centerline_task.run()
-        if result is True:
-            cl = QgsGeometry(centerline_task.centerline)
-            self.centerline_complete(cl)
+        # result = centerline_task.run()
+        # if result is True:
+        #     cl = QgsGeometry(centerline_task.centerline)
+        #     self.centerline_complete(cl)
         # PRODUCTION
-        # centerline_task.centerline_complete.connect(self.centerline_complete)
-        # QgsApplication.taskManager().addTask(centerline_task)
+        centerline_task.centerline_complete.connect(self.centerline_complete)
+        QgsApplication.taskManager().addTask(centerline_task)
 
         return
 
@@ -204,6 +232,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.geom_start = line_string
         self.geom_start.transform(self.transform)
         self.txtStart.setText(self.geom_start.asWkt())
+        self.txtStart.setCursorPosition(0)
         feat = QgsFeature()
         feat.setGeometry(self.geom_start)
         self.layer_start_line.dataProvider().addFeature(feat)
@@ -216,6 +245,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.geom_end = line_string
         self.geom_end.transform(self.transform)
         self.txtEnd.setText(self.geom_end.asWkt())
+        self.txtEnd.setCursorPosition(0)
         feat = QgsFeature()
         feat.setGeometry(self.geom_end)
         self.layer_end_line.dataProvider().addFeature(feat)
@@ -267,110 +297,126 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     def setupUi(self):
 
-        self.setWindowTitle("Build Centerlines")
+        self.setWindowTitle("Generate Centerlines")
 
         self.dockWidgetContents = QtWidgets.QWidget(self)
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
-        self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
+        self.tabWidget = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabWidget)
 
-        self.lblLayer = QtWidgets.QLabel()
-        self.lblLayer.setText('Layer')
-        self.grid.addWidget(self.lblLayer, 0, 0, 1, 1)
+        self.tabCenterline = QtWidgets.QWidget()
+        self.tabWidget.addTab(self.tabCenterline, "Centerline Inputs")
+
+        self.gridCenterline = QtWidgets.QGridLayout()
+        self.tabCenterline.setLayout(self.gridCenterline)
+
+        self.lblLayer = QtWidgets.QLabel('Polygon Layer')
+        self.gridCenterline.addWidget(self.lblLayer, 0, 0, 1, 1)
+
+        self.horizLayer = QtWidgets.QHBoxLayout()
+        self.gridCenterline.addLayout(self.horizLayer, 0, 1, 1, 1)
 
         self.txtLayer = QtWidgets.QLineEdit()
         self.txtLayer.setReadOnly(True)
-        self.grid.addWidget(self.txtLayer, 0, 1, 1, 1)
+        self.horizLayer.addWidget(self.txtLayer)
 
-        self.lblPolygon = QtWidgets.QLabel()
-        self.lblPolygon.setText('Polygon')
-        self.grid.addWidget(self.lblPolygon, 1, 0, 1, 1)
+        self.cmdSelectLayer = QtWidgets.QPushButton('Select')
+        self.cmdSelectLayer.setToolTip('Select Polygon Layer')
+        self.cmdSelectLayer.clicked.connect(self.cmdSelectLayer_click)
+        self.horizLayer.addWidget(self.cmdSelectLayer)
+
+        self.lblPolygon = QtWidgets.QLabel('Polygon Feature')
+        self.gridCenterline.addWidget(self.lblPolygon, 1, 0, 1, 1)
 
         self.horizPoly = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizPoly, 1, 1, 1, 1)
+        self.gridCenterline.addLayout(self.horizPoly, 1, 1, 1, 1)
 
         self.txtPolygon = QtWidgets.QLineEdit()
         self.txtPolygon.setReadOnly(True)
         self.horizPoly.addWidget(self.txtPolygon)
 
-        self.cmdPolygon = QtWidgets.QPushButton()
-        self.cmdPolygon.setText('Select')
+        self.cmdPolygon = QtWidgets.QPushButton('Select')
         self.cmdPolygon.setToolTip('Select Polygon on map')
         self.cmdPolygon.clicked.connect(self.cmdSelectPolygon_click)
         self.horizPoly.addWidget(self.cmdPolygon)
 
-        self.lblStart = QtWidgets.QLabel()
-        self.lblStart.setText('Start of Polygon')
-        self.grid.addWidget(self.lblStart, 2, 0, 1, 1)
+        self.lblStart = QtWidgets.QLabel('Start of Centerline')
+        self.gridCenterline.addWidget(self.lblStart, 2, 0, 1, 1)
 
         self.horizStart = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizStart, 2, 1, 1, 1)
+        self.gridCenterline.addLayout(self.horizStart, 2, 1, 1, 1)
 
         self.txtStart = QtWidgets.QLineEdit()
         self.txtStart.setReadOnly(True)
         self.horizStart.addWidget(self.txtStart)
 
-        self.cmdCaptureS = QtWidgets.QPushButton()
-        self.cmdCaptureS.setText('Capture')
+        self.cmdCaptureS = QtWidgets.QPushButton('Capture')
         self.cmdCaptureS.setToolTip('Manually capture the transect across the polygon at the start of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.')
         self.cmdCaptureS.clicked.connect(self.cmdCaptureStart_click)
         self.horizStart.addWidget(self.cmdCaptureS)
 
-        self.lblEnd = QtWidgets.QLabel()
-        self.lblEnd.setText('End of Polygon')
-        self.grid.addWidget(self.lblEnd, 3, 0, 1, 1)
+        self.lblEnd = QtWidgets.QLabel('End of Centerline')
+        self.gridCenterline.addWidget(self.lblEnd, 3, 0, 1, 1)
 
         self.horizEnd = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizEnd, 3, 1, 1, 1)
+        self.gridCenterline.addLayout(self.horizEnd, 3, 1, 1, 1)
 
         self.txtEnd = QtWidgets.QLineEdit()
         self.txtEnd.setReadOnly(True)
         self.horizEnd.addWidget(self.txtEnd)
 
-        self.cmdCaptureE = QtWidgets.QPushButton()
-        self.cmdCaptureE.setText('Capture')
+        self.cmdCaptureE = QtWidgets.QPushButton('Capture')
         self.cmdCaptureE.setToolTip('Manually capture the transect across the polygon at the end of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.')
         self.cmdCaptureE.clicked.connect(self.cmdCaptureEnd_click)
         self.horizEnd.addWidget(self.cmdCaptureE)
 
-        self.lblDensity = QtWidgets.QLabel()
-        self.lblDensity.setText('Densify Distance')
+        self.cmdReset = QtWidgets.QPushButton('Reset')
+        self.cmdReset.setToolTip('Reset the centerline tool polygon, transects, and parameters')
+        self.cmdReset.setFixedSize(self.cmdReset.sizeHint())
+        self.cmdReset.clicked.connect(self.cmdReset_click)
+        self.gridCenterline.addWidget(self.cmdReset, 4, 0, 1, 1)
+
+        # add tab for the smoothing parameters
+        self.tabSmoothing = QtWidgets.QWidget()
+        self.tabWidget.addTab(self.tabSmoothing, "Smoothing")
+
+        self.gridSmoothing = QtWidgets.QGridLayout()
+        self.tabSmoothing.setLayout(self.gridSmoothing)
+
+        self.lblDensity = QtWidgets.QLabel('Densify Distance')
         self.lblDensity.setToolTip('Densify the polygon by adding regularly placed extra nodes inside each segment so that the maximum distance between any two nodes does not exceed the specified distance')
-        self.grid.addWidget(self.lblDensity, 4, 0, 1, 1)
+        self.gridSmoothing.addWidget(self.lblDensity, 0, 0, 1, 1)
 
         self.dblDensity = QtWidgets.QSpinBox()
         self.dblDensity.setValue(10)
         self.dblDensity.setSuffix(' m')
         self.dblDensity.setRange(0, 500)
-        self.grid.addWidget(self.dblDensity, 4, 1, 1, 1)
+        self.gridSmoothing.addWidget(self.dblDensity, 0, 1, 1, 1)
 
-        self.lblSmoothingIter = QtWidgets.QLabel()
-        self.lblSmoothingIter.setText('Smoothing Iter.')
+        self.lblSmoothingIter = QtWidgets.QLabel('Smoothing Iterations')
         self.lblSmoothingIter.setToolTip('number of smoothing iterations to run. More iterations results in a smoother geometry. Set to 0 for no smoothing.')
-        self.grid.addWidget(self.lblSmoothingIter, 5, 0, 1, 1)
+        self.gridSmoothing.addWidget(self.lblSmoothingIter, 1, 0, 1, 1)
 
         self.dblSmoothingIter = QtWidgets.QSpinBox()
         self.dblSmoothingIter.setValue(10)
         self.dblSmoothingIter.setRange(0, 10)
-        self.grid.addWidget(self.dblSmoothingIter, 5, 1, 1, 1)
+        self.gridSmoothing.addWidget(self.dblSmoothingIter, 1, 1, 1, 1)
 
-        self.lblSmoothingOffset = QtWidgets.QLabel()
-        self.lblSmoothingOffset.setText('Smoothing Offset')
+        self.lblSmoothingOffset = QtWidgets.QLabel('Smoothing Offset')
         self.lblSmoothingOffset.setToolTip(f'fraction of line to create new vertices along, between 0 and 1.0, e.g., the default value of 0.25 will create new vertices 25% and 75% along each line segment of the geometry for each iteration. Smaller values result in “tighter” smoothing.')
-        self.grid.addWidget(self.lblSmoothingOffset, 6, 0, 1, 1)
+        self.gridSmoothing.addWidget(self.lblSmoothingOffset, 2, 0, 1, 1)
 
         self.dblSmoothingOffset = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingOffset.setDecimals(2)
         self.dblSmoothingOffset.setValue(0.25)
         self.dblSmoothingOffset.setSingleStep(0.05)
         self.dblSmoothingOffset.setRange(0, 1)
-        self.grid.addWidget(self.dblSmoothingOffset, 6, 1, 1, 1)
+        self.gridSmoothing.addWidget(self.dblSmoothingOffset, 2, 1, 1, 1)
 
-        self.lblSmoothingMin = QtWidgets.QLabel()
-        self.lblSmoothingMin.setText('Smoothing Min Dist.')
+        self.lblSmoothingMin = QtWidgets.QLabel('Smoothing Min Distance')
         self.lblSmoothingMin.setToolTip('minimum segment length to apply smoothing to')
-        self.grid.addWidget(self.lblSmoothingMin, 7, 0, 1, 1)
+        self.gridSmoothing.addWidget(self.lblSmoothingMin, 3, 0, 1, 1)
 
         self.dblSmoothingMin = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingMin.setSuffix(' m')
@@ -378,42 +424,36 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.dblSmoothingMin.setRange(-1.0, 500.0)
         self.dblSmoothingMin.setValue(-1.0)
         self.dblSmoothingMin.setSingleStep(5)
-        self.grid.addWidget(self.dblSmoothingMin, 7, 1, 1, 1)
+        self.gridSmoothing.addWidget(self.dblSmoothingMin, 3, 1, 1, 1)
 
-        self.lblSmoothingAngle = QtWidgets.QLabel()
-        self.lblSmoothingAngle.setText('Smoothing Max Angle')
+        self.lblSmoothingAngle = QtWidgets.QLabel('Smoothing Max Angle')
         self.lblSmoothingAngle.setToolTip('maximum angle at node (0-180) at which smoothing will be applied')
-        self.grid.addWidget(self.lblSmoothingAngle, 8, 0, 1, 1)
+        self.gridSmoothing.addWidget(self.lblSmoothingAngle, 4, 0, 1, 1)
 
         self.dblSmoothingAngle = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingAngle.setSuffix(' degrees')
         self.dblSmoothingAngle.setDecimals(1)
         self.dblSmoothingAngle.setRange(0, 180)
         self.dblSmoothingAngle.setValue(180.0)
+        self.gridSmoothing.addWidget(self.dblSmoothingAngle, 4, 1, 1, 1)
 
-        self.grid.addWidget(self.dblSmoothingAngle, 8, 1, 1, 1)
+        # add grid for the buttons
+        self.gridButtons = QtWidgets.QGridLayout()
+        self.vert.addLayout(self.gridButtons)
 
-        self.horizBottom = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizBottom, 9, 1, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, 'centerlines'), 0, 0, 1, 1)
 
-        self.cmdGenerateCl = QtWidgets.QPushButton()
-        self.cmdGenerateCl.setText('Generate Centerline')
+        # include a spacer to push the buttons to the right
+        self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
+
+        self.cmdGenerateCl = QtWidgets.QPushButton('Generate Centerline')
         self.cmdGenerateCl.setToolTip('Generate a preview the centerline')
         self.cmdGenerateCl.clicked.connect(self.cmdGenerateCl_click)
-        self.horizBottom.addWidget(self.cmdGenerateCl)
+        self.gridButtons.addWidget(self.cmdGenerateCl, 0, 2, 1, 1)
 
-        self.cmdSaveCl = QtWidgets.QPushButton()
-        self.cmdSaveCl.setText('Save Centerline')
+        self.cmdSaveCl = QtWidgets.QPushButton('Save Centerline')
         self.cmdSaveCl.setToolTip('Save the centerline to the project')
         self.cmdSaveCl.clicked.connect(self.cmdSaveCenterline_click)
-        self.horizBottom.addWidget(self.cmdSaveCl)
-
-        self.cmdReset = QtWidgets.QPushButton()
-        self.cmdReset.setText('Reset')
-        self.cmdReset.setToolTip('Reset the centerline tool polygon, transects, and parameters')
-        self.cmdReset.clicked.connect(self.cmdReset_click)
-        self.grid.addWidget(self.cmdReset, 10, 0, 1, 1)
-
-        self.vert.addLayout(add_help_button(self, 'centerlines'))
+        self.gridButtons.addWidget(self.cmdSaveCl, 1, 2, 1, 1)
 
         self.setWidget(self.dockWidgetContents)

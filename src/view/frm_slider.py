@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsRasterBandStats
@@ -20,6 +20,7 @@ class FrmSlider(QtWidgets.QDockWidget):
 
     def __init__(self, parent, project: Project, map_manager: QRisMapManager):
         super().__init__(parent)
+        self.increment = 1.0
         self.setupUi()
 
         self.project = project
@@ -59,6 +60,10 @@ class FrmSlider(QtWidgets.QDockWidget):
         value = self.valElevation.value()
         self.map_manager.apply_raster_single_value(self.raster_layer, value, self.max, self.optAbove.isChecked())
 
+    def increment_change(self):
+        self.increment = self.valIncrement.value()
+        self.valElevation.setSingleStep(self.increment)
+
     def cmdSelect_click(self):
         rasters = list(self.project.rasters.values())
         frm = FrmLayerPicker(self, 'Select raster', rasters)
@@ -97,8 +102,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblSurface = QtWidgets.QLabel()
-        self.lblSurface.setText('Surface')
+        self.lblSurface = QtWidgets.QLabel('Surface')
         self.grid.addWidget(self.lblSurface, 0, 0, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
@@ -108,12 +112,13 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.txtSurface.setReadOnly(True)
         self.horiz.addWidget(self.txtSurface)
 
-        self.cmdSurface = QtWidgets.QPushButton()
-        self.cmdSurface.setText('Select')
+        self.cmdSurface = QtWidgets.QPushButton('Select')
+        self.cmdSurface.setToolTip('Select a raster layer')
         self.cmdSurface.clicked.connect(self.cmdSelect_click)
         self.horiz.addWidget(self.cmdSurface)
 
         self.lblSliderType = QtWidgets.QLabel('Threshold')
+        self.lblSliderType.setToolTip('Select whether the highlighted area will be above or below the threshold value')
         self.grid.addWidget(self.lblSliderType, 1, 0, 1, 1)
 
         self.horizOptions = QtWidgets.QHBoxLayout()
@@ -125,12 +130,11 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.optBelow.setChecked(True)
         self.horizOptions.addWidget(self.optBelow)
 
-        self.lblElevation = QtWidgets.QLabel()
-        self.lblElevation.setText('Surface Value')
+        self.lblElevation = QtWidgets.QLabel('Surface Value')
         self.grid.addWidget(self.lblElevation, 2, 0, 1, 1)
 
         self.valElevation = QtWidgets.QDoubleSpinBox()
-        self.valElevation.setSingleStep(0.1)
+        self.valElevation.setSingleStep(self.increment)
         self.valElevation.setDecimals(2)
         self.valElevation.valueChanged.connect(self.spinBoxElevationChange)
         self.grid.addWidget(self.valElevation, 2, 1, 1, 1)
@@ -138,17 +142,31 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.slider = DoubleSlider(decimals=2)
         self.slider.setOrientation(QtCore.Qt.Horizontal)
         self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
-        self.slider.setSingleStep(0.1)
+        self.slider.setSingleStep(self.increment)
         self.slider.doubleValueChanged.connect(self.sliderElevationChange)
         self.grid.addWidget(self.slider, 3, 1, 1, 1)
 
-        self.precision = QtWidgets
+        self.lblIncrement = QtWidgets.QLabel('Increment')
+        self.lblIncrement.setToolTip('The increment value for the slider')
+        self.grid.addWidget(self.lblIncrement, 4, 0, 1, 1)
 
-        self.vert.addLayout(add_help_button(self, 'raster_slider'))
+        self.valIncrement = QtWidgets.QDoubleSpinBox()
+        self.valIncrement.setSingleStep(0.1)
+        self.valIncrement.setDecimals(2)
+        self.valIncrement.setValue(self.increment)
+        self.valIncrement.valueChanged.connect(self.increment_change)
+        self.grid.addWidget(self.valIncrement, 4, 1, 1, 1)
 
-        self.cmdExport = QtWidgets.QPushButton()
-        self.cmdExport.setText('Export')
+        self.gridButtons = QtWidgets.QGridLayout()
+        self.vert.addLayout(self.gridButtons)
+
+        self.gridButtons.addWidget(add_help_button(self, 'raster_slider'), 0, 0, 1, 1)
+
+        self.gridButtons.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
+
+        self.cmdExport = QtWidgets.QPushButton('Export Polygon')
+        self.cmdExport.setToolTip('Export the highlighted area as a polygon')
         self.cmdExport.clicked.connect(self.cmdExport_click)
-        self.grid.addWidget(self.cmdExport)
+        self.gridButtons.addWidget(self.cmdExport, 0, 2, 1, 1)
 
         self.setWidget(self.dockWidgetContents)
