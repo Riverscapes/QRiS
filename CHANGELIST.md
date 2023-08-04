@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [0.2.2] 2023 AUG 4
+
+### Added
+- Promote scratch vector to AOI
+
+### Fixed
+- Bug with missing json import when creating new project
+
+### Changed
+- Dockable window improvements and form updates
+- Copy Feature Class Task depreciated in favor of using the updated import feature class task
+- First cross section is now at the at the first interval of the spacing distance, not the start of centerline.
+
 ## [0.2.1] 2023 JUL 28
 
 ### Added
