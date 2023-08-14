@@ -949,7 +949,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if db_item.event_type.id == DATA_CAPTURE_EVENT_TYPE_ID:
                 frm = FrmEvent(self, self.project, event=db_item)
             else:
-                frm = FrmDesign(self, self.project, db_item)
+                frm = FrmDesign(self, self.project, db_item.event_type.id, event=db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, Profile):

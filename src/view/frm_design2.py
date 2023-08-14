@@ -56,13 +56,14 @@ class FrmDesign(FrmEvent):
             if 'designers' in event.metadata:
                 self.txtDesigners.setPlainText(event.metadata['designers'])
 
-            design_source_ids = event.metadata['designSourceIds']
-            if design_source_ids is not None:
-                for source_id in design_source_ids:
-                    for widget in self.design_source_widgets:
-                        widget_id = widget.property('id')
-                        if widget_id == source_id:
-                            widget.setChecked(True)
+            if 'designSourceIds' in event.metadata:
+                design_source_ids = event.metadata['designSourceIds']
+                if design_source_ids is not None:
+                    for source_id in design_source_ids:
+                        for widget in self.design_source_widgets:
+                            widget_id = widget.property('id')
+                            if widget_id == source_id:
+                                widget.setChecked(True)
 
     def accept(self):
 
