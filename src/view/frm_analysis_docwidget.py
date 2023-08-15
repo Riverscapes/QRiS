@@ -24,6 +24,9 @@
 
 import os
 import sqlite3
+import json
+import pandas as pd
+import xlwt
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
 from qgis.utils import iface
@@ -48,6 +51,7 @@ from ..QRiS.path_utilities import parse_posix_path
 
 from .frm_metric_value import FrmMetricValue
 from .frm_calculate_all_metrics import FrmCalculateAllMetrics
+from .frm_export_metrics import FrmExportMetrics
 
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
@@ -227,6 +231,59 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                     iface.messageBar().pushMessage('Metrics', 'Onr or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
             self.load_table_values()
 
+    def export_table(self):
+
+        # open modal dialog to select export file
+        frm = FrmExportMetrics(self)
+        result = frm.exec_()
+
+        out_values = []
+
+        if result == QtWidgets.QDialog.Accepted:
+            mask_features = [self.cboSampleFrame.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(QtCore.Qt.UserRole)]
+            data_capture_events = [self.cboEvent.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboEvent.count())] if frm.rdoAllDCE.isChecked() else [self.cboEvent.currentData(QtCore.Qt.UserRole)]
+            for mask_feature in mask_features:
+                for data_capture_event in data_capture_events:
+                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, self.project.metrics)
+                    values = {'sample_frame_id': mask_feature.id, 'data_capture_event_id': data_capture_event.id, 'mask_feature_name': mask_feature.name, 'data_capture_event_name': data_capture_event.name}
+                    for analysis_metric in self.analysis.analysis_metrics.values():
+                        metric = analysis_metric.metric
+                        metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
+                        value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.automated_value
+                        value = value if value is not None else ''
+                        values.update({metric.name: value})
+                    out_values.append(values)
+
+            if frm.combo_format.currentText() == 'CSV':
+                # write csv file
+                with open(frm.txtOutpath.text(), 'w') as f:
+                    f.write(','.join(out_values[0].keys()) + '\n')
+                    for values in out_values:
+                        f.write(','.join([str(v) for v in values.values()]) + '\n')
+            elif frm.combo_format.currentText() == 'JSON':
+                # write json file
+                with open(frm.txtOutpath.text(), 'w') as f:
+                    json.dump(out_values, f)
+            elif frm.combo_format.currentText() == 'Excel':
+                # write to excel file
+                # create workbook
+                wb = xlwt.Workbook()
+                ws = wb.add_sheet('Metrics')
+                # write header row
+                row = 0
+                for col, key in enumerate(out_values[0].keys()):
+                    ws.write(row, col, key)
+                # write data rows
+                for row, values in enumerate(out_values):
+                    for col, value in enumerate(values.values()):
+                        ws.write(row + 1, col, value)
+                # save workbook
+                wb.save(frm.txtOutpath.text())
+            else:
+                iface.messageBar().pushMessage('Export Metrics', f'Export format {frm.combo_format.currentText()} not supported.', level=Qgis.Warning)
+
+            iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {frm.txtOutpath.text()}', level=Qgis.Success)
+
     def cmdProperties_clicked(self):
 
         frm = FrmAnalysisProperties(self, self.project, self.analysis)
@@ -363,5 +420,18 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.table.setColumnWidth(3, 50)
         self.table.setIconSize(QtCore.QSize(32, 16))
         self.vert.addWidget(self.table)
+
+        # add export table button at the bottom right of the dock
+        self.horizExport = QtWidgets.QHBoxLayout()
+        self.vert.addLayout(self.horizExport)
+
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizExport.addItem(self.spacerItem)
+
+        self.cmdExport = QtWidgets.QPushButton()
+        self.cmdExport.setText('Export Metrics Table')
+        self.cmdExport.clicked.connect(self.export_table)
+        self.cmdExport.setToolTip('Export the table to a csv, json, or Excel file')
+        self.horizExport.addWidget(self.cmdExport, 0)
 
         self.setWidget(self.dockWidgetContents)
