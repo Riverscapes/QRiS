@@ -8,6 +8,7 @@ class FrmCalculateAllMetrics(QtWidgets.QDialog):
 
     def __init__(self, parent):
         super(FrmCalculateAllMetrics, self).__init__(parent)
+        self.setWindowTitle('Calculate All Metrics')
         self.setupUi()
 
     def accept(self):

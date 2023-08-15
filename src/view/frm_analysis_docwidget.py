@@ -310,7 +310,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def resizeEvent(self, event):
         if self.table.columnWidth(0) > self.table.width():
-            self.table.setColumnWidth(0, self.table.width() * 0.8)
+            self.table.setColumnWidth(0, int(self.table.width() * 0.8))
         QtWidgets.QDockWidget.resizeEvent(self, event)
 
     def closeEvent(self, event):
@@ -414,7 +414,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
-        self.table.setColumnWidth(0, self.table.width() * 0.8)
+        self.table.setColumnWidth(0, int(self.table.width() * 0.8))
         self.table.setColumnWidth(1, 100)
         self.table.setColumnWidth(2, 100)
         self.table.setColumnWidth(3, 50)
