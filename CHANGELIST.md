@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [0.2.3] 2023 AUG 15
+
+### Added
+- Export Metrics Table to csv, json, or xlsx
+
+### Fixed
+- Bug when saving DCE properties
+- Window title for Calculate All Metrics Form
+- Analysis table column size depreication warning.
+
 ## [0.2.2] 2023 AUG 4
 
 ### Added
