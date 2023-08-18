@@ -1,13 +1,14 @@
-import os
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsApplication, QgsVectorLayer
+from qgis.utils import Qgis, iface
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.profile import Profile, insert_profile
 from ..model.mask import AOI_MASK_TYPE_ID
 
-from ..gp.feature_class_functions import import_existing
+from ..gp.feature_class_functions import import_existing, layer_path_parser
+from ..gp.import_temp_layer import ImportTemporaryLayer
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -35,11 +36,20 @@ class FrmProfile(QtWidgets.QDialog):
         self.cboMaskClip.setVisible(show_mask_clip)
 
         if import_source_path is not None:
-            self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
+            if isinstance(import_source_path, QgsVectorLayer):
+                self.layer_name = import_source_path.name()
+                self.layer_id = 'memory'
+                show_attribute_filter = False
+                show_mask_clip = False
+            else:
+                # find if import_source_path is shapefile, geopackage, or other
+                self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
+
+            self.txtName.setText(self.layer_name)
             self.txtName.selectAll()
 
             if show_attribute_filter:
-                vector_layer = QgsVectorLayer(import_source_path)
+                vector_layer = import_source_path if isinstance(import_source_path, QgsVectorLayer) else QgsVectorLayer(import_source_path)
                 self.attributes = {i: DBItem('None', i, vector_layer.attributeDisplayName(i)) for i in vector_layer.attributeList()}
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
@@ -96,17 +106,35 @@ class FrmProfile(QtWidgets.QDialog):
                     clip_mask_id = None
                     if clip_mask is not None:
                         clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
-                    attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    import_existing(self.import_source_path, self.qris_project.project_file, 'profile_features', self.profile.id, 'profile_id', attributes, clip_mask_id)
+                    if self.layer_id == 'memory':
+                        task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, 'profile_features', 'profile_id', self.profile.id, mask_clip_id=clip_mask_id, proj_gpkg=self.qris_project.project_file)
+                        # DEBUG task.run()
+                        task.import_complete.connect(self.on_import_complete)
+                        QgsApplication.taskManager().addTask(task)
+                    else:
+                        attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
+                        import_existing(self.import_source_path, self.qris_project.project_file, 'profile_features', self.profile.id, 'profile_id', attributes, clip_mask_id)
+                        super(FrmProfile, self).accept()
                 except Exception as ex:
                     try:
                         self.profile.delete(self.qris_project.project_file)
-                    except Exception as ex:
-                        print('Error attempting to delete profile after the importing of features failed.')
-                        QtWidgets.QMessageBox.warning(self, 'Error Importing Profile Features', str(ex))
+                    except Exception as ex_delete:
+                        QtWidgets.QMessageBox.warning(self, 'Error Importing Profile Features', str(ex_delete))
+                    QtWidgets.QMessageBox.warning(self, 'Error Importing Profile Features', str(ex))
                     return
 
-        super(FrmProfile, self).accept()
+    def on_import_complete(self, result: bool):
+
+        if not result:
+            QtWidgets.QMessageBox.warning(self, f'Error Importing Profile Features', str(self.exception))
+            try:
+                self.profile.delete(self.qris_project.project_file)
+            except Exception as ex:
+                print(f'Error attempting to delete Profile after the importing of features failed.')
+            return
+        else:
+            iface.messageBar().pushMessage('Profile Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
+            super(FrmProfile, self).accept()
 
     def setupUi(self):
 

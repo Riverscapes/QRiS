@@ -50,9 +50,13 @@ def layer_path_parser(path: str) -> tuple[str, str, object]:
 
     if os.path.splitext(path)[1].lower() == ".shp":
         return path, os.path.splitext(os.path.basename(path))[0], 0
-    else:
+    elif ".gpkg|layername=" in path:
         path, layer_name = path.split('|layername=')
         return path, layer_name, layer_name
+    else:
+        # this represents an in-memory layer
+        vl = QgsVectorLayer(path)
+        return path, vl.name(), "memory"
 
 
 def import_existing(source_path: str, dest_path: str, dest_layer_name: str, output_id: int, output_id_field: str, attributes: dict = {}, clip_mask_id: int = None) -> None:
@@ -108,6 +112,7 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
 
         err = dst_layer.CreateFeature(dst_feature)
         dst_feature = None
+        feats += 1
 
     src_dataset = None
     dst_dataset = None

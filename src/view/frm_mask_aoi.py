@@ -1,4 +1,3 @@
-import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication, QgsVectorLayer
 
@@ -8,7 +7,9 @@ from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_
 from ..model.pour_point import PourPoint
 from ..model.scratch_vector import ScratchVector
 
+from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
+from ..gp.import_temp_layer import ImportTemporaryLayer
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -43,11 +44,24 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.cboMaskClip.setVisible(show_mask_clip)
 
         if import_source_path is not None:
-            self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
+            if isinstance(import_source_path, QgsVectorLayer):
+                self.layer_name = import_source_path.name()
+                self.layer_id = 'memory'
+                show_attribute_filter = False
+                show_mask_clip = False
+                self.cboMaskClip.setVisible(False)
+                self.cboAttribute.setVisible(False)
+                self.lblMaskClip.setVisible(False)
+                self.lblAttribute.setVisible(False)
+            else:
+                # find if import_source_path is shapefile, geopackage, or other
+                self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
+
+            self.txtName.setText(self.layer_name)
             self.txtName.selectAll()
 
             if show_attribute_filter:
-                vector_layer = QgsVectorLayer(import_source_path)
+                vector_layer = import_source_path if isinstance(import_source_path, QgsVectorLayer) else QgsVectorLayer(import_source_path)
                 self.attributes = {i: DBItem('None', i, vector_layer.attributeDisplayName(i)) for i in vector_layer.attributeList()}
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
@@ -116,16 +130,19 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 clip_mask_id = None
                 if clip_mask is not None:
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
-                attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                # import_mask(self.import_source_path, self.qris_project.project_file, self.qris_mask.id, attributes, self.mask_type, clip_mask_id)
-                mask_path = f'{self.qris_project.project_file}|layername={"aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "sampling_frame"}'
-                import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, 'mask_id', self.qris_mask.id, attributes, clip_mask_id, self.attribute_filter)
+                mask_layer_name = "aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "mask_features"
+                if self.layer_id == 'memory':
+                    import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, mask_layer_name, 'mask_id', self.qris_mask.id, clip_mask_id, proj_gpkg=self.qris_project.project_file)
+                else:
+                    mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
+                    attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
+                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, 'mask_id', self.qris_mask.id, attributes, clip_mask_id, self.attribute_filter)
                 # DEBUG
-                # result = import_mask_task.run()
-                # self.on_import_complete(result)
+                result = import_mask_task.run()
+                self.on_import_complete(result)
                 # PRODUCTION
-                import_mask_task.import_complete.connect(self.on_import_complete)
-                QgsApplication.taskManager().addTask(import_mask_task)
+                # import_mask_task.import_complete.connect(self.on_import_complete)
+                # QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
                     self.qris_mask.delete(self.qris_project.project_file)
