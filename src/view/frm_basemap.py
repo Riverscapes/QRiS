@@ -51,7 +51,7 @@ class FrmRaster(QtWidgets.QDialog):
             #     self.cboRasterType.setCurrentIndex(basemap_raster_type)
 
             self.setWindowTitle('Create New Context Raster' if self.raster is None else 'Edit Context Raster Properties')
-        # else:
+        else:
             self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
 
         if raster is None:

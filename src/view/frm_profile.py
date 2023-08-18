@@ -24,7 +24,7 @@ class FrmProfile(QtWidgets.QDialog):
         super(FrmProfile, self).__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle(f'Create New Profile')
+        self.setWindowTitle(f'Create New Profile' if self.profile is None else f'Edit Profile Properties')
 
         # The attribute picker is only visible when creating a new regular mask
         show_attribute_filter = import_source_path is not None

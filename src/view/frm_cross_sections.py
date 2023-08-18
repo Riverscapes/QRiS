@@ -29,7 +29,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         super(FrmCrossSections, self).__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle(f'Create New Cross Sections layer')
+        self.setWindowTitle(f'Create New Cross Sections layer' if self.cross_sections is None else f'Edit Cross Sections Properties')
 
         # The attribute picker is only visible when creating a new regular mask
         show_attribute_filter = import_source_path is not None

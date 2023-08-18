@@ -352,7 +352,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         or isinstance(model_data, PourPoint) \
                         or isinstance(model_data, ScratchVector) \
                         or isinstance(model_data, Analysis):
-                    self.add_context_menu_item(self.menu, 'Edit', 'options', lambda: self.edit_item(model_item, model_data))
+                    self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
 
                 if isinstance(model_data, Mask):
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
