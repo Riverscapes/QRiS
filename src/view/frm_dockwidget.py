@@ -386,10 +386,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if model_data.name == 'BRAT CIS (Capacity Inference System)':
                         self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
                     if model_data.name == 'BRAT CIS Reaches':
-                        self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', None, lambda: self.import_brat_results(model_data))
+                        self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                         # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
                     else:
-                        self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', None, lambda: self.import_dce(model_data))
+                        self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
                         self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
