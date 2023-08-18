@@ -25,8 +25,8 @@
 import os
 import sqlite3
 import json
-import pandas as pd
-import xlwt
+# import pandas as pd
+# import xlwt
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
 from qgis.utils import iface
@@ -264,21 +264,21 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 # write json file
                 with open(frm.txtOutpath.text(), 'w') as f:
                     json.dump(out_values, f)
-            elif frm.combo_format.currentText() == 'Excel':
-                # write to excel file
-                # create workbook
-                wb = xlwt.Workbook()
-                ws = wb.add_sheet('Metrics')
-                # write header row
-                row = 0
-                for col, key in enumerate(out_values[0].keys()):
-                    ws.write(row, col, key)
-                # write data rows
-                for row, values in enumerate(out_values):
-                    for col, value in enumerate(values.values()):
-                        ws.write(row + 1, col, value)
-                # save workbook
-                wb.save(frm.txtOutpath.text())
+            # elif frm.combo_format.currentText() == 'Excel':
+            #     # write to excel file
+            #     # create workbook
+            #     wb = xlwt.Workbook()
+            #     ws = wb.add_sheet('Metrics')
+            #     # write header row
+            #     row = 0
+            #     for col, key in enumerate(out_values[0].keys()):
+            #         ws.write(row, col, key)
+            #     # write data rows
+            #     for row, values in enumerate(out_values):
+            #         for col, value in enumerate(values.values()):
+            #             ws.write(row + 1, col, value)
+            #     # save workbook
+            #     wb.save(frm.txtOutpath.text())
             else:
                 iface.messageBar().pushMessage('Export Metrics', f'Export format {frm.combo_format.currentText()} not supported.', level=Qgis.Warning)
 

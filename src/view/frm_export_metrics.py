@@ -49,7 +49,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # Groupbox named "Data Capture Events" with radio buttons for "just the currently active DCE" or "All Data Capture Events"
         self.grpDCE = QtWidgets.QGroupBox('Data Capture Events')
-        self.rdoActiveDCE = QtWidgets.QRadioButton('Just the currently active DCE')
+        self.rdoActiveDCE = QtWidgets.QRadioButton('Just the currently active Data Capture Event')
         self.rdoAllDCE = QtWidgets.QRadioButton('All Data Capture Events')
         self.rdoActiveDCE.setChecked(True)
         self.grpDCE.setLayout(QtWidgets.QVBoxLayout())
@@ -59,7 +59,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # groupbox named Sampling Frames with radio buttons for "just the currently active SF" or "All Sampling Frames"
         self.grpSF = QtWidgets.QGroupBox('Sampling Frames')
-        self.rdoActiveSF = QtWidgets.QRadioButton('Just the currently active SF')
+        self.rdoActiveSF = QtWidgets.QRadioButton('Just the currently active Sampling Frame')
         self.rdoAllSF = QtWidgets.QRadioButton('All Sampling Frames')
         self.rdoActiveSF.setChecked(True)
         self.grpSF.setLayout(QtWidgets.QVBoxLayout())
@@ -67,25 +67,31 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.grpSF.layout().addWidget(self.rdoAllSF)
         self.vert.addWidget(self.grpSF)
 
-        self.horizFormat = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horizFormat)
+        self.export_grid = QtWidgets.QGridLayout()
+        self.vert.addLayout(self.export_grid)
 
         # label for export format
         self.lbl_format = QtWidgets.QLabel("Export Format")
-        self.horizFormat.addWidget(self.lbl_format)
+        self.export_grid.addWidget(self.lbl_format, 0, 0, 1, 1)
+
+        self.horiz_format = QtWidgets.QHBoxLayout()
+        self.export_grid.addLayout(self.horiz_format, 0, 1, 1, 1)
 
         # drop down for export format
         self.combo_format = QtWidgets.QComboBox()
-        self.combo_format.addItems(["CSV", "JSON", "Excel"])
+        self.combo_format.addItems(["CSV", "JSON"])  # , "Excel"
         self.combo_format.currentTextChanged.connect(self.format_change)
-        self.horizFormat.addWidget(self.combo_format)
+        self.horiz_format.addWidget(self.combo_format)
 
-        self.horizOutput = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horizOutput)
+        # add spacer
+        self.horiz_format.addStretch()
 
         # label for export location
         self.lbl_location = QtWidgets.QLabel("Export Path")
-        self.horizOutput.addWidget(self.lbl_location)
+        self.export_grid.addWidget(self.lbl_location, 1, 0, 1, 1)
+
+        self.horizOutput = QtWidgets.QHBoxLayout()
+        self.export_grid.addLayout(self.horizOutput, 1, 1, 1, 1)
 
         # line edit for export location
         self.txtOutpath = QtWidgets.QLineEdit()
