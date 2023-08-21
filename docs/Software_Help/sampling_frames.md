@@ -2,6 +2,13 @@
 title: Sampling Frames
 ---
 
-# Regular Masks
+# Regular Sampling Frames
 
-# Directional Masks
+![sampling frame creation]({{ site.baseurl }}/assets/images/sampling_frames/sample_frame.png)
+
+![sampling frame example]({{ site.baseurl }}/assets/images/sampling_frames/sample_frame_example.png)
+
+
+# Directional Sampling Frames
+
+not yet implemented
