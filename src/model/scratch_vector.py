@@ -14,26 +14,29 @@ CONTEXT_PARENT_FOLDER = 'context'
 
 class ScratchVector(DBItem):
 
-    def __init__(self, id: int, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str):
+    def __init__(self, id: int, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: dict = None):
         super().__init__('scratch_vectors', id, name)
 
         self.fc_name = fc_name
         self.gpkg_path = gpkg_path
         self.vector_type_id = vector_type_id
         self.description = description
+        self.metadata = metadata
         self.icon = 'vector'
 
-    def update(self, db_path: str, name: str, description: str) -> None:
+    def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 
         description = description if len(description) > 0 else None
+        metadata_str = json.dumps(metadata) if metadata is not None else None
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE scratch_vectors SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
+                curs.execute('UPDATE scratch_vectors SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
                 conn.commit()
 
                 self.name = name
                 self.description = description
+                self.metadata = metadata
 
             except Exception as ex:
                 conn.rollback()
@@ -108,7 +111,8 @@ def load_scratch_vectors(curs: sqlite3.Cursor, project_file: str) -> dict:
                 row['fc_name'],
                 geopackage_path,
                 row['vector_type_id'],
-                row['description']
+                row['description'],
+                json.loads(row['metadata']) if row['metadata'] is not None else None
             )
 
     return scratch_vectors
