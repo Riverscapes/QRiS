@@ -45,6 +45,32 @@ class RiverscapesMapManager():
         self.symbology_folder = settings.getValue('symbologyDir')
         self.layer_order = ['Basemaps']
 
+    def get_product_key_layers(self) -> list:
+
+        layers = QgsProject.instance().layerTreeRoot().findLayers()
+        product_layers = [layer for layer in layers if layer.customProperty(self.product_key) is not None]
+        return product_layers
+
+    def stop_edits(self):
+
+        # set all layers to editable true
+        for layer in self.get_product_key_layers():
+            layer.layer().setReadOnly(False)
+
+    def start_edits(self):
+
+        # set all layers to editable false
+        for layer in self.get_product_key_layers():
+            layer.layer().setReadOnly(True)
+        # get active layer
+        active_layer = iface.activeLayer()
+        # set active layer to editable true
+        active_layer.setReadOnly(False)
+
+    def get_edit_mode(self):
+
+        return any([layer.layer().isEditable() for layer in self.get_product_key_layers()])
+
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
         return f'{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}'
 
@@ -215,6 +241,12 @@ class RiverscapesMapManager():
             iface.setActiveLayer(layer)
             iface.zoomToActiveLayer()
 
+        if self.get_edit_mode() is True:
+            layer.setReadOnly(True)
+
+        layer.editingStarted.connect(self.start_edits)
+        layer.editingStopped.connect(self.stop_edits)
+
         return layer
 
     def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: str = None, driver: str = 'ogr') -> QgsVectorLayer:
@@ -248,6 +280,12 @@ class RiverscapesMapManager():
         if zoom:
             iface.setActiveLayer(layer)
             iface.zoomToActiveLayer()
+
+        if self.get_edit_mode() is True:
+            layer.setReadOnly(True)
+
+        layer.editingStarted.connect(self.start_edits)
+        layer.editingStopped.connect(self.stop_edits)
 
         return layer
 
