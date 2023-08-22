@@ -111,6 +111,8 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.import_source_path = f'{db_path}|layername={layer_name}'
         self.attribute_filter = f'{id_field} = {db_item.id}' if id_field is not None else None
 
+        self.basepath, self.layer_name, self.layer_id = layer_path_parser(self.import_source_path)
+
     def accept(self):
 
         if not validate_name(self, self.txtName):
