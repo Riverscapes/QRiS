@@ -23,6 +23,10 @@ class MetadataWidget(QtWidgets.QWidget):
         self.json_meta = json_meta
         self.metadata = json.loads(self.json_meta)
 
+    def add_metadata(self, key: str, value: str):
+
+        self.metadata[key] = value
+
     def create_table_ui(self):
 
         self.horiz = QtWidgets.QHBoxLayout()

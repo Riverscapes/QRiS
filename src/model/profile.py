@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from enum import IntEnum
 
@@ -15,23 +16,27 @@ class Profile(DBItem):
         CENTERLINE_PROFILE_TYPE = 2
         THALWEG_PROFILE_TYPE = 3
 
-    def __init__(self, id: int, name: str, profile_type_id: int, description: str):
+    def __init__(self, id: int, name: str, profile_type_id: int, description: str, metadata: dict = None):
         super().__init__('profiles', id, name)
         self.profile_type_id = profile_type_id
         self.description = description
+        self.metadata = metadata
         self.icon = 'gis'
 
-    def update(self, db_path: str, name: str, description: str) -> None:
+    def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 
         description = description if len(description) > 0 else None
+        metadata_str = json.dumps(metadata) if metadata is not None else None
+
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE profiles SET name = ?, description = ? WHERE id = ?', [name, description, self.id])
+                curs.execute('UPDATE profiles SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
                 conn.commit()
 
                 self.name = name
                 self.description = description
+                self.metadata = metadata
 
             except Exception as ex:
                 conn.rollback()
@@ -45,7 +50,8 @@ def load_profiles(curs: sqlite3.Cursor) -> dict:  # profile_types: dict
         row['id'],
         row['name'],
         row['profile_type_id'],  # profile_types[row['profile_type_id']],
-        row['description']
+        row['description'],
+        json.loads(row['metadata']) if row['metadata'] is not None else None
     ) for row in curs.fetchall()}
 
 
@@ -53,16 +59,18 @@ def insert_profile(db_path: str, name: str, profile_type_id: int, description: s
 
     profile = None
     description = description if len(description) > 0 else None
+    metadata_str = json.dumps(metadata) if metadata is not None else None
+
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO profiles (name, profile_type_id, description, metadata) VALUES (?, ?, ?,?)', [name, profile_type_id, description, metadata])
+            curs.execute('INSERT INTO profiles (name, profile_type_id, description, metadata) VALUES (?, ?, ?,?)', [name, profile_type_id, description, metadata_str])
             id = curs.lastrowid
-            profile = Profile(id, name, profile_type_id, description)
+            profile = Profile(id, name, profile_type_id, description, metadata)
             conn.commit()
 
         except Exception as ex:
-            mask = None
+            profile = None
             conn.rollback()
             raise ex
 

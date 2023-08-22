@@ -1,3 +1,5 @@
+import json
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication, QgsVectorLayer
 from qgis.utils import Qgis, iface
@@ -9,6 +11,8 @@ from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportTemporaryLayer
+
+from .metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -22,6 +26,8 @@ class FrmProfile(QtWidgets.QDialog):
         self.profile_type = Profile.ProfileTypes.GENERIC_PROFILE_TYPE  # mask_type
 
         super(FrmProfile, self).__init__(parent)
+        metadata_json = json.dumps(profile.metadata) if profile is not None else None
+        self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
         self.setWindowTitle(f'Create New Profile' if self.profile is None else f'Edit Profile Properties')
@@ -78,9 +84,12 @@ class FrmProfile(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
+        metadata_json = self.metadata_widget.get_json()
+        metadata = json.loads(metadata_json) if metadata_json is not None else None
+
         if self.profile is not None:
             try:
-                self.profile.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.profile.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A profile with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -88,9 +97,11 @@ class FrmProfile(QtWidgets.QDialog):
                 else:
                     QtWidgets.QMessageBox.warning(self, 'Error Saving Profile', str(ex))
                 return
+            super(FrmProfile, self).accept()
+
         else:
             try:
-                self.profile = insert_profile(self.qris_project.project_file, self.txtName.text(), self.profile_type, self.txtDescription.toPlainText())
+                self.profile = insert_profile(self.qris_project.project_file, self.txtName.text(), self.profile_type, self.txtDescription.toPlainText(), metadata)
                 self.qris_project.profiles[self.profile.id] = self.profile
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -144,9 +155,10 @@ class FrmProfile(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
 
         self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
 
         self.lblName = QtWidgets.QLabel()
         self.lblName.setText('Name')
@@ -176,6 +188,13 @@ class FrmProfile(QtWidgets.QDialog):
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription)
+
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabProperties.setLayout(self.grid)
+
+        # Metadata Tab
+        self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setChecked(True)

@@ -1,3 +1,5 @@
+import json
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsApplication, QgsVectorLayer
 
@@ -10,6 +12,8 @@ from ..model.scratch_vector import ScratchVector
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
 from ..gp.import_temp_layer import ImportTemporaryLayer
+
+from .metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -25,6 +29,8 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.str_mask_type = "AOI" if self.mask_type.id == AOI_MASK_TYPE_ID else "Sample Frame"
 
         super(FrmMaskAOI, self).__init__(parent)
+        metadata_json = json.dumps(mask.metadata) if mask is not None else None
+        self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
         if self.qris_mask is not None:
@@ -110,11 +116,14 @@ class FrmMaskAOI(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
+        metadata_json = self.metadata_widget.get_json()
+        metadata = json.loads(metadata_json) if metadata_json is not None else None
+
         try:
             if self.qris_mask is not None:
-                self.qris_mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.qris_mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
             else:
-                self.qris_mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText())
+                self.qris_mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText(), metadata)
                 self.qris_project.masks[self.qris_mask.id] = self.qris_mask
         except Exception as ex:
             if 'unique' in str(ex).lower():
@@ -171,9 +180,10 @@ class FrmMaskAOI(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
 
         self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
 
         self.lblName = QtWidgets.QLabel()
         self.lblName.setText('Name')
@@ -202,6 +212,13 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription)
+
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabProperties.setLayout(self.grid)
+
+        # Metadata Tab
+        self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setChecked(True)

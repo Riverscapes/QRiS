@@ -44,7 +44,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
         try:
-            self.profile = insert_profile(self.project.project_file, self.txtName.text(), Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, self.txtDescription.toPlainText(), json.dumps(self.metrics))
+            self.profile = insert_profile(self.project.project_file, self.txtName.text(), Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, self.txtDescription.toPlainText(), self.metrics)
             out_layer = QgsVectorLayer(f'{self.project.project_file}|layername=profile_centerlines')
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())

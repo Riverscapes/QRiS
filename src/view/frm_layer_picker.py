@@ -8,6 +8,8 @@ class FrmLayerPicker(QtWidgets.QDialog):
         super().__init__(parent)
         self.setupUi()
 
+        self.setWindowTitle('Select Layer')
+
         self.layer = None
 
         self.lblMessage.setText(label_message)

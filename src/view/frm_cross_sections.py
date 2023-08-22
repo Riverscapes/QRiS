@@ -11,6 +11,8 @@ from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportTemporaryLayer
+
+from .metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 from typing import Dict
@@ -18,15 +20,18 @@ from typing import Dict
 
 class FrmCrossSections(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str = None, cross_sections: CrossSections = None, output_features: Dict[float, QgsFeature] = None):
+    def __init__(self, parent, project: Project, import_source_path: str = None, cross_sections: CrossSections = None, output_features: Dict[float, QgsFeature] = None, metadata: dict = None):
 
         self.project = project
         self.cross_sections = cross_sections
         self.import_source_path = import_source_path
         self.output_features = output_features
-        self.metadata = None
 
         super(FrmCrossSections, self).__init__(parent)
+        metadata_json = json.dumps(cross_sections.metadata) if cross_sections is not None else None
+        if metadata is not None:
+            metadata_json = json.dumps(metadata)
+        self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
         self.setWindowTitle(f'Create New Cross Sections layer' if self.cross_sections is None else f'Edit Cross Sections Properties')
@@ -78,27 +83,32 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
 
-    def add_metadata(self, metadata):
-        self.metadata = metadata
-
     def accept(self):
 
         if not validate_name(self, self.txtName):
             return
 
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+
+        metadata_json = self.metadata_widget.get_json()
+        metadata = json.loads(metadata_json) if metadata_json is not None else None
+
         if self.cross_sections is not None:
             try:
-                self.cross_sections.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.cross_sections.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+                super(FrmCrossSections, self).accept()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A cross sections layer with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
                     QtWidgets.QMessageBox.warning(self, 'Error Saving cross sections', str(ex))
+                self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
                 return
+
         else:
             try:
-                self.cross_sections = insert_cross_sections(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), json.dumps(self.metadata))
+                self.cross_sections = insert_cross_sections(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
                 self.project.cross_sections[self.cross_sections.id] = self.cross_sections
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -106,6 +116,7 @@ class FrmCrossSections(QtWidgets.QDialog):
                     self.txtName.setFocus()
                 else:
                     QtWidgets.QMessageBox.warning(self, 'Error Saving cross sections', str(ex))
+                self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
                 return
             try:
                 clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
@@ -148,6 +159,8 @@ class FrmCrossSections(QtWidgets.QDialog):
                 except Exception as ex_del:
                     QtWidgets.QMessageBox.warning(self, 'Error attempting to delete cross sections after the importing of features failed.', str(ex_del))
                 QtWidgets.QMessageBox.warning(self, 'Error Importing Cross Sections Features', str(ex))
+                self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+                return
 
     def on_import_complete(self, result: bool):
 
@@ -170,42 +183,45 @@ class FrmCrossSections(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
 
         self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblAttribute = QtWidgets.QLabel()
-        self.lblAttribute.setText('Attribute')
+        self.lblAttribute = QtWidgets.QLabel('Attribute')
         self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
 
-        self.lblMaskClip = QtWidgets.QLabel()
-        self.lblMaskClip.setText('Clip to AOI')
+        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI')
         self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel()
-        self.lblDescription.setText('Description')
+        self.lblDescription = QtWidgets.QLabel('Description')
         self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.grid.addWidget(self.txtDescription)
 
-        self.chkAddToMap = QtWidgets.QCheckBox()
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabProperties.setLayout(self.grid)
+
+        # Metadata Tab
+        self.tabs.addTab(self.metadata_widget, 'Metadata')
+
+        self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'cross_sections'))

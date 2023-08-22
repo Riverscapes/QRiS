@@ -141,7 +141,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, 'Cross Sections Error', 'Generate the cross sections before saving.')
             return
 
-        metadata = {
+        out_metadata = {
             'parent_profile_source': self.profile.db_table_name,
             'parent_profile_id': self.profile.id,
             # 'clipping_polygon_source': self.clip_polygon,
@@ -152,9 +152,8 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
             'extension': self.dblExtension.value()
         }
 
-        frm_x_sections = FrmCrossSections(self, self.project, output_features=self.xsections)
+        frm_x_sections = FrmCrossSections(self, self.project, output_features=self.xsections, metadata=out_metadata)
 
-        frm_x_sections.add_metadata(metadata)
         result = frm_x_sections.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
