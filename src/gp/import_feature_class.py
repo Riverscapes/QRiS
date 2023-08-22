@@ -54,13 +54,17 @@ class ImportFeatureClass(QgsTask):
 
             dst_path, dst_layer_name, _dst_layer_id = layer_path_parser(self.output_path)
 
+            base_path = os.path.dirname(dst_path)
+            if not os.path.exists(base_path):
+                os.makedirs(base_path)
+
             gpkg_driver = ogr.GetDriverByName('GPKG')
             if not os.path.exists(dst_path):
-                gpkg_driver.CreateDataSource(dst_path)
+                dst_dataset = gpkg_driver.CreateDataSource(dst_path)
+            else:
+                dst_dataset = gpkg_driver.Open(dst_path, 1)
 
-            dst_dataset = gpkg_driver.Open(dst_path, 1)
             dst_layer = dst_dataset.GetLayerByName(dst_layer_name)
-
             if dst_layer is None:
                 copy_fields = True
                 # create the layer based on the source layer

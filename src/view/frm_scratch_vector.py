@@ -94,16 +94,19 @@ class FrmScratchVector(QtWidgets.QDialog):
                 # Do this because an error might have left a lingering feature class table etc
                 self.fc_name = get_unique_scratch_fc_name(self.project.project_file, self.txtName.text())
 
-                copy_vector = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=mask.id, proj_gpkg=self.project.project_file)
+                clip_mask_id = None
+                if mask is not None:
+                    clip_mask_id = mask.id if mask.id > 0 else None
+                copy_vector = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=clip_mask_id, proj_gpkg=self.project.project_file)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
-                # self.on_copy_complete(copy_vector.run())
+                self.on_copy_complete(copy_vector.run())
                 # return
 
                 # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
                 self.buttonBox.setEnabled(False)
-                copy_vector.import_complete.connect(self.on_copy_complete)
-                QgsApplication.taskManager().addTask(copy_vector)
+                # copy_vector.import_complete.connect(self.on_copy_complete)
+                # QgsApplication.taskManager().addTask(copy_vector)
 
             except Exception as ex:
                 self.buttonBox.setEnabled(True)
