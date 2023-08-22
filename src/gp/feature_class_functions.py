@@ -160,7 +160,14 @@ def browse_raster(parent, description: str) -> str:
 
     frm_browse.exec()
     uri = frm_browse.uri()
+
     if uri is not None and uri.isValid():
+        # if uri extension is .vrt then it is a virtual raster and cannot be used
+        vrt_ext = os.path.splitext(uri.uri)[1].lower()
+        if vrt_ext == '.vrt':
+            QMessageBox.warning(parent, 'Invalid Raster',
+                                f'The raster is a virtual raster and cannot be used. Please select a different raster.')
+            return None
         return uri.uri
 
     return None
