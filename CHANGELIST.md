@@ -1,12 +1,13 @@
 # QRiS Plugin
 
-## [0.2.4] 2023 AUG 13
+## [0.2.4] 2023 AUG 22
 
 ### Added
 - Add Delete Right-Click to Watershed Catchments
 - Ability to import temporary layers to qris project
 
 ### Changed
+- Limit editing to only one QRiS layer at a time (does not apply to non-QRiS layers)
 - Disabled exporting metrics table to excel format (temporary)
 - Right Click "Edit" menu changed to "Properties" and associated window titles fixed
 
