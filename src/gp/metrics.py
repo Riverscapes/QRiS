@@ -59,6 +59,7 @@ class Metrics:
 
             if geom.IsMeasured() > 0 or geom.Is3D() > 0:
                 geom.FlattenTo2D()
+            geom.MakeValid()
             polygons[feature.GetFID()] = {
                 'geometry': wkbload(bytes(geom.ExportToWkb())),
                 'display_label': feature.GetField('display_label') if mask_layer == 'mask_features' else f'AOI {mask.name}'
@@ -122,6 +123,7 @@ class Metrics:
             polygon = polygon_data['geometry']
             polygon_geom = ogr.CreateGeometryFromWkb(polygon.wkb)
             polygon_geom.Transform(transform_utm_to_src)
+            polygon_geom.MakeValid()
 
             polygon_metrics = {'count': 0}
             layer.SetSpatialFilter(polygon_geom)
@@ -131,6 +133,7 @@ class Metrics:
 
                 if geom.IsMeasured() > 0 or geom.Is3D() > 0:
                     geom.FlattenTo2D()
+                geom.MakeValid()
 
                 shape = wkbload(bytes(geom.ExportToWkb()))
                 if polygon.intersects(shape):

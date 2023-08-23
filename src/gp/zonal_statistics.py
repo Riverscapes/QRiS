@@ -48,6 +48,7 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     outFeature = ogr.Feature(featureDefn)
     out_geom = geom.Clone()
     out_geom.TransformTo(raster_ds.GetSpatialRef())
+    out_geom.MakeValid()
     outFeature.SetGeometry(out_geom)
     ogr_mem_lyr.CreateFeature(outFeature)
 
