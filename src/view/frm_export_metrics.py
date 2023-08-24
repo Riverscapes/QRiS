@@ -1,21 +1,47 @@
-from PyQt5 import QtWidgets
+import json
+import xlwt
 
+from PyQt5 import QtCore, QtWidgets
+from qgis.utils import Qgis, iface
+
+from ..model.mask import get_sample_frame_ids
+from ..model.metric_value import MetricValue, load_metric_values
+from ..model.db_item import DBItemModel
 
 from .utilities import add_standard_form_buttons
 
 
 class FrmExportMetrics(QtWidgets.QDialog):
 
-    def __init__(self, parent):
+    def __init__(self, parent, project, analysis, current_dce=None, current_sf=None):
         super().__init__(parent)
+
+        self.project = project
+        self.analysis = analysis
+        self.current_dce = current_dce
+        self.current_sf = current_sf
+
+        self.sample_frame_ids = get_sample_frame_ids(self.project.project_file, self.analysis.mask.id)
 
         self.setWindowTitle("Export Metrics Table")
         self.setupUi()
 
+        if self.current_dce is None:
+            self.rdoAllDCE.setChecked(True)
+            # hide the groupbox for DCEs
+            self.grpDCE.setEnabled(False)
+            self.grpDCE.setVisible(False)
+
+        if self.current_sf is None:
+            self.rdoAllSF.setChecked(True)
+            # hide the groupbox for SFs
+            self.grpSF.setEnabled(False)
+            self.grpSF.setVisible(False)
+
     def browse_path(self):
 
         output_format = self.combo_format.currentText()
-        output_ext = "xlsx" if output_format == "Excel" else output_format.lower()
+        output_ext = "xls" if output_format == "Excel" else output_format.lower()
 
         path = QtWidgets.QFileDialog.getSaveFileName(self, "Export Metrics Table", "", f"{output_format} Files (*.{output_ext})")[0]
         self.txtOutpath.setText(path)
@@ -27,7 +53,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
             path = self.txtOutpath.text()
             output_format = self.combo_format.currentText()
             if output_format == "Excel":
-                output_format = "xlsx"
+                output_format = "xls"
             path = path[:path.rfind(".") + 1] + output_format.lower()
             self.txtOutpath.setText(path)
 
@@ -37,6 +63,56 @@ class FrmExportMetrics(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, "Export Metrics Table", "Please specify an output file.")
             return
 
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+        try:
+            out_values = []
+            mask_features = list(self.sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
+            data_capture_events = list(self.project.events.values()) if self.rdoAllDCE.isChecked() else [self.current_dce]
+            for mask_feature in mask_features:
+                for data_capture_event in data_capture_events:
+                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, self.project.metrics)
+                    values = {'sample_frame_id': mask_feature.id, 'data_capture_event_id': data_capture_event.id, 'mask_feature_name': mask_feature.name, 'data_capture_event_name': data_capture_event.name}
+                    for analysis_metric in self.analysis.analysis_metrics.values():
+                        metric = analysis_metric.metric
+                        metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
+                        value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.automated_value
+                        value = value if value is not None else ''
+                        values.update({metric.name: value})
+                    out_values.append(values)
+
+            if self.combo_format.currentText() == 'CSV':
+                # write csv file
+                with open(self.txtOutpath.text(), 'w') as f:
+                    f.write(','.join(out_values[0].keys()) + '\n')
+                    for values in out_values:
+                        f.write(','.join([str(v) for v in values.values()]) + '\n')
+            elif self.combo_format.currentText() == 'JSON':
+                # write json file
+                with open(self.txtOutpath.text(), 'w') as f:
+                    json.dump(out_values, f)
+            elif self.combo_format.currentText() == 'Excel':
+                # write to excel file
+                # create workbook
+                wb = xlwt.Workbook()
+                # create worksheet
+                ws = wb.add_sheet('Metrics')
+                # write header row
+                for col, key in enumerate(out_values[0].keys()):
+                    ws.write(0, col, key)
+                # write data rows
+                for row, values in enumerate(out_values):
+                    for col, value in enumerate(values.values()):
+                        ws.write(row + 1, col, value)
+                # save workbook
+                wb.save(self.txtOutpath.text())
+            else:
+                raise Exception("Unsupported output format.")
+
+        except Exception as ex:
+            QtWidgets.QMessageBox.critical(self, "Export Metrics Table", f"Error exporting metrics table: {ex}")
+            self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+
+        iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {self.txtOutpath.text()}', level=Qgis.Success)
         return super().accept()
 
     def setupUi(self):
@@ -79,7 +155,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # drop down for export format
         self.combo_format = QtWidgets.QComboBox()
-        self.combo_format.addItems(["CSV", "JSON"])  # , "Excel"
+        self.combo_format.addItems(["CSV", "JSON", "Excel"])
         self.combo_format.currentTextChanged.connect(self.format_change)
         self.horiz_format.addWidget(self.combo_format)
 
@@ -102,6 +178,9 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.btn_location = QtWidgets.QPushButton("...")
         self.btn_location.clicked.connect(self.browse_path)
         self.horizOutput.addWidget(self.btn_location)
+
+        # add vertical spacer
+        self.vert.addStretch()
 
         # add standard form buttons
         self.vert.addLayout(add_standard_form_buttons(self, "export_metrics"))

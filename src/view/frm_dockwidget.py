@@ -67,6 +67,7 @@ from .frm_cross_sections import FrmCrossSections
 from .frm_sampleframe import FrmSampleFrame
 from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_toc_layer_picker import FrmTOCLayerPicker
+from .frm_export_metrics import FrmExportMetrics
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -338,6 +339,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, DBItem):
                     if isinstance(model_data, Analysis):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
+                        self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     else:
                         self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
@@ -534,6 +536,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
         self.analysis_doc_widget.show()
+
+    def export_analysis_table(self, analysis: Analysis):
+
+        frm = FrmExportMetrics(self, self.project, analysis)
+        frm.exec_()
 
     def stream_gage_explorer(self):
 
