@@ -654,7 +654,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result is True:
             iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
             # refresh map
-            self.iface.mapCanvas().refreshAllLayers()
+            iface.mapCanvas().refreshAllLayers()
+            iface.mapCanvas().refresh()
         else:
             iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
 

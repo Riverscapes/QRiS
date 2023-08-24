@@ -192,6 +192,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         if result is True:
             extra_message = '' if source_feats == out_feats else f' (additional features were created due to exploding multi-part geometries.)'
             iface.messageBar().pushMessage('Import Feature Class Complete.', f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.fc_name}.{extra_message}", level=Qgis.Info, duration=5)
+            iface.mapCanvas().refreshAllLayers()
+            iface.mapCanvas().refresh()
             super(FrmImportDceLayer, self).accept()
         else:
             iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
