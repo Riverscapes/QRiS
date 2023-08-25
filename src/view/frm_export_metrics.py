@@ -13,7 +13,7 @@ from .utilities import add_standard_form_buttons
 
 class FrmExportMetrics(QtWidgets.QDialog):
 
-    def __init__(self, parent, project, analysis, current_dce=None, current_sf=None):
+    def __init__(self, parent, project, analysis=None, current_dce=None, current_sf=None):
         super().__init__(parent)
 
         self.project = project
@@ -21,7 +21,10 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.current_dce = current_dce
         self.current_sf = current_sf
 
-        self.sample_frame_ids = get_sample_frame_ids(self.project.project_file, self.analysis.mask.id)
+        if self.analysis is not None:
+            self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, self.analysis.mask.id)}
+        else:
+            self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, analysis.mask.id) for analysis in self.project.analyses.values()}
 
         self.setWindowTitle("Export Metrics Table")
         self.setupUi()
@@ -63,22 +66,23 @@ class FrmExportMetrics(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, "Export Metrics Table", "Please specify an output file.")
             return
 
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         try:
             out_values = []
-            mask_features = list(self.sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
+
             data_capture_events = list(self.project.events.values()) if self.rdoAllDCE.isChecked() else [self.current_dce]
-            for mask_feature in mask_features:
-                for data_capture_event in data_capture_events:
-                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, self.project.metrics)
-                    values = {'sample_frame_id': mask_feature.id, 'data_capture_event_id': data_capture_event.id, 'mask_feature_name': mask_feature.name, 'data_capture_event_name': data_capture_event.name}
-                    for analysis_metric in self.analysis.analysis_metrics.values():
-                        metric = analysis_metric.metric
-                        metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
-                        value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.automated_value
-                        value = value if value is not None else ''
-                        values.update({metric.name: value})
-                    out_values.append(values)
+            for analysis, sample_frame_ids in self.analyses.items():
+                mask_features = list(sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
+                for mask_feature in mask_features:
+                    for data_capture_event in data_capture_events:
+                        metric_values = load_metric_values(self.project.project_file, analysis, data_capture_event, mask_feature.id, self.project.metrics)
+                        values = {'analysis_name': analysis.name, 'sample_frame_id': mask_feature.id, 'data_capture_event_id': data_capture_event.id, 'mask_feature_name': mask_feature.name, 'data_capture_event_name': data_capture_event.name}
+                        for analysis_metric in analysis.analysis_metrics.values():
+                            metric = analysis_metric.metric
+                            metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
+                            value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.automated_value
+                            value = value if value is not None else ''
+                            values.update({metric.name: value})
+                        out_values.append(values)
 
             if self.combo_format.currentText() == 'CSV':
                 # write csv file
@@ -110,7 +114,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         except Exception as ex:
             QtWidgets.QMessageBox.critical(self, "Export Metrics Table", f"Error exporting metrics table: {ex}")
-            self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+            return
 
         iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {self.txtOutpath.text()}', level=Qgis.Success)
         return super().accept()

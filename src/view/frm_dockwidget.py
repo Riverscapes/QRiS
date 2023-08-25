@@ -286,6 +286,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if isinstance(model_data, str):
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
+                if len(self.project.analyses) > 0:
+                    self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             else:
                 self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 if model_data == EVENT_MACHINE_CODE:
@@ -537,7 +539,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
         self.analysis_doc_widget.show()
 
-    def export_analysis_table(self, analysis: Analysis):
+    def export_analysis_table(self, analysis: Analysis = None):
 
         frm = FrmExportMetrics(self, self.project, analysis)
         frm.exec_()
