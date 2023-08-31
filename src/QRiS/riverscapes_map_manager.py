@@ -55,13 +55,15 @@ class RiverscapesMapManager():
 
         # set all layers to editable true
         for layer in self.get_product_key_layers():
-            layer.layer().setReadOnly(False)
+            if layer.layer().type() == QgsMapLayer.VectorLayer:
+                layer.layer().setReadOnly(False)
 
     def start_edits(self):
 
         # set all layers to editable false
         for layer in self.get_product_key_layers():
-            layer.layer().setReadOnly(True)
+            if layer.layer().type() == QgsMapLayer.VectorLayer:
+                layer.layer().setReadOnly(True)
         # get active layer
         active_layer = iface.activeLayer()
         # set active layer to editable true
