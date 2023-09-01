@@ -97,6 +97,7 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     layer = dataset.GetLayerByName('catchments')
     geojson = catchment['featurecollection'][1]['feature']['features'][0]['geometry']
     polygon = ogr.CreateGeometryFromJson(json.dumps(geojson))
+    polygon = polygon.MakeValid()
     featureDefn = layer.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
     outFeature.SetGeometry(polygon)
