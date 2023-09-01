@@ -1,5 +1,25 @@
 # QRiS Plugin
 
+## [0.2.5] 2023 SEP 01
+
+### Added
+- Metadata Widget for profiles, masks, cross sections, and context vectors
+- Warning and prevent user from importing vrt rasters
+- Added xls format to export metrics table
+- Ability to export multiple analyses as one table
+
+### Fixed
+- Bug with Import context vectors
+- Bug with promote catchments to aoi
+- Make geometries valid for zonal stats tool
+- Better warnings for centerline tool
+- Refresh map after importing dce features
+- Raster layers causign bug with edit session locking
+- Clean any invalid geometries when creating catchments
+### Changed
+- Reworked code for export metrics table
+
+
 ## [0.2.4] 2023 AUG 22
 
 ### Added
