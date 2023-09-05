@@ -8,6 +8,7 @@ from ..model.project import Project
 from ..model.layer import Layer
 
 from .frm_date_picker import FrmDatePicker
+from .frm_event_layers import FrmAddFromDCE
 
 from datetime import date, datetime
 from .utilities import validate_name, add_standard_form_buttons
@@ -248,6 +249,18 @@ class FrmEvent(QtWidgets.QDialog):
             modelItem = self.tree_model.itemFromIndex(index)
             self.add_selected_layers(modelItem)
 
+    def on_add_from_dce_clicked(self):
+
+        frm = FrmAddFromDCE(self, self.qris_project, self.event_type_id, copy_features=False)
+        frm.exec_()
+        if frm.result() == QtWidgets.QDialog.Accepted:
+            for layer in frm.layers:
+                # add layer to the layers in use list
+                layer_item = QtGui.QStandardItem(layer.name)
+                layer_item.setData(layer, QtCore.Qt.UserRole)
+                layer_item.setEditable(False)
+                self.layers_model.appendRow(layer_item)
+
     def add_selected_layers(self, item: QtGui.QStandardItem) -> None:
 
         if item is None:
@@ -436,14 +449,19 @@ class FrmEvent(QtWidgets.QDialog):
         self.vert_layer_tree.addWidget(self.layer_tree)
 
         # Add Remove Buttons
-        self.vert_buttpns = QtWidgets.QVBoxLayout(self)
-        self.horiz_layers.addLayout(self.vert_buttpns)
+        self.vert_buttons = QtWidgets.QVBoxLayout(self)
+        self.horiz_layers.addLayout(self.vert_buttons)
+        self.vert_add = QtWidgets.QVBoxLayout(self)
+        self.vert_buttons.addLayout(self.vert_add)
         self.cmdAddLayer = QtWidgets.QPushButton('Add >>', self)
         self.cmdAddLayer.clicked.connect(self.on_add_layer_clicked)
-        self.vert_buttpns.addWidget(self.cmdAddLayer)
+        self.vert_add.addWidget(self.cmdAddLayer)
+        self.cmdAddFromDCE = QtWidgets.QPushButton('Add From DCE >>', self)
+        self.cmdAddFromDCE.clicked.connect(self.on_add_from_dce_clicked)
+        self.vert_add.addWidget(self.cmdAddFromDCE)
         self.cmdRemoveLayer = QtWidgets.QPushButton('<< Remove', self)
         self.cmdRemoveLayer.clicked.connect(self.on_remove_layer)
-        self.vert_buttpns.addWidget(self.cmdRemoveLayer)
+        self.vert_buttons.addWidget(self.cmdRemoveLayer)
 
         # Layers list
         self.vert_layers = QtWidgets.QVBoxLayout(self)
