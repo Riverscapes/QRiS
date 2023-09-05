@@ -332,7 +332,7 @@ class FrmEvent(QtWidgets.QDialog):
 
         date_order_valid = check_if_date_order_valid(start_date, end_date)
         if not date_order_valid:
-            QtWidgets.QMessageBox.warning(self, 'Invalid Date Order', "")
+            QtWidgets.QMessageBox.warning(self, 'Invalid Date Order', "Start date must be before the end date.")
             self.uc_end.setFocus()
             return
 
