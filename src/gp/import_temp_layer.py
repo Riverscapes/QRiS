@@ -45,6 +45,9 @@ class ImportTemporaryLayer(QgsTask):
             options.driverName = 'GPKG'
             options.layerName = self.output_fc_name
 
+            epgs_4326 = QgsCoordinateReferenceSystem('EPSG:4326')
+            out_transform = QgsCoordinateTransform(self.source_layer.sourceCrs(), epgs_4326, QgsProject.instance().transformContext())
+
             # Logic to set the write/update mode depending on if data source and/or layers are present
             if options.driverName == 'GPKG':
                 if os.path.exists(self.output_path):
@@ -73,10 +76,11 @@ class ImportTemporaryLayer(QgsTask):
             self.source_layer.startEditing()
             for feat in self.source_layer.getFeatures():
                 feat[self.id_field] = self.id_value
+                geom = feat.geometry()
                 if self.mask_clip_id is not None:
-                    geom = feat.geometry()
                     geom = geom.intersection(clip_geom)
-                    feat.setGeometry(geom)
+                geom.transform(out_transform)
+                feat.setGeometry(geom)
                 self.source_layer.updateFeature(feat)
             self.source_layer.commitChanges()
 
