@@ -26,7 +26,7 @@ import os
 import requests
 from osgeo import ogr
 
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
@@ -38,7 +38,7 @@ from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DBItem
+from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
 from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
 from ..model.protocol import Protocol
 from ..model.method import Method
@@ -68,6 +68,7 @@ from .frm_sampleframe import FrmSampleFrame
 from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
+from .frm_event_picker import FrmEventPicker
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -393,6 +394,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                         # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
                     else:
+                        self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
                         self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
                         self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
                 if isinstance(model_data, PourPoint):
@@ -640,6 +642,32 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
             import_source_layer = import_source_path
 
+        if mode == DB_MODE_COPY:
+            layer_name = db_item.layer.fc_name
+            event_type = self.project.events[db_item.event_id].event_type.id
+            event_name = "Data Capture Event" if event_type == DATA_CAPTURE_EVENT_TYPE_ID else "Design"
+            # filter events to only those with an event layer of the same type as the layer to be copied
+            dce_events = [event for event in self.project.events.values() if event.event_type.id == event_type]
+            # remove the current event
+            dce_events = [event for event in dce_events if event.id != db_item.event_id]
+            # filter events if layer name is within the event layers
+            dce_events = [event for event in dce_events if layer_name in [layer.layer.fc_name for layer in event.event_layers]]
+            if len(dce_events) == 0:
+                # warn user with message box and reject the dialog
+                filter_message = f" with layer name '{layer_name}'" if layer_name is not None else ""
+                QtWidgets.QMessageBox.warning(self, f"No {event_name}s", f"There are no {event_name}s{filter_message} in the project.")
+                return
+
+            frm = FrmEventPicker(self, self.project, DATA_CAPTURE_EVENT_TYPE_ID, events=dce_events)
+            if frm.dce_events == [] or frm.dce_events is None:
+                return
+            result = frm.exec_()
+            if result != QtWidgets.QDialog.Accepted:
+                return
+            import_source_path = QgsVectorLayer(f'{self.project.project_file}|layername={db_item.layer.fc_name}')
+            import_source_path.setSubsetString('event_id = ' + str(frm.qris_event.id))
+            import_source_layer = import_source_path
+
         # Get feature count of import source
         import_source_count = import_source_layer.featureCount()
         import_source_crs = import_source_layer.crs().authid()
@@ -654,6 +682,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             task = ImportTemporaryLayer(import_source_path, self.project.project_file, db_item.layer.fc_name, 'event_id', db_item.event_id)
             task.import_complete.connect(self.import_dce_complete)
             QgsApplication.taskManager().addTask(task)
+        if mode == DB_MODE_COPY:
+            feats = []
+            source_layer = QgsVectorLayer(f'{self.project.project_file}|layername={db_item.layer.fc_name}')
+            feat_count = source_layer.featureCount() + 1
+            for feature in import_source_path.getFeatures():
+                new_feature = QgsFeature()
+                new_feature.setFields(feature.fields())
+                new_feature.setGeometry(feature.geometry())
+                new_feature.setAttributes(feature.attributes())
+                new_feature.setAttribute('event_id', db_item.event_id)
+                new_feature.setId(feat_count)
+                new_feature['fid'] = feat_count
+                feats.append(new_feature)
+                feat_count += 1
+            source_layer.startEditing()
+            source_layer.addFeatures(feats)
+            source_layer.commitChanges()
+            self.import_dce_complete(True)
+
         else:
             frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
             frm.exec_()

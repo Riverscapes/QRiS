@@ -8,7 +8,7 @@ from ..model.project import Project
 from ..model.layer import Layer
 
 from .frm_date_picker import FrmDatePicker
-from .frm_event_layers import FrmAddFromDCE
+from .frm_event_picker import FrmEventPicker
 
 from datetime import date, datetime
 from .utilities import validate_name, add_standard_form_buttons
@@ -251,15 +251,13 @@ class FrmEvent(QtWidgets.QDialog):
 
     def on_add_from_dce_clicked(self):
 
-        frm = FrmAddFromDCE(self, self.qris_project, self.event_type_id, copy_features=False)
+        frm = FrmEventPicker(self, self.qris_project, self.event_type_id)
         frm.exec_()
         if frm.result() == QtWidgets.QDialog.Accepted:
             for layer in frm.layers:
-                # add layer to the layers in use list
                 layer_item = QtGui.QStandardItem(layer.name)
                 layer_item.setData(layer, QtCore.Qt.UserRole)
-                layer_item.setEditable(False)
-                self.layers_model.appendRow(layer_item)
+                self.add_selected_layers(layer_item)
 
     def add_selected_layers(self, item: QtGui.QStandardItem) -> None:
 
