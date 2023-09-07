@@ -11,6 +11,7 @@ INSERT INTO migrations (file_name) VALUES ('003_metrics_update.sql');
 INSERT INTO migrations (file_name) VALUES ('004_metadata.sql');
 INSERT INTO migrations (file_name) VALUES ('005_raster_symbology.sql');
 INSERT INTO migrations (file_name) VALUES ('006_layer_metadata.sql');
+INSERT INTO migrations (file_name) VALUES ('007_metadata_thalweg.sql');
 
 -- LOOKUP TABLES
 CREATE TABLE protocols (
@@ -578,6 +579,7 @@ INSERT INTO lkp_thalweg_types (id, name) VALUES (2, 'Non-Primary');
 ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
 ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
 ALTER TABLE thalwegs ADD description TEXT;
+ALTER TABLE thalwegs ADD COLUMN metadata TEXT;
 
 -- active extents
 CREATE TABLE lkp_active_extent_types (
