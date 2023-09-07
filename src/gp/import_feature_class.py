@@ -17,7 +17,7 @@ class ImportFeatureClass(QgsTask):
     """
 
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    import_complete = pyqtSignal(bool, int, int)
+    import_complete = pyqtSignal(bool, int, int, int)
 
     def __init__(self, source_path: str, dest_path: str, output_id_field: str = None, output_id: int = None, field_map: dict = None, clip_mask_id=None, attribute_filter: str = None, proj_gpkg=None):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
@@ -31,6 +31,7 @@ class ImportFeatureClass(QgsTask):
         self.attribute_filter = attribute_filter
         self.in_feats = 0
         self.out_feats = 0
+        self.skipped_feats = 0
         self.proj_gpkg = proj_gpkg
 
     def run(self):
@@ -100,6 +101,9 @@ class ImportFeatureClass(QgsTask):
             for src_feature in src_layer:
 
                 geom = src_feature.GetGeometryRef()
+                if geom is None:
+                    self.skipped_feats += 1
+                    continue
 
                 if clip_geom is not None:
                     geom = clip_geom.Intersection(geom)
@@ -213,7 +217,7 @@ class ImportFeatureClass(QgsTask):
                 QgsMessageLog.logMessage(f'Feature Class Import exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
-        self.import_complete.emit(result, self.in_feats, self.out_feats)
+        self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
         QgsMessageLog.logMessage(

@@ -178,7 +178,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             # result = import_task.run()
             # source_feats = import_task.in_feats
             # out_feats = import_task.out_feats
-            # self.on_import_complete(result, source_feats, out_feats)
+            # skip_feats = import_task.skipped_feats
+            # self.on_import_complete(result, source_feats, out_feats, skip_feats)
             # PRODUCTION
             import_task.import_complete.connect(self.on_import_complete)
             QgsApplication.taskManager().addTask(import_task)
@@ -187,10 +188,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             self.buttonBox.setEnabled(True)
             return False
 
-    def on_import_complete(self, result: bool, source_feats: int, out_feats: int):
+    def on_import_complete(self, result: bool, source_feats: int, out_feats: int, skip_feats: int):
 
         if result is True:
             extra_message = '' if source_feats == out_feats else f' (additional features were created due to exploding multi-part geometries.)'
+            extra_message += f' {skip_feats} features were skipped due to missing geometry.'
             iface.messageBar().pushMessage('Import Feature Class Complete.', f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.fc_name}.{extra_message}", level=Qgis.Info, duration=5)
             iface.mapCanvas().refreshAllLayers()
             iface.mapCanvas().refresh()
