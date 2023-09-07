@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [0.2.6] 2023 SEP 07
+
+### Added
+- Ability to create new dce from existing dce
+- Ability copy dce features from existing dce
+- Import temporary layers to context
+
+### Fixed
+- Bug with transforming features from temporary layer
+- Bug when importing features with empty geometry
+- Thalwegs missing metadata field
+- Missing warning message when dce date is invalid
+
 ## [0.2.5] 2023 SEP 01
 
 ### Added
