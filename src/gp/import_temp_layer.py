@@ -1,6 +1,6 @@
 import os
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
 from qgis.PyQt.QtCore import pyqtSignal, QVariant
 
 from ..model.db_item import DBItem
@@ -18,7 +18,7 @@ class ImportTemporaryLayer(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool)
 
-    def __init__(self, source_layer: str, output_dataset_path: str, output_layer_name: str, id_field, id_value, mask_clip_id=None, proj_gpkg=None):
+    def __init__(self, source_layer: str, output_dataset_path: str, output_layer_name: str, id_field: str = None, id_value: str = None, mask_clip_id=None, proj_gpkg=None):
         super().__init__(f'Import Temporary Layer', QgsTask.CanCancel)
 
         self.source_layer = source_layer.clone()
@@ -49,20 +49,19 @@ class ImportTemporaryLayer(QgsTask):
             out_transform = QgsCoordinateTransform(self.source_layer.sourceCrs(), epgs_4326, QgsProject.instance().transformContext())
 
             # Logic to set the write/update mode depending on if data source and/or layers are present
+            options.actionOnExistingFile = QgsVectorFileWriter.AppendToLayerNoNewFields
             if options.driverName == 'GPKG':
                 if os.path.exists(self.output_path):
-                    options.actionOnExistingFile = QgsVectorFileWriter.AppendToLayerNoNewFields
-                    if self.source_layer.dataProvider().subLayerCount() > 0:
-                        options.EditionCapability = QgsVectorFileWriter.CanAddNewLayer
-                else:
-                    options.actionOnExistingFile = QgsVectorFileWriter.AppendToLayerNoNewFields
-            else:  # likely shapefile. Need to test for other formats and modify if needed.
-                options.actionOnExistingFile = QgsVectorFileWriter.AppendToLayerNoNewFields
+                    output_layer = QgsVectorLayer(self.output_path)
+                    sublayers = [subLayer.split(QgsDataProvider.SUBLAYER_SEPARATOR)[1] for subLayer in output_layer.dataProvider().subLayers()]
+                    if options.layerName not in sublayers:
+                        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
 
             # add the event_id field to the source layer
-            field = QgsField(self.id_field, QVariant.Int)
-            self.source_layer.dataProvider().addAttributes([field])
-            self.source_layer.updateFields()
+            if self.id_field is not None:
+                field = QgsField(self.id_field, QVariant.Int)
+                self.source_layer.dataProvider().addAttributes([field])
+                self.source_layer.updateFields()
 
             if self.mask_clip_id is not None:
                 clip_layer = QgsVectorLayer(f'{self.proj_gpkg}|layername=aoi_features')
@@ -75,7 +74,8 @@ class ImportTemporaryLayer(QgsTask):
 
             self.source_layer.startEditing()
             for feat in self.source_layer.getFeatures():
-                feat[self.id_field] = self.id_value
+                if self.id_field is not None:
+                    feat[self.id_field] = self.id_value
                 geom = feat.geometry()
                 if self.mask_clip_id is not None:
                     geom = geom.intersection(clip_geom)

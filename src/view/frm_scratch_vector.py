@@ -4,7 +4,7 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from qgis.core import Qgis, QgsApplication
+from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 from .metadata import MetadataWidget
@@ -13,8 +13,10 @@ from ..model.scratch_vector import ScratchVector, insert_scratch_vector, scratch
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.mask import AOI_MASK_TYPE_ID
-from ..QRiS.path_utilities import parse_posix_path
+
+from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
+from ..gp.import_temp_layer import ImportTemporaryLayer
 
 
 class FrmScratchVector(QtWidgets.QDialog):
@@ -25,6 +27,8 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.project = project
         self.vector_type_id = vector_type_id
         self.scratch_vector = scratch_vector
+        self.import_source_path = import_source_path
+        self.layer_id = None
 
         super(FrmScratchVector, self).__init__(parent)
         metadata_json = json.dumps(scratch_vector.metadata) if scratch_vector is not None else None
@@ -40,8 +44,17 @@ class FrmScratchVector(QtWidgets.QDialog):
 
             self.txtName.textChanged.connect(self.on_name_changed)
             self.txtSourcePath.textChanged.connect(self.on_name_changed)
-            self.txtSourcePath.setText(import_source_path)
-            self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
+
+            if isinstance(import_source_path, QgsVectorLayer):
+                self.layer_name = import_source_path.name()
+                self.layer_id = 'memory'
+                init_path = f'Temporary Layer: {self.layer_name}'
+            else:
+                init_path = import_source_path
+                self.layer_name = os.path.splitext(os.path.basename(import_source_path))[0]
+
+            self.txtSourcePath.setText(init_path)
+            self.txtName.setText(self.layer_name)
 
             # Masks (filtered to just AOI)
             self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
@@ -100,21 +113,26 @@ class FrmScratchVector(QtWidgets.QDialog):
 
                 # Ensure that the scratch feature class name doesn't exist in scratch geopackage
                 # Do this because an error might have left a lingering feature class table etc
-                self.fc_name = get_unique_scratch_fc_name(self.project.project_file, self.txtName.text())
+                out_path, layer_name, _layer_id = layer_path_parser(self.txtProjectPath.text())
+                self.fc_name = get_unique_scratch_fc_name(self.project.project_file, layer_name)
 
                 clip_mask_id = None
                 if mask is not None:
                     clip_mask_id = mask.id if mask.id > 0 else None
-                copy_vector = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=clip_mask_id, proj_gpkg=self.project.project_file)
+                if self.layer_id == 'memory':
+                    task = ImportTemporaryLayer(self.import_source_path, out_path, self.fc_name, mask_clip_id=clip_mask_id, proj_gpkg=self.project.project_file)
+                else:
+                    task = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=clip_mask_id, proj_gpkg=self.project.project_file)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
-                self.on_copy_complete(copy_vector.run())
+                result = task.run()
+                self.on_copy_complete(result)
                 # return
 
                 # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
                 self.buttonBox.setEnabled(False)
-                # copy_vector.import_complete.connect(self.on_copy_complete)
-                # QgsApplication.taskManager().addTask(copy_vector)
+                # task.import_complete.connect(self.on_copy_complete)
+                # QgsApplication.taskManager().addTask(task)
 
             except Exception as ex:
                 self.buttonBox.setEnabled(True)

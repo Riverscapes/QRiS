@@ -323,6 +323,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
                     self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, True))
                     self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_context_vector(model_item))
+                    self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_TEMPORARY))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
@@ -865,6 +866,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if import_source_path is None:
             import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
+            if import_source_path is None:
+                return
+        if import_source_path == DB_MODE_IMPORT_TEMPORARY:
+            import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry, QgsWkbTypes.LineGeometry, QgsWkbTypes.PointGeometry])
             if import_source_path is None:
                 return
 
