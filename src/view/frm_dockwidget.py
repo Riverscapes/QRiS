@@ -69,6 +69,7 @@ from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
+from .frm_export_design import FrmExportDesign
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -388,6 +389,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
 
+                if isinstance(model_data, Event):
+                    if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:
+                        self.add_context_menu_item(self.menu, 'Export LTPBR Design...', None, lambda: self.export_design(model_data))
+
                 if isinstance(model_data, EventLayer):
                     if model_data.name == 'BRAT CIS (Capacity Inference System)':
                         self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
@@ -705,6 +710,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
             frm.exec_()
+
+    def export_design(self, event: Event):
+
+        frm = FrmExportDesign(self, self.project, event)
+        frm.exec_()
 
     def import_dce_complete(self, result: bool):
 
