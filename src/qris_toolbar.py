@@ -195,8 +195,8 @@ class QRiSToolbar:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         # DEBUG: REMOVE ME
-        from .rsxml_test import rsxml_test
-        rsxml_test()
+        # from ..test.rsxml_test import rsxml_test
+        # rsxml_test()
 
         # Initialize the processing framework
         # self.initProcessing()
