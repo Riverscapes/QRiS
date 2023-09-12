@@ -16,7 +16,7 @@ from .utilities import add_standard_form_buttons
 
 class FrmExportDesign(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: QRiSProject, event: Event):
+    def __init__(self, parent, project: QRiSProject, event: Event, outpath: str = None):
         super().__init__(parent)
 
         self.qris_project = project
@@ -24,6 +24,18 @@ class FrmExportDesign(QtWidgets.QDialog):
 
         self.setWindowTitle("Export Riverscapes LTPBR Design")
         self.setupUi()
+
+        if outpath:
+            self.basepath = outpath
+        else:
+            self.basepath = os.path.dirname(self.qris_project.project_file)
+
+        self.set_output_path(self.qris_project.name)
+
+    def set_output_path(self, project_name: str):
+
+        outpath = parse_posix_path(os.path.join(self.basepath, project_name.replace(" ", "_")))
+        self.txt_outpath.setText(outpath)
 
     def accept(self) -> None:
 
@@ -150,7 +162,7 @@ class FrmExportDesign(QtWidgets.QDialog):
                     if ret == QtWidgets.QMessageBox.Cancel:
                         return
 
-        self.txt_outpath.setText(path)
+        self.set_output_path(self.txt_rs_name.text())
 
     def setupUi(self):
 
@@ -164,12 +176,13 @@ class FrmExportDesign(QtWidgets.QDialog):
         self.vert.addLayout(self.grid)
 
         # add label and txt box for project name
-        self.lbl_project = QtWidgets.QLabel("Project Name")
+        self.lbl_project = QtWidgets.QLabel("Design Name")
         self.grid.addWidget(self.lbl_project, 0, 0, 1, 1)
 
         self.txt_rs_name = QtWidgets.QLineEdit()
         self.txt_rs_name.setReadOnly(False)
         self.txt_rs_name.setText(self.qris_project.name)
+        self.txt_rs_name.textChanged.connect(self.set_output_path)
         self.grid.addWidget(self.txt_rs_name, 0, 1, 1, 1)
 
         # add label and horizontal layout with textbox and small button for output path

@@ -713,7 +713,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def export_design(self, event: Event):
 
-        frm = FrmExportDesign(self, self.project, event)
+        # select the output directory
+        basedir = os.path.dirname(self.project.project_file)
+        out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Output Directory", basedir)
+        if out_dir == "":
+            return
+
+        # check if there is already a project.rs.xml file in the output directory
+        if os.path.exists(os.path.join(out_dir, 'project.rs.xml')):
+            # warn the user that a project has already been exported to this directory
+            result = QtWidgets.QMessageBox.question(self, 'Export Design', 'A design has already been exported to this directory.\n\nWould you like to overwrite the existing design?',
+                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if result == QtWidgets.QMessageBox.No:
+                return
+
+        frm = FrmExportDesign(self, self.project, event, out_dir)
         frm.exec_()
 
     def import_dce_complete(self, result: bool):
