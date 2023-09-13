@@ -215,8 +215,11 @@ class RiverscapesMapManager():
             return layer
 
         # Create a layer from the table
+        if id_field is not None:
+            id_value = db_item.event_id if id_field == 'event_id' else db_item.id
+            fc_path = fc_path + f'|subset={id_field} = {id_value}'
         layer = QgsVectorLayer(fc_path, db_item.name, 'ogr')
-        QgsProject.instance().addMapLayer(layer, False)
+        # QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
         symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
@@ -224,9 +227,9 @@ class RiverscapesMapManager():
         layer.loadNamedStyle(qml)
 
         if id_field is not None:
-            id_value = db_item.event_id if id_field == 'event_id' else db_item.id
-            # Filter to just the features for this item
-            layer.setSubsetString(f'{id_field} = {id_value}')
+            # id_value = db_item.event_id if id_field == 'event_id' else db_item.id
+            # # Filter to just the features for this item
+            # layer.setSubsetString(f'{id_field} = {id_value}')
 
             # Set a parent assessment variable
             QgsExpressionContextUtils.setLayerVariable(layer, id_field, id_value)
