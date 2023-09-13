@@ -210,7 +210,7 @@ class QRiSToolbar:
         # Close project when the project is cleared
         self.qproject.cleared.connect(self.close_project)
 
-        icon_path = ':/plugins/qris_toolbar/riverscapes_icon'
+        icon_path = ':/plugins/qris_toolbar/qris_icon'
         self.add_action(icon_path, text='QRiS', callback=self.run, parent=self.iface.mainWindow(), add_to_menu=False)
 
         # --- PROJECT MENU ---
@@ -224,7 +224,7 @@ class QRiSToolbar:
         # --- HELP MENU --
         help_menu = self.add_toolbar_menu('Help')
         self.add_menu_action(help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
-        self.add_menu_action(help_menu, 'riverscapes_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
+        self.add_menu_action(help_menu, 'qris_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
 
         canvas = self.iface.mapCanvas()
         self.watershed_html_tool = QgsMapToolEmitPoint(canvas)

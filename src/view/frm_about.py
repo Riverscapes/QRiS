@@ -18,7 +18,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi2()
 
-        pixmap = QtGui.QPixmap(':/plugins/qris_toolbar/riverscapes_logo').scaled(128, 128)
+        pixmap = QtGui.QIcon(":/plugins/qris_toolbar/qris_icon").pixmap(128, 128)
         self.logo.setPixmap(pixmap)
 
         self.setWindowTitle('QRiS Plugin for QGIS')
@@ -47,6 +47,8 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.logo.setSizePolicy(sizePolicy)
         self.logo.setMinimumSize(QtCore.QSize(128, 128))
         self.logo.setMaximumSize(QtCore.QSize(128, 128))
+        # center the logo
+        self.logo.setAlignment(QtCore.Qt.AlignCenter)
         self.horiz.addWidget(self.logo)
 
         self.grid = QtWidgets.QGridLayout()
