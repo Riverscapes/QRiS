@@ -11,6 +11,7 @@ from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
+from .event_layer import EventLayer
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
 from .scratch_vector import ScratchVector, load_scratch_vectors
@@ -137,6 +138,9 @@ class Project(DBItem):
             self.profiles.pop(db_item.id)
         elif isinstance(db_item, CrossSections):
             self.cross_sections.pop(db_item.id)
+        elif isinstance(db_item, EventLayer):
+            event_layer_index = list(event_layer.id for event_layer in self.events[db_item.event_id].event_layers).index(db_item.id)
+            self.events[db_item.event_id].event_layers.pop(event_layer_index)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
