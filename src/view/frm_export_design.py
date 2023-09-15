@@ -101,10 +101,24 @@ class FrmExportDesign(QtWidgets.QDialog):
                                        filepath=geojson_filename)
 
         path = parse_posix_path(os.path.join(self.txt_outpath.text(), "project.rs.xml"))
+
+        metadata_values = [Meta('QRiS Project Name', self.qris_project.name),
+                           Meta('QRiS Project Description', self.qris_project.description)]
+
+        if self.qris_event.description:
+            metadata_values.append(Meta('LTPBR Design Description', self.qris_event.description))
+        # check if there is one design date or multiple
+        # if multiple, add both to meta as start and end date
+        if self.qris_event.date_text:
+            metadata_values.append(Meta('LTPBR Design Date', self.qris_event.date_text))
+
+        # add any other design metadata
+        # for key, value in self.qris_event.metadata.items():
+
         self.rs_project = Project(name=self.txt_rs_name.text(),
                                   proj_path=path,
                                   project_type='LTPBRDesign',
-                                  meta_data=MetaData(values=[Meta('QRiS Project', self.qris_project.name)]),
+                                  meta_data=MetaData(values=metadata_values),
                                   description=self.txt_description.toPlainText(),
                                   bounds=project_bounds)
 
