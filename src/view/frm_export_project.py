@@ -1,14 +1,20 @@
 import os
+import shutil
+import sqlite3
+
 from osgeo import gdal
 
 from PyQt5 import QtCore, QtWidgets
 from qgis.core import QgsVectorLayer, QgsGeometry, QgsPolygon
 
-from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes
+from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
 
 from ...__version__ import __version__ as qris_version
 from ..model.event import Event
+from ..model.analysis import Analysis
+from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.project import Project as QRiSProject
+from ..model.scratch_vector import scratch_gpkg_path
 from ..QRiS.path_utilities import parse_posix_path
 from .metadata import MetadataWidget
 from .utilities import add_standard_form_buttons
@@ -55,11 +61,26 @@ class FrmExportProject(QtWidgets.QDialog):
         if not os.path.exists(self.txt_outpath.text()):
             os.mkdir(self.txt_outpath.text())
 
+        # create the surfaces directory
+        surfaces_dir = parse_posix_path(os.path.join(self.txt_outpath.text(), 'surfaces'))
+        if not os.path.exists(surfaces_dir):
+            os.mkdir(surfaces_dir
+                     )
+        # Create the context directory
+        context_dir = parse_posix_path(os.path.join(self.txt_outpath.text(), 'context'))
+        if not os.path.exists(context_dir):
+            os.mkdir(context_dir)
+
         # copy the geopackage layers to the new project folder
-        out_geopackage = parse_posix_path(os.path.join(self.txt_outpath.text(), "ltpbr.gpkg"))
-        # layers = [layer.layer.fc_name for layer in self.qris_event.event_layers]
+        out_geopackage = parse_posix_path(os.path.join(self.txt_outpath.text(), "qris.gpkg"))
         gdal.VectorTranslate(out_geopackage,
                              self.qris_project.project_file,
+                             format="GPKG")
+
+        # copy the context geopackage to the new project folder
+        context_geopackage = parse_posix_path(os.path.join(context_dir, "feature_classes.gpkg"))
+        gdal.VectorTranslate(context_geopackage,
+                             scratch_gpkg_path(self.qris_project.project_file),
                              format="GPKG")
 
         # get the project bounds or have user select an aoi?
@@ -127,37 +148,255 @@ class FrmExportProject(QtWidgets.QDialog):
 
         date_created = QtCore.QDateTime.currentDateTime()
 
-        # prepare the datasets
-        geopackage_layers = []
-        for layer in self.qris_project.layers.values():
-            gp_lyr = GeopackageLayer(lyr_name=layer.fc_name,
-                                     name=layer.name,
+        raster_datasets = []
+        for raster_id, raster in self.qris_project.rasters.items():
+            # check if raster is surface or context
+            if raster.is_context:
+                raster_xml_id = f'context_{raster_id}'
+            else:
+                raster_xml_id = f'surface_{raster_id}'
+
+            raster_path = parse_posix_path(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path))
+            shutil.copy(raster_path, parse_posix_path(os.path.join(self.txt_outpath.text(), raster.path)))
+
+            raster_datasets.append(Dataset(xml_id=raster_xml_id,
+                                           name=raster.name,
+                                           path=raster.path,
+                                           ds_type='Raster'))
+
+        input_layers = []
+        for aoi_id, aoi in self.qris_project.masks.items():
+
+            if not aoi.mask_type.id == AOI_MASK_TYPE_ID:
+                continue
+
+            view_name = f'vw_aoi_{aoi_id}'
+            self.create_spatial_view(view_name=view_name,
+                                     fc_name='aoi_features',
+                                     field_name='mask_id',
+                                     id_value=aoi_id,
+                                     out_geopackage=out_geopackage,
+                                     geom_type='POLYGON')
+
+            input_layers.append(GeopackageLayer(lyr_name=view_name,
+                                                name=aoi.name,
+                                                ds_type=GeoPackageDatasetTypes.VECTOR))
+
+        for sample_frame_id, sample_frame in self.qris_project.masks.items():
+            sample_frame_layers = []
+            if sample_frame.mask_type.id == AOI_MASK_TYPE_ID:
+                continue
+
+            view_name = f'vw_sample_frame_{sample_frame_id}'
+            self.create_spatial_view(view_name=view_name,
+                                     fc_name='mask_features',
+                                     field_name='mask_id',
+                                     id_value=sample_frame_id,
+                                     out_geopackage=out_geopackage,
+                                     geom_type='POLYGON')
+
+            input_layers.append(GeopackageLayer(lyr_name=view_name,
+                                                name=sample_frame.name,
+                                                ds_type=GeoPackageDatasetTypes.VECTOR))
+
+        for profile_id, profile in self.qris_project.profiles.items():
+            profile_fc = 'profile_centerlines' if profile.profile_type_id == 2 else 'profile_features'
+
+            view_name = f'vw_profile_{profile_id}'
+            self.create_spatial_view(view_name=view_name,
+                                     fc_name=profile_fc,
+                                     field_name='profile_id',
+                                     id_value=profile_id,
+                                     out_geopackage=out_geopackage,
+                                     geom_type='LINESTRING')
+
+            input_layers.append(GeopackageLayer(lyr_name=view_name,
+                                                name=profile.name,
+                                                ds_type=GeoPackageDatasetTypes.VECTOR))
+
+        for xsection_id, xsection in self.qris_project.cross_sections.items():
+
+            view_name = f'vw_cross_section_{xsection_id}'
+            self.create_spatial_view(view_name=view_name,
+                                     fc_name='cross_section_features',
+                                     field_name='cross_section_id',
+                                     id_value=xsection_id,
+                                     out_geopackage=out_geopackage,
+                                     geom_type='LINESTRING')
+
+            input_layers.append(GeopackageLayer(lyr_name=view_name,
+                                                name=xsection.name,
+                                                ds_type=GeoPackageDatasetTypes.VECTOR))
+
+        gpkg = Geopackage(xml_id=f'inputs_gpkg',
+                          name=f'Inputs',
+                          path='qris.gpkg',
+                          layers=input_layers)
+
+        # need to prepare the Watershed catchments (pour points)
+        pour_point_gpkgs = []
+        for pour_point_id, pour_point in self.qris_project.pour_points.items():
+            pour_point_layers = []
+            view_name = f'vw_pour_point_{pour_point_id}'
+            self.create_spatial_view(view_name=view_name,
+                                     fc_name='pour_points',
+                                     field_name='fid',
+                                     id_value=pour_point_id,
+                                     out_geopackage=out_geopackage,
+                                     geom_type='POINT')
+
+            pour_point_layers.append(GeopackageLayer(lyr_name=view_name,
+                                                     name=pour_point.name,
+                                                     ds_type=GeoPackageDatasetTypes.VECTOR))
+
+            catchment_view = f'vw_catchment_{pour_point_id}'
+            self.create_spatial_view(view_name=catchment_view,
+                                     fc_name='catchments',
+                                     field_name='pour_point_id',
+                                     id_value=pour_point_id,
+                                     out_geopackage=out_geopackage,
+                                     geom_type='POLYGON')
+
+            pour_point_layers.append(GeopackageLayer(lyr_name=catchment_view,
+                                                     name=pour_point.name,
+                                                     ds_type=GeoPackageDatasetTypes.VECTOR))
+
+            pour_point_gpkgs.append(Geopackage(xml_id=f'pour_points_{pour_point_id}_gpkg',
+                                               name=pour_point.name,
+                                               path='qris.gpkg',
+                                               layers=pour_point_layers))
+
+        # context vectors
+        context_layers = []
+        for scratch_vector_id, scratch_vector in self.qris_project.scratch_vectors.items():
+            # get the geom type for the feature class
+            geom_type: str = None
+            with sqlite3.connect(scratch_gpkg_path(self.qris_project.project_file)) as conn:
+                curs = conn.cursor()
+                curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{scratch_vector.fc_name}'")
+                geom_type = curs.fetchone()[0]
+
+            context_layers.append(GeopackageLayer(summary=f'context_{geom_type.lower()}',
+                                                  lyr_name=scratch_vector.fc_name,
+                                                  name=scratch_vector.name,
+                                                  ds_type=GeoPackageDatasetTypes.VECTOR))
+
+        context_gpkg = Geopackage(xml_id=f'context_gpkg',
+                                  name=f'Context',
+                                  path='context/feature_classes.gpkg',
+                                  layers=context_layers)
+
+        self.rs_project.realizations.append(Realization(xml_id=f'inputs',
+                                                        name='Inputs',
+                                                        date_created=date_created.toPyDateTime(),
+                                                        product_version=qris_version,
+                                                        datasets=raster_datasets + [gpkg, context_gpkg] + pour_point_gpkgs))
+
+        for event_id, event in self.qris_project.events.items():
+            event_type = "DCE" if event.event_type.id == 1 else "Design"
+            meta = MetaData(values=[Meta(event_type, "")])
+            # prepare the datasets
+            geopackage_layers = []
+            for layer in event.event_layers:
+                geom_type = layer.layer.geom_type
+                if geom_type == "NoGeometry":
+                    continue
+
+                view_name = f'vw_{layer.layer.fc_name}_{event_id}'
+                self.create_spatial_view(view_name=view_name,
+                                         fc_name=layer.layer.fc_name,
+                                         field_name='event_id',
+                                         id_value=event_id,
+                                         out_geopackage=out_geopackage,
+                                         geom_type=geom_type.upper())
+
+                gp_lyr = GeopackageLayer(lyr_name=view_name,
+                                         name=layer.name,
+                                         ds_type=GeoPackageDatasetTypes.VECTOR)
+                geopackage_layers.append(gp_lyr)
+
+            gpkg = Geopackage(xml_id=f'{event_id}_gpkg',
+                              name=f'{event.name}',
+                              path='qris.gpkg',
+                              layers=geopackage_layers)
+
+            # # self.rs_project.common_datasets.append(gpkg)
+            # ds = [RefDataset(lyr.lyr_name, lyr) for lyr in geopackage_layers]
+
+            realization = Realization(xml_id=f'realization_qris_{event_id}',
+                                      name=event.name,
+                                      date_created=date_created.toPyDateTime(),
+                                      product_version=qris_version,
+                                      datasets=[gpkg],
+                                      meta_data=meta)
+
+            # add description if it exists
+            if event.description:
+                realization.description = event.description
+
+            self.rs_project.realizations.append(realization)
+
+        # add analyses
+        for analysis_id, analysis in self.qris_project.analyses.items():
+            geopackage_layers = []
+            analysis: Analysis = analysis
+            sample_frame: Mask = analysis.mask
+
+            # flatten the table of analysis metrics
+            analysis_metrics = []
+            for metric_id, metric in analysis.analysis_metrics.items():
+                analysis_metrics.append([metric_id, metric.level_id])
+
+            # create the analysis view
+            analysis_view = f'vw_analysis_{analysis_id}'
+
+            # prepare sql string for each metric
+            sql_metric = ", ".join([f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in analysis.analysis_metrics.items()])
+            sql = f"""CREATE VIEW {analysis_view} AS SELECT * from mask_features JOIN (SELECT mask_feature_id, {sql_metric} FROM metric_values JOIN metrics on metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis_id} Group BY mask_feature_id) AS x ON mask_features.fid = x.mask_feature_id"""
+            self.create_spatial_view(view_name=analysis_view,
+                                     fc_name=None,
+                                     field_name=None,
+                                     id_value=None,
+                                     out_geopackage=out_geopackage,
+                                     geom_type="POLYGON",
+                                     sql=sql)
+
+            gp_lyr = GeopackageLayer(lyr_name=analysis_view,
+                                     name=analysis.name,
                                      ds_type=GeoPackageDatasetTypes.VECTOR)
             geopackage_layers.append(gp_lyr)
 
-        gpkg = Geopackage(xml_id='qris_gpkg',
-                          name='qris',
-                          path='qris.gpkg',
-                          layers=geopackage_layers)
+            gpkg = Geopackage(xml_id=f'{analysis_id}_gpkg',
+                              name=f'{analysis.name}',
+                              path='qris.gpkg',
+                              layers=geopackage_layers)
 
-        realization = Realization(xml_id='realization_qris',
-                                  name=self.qris_project.name,
-                                  date_created=date_created.toPyDateTime(),
-                                  product_version=qris_version,
-                                  datasets=[gpkg])
+            realization = Realization(xml_id=f'analysis_{analysis_id}',
+                                      name=analysis.name,
+                                      date_created=date_created.toPyDateTime(),
+                                      product_version=qris_version,
+                                      datasets=[gpkg])
+            # meta_data=meta)
 
-        # # add description if it exists
-        # if self.qris_event.description:
-        #     realization.description = self.qris_event.description
-
-        self.rs_project.realizations.append(realization)
-
-        # Metadata from project?
-        # metadata from design?
+            self.rs_project.realizations.append(realization)
 
         self.rs_project.write()
 
         return super().accept()
+
+    @staticmethod
+    def create_spatial_view(view_name: str, fc_name, field_name: str, id_value: int, out_geopackage: str, geom_type: str, epsg: int = 4326, sql: str = None):
+        # create spaitail view of the aoi
+        sql = sql if sql is not None else f"CREATE VIEW {view_name} AS SELECT * FROM {fc_name} WHERE {field_name} == {id_value}"
+        with sqlite3.connect(out_geopackage) as conn:
+            curs = conn.cursor()
+            curs.execute(sql)
+            # add view to geopackage
+            sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
+            curs.execute(sql, [view_name, "features", view_name, "", epsg])
+            sql = "INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES (?, ?, ?, ?, ?, ?)"
+            curs.execute(sql, [view_name, 'geom', geom_type, epsg, 0, 0])
+            conn.commit()
 
     def browse_path(self):
 
