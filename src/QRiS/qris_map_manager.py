@@ -451,8 +451,13 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_virtual_dimension(feature_layer, 'length')
         self.set_alias(feature_layer, 'created', 'Created')
+        self.set_metadata_edit(feature_layer, 'metadata', 'Metadata')
         self.set_field_constraint_not_null(feature_layer, 'structure_type_id', 1)
         self.set_created_datetime(feature_layer)
+        column_index = feature_layer.fields().indexOf('metadata')
+        layer_attr_table_config = feature_layer.attributeTableConfig()
+        layer_attr_table_config.setColumnHidden(column_index, True)
+        feature_layer.setAttributeTableConfig(layer_attr_table_config)
 
     def configure_complexes(self, feature_layer: QgsVectorLayer) -> None:
         self.set_hidden(feature_layer, 'fid', 'Structure ID')

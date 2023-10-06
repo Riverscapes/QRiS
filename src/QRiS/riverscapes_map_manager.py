@@ -539,3 +539,13 @@ class RiverscapesMapManager():
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
         feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)
+
+    def set_metadata_edit(self, feature_layer: QgsVectorLayer, field_name='metadata', field_alias='Metadata'):
+        fields = feature_layer.fields()
+        field_index = fields.indexFromName(field_name)
+        widget_setup = QgsEditorWidgetSetup('MetadataFieldEdit', {'IsMultiline': True, 'UseHtml': False})
+        feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+        feature_layer.setFieldAlias(field_index, field_alias)
+        form_config = feature_layer.editFormConfig()
+        form_config.setLabelOnTop(field_index, True)
+        feature_layer.setEditFormConfig(form_config)

@@ -1,5 +1,11 @@
 # QRiS Plugin
 
+## [0.2.7] 2023 SEP 12
+
+### Added
+- rsxml pip module for parsing riverscapes xml
+- Export LTPBRDesign Riverscapes Project
+
 ## [0.2.6] 2023 SEP 07
 
 ### Added
