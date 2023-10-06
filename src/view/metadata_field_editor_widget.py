@@ -11,10 +11,6 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
     # def __init__(self, layer: QgsVectorLayer, fieldIdx: int, editor: QWidget, parent: QWidget):
     #     super().__init__(layer, fieldIdx, editor, parent)
 
-    #     self.mLineEdit = QLineEdit()
-    #     self.mLineEdit.textChanged.connect(lambda value: self.valueChanged(value))
-    #     self.mLineEdit.textChanged.connect(self.textChanged)
-
     def value(self) -> QVariant:
         """Will be used to access the widget's value. Read the value from the widget and return it properly formatted to be saved in the attribute.
            If an invalid variant is returned this will be interpreted as no change. Be sure to return a NULL QVariant if it should be set to NULL.
@@ -27,13 +23,6 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.current_value = json.dumps(json_data)
         return self.current_value
 
-        # #if self.table is not None:
-        #     # load json from table
-        #     json_data = {}
-        #     for i in range(self.table.rowCount()):
-        #         json_data[self.table.item(i, 0).text()] = self.table.item(i, 1).text()
-        #     return json.dumps(json_data)
-
     def createWidget(self, parent: QWidget) -> QWidget:
 
         return QWidget(parent)  # QTableWidget(parent)
@@ -41,11 +30,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
     def initWidget(self, editor: QWidget):
         """This method should initialize the editor widget with runtime data. Fill your comboboxes here.
 
-           Parameters: editor – The widget which will represent this attribute editor in a form."""
+           Parameters: editor - The widget which will represent this attribute editor in a form."""
 
-        # self.spinbox = editor if type(editor) is QDoubleSpinBox else editor.findChild(QDoubleSpinBox)
-        # self.table = editor if type(editor) is QTableWidget else editor.findChild(QTableWidget)
-        # self.table.cellChanged.connect(self.onValueChanged)
         self.editor_widget = editor if type(editor) is QWidget else editor.findChild(QWidget)
         # Grid layout
         self.vert = QVBoxLayout(self.editor_widget)
@@ -74,12 +60,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.dblAge.valueChanged.connect(self.onValueChanged)
 
     def valid(self) -> bool:
-        return True  # self.table is not None
-
-    # def setFeature(self, feature: QgsFeature):
-
-    #     self.setFormFeature(feature)
-    #     self.setValue(feature.attribute(self.fieldIdx()))
+        return True
 
     def setValue(self, value):
         """Is called when the value of the widget needs to be changed. Updates the widget representation to reflect the new value."""
@@ -93,32 +74,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             if 'age' in parsed_json:
                 self.dblAge.setValue(parsed_json['age'])
 
-    # def onCityValueChanged(self, value):
-    #     parsed_json = json.loads(self.current_value)
-    #     parsed_json['city'] = self.cboCity.currentText()
-    #     self.txtJsonCurrent.setText(json.dumps(parsed_json))
-    #     self.valueChanged.emit(json.dumps(parsed_json))
-    #     self.emitValueChanged()
-
-    # def onAgeValueChanged(self, value):
-    #     parsed_json = json.loads(self.current_value)
-    #     parsed_json['age'] = value
-    #     self.txtJsonCurrent.setText(json.dumps(parsed_json))
-    #     self.valueChanged.emit(json.dumps(parsed_json))
-    #     self.emitValueChanged()
-
     def onValueChanged(self, value):
         # self.valueChanged.emit(value)
         self.emitValueChanged()
-
-    # def setHint(self, hintText: str):
-    #     if hintText == "":
-    #         self.mPlaceholderText = self.mPlaceholderTextBackup
-    #     else:
-    #         self.mPlaceholderTextBackup = self.mPlaceholderText
-    #         self.mPlaceholderText = hintText
-    #     if self.mLineEdit:
-    #         self.mLineEdit.setPlaceholderText(self.mPlaceholderText)
 
 
 class MetadataFieldEditConfigWidget(QgsEditorConfigWidget):
