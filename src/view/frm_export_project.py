@@ -36,6 +36,10 @@ class FrmExportProject(QtWidgets.QDialog):
             self.basepath = os.path.dirname(self.qris_project.project_file)
 
         self.set_output_path(self.qris_project.name)
+        # populate the AOI combo box with aoi names
+        for aoi_id, aoi in self.qris_project.masks.items():
+            if aoi.mask_type.id == AOI_MASK_TYPE_ID:
+                self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
 
     def set_output_path(self, project_name: str):
 
@@ -55,6 +59,19 @@ class FrmExportProject(QtWidgets.QDialog):
             msg.setEscapeButton(QtWidgets.QMessageBox.Cancel)
             ret = msg.exec_()
             if ret == QtWidgets.QMessageBox.Cancel:
+                return
+
+        if self.opt_project_bounds_aoi.isChecked():
+            # if Select AOI is selected, then warn the user to select an AOI
+            if self.cbo_project_bounds_aoi.currentIndex() == 0:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Warning)
+                msg.setText("Please select an AOI or select 'Use all QRiS layers'")
+                msg.setWindowTitle("Select AOI")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
+                msg.setEscapeButton(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
                 return
 
         # create a new project folder if it doesn't exist
@@ -83,30 +100,38 @@ class FrmExportProject(QtWidgets.QDialog):
                              scratch_gpkg_path(self.qris_project.project_file),
                              format="GPKG")
 
-        # get the project bounds or have user select an aoi?
-        envelope = None
-        for layer in self.qris_project.layers.values():
-            if layer.geom_type == "NoGeometry":
-                continue
-            geom = None
-            lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer.fc_name}', layer.name, "ogr")
-            # lyr.setSubsetString(f"event_id = {layer.event_id}")
-            for f in lyr.getFeatures():
+        # Project Bounds
+        if self.opt_project_bounds_all.isChecked():
+            # get the extent of all layers
+            envelope = None
+            for layer in self.qris_project.layers.values():
+                if layer.geom_type == "NoGeometry":
+                    continue
+                geom = None
+                lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer.fc_name}', layer.name, "ogr")
+                # lyr.setSubsetString(f"event_id = {layer.event_id}")
+                for f in lyr.getFeatures():
+                    if geom is None:
+                        geom = f.geometry()
+                    else:
+                        geom = geom.combine(f.geometry())
                 if geom is None:
-                    geom = f.geometry()
+                    continue
+                hull = geom.convexHull()
+                if envelope is None:
+                    envelope = hull
                 else:
-                    geom = geom.combine(f.geometry())
-            if geom is None:
-                continue
-            hull = geom.convexHull()
-            if envelope is None:
-                envelope = hull
-            else:
-                envelope = envelope.combine(hull)
+                    envelope = envelope.combine(hull)
+        else:
+            # get the extent of the selected AOI
+            aoi_id = self.cbo_project_bounds_aoi.currentData()
+            aoi: Mask = self.qris_project.masks[aoi_id]
+            lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features', aoi.name, "ogr")
+            lyr.setSubsetString(f"mask_id = {aoi.id}")
+            envelope = lyr.getFeatures().__next__().geometry()
 
         extent = envelope.boundingBox()
         centroid = envelope.centroid().asPoint()
-
         geojson = envelope.asJson()
         # write to file
         geojson_filename = "project_bounds.geojson"
@@ -420,6 +445,13 @@ class FrmExportProject(QtWidgets.QDialog):
 
         self.set_output_path(self.txt_rs_name.text())
 
+    def change_project_bounds(self):
+
+        if self.opt_project_bounds_aoi.isChecked():
+            self.cbo_project_bounds_aoi.setEnabled(True)
+        else:
+            self.cbo_project_bounds_aoi.setEnabled(False)
+
     def setupUi(self):
 
         self.setMinimumSize(500, 300)
@@ -457,14 +489,37 @@ class FrmExportProject(QtWidgets.QDialog):
         self.btn_output.clicked.connect(self.browse_path)
         self.horiz_output.addWidget(self.btn_output)
 
+        self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
+        self.grid.addWidget(self.lbl_project_bounds, 2, 0, 1, 1, QtCore.Qt.AlignTop)
+
+        self.vert_project_bounds = QtWidgets.QVBoxLayout()
+        self.grid.addLayout(self.vert_project_bounds, 2, 1, 1, 1)
+
+        self.opt_project_bounds_all = QtWidgets.QRadioButton("Use all QRiS layers")
+        self.opt_project_bounds_all.setChecked(True)
+        self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
+        self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
+
+        self.horiz_project_bounds_aoi = QtWidgets.QHBoxLayout()
+        self.vert_project_bounds.addLayout(self.horiz_project_bounds_aoi)
+
+        self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI")
+        self.opt_project_bounds_aoi.clicked.connect(self.change_project_bounds)
+        self.horiz_project_bounds_aoi.addWidget(self.opt_project_bounds_aoi)
+
+        self.cbo_project_bounds_aoi = QtWidgets.QComboBox()
+        self.cbo_project_bounds_aoi.addItem("Select AOI")
+        self.cbo_project_bounds_aoi.setEnabled(False)
+        self.horiz_project_bounds_aoi.addWidget(self.cbo_project_bounds_aoi)
+
         # add multiline box for description
         self.lbl_description = QtWidgets.QLabel("Description")
-        self.grid.addWidget(self.lbl_description, 2, 0, 1, 1)
+        self.grid.addWidget(self.lbl_description, 3, 0, 1, 1, QtCore.Qt.AlignTop)
 
         self.txt_description = QtWidgets.QTextEdit()
         self.txt_description.setReadOnly(False)
         self.txt_description.setText(self.qris_project.description)
-        self.grid.addWidget(self.txt_description, 2, 1, 1, 1)
+        self.grid.addWidget(self.txt_description, 3, 1, 1, 1)
 
         # add vertical spacer
         self.vert.addStretch()
