@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 from pathlib import Path, PurePosixPath
 
 
@@ -46,3 +47,19 @@ def safe_make_abspath(in_path: str, cwd_path: str) -> str:
         return os.path.abspath(os.path.join(cwd_path, in_path))
     else:
         return in_path
+
+
+def is_url(url: str) -> bool:
+    """Check if the path is a url
+
+    Args:
+        path (str): _description_
+
+    Returns:
+        bool: _description_
+    """
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False

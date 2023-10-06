@@ -78,6 +78,7 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'area')
+        self.set_metadata_fields(feature_layer)
 
         if not mask.mask_type.id == AOI_MASK_TYPE_ID:
             feature_layer.setLabelsEnabled(True)
@@ -133,6 +134,7 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'length')
+        self.set_metadata_fields(feature_layer)
 
         return feature_layer
 

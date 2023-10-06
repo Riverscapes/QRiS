@@ -7,6 +7,7 @@ from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
 from qgis.PyQt.QtCore import Qt, QVariant
 from qgis.utils import iface
 
+from ..QRiS.path_utilities import is_url
 from ..QRiS.settings import Settings, CONSTANTS
 
 from ..model.db_item import DBItem
@@ -393,6 +394,108 @@ class RiverscapesMapManager():
         raster_layer.triggerRepaint()
 
     # Set Fields
+    def set_metadata_fields(self, feature_layer: QgsVectorLayer) -> None:
+
+        fields = feature_layer.fields()
+        field_index = fields.indexFromName('metadata')
+        if field_index == -1:
+            return
+        # get all the keys from the metadata dictionary by reading all of the features
+        metadata_fields = {}
+        for feature in feature_layer.getFeatures():
+            # this is to catch empty metadata fields, which are stored as QVariant
+            if isinstance(feature['metadata'], QVariant) or feature['metadata'] is None:
+                continue
+            feat_metadata = json.loads(feature['metadata'])
+            for key, value in feat_metadata.items():
+                # parse data type from values. do not change if the type is of a higher order
+                # e.g. if the value is a float, but the type is already a string, don't change it
+                existing_type = metadata_fields.get(key, None)
+                if isinstance(value, bool) and (existing_type is None or existing_type == QVariant.Bool):
+                    field_type = QVariant.Bool
+                if isinstance(value, int) and (existing_type is None or existing_type == QVariant.Int):
+                    field_type = QVariant.Int
+                elif isinstance(value, float) and (existing_type is None or existing_type == QVariant.Double):
+                    field_type = QVariant.Double
+                elif is_url(value) and (existing_type is None or existing_type == QVariant.Url):
+                    field_type = QVariant.Url
+                else:
+                    field_type = QVariant.String
+                metadata_fields.update({key: field_type})
+
+        # create a virtual field for each key
+        for key, field_type in metadata_fields.items():
+            virtual_field = QgsField(key, field_type)
+            feature_layer.addExpressionField(f"""map_get(json_to_map("metadata"), '{key}')""", virtual_field)
+
+            # if field_type == QVariant.Url:
+            # set the widget to open the url
+
+            # add an action edit the value
+            # edit_action_text = dedent("""
+            #                         from qgis.PyQt.QtWidgets import QLineEdit, QDialog, QDialogButtonBox, QVBoxLayout
+            #                         from qgis.PyQt.QtCore import Qt
+            #                         from qgis.PyQt.QtGui import QIntValidator, QDoubleValidator
+            #                         from qgis.core import QgsExpressionContextUtils
+
+            #                         class EditMetadata(QDialog):
+            #                             def __init__(self, parent=None):
+
+            #                                 QDialog.__init__(self, parent)
+            #                                 self.setWindowTitle('Edit Metadata')
+            #                                 self.setWindowFlags(Qt.WindowStaysOnTopHint)
+            #                                 self.setLayout(QVBoxLayout())
+            #                                 self.layout().setContentsMargins(0, 0, 0, 0)
+            #                                 self.layout().setSpacing(0)
+            #                                 self.layout().setAlignment(Qt.AlignTop)
+            #                                 self.layout().setAlignment(Qt.AlignLeft)
+
+            #                                 self.metadata = QgsExpressionContextUtils.layerScope(iface.activeLayer()).variable('metadata')
+            #                                 self.
+
+            #                                 self.metadata_edit = QLineEdit()
+            #                                 self.metadata_edit.setText(self.metadata)
+            #                                 self.layout().addWidget(self.metadata_edit)
+
+            #                                 self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            #                                 self.button_box.accepted.connect(self.accept)
+            #                                 self.button_box.rejected.connect(self.reject)
+            #                                 self.layout().addWidget(self.button_box)
+
+            #                             def accept(self):
+            #                                 self.metadata = self.metadata_edit.text()
+            #                                 QgsExpressionContextUtils.setLayerVariable(iface.activeLayer(), 'metadata', self.metadata)
+            #                                 self.super().accept()
+
+            #                             def reject(self):
+            #                                 self.super().reject()
+
+            #                         dialog = EditMetadata()
+            #                         dialog.exec_()
+            #                         """).strip("\n")
+
+            # editAction = QgsAction(1, 'Edit Metadata', edit_action_text, None, capture=False, shortTitle='Edit Metadata', actionScopes={'Feature'})
+            # feature_layer.actions().addAction(editAction)
+            # editorAction = QgsAttributeEditorAction(editAction)
+
+            # feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False, 'Action': editorAction}))
+
+            # if field_type == QVariant.Url:
+            #     # add an action to open the url
+            #     url_action_text = dedent("""
+            #                             import webbrowser
+            #                             url = "[% @url %]"
+            #                             webbrowser.open(url, new=2)
+            #                             """).strip("\n")
+
+            #     urlAction = QgsAction(1, 'Open URL', url_action_text, None, capture=False, shortTitle='Open URL', actionScopes={'Feature'})
+            #     feature_layer.actions().addAction(urlAction)
+            #     editorAction = QgsAttributeEditorAction(urlAction)
+            #     feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), QgsEditorWidgetSetup('OpenUrl', {'Action': editorAction}))
+
+            # set the default value for the metadata field
+        feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue('\'{}\''))
+
     def set_multiline(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
