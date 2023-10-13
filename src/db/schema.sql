@@ -90,14 +90,17 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (19, 'zoi', 'Zones of influence', 'Polygon', 0, 'zoi.qml', NULL, '{"fields": {"type_id": {"display_name": "ZOI Type", "lookup": "zoi_types"}, "stage_id": {"display_name": "ZOI Stage", "lookup": "lkp_zoi_stage"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"fields": {"structure_type_id": {"display_name": "Structure Type", "lookup": "structure_types"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"fields": {"structure_type_id": {"display_name": "Structure Type", "lookup": "structure_types"}}}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (19, 'zoi', 'Zones of Influence', 'Polygon', 0, 'zoi.qml', NULL, '{"fields": {"ZOI Type": {"type": "list", "values": ["Increase Channel Complexity", "Accelerate Incision Recovery", "Lateral Channel Migration", "Increase Floodplain Connectivity", "Facilitate Beaver Translocation", "Other", "Unclassified"]}, "ZOI Stage": {"type": "list", "values": ["Baseflow", "Typical Flood", "Large Flood", "Other"]}}}'); --'{"fields": {"type_id": {"display_name": "ZOI Type", "lookup": "zoi_types"}, "stage_id": {"display_name": "ZOI Stage", "lookup": "lkp_zoi_stage"}}}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL, '{"fields": {}}'); --NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"fields": {"Structure Type": {"type": "list", "values": ["BDA Large", "BDA Small", "BDA Postless", "PALS Mid-Channel", "PALS Bank Attached", "Wood Jam", "Other"]}}}'); --'{"fields": {"structure_type_id": {"display_name": "Structure Type", "lookup": "structure_types"}}}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"fields": {"Structure Type": {"type": "list", "values": ["BDA Large", "BDA Small", "BDA Postless", "PALS Mid-Channel", "PALS Bank Attached", "Wood Jam", "Other"]}}}'); --'{"fields": {"structure_type_id": {"display_name": "Structure Type", "lookup": "structure_types"}}}');
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (27, 'dce_points', 'DCE Points', 'Point', 0, 'dce_points.qml', NULL, NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (28, 'dce_lines', 'DCE Lines', 'Linestring', 0, 'dce_lines.qml', NULL, NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (29, 'dce_polygons', 'DCE Polygons', 'Polygon', 0, 'dce_polygons.qml', NULL, NULL);
 -- Lookup Tables
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (101, 'lkp_platform', 'Platform', 'NoGeometry', 1, 'temp.qml', NULL);
@@ -157,6 +160,31 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (5, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 22);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 5);
 INSERT INTO method_layers (method_id, layer_id) VALUES (3, 7);
+
+--dce layers
+ALTER TABLE dce_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE dce_points ADD COLUMN event_layer_id INTEGER REFERENCES layers(id) ON DELETE CASCADE;
+ALTER TABLE dce_points ADD COLUMN metadata TEXT;
+
+CREATE INDEX ix_dce_points_event_id ON dce_points(event_id, event_layer_id);
+
+ALTER TABLE dce_lines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE dce_lines ADD COLUMN event_layer_id INTEGER REFERENCES layers(id) ON DELETE CASCADE;
+ALTER TABLE dce_lines ADD COLUMN metadata TEXT;
+
+CREATE INDEX ix_dce_lines_event_id ON dce_lines(event_id, event_layer_id);
+
+ALTER TABLE dce_polygons ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+ALTER TABLE dce_polygons ADD COLUMN event_layer_id INTEGER REFERENCES layers(id) ON DELETE CASCADE;
+ALTER TABLE dce_polygons ADD COLUMN metadata TEXT;
+
+CREATE INDEX ix_dce_polygons_event_id ON dce_polygons(event_id, event_layer_id);
+
+-- CREATE TABLE dce_layers (
+--     id INTEGER PRIMARY KEY NOT NULL,
+--     name TEXT UNIQUE NOT NULL,
+--     metadata TEXT
+-- );
 
 -- CREATE TABLE protocol_layers (
 --     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,

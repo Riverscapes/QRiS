@@ -104,12 +104,13 @@ class FrmExportProject(QtWidgets.QDialog):
         if self.opt_project_bounds_all.isChecked():
             # get the extent of all layers
             envelope = None
-            for layer in self.qris_project.layers.values():
-                if layer.geom_type == "NoGeometry":
-                    continue
+            for layer in ['dce_points', 'dce_lines', 'dce_polygons']:  # self.qris_project.layers.values():
+                # if layer.geom_type == "NoGeometry":
+                # continue
                 geom = None
-                lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer.fc_name}', layer.name, "ogr")
+                # lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer.fc_name}', layer.name, "ogr")
                 # lyr.setSubsetString(f"event_id = {layer.event_id}")
+                lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer}', layer, "ogr")
                 for f in lyr.getFeatures():
                     if geom is None:
                         geom = f.geometry()
@@ -326,14 +327,28 @@ class FrmExportProject(QtWidgets.QDialog):
                 geom_type = layer.layer.geom_type
                 if geom_type == "NoGeometry":
                     continue
-
+                if geom_type == "Point":
+                    fc_name = 'dce_points'
+                elif geom_type == "Linestring":
+                    fc_name = 'dce_lines'
+                elif geom_type == "Polygon":
+                    fc_name = 'dce_polygons'
+                else:
+                    continue
                 view_name = f'vw_{layer.layer.fc_name}_{event_id}'
+
+                layer_fields = layer.layer.metadata.get('fields', None)
+                out_fields = '*'
+                if layer_fields is not None and len(layer_fields) > 0:
+                    out_fields = ", ".join([f'json_extract(metadata, \'$.{field}\') AS "{field}"' for field in layer_fields.keys()])
+                sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event_id} and event_layer_id == {layer.layer.id}"
                 self.create_spatial_view(view_name=view_name,
-                                         fc_name=layer.layer.fc_name,
+                                         fc_name=fc_name,
                                          field_name='event_id',
                                          id_value=event_id,
                                          out_geopackage=out_geopackage,
-                                         geom_type=geom_type.upper())
+                                         geom_type=geom_type.upper(),
+                                         sql=sql)
 
                 gp_lyr = GeopackageLayer(lyr_name=view_name,
                                          name=layer.name,

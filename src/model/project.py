@@ -59,7 +59,10 @@ project_layers = [
     ('stream_gages', 'Stream Gages', 'Point'),
     ('profile_centerlines', 'Centerlines', 'Linestring'),
     ('profile_features', 'Profiles', 'Linestring'),
-    ('cross_section_features', 'Cross Sections', 'Linestring')
+    ('cross_section_features', 'Cross Sections', 'Linestring'),
+    ('dce_points', 'DCE Points', 'Point'),
+    ('dce_lines', 'DCE Lines', 'Linestring'),
+    ('dce_polygons', 'DCE Polygons', 'Polygon')
 ]
 
 

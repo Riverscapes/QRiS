@@ -13,6 +13,8 @@ from ..QRiS.settings import Settings, CONSTANTS
 from ..model.db_item import DBItem
 from ..model.raster import BASEMAP_MACHINE_CODE
 
+from ..view.metadata_field_editor_widget import initialize_metadata_widget
+
 from qgis.core import (
     QgsField,
     QgsLayerTreeGroup,
@@ -394,39 +396,57 @@ class RiverscapesMapManager():
         raster_layer.triggerRepaint()
 
     # Set Fields
-    def set_metadata_fields(self, feature_layer: QgsVectorLayer) -> None:
+    def set_metadata_fields(self, feature_layer: QgsVectorLayer, field_config: dict = None) -> None:
 
         fields = feature_layer.fields()
         field_index = fields.indexFromName('metadata')
         if field_index == -1:
             return
-        # get all the keys from the metadata dictionary by reading all of the features
+
         metadata_fields = {}
-        for feature in feature_layer.getFeatures():
-            # this is to catch empty metadata fields, which are stored as QVariant
-            if isinstance(feature['metadata'], QVariant) or feature['metadata'] is None:
-                continue
-            feat_metadata = json.loads(feature['metadata'])
-            for key, value in feat_metadata.items():
-                # parse data type from values. do not change if the type is of a higher order
-                # e.g. if the value is a float, but the type is already a string, don't change it
-                existing_type = metadata_fields.get(key, None)
-                if isinstance(value, bool) and (existing_type is None or existing_type == QVariant.Bool):
-                    field_type = QVariant.Bool
-                if isinstance(value, int) and (existing_type is None or existing_type == QVariant.Int):
+        if field_config is None:
+            # get all the keys from the metadata dictionary by reading all of the features
+            for feature in feature_layer.getFeatures():
+                # this is to catch empty metadata fields, which are stored as QVariant
+                if isinstance(feature['metadata'], QVariant) or feature['metadata'] is None:
+                    continue
+                feat_metadata = json.loads(feature['metadata'])
+                for key, value in feat_metadata.items():
+                    # parse data type from values. do not change if the type is of a higher order
+                    # e.g. if the value is a float, but the type is already a string, don't change it
+                    existing_type = metadata_fields.get(key, None)
+                    if isinstance(value, bool) and (existing_type is None or existing_type == QVariant.Bool):
+                        field_type = QVariant.Bool
+                    if isinstance(value, int) and (existing_type is None or existing_type == QVariant.Int):
+                        field_type = QVariant.Int
+                    elif isinstance(value, float) and (existing_type is None or existing_type == QVariant.Double):
+                        field_type = QVariant.Double
+                    elif is_url(value) and (existing_type is None or existing_type == QVariant.Url):
+                        field_type = QVariant.Url
+                    else:
+                        field_type = QVariant.String
+                    metadata_fields.update({key: field_type})
+        else:
+
+            for field_name, field in field_config.get('fields', {}).items():
+                if field['type'] == 'integer':
                     field_type = QVariant.Int
-                elif isinstance(value, float) and (existing_type is None or existing_type == QVariant.Double):
+                elif field['type'] == 'float':
                     field_type = QVariant.Double
-                elif is_url(value) and (existing_type is None or existing_type == QVariant.Url):
+                elif field['type'] == 'boolean':
+                    field_type = QVariant.Bool
+                elif field['type'] == 'url':
                     field_type = QVariant.Url
                 else:
                     field_type = QVariant.String
-                metadata_fields.update({key: field_type})
+                metadata_fields.update({field_name: field_type})
 
         # create a virtual field for each key
         for key, field_type in metadata_fields.items():
             virtual_field = QgsField(key, field_type)
             feature_layer.addExpressionField(f"""map_get(json_to_map("metadata"), '{key}')""", virtual_field)
+            # hide the virtual field from the form editor
+            feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), QgsEditorWidgetSetup('Hidden', {}))
 
             # if field_type == QVariant.Url:
             # set the widget to open the url
@@ -643,12 +663,15 @@ class RiverscapesMapManager():
         field_index = fields.indexFromName(field_name)
         feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)
 
-    def set_metadata_edit(self, feature_layer: QgsVectorLayer, field_name='metadata', field_alias='Metadata'):
+    def set_metadata_edit(self, feature_layer: QgsVectorLayer, field_name='metadata', field_alias='Metadata', config_params={}):
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
-        widget_setup = QgsEditorWidgetSetup('MetadataFieldEdit', {'IsMultiline': True, 'UseHtml': False})
+        initialize_metadata_widget()
+        widget_setup = QgsEditorWidgetSetup('MetadataFieldEdit', config_params)
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
         feature_layer.setFieldAlias(field_index, field_alias)
+        feature_layer.setDisplayExpression('fid')
         form_config = feature_layer.editFormConfig()
+        form_config.setReadOnly(field_index, False)
         form_config.setLabelOnTop(field_index, True)
         feature_layer.setEditFormConfig(form_config)

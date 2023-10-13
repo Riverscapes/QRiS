@@ -1,9 +1,10 @@
 
 import json
+import typing
 
 from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory
 from qgis.core import QgsVectorLayer, NULL
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QTextEdit, QTableWidget, QTableWidgetItem, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QTextEdit, QLineEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox
 from PyQt5.QtCore import Qt, QVariant, QSettings
 
 
@@ -17,15 +18,21 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
            Returns (Any): The current value the widget represents"""
 
-        json_data = {}
-        json_data['city'] = self.cboCity.currentText()
-        json_data['age'] = self.dblAge.value()
-        self.current_value = json.dumps(json_data)
+        data = {}
+        for name, widget in self.widgets.items():
+            if isinstance(widget, QLineEdit):
+                data[name] = widget.text()
+            elif isinstance(widget, QDoubleSpinBox):
+                data[name] = widget.value()
+            elif isinstance(widget, QComboBox):
+                data[name] = widget.currentText()
+        self.current_value = json.dumps(data)
+
         return self.current_value
 
     def createWidget(self, parent: QWidget) -> QWidget:
 
-        return QWidget(parent)  # QTableWidget(parent)
+        return QWidget(parent)
 
     def initWidget(self, editor: QWidget):
         """This method should initialize the editor widget with runtime data. Fill your comboboxes here.
@@ -36,28 +43,42 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         # Grid layout
         self.vert = QVBoxLayout(self.editor_widget)
         self.editor_widget.setLayout(self.vert)
-
         self.grid = QGridLayout()
         self.vert.addLayout(self.grid)
-        # attributes = self.config('attributes')        #
-        self.lblCity = QLabel('City')
-        self.grid.addWidget(self.lblCity, 0, 0, 1, 1)
+        self.widgets = {}
 
-        self.cboCity = QComboBox()
-        self.cboCity.addItems(["Seattle", "San Francisco", "Los Angeles", "New York", "Boston"])
-        self.grid.addWidget(self.cboCity, 0, 1, 1, 1)
+        fields = self.config('fields')
+        row = 0
+        for field, field_params in fields.items():
+            # generate a label and a widget for each field
+            label = QLabel(field)
+            self.grid.addWidget(label, row, 0, 1, 1)
+            widget = None
+            if field_params['type'] == 'list':
+                widget = QComboBox(editor)
+                widget.addItems(field_params['values'])
+                widget.currentIndexChanged.connect(self.onValueChanged)
+            elif field_params['type'] in ['integer', 'double', 'float']:
+                widget = QDoubleSpinBox(editor)
+                min = field_params['min'] if 'min' in field_params else 0
+                max = field_params['max'] if 'max' in field_params else 100
+                widget.setRange(min, max)
+                if field_params['type'] == 'integer':
+                    widget.setDecimals(0)
+                elif 'precision' in field_params:
+                    widget.setDecimals(field_params['precision'])
+                widget.setSingleStep(1)
+                widget.valueChanged.connect(self.onValueChanged)
+            else:
+                widget = QLineEdit(editor)
+                widget.textChanged.connect(self.onTextChanged)
+            self.grid.addWidget(widget, row, 1, 1, 1)
 
-        self.lblAge = QLabel('Age')
-        self.grid.addWidget(self.lblAge, 1, 0, 1, 1)
+            if 'default' in field_params:
+                widget.setValue(field_params['default'])
 
-        self.dblAge = QDoubleSpinBox()
-        self.dblAge.setRange(0, 100)
-        self.dblAge.setDecimals(0)
-        self.dblAge.setSingleStep(1)
-        self.grid.addWidget(self.dblAge, 1, 1, 1, 1)
-
-        self.cboCity.currentIndexChanged.connect(self.onValueChanged)
-        self.dblAge.valueChanged.connect(self.onValueChanged)
+            self.widgets[field] = widget
+            row += 1
 
     def valid(self) -> bool:
         return True
@@ -68,14 +89,24 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         if value is None or value == NULL:
             pass
         else:
-            parsed_json = json.loads(value)
-            if 'city' in parsed_json:
-                self.cboCity.setCurrentText(parsed_json['city'])
-            if 'age' in parsed_json:
-                self.dblAge.setValue(parsed_json['age'])
+            values = json.loads(value)
+            for name, val in values.items():
+                if name in self.widgets:
+                    if isinstance(self.widgets[name], QLineEdit):
+                        self.widgets[name].setText(val)
+                    elif isinstance(self.widgets[name], QDoubleSpinBox):
+                        self.widgets[name].setValue(val)
+                    elif isinstance(self.widgets[name], QComboBox):
+                        # get the index of the value in the combo box
+                        index = self.widgets[name].findText(val)
+                        # set the current index of the combo box
+                        self.widgets[name].setCurrentIndex(index)
 
     def onValueChanged(self, value):
         # self.valueChanged.emit(value)
+        self.emitValueChanged()
+
+    def onTextChanged(self):
         self.emitValueChanged()
 
 
@@ -85,17 +116,21 @@ class MetadataFieldEditConfigWidget(QgsEditorConfigWidget):
 
         self.setLayout(QHBoxLayout())
         self.ruleEdit = QLabel(self)
-        self.ruleEdit.setText("Metadata Field Editor Test Config")
+        self.ruleEdit.setText("Field Configuration")
         self.ruleCheck = QTextEdit(self)
-        self.ruleCheck.setText("Metadata Field Editor param")
         self.layout().addWidget(self.ruleEdit)
         self.layout().addWidget(self.ruleCheck)
 
     def config(self):
-        return self.config
+
+        config = json.loads(self.ruleCheck.toPlainText())
+
+        return config
 
     def setConfig(self, config: str):
-        self.config = config
+        values = config
+        str_values = json.dumps(values, indent=4)
+        self.ruleCheck.setText(str_values)
 
 
 class MetadataFieldEditWidgetFactory(QgsEditorWidgetFactory):
@@ -109,9 +144,10 @@ class MetadataFieldEditWidgetFactory(QgsEditorWidgetFactory):
         return MetadataFieldEditConfigWidget(vl, fieldIdx, parent)
 
 
-# # check if the widget is already registered and unregister it
-# if QgsGui.editorWidgetRegistry().factory("MetadataFieldEdit"):
-#     QgsGui.editorWidgetRegistry().factories("MetadataFieldEdit")
+def initialize_metadata_widget():
 
-factory = MetadataFieldEditWidgetFactory()
-QgsGui.editorWidgetRegistry().registerWidget("MetadataFieldEdit", factory)
+    # check if the widget is already registered and unregister it
+    widget = QgsGui.editorWidgetRegistry().factory("MetadataFieldEdit")
+    if widget.name() != "Metadata Field Editor":
+        factory = MetadataFieldEditWidgetFactory()
+        QgsGui.editorWidgetRegistry().registerWidget("MetadataFieldEdit", factory)

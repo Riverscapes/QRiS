@@ -24,6 +24,7 @@ from qgis.core import (
     QgsExpressionContextUtils,
     qgsfunction,
     QgsAttributeEditorContainer,
+    QgsDefaultValue,
     QgsAction,
     QgsAttributeEditorAction
 )
@@ -261,40 +262,92 @@ class QRisMapManager(RiverscapesMapManager):
         if existing_layer is not None:
             return
 
-        fc_path = self.project.project_file + '|layername=' + event_layer.layer.fc_name
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, event_group_layer, fc_path, event_layer, 'event_id', event_layer.layer.qml)
+        if event_layer.layer.geom_type == 'Point':
+            fc_name = 'dce_points'
+        elif event_layer.layer.geom_type == 'Linestring':
+            fc_name = 'dce_lines'
+        elif event_layer.layer.geom_type == 'Polygon':
+            fc_name = 'dce_polygons'
+        else:
+            raise Exception('Unknown geom type')
+
+        fc_path = f'{self.project.project_file}|layername={fc_name}|subset=event_id = {event.id} AND event_layer_id = {event_layer.layer.id}'
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, event_group_layer, fc_path, event_layer, None, event_layer.layer.qml)
+        for id_field, id_value in {'event_id': event.id, 'event_layer_id': event_layer.layer.id}.items():
+            QgsExpressionContextUtils.setLayerVariable(feature_layer, id_field, id_value)
+            # Set the default value from the variable
+            field_index = feature_layer.fields().indexFromName(id_field)
+            feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
+
+        self.set_hidden(feature_layer, 'fid', 'Feature ID')
+        self.set_hidden(feature_layer, 'event_layer_id', 'Layer ID')
+        self.set_hidden(feature_layer, 'event_id', 'Event ID')
+        self.metadata_field(feature_layer, event_layer, 'metadata')
 
         # send to layer specific field handlers
-        layer_name = event_layer.layer.fc_name
-        if layer_name == 'dam_crests':
-            self.configure_dam_crests(feature_layer)
-        elif layer_name == 'thalwegs':
-            self.configure_thalwegs(feature_layer)
-        elif layer_name == 'inundation_extents':
-            self.configure_inundation_extents(feature_layer)
-        elif layer_name == 'dams':
-            self.configure_dams(feature_layer)
-        elif layer_name == 'jams':
-            self.configure_jams(feature_layer)
-        elif layer_name == 'channel_unit_points':
-            self.configure_channel_unit_points(feature_layer)
-        elif layer_name == 'channel_unit_polygons':
-            self.configure_channel_unit_polygons(feature_layer)
-        elif layer_name == 'active_extents':
-            self.configure_active_extents(feature_layer)
-        elif layer_name == 'zoi':
-            self.configure_zoi(feature_layer)
-        elif layer_name == 'structure_points':
-            self.configure_structure_points(feature_layer)
-        elif layer_name == 'structure_lines':
-            self.configure_structure_lines(feature_layer)
-        elif layer_name == 'complexes':
-            self.configure_complexes(feature_layer)
-        elif layer_name in ['brat_cis', 'brat_cis_reaches']:
-            self.add_brat_cis(feature_layer)
-        else:
-            # TODO: Should probably have a notification for layers not found....
-            pass
+        # layer_name = event_layer.layer.fc_name
+        # if layer_name == 'dam_crests':
+        #     self.configure_dam_crests(feature_layer)
+        # elif layer_name == 'thalwegs':
+        #     self.configure_thalwegs(feature_layer)
+        # elif layer_name == 'inundation_extents':
+        #     self.configure_inundation_extents(feature_layer)
+        # elif layer_name == 'dams':
+        #     self.configure_dams(feature_layer)
+        # elif layer_name == 'jams':
+        #     self.configure_jams(feature_layer)
+        # elif layer_name == 'channel_unit_points':
+        #     self.configure_channel_unit_points(feature_layer)
+        # elif layer_name == 'channel_unit_polygons':
+        #     self.configure_channel_unit_polygons(feature_layer)
+        # elif layer_name == 'active_extents':
+        #     self.configure_active_extents(feature_layer)
+        # elif layer_name == 'zoi':
+        #     self.configure_zoi(feature_layer)
+        # elif layer_name == 'structure_points':
+        #     self.configure_structure_points(feature_layer)
+        # elif layer_name == 'structure_lines':
+        #     self.configure_structure_lines(feature_layer)
+        # elif layer_name == 'complexes':
+        #     self.configure_complexes(feature_layer)
+        # elif layer_name in ['brat_cis', 'brat_cis_reaches']:
+        #     self.add_brat_cis(feature_layer)
+        # else:
+        #     # TODO: Should probably have a notification for layers not found....
+        #     pass
+
+    def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
+
+        config = event_layer.layer.metadata  # .get('fields', {})
+
+        # build virtual metadata fields for attribute table
+        self.set_metadata_fields(feature_layer, config)
+
+        # config = {'fields': {'My Field 1': {"type": 'text'}, 'My Field 2': {"type": 'list', "values": ['a', 'b', 'c']}, 'My Field 3': {"type": 'integer', "min": 0, "max": 100}}}
+        # structure_types = ['BDA Large', 'BDA Small', 'BDA Postless', 'PALS Mid-Channel', 'PALS Bank Attached', 'Wood Jam', 'Other']
+
+        # config_zoi = {'fields': {"ZOI Type": {"type": 'list', "values": ['Increase Channel Complexity', 'Accelerate Incision Recovery', 'Lateral Channel Migration', 'Increase Floodplain Connectivity',
+        # 'Facilitate Beaver Translocation', 'Other', 'Unclassified']}, "ZOI Stage": {"type": 'list', "values": ['Baseflow', "Typical Flood", "Large Flood", "Other"]}}}
+        # config_points = {'fields': {"Structure Type": {'type': 'list', 'values': structure_types}}}
+        # config_lines = {'fields': {'Structure Type': {'type': 'list', 'values': structure_types}}}
+        # config_complexes = {'fields': {}}
+
+        # config = {}
+        # if event_layer.layer.fc_name == 'zoi':
+        #     config = config_zoi
+        # elif event_layer.layer.fc_name == 'structure_points':
+        #     config = config_points
+        # elif event_layer.layer.fc_name == 'structure_lines':
+        #     config = config_lines
+        # elif event_layer.layer.fc_name == 'complexes':
+        #     config = config_complexes
+
+        # prepare the metadata attribute editor widget
+        self.set_metadata_edit(feature_layer, 'metadata', 'Metadata', config)
+        column_index = feature_layer.fields().indexOf('metadata')
+        layer_attr_table_config = feature_layer.attributeTableConfig()
+        layer_attr_table_config.setColumnHidden(column_index, True)
+        feature_layer.setAttributeTableConfig(layer_attr_table_config)
 
     def add_brat_cis(self, feature_layer: QgsVectorLayer) -> None:
         # first read and set the lookup tables
@@ -532,7 +585,7 @@ class QRisMapManager(RiverscapesMapManager):
 
 
 # QGSfunctions for field expressions
-@qgsfunction(args='auto', group='QRIS', referenced_columns=[])
+@ qgsfunction(args='auto', group='QRIS', referenced_columns=[])
 def get_veg_dam_density(stream_veg, riparian_veg, rules_string, feature, parent):
     rules = json.loads(rules_string)
     for rule in rules:
@@ -541,7 +594,7 @@ def get_veg_dam_density(stream_veg, riparian_veg, rules_string, feature, parent)
     return 1
 
 
-@qgsfunction(args='auto', group='QRIS', referenced_columns=[])
+@ qgsfunction(args='auto', group='QRIS', referenced_columns=[])
 def get_comb_dam_density(veg_density, base_power, high_power, slope, cis_rules, feature, parent):
     combined_rules = json.loads(cis_rules)
     for rule in combined_rules:
