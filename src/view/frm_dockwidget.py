@@ -391,13 +391,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
 
-                if isinstance(model_data, Event):
-                    if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:
-                        self.add_context_menu_item(self.menu, 'Export LTPBR Design...', 'qris_icon', lambda: self.export_design(model_data))
+                # if isinstance(model_data, Event):
+                #     if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:
+                #         self.add_context_menu_item(self.menu, 'Export LTPBR Design...', 'qris_icon', lambda: self.export_design(model_data))
 
                 if isinstance(model_data, EventLayer):
                     if model_data.name == 'BRAT CIS (Capacity Inference System)':
                         self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
+                    if model_data.name == 'Observation Points':
+                        self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_data))
                     if model_data.name == 'BRAT CIS Reaches':
                         self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                         # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
@@ -632,6 +634,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         import_existing(import_source_path, self.project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
 
         # self.add_child_to_project_tree(parent_node, db_item, True)
+
+    def import_photos(self, db_item: DBItem):
+        # alert user not implemented
+        QtWidgets.QMessageBox.information(self, 'Import Photos', 'This feature is not yet implemented.')
+        pass
 
     def import_dce(self, db_item: DBItem, mode: int = DB_MODE_IMPORT):
 

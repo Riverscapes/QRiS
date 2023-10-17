@@ -41,5 +41,6 @@
         <file alias="auto_selected">../Images/auto_selected.png</file>
         <file alias="table">../Images/table.png</file>
         <file alias="qris_icon">../Images/qris_icon.svg</file>
+        <file alias="camera">../Images/camera.svg</file>
     </qresource>
 </RCC>

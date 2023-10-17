@@ -47,26 +47,27 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.vert.addLayout(self.grid)
         self.widgets = {}
 
-        fields = self.config('fields')
+        fields: list = self.config('fields')
         row = 0
-        for field, field_params in fields.items():
+        field: dict
+        for field in fields:
             # generate a label and a widget for each field
-            label = QLabel(field)
+            label = QLabel(field['label'])
             self.grid.addWidget(label, row, 0, 1, 1)
             widget = None
-            if field_params['type'] == 'list':
+            if field['type'] == 'list':
                 widget = QComboBox(editor)
-                widget.addItems(field_params['values'])
+                widget.addItems(field['values'])
                 widget.currentIndexChanged.connect(self.onValueChanged)
-            elif field_params['type'] in ['integer', 'double', 'float']:
+            elif field['type'] in ['integer', 'double', 'float']:
                 widget = QDoubleSpinBox(editor)
-                min = field_params['min'] if 'min' in field_params else 0
-                max = field_params['max'] if 'max' in field_params else 100
+                min = field['min'] if 'min' in field else 0
+                max = field['max'] if 'max' in field else 100
                 widget.setRange(min, max)
-                if field_params['type'] == 'integer':
+                if field['type'] == 'integer':
                     widget.setDecimals(0)
-                elif 'precision' in field_params:
-                    widget.setDecimals(field_params['precision'])
+                elif 'precision' in field.keys():
+                    widget.setDecimals(field['precision'])
                 widget.setSingleStep(1)
                 widget.valueChanged.connect(self.onValueChanged)
             else:
@@ -74,10 +75,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget.textChanged.connect(self.onTextChanged)
             self.grid.addWidget(widget, row, 1, 1, 1)
 
-            if 'default' in field_params:
-                widget.setValue(field_params['default'])
+            if 'default' in field.keys():
+                widget.setValue(field['default'])
 
-            self.widgets[field] = widget
+            self.widgets[field['label']] = widget
             row += 1
 
     def valid(self) -> bool:
@@ -89,7 +90,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         if value is None or value == NULL:
             pass
         else:
-            values = json.loads(value)
+            values: dict = json.loads(value)
             for name, val in values.items():
                 if name in self.widgets:
                     if isinstance(self.widgets[name], QLineEdit):

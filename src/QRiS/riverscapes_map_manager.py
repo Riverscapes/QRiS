@@ -427,8 +427,7 @@ class RiverscapesMapManager():
                         field_type = QVariant.String
                     metadata_fields.update({key: field_type})
         else:
-
-            for field_name, field in field_config.get('fields', {}).items():
+            for field in field_config.get('fields', []):
                 if field['type'] == 'integer':
                     field_type = QVariant.Int
                 elif field['type'] == 'float':
@@ -439,7 +438,7 @@ class RiverscapesMapManager():
                     field_type = QVariant.Url
                 else:
                     field_type = QVariant.String
-                metadata_fields.update({field_name: field_type})
+                metadata_fields.update({field['label']: field_type})
 
         # create a virtual field for each key
         for key, field_type in metadata_fields.items():

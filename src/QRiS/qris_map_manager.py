@@ -318,29 +318,17 @@ class QRisMapManager(RiverscapesMapManager):
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
 
-        config = event_layer.layer.metadata  # .get('fields', {})
+        config: dict = event_layer.layer.metadata  # .get('fields', {})
+
+        # add 'values' to config from self.lookups if the field has 'lookup' as an attribute
+        fields: list = config.get('fields', [])
+        field: dict
+        for ix, field in enumerate(fields):
+            if 'lookup' in field:
+                config['fields'][ix]['values'] = self.project.lookup_values[field['lookup']]
 
         # build virtual metadata fields for attribute table
         self.set_metadata_fields(feature_layer, config)
-
-        # config = {'fields': {'My Field 1': {"type": 'text'}, 'My Field 2': {"type": 'list', "values": ['a', 'b', 'c']}, 'My Field 3': {"type": 'integer', "min": 0, "max": 100}}}
-        # structure_types = ['BDA Large', 'BDA Small', 'BDA Postless', 'PALS Mid-Channel', 'PALS Bank Attached', 'Wood Jam', 'Other']
-
-        # config_zoi = {'fields': {"ZOI Type": {"type": 'list', "values": ['Increase Channel Complexity', 'Accelerate Incision Recovery', 'Lateral Channel Migration', 'Increase Floodplain Connectivity',
-        # 'Facilitate Beaver Translocation', 'Other', 'Unclassified']}, "ZOI Stage": {"type": 'list', "values": ['Baseflow', "Typical Flood", "Large Flood", "Other"]}}}
-        # config_points = {'fields': {"Structure Type": {'type': 'list', 'values': structure_types}}}
-        # config_lines = {'fields': {'Structure Type': {'type': 'list', 'values': structure_types}}}
-        # config_complexes = {'fields': {}}
-
-        # config = {}
-        # if event_layer.layer.fc_name == 'zoi':
-        #     config = config_zoi
-        # elif event_layer.layer.fc_name == 'structure_points':
-        #     config = config_points
-        # elif event_layer.layer.fc_name == 'structure_lines':
-        #     config = config_lines
-        # elif event_layer.layer.fc_name == 'complexes':
-        #     config = config_complexes
 
         # prepare the metadata attribute editor widget
         self.set_metadata_edit(feature_layer, 'metadata', 'Metadata', config)

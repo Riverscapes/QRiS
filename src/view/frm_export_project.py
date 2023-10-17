@@ -337,10 +337,11 @@ class FrmExportProject(QtWidgets.QDialog):
                     continue
                 view_name = f'vw_{layer.layer.fc_name}_{event_id}'
 
-                layer_fields = layer.layer.metadata.get('fields', None)
+                layer_fields: list = layer.layer.metadata.get('fields', None)
                 out_fields = '*'
                 if layer_fields is not None and len(layer_fields) > 0:
-                    out_fields = ", ".join([f'json_extract(metadata, \'$.{field}\') AS "{field}"' for field in layer_fields.keys()])
+                    field_names = [field['label'] for field in layer_fields]
+                    out_fields = ", ".join([f'json_extract(metadata, \'$.{field}\') AS "{field}"' for field in field_names])
                 sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event_id} and event_layer_id == {layer.layer.id}"
                 self.create_spatial_view(view_name=view_name,
                                          fc_name=fc_name,

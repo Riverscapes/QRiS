@@ -30,30 +30,30 @@ PROJECT_MACHINE_CODE = 'Project'
 project_layers = [
     ('aoi_features', 'AOI Features', 'Polygon'),
     ('mask_features', 'Mask Features', 'Polygon'),
-    ('dam_crests', 'Dam Crests', 'Linestring'),
-    ('dams', 'Dam Points', 'Point'),
-    ('jams', 'Jam Points', 'Point'),
-    ('thalwegs', 'Thalwegs', 'Linestring'),
-    ('active_extents', 'Active Extents', 'Polygon'),
-    ('centerlines', 'Centerlines', 'Linestring'),
-    ('inundation_extents', 'Inundation Extents', 'Polygon'),
-    ('valley_bottoms', 'Valley Bottoms', 'Polygon'),
-    ('junctions', 'Junctions', 'Point'),
-    ('geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon'),
-    ('geomorphic_units', 'Geomorphic Unit Points', 'Point'),
-    ('geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point'),
-    ('cem_phases', 'Channel Evolution Model Stages', 'Polygon'),
-    ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
-    ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
-    ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
-    ('zoi', 'Zones of Influence', 'Polygon'),
-    ('complexes', 'Complexes', 'Polygon'),
-    ('structure_points', 'Structure Points', 'Point'),
-    ('structure_lines', 'Structure Lines', 'Linestring'),
-    ('channel_unit_points', 'Channel Unit Points', 'Point'),
-    ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
-    ('brat_cis', 'BRAT CIS', 'Point'),
-    ('brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring'),
+    # ('dam_crests', 'Dam Crests', 'Linestring'),
+    # ('dams', 'Dam Points', 'Point'),
+    # ('jams', 'Jam Points', 'Point'),
+    # ('thalwegs', 'Thalwegs', 'Linestring'),
+    # ('active_extents', 'Active Extents', 'Polygon'),
+    # ('centerlines', 'Centerlines', 'Linestring'),
+    # ('inundation_extents', 'Inundation Extents', 'Polygon'),
+    # ('valley_bottoms', 'Valley Bottoms', 'Polygon'),
+    # ('junctions', 'Junctions', 'Point'),
+    # ('geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon'),
+    # ('geomorphic_units', 'Geomorphic Unit Points', 'Point'),
+    # ('geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point'),
+    # ('cem_phases', 'Channel Evolution Model Stages', 'Polygon'),
+    # ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
+    # ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
+    # ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
+    # ('zoi', 'Zones of Influence', 'Polygon'),
+    # ('complexes', 'Complexes', 'Polygon'),
+    # ('structure_points', 'Structure Points', 'Point'),
+    # ('structure_lines', 'Structure Lines', 'Linestring'),
+    # ('channel_unit_points', 'Channel Unit Points', 'Point'),
+    # ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
+    # ('brat_cis', 'BRAT CIS', 'Point'),
+    # ('brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring'),
     ('pour_points', 'Pour Points', 'Point'),
     ('catchments', 'Catchments', 'Polygon'),
     ('stream_gages', 'Stream Gages', 'Point'),
@@ -83,12 +83,13 @@ class Project(DBItem):
             self.description = project_row['description']
             self.map_guid = project_row['map_guid']
             self.metadata = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
+            self.lookup_values = self.get_lookups()
 
             # get list of lookup tables from layers where is_lookup = 1
             lkp_tables = [row['fc_name'] for row in curs.execute('SELECT DISTINCT fc_name FROM layers WHERE is_lookup = 1').fetchall()]
             # TODO clean up the schema to avoid this hack
-            for table in ['lkp_brat_combined_cis', 'lkp_brat_vegetation_cis', 'lkp_units']:
-                lkp_tables.remove(table)
+            # for table in ['lkp_brat_combined_cis', 'lkp_brat_vegetation_cis', 'lkp_units']:
+            #     lkp_tables.remove(table)
             lkp_tables.append('lkp_event_types')
             lkp_tables.append('lkp_raster_types')
             lkp_tables.append('lkp_scratch_vector_types')
@@ -169,6 +170,19 @@ class Project(DBItem):
         """ Returns a dictionary of all project surface rasters"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.is_context is False}
+
+    def get_lookups(self) -> dict:
+        # load and parse all of the lookups from the lookup_list_values table if it exists
+        lookups = {}
+        with sqlite3.connect(self.project_file) as conn:
+            conn.row_factory = sqlite3.Row
+            curs = conn.cursor()
+            curs.execute('SELECT * FROM lookup_list_values')
+            for row in curs.fetchall():
+                if row['list_name'] not in lookups:
+                    lookups[row['list_name']] = []
+                lookups[row['list_name']].append(row['list_value'])
+        return lookups
 
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):

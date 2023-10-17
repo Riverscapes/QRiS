@@ -73,72 +73,75 @@ CREATE TABLE layers (
 );
 
 -- Layers
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "dam_integrity_id": {"display_name": "Dam Integrity", "lookup": "lkp_dam_integrity"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "dam_integrity_id": {"display_name": "Dam Integrity", "lookup": "lkp_dam_integrity"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL, '{"fields": {"type_id": {"display_name": "Thalweg Type", "lookup": "lkp_thalweg_types"}}}'); -- type: primary, secondary - see GUT
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL, '{"fields":{ "type_id": {"display_name": "Extent Type", "lookup": "lkp_active_extent_types"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL, '{"fields": {"type_id": {"display_name": "Extent Type", "lookup": "lkp_inundation_extent_types"}}}'); -- type: free flow, overflow, ponded
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'valley_bottoms.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'junctions.qml', NULL); -- type: convergence, divergence
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (13, 'geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point', 0, 'temp.qml', NULL); -- fluvial taxonomy
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL); -- veg_classes
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "dam_integrity_id": {"display_name": "Dam Integrity", "lookup": "lkp_dam_integrity"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "dam_integrity_id": {"display_name": "Dam Integrity", "lookup": "lkp_dam_integrity"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL, '{"fields": {"type_id": {"display_name": "Thalweg Type", "lookup": "lkp_thalweg_types"}}}'); -- type: primary, secondary - see GUT
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL, '{"fields":{ "type_id": {"display_name": "Extent Type", "lookup": "lkp_active_extent_types"}}}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL, '{"fields": {"type_id": {"display_name": "Extent Type", "lookup": "lkp_inundation_extent_types"}}}'); -- type: free flow, overflow, ponded
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'valley_bottoms.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'junctions.qml', NULL); -- type: convergence, divergence
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (13, 'geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point', 0, 'temp.qml', NULL); -- fluvial taxonomy
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 0, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL); -- veg_classes
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (19, 'zoi', 'Zones of Influence', 'Polygon', 0, 'zoi.qml', NULL, '{"fields": {"ZOI Type": {"type": "list", "values": ["Increase Channel Complexity", "Accelerate Incision Recovery", "Lateral Channel Migration", "Increase Floodplain Connectivity", "Facilitate Beaver Translocation", "Other", "Unclassified"]}, "ZOI Stage": {"type": "list", "values": ["Baseflow", "Typical Flood", "Large Flood", "Other"]}}}'); --'{"fields": {"type_id": {"display_name": "ZOI Type", "lookup": "zoi_types"}, "stage_id": {"display_name": "ZOI Stage", "lookup": "lkp_zoi_stage"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL, '{"fields": {}}'); --NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"fields": {"Structure Type": {"type": "list", "values": ["BDA Large", "BDA Small", "BDA Postless", "PALS Mid-Channel", "PALS Bank Attached", "Wood Jam", "Other"]}}}'); --'{"fields": {"structure_type_id": {"display_name": "Structure Type", "lookup": "structure_types"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"fields": {"Structure Type": {"type": "list", "values": ["BDA Large", "BDA Small", "BDA Postless", "PALS Mid-Channel", "PALS Bank Attached", "Wood Jam", "Other"]}}}'); --'{"fields": {"structure_type_id": {"display_name": "Structure Type", "lookup": "structure_types"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (19, 'zoi', 'Zones of Influence', 'Polygon', 0, 'zoi.qml', NULL, '{"fields": [{"machine_code": "zoi_type", "label": "ZOI Type", "type": "list", "lookup": "zoi_types"}, {"machine_code": "zoi_stage", "label": "ZOI Stage", "type": "list", "lookup": "zoi_stages"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL, '{"fields": []}'); --NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}'); 
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (27, 'dce_points', 'DCE Points', 'Point', 0, 'dce_points.qml', NULL, NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (28, 'dce_lines', 'DCE Lines', 'Linestring', 0, 'dce_lines.qml', NULL, NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (29, 'dce_polygons', 'DCE Polygons', 'Polygon', 0, 'dce_polygons.qml', NULL, NULL);
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (30, 'observation_points', 'Observation Points', 'Point', 0, 'observation_points.qml', NULL, '{"fields": [{"machine_code": "observation_point_type", "label": "Observation Type", "type": "list", "lookup": "observation_point_types"}, {"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (31, 'observation_lines', 'Observation Lines', 'Linestring', 0, 'observation_lines.qml', NULL, '{"fields": [{"machine_code": "observation_line_type", "label": "Observation Type", "type": "list", "lookup": "observation_line_types"}]}');
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (32, 'observation_polygons', 'Observation Polygons', 'Polygon', 0, 'observation_polygons.qml', NULL, '{"fields": [{"machine_code": "observation_polygon_type", "label": "Observation Type", "type": "list", "lookup": "observation_polygon_types"}]}');
 -- Lookup Tables
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (101, 'lkp_platform', 'Platform', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (102, 'lkp_mask_types', 'Mask Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (103, 'lkp_structure_source', 'Structure Sources', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (104, 'lkp_dam_integrity', 'Dam Integrity', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (105, 'lkp_beaver_maintenance', 'Beaver Maintenance', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (106, 'lkp_thalweg_types', 'Thalweg Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (107, 'lkp_active_extent_types', 'Active Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (108, 'lkp_junction_types', 'Junction Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (109, 'lkp_geomorphic_unit_types', 'Geomorphic Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (110, 'lkp_vegetation_extent_types', 'Vegetation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (111, 'lkp_cem_phase_types', 'CEM Phase Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (112, 'lkp_floodplain_accessibility_types', 'Floodplain Accessibility Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (113, 'lkp_brat_vegetation_types', 'Brat Vegetation Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (114, 'lkp_context_layer_types', 'Context Layer Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (115, 'lkp_inundation_extent_types', 'Inundation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (116, 'lkp_primary_channel', 'Primary Channel Type', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (117, 'lkp_primary_unit', 'Primary Unit Type', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (118, 'lkp_structure_forced', 'Structure Forced', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (119, 'lkp_channel_unit_types', 'Channel Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (103, 'lkp_structure_source', 'Structure Sources', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (104, 'lkp_dam_integrity', 'Dam Integrity', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (105, 'lkp_beaver_maintenance', 'Beaver Maintenance', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (106, 'lkp_thalweg_types', 'Thalweg Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (107, 'lkp_active_extent_types', 'Active Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (108, 'lkp_junction_types', 'Junction Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (109, 'lkp_geomorphic_unit_types', 'Geomorphic Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (110, 'lkp_vegetation_extent_types', 'Vegetation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (111, 'lkp_cem_phase_types', 'CEM Phase Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (112, 'lkp_floodplain_accessibility_types', 'Floodplain Accessibility Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (113, 'lkp_brat_vegetation_types', 'Brat Vegetation Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (114, 'lkp_context_layer_types', 'Context Layer Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (115, 'lkp_inundation_extent_types', 'Inundation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (116, 'lkp_primary_channel', 'Primary Channel Type', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (117, 'lkp_primary_unit', 'Primary Unit Type', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (118, 'lkp_structure_forced', 'Structure Forced', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (119, 'lkp_channel_unit_types', 'Channel Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (120, 'lkp_design_status', 'Design Status', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (121, 'lkp_structure_mimics', 'Structure Mimics', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (122, 'lkp_zoi_stage', 'ZOI Stage', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (123, 'structure_types', 'Structure Types', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (124, 'zoi_types', 'Zoi Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (121, 'lkp_structure_mimics', 'Structure Mimics', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (122, 'lkp_zoi_stage', 'ZOI Stage', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (123, 'structure_types', 'Structure Types', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (124, 'zoi_types', 'Zoi Types', 'NoGeometry', 1, 'temp.qml', NULL);
 
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (125, 'lkp_brat_base_streampower', 'Base Streampower', 'NoGeometry', 1, 'temp.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (126, 'lkp_brat_high_streampower', 'High flow Streampower', 'NoGeometry', 1, 'none.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (127, 'lkp_brat_slope', 'Slope', 'NoGeometry', 1, 'none.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (128, 'lkp_brat_dam_density', 'BRAT Dam Density', 'NoGeometry', 1, 'none.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (129, 'lkp_brat_vegetation_cis', 'BRAT Vegetation CIS', 'NoGeometry', 1, 'none.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (125, 'lkp_brat_base_streampower', 'Base Streampower', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (126, 'lkp_brat_high_streampower', 'High flow Streampower', 'NoGeometry', 1, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (127, 'lkp_brat_slope', 'Slope', 'NoGeometry', 1, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (128, 'lkp_brat_dam_density', 'BRAT Dam Density', 'NoGeometry', 1, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (129, 'lkp_brat_vegetation_cis', 'BRAT Vegetation CIS', 'NoGeometry', 1, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
 
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (131, 'lkp_representation', 'Representation', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (132, 'lkp_profiles', 'Profiles', 'NoGeometry', 1, 'none.qml', NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (133, 'lkp_units', 'Unit Types', 'NoGeometry', 1, 'none.qml', NULL);
+-- -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (132, 'lkp_profiles', 'Profiles', 'NoGeometry', 1, 'none.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (133, 'lkp_units', 'Unit Types', 'NoGeometry', 1, 'none.qml', NULL);
 
 CREATE TABLE method_layers (
     method_id INTEGER NOT NULL REFERENCES methods(id) ON DELETE CASCADE,
@@ -147,19 +150,22 @@ CREATE TABLE method_layers (
     CONSTRAINT pk_method_layers PRIMARY KEY (method_id, layer_id)
 );
 
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
-INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
-INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
-INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
-INSERT INTO method_layers (method_id, layer_id) VALUES (4, 26);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (4, 26);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 21);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 22);
-INSERT INTO method_layers (method_id, layer_id) VALUES (3, 5);
-INSERT INTO method_layers (method_id, layer_id) VALUES (3, 7);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 30);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 31);
+INSERT INTO method_layers (method_id, layer_id) VALUES (5, 32);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 5);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 7);
 
 --dce layers
 ALTER TABLE dce_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -179,6 +185,15 @@ ALTER TABLE dce_polygons ADD COLUMN event_layer_id INTEGER REFERENCES layers(id)
 ALTER TABLE dce_polygons ADD COLUMN metadata TEXT;
 
 CREATE INDEX ix_dce_polygons_event_id ON dce_polygons(event_id, event_layer_id);
+
+CREATE TABLE lookup_list_values (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ list_name TEXT NOT NULL,
+ list_value TEXT NOT NULL,
+ metadata TEXT,
+ created_on DATETIME DEFAULT CURRENT_TIMESTAMP);
+ 
+ CREATE UNIQUE INDEX ux_lookup_list_values ON lookup_list_values(list_name, list_value);
 
 -- CREATE TABLE dce_layers (
 --     id INTEGER PRIMARY KEY NOT NULL,
@@ -216,15 +231,15 @@ CREATE INDEX ix_dce_polygons_event_id ON dce_polygons(event_id, event_layer_id);
 -- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 23);
 -- INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (6, 24);
 
-CREATE TABLE lkp_metric_sources (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_metric_sources (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT UNIQUE NOT NULL,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_metric_sources (id, name, description) VALUES (1, 'Calculated', 'Calculated from spatial data');
-INSERT INTO lkp_metric_sources (id, name, description) VALUES (2, 'Estimated', 'Estimated from other sources or evidence');
+-- INSERT INTO lkp_metric_sources (id, name, description) VALUES (1, 'Calculated', 'Calculated from spatial data');
+-- INSERT INTO lkp_metric_sources (id, name, description) VALUES (2, 'Estimated', 'Estimated from other sources or evidence');
 
 
 CREATE TABLE lkp_context_layer_types (
@@ -564,509 +579,509 @@ INSERT INTO lkp_beaver_maintenance (id, name) VALUES (3, 'Fresh');
 INSERT INTO lkp_beaver_maintenance (id, name) VALUES (4, 'NA');
 
 
--- dam crests
-ALTER TABLE dam_crests ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE dam_crests ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
-ALTER TABLE dam_crests ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
-ALTER TABLE dam_crests ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
-ALTER TABLE dam_crests ADD description TEXT;
-ALTER TABLE dam_crests ADD COLUMN metadata TEXT;
+-- -- dam crests
+-- ALTER TABLE dam_crests ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE dam_crests ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
+-- ALTER TABLE dam_crests ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
+-- ALTER TABLE dam_crests ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
+-- ALTER TABLE dam_crests ADD description TEXT;
+-- ALTER TABLE dam_crests ADD COLUMN metadata TEXT;
 
--- dam points
-ALTER TABLE dams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE dams ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
-ALTER TABLE dams ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
-ALTER TABLE dams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
-ALTER TABLE dams ADD COLUMN length NUMERIC;
-ALTER TABLE dams ADD COLUMN height NUMERIC;
-ALTER TABLE dams ADD description TEXT;
-ALTER TABLE dams ADD COLUMN metadata TEXT;
+-- -- dam points
+-- ALTER TABLE dams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE dams ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
+-- ALTER TABLE dams ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
+-- ALTER TABLE dams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
+-- ALTER TABLE dams ADD COLUMN length NUMERIC;
+-- ALTER TABLE dams ADD COLUMN height NUMERIC;
+-- ALTER TABLE dams ADD description TEXT;
+-- ALTER TABLE dams ADD COLUMN metadata TEXT;
 
--- jam points
-ALTER TABLE jams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE jams ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
-ALTER TABLE jams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
-ALTER TABLE jams ADD COLUMN length NUMERIC;
-ALTER TABLE jams ADD COLUMN width NUMERIC;
-ALTER TABLE jams ADD COLUMN height NUMERIC;
-ALTER TABLE jams ADD COLUMN wood_count INTEGER;
-ALTER TABLE jams ADD description TEXT;
-ALTER TABLE jams ADD COLUMN metadata TEXT;
+-- -- jam points
+-- ALTER TABLE jams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE jams ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
+-- ALTER TABLE jams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
+-- ALTER TABLE jams ADD COLUMN length NUMERIC;
+-- ALTER TABLE jams ADD COLUMN width NUMERIC;
+-- ALTER TABLE jams ADD COLUMN height NUMERIC;
+-- ALTER TABLE jams ADD COLUMN wood_count INTEGER;
+-- ALTER TABLE jams ADD description TEXT;
+-- ALTER TABLE jams ADD COLUMN metadata TEXT;
 
--- thalwegs
-CREATE TABLE lkp_thalweg_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- thalwegs
+-- CREATE TABLE lkp_thalweg_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_thalweg_types (id, name) VALUES (1, 'Primary');
-INSERT INTO lkp_thalweg_types (id, name) VALUES (2, 'Non-Primary');
+-- INSERT INTO lkp_thalweg_types (id, name) VALUES (1, 'Primary');
+-- INSERT INTO lkp_thalweg_types (id, name) VALUES (2, 'Non-Primary');
 
-ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
-ALTER TABLE thalwegs ADD description TEXT;
-ALTER TABLE thalwegs ADD COLUMN metadata TEXT;
+-- ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
+-- ALTER TABLE thalwegs ADD description TEXT;
+-- ALTER TABLE thalwegs ADD COLUMN metadata TEXT;
 
--- active extents
-CREATE TABLE lkp_active_extent_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- active extents
+-- CREATE TABLE lkp_active_extent_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_active_extent_types (id, name) VALUES (1, 'Active');
-INSERT INTO lkp_active_extent_types (id, name) VALUES (2, 'Inactive');
+-- INSERT INTO lkp_active_extent_types (id, name) VALUES (1, 'Active');
+-- INSERT INTO lkp_active_extent_types (id, name) VALUES (2, 'Inactive');
 
-ALTER TABLE active_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE active_extents ADD COLUMN type_id INTEGER REFERENCES lkp_active_extent_types(id);
-ALTER TABLE active_extents ADD description TEXT;
-ALTER TABLE active_extents ADD metadata TEXT;
+-- ALTER TABLE active_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE active_extents ADD COLUMN type_id INTEGER REFERENCES lkp_active_extent_types(id);
+-- ALTER TABLE active_extents ADD description TEXT;
+-- ALTER TABLE active_extents ADD metadata TEXT;
 
--- centerlines
-ALTER TABLE centerlines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE centerlines ADD COLUMN metadata TEXT;
+-- -- centerlines
+-- ALTER TABLE centerlines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE centerlines ADD COLUMN metadata TEXT;
 
--- inundation
-CREATE TABLE lkp_inundation_extent_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- inundation
+-- CREATE TABLE lkp_inundation_extent_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_inundation_extent_types (id, name) VALUES (1, 'Free Flowing');
-INSERT INTO lkp_inundation_extent_types (id, name) VALUES (2, 'Ponded');
-INSERT INTO lkp_inundation_extent_types (id, name) VALUES (3, 'Overflow');
+-- INSERT INTO lkp_inundation_extent_types (id, name) VALUES (1, 'Free Flowing');
+-- INSERT INTO lkp_inundation_extent_types (id, name) VALUES (2, 'Ponded');
+-- INSERT INTO lkp_inundation_extent_types (id, name) VALUES (3, 'Overflow');
 
-ALTER TABLE inundation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE inundation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_inundation_extent_types(id);
-ALTER TABLE inundation_extents ADD description TEXT;
-ALTER TABLE inundation_extents ADD metadata TEXT;
+-- ALTER TABLE inundation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE inundation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_inundation_extent_types(id);
+-- ALTER TABLE inundation_extents ADD description TEXT;
+-- ALTER TABLE inundation_extents ADD metadata TEXT;
 
--- valley bottoms
-ALTER TABLE valley_bottoms ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE valley_bottoms ADD COLUMN metadata TEXT;
+-- -- valley bottoms
+-- ALTER TABLE valley_bottoms ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE valley_bottoms ADD COLUMN metadata TEXT;
 
--- junctions
-CREATE TABLE lkp_junction_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- junctions
+-- CREATE TABLE lkp_junction_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_junction_types (id, name) VALUES (1, 'Confluence');
-INSERT INTO lkp_junction_types (id, name) VALUES (2, 'Diffluence');
+-- INSERT INTO lkp_junction_types (id, name) VALUES (1, 'Confluence');
+-- INSERT INTO lkp_junction_types (id, name) VALUES (2, 'Diffluence');
 
-ALTER TABLE junctions ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE junctions ADD COLUMN type_id INTEGER REFERENCES lkp_junction_types(id) ON DELETE CASCADE;
-ALTER TABLE junctions ADD COLUMN metadata TEXT;
+-- ALTER TABLE junctions ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE junctions ADD COLUMN type_id INTEGER REFERENCES lkp_junction_types(id) ON DELETE CASCADE;
+-- ALTER TABLE junctions ADD COLUMN metadata TEXT;
 
--- geomorphic units
-CREATE TABLE lkp_geomorphic_unit_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- geomorphic units
+-- CREATE TABLE lkp_geomorphic_unit_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (1, 'Concavity');
-INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (2, 'Convexity');
-INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (3, 'Planner');
-INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (4, 'Pond');
+-- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (1, 'Concavity');
+-- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (2, 'Convexity');
+-- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (3, 'Planner');
+-- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (4, 'Pond');
 
-ALTER TABLE geomorphic_units ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE geomorphic_units ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
-ALTER TABLE geomorphic_units ADD COLUMN metadata TEXT;
+-- ALTER TABLE geomorphic_units ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE geomorphic_units ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
+-- ALTER TABLE geomorphic_units ADD COLUMN metadata TEXT;
 
-ALTER TABLE geomorphic_unit_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE geomorphic_unit_extents ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
-ALTER TABLE geomorphic_unit_extents ADD COLUMN metadata TEXT;
+-- ALTER TABLE geomorphic_unit_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE geomorphic_unit_extents ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
+-- ALTER TABLE geomorphic_unit_extents ADD COLUMN metadata TEXT;
 
-ALTER TABLE geomorphic_units_tier3 ADD COLUMN metadata TEXT;
+-- ALTER TABLE geomorphic_units_tier3 ADD COLUMN metadata TEXT;
 
--- cem phases
-CREATE TABLE lkp_cem_phase_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- cem phases
+-- CREATE TABLE lkp_cem_phase_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_cem_phase_types (id, name) VALUES (1, 'Stage-1');
-INSERT INTO lkp_cem_phase_types (id, name) VALUES (2, 'Stage-5');
-INSERT INTO lkp_cem_phase_types (id, name) VALUES (3, 'Stage-0');
+-- INSERT INTO lkp_cem_phase_types (id, name) VALUES (1, 'Stage-1');
+-- INSERT INTO lkp_cem_phase_types (id, name) VALUES (2, 'Stage-5');
+-- INSERT INTO lkp_cem_phase_types (id, name) VALUES (3, 'Stage-0');
 
-ALTER TABLE cem_phases ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE cem_phases ADD COLUMN type_id INTEGER REFERENCES lkp_cem_phase_types(id);
-ALTER TABLE cem_phases ADD COLUMN metadata TEXT;
+-- ALTER TABLE cem_phases ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE cem_phases ADD COLUMN type_id INTEGER REFERENCES lkp_cem_phase_types(id);
+-- ALTER TABLE cem_phases ADD COLUMN metadata TEXT;
 
--- vegetation extents
-CREATE TABLE lkp_vegetation_extent_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- vegetation extents
+-- CREATE TABLE lkp_vegetation_extent_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (1, 'Riparian');
-INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (2, 'Wetland');
-INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (3, 'Upland');
-INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (4, 'Other');
+-- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (1, 'Riparian');
+-- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (2, 'Wetland');
+-- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (3, 'Upland');
+-- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (4, 'Other');
 
-ALTER TABLE vegetation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE vegetation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_vegetation_extent_types(id);
-ALTER TABLE vegetation_extents ADD COLUMN metadata TEXT;
+-- ALTER TABLE vegetation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE vegetation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_vegetation_extent_types(id);
+-- ALTER TABLE vegetation_extents ADD COLUMN metadata TEXT;
 
--- floodplain acessibility
-CREATE TABLE lkp_floodplain_accessibility_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- floodplain acessibility
+-- CREATE TABLE lkp_floodplain_accessibility_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (1, 'Inaccessible');
-INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (2, 'Surface water Accessible');
-INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (3, 'Groundwater Accessible');
-INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (4, 'Fully Accessible');
+-- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (1, 'Inaccessible');
+-- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (2, 'Surface water Accessible');
+-- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (3, 'Groundwater Accessible');
+-- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (4, 'Fully Accessible');
 
-ALTER TABLE floodplain_accessibilities ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE floodplain_accessibilities ADD COLUMN type_id INTEGER REFERENCES lkp_floodplain_accessibility_types(id);
-ALTER TABLE floodplain_accessibilities ADD COLUMN metadata TEXT;
+-- ALTER TABLE floodplain_accessibilities ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE floodplain_accessibilities ADD COLUMN type_id INTEGER REFERENCES lkp_floodplain_accessibility_types(id);
+-- ALTER TABLE floodplain_accessibilities ADD COLUMN metadata TEXT;
 
--- brat vegetation
-CREATE TABLE lkp_brat_vegetation_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- brat vegetation
+-- CREATE TABLE lkp_brat_vegetation_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (1, 'Preferred');
-INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (2, 'Suitable');
-INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (3, 'Moderately Suitable');
-INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (4, 'Barely Suitable');
-INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (5, 'Unsuitable');
+-- INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (1, 'Preferred');
+-- INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (2, 'Suitable');
+-- INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (3, 'Moderately Suitable');
+-- INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (4, 'Barely Suitable');
+-- INSERT INTO lkp_brat_vegetation_types (id, name) VALUES (5, 'Unsuitable');
 
-ALTER TABLE brat_vegetation ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_vegetation_types(id) ON DELETE CASCADE;
-ALTER TABLE brat_vegetation ADD COLUMN metadata TEXT;
+-- ALTER TABLE brat_vegetation ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE brat_vegetation ADD COLUMN type_id INTEGER REFERENCES lkp_brat_vegetation_types(id) ON DELETE CASCADE;
+-- ALTER TABLE brat_vegetation ADD COLUMN metadata TEXT;
 
--- BRAT base Stream power
-CREATE TABLE lkp_brat_base_streampower (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- BRAT base Stream power
+-- CREATE TABLE lkp_brat_base_streampower (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_brat_base_streampower (id, name) VALUES (1, 'Probably can build dam');
-INSERT INTO lkp_brat_base_streampower (id, name) VALUES (2, 'Can build dam');
-INSERT INTO lkp_brat_base_streampower (id, name) VALUES (3, 'Can build dam (saw evidence of recent dams)');
-INSERT INTO lkp_brat_base_streampower (id, name) VALUES (4, 'Could build dam at one time (saw evidence of relic dams)');
-INSERT INTO lkp_brat_base_streampower (id, name) VALUES (5, 'Cannot build dam (streampower really high)');
+-- INSERT INTO lkp_brat_base_streampower (id, name) VALUES (1, 'Probably can build dam');
+-- INSERT INTO lkp_brat_base_streampower (id, name) VALUES (2, 'Can build dam');
+-- INSERT INTO lkp_brat_base_streampower (id, name) VALUES (3, 'Can build dam (saw evidence of recent dams)');
+-- INSERT INTO lkp_brat_base_streampower (id, name) VALUES (4, 'Could build dam at one time (saw evidence of relic dams)');
+-- INSERT INTO lkp_brat_base_streampower (id, name) VALUES (5, 'Cannot build dam (streampower really high)');
 
--- BRAT 2 year flood stream power
-CREATE TABLE lkp_brat_high_streampower (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- -- BRAT 2 year flood stream power
+-- CREATE TABLE lkp_brat_high_streampower (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_brat_high_streampower (id, name) VALUES (1, 'Blowout');
-INSERT INTO lkp_brat_high_streampower (id, name) VALUES (2, 'Occasional Breach');
-INSERT INTO lkp_brat_high_streampower (id, name) VALUES (3, 'Occasional Blowout');
-INSERT INTO lkp_brat_high_streampower (id, name) VALUES (4, 'Dam Persists');
+-- INSERT INTO lkp_brat_high_streampower (id, name) VALUES (1, 'Blowout');
+-- INSERT INTO lkp_brat_high_streampower (id, name) VALUES (2, 'Occasional Breach');
+-- INSERT INTO lkp_brat_high_streampower (id, name) VALUES (3, 'Occasional Blowout');
+-- INSERT INTO lkp_brat_high_streampower (id, name) VALUES (4, 'Dam Persists');
 
 
-CREATE TABLE lkp_brat_slope (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_brat_slope (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_brat_slope (id, name) VALUES (1, 'So steep they cannot build a dam (e.g. > 20% slope)');
-INSERT INTO lkp_brat_slope (id, name) VALUES (2, 'Probably can build dam');
-INSERT INTO lkp_brat_slope (id, name) VALUES (3, 'Can build dam (inferred)');
-INSERT INTO lkp_brat_slope (id, name) VALUES (4, 'Can build dam (evidence or current or past dams)');
-INSERT INTO lkp_brat_slope (id, name) VALUES (5, 'Really flat (can build dam, but might not need as many as one dam might back up water > 0.5 km)');
+-- INSERT INTO lkp_brat_slope (id, name) VALUES (1, 'So steep they cannot build a dam (e.g. > 20% slope)');
+-- INSERT INTO lkp_brat_slope (id, name) VALUES (2, 'Probably can build dam');
+-- INSERT INTO lkp_brat_slope (id, name) VALUES (3, 'Can build dam (inferred)');
+-- INSERT INTO lkp_brat_slope (id, name) VALUES (4, 'Can build dam (evidence or current or past dams)');
+-- INSERT INTO lkp_brat_slope (id, name) VALUES (5, 'Really flat (can build dam, but might not need as many as one dam might back up water > 0.5 km)');
 
-CREATE TABLE lkp_brat_dam_density (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_brat_dam_density (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (1, 'None', '(no dams)');
-INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (2, 'Rare', '(0-1 dams/km)');
-INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (3, 'Occasional', '(1-4 dams/km)');
-INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (4, 'Frequent', '(5-15 dams/km)');
-INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (5, 'Pervasive', '(15-40 dams/km)');
+-- INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (1, 'None', '(no dams)');
+-- INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (2, 'Rare', '(0-1 dams/km)');
+-- INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (3, 'Occasional', '(1-4 dams/km)');
+-- INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (4, 'Frequent', '(5-15 dams/km)');
+-- INSERT INTO lkp_brat_dam_density (id, name, description) VALUES (5, 'Pervasive', '(15-40 dams/km)');
 
-CREATE TABLE lkp_brat_vegetation_cis
-(
-    rule_id INTEGER PRIMARY KEY AUTOINCREMENT ,
-    streamside_veg_id INT NOT NULL REFERENCES lkp_brat_vegetation_types (id) ON DELETE CASCADE,
-    riparian_veg_id INT NOT NULL REFERENCES  lkp_brat_vegetation_types (id) ON DELETE CASCADE,
-    output_id INT NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
-);
-CREATE INDEX ux_lkp_brat_vegetation_cis ON lkp_brat_vegetation_cis(streamside_veg_id, riparian_veg_id, output_id);
+-- CREATE TABLE lkp_brat_vegetation_cis
+-- (
+--     rule_id INTEGER PRIMARY KEY AUTOINCREMENT ,
+--     streamside_veg_id INT NOT NULL REFERENCES lkp_brat_vegetation_types (id) ON DELETE CASCADE,
+--     riparian_veg_id INT NOT NULL REFERENCES  lkp_brat_vegetation_types (id) ON DELETE CASCADE,
+--     output_id INT NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
+-- );
+-- CREATE INDEX ux_lkp_brat_vegetation_cis ON lkp_brat_vegetation_cis(streamside_veg_id, riparian_veg_id, output_id);
 
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (2, 4, 5, 2);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (3, 3, 5, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (4, 2, 5, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (5, 1, 5, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (6, 5, 4, 2);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (7, 4, 4, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (8, 3, 4, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (9, 2, 4, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (10, 1, 4, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (11, 5, 3, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (12, 4, 3, 2);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (13, 3, 3, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (14, 2, 3, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (15, 1, 3, 5);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (16, 5, 2, 2);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (17, 4, 2, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (18, 3, 2, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (19, 2, 2, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (20, 1, 2, 5);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (21, 5, 1, 3);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (22, 4, 1, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (23, 3, 1, 4);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (24, 2, 1, 5);
-INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (25, 1, 1, 5);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (1, 5, 5, 1);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (2, 4, 5, 2);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (3, 3, 5, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (4, 2, 5, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (5, 1, 5, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (6, 5, 4, 2);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (7, 4, 4, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (8, 3, 4, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (9, 2, 4, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (10, 1, 4, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (11, 5, 3, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (12, 4, 3, 2);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (13, 3, 3, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (14, 2, 3, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (15, 1, 3, 5);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (16, 5, 2, 2);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (17, 4, 2, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (18, 3, 2, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (19, 2, 2, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (20, 1, 2, 5);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (21, 5, 1, 3);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (22, 4, 1, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (23, 3, 1, 4);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (24, 2, 1, 5);
+-- INSERT INTO lkp_brat_vegetation_cis (rule_id, streamside_veg_id, riparian_veg_id, output_id) VALUES (25, 1, 1, 5);
 
-CREATE TABLE lkp_brat_combined_cis (
-    rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    veg_density_id INTEGER NOT NULL REFERENCES lkp_brat_vegetation_cis(rule_id) ON DELETE CASCADE,
-    base_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_base_streampower(id) ON DELETE CASCADE,
-    high_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_high_streampower(id) ON DELETE CASCADE,
-    slope_id INTEGER NOT NULL REFERENCES  lkp_brat_slope(id) ON DELETE CASCADE,
-    output_id INTEGER NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
-);
-CREATE INDEX ux_lkp_brat_combined_cis ON lkp_brat_combined_cis(veg_density_id, base_streampower_id, high_streampower_id, slope_id);
+-- CREATE TABLE lkp_brat_combined_cis (
+--     rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     veg_density_id INTEGER NOT NULL REFERENCES lkp_brat_vegetation_cis(rule_id) ON DELETE CASCADE,
+--     base_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_base_streampower(id) ON DELETE CASCADE,
+--     high_streampower_id INTEGER NOT NULL REFERENCES lkp_brat_high_streampower(id) ON DELETE CASCADE,
+--     slope_id INTEGER NOT NULL REFERENCES  lkp_brat_slope(id) ON DELETE CASCADE,
+--     output_id INTEGER NOT NULL REFERENCES lkp_brat_dam_density(id) ON DELETE CASCADE
+-- );
+-- CREATE INDEX ux_lkp_brat_combined_cis ON lkp_brat_combined_cis(veg_density_id, base_streampower_id, high_streampower_id, slope_id);
 
---value combinations that produce an output of 'None' are not stored in this table
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (1, 2, 2, 4, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (2, 2, 2, 4, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (3, 2, 2, 4, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (4, 2, 2, 4, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (5, 2, 2, 4, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (6, 3, 2, 4, 1, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (7, 3, 2, 4, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (8, 3, 2, 4, 3, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (9, 3, 2, 4, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (10, 3, 2, 4, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (11, 4, 2, 4, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (12, 4, 2, 4, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (13, 5, 2, 4, 5, 5);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (14, 5, 2, 4, 4, 5);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (15, 5, 2, 4, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (16, 2, 2, 2, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (17, 2, 2, 2, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (18, 2, 2, 2, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (19, 2, 2, 2, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (20, 2, 2, 2, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (21, 3, 2, 2, 1, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (22, 3, 2, 2, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (23, 3, 2, 2, 3, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (24, 3, 2, 2, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (25, 3, 2, 2, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (26, 4, 2, 2, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (27, 4, 2, 2, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (28, 5, 2, 2, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (29, 5, 2, 2, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (30, 5, 2, 2, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (31, 2, 2, 3, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (32, 2, 2, 3, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (33, 2, 2, 3, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (34, 2, 2, 3, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (35, 2, 2, 3, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (36, 3, 2, 3, 1, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (37, 3, 2, 3, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (38, 3, 2, 3, 3, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (39, 3, 2, 3, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (40, 3, 2, 3, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (41, 4, 2, 3, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (42, 4, 2, 3, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (43, 5, 2, 3, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (44, 5, 2, 3, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (45, 5, 2, 3, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (46, 3, 2, 1, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (47, 3, 2, 1, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (48, 3, 2, 1, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (49, 3, 2, 1, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (50, 3, 2, 1, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (51, 4, 2, 1, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (52, 5, 2, 1, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (53, 5, 2, 1, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (54, 5, 2, 1, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (55, 2, 1, 2, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (56, 2, 1, 2, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (57, 2, 1, 2, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (58, 2, 1, 2, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (59, 2, 1, 2, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (60, 3, 1, 2, 1, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (61, 3, 1, 2, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (62, 3, 1, 2, 3, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (63, 3, 1, 2, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (64, 3, 1, 2, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (65, 4, 1, 2, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (66, 4, 1, 2, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (67, 5, 1, 2, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (68, 5, 1, 2, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (69, 5, 1, 2, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (70, 2, 1, 3, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (71, 2, 1, 3, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (72, 2, 1, 3, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (73, 2, 1, 3, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (74, 2, 1, 3, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (75, 3, 1, 3, 1, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (76, 3, 1, 3, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (77, 3, 1, 3, 3, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (78, 3, 1, 3, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (79, 3, 1, 3, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (80, 4, 1, 3, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (81, 4, 1, 3, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (82, 5, 1, 3, 5, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (83, 5, 1, 3, 4, 4);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (84, 5, 1, 3, 2, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (85, 3, 1, 1, 1, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (86, 3, 1, 1, 2, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (87, 3, 1, 1, 3, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (88, 3, 1, 1, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (89, 3, 1, 1, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (90, 4, 1, 1, 4, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (91, 5, 1, 1, 5, 2);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (92, 5, 1, 1, 4, 3);
-INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (93, 5, 1, 1, 2, 2);
+-- --value combinations that produce an output of 'None' are not stored in this table
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (1, 2, 2, 4, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (2, 2, 2, 4, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (3, 2, 2, 4, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (4, 2, 2, 4, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (5, 2, 2, 4, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (6, 3, 2, 4, 1, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (7, 3, 2, 4, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (8, 3, 2, 4, 3, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (9, 3, 2, 4, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (10, 3, 2, 4, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (11, 4, 2, 4, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (12, 4, 2, 4, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (13, 5, 2, 4, 5, 5);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (14, 5, 2, 4, 4, 5);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (15, 5, 2, 4, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (16, 2, 2, 2, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (17, 2, 2, 2, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (18, 2, 2, 2, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (19, 2, 2, 2, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (20, 2, 2, 2, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (21, 3, 2, 2, 1, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (22, 3, 2, 2, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (23, 3, 2, 2, 3, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (24, 3, 2, 2, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (25, 3, 2, 2, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (26, 4, 2, 2, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (27, 4, 2, 2, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (28, 5, 2, 2, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (29, 5, 2, 2, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (30, 5, 2, 2, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (31, 2, 2, 3, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (32, 2, 2, 3, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (33, 2, 2, 3, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (34, 2, 2, 3, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (35, 2, 2, 3, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (36, 3, 2, 3, 1, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (37, 3, 2, 3, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (38, 3, 2, 3, 3, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (39, 3, 2, 3, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (40, 3, 2, 3, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (41, 4, 2, 3, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (42, 4, 2, 3, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (43, 5, 2, 3, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (44, 5, 2, 3, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (45, 5, 2, 3, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (46, 3, 2, 1, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (47, 3, 2, 1, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (48, 3, 2, 1, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (49, 3, 2, 1, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (50, 3, 2, 1, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (51, 4, 2, 1, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (52, 5, 2, 1, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (53, 5, 2, 1, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (54, 5, 2, 1, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (55, 2, 1, 2, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (56, 2, 1, 2, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (57, 2, 1, 2, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (58, 2, 1, 2, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (59, 2, 1, 2, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (60, 3, 1, 2, 1, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (61, 3, 1, 2, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (62, 3, 1, 2, 3, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (63, 3, 1, 2, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (64, 3, 1, 2, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (65, 4, 1, 2, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (66, 4, 1, 2, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (67, 5, 1, 2, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (68, 5, 1, 2, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (69, 5, 1, 2, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (70, 2, 1, 3, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (71, 2, 1, 3, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (72, 2, 1, 3, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (73, 2, 1, 3, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (74, 2, 1, 3, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (75, 3, 1, 3, 1, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (76, 3, 1, 3, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (77, 3, 1, 3, 3, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (78, 3, 1, 3, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (79, 3, 1, 3, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (80, 4, 1, 3, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (81, 4, 1, 3, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (82, 5, 1, 3, 5, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (83, 5, 1, 3, 4, 4);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (84, 5, 1, 3, 2, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (85, 3, 1, 1, 1, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (86, 3, 1, 1, 2, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (87, 3, 1, 1, 3, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (88, 3, 1, 1, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (89, 3, 1, 1, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (90, 4, 1, 1, 4, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (91, 5, 1, 1, 5, 2);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (92, 5, 1, 1, 4, 3);
+-- INSERT INTO lkp_brat_combined_cis (rule_id, veg_density_id, base_streampower_id, high_streampower_id, slope_id, output_id) VALUES (93, 5, 1, 1, 2, 2);
 
--- Alter the BRAT CIS Feature Class table
-ALTER TABLE brat_cis ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE brat_cis ADD COLUMN observer_name TEXT;
-ALTER TABLE brat_cis ADD COLUMN reach_id TEXT;
-ALTER TABLE brat_cis ADD COLUMN observation_date DATE;
-ALTER TABLE brat_cis ADD COLUMN reach_length FLOAT;
-ALTER TABLE brat_cis ADD COLUMN notes TEXT;
-ALTER TABLE brat_cis ADD COLUMN metadata TEXT;
+-- -- Alter the BRAT CIS Feature Class table
+-- ALTER TABLE brat_cis ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE brat_cis ADD COLUMN observer_name TEXT;
+-- ALTER TABLE brat_cis ADD COLUMN reach_id TEXT;
+-- ALTER TABLE brat_cis ADD COLUMN observation_date DATE;
+-- ALTER TABLE brat_cis ADD COLUMN reach_length FLOAT;
+-- ALTER TABLE brat_cis ADD COLUMN notes TEXT;
+-- ALTER TABLE brat_cis ADD COLUMN metadata TEXT;
 
-ALTER TABLE brat_cis ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
-ALTER TABLE brat_cis ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
-ALTER TABLE brat_cis ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
+-- ALTER TABLE brat_cis ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+-- ALTER TABLE brat_cis ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+-- ALTER TABLE brat_cis ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
 
-ALTER TABLE brat_cis ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base_streampower(id);
-ALTER TABLE brat_cis ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
+-- ALTER TABLE brat_cis ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base_streampower(id);
+-- ALTER TABLE brat_cis ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
 
-ALTER TABLE brat_cis ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
+-- ALTER TABLE brat_cis ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
 
-ALTER TABLE brat_cis ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
+-- ALTER TABLE brat_cis ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
 
--- Alter the Brat CIS Reaches feature class
-ALTER TABLE brat_cis_reaches ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE brat_cis_reaches ADD COLUMN observer_name TEXT;
-ALTER TABLE brat_cis_reaches ADD COLUMN reach_id TEXT;
-ALTER TABLE brat_cis_reaches ADD COLUMN observation_date DATE;
-ALTER TABLE brat_cis_reaches ADD COLUMN reach_length FLOAT;
-ALTER TABLE brat_cis_reaches ADD COLUMN notes TEXT;
-ALTER TABLE brat_cis_reaches ADD COLUMN metadata TEXT;
+-- -- Alter the Brat CIS Reaches feature class
+-- ALTER TABLE brat_cis_reaches ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE brat_cis_reaches ADD COLUMN observer_name TEXT;
+-- ALTER TABLE brat_cis_reaches ADD COLUMN reach_id TEXT;
+-- ALTER TABLE brat_cis_reaches ADD COLUMN observation_date DATE;
+-- ALTER TABLE brat_cis_reaches ADD COLUMN reach_length FLOAT;
+-- ALTER TABLE brat_cis_reaches ADD COLUMN notes TEXT;
+-- ALTER TABLE brat_cis_reaches ADD COLUMN metadata TEXT;
 
-ALTER TABLE brat_cis_reaches ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
-ALTER TABLE brat_cis_reaches ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
-ALTER TABLE brat_cis_reaches ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN streamside_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN riparian_veg_id INT REFERENCES lkp_brat_vegetation_types(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN veg_density_id INT REFERENCES lkp_brat_dam_density(id);
 
-ALTER TABLE brat_cis_reaches ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base_streampower(id);
-ALTER TABLE brat_cis_reaches ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN base_streampower_id INT REFERENCES lkp_brat_base_streampower(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN high_streampower_id INT REFERENCES lkp_brat_high_streampower(id);
 
-ALTER TABLE brat_cis_reaches ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN slope_id INT REFERENCES lkp_brat_slope(id);
 
-ALTER TABLE brat_cis_reaches ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
+-- ALTER TABLE brat_cis_reaches ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
 ----------------------------------------------------------------------------------------------------------------
 
 -- channel unit layers
-CREATE TABLE lkp_channel_unit_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT,
-    metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_channel_unit_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT UNIQUE NOT NULL,
+--     description TEXT,
+--     metadata TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_channel_unit_types (id, name) VALUES (1, 'Concavity');
-INSERT INTO lkp_channel_unit_types (id, name) VALUES (2, 'Convexity');
-INSERT INTO lkp_channel_unit_types (id, name) VALUES (3, 'Planar');
-INSERT INTO lkp_channel_unit_types (id, name) VALUES (4, 'Pond');
-INSERT INTO lkp_channel_unit_types (id, name) VALUES (5, 'NA');
-
-
-CREATE TABLE lkp_structure_forced (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT,
-    metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO lkp_structure_forced (id, name) VALUES (1, 'Artificial Structure');
-INSERT INTO lkp_structure_forced (id, name) VALUES (2, 'Natural Structure');
-INSERT INTO lkp_structure_forced (id, name) VALUES (3, 'Not Structure Forced');
-INSERT INTO lkp_structure_forced (id, name) VALUES (4, 'NA');
+-- INSERT INTO lkp_channel_unit_types (id, name) VALUES (1, 'Concavity');
+-- INSERT INTO lkp_channel_unit_types (id, name) VALUES (2, 'Convexity');
+-- INSERT INTO lkp_channel_unit_types (id, name) VALUES (3, 'Planar');
+-- INSERT INTO lkp_channel_unit_types (id, name) VALUES (4, 'Pond');
+-- INSERT INTO lkp_channel_unit_types (id, name) VALUES (5, 'NA');
 
 
-CREATE TABLE lkp_primary_channel (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT,
-    metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_structure_forced (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT UNIQUE NOT NULL,
+--     description TEXT,
+--     metadata TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_primary_channel (id, name) VALUES (1, 'Primary Channel');
-INSERT INTO lkp_primary_channel (id, name) VALUES (2, 'Non-Primary Channel');
-INSERT INTO lkp_primary_channel (id, name) VALUES (3, 'NA');
-
-CREATE TABLE lkp_primary_unit (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT,
-    metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO lkp_primary_unit (id, name) VALUES (1, 'Primary Unit');
-INSERT INTO lkp_primary_unit (id, name) VALUES (2, 'Non-Primary Unit');
-INSERT INTO lkp_primary_unit (id, name) VALUES (3, 'NA');
+-- INSERT INTO lkp_structure_forced (id, name) VALUES (1, 'Artificial Structure');
+-- INSERT INTO lkp_structure_forced (id, name) VALUES (2, 'Natural Structure');
+-- INSERT INTO lkp_structure_forced (id, name) VALUES (3, 'Not Structure Forced');
+-- INSERT INTO lkp_structure_forced (id, name) VALUES (4, 'NA');
 
 
-ALTER TABLE channel_unit_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_points ADD COLUMN length NUMERIC;
-ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
-ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
-ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
-ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
-ALTER TABLE channel_unit_points ADD COLUMN metadata TEXT;
+-- CREATE TABLE lkp_primary_channel (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT UNIQUE NOT NULL,
+--     description TEXT,
+--     metadata TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- INSERT INTO lkp_primary_channel (id, name) VALUES (1, 'Primary Channel');
+-- INSERT INTO lkp_primary_channel (id, name) VALUES (2, 'Non-Primary Channel');
+-- INSERT INTO lkp_primary_channel (id, name) VALUES (3, 'NA');
+
+-- CREATE TABLE lkp_primary_unit (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT UNIQUE NOT NULL,
+--     description TEXT,
+--     metadata TEXT,
+--     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- INSERT INTO lkp_primary_unit (id, name) VALUES (1, 'Primary Unit');
+-- INSERT INTO lkp_primary_unit (id, name) VALUES (2, 'Non-Primary Unit');
+-- INSERT INTO lkp_primary_unit (id, name) VALUES (3, 'NA');
 
 
-ALTER TABLE channel_unit_polygons ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
-ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
-ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
-ALTER TABLE channel_unit_polygons ADD COLUMN metadata TEXT;
+-- ALTER TABLE channel_unit_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_points ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_points ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_points ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_points ADD COLUMN length NUMERIC;
+-- ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
+-- ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
+-- ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
+-- ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
+-- ALTER TABLE channel_unit_points ADD COLUMN metadata TEXT;
+
+
+-- ALTER TABLE channel_unit_polygons ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
+-- ALTER TABLE channel_unit_polygons ADD COLUMN metadata TEXT;
 
 
 -- Design Lookup Tables
@@ -1095,97 +1110,206 @@ INSERT INTO lkp_design_sources (id, name, description) VALUES (2, 'Desktop Analy
 INSERT INTO lkp_design_sources (id, name, description) VALUES (3, 'Field Work', NULL);
 
 
-CREATE TABLE lkp_structure_mimics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT,
-    created DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_structure_mimics (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE,
+--     description TEXT,
+--     created DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_structure_mimics (id, name, description) VALUES (1, 'Beaver Dam', 'Structure has been designed to mimic the form and function of a beaver dam');
-INSERT INTO lkp_structure_mimics (id, name, description) VALUES (2, 'Wood Jam', 'Structure has been designed to mimic the form and function of a wood jam or piece of woody debris');
-INSERT INTO lkp_structure_mimics (id, name, description) VALUES (3, 'Other', 'Structure does not mimic a beaver dam, wood jam, or woody debris');
+-- INSERT INTO lkp_structure_mimics (id, name, description) VALUES (1, 'Beaver Dam', 'Structure has been designed to mimic the form and function of a beaver dam');
+-- INSERT INTO lkp_structure_mimics (id, name, description) VALUES (2, 'Wood Jam', 'Structure has been designed to mimic the form and function of a wood jam or piece of woody debris');
+-- INSERT INTO lkp_structure_mimics (id, name, description) VALUES (3, 'Other', 'Structure does not mimic a beaver dam, wood jam, or woody debris');
 
 
-CREATE TABLE lkp_zoi_stage (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    description TEXT,
-    created DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE lkp_zoi_stage (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT,
+--     description TEXT,
+--     created DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO lkp_zoi_stage (id, name, description) VALUES (1, 'Baseflow', 'Extent is the expected influence during or in response to baseflow discharge');
-INSERT INTO lkp_zoi_stage (id, name, description) VALUES (2, 'Typical Flood', 'Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)');
-INSERT INTO lkp_zoi_stage (id, name, description) VALUES (3, 'Large Flood', 'Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)');
-INSERT INTO lkp_zoi_stage (id, name, description) VALUES (4, 'Other', 'Extent is not related to flood event');
+-- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (1, 'Baseflow', 'Extent is the expected influence during or in response to baseflow discharge');
+-- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (2, 'Typical Flood', 'Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)');
+-- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (3, 'Large Flood', 'Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)');
+-- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (4, 'Other', 'Extent is not related to flood event');
 
-CREATE TABLE structure_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    mimics_id INTEGER REFERENCES lkp_structure_mimics(id) ON DELETE CASCADE,
-    construction_description TEXT,
-    function_description TEXT,
-    typical_posts INTEGER,
-    typical_length NUMERIC,
-    typical_width NUMERIC,
-    typical_height NUMERIC,
-    metadata TEXT,
-    created DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE structure_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT,
+--     mimics_id INTEGER REFERENCES lkp_structure_mimics(id) ON DELETE CASCADE,
+--     construction_description TEXT,
+--     function_description TEXT,
+--     typical_posts INTEGER,
+--     typical_length NUMERIC,
+--     typical_width NUMERIC,
+--     typical_height NUMERIC,
+--     metadata TEXT,
+--     created DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO structure_types (id, name, mimics_id) VALUES (1, 'BDA Large', 1);
-INSERT INTO structure_types (id, name, mimics_id) VALUES (2, 'BDA Small', 1);
-INSERT INTO structure_types (id, name, mimics_id) VALUES (3, 'BDA Postless', 1);
-INSERT INTO structure_types (id, name, mimics_id) VALUES (4, 'PALS Mid-Channel', 2);
-INSERT INTO structure_types (id, name, mimics_id) VALUES (5, 'PALS Bank Attached', 2);
-INSERT INTO structure_types (id, name, mimics_id) VALUES (6, 'Wood Jam', 2);
-INSERT INTO structure_types (id, name, mimics_id) VALUES (7, 'Other', 3);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (1, 'BDA Large', 1);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (2, 'BDA Small', 1);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (3, 'BDA Postless', 1);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (4, 'PALS Mid-Channel', 2);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (5, 'PALS Bank Attached', 2);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (6, 'Wood Jam', 2);
+-- INSERT INTO structure_types (id, name, mimics_id) VALUES (7, 'Other', 3);
 
-CREATE TABLE zoi_types (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    description TEXT,
-    created DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE zoi_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT,
+--     description TEXT,
+--     created DATETIME DEFAULT CURRENT_TIMESTAMP
+-- );
 
-INSERT INTO zoi_types (id, name, description) VALUES (1, 'Increase Channel Complexity', 'Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment');
-INSERT INTO zoi_types (id, name, description) VALUES (2, 'Accelerate Incision Recovery', 'Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation');
-INSERT INTO zoi_types (id, name, description) VALUES (3, 'Lateral Channel Migration', 'Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders');
-INSERT INTO zoi_types (id, name, description) VALUES (4, 'Increase Floodplain Connectivity', 'Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow');
-INSERT INTO zoi_types (id, name, description) VALUES (5, 'Facilitate Beaver Translocation', 'Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation');
-INSERT INTO zoi_types (id, name, description) VALUES (6, 'Other', 'Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)');
+-- INSERT INTO zoi_types (id, name, description) VALUES (1, 'Increase Channel Complexity', 'Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment');
+-- INSERT INTO zoi_types (id, name, description) VALUES (2, 'Accelerate Incision Recovery', 'Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation');
+-- INSERT INTO zoi_types (id, name, description) VALUES (3, 'Lateral Channel Migration', 'Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders');
+-- INSERT INTO zoi_types (id, name, description) VALUES (4, 'Increase Floodplain Connectivity', 'Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow');
+-- INSERT INTO zoi_types (id, name, description) VALUES (5, 'Facilitate Beaver Translocation', 'Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation');
+-- INSERT INTO zoi_types (id, name, description) VALUES (6, 'Other', 'Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)');
 
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (1, 'zoi_types_orig', 'Increase Channel Complexity', '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (2, 'zoi_types_orig', 'Accelerate Incision Recovery', '{"description": "Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (3, 'zoi_types_orig', 'Lateral Channel Migration', '{"description": "Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (4, 'zoi_types_orig', 'Increase Floodplain Connectivity', '{"description": "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (5, 'zoi_types_orig', 'Facilitate Beaver Translocation', '{"description": "Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (6, 'zoi_types_orig', 'Other', '{"description": "Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (7, 'structure_types_orig', 'BDA Large', '{"mimics_id": 1}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (8, 'structure_types_orig', 'BDA Small', '{"mimics_id": 1}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (9, 'structure_types_orig', 'BDA Postless', '{"mimics_id": 1}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (10, 'structure_types_orig', 'PALS Mid-Channel', '{"mimics_id": 2}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (11, 'structure_types_orig', 'PALS Bank Attached', '{"mimics_id": 2}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (12, 'structure_types_orig', 'Wood Jam', '{"mimics_id": 2}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (13, 'structure_types_orig', 'Other', '{"mimics_id": 3}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (14, 'structure_mimics', 'Beaver Dam', '{"description": "Structure has been designed to mimic the form and function of a beaver dam"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (15, 'structure_mimics', 'Wood Jam', '{"description": "Structure has been designed to mimic the form and function of a wood jam or piece of woody debris"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (16, 'structure_mimics', 'Other', '{"description": "Structure does not mimic a beaver dam, wood jam, or woody debris"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (17, 'zoi_stages', 'Baseflow', '{"description": "Extent is the expected influence during or in response to baseflow discharge"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (18, 'zoi_stages', 'Typical Flood', '{"description": "Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (19, 'zoi_stages', 'Large Flood', '{"description": "Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (20, 'zoi_stages', 'Other', '{"description": "Extent is not related to flood event"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (21, 'observation_point_types', "Logistics", '{"description": "Observation point is used to record logistical information about the site (e.g., access, parking, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (22, 'observation_point_types', "Riverscape Feature", '{"description": "Observation point is used to record information about a riverscape feature (e.g., riffle, pool, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (23, 'observation_point_types', "Design Consideration", '{"description": "Observation point is used to record information about a design consideration (e.g., structure location, structure type, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (24, 'observation_point_types', "Building Materials", '{"description": "Observation point is used to record information about building source materials (e.g., wood, rock, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (25, 'observation_point_types', "Photo Observation", '{"description": "Observation point is used to record information about a photo observation (e.g., photo point, photo direction, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (26, 'observation_point_types', "Caution", '{"description": "Observation point is used to record information about a cautionary note (e.g., safety, access, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (27, 'observation_point_types', "Other", '{"description": "Observation point is used to record information that does not fit into any other category"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (28, 'observation_line_types', "Road", '{"description": "Observation line is used to record information about a road (e.g., road name, road condition, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (29, 'observation_line_types', "Logistics", '{"description": "Observation line is used to record logistical information about the site (e.g., access, parking, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (30, 'observation_line_types', "Riverscape Feature", '{"description": "Observation line is used to record information about a riverscape feature (e.g., riffle, pool, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUEs (31, 'observation_line_types', "Caution", '{"description": "Observation line is used to record information about a cautionary note (e.g., safety, access, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (32, 'observation_line_types', "Other", '{"description": "Observation line is used to record information that does not fit into any other category"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (33, 'observation_polygon_types', "Logistics", '{"description": "Observation polygon is used to record logistical information about the site (e.g., access, parking, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (34, 'observation_polygon_types', "Building Materials", '{"description": "Observation polygon is used to record information about building source materials (e.g., wood, rock, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (35, 'observation_polygon_types', "Infrastructure", '{"description": "Observation polygon is used to record information about infrastructure (e.g., bridge, culvert, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (36, 'observation_polygon_types', "Caution", '{"description": "Observation polygon is used to record information about a cautionary note (e.g., safety, access, etc.)"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (37, 'observation_polygon_types', "Other", '{"description": "Observation polygon is used to record information that does not fit into any other category"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (38, 'zoi_types', "Complex: Increase Floodplain Connectivity", '{"description": "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (39, 'zoi_types', "Complex: Overbank Flow Dispersal", '{"description": "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (40, 'zoi_types', "Complex: Aggradation and Avulsion", '{"description": "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow"}'); 
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (41, 'zoi_types', "Complex: Side-Channel Connection", '{"description": "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (42, 'zoi_types', "Complex: Riparian/Wetland Expansion", '{"description": "Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (43, 'zoi_types', "Complex: Facilitate Beaver Translocation", '{"description": "Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (44, 'zoi_types', "Complex: Pond/Wetland Creation", '{"description": "Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (45, 'zoi_types', "Complex: Accelerate Incision Recovery", '{"description": "Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (46, 'zoi_types', "Complex: Lateral Channel Migration", '{"description": "Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (47, 'zoi_types', "Complex: Widening and Aggradation", '{"description": "Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (48, 'zoi_types', "Complex: Increase Channel Complexity", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (49, 'zoi_types', "Complex: Headcut Arrest", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (50, 'zoi_types', "Complex: Cover/Complexity", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (51, 'zoi_types', "Structure: Hydraulic - Eddy", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (52, 'zoi_types', "Structure: Hydraulic - Splitting Flow", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (53, 'zoi_types', "Structure: Hydraulic - Shunting Flow", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (54, 'zoi_types', "Structure: Hydraulic - Ponding Flow", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (55, 'zoi_types', "Structure: Hydraulic - Overflow", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (56, 'zoi_types', "Structure: Hydraulic - Constriction Jet", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (57, 'zoi_types', "Structure: Hydraulic - Divergent Flow", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (58, 'zoi_types', "Structure: Geomorphic - Erode Bank", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (59, 'zoi_types', "Structure: Geomorphic - Erosion from return flow headcut", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (60, 'zoi_types', "Structure: Geomorphic - Erosion from plunge", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (61, 'zoi_types', "Structure: Geomorphic - Erosion from convergent jet", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (62, 'zoi_types', "Structure: Geomorphic - Erosion of bar edge", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (63, 'zoi_types', "Structure: Geomorphic - Deposition overbank", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (64, 'zoi_types', "Structure: Geomorphic - Deposition of bar", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (65, 'zoi_types', "Structure: Geomorphic - Deposition in upstream backwater", '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (66, 'zoi_types', "Structure: Scout Pool Formation", '{"description": "Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders"}');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (67, 'structure_types', 'Secondary BDA', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (68, 'structure_types', 'BDA', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (69, 'structure_types', 'Primary BDA', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (70, 'structure_types', 'BDA Large', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (71, 'structure_types', 'BDA Small', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (72, 'structure_types', 'BDA Postless', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (73, 'structure_types', 'PALS', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (74, 'structure_types', 'PALS - Bank Attached', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (75, 'structure_types', 'PALS - Right Bank Attached', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (76, 'structure_types', 'PALS - Left Bank Attached', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (77, 'structure_types', 'PALS - Bank Blaster', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (78, 'structure_types', 'PALS - Constriction Jet', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (79, 'structure_types', 'PALS - Mid Channel', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (80, 'structure_types', 'PALS - Rhino', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (81, 'structure_types', 'Rhino', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (82, 'structure_types', 'PALS - Channel Spanning', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (83, 'structure_types', 'ALS', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (84, 'structure_types', 'ALS - Bank Attached', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (85, 'structure_types', 'ALS - Bank Blaster', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (86, 'structure_types', 'ALS - Mid Channel', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (87, 'structure_types', 'ALS - Rhino', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (88, 'structure_types', 'ALS - Channel Spanning', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (89, 'structure_types', 'Wood Jam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (90, 'structure_types', 'Leaky Dam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (91, 'structure_types', 'One Rock Dam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (92, 'structure_types', 'Zuni Bowl', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (93, 'structure_types', 'Spreaders', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (94, 'structure_types', 'Floodplain BDA', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (95, 'structure_types', 'Sedge Plugs', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (96, 'structure_types', 'Tight PALS (BDA without sod)', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (97, 'structure_types', 'Full Tree', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (98, 'structure_types', 'Bag Plugs', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (99, 'structure_types', 'Headcut Treatment', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (100, 'structure_types', 'Floodplain LWD', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (101, 'structure_types', 'Startegic Felling', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (102, 'structure_types', 'Postline Wicker Weave', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (103, 'structure_types', 'Grip Hoist Tree', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (104, 'structure_types', 'Fell Tree', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (105, 'structure_types', 'Post and Brush Plug', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (106, 'structure_types', 'Tree Dam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (107, 'structure_types', 'Tree Plug', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (108, 'structure_types', 'Vanes', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (109, 'structure_types', 'Wicker Weirs', '');
 
 
 -- Design Spatial Table Fields and Relationships
-ALTER TABLE zoi ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE zoi ADD COLUMN type_id INTEGER REFERENCES zoi_types(id);
-ALTER TABLE zoi ADD COLUMN stage_id INTEGER REFERENCES lkp_zoi_stage(id);
-ALTER TABLE zoi ADD COLUMN description TEXT;
-ALTER TABLE zoi ADD COLUMN created DATETIME;
-ALTER TABLE zoi ADD COLUMN metadata TEXT;
+-- ALTER TABLE zoi ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE zoi ADD COLUMN type_id INTEGER REFERENCES zoi_types(id);
+-- ALTER TABLE zoi ADD COLUMN stage_id INTEGER REFERENCES lkp_zoi_stage(id);
+-- ALTER TABLE zoi ADD COLUMN description TEXT;
+-- ALTER TABLE zoi ADD COLUMN created DATETIME;
+-- ALTER TABLE zoi ADD COLUMN metadata TEXT;
 
-ALTER TABLE complexes ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE complexes ADD COLUMN name TEXT;
-ALTER TABLE complexes ADD COLUMN initial_condition TEXT;
-ALTER TABLE complexes ADD COLUMN target_condition TEXT;
-ALTER TABLE complexes ADD COLUMN description TEXT;
-ALTER TABLE complexes ADD COLUMN created DATETIME;
-ALTER TABLE complexes ADD COLUMN metadata TEXT;
+-- ALTER TABLE complexes ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE complexes ADD COLUMN name TEXT;
+-- ALTER TABLE complexes ADD COLUMN initial_condition TEXT;
+-- ALTER TABLE complexes ADD COLUMN target_condition TEXT;
+-- ALTER TABLE complexes ADD COLUMN description TEXT;
+-- ALTER TABLE complexes ADD COLUMN created DATETIME;
+-- ALTER TABLE complexes ADD COLUMN metadata TEXT;
 
-ALTER TABLE structure_lines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE structure_lines ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(id);
-ALTER TABLE structure_lines ADD COLUMN name TEXT;
-ALTER TABLE structure_lines ADD COLUMN description TEXT;
-ALTER TABLE structure_lines ADD COLUMN created DATETIME;
-ALTER TABLE structure_lines ADD COLUMN metadata TEXT;
+-- ALTER TABLE structure_lines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE structure_lines ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(id);
+-- ALTER TABLE structure_lines ADD COLUMN name TEXT;
+-- ALTER TABLE structure_lines ADD COLUMN description TEXT;
+-- ALTER TABLE structure_lines ADD COLUMN created DATETIME;
+-- ALTER TABLE structure_lines ADD COLUMN metadata TEXT;
 
-ALTER TABLE structure_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
-ALTER TABLE structure_points ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(id);
-ALTER TABLE structure_points ADD COLUMN name TEXT;
-ALTER TABLE structure_points ADD COLUMN description TEXT;
-ALTER TABLE structure_points ADD COLUMN created DATETIME;
-ALTER TABLE structure_points ADD COLUMN metadata TEXT;
+-- ALTER TABLE structure_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
+-- ALTER TABLE structure_points ADD COLUMN structure_type_id INTEGER REFERENCES structure_types(id);
+-- ALTER TABLE structure_points ADD COLUMN name TEXT;
+-- ALTER TABLE structure_points ADD COLUMN description TEXT;
+-- ALTER TABLE structure_points ADD COLUMN created DATETIME;
+-- ALTER TABLE structure_points ADD COLUMN metadata TEXT;
 
 -- pour points and catchments
 ALTER TABLE pour_points ADD COLUMN name TEXT;
@@ -1299,29 +1423,30 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('m
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('profiles', 'attributes', 'profiles', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('cross_sections', 'attributes', 'cross_sections', 0);
 
--- LOOKUP TABLES
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_metric_sources', 'attributes', 'lkp_metric_sources', 0);
+-- -- LOOKUP TABLES
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_metric_sources', 'attributes', 'lkp_metric_sources', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_platform', 'attributes', 'lkp_platform', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_representation', 'attributes', 'lkp_representation', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_mask_types', 'attributes', 'lkp_mask_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_source', 'attributes', 'lkp_structure_source', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_dam_integrity', 'attributes', 'lkp_dam_integrity', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_beaver_maintenance', 'attributes', 'lkp_beaver_maintenance', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_thalweg_types', 'attributes', 'lkp_thalweg_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_active_extent_types', 'attributes', 'lkp_active_extent_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_junction_types', 'attributes', 'lkp_junction_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_geomorphic_unit_types', 'attributes', 'lkp_geomorphic_unit_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_vegetation_extent_types', 'attributes', 'lkp_vegetation_extent_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_cem_phase_types', 'attributes', 'lkp_cem_phase_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_floodplain_accessibility_types', 'attributes', 'lkp_floodplain_accessibility_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_types', 'attributes', 'lkp_brat_vegetation_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_context_layer_types', 'attributes', 'lkp_context_layer_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_inundation_extent_types', 'attributes', 'lkp_inundation_extent_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_channel', 'attributes', 'lkp_primary_channel', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_unit', 'attributes', 'lkp_primary_unit', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_unit_types', 'attributes', 'lkp_channel_unit_types', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_raster_types', 'attributes', 'lkp_raster_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_source', 'attributes', 'lkp_structure_source', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_dam_integrity', 'attributes', 'lkp_dam_integrity', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_beaver_maintenance', 'attributes', 'lkp_beaver_maintenance', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_thalweg_types', 'attributes', 'lkp_thalweg_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_active_extent_types', 'attributes', 'lkp_active_extent_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_junction_types', 'attributes', 'lkp_junction_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_geomorphic_unit_types', 'attributes', 'lkp_geomorphic_unit_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_vegetation_extent_types', 'attributes', 'lkp_vegetation_extent_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_cem_phase_types', 'attributes', 'lkp_cem_phase_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_floodplain_accessibility_types', 'attributes', 'lkp_floodplain_accessibility_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_types', 'attributes', 'lkp_brat_vegetation_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_context_layer_types', 'attributes', 'lkp_context_layer_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_inundation_extent_types', 'attributes', 'lkp_inundation_extent_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_channel', 'attributes', 'lkp_primary_channel', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_unit', 'attributes', 'lkp_primary_unit', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_channel_unit_types', 'attributes', 'lkp_channel_unit_types', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_raster_types', 'attributes', 'lkp_raster_types', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lookup_list_values', 'attributes', 'lookup_list_values', 0);
 
 -- DESIGN TABLES
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_mimics', 'attributes', 'lkp_structure_mimics', 0);
@@ -1331,11 +1456,11 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('s
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('zoi_types', 'attributes', 'zoi_types', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_design_sources', 'attributes', 'lkp_design_sources', 0);
 
--- BRAT CIS TABLES
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_base_streampower', 'attributes', 'lkp_brat_base_streampower', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_high_streampower', 'attributes', 'lkp_brat_high_streampower', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_slope', 'attributes', 'lkp_brat_slope', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_dam_density', 'attributes', 'lkp_brat_dam_density', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_cis', 'attributes', 'lkp_brat_vegetation_cis', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_combined_cis', 'attributes', 'lkp_brat_combined_cis', 0);
+-- -- BRAT CIS TABLES
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_base_streampower', 'attributes', 'lkp_brat_base_streampower', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_high_streampower', 'attributes', 'lkp_brat_high_streampower', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_slope', 'attributes', 'lkp_brat_slope', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_dam_density', 'attributes', 'lkp_brat_dam_density', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_cis', 'attributes', 'lkp_brat_vegetation_cis', 0);
+-- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_combined_cis', 'attributes', 'lkp_brat_combined_cis', 0);
 
