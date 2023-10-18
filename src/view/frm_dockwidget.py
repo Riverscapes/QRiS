@@ -736,7 +736,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if result == QtWidgets.QMessageBox.No:
                 return
 
-        frm = FrmExportProject(self, self.project)
+        frm = FrmExportProject(self, self.project, out_dir)
         frm.exec_()
 
     def export_design(self, event: Event):

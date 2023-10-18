@@ -30,36 +30,37 @@ class FrmExportProject(QtWidgets.QDialog):
         self.setWindowTitle("Export QRiS to Riverscapes Project")
         self.setupUi()
 
-        if outpath:
-            self.basepath = outpath
-        else:
-            self.basepath = os.path.dirname(self.qris_project.project_file)
+        # if outpath:
+        #     self.basepath = outpath
+        # else:
+        #     self.basepath = os.path.dirname(self.qris_project.project_file)
 
-        self.set_output_path(self.qris_project.name)
+        self.set_output_path(outpath)
         # populate the AOI combo box with aoi names
         for aoi_id, aoi in self.qris_project.masks.items():
             if aoi.mask_type.id == AOI_MASK_TYPE_ID:
                 self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
 
-    def set_output_path(self, project_name: str):
+    def set_output_path(self, outpath: str):
 
-        outpath = parse_posix_path(os.path.join(self.basepath, project_name.replace(" ", "_")))
+        # outpath = parse_posix_path(os.path.join(self.basepath, project_name.replace(" ", "_")))
         self.txt_outpath.setText(outpath)
 
     def accept(self) -> None:
 
-        # check if output path already exists. If so, prompt user to overwrite or cancel
+        # check if output directory is empty. If so, prompt user to overwrite or cancel
         if os.path.exists(self.txt_outpath.text()):
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Warning)
-            msg.setText("The output path already exists. Do you want to overwrite it?")
-            msg.setWindowTitle("Overwrite Output Path?")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-            msg.setDefaultButton(QtWidgets.QMessageBox.Cancel)
-            msg.setEscapeButton(QtWidgets.QMessageBox.Cancel)
-            ret = msg.exec_()
-            if ret == QtWidgets.QMessageBox.Cancel:
-                return
+            if len(os.listdir(self.txt_outpath.text())) > 0:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Warning)
+                msg.setText("The selected output folder is not empty. Do you want to overwrite it?")
+                msg.setWindowTitle("Overwrite Output Folder?")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
+                msg.setDefaultButton(QtWidgets.QMessageBox.Cancel)
+                msg.setEscapeButton(QtWidgets.QMessageBox.Cancel)
+                ret = msg.exec_()
+                if ret == QtWidgets.QMessageBox.Cancel:
+                    return
 
         if self.opt_project_bounds_aoi.isChecked():
             # if Select AOI is selected, then warn the user to select an AOI
@@ -79,26 +80,30 @@ class FrmExportProject(QtWidgets.QDialog):
             os.mkdir(self.txt_outpath.text())
 
         # create the surfaces directory
-        surfaces_dir = parse_posix_path(os.path.join(self.txt_outpath.text(), 'surfaces'))
+        surfaces_dir = os.path.abspath(os.path.join(self.txt_outpath.text(), 'surfaces').replace("\\", "/"))
         if not os.path.exists(surfaces_dir):
             os.mkdir(surfaces_dir
                      )
         # Create the context directory
-        context_dir = parse_posix_path(os.path.join(self.txt_outpath.text(), 'context'))
+        context_dir = os.path.abspath(os.path.join(self.txt_outpath.text(), 'context').replace("\\", "/"))
         if not os.path.exists(context_dir):
             os.mkdir(context_dir)
 
         # copy the geopackage layers to the new project folder
-        out_geopackage = parse_posix_path(os.path.join(self.txt_outpath.text(), "qris.gpkg"))
-        gdal.VectorTranslate(out_geopackage,
-                             self.qris_project.project_file,
-                             format="GPKG")
+        out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), "qris.gpkg").replace("\\", "/"))
+        # shutil.copy(self.qris_project.project_file, out_geopackage)
+
+        ds_gpkg = gdal.VectorTranslate(out_geopackage,
+                                       self.qris_project.project_file,
+                                       format="GPKG")
+        del ds_gpkg
 
         # copy the context geopackage to the new project folder
-        context_geopackage = parse_posix_path(os.path.join(context_dir, "feature_classes.gpkg"))
-        gdal.VectorTranslate(context_geopackage,
-                             scratch_gpkg_path(self.qris_project.project_file),
-                             format="GPKG")
+        context_geopackage = os.path.abspath(os.path.join(context_dir, "feature_classes.gpkg").replace("\\", "/"))
+        ds = gdal.VectorTranslate(context_geopackage,
+                                  scratch_gpkg_path(self.qris_project.project_file),
+                                  format="GPKG")
+        del ds
 
         # Project Bounds
         if self.opt_project_bounds_all.isChecked():
@@ -136,7 +141,7 @@ class FrmExportProject(QtWidgets.QDialog):
         geojson = envelope.asJson()
         # write to file
         geojson_filename = "project_bounds.geojson"
-        geojson_path = parse_posix_path(os.path.join(self.txt_outpath.text(), geojson_filename))
+        geojson_path = os.path.abspath(os.path.join(self.txt_outpath.text(), geojson_filename).replace("\\", "/"))
         with open(geojson_path, 'w') as f:
             f.write(geojson)
 
@@ -147,7 +152,7 @@ class FrmExportProject(QtWidgets.QDialog):
                                                                 maxLng=extent.xMaximum()),
                                        filepath=geojson_filename)
 
-        path = parse_posix_path(os.path.join(self.txt_outpath.text(), "project.rs.xml"))
+        path = os.path.abspath(os.path.join(self.txt_outpath.text(), "project.rs.xml").replace("\\", "/"))
 
         metadata_values = [Meta('QRiS Project Name', self.qris_project.name),
                            Meta('QRiS Project Description', self.qris_project.description)]
@@ -182,8 +187,8 @@ class FrmExportProject(QtWidgets.QDialog):
             else:
                 raster_xml_id = f'surface_{raster_id}'
 
-            raster_path = parse_posix_path(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path))
-            shutil.copy(raster_path, parse_posix_path(os.path.join(self.txt_outpath.text(), raster.path)))
+            raster_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path).replace("\\", "/"))
+            shutil.copy(raster_path, os.path.abspath(os.path.join(self.txt_outpath.text(), raster.path).replace("\\", "/")))
 
             raster_datasets.append(Dataset(xml_id=raster_xml_id,
                                            name=raster.name,
@@ -441,8 +446,10 @@ class FrmExportProject(QtWidgets.QDialog):
 
     def browse_path(self):
 
-        basepath = os.path.dirname(self.qris_project.project_file)
-        # path = QtWidgets.QFileDialog.getSaveFileName(self, "Export Riverscapes LTPBR Design", basepath, "XML Files (project.rs.xml)")[0]
+        if self.txt_outpath.text() is not None and self.txt_outpath.text() != "":
+            basepath = self.txt_outpath.text()
+        else:
+            basepath = os.path.dirname(self.qris_project.project_file)
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', basepath, QtWidgets.QFileDialog.ShowDirsOnly)
         if path:
             # check if a project.rs.xml file already exists in the selected folder
@@ -459,7 +466,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     if ret == QtWidgets.QMessageBox.Cancel:
                         return
 
-        self.set_output_path(self.txt_rs_name.text())
+        self.set_output_path(path)
 
     def change_project_bounds(self):
 
