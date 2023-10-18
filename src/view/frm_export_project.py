@@ -91,19 +91,21 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # copy the geopackage layers to the new project folder
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), "qris.gpkg").replace("\\", "/"))
-        # shutil.copy(self.qris_project.project_file, out_geopackage)
+        shutil.copy(self.qris_project.project_file, out_geopackage)
 
-        ds_gpkg = gdal.VectorTranslate(out_geopackage,
-                                       self.qris_project.project_file,
-                                       format="GPKG")
-        del ds_gpkg
+        # ds_gpkg = gdal.VectorTranslate(out_geopackage,
+        #                                self.qris_project.project_file,
+        #                                format="GPKG")
+        # del ds_gpkg
 
         # copy the context geopackage to the new project folder
         context_geopackage = os.path.abspath(os.path.join(context_dir, "feature_classes.gpkg").replace("\\", "/"))
-        ds = gdal.VectorTranslate(context_geopackage,
-                                  scratch_gpkg_path(self.qris_project.project_file),
-                                  format="GPKG")
-        del ds
+        if os.path.exists(scratch_gpkg_path(self.qris_project.project_file)):
+            shutil.copy(scratch_gpkg_path(self.qris_project.project_file), context_geopackage)
+        # ds = gdal.VectorTranslate(context_geopackage,
+        #                           scratch_gpkg_path(self.qris_project.project_file),
+        #                           format="GPKG")
+        # del ds
 
         # Project Bounds
         if self.opt_project_bounds_all.isChecked():
