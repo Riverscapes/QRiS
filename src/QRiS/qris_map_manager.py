@@ -79,7 +79,7 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'area')
-        self.set_metadata_fields(feature_layer)
+        self.set_metadata_virtual_fields(feature_layer)
 
         if not mask.mask_type.id == AOI_MASK_TYPE_ID:
             feature_layer.setLabelsEnabled(True)
@@ -135,7 +135,7 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'length')
-        self.set_metadata_fields(feature_layer)
+        self.set_metadata_virtual_fields(feature_layer)
 
         return feature_layer
 
@@ -328,10 +328,11 @@ class QRisMapManager(RiverscapesMapManager):
                 config['fields'][ix]['values'] = self.project.lookup_values[field['lookup']]
 
         # build virtual metadata fields for attribute table
-        self.set_metadata_fields(feature_layer, config)
+        default_photo_path = os.path.join(os.path.dirname(self.project.project_file), 'photos', f'dce_{str(event_layer.event_id).zfill(3)}').replace('\\', '/')
+        self.set_metadata_virtual_fields(feature_layer, config, default_photo_path)
 
         # prepare the metadata attribute editor widget
-        self.set_metadata_edit(feature_layer, 'metadata', 'Metadata', config)
+        self.set_metadata_attribute_editor(feature_layer, 'metadata', 'Metadata', config)
         column_index = feature_layer.fields().indexOf('metadata')
         layer_attr_table_config = feature_layer.attributeTableConfig()
         layer_attr_table_config.setColumnHidden(column_index, True)
@@ -494,7 +495,7 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_virtual_dimension(feature_layer, 'length')
         self.set_alias(feature_layer, 'created', 'Created')
-        self.set_metadata_edit(feature_layer, 'metadata', 'Metadata')
+        self.set_metadata_attribute_editor(feature_layer, 'metadata', 'Metadata')
         self.set_field_constraint_not_null(feature_layer, 'structure_type_id', 1)
         self.set_created_datetime(feature_layer)
         column_index = feature_layer.fields().indexOf('metadata')

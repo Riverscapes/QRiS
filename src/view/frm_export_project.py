@@ -89,6 +89,11 @@ class FrmExportProject(QtWidgets.QDialog):
         if not os.path.exists(context_dir):
             os.mkdir(context_dir)
 
+        # copy the photos folder to the new project folder
+        photos_dir = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), "photos").replace("\\", "/"))
+        if os.path.exists(photos_dir):
+            shutil.copytree(photos_dir, os.path.abspath(os.path.join(self.txt_outpath.text(), "photos").replace("\\", "/")))
+
         # copy the geopackage layers to the new project folder
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), "qris.gpkg").replace("\\", "/"))
         shutil.copy(self.qris_project.project_file, out_geopackage)
@@ -327,6 +332,18 @@ class FrmExportProject(QtWidgets.QDialog):
 
         for event_id, event in self.qris_project.events.items():
             event_type = "DCE" if event.event_type.id == 1 else "Design"
+
+            # Search for photos for the dce in the photos folder
+            photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event_id).zfill(3)}').replace("\\", "/"))
+            photo_datasets = []
+            # list photos in the photos folder
+            for photo in os.listdir(photo_dce_folder):
+                photo_id = os.path.splitext(photo)[0]
+                photo_datasets.append(Dataset(xml_id=photo_id,
+                                              name=photo,
+                                              path=f'photos/dce_{str(event_id).zfill(3)}/{photo}',
+                                              ds_type='Image'))
+
             meta = MetaData(values=[Meta(event_type, "")])
             # prepare the datasets
             geopackage_layers = []
@@ -375,7 +392,7 @@ class FrmExportProject(QtWidgets.QDialog):
                                       name=event.name,
                                       date_created=date_created.toPyDateTime(),
                                       product_version=qris_version,
-                                      datasets=[gpkg],
+                                      datasets=[gpkg] + photo_datasets,
                                       meta_data=meta)
 
             # add description if it exists

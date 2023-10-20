@@ -396,7 +396,7 @@ class RiverscapesMapManager():
         raster_layer.triggerRepaint()
 
     # Set Fields
-    def set_metadata_fields(self, feature_layer: QgsVectorLayer, field_config: dict = None) -> None:
+    def set_metadata_virtual_fields(self, feature_layer: QgsVectorLayer, field_config: dict = None, default_photo_path: str = None) -> None:
 
         fields = feature_layer.fields()
         field_index = fields.indexFromName('metadata')
@@ -444,8 +444,25 @@ class RiverscapesMapManager():
         for key, field_type in metadata_fields.items():
             virtual_field = QgsField(key, field_type)
             feature_layer.addExpressionField(f"""map_get(json_to_map("metadata"), '{key}')""", virtual_field)
-            # hide the virtual field from the form editor
-            feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), QgsEditorWidgetSetup('Hidden', {}))
+
+            if key == "Photo Path":
+                # set attachment widget for photos
+                widget = QgsEditorWidgetSetup('ExternalResource',
+                                              {
+                                                  'FileWidget': False,
+                                                  'DocumentViewer': 1,
+                                                  'RelativeStorage': 2,
+                                                  'StorageMode': 0,
+                                                  'DocumentViewerHeight': 0,
+                                                  'FileWidgetButton': False,
+                                                  'DocumentViewerWidth': 0,
+                                                  'FileWidgetFilter': '',
+                                                  'DefaultRoot': default_photo_path
+                                              })
+            else:
+                # hide the virtual field from the form editor
+                widget = QgsEditorWidgetSetup('Hidden', {})
+            feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), widget)
 
             # if field_type == QVariant.Url:
             # set the widget to open the url
@@ -662,7 +679,7 @@ class RiverscapesMapManager():
         field_index = fields.indexFromName(field_name)
         feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)
 
-    def set_metadata_edit(self, feature_layer: QgsVectorLayer, field_name='metadata', field_alias='Metadata', config_params={}):
+    def set_metadata_attribute_editor(self, feature_layer: QgsVectorLayer, field_name='metadata', field_alias='Metadata', config_params={}):
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
         initialize_metadata_widget()

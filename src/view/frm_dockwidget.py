@@ -71,6 +71,7 @@ from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
 from .frm_export_design import FrmExportDesign
 from .frm_export_project import FrmExportProject
+from .frm_import_photos import FrmImportPhotos
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -399,7 +400,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if model_data.name == 'BRAT CIS (Capacity Inference System)':
                         self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
                     if model_data.name == 'Observation Points':
-                        self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_data))
+                        self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_item, model_data))
                     if model_data.name == 'BRAT CIS Reaches':
                         self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                         # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
@@ -635,10 +636,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # self.add_child_to_project_tree(parent_node, db_item, True)
 
-    def import_photos(self, db_item: DBItem):
-        # alert user not implemented
-        QtWidgets.QMessageBox.information(self, 'Import Photos', 'This feature is not yet implemented.')
-        pass
+    def import_photos(self, parent_node, db_item: DBItem):
+        # navigate to the folder containing the photos
+        photos_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select the folder containing the photos to import.')
+        if photos_folder is None or photos_folder == '':
+            return
+
+        frm = FrmImportPhotos(self, self.project, db_item, photos_folder)
+        result = frm.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            self.add_db_item_to_map(parent_node, db_item)
 
     def import_dce(self, db_item: DBItem, mode: int = DB_MODE_IMPORT):
 
