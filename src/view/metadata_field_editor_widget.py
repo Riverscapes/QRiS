@@ -18,7 +18,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
            Returns (Any): The current value the widget represents"""
 
-        data = {}
+        data = self.dict_values
         for name, widget in self.widgets.items():
             if isinstance(widget, QLineEdit):
                 data[name] = widget.text()
@@ -26,6 +26,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 data[name] = widget.value()
             elif isinstance(widget, QComboBox):
                 data[name] = widget.currentText()
+        self.dict_values = data
         self.current_value = json.dumps(data)
 
         return self.current_value
@@ -51,6 +52,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         row = 0
         field: dict
         for field in fields:
+            if field['label'] == 'Photo Path':
+                continue
             # generate a label and a widget for each field
             label = QLabel(field['label'])
             self.grid.addWidget(label, row, 0, 1, 1)
@@ -91,6 +94,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             pass
         else:
             values: dict = json.loads(value)
+            self.dict_values = values
             for name, val in values.items():
                 if name in self.widgets:
                     if isinstance(self.widgets[name], QLineEdit):
