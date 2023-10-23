@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import sqlite3
 
@@ -330,6 +331,17 @@ class FrmExportProject(QtWidgets.QDialog):
                                                         product_version=qris_version,
                                                         datasets=raster_datasets + [gpkg, context_gpkg] + pour_point_gpkgs))
 
+        all_photo_metadata = {}
+        with sqlite3.connect(out_geopackage) as conn:
+            # iterate through dce_points and get metadata for each photo
+            curs = conn.cursor()
+            curs.execute("SELECT metadata FROM dce_points")
+            rows = curs.fetchall()
+            for row in rows:
+                metadata = json.loads(row[0])
+                if 'Photo Path' in metadata:
+                    all_photo_metadata[metadata['Photo Path']] = metadata
+
         for event_id, event in self.qris_project.events.items():
             event_type = "DCE" if event.event_type.id == 1 else "Design"
 
@@ -338,10 +350,18 @@ class FrmExportProject(QtWidgets.QDialog):
             photo_datasets = []
             # list photos in the photos folder
             for photo in os.listdir(photo_dce_folder):
+                photo_metadata = all_photo_metadata[photo]
                 photo_id = os.path.splitext(photo)[0]
+                # get the lat long of the photo
+                photo_meta = MetaData(values=[Meta('lat', photo_metadata['latitude']),
+                                              Meta('long', photo_metadata['longitude']),
+                                              Meta('timestamp', photo_metadata['timestamp'])
+                                              ])
+
                 photo_datasets.append(Dataset(xml_id=photo_id,
                                               name=photo,
                                               path=f'photos/dce_{str(event_id).zfill(3)}/{photo}',
+                                              meta_data=photo_meta,
                                               ds_type='Image'))
 
             meta = MetaData(values=[Meta(event_type, "")])
