@@ -1,5 +1,26 @@
 # QRiS Plugin
 
+## [0.3.1] 2023 OCT 23
+
+### Added
+- Import photos to Observation Points
+
+### Changed
+- Design layers
+
+### Fixed
+- Metadata attribute form widget retains existing values when making edits
+
+## [0.3.0] 2023 OCT 18
+
+### Added
+- Export QrIS Project to Riverscapes XML project
+- Metadata widget for editing layer attributes from json
+
+### Changed
+- DCE and design now stored as three feature classes (points, lines, polygons)
+- Updated icons
+
 ## [0.2.7] 2023 SEP 12
 
 ### Added
