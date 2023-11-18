@@ -3,20 +3,7 @@
         "editor.tabSize": 4,
         "editor.formatOnSave": true,
     },
-    "python.linting.enabled": true,
-    "python.linting.lintOnSave": true,
-    "python.linting.pycodestyleEnabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.linting.pycodestyleArgs": [
-        "--ignore=E501"
-    ],
-    "python.formatting.autopep8Args": [
-        "--ignore=E501",
-        "--ignore=E402",
-        "--max-line-length=300"
-    ],
     "python.terminal.activateEnvironment": true,
-    "python.autoComplete.showAdvancedMembers": false,
     "python.autoComplete.extraPaths": [
         "${workspaceRoot}"
     ],
@@ -29,7 +16,7 @@
     "search.exclude": {
         "**/*.egg-info": true
     },
-    "python.linting.pylintArgs": [
+    "pylint.args": [
         "--extension-pkg-whitelist=PyQt5,qgis,db_manager",
         "--disable=all",
         "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
