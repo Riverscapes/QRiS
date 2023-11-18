@@ -1,5 +1,13 @@
 # QRiS Plugin
 
+## [0.3.2] 2023 NOV 17
+
+### Changed
+- Update import feature class tool to store attributes in metadata json
+
+### Fixed
+- Bug with exporting rs project when no photos exist
+
 ## [0.3.1] 2023 OCT 23
 
 ### Added
