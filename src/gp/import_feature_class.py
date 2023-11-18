@@ -1,5 +1,6 @@
 import os
 import json
+from typing import List
 
 from osgeo import ogr, osr
 
@@ -10,6 +11,12 @@ from ..gp.feature_class_functions import layer_path_parser
 
 MESSAGE_CATEGORY = 'QRiS_ImportFeatureClassTask'
 
+# create a data class to store 'src_field', 'dest_field', and optional 'map' values
+class ImportFieldMap:
+    def __init__(self, src_field: str, dest_field: str=None, map: dict = None):
+        self.src_field = src_field
+        self.dest_field = dest_field
+        self.map = map
 
 class ImportFeatureClass(QgsTask):
     """
@@ -19,15 +26,14 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, output_id_field: str = None, output_id: int = None, field_map: dict = None, clip_mask_id=None, attribute_filter: str = None, proj_gpkg=None):
+    def __init__(self, source_path: str, dest_path: str, attributes:dict= None, field_map: List[ImportFieldMap] = None, clip_mask_id=None, attribute_filter: str = None, proj_gpkg=None):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
 
         self.source_path = source_path
         self.clip_mask_id = clip_mask_id
         self.output_path = dest_path
         self.field_map = field_map
-        self.output_id_field = output_id_field
-        self.output_id = output_id
+        self.attributes = attributes
         self.attribute_filter = attribute_filter
         self.in_feats = 0
         self.out_feats = 0
@@ -45,8 +51,8 @@ class ImportFeatureClass(QgsTask):
 
         try:
             src_path, _src_layer_name, src_layer_id = layer_path_parser(self.source_path)
-            src_dataset = ogr.Open(src_path)
-            src_layer = src_dataset.GetLayer(src_layer_id)
+            src_dataset: ogr.DataSource = ogr.Open(src_path)
+            src_layer: ogr.Layer = src_dataset.GetLayer(src_layer_id)
             src_srs = src_layer.GetSpatialRef()
             if self.attribute_filter is not None:
                 src_layer.SetAttributeFilter(self.attribute_filter)
@@ -59,19 +65,19 @@ class ImportFeatureClass(QgsTask):
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
-            gpkg_driver = ogr.GetDriverByName('GPKG')
+            gpkg_driver: ogr.Driver = ogr.GetDriverByName('GPKG')
             if not os.path.exists(dst_path):
-                dst_dataset = gpkg_driver.CreateDataSource(dst_path)
+                dst_dataset: ogr.DataSource = gpkg_driver.CreateDataSource(dst_path)
             else:
                 dst_dataset = gpkg_driver.Open(dst_path, 1)
 
-            dst_layer = dst_dataset.GetLayerByName(dst_layer_name)
+            dst_layer: ogr.Layer = dst_dataset.GetLayerByName(dst_layer_name)
             if dst_layer is None:
                 copy_fields = True
                 # create the layer based on the source layer
                 dst_layer = dst_dataset.CreateLayer(dst_layer_name, src_srs, src_layer.GetGeomType())
                 # add the fields from the source layer
-                src_layer_def = src_layer.GetLayerDefn()
+                src_layer_def: ogr.FeatureDefn = src_layer.GetLayerDefn()
                 for i in range(src_layer_def.GetFieldCount()):
                     src_field = src_layer_def.GetFieldDefn(i)
                     dst_layer.CreateField(src_field)
@@ -85,7 +91,7 @@ class ImportFeatureClass(QgsTask):
                     mask_dataset = ogr.Open(self.proj_gpkg)
                 else:
                     mask_dataset = dst_dataset
-                clip_layer = mask_dataset.GetLayer('aoi_features')
+                clip_layer: ogr.Layer = mask_dataset.GetLayer('aoi_features')
                 clip_layer.SetAttributeFilter(f'mask_id = {self.clip_mask_id}')
                 # Gather all of the geoms and merge into a multipart geometry
                 clip_geom = ogr.Geometry(ogr.wkbMultiPolygon)
@@ -98,9 +104,10 @@ class ImportFeatureClass(QgsTask):
             transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
             self.out_feats = 0
+            src_feature: ogr.Feature = None
             for src_feature in src_layer:
 
-                geom = src_feature.GetGeometryRef()
+                geom: ogr.Geometry = src_feature.GetGeometryRef()
                 if geom is None:
                     self.skipped_feats += 1
                     continue
@@ -133,42 +140,35 @@ class ImportFeatureClass(QgsTask):
                         g = geom.GetGeometryRef(i)
                     dst_feature = ogr.Feature(dst_layer_def)
                     dst_feature.SetGeometry(g)
-                    if self.output_id_field is not None and self.output_id is not None:
-                        dst_feature.SetField(self.output_id_field, self.output_id)
+                    if self.attributes is not None:
+                        for field_name, field_value in self.attributes.items():
+                            dst_feature.SetField(field_name, field_value)
 
                     # Field Mapping
                     if self.field_map is not None:
                         metadata = {}
-                        for src_field, map in self.field_map.items():
-                            value = src_feature.GetField(src_field)
+                        field_map: ImportFieldMap = None
+                        for field_map in self.field_map:
+                            value = src_feature.GetField(field_map.src_field)
                             # change empty stringd to None
                             if value == '':
                                 value = None
-                            output = {}
-                            if map == '- METADATA -':
-                                metadata.update({src_field: value})
-                            elif map == 'display_label':
-                                # legacy support for mask display_label
-                                value = str(src_feature.GetFID()) if src_field == src_fid_field_name else value
-                                output.update({'display_label': value})
-                            elif isinstance(map, dict):
-                                # this is a value map
-                                value_map = map[value]
+                            if field_map.dest_field == 'display_label':
+                                value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else value
+                            if field_map.dest_field is not None:
+                                metadata.update({field_map.dest_field: value})
+                            if field_map.map is not None:
+                                # there is a value map. we need to map the value to the output fields in the metadata
+                                value_map = field_map.map[value]
                                 for dest_field, out_value in value_map.items():
-                                    output[dest_field] = out_value
-                            else:
-                                output = {map: value}
-
-                            for dest_field, out_value in output.items():
-                                dst_feature.SetField(dest_field, out_value)
-                        # add metadata field if it is not empty
+                                    metadata.update({dest_field: out_value})
                         if metadata:
                             dst_feature.SetField('metadata', json.dumps(metadata))
 
                     if copy_fields is True:
                         # copy the field values from the source layer
                         for i in range(src_feature.GetFieldCount()):
-                            src_field = src_feature.GetFieldDefnRef(i)
+                            src_field: ogr.FieldDefn = src_feature.GetFieldDefnRef(i)
                             dst_feature.SetField(src_field.GetNameRef(), src_feature.GetField(i))
 
                     err = dst_layer.CreateFeature(dst_feature)

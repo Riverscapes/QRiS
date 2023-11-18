@@ -6,7 +6,7 @@ from .utilities import add_standard_form_buttons
 class FrmFieldValueMap(QtWidgets.QDialog):
 
     # signal to send field value map to parent
-    field_value_map = QtCore.pyqtSignal(dict)
+    field_value_map = QtCore.pyqtSignal(str, dict, bool)
 
     def __init__(self, parent, field: str, values: list, fields: dict):
 
@@ -34,9 +34,9 @@ class FrmFieldValueMap(QtWidgets.QDialog):
             for j, field in enumerate(self.fields.keys()):
                 combo = QtWidgets.QComboBox()
                 combo.addItem('- NULL -', None)
-                for value, display in self.fields[field].items():
+                for value in self.fields[field]:
                     # add the value and display name to the combo box
-                    combo.addItem(str(display), value)
+                    combo.addItem(str(value), value)
 
                 self.tblFields.setCellWidget(i, j + 1, combo)
                 combo.setCurrentIndex(0)
@@ -56,14 +56,14 @@ class FrmFieldValueMap(QtWidgets.QDialog):
 
         for i, value in enumerate(self.values):
             for j, field in enumerate(self.fields.keys()):
-                combo = self.tblFields.cellWidget(i, j + 1)
+                combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, j + 1)
                 combo.setCurrentIndex(combo.findData(field_value_map[value][field]))
 
     def accept(self) -> None:
 
-        field_map = self.get_field_value_map()
-        out_map = {self.field: field_map}
-        self.field_value_map.emit(out_map)
+        out_map = self.get_field_value_map()
+        retain = self.chkRetain.isChecked()
+        self.field_value_map.emit(self.field, out_map, retain)
 
         return super().accept()
 
@@ -87,6 +87,11 @@ class FrmFieldValueMap(QtWidgets.QDialog):
         self.txtField = QtWidgets.QLineEdit()
         self.txtField.setReadOnly(True)
         self.hLayout.addWidget(self.txtField)
+
+        # Retain original values as Metadata checkox
+        self.chkRetain = QtWidgets.QCheckBox('Retain original values as Metadata')
+        self.chkRetain.setChecked(True)
+        self.vLayout.addWidget(self.chkRetain)
 
         # new table with 1 + number of fields columns
         self.tblFields = QtWidgets.QTableWidget()

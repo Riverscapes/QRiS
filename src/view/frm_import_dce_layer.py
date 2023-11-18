@@ -5,10 +5,12 @@ from qgis.utils import iface
 from ..model.project import Project
 from ..model.db_item import DBItem
 from ..gp.feature_class_functions import get_field_names, get_field_values
-from ..gp.import_feature_class import ImportFeatureClass
+from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 
 from .frm_field_value_map import FrmFieldValueMap
 from .utilities import add_standard_form_buttons
+
+from typing import List
 
 
 class FrmImportDceLayer(QtWidgets.QDialog):
@@ -18,13 +20,19 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.qris_project = project
         self.db_item = db_item
         self.import_path = import_path
-        self.target_path = f'{project.project_file}|layername={db_item.layer.fc_name}'
-        self.qris_event = next(event for event in self.qris_project.events.values() if event.id == db_item.event_id)
+        source = 'dce_points' if db_item.layer.geom_type == 'Point' else 'dce_lines' if db_item.layer.geom_type == 'Linestring' else 'dce_polygons'
+        self.target_path = f'{project.project_file}|layername={source}'
+        self.qris_event = next((event for event in self.qris_project.events.values() if event.id == db_item.event_id), None)
         self.field_status = None
-        self.field_maps = {}
-
+        self.field_maps: List[ImportFieldMap] = []
         self.input_fields, self.input_field_types = get_field_names(self.import_path)
-        self.target_fields, self.target_field_types = get_field_names(self.target_path)
+        # self.target_fields, self.target_field_types = get_field_names(self.target_path)
+        # Get the fields from the layer metadata if it exists
+        self.target_fields = {}
+        if self.db_item.layer.metadata is not None:
+            if 'fields' in self.db_item.layer.metadata.keys():
+                for field in self.db_item.layer.metadata['fields']:
+                    self.target_fields[field['label']] = field
 
         super(FrmImportDceLayer, self).__init__(parent)
         self.setupUi()
@@ -50,11 +58,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             # filtered_input_fields = [field for field, field_type in zip(input_fields, input_field_types) if field_type == target_field_types[i]]
             combo.addItems(['-- Do Not Import --', 'Add to Metadata'])
             items = {}
-            for target_field, target_field_type in zip(self.target_fields, self.target_field_types):
-                if target_field in ['event_id', 'metadata']:
+            for target_field_name, target_field in self.target_fields.items():
+                if target_field_name in ['event_id', 'metadata']:
                     continue
-                if target_field_type == self.input_field_types[i]:
-                    item = f'Direct Copy to {target_field}'
+                if target_field['type'] == self.input_field_types[i]:
+                    item = f'Direct Copy to {target_field_name}'
                     # else:
                     #     item = f'Map values to {target_field}'
                     items[field] = item
@@ -96,34 +104,38 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         values = get_field_values(self.import_path, input_field)
         # get dict of target fields and values
         fields = {}
-        for target_field in self.target_fields:
-            if target_field in ['event_id', 'metadata']:
+        for target_field_name, target_field in self.target_fields.items():
+            if target_field_name in ['event_id', 'metadata']:
                 continue
-            if self.db_item.layer.metadata is not None:
-                if 'fields' in self.db_item.layer.metadata.keys():
-                    if target_field in self.db_item.layer.metadata['fields'].keys():
-                        # find the lookup table in the project that matches the field name
-                        lookup_table_name = self.db_item.layer.metadata['fields'][target_field]['lookup']
-                        fields[target_field] = {id: value.name for id, value in self.qris_project.lookup_tables[lookup_table_name].items()}
+            # find the lookup table in the project that matches the field name
+            if 'lookup' in target_field.keys():
+                fields[target_field_name] = self.qris_project.lookup_values[target_field['lookup']]
 
         # open the value map dialog
         frm = FrmFieldValueMap(self, input_field, values, fields)
-        if input_field in self.field_maps.keys():
-            frm.load_field_value_map(self.field_maps[input_field])
+        if input_field in [field.src_field for field in self.field_maps]:
+            in_field = next((field for field in self.field_maps if field.src_field == input_field), None)
+            frm.load_field_value_map(in_field)
         frm.field_value_map.connect(self.on_field_value_map)
         frm.exec_()
 
-    def on_field_value_map(self, field_value_map: dict):
+    def on_field_value_map(self, field_name: str, field_value_map: dict, retain: bool):
 
         # add or replace the field value map for the field
-        self.field_maps.update(field_value_map)
+        if field_name in [field.src_field for field in self.field_maps]:
+            self.field_maps.remove(next((field for field in self.field_maps if field.src_field == field), None))
+        if retain is True:
+            field_map = ImportFieldMap(field_name, field_name, map=field_value_map)
+        else:
+            field_map = ImportFieldMap(field_name, map=field_value_map)
+        self.field_maps.append(field_map)
 
     def combo_changed(self):
 
         # disable button if Map Values is not is selected for each row
         for i in range(self.tblFields.rowCount()):
-            combo = self.tblFields.cellWidget(i, 2)
-            btn = self.tblFields.cellWidget(i, 3)
+            combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
+            btn: QtWidgets.QPushButton = self.tblFields.cellWidget(i, 3)
             if combo.currentText() == 'Map Values':
                 btn.setEnabled(True)
             else:
@@ -135,7 +147,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         input_fields = []
         valid = True
         for i in range(self.tblFields.rowCount()):
-            combo = self.tblFields.cellWidget(i, 2)
+            combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
             if combo.currentText() not in ['-- Do Not Import --', 'Add to Metadata', "Map Values"]:
                 input_fields.append(combo.currentText())
 
@@ -164,15 +176,17 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         # get list of fields where the combo box is set to add to metadata
         for i in range(self.tblFields.rowCount()):
-            combo = self.tblFields.cellWidget(i, 2)
+            combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
             if combo.currentText() == 'Add to Metadata':
-                self.field_maps.update({self.tblFields.item(i, 0).text(): "- METADATA -"})
-            if "Direct Copy to " in combo.currentText():
-                self.field_maps.update({self.tblFields.item(i, 0).text(): combo.currentText().replace("Direct Copy to ", "")})
+                field_name = self.tblFields.item(i, 0).text()
+                field_map = ImportFieldMap(field_name, field_name)
+                self.field_maps.append(field_map)
+            # if "Direct Copy to " in combo.currentText():
+            #     self.field_maps.update({self.tblFields.item(i, 0).text(): combo.currentText().replace("Direct Copy to ", "")})
 
         try:
-
-            import_task = ImportFeatureClass(self.import_path, self.target_path, 'event_id', self.db_item.event_id, self.field_maps)
+            layer_attributes = {'event_id': self.db_item.event_id, 'event_layer_id': self.db_item.layer.id}
+            import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, self.field_maps)
             self.buttonBox.setEnabled(False)
             # DEBUG
             # result = import_task.run()
@@ -211,7 +225,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             self.field_status = []
             # set all combo boxes to 'Do Not Import'
             for i in range(self.tblFields.rowCount()):
-                combo = self.tblFields.cellWidget(i, 2)
+                combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
                 self.field_status.append(combo.currentIndex())
                 combo.setCurrentIndex(0)
             self.tblFields.setEnabled(False)

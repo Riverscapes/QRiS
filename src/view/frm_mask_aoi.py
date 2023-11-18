@@ -147,7 +147,8 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 else:
                     mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
                     attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, 'mask_id', self.qris_mask.id, attributes, clip_mask_id, self.attribute_filter)
+                    layer_attributes = {'mask_id': self.qris_mask.id}
+                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, attributes, clip_mask_id, self.attribute_filter)
                 # DEBUG
                 result = import_mask_task.run()
                 self.on_import_complete(result)
