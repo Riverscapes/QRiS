@@ -346,23 +346,24 @@ class FrmExportProject(QtWidgets.QDialog):
             event_type = "DCE" if event.event_type.id == 1 else "Design"
 
             # Search for photos for the dce in the photos folder
-            photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event_id).zfill(3)}').replace("\\", "/"))
             photo_datasets = []
-            # list photos in the photos folder
-            for photo in os.listdir(photo_dce_folder):
-                photo_metadata = all_photo_metadata[photo]
-                photo_id = os.path.splitext(photo)[0]
-                # get the lat long of the photo
-                photo_meta = MetaData(values=[Meta('lat', photo_metadata['latitude']),
-                                              Meta('long', photo_metadata['longitude']),
-                                              Meta('timestamp', photo_metadata['timestamp'])
-                                              ])
+            photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event_id).zfill(3)}').replace("\\", "/"))
+            if os.path.exists(photo_dce_folder):
+                # list photos in the photos folder
+                for photo in os.listdir(photo_dce_folder):
+                    photo_metadata = all_photo_metadata[photo]
+                    photo_id = os.path.splitext(photo)[0]
+                    # get the lat long of the photo
+                    photo_meta = MetaData(values=[Meta('lat', photo_metadata['latitude']),
+                                                Meta('long', photo_metadata['longitude']),
+                                                Meta('timestamp', photo_metadata['timestamp'])
+                                                ])
 
-                photo_datasets.append(Dataset(xml_id=photo_id,
-                                              name=photo,
-                                              path=f'photos/dce_{str(event_id).zfill(3)}/{photo}',
-                                              meta_data=photo_meta,
-                                              ds_type='Image'))
+                    photo_datasets.append(Dataset(xml_id=photo_id,
+                                                name=photo,
+                                                path=f'photos/dce_{str(event_id).zfill(3)}/{photo}',
+                                                meta_data=photo_meta,
+                                                ds_type='Image'))
 
             meta = MetaData(values=[Meta(event_type, "")])
             # prepare the datasets
