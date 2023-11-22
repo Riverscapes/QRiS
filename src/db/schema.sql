@@ -24,12 +24,9 @@ CREATE TABLE protocols (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (1, 'RIM', 'RIM', 0, 'Riverscape Inundation Mapping');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (2, 'Channel Units', 'CHANNEL_UNITS', 0, 'Simplified channel unit survey for in-channel features. Compliments Low-Tech. Monitoring Protocol');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (3, 'Active Extents', 'ACTIVE_EXTENT', 0, 'Mapping portions of the valley bottom that are part of the active channel or floodplain');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (1, 'LTPBR BASE', 'LTPBR_BASE', 0, 'Base LTPBR Layers');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
-INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (7, 'Beaver Dam Survey', 'BRATCIS', 0, 'Survey of beaver dams');
+-- INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
 
 CREATE TABLE methods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,10 +37,10 @@ CREATE TABLE methods (
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO methods (id, name, machine_code) VALUES (1, 'Dam / Jam Survey', 'DAMJAMS');
-INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
-INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
-INSERT INTO methods (id, name, machine_code) VALUES (4, 'BRAT CIS', 'BRATCIS');
+INSERT INTO methods (id, name, machine_code) VALUES (1, 'Methods', 'METHODS');
+-- INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
+-- INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
+-- INSERT INTO methods (id, name, machine_code) VALUES (4, 'BRAT CIS', 'BRATCIS');
 INSERT INTO methods (id, name, machine_code) VALUES (5, 'LT-PBR Design', 'LTPBRDESIGN');
 
 CREATE TABLE protocol_methods (
@@ -54,9 +51,9 @@ CREATE TABLE protocol_methods (
 );
 
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 1);
-INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
-INSERT INTO protocol_methods (protocol_id, method_id) VALUES (2, 2);
-INSERT INTO protocol_methods (protocol_id, method_id) VALUES (7, 4);
+-- INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
+-- INSERT INTO protocol_methods (protocol_id, method_id) VALUES (2, 2);
+-- INSERT INTO protocol_methods (protocol_id, method_id) VALUES (7, 4);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (4, 5);
 
 
@@ -73,39 +70,32 @@ CREATE TABLE layers (
 );
 
 -- Layers
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "dam_integrity_id": {"display_name": "Dam Integrity", "lookup": "lkp_dam_integrity"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "dam_integrity_id": {"display_name": "Dam Integrity", "lookup": "lkp_dam_integrity"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL, '{"fields": {"structure_source_id": {"display_name": "Structure Source", "lookup": "lkp_structure_source"}, "beaver_maintenance_id": {"display_name": "Beaver Maintenance", "lookup": "lkp_beaver_maintenance"}}}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL, '{"fields": {"type_id": {"display_name": "Thalweg Type", "lookup": "lkp_thalweg_types"}}}'); -- type: primary, secondary - see GUT
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL, '{"fields":{ "type_id": {"display_name": "Extent Type", "lookup": "lkp_active_extent_types"}}}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL, '{"fields": {"type_id": {"display_name": "Extent Type", "lookup": "lkp_inundation_extent_types"}}}'); -- type: free flow, overflow, ponded
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (9, 'valley_bottoms', 'Valley Bottoms', 'Polygon', 0, 'valley_bottoms.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'junctions.qml', NULL); -- type: convergence, divergence
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (13, 'geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point', 0, 'temp.qml', NULL); -- fluvial taxonomy
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 0, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL); -- veg_classes
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL); -- floating point accessibility
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (18, 'designs', 'Design', 'NoGeometry', 0, 'temp.qml', NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "dam_integrity_id", "label": "Dam Integrity", "type": "list", "lookup": "dam_integrity"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list" ,"lookup": "beaver_maintenance"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (2, 'jam_area', 'Jam Areas', 'Polygon', 0, 'jam_area.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "beaver_maintenance"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "dam_integrity_id", "label": "Dam Integrity", "type": "list", "lookup": "dam_integrity"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "lkp_beaver_maintenance"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "beaver_maintenance"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL, '{"fields": [{"machine_code": "type_id", "label": "Thalweg Type", "type": "list", "lookup": "thalweg_types"}]}'); -- type: primary, secondary - see GUT
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL, '{"fields": [{"machine_code": "type_id", "label": "Extent Type", "type": "list", "lookup": "active_extent_types"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL, '{}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL, '{"fields": [{"machine_code": "type_id", "label": "Extent Type", "type": "list", "lookup": "inundation_extent_types"}]}'); -- type: free flow, overflow, ponded
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'junctions.qml', NULL, '{}'); -- type: convergence, divergence
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL, '{}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL, '{}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 0, 'temp.qml', NULL, '{}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL, '{}'); -- veg_classes
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL, '{}'); -- floating point accessibility
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL, '{}');
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (19, 'zoi', 'Zones of Influence', 'Polygon', 0, 'zoi.qml', NULL, '{"fields": [{"machine_code": "zoi_type", "label": "ZOI Type", "type": "list", "lookup": "zoi_types"}, {"machine_code": "zoi_stage", "label": "ZOI Stage", "type": "list", "lookup": "zoi_stages"}]}');
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL, '{"fields": []}'); --NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}'); 
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (23, 'channel_unit_points', 'Channel Unit Points', 'Point', 0, 'channel_unit_points.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (24, 'channel_unit_polygons', 'Channel Unit Polygons ', 'Polygon', 0, 'channel_unit_polygons.qml', NULL, '{"fields": {"unit_type_id": {"display_name": "Unit Type", "lookup": "lkp_channel_unit_types"}, "structure_forced_id": {"display_name": "Structure Forced", "lookup": "lkp_structure_forced"}, "primary_channel_id": {"display_name": "Primary Channel", "lookup": "lkp_primary_channel"},"primary_unit_id":{"display_name": "Primary Unit", "lookup": "lkp_primary_unit"}}}');
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (27, 'dce_points', 'DCE Points', 'Point', 0, 'dce_points.qml', NULL, NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (28, 'dce_lines', 'DCE Lines', 'Linestring', 0, 'dce_lines.qml', NULL, NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (29, 'dce_polygons', 'DCE Polygons', 'Polygon', 0, 'dce_polygons.qml', NULL, NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL, '{}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL, '{}');
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (30, 'observation_points', 'Observation Points', 'Point', 0, 'observation_points.qml', NULL, '{"fields": [{"machine_code": "observation_point_type", "label": "Observation Type", "type": "list", "lookup": "observation_point_types"}, {"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (31, 'observation_lines', 'Observation Lines', 'Linestring', 0, 'observation_lines.qml', NULL, '{"fields": [{"machine_code": "observation_line_type", "label": "Observation Type", "type": "list", "lookup": "observation_line_types"}]}');
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (32, 'observation_polygons', 'Observation Polygons', 'Polygon', 0, 'observation_polygons.qml', NULL, '{"fields": [{"machine_code": "observation_polygon_type", "label": "Observation Type", "type": "list", "lookup": "observation_polygon_types"}]}');
 -- Lookup Tables
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (101, 'lkp_platform', 'Platform', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (102, 'lkp_mask_types', 'Mask Types', 'NoGeometry', 1, 'temp.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (103, 'lkp_structure_source', 'Structure Sources', 'NoGeometry', 1, 'temp.qml', NULL);
@@ -150,9 +140,21 @@ CREATE TABLE method_layers (
     CONSTRAINT pk_method_layers PRIMARY KEY (method_id, layer_id)
 );
 
--- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 2);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 5);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 6);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 7);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 8);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 10);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 11);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 12);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 14);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 15);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 16);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 17);
 -- INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
 -- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
 -- INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
