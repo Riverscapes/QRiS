@@ -24,6 +24,17 @@ class FrmNewProject(QtWidgets.QDialog):
         super(FrmNewProject, self).__init__(parent)
 
         metadata_json = json.dumps(project.metadata) if project is not None else None
+        
+        # Pull the tags out of metadata if the exist
+        self.tags = []
+        if metadata_json is not None:
+            metadata = json.loads(metadata_json)
+            if 'tags' in metadata:
+                self.tags = metadata['tags']
+                # Remove the tags from the metadata so that they are not duplicated
+                del metadata['tags']
+                metadata_json = json.dumps(metadata)
+        
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
@@ -31,6 +42,9 @@ class FrmNewProject(QtWidgets.QDialog):
         self.root_path = parse_posix_path(root_project_folder)
         self.txtPath.setText(root_project_folder)
         self.project = project
+
+        if self.tags is not None:
+            self.txtTags.setText(', '.join(self.tags))
 
         if project is None:
             self.setWindowTitle('Create New Project')
@@ -50,7 +64,10 @@ class FrmNewProject(QtWidgets.QDialog):
             self.project_folder = parse_posix_path(os.path.join(self.root_path, clean_name, f'{clean_name}.gpkg'))
             self.txtPath.setText(self.project_folder)
 
-    # def save_new_project(self):
+    def get_tags(self):
+        """Returns a list of tags from the tags text box"""
+        tags = self.txtTags.text().split(',')
+        return [tag.strip() for tag in tags]
 
     def accept(self):
 
@@ -61,6 +78,8 @@ class FrmNewProject(QtWidgets.QDialog):
             return
 
         metadata_json = self.metadata_widget.get_json()
+        if self.tags is not None:
+            metadata_json = json.dumps({'tags': self.get_tags(), **json.loads(metadata_json)})
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
         if isinstance(self.project, Project):
@@ -136,12 +155,20 @@ class FrmNewProject(QtWidgets.QDialog):
         self.txtPath.setReadOnly(True)
         self.grid.addWidget(self.txtPath, 1, 1, 1, 1)
 
+        self.lblTags = QtWidgets.QLabel("Tags")
+        self.grid.addWidget(self.lblTags, 2, 0, 1, 1)
+
+        self.txtTags = QtWidgets.QLineEdit()
+        self.toolTip = "Comma separated list of tags for the project"
+        self.txtTags.setToolTip(self.toolTip)
+        self.grid.addWidget(self.txtTags, 2, 1, 1, 1)
+
         self.lblDescription = QtWidgets.QLabel()
         self.lblDescription.setText('Description')
-        self.grid.addWidget(self.lblDescription, 2, 0, 1, 1)
+        self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription, 2, 1, 1, 1)
+        self.grid.addWidget(self.txtDescription, 3, 1, 1, 1)
 
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, 'Project Properties')
