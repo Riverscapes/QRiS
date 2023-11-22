@@ -325,7 +325,10 @@ class QRisMapManager(RiverscapesMapManager):
         field: dict
         for ix, field in enumerate(fields):
             if 'lookup' in field:
-                config['fields'][ix]['values'] = self.project.lookup_values[field['lookup']]
+                if field['lookup'] in self.project.lookup_values:
+                    config['fields'][ix]['values'] = self.project.lookup_values[field['lookup']]
+                else:
+                    config['fields'][ix]['values'] = []
 
         # build virtual metadata fields for attribute table
         default_photo_path = os.path.join(os.path.dirname(self.project.project_file), 'photos', f'dce_{str(event_layer.event_id).zfill(3)}').replace('\\', '/')
