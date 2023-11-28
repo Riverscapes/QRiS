@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [0.3.3] 2023 NOV 22
+
+### Changed
+- Updated layer schema for LTBPR Base
+
+### Fixed
+- bug when lookkup table is empty
+
+### Added
+- Project Tags
+
 ## [0.3.2] 2023 NOV 17
 
 ### Changed
