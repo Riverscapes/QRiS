@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from qgis.core import Qgis, QgsApplication
 from qgis.utils import iface
 
@@ -14,6 +14,8 @@ from typing import List
 
 
 class FrmImportDceLayer(QtWidgets.QDialog):
+
+    import_complete = QtCore.pyqtSignal(bool)
 
     def __init__(self, parent, project: Project, db_item: DBItem, import_path: str):
 
@@ -210,6 +212,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             iface.messageBar().pushMessage('Import Feature Class Complete.', f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.fc_name}.{extra_message}", level=Qgis.Info, duration=5)
             iface.mapCanvas().refreshAllLayers()
             iface.mapCanvas().refresh()
+            self.import_complete.emit(result)
             super(FrmImportDceLayer, self).accept()
         else:
             iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)

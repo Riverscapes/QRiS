@@ -15,6 +15,10 @@ class Layer(DBItem):
     GEOMETRY_TYPES = {'Point': QgsWkbTypes.GeometryType.PointGeometry,
                       'Linestring': QgsWkbTypes.GeometryType.LineGeometry,
                       'Polygon': QgsWkbTypes.GeometryType.PolygonGeometry}
+    
+    DCE_LAYER_NAMES = {'Point': 'dce_points',
+                      'Linestring': 'dce_lines',
+                      'Polygon': 'dce_polygons'}
 
     def __init__(self, id: int, fc_name: str, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str, metadata: dict = None):
         # Must use the display name as the official db_item name so that it is the string displayed in UI

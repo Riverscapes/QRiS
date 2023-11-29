@@ -23,7 +23,7 @@
 """
 
 import os
-import requests
+from functools import partial
 from osgeo import ogr
 
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog
@@ -650,6 +650,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def import_dce(self, db_item: DBItem, mode: int = DB_MODE_IMPORT):
 
         layer_type = Layer.GEOMETRY_TYPES[db_item.layer.geom_type]
+        fc_name = Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]
 
         if mode == DB_MODE_IMPORT:
             import_source_path = browse_vector(self, 'Select feature class to import.', layer_type)
@@ -701,12 +702,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, 'Import DCE', 'The selected feature class does not have a valid coordinate reference system.')
             return
         if mode == DB_MODE_IMPORT_TEMPORARY:
-            task = ImportTemporaryLayer(import_source_path, self.project.project_file, db_item.layer.fc_name, 'event_id', db_item.event_id)
-            task.import_complete.connect(self.import_dce_complete)
+            attributes = {'event_id': db_item.event_id, 'event_layer_id': db_item.layer.id}
+            task = ImportTemporaryLayer(import_source_path, self.project.project_file, fc_name, attributes)
+            task.import_complete.connect(partial(self.import_dce_complete, db_item))
             QgsApplication.taskManager().addTask(task)
-        if mode == DB_MODE_COPY:
+            # task.run()
+        elif mode == DB_MODE_COPY:
             feats = []
-            source_layer = QgsVectorLayer(f'{self.project.project_file}|layername={db_item.layer.fc_name}')
+            source_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}')
             feat_count = source_layer.featureCount() + 1
             for feature in import_source_path.getFeatures():
                 new_feature = QgsFeature()
@@ -721,10 +724,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             source_layer.startEditing()
             source_layer.addFeatures(feats)
             source_layer.commitChanges()
-            self.import_dce_complete(True)
+            self.import_dce_complete(db_item, True)
 
         else:
             frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
+            frm.import_complete.connect(partial(self.import_dce_complete, db_item))
             frm.exec_()
 
     def export_project(self, project: Project):
@@ -768,10 +772,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmExportDesign(self, self.project, event, out_dir)
         frm.exec_()
 
-    def import_dce_complete(self, result: bool):
+    def import_dce_complete(self, db_item: DBItem, result: bool):
 
         if result is True:
             iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
+            layer = self.map_manager.get_db_item_layer(self.project.map_guid, db_item, None)
+            self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
+            
             # refresh map
             iface.mapCanvas().refreshAllLayers()
             iface.mapCanvas().refresh()

@@ -18,15 +18,14 @@ class ImportTemporaryLayer(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool)
 
-    def __init__(self, source_layer: str, output_dataset_path: str, output_layer_name: str, id_field: str = None, id_value: str = None, mask_clip_id=None, proj_gpkg=None):
+    def __init__(self, source_layer: str, output_dataset_path: str, output_layer_name: str, attributes: dict=None, mask_clip_id=None, proj_gpkg=None):
         super().__init__(f'Import Temporary Layer', QgsTask.CanCancel)
 
         self.source_layer = source_layer.clone()
         self.mask_clip_id = mask_clip_id
         self.output_path = output_dataset_path
         self.output_fc_name = output_layer_name
-        self.id_field = id_field
-        self.id_value = id_value
+        self.attributes = attributes
         self.proj_gpkg = proj_gpkg
 
     def run(self):
@@ -58,9 +57,12 @@ class ImportTemporaryLayer(QgsTask):
                         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
 
             # add the event_id field to the source layer
-            if self.id_field is not None:
-                field = QgsField(self.id_field, QVariant.Int)
-                self.source_layer.dataProvider().addAttributes([field])
+            if self.attributes is not None:
+                fields = []
+                for field_name in self.attributes.keys():
+                    field = QgsField(field_name, QVariant.Int)
+                    fields.append(field)
+                self.source_layer.dataProvider().addAttributes(fields)
                 self.source_layer.updateFields()
 
             if self.mask_clip_id is not None:
@@ -74,8 +76,9 @@ class ImportTemporaryLayer(QgsTask):
 
             self.source_layer.startEditing()
             for feat in self.source_layer.getFeatures():
-                if self.id_field is not None:
-                    feat[self.id_field] = self.id_value
+                if self.attributes is not None:
+                    for field_name, field_value in self.attributes.items():
+                        feat[field_name] = field_value
                 geom = feat.geometry()
                 if self.mask_clip_id is not None:
                     geom = geom.intersection(clip_geom)
