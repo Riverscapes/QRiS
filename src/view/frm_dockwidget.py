@@ -744,7 +744,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmExportProject(self, self.project, out_dir)
-        frm.exec_()
+        result = frm.exec_()
+
+        if result == QtWidgets.QDialog.Accepted:
+            iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
 
     def export_design(self, event: Event):
 
