@@ -5,7 +5,7 @@ import sqlite3
 
 from osgeo import gdal
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import QgsVectorLayer, QgsGeometry, QgsPolygon
 
 from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
@@ -31,16 +31,167 @@ class FrmExportProject(QtWidgets.QDialog):
         self.setWindowTitle("Export QRiS to Riverscapes Project")
         self.setupUi()
 
-        # if outpath:
-        #     self.basepath = outpath
-        # else:
-        #     self.basepath = os.path.dirname(self.qris_project.project_file)
-
         self.set_output_path(outpath)
+
         # populate the AOI combo box with aoi names
         for aoi_id, aoi in self.qris_project.masks.items():
             if aoi.mask_type.id == AOI_MASK_TYPE_ID:
                 self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
+
+        # Layer Model
+        self.export_layers_model = QtGui.QStandardItemModel()
+        self.export_layers_model.itemChanged.connect(self.handle_item_changed)
+
+        # Inputs
+        inputs_node = QtGui.QStandardItem("Inputs")
+        inputs_node.setCheckable(True)
+        inputs_node.setCheckState(QtCore.Qt.PartiallyChecked)
+
+        # AOIs
+        aois_node = QtGui.QStandardItem("AOIs")
+        aois_node.setCheckable(True)
+        aois_node.setCheckState(QtCore.Qt.Checked)
+        for aoi in self.qris_project.masks.values():
+            if aoi.mask_type.id == AOI_MASK_TYPE_ID:
+                item = QtGui.QStandardItem(aoi.name)
+                item.setCheckable(True)
+                item.setCheckState(QtCore.Qt.Checked)
+                item.setData(aoi, QtCore.Qt.UserRole)
+                aois_node.appendRow(item)
+        inputs_node.appendRow(aois_node)
+
+        # Sample Frames
+        sample_frames_node = QtGui.QStandardItem("Sample Frames")
+        sample_frames_node.setCheckable(True)
+        sample_frames_node.setCheckState(QtCore.Qt.Checked)
+        for sample_frame in self.qris_project.masks.values():
+            if sample_frame.mask_type.id != AOI_MASK_TYPE_ID:
+                item = QtGui.QStandardItem(sample_frame.name)
+                item.setCheckable(True)
+                item.setCheckState(QtCore.Qt.Checked)
+                item.setData(sample_frame, QtCore.Qt.UserRole)
+                sample_frames_node.appendRow(item)
+        inputs_node.appendRow(sample_frames_node)
+
+        # Profiles
+        profiles_node = QtGui.QStandardItem("Profiles")
+        profiles_node.setCheckable(True)
+        profiles_node.setCheckState(QtCore.Qt.Checked)
+        for profile in self.qris_project.profiles.values():
+            item = QtGui.QStandardItem(profile.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(profile, QtCore.Qt.UserRole)
+            profiles_node.appendRow(item)
+        inputs_node.appendRow(profiles_node)
+
+        # Cross Sections
+        xsections_node = QtGui.QStandardItem("Cross Sections")
+        xsections_node.setCheckable(True)
+        xsections_node.setCheckState(QtCore.Qt.Checked)
+        for xsection in self.qris_project.cross_sections.values():
+            item = QtGui.QStandardItem(xsection.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(xsection, QtCore.Qt.UserRole)
+            xsections_node.appendRow(item)
+        inputs_node.appendRow(xsections_node)
+
+        # Surfaces
+        surfaces_node = QtGui.QStandardItem("Surfaces")
+        surfaces_node.setCheckable(True)
+        for surface in self.qris_project.rasters.values():
+            if surface.is_context:
+                continue
+            item = QtGui.QStandardItem(surface.name)
+            item.setCheckable(True)
+            item.setData(surface, QtCore.Qt.UserRole)
+            surfaces_node.appendRow(item)        
+        inputs_node.appendRow(surfaces_node)
+        self.export_layers_model.appendRow(inputs_node)
+
+        # Context
+        context_node = QtGui.QStandardItem("Context")
+        context_node.setCheckable(True)
+        for context_vector in self.qris_project.scratch_vectors.values():
+            item = QtGui.QStandardItem(context_vector.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(context_vector, QtCore.Qt.UserRole)
+            context_node.appendRow(item)
+        for context in self.qris_project.rasters.values():
+            if not context.is_context:
+                continue
+            item = QtGui.QStandardItem(context.name)
+            item.setCheckable(True)
+            item.setData(context, QtCore.Qt.UserRole)
+            context_node.appendRow(item)
+
+        # DCE and Designs
+        events_node = QtGui.QStandardItem("Data Capture Events and Designs")
+        events_node.setCheckable(True)
+        events_node.setCheckState(QtCore.Qt.Checked)
+        for event in self.qris_project.events.values():
+            item = QtGui.QStandardItem(event.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(event, QtCore.Qt.UserRole)
+            events_node.appendRow(item)
+        self.export_layers_model.appendRow(events_node)
+
+        # Analysis
+        analyses_node = QtGui.QStandardItem("Analyses")
+        analyses_node.setCheckable(True)
+        analyses_node.setCheckState(QtCore.Qt.Checked)
+        for analysis in self.qris_project.analyses.values():
+            item = QtGui.QStandardItem(analysis.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(analysis, QtCore.Qt.UserRole)
+            analyses_node.appendRow(item)
+        self.export_layers_model.appendRow(analyses_node)
+
+        # Layer Tree
+        self.export_tree.setModel(self.export_layers_model)
+        self.export_tree.setUniformRowHeights(True)
+        self.export_tree.setAnimated(True)
+        self.export_tree.setIndentation(20)
+        self.export_tree.setSortingEnabled(False)
+        self.export_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.export_tree.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.export_tree.expandAll()
+
+    def handle_item_changed(self, item):
+        if item.hasChildren():
+            self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
+            self.update_child_check_state(item)
+            self.export_layers_model.itemChanged.connect(self.handle_item_changed)
+        self.update_check_state(item.parent())
+
+    def update_child_check_state(self, item):
+        for i in range(item.rowCount()):
+            child = item.child(i)
+            if child is not None:
+                child.setCheckState(item.checkState())
+                if child.hasChildren():
+                    self.update_child_check_state(child)
+
+    def update_check_state(self, item):
+        if item is not None and item.hasChildren():
+            check_states = [item.child(i).checkState() for i in range(item.rowCount())]
+            if all(state == QtCore.Qt.Checked for state in check_states):
+                self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
+                item.setCheckState(QtCore.Qt.Checked)
+                self.export_layers_model.itemChanged.connect(self.handle_item_changed)
+            elif all(state == QtCore.Qt.Unchecked for state in check_states):
+                self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
+                item.setCheckState(QtCore.Qt.Unchecked)
+                self.export_layers_model.itemChanged.connect(self.handle_item_changed)
+            else:
+                self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
+                item.setCheckState(QtCore.Qt.PartiallyChecked)
+                self.export_layers_model.itemChanged.connect(self.handle_item_changed)
+            self.update_check_state(item.parent())
 
     def set_output_path(self, outpath: str):
 
@@ -80,21 +231,6 @@ class FrmExportProject(QtWidgets.QDialog):
         if not os.path.exists(self.txt_outpath.text()):
             os.mkdir(self.txt_outpath.text())
 
-        # create the surfaces directory
-        surfaces_dir = os.path.abspath(os.path.join(self.txt_outpath.text(), 'surfaces').replace("\\", "/"))
-        if not os.path.exists(surfaces_dir):
-            os.mkdir(surfaces_dir
-                     )
-        # Create the context directory
-        context_dir = os.path.abspath(os.path.join(self.txt_outpath.text(), 'context').replace("\\", "/"))
-        if not os.path.exists(context_dir):
-            os.mkdir(context_dir)
-
-        # copy the photos folder to the new project folder
-        photos_dir = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), "photos").replace("\\", "/"))
-        if os.path.exists(photos_dir):
-            shutil.copytree(photos_dir, os.path.abspath(os.path.join(self.txt_outpath.text(), "photos").replace("\\", "/")))
-
         # copy the geopackage layers to the new project folder
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), "qris.gpkg").replace("\\", "/"))
         shutil.copy(self.qris_project.project_file, out_geopackage)
@@ -105,8 +241,11 @@ class FrmExportProject(QtWidgets.QDialog):
         # del ds_gpkg
 
         # copy the context geopackage to the new project folder
+        context_dir = os.path.abspath(os.path.join(self.txt_outpath.text(), 'context').replace("\\", "/"))
         context_geopackage = os.path.abspath(os.path.join(context_dir, "feature_classes.gpkg").replace("\\", "/"))
         if os.path.exists(scratch_gpkg_path(self.qris_project.project_file)):
+            if not os.path.exists(context_dir):
+                os.mkdir(context_dir)
             shutil.copy(scratch_gpkg_path(self.qris_project.project_file), context_geopackage)
         # ds = gdal.VectorTranslate(context_geopackage,
         #                           scratch_gpkg_path(self.qris_project.project_file),
@@ -163,20 +302,16 @@ class FrmExportProject(QtWidgets.QDialog):
         path = os.path.abspath(os.path.join(self.txt_outpath.text(), "project.rs.xml").replace("\\", "/"))
 
         metadata_values = [Meta('QRiS Project Name', self.qris_project.name),
-                           Meta('QRiS Project Description', self.qris_project.description)]
+                           Meta('QRiS Project Description', self.qris_project.description),
+                           Meta('ModelVersion', '1')]
 
         for key, value in self.qris_project.metadata.items():
+            # if tags are empty, skip
+            if key == "tags":
+                continue
+            if value == "":
+                continue
             metadata_values.append(Meta(key, value))
-
-        # if self.qris_event.description:
-        #     metadata_values.append(Meta('LTPBR Design Description', self.qris_event.description))
-        # # check if there is one design date or multiple
-        # # if multiple, add both to meta as start and end date
-        # if self.qris_event.date_text:
-        #     metadata_values.append(Meta('LTPBR Design Date', self.qris_event.date_text))
-
-        # add any other design metadata
-        # for key, value in self.qris_event.metadata.items():
 
         self.rs_project = Project(name=self.txt_rs_name.text(),
                                   proj_path=path,
@@ -196,6 +331,8 @@ class FrmExportProject(QtWidgets.QDialog):
                 raster_xml_id = f'surface_{raster_id}'
 
             raster_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path).replace("\\", "/"))
+            if not os.path.exists(os.path.dirname(raster_path)):
+                os.makedirs(os.path.dirname(raster_path))
             shutil.copy(raster_path, os.path.abspath(os.path.join(self.txt_outpath.text(), raster.path).replace("\\", "/")))
 
             raster_datasets.append(Dataset(xml_id=raster_xml_id,
@@ -222,7 +359,7 @@ class FrmExportProject(QtWidgets.QDialog):
                                                 ds_type=GeoPackageDatasetTypes.VECTOR))
 
         for sample_frame_id, sample_frame in self.qris_project.masks.items():
-            sample_frame_layers = []
+
             if sample_frame.mask_type.id == AOI_MASK_TYPE_ID:
                 continue
 
@@ -342,13 +479,23 @@ class FrmExportProject(QtWidgets.QDialog):
                 if 'Photo Path' in metadata:
                     all_photo_metadata[metadata['Photo Path']] = metadata
 
-        for event_id, event in self.qris_project.events.items():
+        # find the Events node in the tree
+        events_node = self.export_layers_model.findItems("Events")[0]
+        # iterate through the events and add the selected ones to the project
+        for i in range(events_node.rowCount()):
+            event_item = events_node.child(i)
+            if event_item.checkState() == QtCore.Qt.Unchecked:
+                continue
+            event: Event = event_item.data(QtCore.Qt.UserRole)
             event_type = "DCE" if event.event_type.id == 1 else "Design"
 
             # Search for photos for the dce in the photos folder
             photo_datasets = []
-            photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event_id).zfill(3)}').replace("\\", "/"))
-            if os.path.exists(photo_dce_folder):
+
+            source_photos_dir = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), "photos", f'dce_{str(event.id).zfill(3)}').replace("\\", "/"))
+            photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event.id).zfill(3)}').replace("\\", "/"))
+            if os.path.exists(source_photos_dir):
+                shutil.copytree(source_photos_dir, photo_dce_folder)
                 # list photos in the photos folder
                 for photo in os.listdir(photo_dce_folder):
                     photo_metadata = all_photo_metadata[photo]
@@ -361,7 +508,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                     photo_datasets.append(Dataset(xml_id=photo_id,
                                                 name=photo,
-                                                path=f'photos/dce_{str(event_id).zfill(3)}/{photo}',
+                                                path=f'photos/dce_{str(event.id).zfill(3)}/{photo}',
                                                 meta_data=photo_meta,
                                                 ds_type='Image'))
 
@@ -380,18 +527,18 @@ class FrmExportProject(QtWidgets.QDialog):
                     fc_name = 'dce_polygons'
                 else:
                     continue
-                view_name = f'vw_{layer.layer.fc_name}_{event_id}'
+                view_name = f'vw_{layer.layer.fc_name}_{event.id}'
 
                 layer_fields: list = layer.layer.metadata.get('fields', None)
                 out_fields = '*'
                 if layer_fields is not None and len(layer_fields) > 0:
                     field_names = [field['label'] for field in layer_fields]
                     out_fields = ", ".join([f'json_extract(metadata, \'$.{field}\') AS "{field}"' for field in field_names])
-                sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event_id} and event_layer_id == {layer.layer.id}"
+                sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event.id} and event_layer_id == {layer.layer.id}"
                 self.create_spatial_view(view_name=view_name,
                                          fc_name=fc_name,
                                          field_name='event_id',
-                                         id_value=event_id,
+                                         id_value=event.id,
                                          out_geopackage=out_geopackage,
                                          geom_type=geom_type.upper(),
                                          sql=sql)
@@ -401,7 +548,7 @@ class FrmExportProject(QtWidgets.QDialog):
                                          ds_type=GeoPackageDatasetTypes.VECTOR)
                 geopackage_layers.append(gp_lyr)
 
-            gpkg = Geopackage(xml_id=f'{event_id}_gpkg',
+            gpkg = Geopackage(xml_id=f'{event.id}_gpkg',
                               name=f'{event.name}',
                               path='qris.gpkg',
                               layers=geopackage_layers)
@@ -409,7 +556,7 @@ class FrmExportProject(QtWidgets.QDialog):
             # # self.rs_project.common_datasets.append(gpkg)
             # ds = [RefDataset(lyr.lyr_name, lyr) for lyr in geopackage_layers]
 
-            realization = Realization(xml_id=f'realization_qris_{event_id}',
+            realization = Realization(xml_id=f'realization_qris_{event.id}',
                                       name=event.name,
                                       date_created=date_created.toPyDateTime(),
                                       product_version=qris_version,
@@ -423,9 +570,15 @@ class FrmExportProject(QtWidgets.QDialog):
             self.rs_project.realizations.append(realization)
 
         # add analyses
-        for analysis_id, analysis in self.qris_project.analyses.items():
+        analysis_node = self.export_layers_model.findItems("Analyses")[0]
+        for i in range(analysis_node.rowCount()):
+            analysis_item = analysis_node.child(i)
+            if analysis_item.checkState() == QtCore.Qt.Unchecked:
+                continue
+            analysis: Analysis = analysis_item.data(QtCore.Qt.UserRole)
+
             geopackage_layers = []
-            analysis: Analysis = analysis
+            # analysis: Analysis = analysis
             sample_frame: Mask = analysis.mask
 
             # flatten the table of analysis metrics
@@ -434,7 +587,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 analysis_metrics.append([metric_id, metric.level_id])
 
             # create the analysis view
-            analysis_view = f'vw_analysis_{analysis_id}'
+            analysis_view = f'vw_analysis_{analysis.id}'
 
             # prepare sql string for each metric
             sql_metric = ", ".join([f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in analysis.analysis_metrics.items()])
@@ -452,12 +605,12 @@ class FrmExportProject(QtWidgets.QDialog):
                                      ds_type=GeoPackageDatasetTypes.VECTOR)
             geopackage_layers.append(gp_lyr)
 
-            gpkg = Geopackage(xml_id=f'{analysis_id}_gpkg',
+            gpkg = Geopackage(xml_id=f'{analysis.id}_gpkg',
                               name=f'{analysis.name}',
                               path='qris.gpkg',
                               layers=geopackage_layers)
 
-            realization = Realization(xml_id=f'analysis_{analysis_id}',
+            realization = Realization(xml_id=f'analysis_{analysis.id}',
                                       name=analysis.name,
                                       date_created=date_created.toPyDateTime(),
                                       product_version=qris_version,
@@ -521,10 +674,12 @@ class FrmExportProject(QtWidgets.QDialog):
 
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
 
         # add grid layout
         self.grid = QtWidgets.QGridLayout()
-        self.vert.addLayout(self.grid)
+        # self.vert.addLayout(self.grid)
 
         # add label and txt box for project name
         self.lbl_project = QtWidgets.QLabel("Riverscapes Project Name")
@@ -586,6 +741,16 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # add vertical spacer
         self.vert.addStretch()
+
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Export Properties')
+        self.tabProperties.setLayout(self.grid)
+
+        # Export Tab
+        self.export_tree = QtWidgets.QTreeView()
+        self.export_tree.setHeaderHidden(True)
+        self.tabs.addTab(self.export_tree, 'Export Layers')
+
 
         # add standard form buttons
         self.vert.addLayout(add_standard_form_buttons(self, "export_metrics"))
