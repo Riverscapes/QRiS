@@ -6,7 +6,7 @@ from .utilities import add_standard_form_buttons
 class FrmFieldValueMap(QtWidgets.QDialog):
 
     # signal to send field value map to parent
-    field_value_map = QtCore.pyqtSignal(str, dict, bool)
+    field_value_map = QtCore.pyqtSignal(str, dict)
 
     def __init__(self, parent, field: str, values: list, fields: dict):
 
@@ -62,8 +62,8 @@ class FrmFieldValueMap(QtWidgets.QDialog):
     def accept(self) -> None:
 
         out_map = self.get_field_value_map()
-        retain = self.chkRetain.isChecked()
-        self.field_value_map.emit(self.field, out_map, retain)
+        # retain = self.chkRetain.isChecked()
+        self.field_value_map.emit(self.field, out_map)
 
         return super().accept()
 
@@ -88,10 +88,10 @@ class FrmFieldValueMap(QtWidgets.QDialog):
         self.txtField.setReadOnly(True)
         self.hLayout.addWidget(self.txtField)
 
-        # Retain original values as Metadata checkox
-        self.chkRetain = QtWidgets.QCheckBox('Retain original values as Metadata')
-        self.chkRetain.setChecked(True)
-        self.vLayout.addWidget(self.chkRetain)
+        # # Retain original values as Metadata checkox
+        # self.chkRetain = QtWidgets.QCheckBox('Retain original values as Metadata')
+        # self.chkRetain.setChecked(True)
+        # self.vLayout.addWidget(self.chkRetain)
 
         # new table with 1 + number of fields columns
         self.tblFields = QtWidgets.QTableWidget()

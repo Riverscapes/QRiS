@@ -13,10 +13,11 @@ MESSAGE_CATEGORY = 'QRiS_ImportFeatureClassTask'
 
 # create a data class to store 'src_field', 'dest_field', and optional 'map' values
 class ImportFieldMap:
-    def __init__(self, src_field: str, dest_field: str=None, map: dict = None):
+    def __init__(self, src_field: str, dest_field: str=None, map: dict = None, parent=None):
         self.src_field = src_field
         self.dest_field = dest_field
         self.map = map
+        self.parent = parent
 
 class ImportFeatureClass(QgsTask):
     """
@@ -156,12 +157,25 @@ class ImportFeatureClass(QgsTask):
                             if field_map.dest_field == 'display_label':
                                 value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else value
                             if field_map.dest_field is not None:
-                                metadata.update({field_map.dest_field: value})
+                                if field_map.parent is not None:
+                                    # this is a child field. we need to add it to the parent
+                                    if field_map.parent not in metadata:
+                                        metadata[field_map.parent] = {}
+                                    metadata[field_map.parent].update({field_map.dest_field: value})
+                                else:
+                                    metadata.update({field_map.dest_field: value})
                             if field_map.map is not None:
                                 # there is a value map. we need to map the value to the output fields in the metadata
-                                value_map = field_map.map[value]
-                                for dest_field, out_value in value_map.items():
-                                    metadata.update({dest_field: out_value})
+                                value_map: dict = field_map.map[value]
+                                if field_map.parent is not None:
+                                    # this is a child field. we need to add it to the parent
+                                    if field_map.parent not in metadata:
+                                        metadata[field_map.parent] = {}
+                                    for dest_field, out_value in value_map.items():
+                                        metadata[field_map.parent].update({dest_field: out_value})
+                                else:
+                                    for dest_field, out_value in value_map.items():
+                                        metadata.update({dest_field: out_value})
                         if metadata:
                             dst_feature.SetField('metadata', json.dumps(metadata))
 

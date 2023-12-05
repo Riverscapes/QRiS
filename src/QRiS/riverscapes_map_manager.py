@@ -417,14 +417,18 @@ class RiverscapesMapManager():
                     field_type = QVariant.Url
                 else:
                     field_type = QVariant.String
-                metadata_fields.update({field['label']: field_type})
+                # add attribute to metadata_fields if it does not exist
+                if 'attributes' not in metadata_fields:
+                    metadata_fields.update({'attributes': {}})
+                metadata_fields['attributes'].update({field['label']: field_type})
 
         # get all the keys from the metadata dictionary by reading all of the features
         for feature in feature_layer.getFeatures():
             # this is to catch empty metadata fields, which are stored as QVariant
             if isinstance(feature['metadata'], QVariant) or feature['metadata'] is None:
                 continue
-            feat_metadata = json.loads(feature['metadata'])
+            feat_metadata_obj = json.loads(feature['metadata'])
+            feat_metadata = feat_metadata_obj.get('metadata', {})
             for key, value in feat_metadata.items():
                 if key in added_fields:
                     continue
@@ -441,31 +445,35 @@ class RiverscapesMapManager():
                     field_type = QVariant.Url
                 else:
                     field_type = QVariant.String
-                metadata_fields.update({key: field_type})
+                if 'metadata' not in metadata_fields:
+                    metadata_fields.update({'metadata': {}})
+                metadata_fields['metadata'].update({key: field_type})
 
         # create a virtual field for each key
-        for key, field_type in metadata_fields.items():
-            virtual_field = QgsField(key, field_type)
-            feature_layer.addExpressionField(f"""map_get(json_to_map("metadata"), '{key}')""", virtual_field)
+        for upper_key, new_fields in metadata_fields.items():
+            for key, field_type in new_fields.items():
 
-            if key == "Photo Path":
-                # set attachment widget for photos
-                widget = QgsEditorWidgetSetup('ExternalResource',
-                                              {
-                                                  'FileWidget': False,
-                                                  'DocumentViewer': 1,
-                                                  'RelativeStorage': 2,
-                                                  'StorageMode': 0,
-                                                  'DocumentViewerHeight': 0,
-                                                  'FileWidgetButton': False,
-                                                  'DocumentViewerWidth': 0,
-                                                  'FileWidgetFilter': '',
-                                                  'DefaultRoot': default_photo_path
-                                              })
-            else:
-                # hide the virtual field from the form editor
-                widget = QgsEditorWidgetSetup('Hidden', {})
-            feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), widget)
+                virtual_field = QgsField(key, field_type)
+                feature_layer.addExpressionField(f"""map_get(map_get(json_to_map("metadata"), '{upper_key}'), '{key}')""", virtual_field)
+
+                if key == "Photo Path":
+                    # set attachment widget for photos
+                    widget = QgsEditorWidgetSetup('ExternalResource',
+                                                {
+                                                    'FileWidget': False,
+                                                    'DocumentViewer': 1,
+                                                    'RelativeStorage': 2,
+                                                    'StorageMode': 0,
+                                                    'DocumentViewerHeight': 0,
+                                                    'FileWidgetButton': False,
+                                                    'DocumentViewerWidth': 0,
+                                                    'FileWidgetFilter': '',
+                                                    'DefaultRoot': default_photo_path
+                                                })
+                else:
+                    # hide the virtual field from the form editor
+                    widget = QgsEditorWidgetSetup('Hidden', {})
+                feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), widget)
 
             # if field_type == QVariant.Url:
             # set the widget to open the url

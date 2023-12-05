@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton
 from qgis.core import Qgis, QgsApplication
 from qgis.utils import iface
 
@@ -12,6 +13,9 @@ from .utilities import add_standard_form_buttons
 
 from typing import List
 
+
+retain_text = 'Retain original values as metadata'
+map_text = 'Map values to target fields'
 
 class FrmImportDceLayer(QtWidgets.QDialog):
 
@@ -56,49 +60,74 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             self.tblFields.setItem(i, 0, QtWidgets.QTableWidgetItem(field))
             self.tblFields.setItem(i, 1, QtWidgets.QTableWidgetItem(self.input_field_types[i]))
             # create a combo box and load the input fields
-            combo = QtWidgets.QComboBox()
+            # combo = QtWidgets.QComboBox()
             # filtered_input_fields = [field for field, field_type in zip(input_fields, input_field_types) if field_type == target_field_types[i]]
-            combo.addItems(['-- Do Not Import --', 'Add to Metadata'])
-            items = {}
-            for target_field_name, target_field in self.target_fields.items():
+            # combo.addItems(['-- Do Not Import --', 'Add to Metadata'])
+            # items = {}
+            for target_field_name in self.target_fields.keys():
                 if target_field_name in ['event_id', 'metadata']:
                     continue
-                if target_field['type'] == self.input_field_types[i]:
-                    item = f'Direct Copy to {target_field_name}'
-                    # else:
-                    #     item = f'Map values to {target_field}'
-                    items[field] = item
-                    combo.addItem(item)
+                # if target_field['type'] == self.input_field_types[i]:
+                #     item = f'Direct Copy to {target_field_name}'
+                #     # else:
+                #     #     item = f'Map values to {target_field}'
+                #     items[field] = item
+                #     combo.addItem(item)
             # add map values option for string or integer types
-            if self.input_field_types[i] in ['String', 'Integer']:
-                values = list(set(get_field_values(self.import_path, field)))
-                if not(len(values) == 1 and values[0] is None):
-                    combo.addItem('Map Values')
-            self.tblFields.setCellWidget(i, 2, combo)
-            if self.field_status is not None:
-                combo.setCurrentIndex(self.field_status[i])
-            else:
-                # if the target field name matches the input field name then select it
-                if field in items.keys():
-                    combo.setCurrentIndex(combo.findText(items[field]))
-                else:
-                    combo.setCurrentIndex(0)
+            # if self.input_field_types[i] in ['String', 'Integer']:
+            #     values = list(set(get_field_values(self.import_path, field)))
+            #     if not(len(values) == 1 and values[0] is None):
+            #         combo.addItem('Map Values')
+            # self.tblFields.setCellWidget(i, 2, combo)
+            # if self.field_status is not None:
+            #     combo.setCurrentIndex(self.field_status[i])
+            # else:
+            #     # if the target field name matches the input field name then select it
+            #     if field in items.keys():
+            #         combo.setCurrentIndex(combo.findText(items[field]))
+            #     else:
+            #         combo.setCurrentIndex(0)
             # add button to open value map dialog
-            btn = QtWidgets.QPushButton('Map Values...')
-            btn.clicked.connect(self.on_btn_clicked)
-            self.tblFields.setCellWidget(i, 3, btn)
+            chk_retain = QtWidgets.QCheckBox()
+            chk_retain.setToolTip(retain_text)
+            chk_retain.setChecked(True)
+            self.tblFields.setCellWidget(i, 2, chk_retain)
 
-            combo.currentIndexChanged.connect(self.combo_changed)
+            chk_map = QtWidgets.QCheckBox()
+            chk_map.setChecked(False)
+            chk_map.setToolTip(map_text)
+            # if the checkbox is clicked for the first time then load the value map dialog
+            chk_map.clicked.connect(self.on_chk_map_clicked)
+            self.tblFields.setCellWidget(i, 3, chk_map)
+            
+            btn = QtWidgets.QPushButton('Map Values...')
+            btn.setToolTip(map_text)
+            btn.clicked.connect(self.on_btn_clicked)
+            self.tblFields.setCellWidget(i, 4, btn)
+
+            # combo.currentIndexChanged.connect(self.combo_changed)
 
         self.tblFields.resizeColumnsToContents()
-        self.combo_changed()
+        # self.combo_changed()
 
     def on_btn_clicked(self):
 
         # get the row and column of the button that was clicked
         btn = self.sender()
         row = self.tblFields.indexAt(btn.pos()).row()
+        self.open_value_map_dialog(row)
 
+    def on_chk_map_clicked(self):
+            
+        # get the row and column of the button that was clicked
+        chk = self.sender()
+        # if unchecking the box, then ignore
+        if not chk.isChecked():
+            return
+        row = self.tblFields.indexAt(chk.pos()).row()
+        self.open_value_map_dialog(row)
+
+    def open_value_map_dialog(self, row: int):
         # get the field name
         input_field = self.tblFields.item(row, 0).text()
 
@@ -117,31 +146,35 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         frm = FrmFieldValueMap(self, input_field, values, fields)
         if input_field in [field.src_field for field in self.field_maps]:
             in_field = next((field for field in self.field_maps if field.src_field == input_field), None)
-            frm.load_field_value_map(in_field)
+            frm.load_field_value_map(in_field.map)
         frm.field_value_map.connect(self.on_field_value_map)
         frm.exec_()
 
-    def on_field_value_map(self, field_name: str, field_value_map: dict, retain: bool):
+    def on_field_value_map(self, field_name: str, field_value_map: dict):
 
         # add or replace the field value map for the field
         if field_name in [field.src_field for field in self.field_maps]:
-            self.field_maps.remove(next((field for field in self.field_maps if field.src_field == field), None))
-        if retain is True:
-            field_map = ImportFieldMap(field_name, field_name, map=field_value_map)
-        else:
-            field_map = ImportFieldMap(field_name, map=field_value_map)
+            self.field_maps.remove(next((field for field in self.field_maps if field.src_field == field_name), None))
+        field_map = ImportFieldMap(field_name, map=field_value_map, parent='attributes')
         self.field_maps.append(field_map)
 
-    def combo_changed(self):
-
-        # disable button if Map Values is not is selected for each row
+        # check the map checkbox
         for i in range(self.tblFields.rowCount()):
-            combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
-            btn: QtWidgets.QPushButton = self.tblFields.cellWidget(i, 3)
-            if combo.currentText() == 'Map Values':
-                btn.setEnabled(True)
-            else:
-                btn.setEnabled(False)
+            if self.tblFields.item(i, 0).text() == field_name:
+                chk_map: QtWidgets.QCheckBox = self.tblFields.cellWidget(i, 3)
+                chk_map.setChecked(True)
+                break
+
+    # def combo_changed(self):
+
+    #     # disable button if Map Values is not is selected for each row
+    #     for i in range(self.tblFields.rowCount()):
+    #         combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
+    #         btn: QtWidgets.QPushButton = self.tblFields.cellWidget(i, 3)
+    #         if combo.currentText() == 'Map Values':
+    #             btn.setEnabled(True)
+    #         else:
+    #             btn.setEnabled(False)
 
     def validate_fields(self):
 
@@ -173,16 +206,24 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
     def accept(self):
 
-        if not self.validate_fields():
-            return
+        # if not self.validate_fields():
+        #     return
+
+        # get list of fields where the retain checkbox is checked and add the field to the metadata
+        for i in range(self.tblFields.rowCount()):
+            chk_retain: QtWidgets.QCheckBox = self.tblFields.cellWidget(i, 2)
+            if chk_retain.isChecked():
+                field_name = self.tblFields.item(i, 0).text()
+                field_map = ImportFieldMap(field_name, field_name, parent='metadata')
+                self.field_maps.append(field_map)
 
         # get list of fields where the combo box is set to add to metadata
-        for i in range(self.tblFields.rowCount()):
-            combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
-            if combo.currentText() == 'Add to Metadata':
-                field_name = self.tblFields.item(i, 0).text()
-                field_map = ImportFieldMap(field_name, field_name)
-                self.field_maps.append(field_map)
+        # for i in range(self.tblFields.rowCount()):
+        #     combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
+        #     if combo.currentText() == 'Add to Metadata':
+        #         field_name = self.tblFields.item(i, 0).text()
+        #         field_map = ImportFieldMap(field_name, field_name)
+        #         self.field_maps.append(field_map)
             # if "Direct Copy to " in combo.currentText():
             #     self.field_maps.update({self.tblFields.item(i, 0).text(): combo.currentText().replace("Direct Copy to ", "")})
 
@@ -191,14 +232,14 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, self.field_maps)
             self.buttonBox.setEnabled(False)
             # DEBUG
-            # result = import_task.run()
-            # source_feats = import_task.in_feats
-            # out_feats = import_task.out_feats
-            # skip_feats = import_task.skipped_feats
-            # self.on_import_complete(result, source_feats, out_feats, skip_feats)
+            result = import_task.run()
+            source_feats = import_task.in_feats
+            out_feats = import_task.out_feats
+            skip_feats = import_task.skipped_feats
+            self.on_import_complete(result, source_feats, out_feats, skip_feats)
             # PRODUCTION
-            import_task.import_complete.connect(self.on_import_complete)
-            QgsApplication.taskManager().addTask(import_task)
+            # import_task.import_complete.connect(self.on_import_complete)
+            # QgsApplication.taskManager().addTask(import_task)
         except Exception as ex:
             self.exception = ex
             self.buttonBox.setEnabled(True)
@@ -280,8 +321,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.horiz.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
 
         self.tblFields = QtWidgets.QTableWidget()
-        self.tblFields.setColumnCount(4)
-        self.tblFields.setHorizontalHeaderLabels(['Input Fields', 'Data Type', 'Actions', ""])
+        self.tblFields.setColumnCount(5)
+        self.tblFields.setHorizontalHeaderLabels(['Input Fields', 'Data Type', 'Retain', 'Map Output', ""])
         # self.tblFields.horizontalHeader().setStretchLastSection(True)
         # self.tblFields.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.tblFields.verticalHeader().setVisible(False)
