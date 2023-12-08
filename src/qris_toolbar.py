@@ -47,6 +47,7 @@ from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
 
 from .gp.watershed_attributes import WatershedAttributes
+from .gp.update_metadata import update_metadata, check_metadata
 
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
@@ -434,6 +435,20 @@ class QRiSToolbar:
         # Apply database migrations to ensure latest schema
         db_path = parse_posix_path(db_path)
         self.update_database(db_path)
+
+        result = check_metadata(db_path)
+        if result is False:
+            # window dialog ask user if they want to update the metadata
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Warning)
+            msg.setText("Metadata Update Recommended")
+            msg.setInformativeText("The QRiS project you are attempting to open has an older metadata format. Would you like to update the metadata?")
+            msg.setWindowTitle("Metadata Update Recommended")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            msg.setDefaultButton(QtWidgets.QMessageBox.Yes)
+            retval = msg.exec_()
+            if retval == QtWidgets.QMessageBox.Yes:
+                update_metadata(db_path)
 
         self.toggle_widget(forceOn=True)
         self.set_project_path_settings(db_path)
