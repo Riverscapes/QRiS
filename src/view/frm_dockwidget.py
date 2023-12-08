@@ -777,7 +777,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result is True:
             iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
             layer = self.map_manager.get_db_item_layer(self.project.map_guid, db_item, None)
-            self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
+            if layer is not None:
+                self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
             
             # refresh map
             iface.mapCanvas().refreshAllLayers()
