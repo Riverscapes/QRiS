@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [0.3.4] 2023 DEC 08
+
+### Changed
+- Import Feature class task restructured
+- User can export sections of qris project to riverscapes project
+- DCE metadata json restructured
+
+### Added
+- Success message for project export
+- Refresh layer after importing dce features (to update symbology and attribute table)
+- Project checks DCE metadata structure on opening (with user option to update)
+- Check for duplicate output fields when importing dce feature class
+
 ## [0.3.3] 2023 NOV 22
 
 ### Changed
