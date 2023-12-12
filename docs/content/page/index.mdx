@@ -1,0 +1,187 @@
+---
+title: Home
+date: "2023-05-20T22:12:03.284Z"
+description: "Riverscapes website"
+banner: false
+isHome: true
+---
+
+import { Container, Divider, Card, CardActionArea, CardMedia, CardContent, Typography } from '@mui/material'
+
+import HeroImage from './background-hero.jpg'
+import CardImage from './card-image.jpg'
+import LogoNASA from './logo-nasa.png'
+import LogoALOGO from './logo-alogo.png'
+import LogoLOGOBRAND from './logo-logobrand.png'
+import LogoUTAH from './logo-utah_state.png'
+import LogoNRDC from './logo-nrdc.png'
+import LogoUSGS from './logo-usgs.png'
+import WhatIsRiverscape from './what-is-riverscape.jpg'
+
+
+<Hero
+    image={HeroImage}
+>
+> We live on a planet dependent upon healthy riverscapes for both its and our survival.  
+
+But riverscapes and the people and ecosystems that rely on them are increasingly more vulnerable to floods, fires and droughts exacerbated by the climate crisis. 
+ 
+The Riverscapes Consortium is dedicated to changing the trajectory of this story by equipping members with what they need to help restore and conserve riverscapes around the world. 
+   
+</Hero>
+<Container maxWidth="xl">
+    <Grid container space={2}>
+        <Grid item md={3} lg={2} />
+        <Grid item xs={12} md={6}>
+            # Learn
+            The Riverscapes Consortium has the people, tools, and data that can help. But first, it's critical to understand our relationship with riverscapes.
+            ### What is a riverscape and why do they matter?
+          </Grid>
+        </Grid>
+        <Grid container space={2}>
+            <Grid item md={5} lg={4} />
+            <Grid item xs={12}  md={6}>
+                <img src={WhatIsRiverscape} />
+            </Grid>
+        </Grid>
+        <Grid container space={2}>
+            <Grid item md={3} lg={2} />
+            <Grid item xs={12} md={6}>
+                Over time, the popular idea of what a river should be has caught hold—and perhaps you have an image in your mind of a long, winding channel flowing effortlessly through the landscape. 
+ 
+                But this image may be part of the problem. Because rivers are more than a channel that delivers water. A healthy riverscape is an integrated system within a valley bottom, frequently connected to their floodplains, supporting vibrant ecosystems of wildlife habitat, wetlands, and vegetation. 
+
+                <Button to="/about-us/">Learn more about riverscapes</Button>
+            </Grid>
+        </Grid>
+</Container>
+
+
+<HomepageCard>
+  <HomepageCardContent background="blue">
+      ## Solve
+      We want to support you in solving complex ecosystem challenges related to riverscapes in a number of ways:
+
+      - Share your snapshots of riverscapes such as adding your photos to a repeat photo-series in [Phlux](https://phlux.riverscapes.net)
+      - Conduct your own monitoring, assessment, designs and analyses in [Riverscapes Studio](https://studio.riverscapes.net)
+      - Leverage existing model runs and datasets from the [Riverscapes Data Exchange](https://data.riverscapes.net) to better understand your riverscapes
+      - Contribute your observations to the [Riverscapes Data Exchange](https://data.riverscapes.net).
+      - Share your efforts to solve problems such as restoration design, analysis, or model-run in a F-A-I-R way with others on the [Riverscapes Data Exchange](https://data.riverscapes.net)
+      - Join one of the many existing Riverscapes Consortium communities or start your own
+      - Share your own model/tool code or Riverscapes-Compliant models for use by the community with GitHub.  
+
+
+      Whether you are a riverscape practitioner, or simply curious about how to take the first step in helping solve these urgent challenges facing riverscapes, we encourage you to start by exploring your own riverscapes with our [Riverscapes Viewer](https://viewer.riverscapes.net) and  by joining the Riverscapes Consortium with a free account in our [Riverscapes Data Exchange](https://data.riverscapes.net). 
+
+
+      <Button to="/our-work/">Explore our work</Button>
+  </HomepageCardContent>
+  <HomepageCardHighlight type="text" align="center" columns={2} stats={[
+    {
+      value: "42+",
+      label: "Label here"
+    },
+    {
+      value: "133%",
+      label: "Label here"
+    },
+    {
+      value: "10,000",
+      label: "Some more label here"
+    },
+    {
+      value: "27",
+      label: "Other stat label here"
+    }
+  ]} />
+</HomepageCard>
+
+<Container maxWidth="xl">
+    ### Stories & updates
+    <Grid container spacing={4} sx={{mt: 3}} padding={0}>
+      <StoryCard 
+        title="Story title"
+        image={CardImage}
+        description="Story description"
+        to="/our-work/" />
+      <StoryCard 
+        title="Story title"
+        image={CardImage}
+        description="Story description"
+        to="/our-work/" />
+      <StoryCard 
+        title="Story title"
+        image={CardImage}
+        description="Story description"
+        to="/our-work/" />
+      <StoryCard 
+        title="Story title"
+        image={CardImage}
+        description="Story description"
+        to="/our-work/" />
+    </Grid>
+</Container>
+
+<HomepageCard>
+  <HomepageCardContent background="white">
+    ## Support
+    
+    Join us in our mission to create vibrant, healthy riverscapes where thriving ecosystems and human societies can coexist and benefit one another for a more resilient future.
+
+    We want to support anyone taking action to improve riverscapes health and work collectively to advance the science and build a robust community equipped to meet the urgent threats to riverscapes around the world.
+
+    The opportunity to effect durable change is now.
+
+    
+    <Button to="/get-involved/">Get involved</Button>
+  </HomepageCardContent>
+  <HomepageCardHighlight type="text">
+      {/* https://www.latimes.com/opinion/story/2022-07-25/climate-change-beavers-wetland-restoration */}
+    <HomepageCardStat
+      value='"Want to fight climate change and drought at the same time? Bring back beavers."'
+      label="Chris Jordan (NOAA) & Emily Fairfax (University of Minnesota)" />
+  </HomepageCardHighlight>
+</HomepageCard>
+
+<Container maxWidth="xl">
+  <Divider>Our supporters</Divider>
+  <Grid container spacing={4} justifyContent="center" alignItems="center" sx={{mt: 3}}>
+    <Grid item xs={6} md={4} lg={2}>
+      <img src={LogoUTAH} width="200"/>
+    </Grid>
+    <Grid item xs={6} md={4} lg={2}>
+      <img src={LogoNASA} width="130" />
+    </Grid>
+    <Grid item xs={6} md={4} lg={2}>
+      <img src={LogoNRDC} width="100" />
+    </Grid>
+    <Grid item xs={6} md={4} lg={2}>
+      <img src={LogoUSGS} width="150" />
+    </Grid>
+    <Grid item xs={6} md={4} lg={2}>
+      <img src={LogoLOGOBRAND} width="150" />
+    </Grid>
+    <Grid item xs={6} md={4} lg={2}>
+      <img src={LogoALOGO} width="150" />
+    </Grid>
+  </Grid>
+</Container>
+
+
+<HomepageCard>
+  <HomepageCardContent background="blue">
+      ## Who we are
+      
+      The Riverscapes Consortium is a collective of scientists, restoration practitioners, managers, conservationists, and supporters tackling urgent riverscape challenges. Our strength is in our diverse perspectives coming together to collectively improve riverscape health.
+
+      Our work advances the science, builds community, develops tools, and distributes data to increase capacity and knowledge, and inspire action.  
+
+      
+      <Button 
+      to="/about-us/">Learn more about us</Button>
+  </HomepageCardContent>
+  <HomepageCardHighlight type="image">
+    <img src={CardImage} width="100%" />
+  </HomepageCardHighlight>
+</HomepageCard>
+
