@@ -19,19 +19,57 @@ module.exports = {
     },
     menuLinks: [
       {
-        title: 'Menu Item 1',
-        url: '/about-us',
+        title: 'Getting Started',
+        url: '/getting-started',
+      },
+      {
+        title: 'About',
+        url: '/about/license',
         items: [
           {
-            title: 'What is a riverscape',
-            url: '/about-us/what-is-a-riverscape',
+            title: 'Acknowledgements',
+            url: '/about/acknowledgements',
           },
           {
-            title: 'FAIR principles',
-            url: '/about-us/fair-principles',
+            title: 'License and Source Code',
+            url: '/about/license',
           },
         ],
       },
+      {
+        title: 'Download',
+        url: '/download/install',
+        items: [
+          {
+            title: 'Install',
+            url: '/download/install',
+          },
+          {
+            title: 'Questions, Feature Requests and Bugs',
+            url: '/download/known-bugs',
+          },
+        ],
+      },
+      {
+        title: 'Software Help',
+        url: '/software-help/index',
+        items: [
+          {
+            title: 'Toolbar',
+            url: '/software-help/index',
+          }
+        ],
+      },
+      {
+        title: 'Technical Reference',
+        url: '/technical-reference/database',
+        items: [
+          {
+            title: 'Database',
+            url: '/technical-reference/database',
+          }
+        ],
+      }
     ],
   },
   plugins: [
