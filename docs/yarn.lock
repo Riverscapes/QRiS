@@ -2275,9 +2275,9 @@
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
 "@riverscapes/gatsby-theme@^0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@riverscapes/gatsby-theme/-/gatsby-theme-0.1.9.tgz#054af88466cccfaec61bdcc05edbdc085ab7b17f"
-  integrity sha512-0h8wZjYqnQBBiLjZq3U2ZMf22Kxv+K0kV0FLzNkZOXefkN23TNoY+GJU9+h+W/w2Y/6zF7TTgh6nBT28aLpmHQ==
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/@riverscapes/gatsby-theme/-/gatsby-theme-0.1.11.tgz#edb5d4394d3aca2525275c1f5a19152b785ac3cc"
+  integrity sha512-oOa+ozzjoVYl0NEZ5RwVicchQ7jhmhpU+aLyMil4nNOy94AXG9384Eu91BhJCR/2JlycYgwQw+5hBEejef6cHA==
   dependencies:
     "@emotion/react" "^11.11.0"
     "@emotion/styled" "^11.11.0"
@@ -2627,9 +2627,9 @@
     "@types/react" "*"
 
 "@types/react@*", "@types/react@>=16":
-  version "18.2.43"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.43.tgz#c58e5abe241e6f71f60ce30e2a9aceb9d3a2a374"
-  integrity sha512-nvOV01ZdBdd/KW6FahSbcNplt2jCJfyWdTos61RYHV+FVv5L/g9AOX1bmbVcWcLFL8+KHQfh1zVIQrud6ihyQA==
+  version "18.2.44"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.44.tgz#13104f12d30545f4cea11b8d81809bec316fe175"
+  integrity sha512-i7rRdWr8XsAdqVXU05NSlash6DapNLVoNnsfWfOYN2BUIzkH2YgagIeOuUK1fNmJ08iGHpt2enwi0beaBR+ldA==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
