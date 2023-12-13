@@ -1,0 +1,53 @@
+---
+title: Getting Started
+---
+
+## QRiS Projects
+
+Projects are the top organizational concept in QRiS. Everything you do in QRiS will be associated with a project. You can think of a project as "your riverscape". Typically, a project will be a single river or watershed, but it could also be a group of rivers or watersheds, or even just a single reach of a river. 
+
+You can have as many projects as you want. Under the hood, each project is stored as a GeoPackage file. You can think of a GeoPackage as a single file that contains all of the data for a project. This makes it easy to share projects with others, or to archive them for later use.
+
+## Install QGIS
+
+If you don't have it already, you will need QGIS to use QRiS. QGIS is a free and open source GIS software package. You can download it from the [QGIS website](https://qgis.org/en/site/forusers/download.html).
+
+## Install QRiS
+
+QRiS is a QGIS plugin. You can install it from the QGIS plugin manager. To do this, open QGIS and go to Plugins > Manage and Install Plugins. Search for QRiS and click the Install button.
+
+## Create a Project
+
+To create a new project, go to the QRiS menu and click New Project. You will be prompted to enter a name for your project. This name will be used to create a new folder on your computer, so it should be a valid folder name.
+
+You can also enter a description for your project. This is optional, but it is a good idea to enter a description so that you can remember what the project is about later.
+
+## Start digitizing
+
+The goal of QRiS is to help you digitize your riverscape. It does this by providing convenient geospatial layers and attributes for common riverscape features.
+
+A distinction is made between two types of features: **static** and **dynamic**. Static features are those that are relatively permanent, such as the valley bottom extent. Dynamic features are those that change over time, such as the location of a river channel.
+
+### Data Capture Events
+
+Dynamic features are digitized within a Data Capture Event. Each data capture event is associated with a point in time. This can be the past (historic conditions), present (design, monitoring event or assessment), or future (restoration design).
+
+To create a new data capture event, go to the QRiS menu and click New Data Capture Event. You will be prompted to enter a name for the data capture event. This name will be used to create a new folder on your computer, so it should be a valid folder name. You can then specify the layers that you want to digitize.
+
+There are two custom Data Capture Event types for LTPBR design and LTPBR as-builts. Using the sub-menu to create one of these two custom types will pre-select the appropriate layers for you as well as incorporate several specific data capture event attributes.
+
+### Valley Bottom Sample Frame
+
+A critical layer that you should include is the polygon layer representing your valley bottom. This layer is used to define the extent of your riverscape. It is also used to define the sample frame for valley bottom sampling.
+
+## Analyses
+
+With one or more Data Capture Events and a valley bottom sample frame digitized, you can start to perform analyses. Analyses store metrics of river health for each valley bottom sample frame polygon. You can populate these manually (e.g. I know there was x number of structural elements at point in time y), or QRiS can automate metric calculation by analysing your dynamic features against the valley bottom sampling frames.
+
+## Sharing Projects
+
+Once you have finished digitizing and analysing your riverscape, you can share your project with others. To do this, go to the QRiS menu and click Export Project. This will create a GeoPackage file that contains all of the data for your project. You can then share this file with others by uploading it to the [Riverscapes Data Exchange](https://data.riverscapes.net). From there it can be discovered, viewed and downloaded by others.
+
+## Living Project
+
+QRiS projects are intended to be living documents. You can continue to add new data capture events to your project as your riverscape changes over time. You can also continue to add new analyses to your project as you learn more about your riverscape.
