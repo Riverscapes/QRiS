@@ -45,7 +45,11 @@ class Event(DBItem):
         self.rasters = rasters.copy() if rasters else []
         self.metadata = metadata
 
-        self.icon = 'design' if self.event_type.id == DESIGN_EVENT_TYPE_ID else 'event'
+        self.icon = 'calendar'
+        if self.event_type.id == DESIGN_EVENT_TYPE_ID:
+            self.icon = 'design'
+        if self.event_type.id == AS_BUILT_EVENT_TYPE_ID:
+            self.icon = 'as-built'
 
     def update(self, db_path: str, name: str, description: str, layers: List[Layer], rasters: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, representation: DBItem, metadata: dict) -> None:
 

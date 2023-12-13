@@ -15,3 +15,10 @@ class EventLayer(DBItem):
         self.event_id = event_id
         self.layer = layer
         self.icon = 'layer'
+
+        if self.layer.geom_type == 'Point':
+            self.icon = 'point'
+        elif self.layer.geom_type == 'Linestring':
+            self.icon = 'line'
+        elif self.layer.geom_type == 'Polygon':
+            self.icon = 'polygon'

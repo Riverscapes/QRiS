@@ -328,7 +328,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_context_vector(model_item))
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_TEMPORARY))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
+                    pass
+                    # self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_TEMPORARY))
@@ -390,7 +391,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
                     self.add_context_menu_item(self.menu, 'Export Project to Riverscapes Project', 'qris_icon', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
-                    self.add_context_menu_item(self.menu, 'Close Project', 'collapse', lambda: self.close())
+                    self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
 
                 # if isinstance(model_data, Event):
                 #     if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:

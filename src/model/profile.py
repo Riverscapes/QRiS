@@ -21,7 +21,7 @@ class Profile(DBItem):
         self.profile_type_id = profile_type_id
         self.description = description
         self.metadata = metadata
-        self.icon = 'gis'
+        self.icon = 'line'
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 

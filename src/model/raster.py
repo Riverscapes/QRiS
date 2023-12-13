@@ -29,7 +29,7 @@ class Raster(DBItem):
         self.raster_type_id = raster_type_id
         self.is_context = is_context
         self.description = description
-        self.icon = 'basemap'
+        self.icon = 'raster'
         self.metadata = metadata
 
     def update(self, db_path: str, name: str, description: str = None, metadata=None, raster_type_id=None) -> None:

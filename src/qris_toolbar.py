@@ -219,7 +219,7 @@ class QRiSToolbar:
         self.add_menu_action(project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
         self.add_menu_action(project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
         self.mru_menu = project_menu.addMenu(QtGui.QIcon(f':/plugins/qris_toolbar/folder'), 'Recent QRiS Projects')
-        self.add_menu_action(project_menu, 'collapse', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
+        self.add_menu_action(project_menu, 'close', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
         self.load_mru_projects()
 
         # --- HELP MENU --
@@ -497,7 +497,7 @@ class QRiSToolbar:
         self.mru_actions = []
         for mru in mrus:
             if os.path.exists(mru):
-                self.add_menu_action(self.mru_menu, 'riverscapes_icon', mru, (lambda mru: lambda: self.open_qris_project(mru))(mru), True, '')
+                self.add_menu_action(self.mru_menu, 'qris_icon', mru, (lambda mru: lambda: self.open_qris_project(mru))(mru), True, '')
 
     def add_project_to_mru_list(self, db_path):
 

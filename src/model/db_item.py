@@ -33,7 +33,7 @@ class DBItem():
         # using the following syntax. All icon image files should be
         # stored directly in the Images folder.
         # QIcon(f':/plugins/qris_toolbar/{db_item.name}')
-        self.icon = 'riverscapes_icon'
+        self.icon = 'qris_icon'
 
         self.map_guid = f'qris_{db_table_name}_{id}'
 

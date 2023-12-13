@@ -13,7 +13,7 @@ class CrossSections(DBItem):
         super().__init__('cross_sections', id, name)
         self.description = description
         self.metadata = metadata
-        self.icon = 'gis'
+        self.icon = 'line'
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 
