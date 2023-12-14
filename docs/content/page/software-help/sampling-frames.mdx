@@ -1,0 +1,29 @@
+---
+title: Sampling Frames
+---
+
+Sampling frames are polygon feature classes that divide up your riverscapes into smaller units. Typically these individual polygons span valley wall to valley wall and longitudinally represent coherent geomorphic units, or uniform sections of river.
+
+Sampling frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics).
+
+Sampling frames are stored within QRiS as a polygon feature class. One string attribute column can be specified as the column to be used for labels when the sampling frame is added to the map. This is useful for displaying the name of each polygon on the map. These labels can be brief names or text representations of the polygon ID etc.
+
+## Add an Existing Sampling Frame
+
+You can import an existing polygon feature class and use it as a sampling frame. To do this, right click on the **AOIs** menu within the QRiS [project](/software-help/project) and select the **Add Existing Sampling** option. Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project.
+
+## Create a New AOI
+
+You can create a new AOI by drawing a polygon on the map. To do this, click the **Create New AOI** button on the **Areas of Interest** folder within your QRiS [project](/software-help/project). Provide a name and optional description and then click **OK**. Add the AOI to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the AOI on the map. Remember to stop editing and save your changes before the AOI is available for use when importing other data.
+
+## Add an AOI to the Map
+
+You can add an AOI to the map by right clicking on any individual AOI in the QRiS project tree and selecting **Add to Map**. This will add the AOI to the map as a new layer. 
+
+## Edit an AOI
+
+You can edit an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Edit**. This will open the AOI in QGIS and allow you to edit the AOI name and description. You can also add the AOI to the map and use the standard QGIS editing tools to edit the AOI polygon. Remember to stop editing and save your changes before the AOI is available for use when importing other data. Layers that have already been imported using the AOI will not be updated when you edit the AOI. You will need to re-import the layers to see the changes.
+
+## Delete an AOI
+
+You can delete an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Delete**. This will remove the AOI from the QRiS project. It will not change any other data layers that used the AOI to clip the data.
