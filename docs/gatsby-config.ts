@@ -66,6 +66,10 @@ module.exports = {
             url: '/software-help/projects',
           },
           {
+            title: 'Profiles',
+            url: '/software-help/profiles',
+          },
+          {
             title: 'Areas of Interest',
             url: '/software-help/aoi',
           },
