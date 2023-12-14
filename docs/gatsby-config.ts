@@ -4,7 +4,6 @@ module.exports = {
   // You need pathPrefix if you're hosting GitHub Pages at a Project Pages or if your
   // site will live at a subdirectory like https://example.com/mypathprefix/.
   // pathPrefix: '/mypathprefix',
-  pathPrefix: '/riverscapes-template',
   siteMetadata: {
     title: `QRiS`,
     author: {
@@ -111,7 +110,7 @@ module.exports = {
         manifest: {
           name: `Riverscapes Gatsby Template Site`,
           short_name: `RiverscapesTemplate`,
-          start_url: `/riverscapes-template`,
+          start_url: `/`,
         },
       },
     },
