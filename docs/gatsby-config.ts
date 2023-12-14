@@ -67,6 +67,10 @@ module.exports = {
             url: '/software-help/project-tree',
           },
           {
+            title: 'Areas of Interest',
+            url: '/software-help/aoi',
+          },
+          {
             title: 'Surfaces',
             url: '/software-help/surfaces',
           },

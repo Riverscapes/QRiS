@@ -1,3 +1,27 @@
 ---
 title: Areas of Interest
 ---
+
+Areas of Interest are polygon feature classes that can be used to clip other layers within your QRiS project. For example, you may want to clip your data to a specific reach, county or watershed. 
+
+You can have as many AOIs within your project as you like. And each AOI can have multiple polygon features.
+
+## Add an Existing AOI
+
+You can import an existing polygon feature class and use it as an AOI. To do this, click the **Add Existing AOI** button on the **Areas of Interest** folder within your QRiS [project](/software-help/project). Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description for the AOI. You can also define key/value pairs of metadata that help describe the originof the data. Click **OK** to import and create a copy of the feature class will be added to your project and will be available for use when importing other data.
+
+## Create a New AOI
+
+You can create a new AOI by drawing a polygon on the map. To do this, click the **Create New AOI** button on the **Areas of Interest** folder within your QRiS [project](/software-help/project). Provide a name and optional description and then click **OK**. Add the AOI to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the AOI on the map. Remember to stop editing and save your changes before the AOI is available for use when importing other data.
+
+## Add an AOI to the Map
+
+You can add an AOI to the map by right clicking on any individual AOI in the QRiS project tree and selecting **Add to Map**. This will add the AOI to the map as a new layer. 
+
+## Edit an AOI
+
+You can edit an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Edit**. This will open the AOI in QGIS and allow you to edit the AOI name and description. You can also add the AOI to the map and use the standard QGIS editing tools to edit the AOI polygon. Remember to stop editing and save your changes before the AOI is available for use when importing other data. Layers that have already been imported using the AOI will not be updated when you edit the AOI. You will need to re-import the layers to see the changes.
+
+## Delete an AOI
+
+You can delete an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Delete**. This will remove the AOI from the QRiS project. It will not change any other data layers that used the AOI to clip the data.
