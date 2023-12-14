@@ -228,5 +228,5 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        help = 'aoi' if self.mask_type == AOI_MASK_TYPE_ID else 'sampling_frame'
+        help = 'aoi' if self.mask_type.id == AOI_MASK_TYPE_ID else 'sampling-frames'
         self.vert.addLayout(add_standard_form_buttons(self, help))

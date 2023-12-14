@@ -83,7 +83,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
     def help(self, metric_name):
 
-        return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics.html#{metric_name.replace(' ', '-')}"))
+        return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
 
     def setupUi(self):
 

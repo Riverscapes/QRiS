@@ -630,7 +630,7 @@ class RiverscapesMapManager():
                            help_url = "[% @help_url %]"
                            webbrowser.open(help_url, new=2)
                            """).strip("\n")
-        help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') + '.html' if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+        help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS
         QgsExpressionContextUtils.setLayerVariable(feature_layer, 'help_url', help_url)
         helpAction = QgsAction(1, 'Open Help URL', help_action_text, None, capture=False, shortTitle='Help', actionScopes={'Layer'})
         feature_layer.actions().addAction(helpAction)

@@ -30,7 +30,7 @@ def add_standard_form_buttons(form: QtWidgets.QDialog, help_slug: str) -> QtWidg
     form.cmdHelp.setText('Help')
     form.cmdHelp.setToolTip('Open online help documentation in browser')
     form.cmdHelp.setToolTipDuration(2000)
-    help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') + '.html' if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+    help_url = CONSTANTS['webUrl'].rstrip('/') + '/software-help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS
     form.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
 
     form.horiz.addWidget(form.cmdHelp)
@@ -54,7 +54,7 @@ def add_help_button(form: QtWidgets.QDialog, help_slug: str) -> QtWidgets.QWidge
     form.cmdHelp.setText('Help')
     form.cmdHelp.setToolTip('Open online help documentation in browser')
     form.cmdHelp.setToolTipDuration(2000)
-    help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') + '.html' if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+    help_url = CONSTANTS['webUrl'].rstrip('/') + '/software-help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS
     form.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
 
     return form.cmdHelp

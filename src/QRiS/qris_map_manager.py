@@ -396,7 +396,7 @@ class QRisMapManager(RiverscapesMapManager):
         editFormConfig.addTab(comb_container)
 
         # Add Help Button to Form
-        self.add_help_action(feature_layer, 'brat_cis', rootContainer)
+        self.add_help_action(feature_layer, 'brat-cis', rootContainer)
 
         feature_layer.setEditFormConfig(editFormConfig)
 
