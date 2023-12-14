@@ -1,6 +1,7 @@
 ---
 title: Sampling Frames
 banner: true
+description: Riverscapes polygons for calculating metrics
 ---
 
 Sampling frames are polygon feature classes that divide up your riverscapes into smaller units. Typically these individual polygons span valley wall to valley wall and longitudinally represent coherent geomorphic units, or uniform sections of river.
@@ -9,22 +10,35 @@ Sampling frames are used to define the spatial extent of your [analysis](/softwa
 
 Sampling frames are stored within QRiS as a polygon feature class. One string attribute column can be specified as the column to be used for labels when the sampling frame is added to the map. This is useful for displaying the name of each polygon on the map. These labels can be brief names or text representations of the polygon ID etc.
 
+![sampling frame overview](/images/software-help/sampling-frame-overview.png)
+
 ## Add an Existing Sampling Frame
 
-You can import an existing polygon feature class and use it as a sampling frame. To do this, right click on the **AOIs** menu within the QRiS [project](/software-help/project) and select the **Add Existing Sampling** option. Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project.
+You can import an existing polygon feature class and use it as a sampling frame. To do this, right click on the **Sampling Frames** folder within the QRiS [project](/software-help/project) and select the **Add Existing Sampling Frame** menu option. Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project.
 
-## Create a New AOI
+## Create a New Sampling Frame
 
-You can create a new AOI by drawing a polygon on the map. To do this, click the **Create New AOI** button on the **Areas of Interest** folder within your QRiS [project](/software-help/project). Provide a name and optional description and then click **OK**. Add the AOI to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the AOI on the map. Remember to stop editing and save your changes before the AOI is available for use when importing other data.
+You can create a new sampling frame by drawing a polygon on the map. To do this, right click on the **Sampling Frames** folder within the QRiS [project](/software-help/project) and select the **Create New Sampling** menu option. Provide a name and optional description and then click **OK**. Add the Sampling Frame to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the sampling frame on the map. Remember to stop editing and save your changes before the sampling frame is available for use when importing other data.
 
-## Add an AOI to the Map
+![create sampling frame](/images/software-help/create-sampling-frame.png)
 
-You can add an AOI to the map by right clicking on any individual AOI in the QRiS project tree and selecting **Add to Map**. This will add the AOI to the map as a new layer. 
+## Sampling Frame Polygon Considerations
 
-## Edit an AOI
+Because sampling frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics), it is important to consider the following when creating your sampling frame:
 
-You can edit an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Edit**. This will open the AOI in QGIS and allow you to edit the AOI name and description. You can also add the AOI to the map and use the standard QGIS editing tools to edit the AOI polygon. Remember to stop editing and save your changes before the AOI is available for use when importing other data. Layers that have already been imported using the AOI will not be updated when you edit the AOI. You will need to re-import the layers to see the changes.
+- Polygons should span valley wall to valley wall.
+- Polygons should be mutually exclusive (i.e. no overlap).
+- Polygons should, in most cases, be single part features.
+- Separate polygons should be used to represent different geomorphic units, uniform sections of river or planning areas.
 
-## Delete an AOI
+## Add an Sampling Frame to the Map
 
-You can delete an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Delete**. This will remove the AOI from the QRiS project. It will not change any other data layers that used the AOI to clip the data.
+You can add a sampling frame to the map by right clicking on any individual sampling frame in the QRiS project tree and selecting **Add to Map**. This will add the sampling frame to the map as a new layer. 
+
+## Edit an Existing Sampling Frame
+
+You can edit a sampling frame by right clicking on any individual sampling frame in the QRiS project tree and selecting **Edit**. This will open the sampling frame in QGIS and allow you to edit the name and description. You can also add the it to the map and use the standard QGIS editing tools to edit the polygons. Remember to stop editing and save your changes before the sampling frame is available for use when importing other data. Layers that have already been imported using the sampling frame will not be updated when you edit the sampling frame. You will need to re-import the layers to see the changes.
+
+## Delete a Sampling Frame
+
+You can delete a sampling frame by right clicking on it in the QRiS project tree and selecting **Delete**. This will remove the sampling frame  from the QRiS project. You will not be able to delete a sampling frame if it is being used by any [analyses](/software-help/analyses). You will need to delete any analyses that use the sampling frame before you can delete it.

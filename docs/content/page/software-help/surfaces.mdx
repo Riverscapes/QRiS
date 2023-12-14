@@ -1,17 +1,20 @@
 ---
 title: Surfaces
 banner: true
+description: Contextual Raster Surfaces
 ---
 
 Surfaces within QRiS refer to contextual information that is tied to a specific point in time. They are typically rasters such as satellite imagery or drone imagery, but can also be scanned topo maps, or even a simple image of a hand-drawn map. Surfaces are used to provide context to the data collected in the field, and can be used to create maps and other visualizations.
 
 Each QRiS project has its own surface library. You can have as manay surfaces as you like, and you can upload new surfaces at any time. Each surface can be used as context for one or more [Data Capture Events](/software-help/data-capture-events). 
 
-## Import a Surface
+## Import Existing Surface
 
 To import a surface right click on the Surfaces folder in the Project Explorer and select **Import Existing Surface**. You will be prompted to select a file to upload. QRiS supports any [raster format compatible with QGiS](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_vector/supported_data.html). Click OK and then provide a name and optional description for the surface.
 
 Note that the underlying raster dataset is copied to the current QRiS project. This means that if you delete the original raster file from your computer, the surface will still be available in QRiS. However, if you move the raster file within the QRiS project, QRiS will not be able to find it and the surface will be broken.
+
+![import existing surface](/images/software-help/create-surface.png)
 
 - **Name** - provide a unique name for the surface. This name will be used to identify the surface in the Project Explorer and in the Data Capture Event form.
 - **Source Path** - this ready only and refers to raster file that was selected.
@@ -41,6 +44,8 @@ The raster slider tool is used to isolate regions of a raster and use them to cr
 
 Use the **Surface Value** control or slider to pick the value at which you want to threshold the raster. You can toggle between isolating raster values that are greater than or less than the threshold value using the **Surface Value** control. You can also use the **Increment** control to adjust the amount that the surface value changes when you click the up or down arrows, or use the slider.
 
+![raster slider](/images/software-help/raster-slider.png)
+
 Once you have selected the threshold value, click the **Export Polygon** button to save the outline of the thresholded raster area as a new scratch polygon. Specify the properties of the scratch vector as follows:
 
 - **Name** - provide a unique name for the scratch polygon. This name will be used to identify the polygon in the Project Explorer and in the Data Capture Event form.
@@ -51,3 +56,5 @@ Once you have selected the threshold value, click the **Export Polygon** button 
 - **Minimum Polygon Area** - this is the minimum area of a polygon that will be retained. This is useful if the raster slider has identified lots of small regions in the raster that possess meet the threshold.
 - **Description** - provide an optional description for the scratch polygon. This description will be displayed in the Project Explorer and in the Data Capture Event form.
 - **Add to Map** - if you select this option, QRiS will add the scratch vector to the map as a raster layer. This is useful if you want to check that the polygon layer has been generated correctly.
+
+![raster slider export](/images/software-help/raster-slider-export.png)

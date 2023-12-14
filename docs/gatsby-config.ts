@@ -75,6 +75,10 @@ module.exports = {
             url: '/software-help/surfaces',
           },
           {
+            title: 'Sampling Frames',
+            url: '/software-help/sampling-frames',
+          },
+          {
             title: 'Zonal Statistics',
             url: '/software-help/zonal-statistics',
           },
