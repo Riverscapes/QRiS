@@ -56,7 +56,7 @@ module.exports = {
         items: [
           {
             title: 'Toolbar',
-            url: '/software-help/index',
+            url: '/software-help',
           }
         ],
       },
