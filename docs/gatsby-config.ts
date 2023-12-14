@@ -52,7 +52,7 @@ module.exports = {
       },
       {
         title: 'Software Help',
-        url: '/software-help/index',
+        url: '/software-help',
         items: [
           {
             title: 'Toolbar',
@@ -64,7 +64,7 @@ module.exports = {
           },
           {
             title: 'Projects',
-            url: '/software-help/project-tree',
+            url: '/software-help/projects',
           },
           {
             title: 'Areas of Interest',
@@ -90,7 +90,6 @@ module.exports = {
       },
       {
         title: 'Technical Reference',
-        url: '/technical-reference/database',
         items: [
           {
             title: 'Database',

@@ -4,11 +4,16 @@
         "name": "📜 Docs",
         "path": "../docs"
       },
+      {
+        "name": "🏠 Root",
+        "path": ".."
+      }
     ],
     "settings": {
       "window.title": "QRiS Docs GATSBY -${separator}${activeEditorShort}${separator}${rootName}",
       "[mdx]": {
-        "editor.wordWrap": "on"
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 80
       },
       "css.lint.validProperties": ["composes"],
       "workbench.colorCustomizations": {
