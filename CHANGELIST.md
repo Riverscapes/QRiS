@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [0.3.5] 2023 DEC 14
+
+### Changed
+- Updated icons
+- Help page updates
+
+## Added
+- Setup hierarchy for project tree and layer TOC 
+
 ## [0.3.4] 2023 DEC 08
 
 ### Changed
