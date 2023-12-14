@@ -412,7 +412,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
 
-                self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
+                if not isinstance(model_data, Project):
+                    self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -446,7 +447,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.map_manager.build_event_single_layer(event, event_layer)
         elif isinstance(db_item, EventLayer):
             # determine parent node
-            event_node = tree_node.parent()
+            event_node = tree_node
+            # traverse up the tree until we find the event node
+            while not isinstance(event_node.data(QtCore.Qt.UserRole), Event):
+                event_node = event_node.parent()
             event = event_node.data(QtCore.Qt.UserRole)
             self.map_manager.build_event_single_layer(event, db_item)
         elif isinstance(db_item, Project):
@@ -874,7 +878,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 icon = 'database'
 
             print(data_item)
-            target_node = QtGui.QStandardItem(data_item.name if isinstance(data_item, DBItem) else GROUP_FOLDER_LABELS[data_item])
+            # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
+            if isinstance(data_item, DBItem):
+                target_node = QtGui.QStandardItem(data_item.name)
+            else:
+                if data_item in GROUP_FOLDER_LABELS:
+                    target_node = QtGui.QStandardItem(GROUP_FOLDER_LABELS[data_item])
+                else:
+                    target_node = QtGui.QStandardItem(data_item)
             target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
             target_node.setData(data_item, QtCore.Qt.UserRole)
             parent_node.appendRow(target_node)
@@ -910,11 +921,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 event_node.removeRow(row)
                 row_adjustment -= 1
 
-        # for method in event.methods:
-        #     protocol_node = self.add_child_to_project_tree(event_node, method, add_to_map)
         for event_layer in event.event_layers:
             if event_layer.layer.is_lookup is False:
-                self.add_child_to_project_tree(event_node, event_layer, add_to_map)
+                node = event_node
+                if event_layer.layer.hierarchy is not None:
+                    for level in event_layer.layer.hierarchy:
+                        node = self.add_child_to_project_tree(node, level, add_to_map)
+                self.add_child_to_project_tree(node, event_layer, add_to_map)
 
     def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new base map to the project"""

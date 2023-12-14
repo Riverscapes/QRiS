@@ -10,7 +10,7 @@ from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
 from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE, get_raster_symbology
-from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, Event
+from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
@@ -252,13 +252,23 @@ class QRisMapManager(RiverscapesMapManager):
             return
 
         machine_code = DESIGN_MACHINE_CODE if event.event_type.id == DESIGN_EVENT_TYPE_ID else EVENT_MACHINE_CODE
-        group_name = 'Designs' if event.event_type.id == DESIGN_EVENT_TYPE_ID else 'Data Capture Events'
+        group_name = 'Data Capture Events'
+        if event.event_type.id == DESIGN_EVENT_TYPE_ID:
+            group_name = 'Designs'
+        if event.event_type.id == AS_BUILT_EVENT_TYPE_ID:
+            group_name = 'As-Builts'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_ROOT', group_name, project_group, True)
         event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True)
+        
+        group_layer = event_group_layer
+        if event_layer.layer.hierarchy is not None:
+            # need to add group layers for each hierarchy level
+            for hierarchy_level in event_layer.layer.hierarchy:
+                group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}_{hierarchy_level}', hierarchy_level, group_layer, True)
 
-        existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, event_group_layer)
+        existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, group_layer)
         if existing_layer is not None:
             return
 
@@ -272,7 +282,7 @@ class QRisMapManager(RiverscapesMapManager):
             raise Exception('Unknown geom type')
 
         fc_path = f'{self.project.project_file}|layername={fc_name}|subset=event_id = {event.id} AND event_layer_id = {event_layer.layer.id}'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, event_group_layer, fc_path, event_layer, None, event_layer.layer.qml)
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, event_layer, None, event_layer.layer.qml)
         for id_field, id_value in {'event_id': event.id, 'event_layer_id': event_layer.layer.id}.items():
             QgsExpressionContextUtils.setLayerVariable(feature_layer, id_field, id_value)
             # Set the default value from the variable
@@ -571,7 +581,7 @@ class QRisMapManager(RiverscapesMapManager):
     def stop_brat_edit(self):
         buffers = {"Small": 0.0001,
                    "Large": 0.00025}
-        for buffer, size in buffers.items():
+        for buffer in buffers.keys():
             for layer in QgsProject.instance().mapLayersByName(f"QRIS BRAT CIS {buffer} Buffer Context"):
                 QgsProject.instance().removeMapLayer(layer.id())
 

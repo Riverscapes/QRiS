@@ -30,7 +30,14 @@ class Layer(DBItem):
         self.description = description
         self.icon = 'layer'
         self.metadata = metadata
+        self.fields = None
+        self.hierarchy = None
 
+        if self.metadata is not None:
+            if 'fields' in metadata:
+                self.fields = metadata['fields']
+            if 'hierarchy' in metadata:
+                self.hierarchy = metadata['hierarchy']
 
 def load_layers(curs: sqlite3.Cursor) -> dict:
 
