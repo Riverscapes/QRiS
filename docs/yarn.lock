@@ -2275,9 +2275,9 @@
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
 "@riverscapes/gatsby-theme@^0.1.9":
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/@riverscapes/gatsby-theme/-/gatsby-theme-0.1.15.tgz#aab15ea17c40475728dfd895d00d0fec791686f0"
-  integrity sha512-Nymd/AUWgdhw8cb81sdNzowSw6CUE9ctIWz5A7imp8+jNBSaRavvg96CUy270utCQqgLtBqqKpH2/5FM88B7MA==
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/@riverscapes/gatsby-theme/-/gatsby-theme-0.1.16.tgz#8b8157cf309527cf49bb1a2cbe102d851f6eee79"
+  integrity sha512-tb9jAxQsgA8598gtlWMuhM7NjfEdbvXynM7CXhPV1j4RKYLPfORM9FFqb06UgExBNhA1oYdnXxnibDGEGLalmA==
   dependencies:
     "@emotion/react" "^11.11.0"
     "@emotion/styled" "^11.11.0"

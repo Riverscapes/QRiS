@@ -2,4 +2,29 @@
 title: Database Schema
 ---
 
+QRiS projects are stored as a single GeoPackage file. All vector feature classes are stored inside this file, while rasters are stored on disk in the same folder as the project GeoPackage.
+
+[GeoPackages](https://www.geopackage.org/) are the Open Geospatial Consortiums (OGC) open standard for storing geospatial data. It is a single file that can store multiple vector feature classes and raster datasets. It is a SQLite database with a specific schema. You can think of a GeoPackage as analagous to a ShapeFile, with the major difference being that a GeoPackage can store multiple feature classes and rasters in a single file.
+
+## Working with GeoPackages
+
+Since a GeoPackage is a SQLite database, you can use any SQLite client to view the data. We discourage editing data outside of QGIS, but using one of the following database user interface tools you can perform custom queries should you want to analyse or report your QRiS data in unanticipated ways:
+
+- [SQLiteStudio](https://sqlitestudio.pl)
+- [DataGrip](https://www.jetbrains.com/datagrip/)
+- [DB Browser for SQLite](https://sqlitebrowser.org/). 
+- You can also use the [QGIS](https://qgis.org/en/site/) desktop GIS software to view and edit the data.
+
+If you plan on using DataGrip then you can filter out the non-QRiS tables by using the following schem configuration string:
+
+```
+table:-rtree.*||table:-sqlite.*||table:-gpkg_tile.*||table:-gpkg_spatial_ref_sys||table:-gpkg_ogr_contents||vtable:-rtree.* co:
+```
+
+## QRiS GeoPackage Schema
+
+The object entity diagram below illustrates the main QRiS GeoPackage database tables. Note that GeoPackages contain several additional database tables that are part of the GeoPackage schema and shown here.
+
 ![schema](https://docs.google.com/drawings/d/e/2PACX-1vTkgfxqiUnx6Xe-KqTiKStvPtAALcuAXpHjqUMAF1zbRo6O_EzjHGYJb6TtE8r4W_WaNeNpCbv9nTjJ/pub?w=1308&h=1103)
+
+

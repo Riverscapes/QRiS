@@ -57,6 +57,30 @@ module.exports = {
           {
             title: 'Toolbar',
             url: '/software-help',
+          },
+          {
+            title: 'Project Tree',
+            url: '/software-help/project-tree',
+          },
+          {
+            title: 'Projects',
+            url: '/software-help/project-tree',
+          },
+          {
+            title: 'Surfaces',
+            url: '/software-help/surfaces',
+          },
+          {
+            title: 'Zonal Statistics',
+            url: '/software-help/zonal-statistics',
+          },
+          {
+            title: 'Stream Gage Tool',
+            url: '/software-help/zonal-statistics',
+          },
+          {
+            title: 'Basemaps',
+            url: '/software-help/basemaps',
           }
         ],
       },

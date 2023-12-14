@@ -1,0 +1,34 @@
+---
+title: Projects
+---
+
+QRiS is focused around the concept of a project. A project is a collection of geospatial data related to your riverscape. This could be a single river, a catchment, or a region. A project is made up of a number of layers, which are displayed on the map. Each layer is a collection of features, which are displayed as points, lines, or polygons on the map. Each feature has a number of attributes, which are displayed in the table.
+
+## Creating a new Project
+
+Use the [QRiS toolbar](software-help) to create a new project. You will first need to browse to a folder on your computer where the project will be stored. You will then be prompted to enter a name for the project. This name will be used to create a folder inside the one you browsed to, so it should not contain any special characters. Once you have entered a name, click the `Create` button to create the project.
+
+The QRiS project tree will be displayed, and you will be able to see the new project you have created. The project tree is used to navigate between projects layers and features. You can also use the project tree to create new layers and features, and to edit project properties.
+
+## Adding an Entire Project To the Map
+
+You can add an entire project to the map by right clicking on the top level of the project tree and selecting `Add Project to Map`. This will add all layers in the project to the map. You can also add individual layers to the map by right clicking on the layer and selecting `Add Layer to Map`.
+
+## Editing Project Properties
+
+You can change the name of a project and its description at any time by right clicking on the top level of the project tree and selecting `Edit Project Properties`. You can also change the project's coordinate reference system (CRS) here. This is the coordinate system that will be used to display the project on the map. 
+
+Note that you can change the name of the project after it is created, but you can't change the name of the actual project file on disk. To change the file name, first close QGIS altogether, then rename the project GeoPackage file name on disk. When you next open QGIS, you will be prompted to locate the project file. Browse to the new location of the project file, and it will be loaded into QRiS.
+
+## Browsing a Project folder
+
+You can browse the contents of a project folder by right clicking on the top level of the project tree and selecting `Browse Project Folder`. This will open a file browser window showing the contents of the project folder. You can use this to view the project GeoPackage file, or to add new files to the project folder.
+
+## Export To Riverscapes Project
+
+You can export a QRiS project to a Riverscapes Project by right clicking on the top level of the project tree and selecting `Export To Riverscapes Project`. This will create a new Riverscapes Project folder, and copy the QRiS project GeoPackage file into it.
+
+
+## Close a Project
+
+You can close a project by right clicking on the top level of the project tree and selecting `Close Project`. This will remove the project from the project tree, and remove all layers from the map. The project will still exist on disk, and can be re-opened at any time by using the `Open Project` button on the QRiS toolbar.
