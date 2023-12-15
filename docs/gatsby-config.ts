@@ -78,6 +78,10 @@ module.exports = {
             url: '/software-help/surfaces',
           },
           {
+            title: 'Cross Sections',
+            url: '/software-help/cross-sections',
+          },
+          {
             title: 'Sampling Frames',
             url: '/software-help/sampling-frames',
           },
