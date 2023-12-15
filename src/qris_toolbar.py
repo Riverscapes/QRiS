@@ -334,8 +334,8 @@ class QRiSToolbar:
         if self.qrave.name is not None:
             self.settings.setValue('symbologyDir', self.qrave.symbology_folder)
         else:
-            QgsMessageLog.logMessage('Unable to load Required QRave plugin. Some functions in QRiS may be disabled, including layer symbology.', 'QRiS', Qgis.Critical)
-            self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load QRave plugin.', level=Qgis.Critical, duration=5)
+            QgsMessageLog.logMessage('Unable to load Required Riverscapes Viewer plugin. Some functions in QRiS may be disabled, including layer symbology and basemaps.', 'QRiS', Qgis.Critical)
+            self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load Riverscapes Viewer plugin.', level=Qgis.Critical, duration=5)
             self.iface.mainWindow().repaint()
 
         # Create the dockwidget (after translation) and keep reference

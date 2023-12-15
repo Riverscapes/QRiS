@@ -8,7 +8,7 @@ from qgis.PyQt.QtGui import QStandardItem, QIcon
 from .path_utilities import parse_posix_path
 
 # Try to load these plugin names in priority order
-NAMES = ['qrave_toolbar_dev', 'qrave_toolbar', 'QRAVEPlugin-qrave_integration']
+NAMES = ['riverscapes_viewer_dev', 'riverscapes_viewer', 'qrave_toolbar_dev', 'qrave_toolbar', 'QRAVEPlugin-qrave_integration']
 
 
 class QRaveIntegration(QObject):
