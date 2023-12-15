@@ -6,7 +6,7 @@
 - Updated icons
 - Help page updates
 
-## Added
+### Added
 - Setup hierarchy for project tree and layer TOC 
 
 ## [0.3.4] 2023 DEC 08
