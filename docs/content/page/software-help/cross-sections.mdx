@@ -4,6 +4,28 @@ banner: true
 description: Transect lines across a riverscape
 ---
 
+Cross sections are transect lines across a riverscape. They are used to measure the elevation of the river bed and the water surface at a given point in time. 
 
+Cross sections can also be used to subdivide a polygon into segments as a way of generating a [sampling frame](/software-help/sampling-frames).
 
-![Cross Section](/images/cross-sections-overview.png)
+## Importing Existing Cross Sections
+
+Right click on the **Cross Sections** folder in the QRiS project tree and select **Import Existing Cross Sections**. This will open a file browser window. Select the feature class that you wish to import. Provide a name and optional description. You can also specify metadata key/value pairs for important information about the database. Click **Open** and the cross sections will be imported into the project and displayed in the map view.
+
+## Create New Cross Sections
+
+Right click on the **Cross Sections** folder in the QRiS project tree and select **Create New Cross Sections**. This will open a window where you can specify the name and description of the cross sections. You can also specify metadata key/value pairs for important information about the database. Click **OK** and the cross sections will be created and displayed in the map view. Use the built in QGIS editing capabilities to edit the cross section geometries.
+
+![Cross Section](/images/software-help/cross-sections-overview.png)
+
+## Editing Cross Section Properties
+
+To edit the properties of a cross section, right click on the cross section in the project tree and select **Properties**. This will open a window where you can edit the name, description, and metadata of the cross section. You can also add the cross sections to the map and use the built in QGIS editing capabilities to edit the cross section geometries.
+
+## Generate a Sampling Frame
+
+You can use the cross sections to segment a valley bottom polygon into a riverscapes [sampling frame](/software-help/sampling-frames). To do this, right click on the cross section in the project tree and select **Generate Sampling Frame**. This will open a window where you can specify the name and description of the sampling frame. You can also specify metadata key/value pairs for important information about the database. Click **OK** and the sampling frame will be created and displayed in the map view.
+
+## Deleting Cross Sections
+
+To delete a cross section, right click on the cross section in the project tree and select **Delete**. This will remove the cross section from the project.

@@ -66,6 +66,10 @@ module.exports = {
             url: '/software-help/projects',
           },
           {
+            title: 'Data Capture Events',
+            url: '/software-help/dce',
+          },
+          {
             title: 'Profiles',
             url: '/software-help/profiles',
           },
@@ -96,6 +100,16 @@ module.exports = {
           {
             title: 'Basemaps',
             url: '/software-help/basemaps',
+          },
+          {
+            title: 'Context',
+            url: '/software-help/context',
+            items: [
+              {
+                title: 'Watershed Catchments',
+                url: '/software-help/watershed-catchments',
+              }
+            ]
           }
         ],
       },
