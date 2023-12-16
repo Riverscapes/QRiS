@@ -90,6 +90,10 @@ module.exports = {
             url: '/software-help/sampling-frames',
           },
           {
+            title: 'Analyses',
+            url: '/software-help/analyses',
+          },
+          {
             title: 'Zonal Statistics',
             url: '/software-help/zonal-statistics',
           },

@@ -1,4 +1,87 @@
 ---
 title: Analyses
 banner: true
+description: Calculating river health metrics over time
 ---
+
+QRiS analyses help track river health over time. Before you can perform an analysis you need to have a project with the following:
+
+- One or more [data capture events](/software-help/dce) that represent the points in time for which you want to measure river health. These events represent past, present or future representations of your riverscape captured as assessments, designs, plans or monitoring events. Ideally each event should have geospatial features digitized that capture features that characterize the health of the river.
+- A [sampling frame](/software-help/sampling-frame) that subdivides your riverscape into the spatial units for which you want to report river health. Typically these are polygons that span valley wall to valley wall and represent the river reaches or sub-reaches.
+
+## Creating an analysis
+
+Right click on the **Analyses** folder in the QRiS project tree and select **New Analysis**. This will open the analysis properties form. Provide a name and description for the analysis. Select the sampling frame you want to use for the analysis. You cannot change this once the analysis has been created. If you make a mistake you will need to delete the analysis and start again.
+
+Pick from the list of available metrics the ones that you want to include in your analysis. You can always add or remove metrics later. Each of the available metrics can have one of three states:
+
+- **Exclude** - the metric will not be included in the analysis
+- **Metric** - the metric will be included and treated as detailed metric when users want to dig into the full details of the analysis.
+- **Indicator** - the metric will be included and treated as an indicator. Indicators are considered summary values, or shortlisted metrics for overall reporting.
+
+Click **OK** to create the analysis.
+
+![analysis properties form](/images/software-help/analyses/create-analysis.png)
+
+## Open An Analysis
+
+Right click on an analysis in the QRiS project tree and select **Open**. This will open the analysis dockable window. You can reposition this window by dragging the title bar to suite your needs.
+
+The analysis dockable window has the following features:
+
+### Analysis Name
+
+The analysis name is shown at the top and can be edited by clicking the **Properties** button.
+
+### Data Capture Event
+
+The currently selected data capture event can be changed using the dropdown list. The metric table below will update to show the metric values for the currently selected event.
+
+### Sample Frame Polygon
+
+The currently selected sample frame polygon can be changed using the dropdown list. The metric table below will update to show the metric values for the currently selected polygon.
+
+### Display Values 
+
+Switch between showing just indicators (summary metrics) or all metrics using the two radio buttons.
+
+### Metric Table
+
+The metric table always reflects the currently selected data capture event and sample frame polygon. The table shows the metric values for each metric. The table can be sorted by clicking on the column headers. Click **Properties** to change which metrics and indicators are displayed.
+
+The value column shows each individual metric value. The status column indicates whether the value displayed is a manually entered value or one that was calculated by QRiS by analysing the data capture event geospatial data within the current sampling frame polygon. The status column can have one of the following values:
+
+- Solid blue circle - a manual value exists for this metric.
+- Solid blue square - a manual value exists and is the active value for this metric.
+- hollow blue circle - no manual value exists for this metric.
+- solid organge circle - an automated value exists for this metric.
+- solid orange square - an automated value exists and is the active value for this metric.
+- hollow orange circle - no automated value exists for this metric.
+
+The uncertainty column shows the uncertainty associated with the current value.
+
+![analysis dockable window](/images/software-help/analyses/analysis-dockable-window.png)
+
+### Manually Entering Metric Values
+
+Double clicking a metric value cell in the analysis dockable window opens a form for entering the value.
+
+- Click the Help icon to get information about currently selected metric.
+- Enter the metric value in the text box.
+- Pick how you want to define the uncertainty associated with the value you have chosen and provide the associated value, or range of values.
+- Clicking the **Calculate** button will attempt to automate the calculation of the metric value using the geospatial data associated with the current data capture event and sample frame polygon. If the calculation is successful the value will be shown in the text box.
+- Provide any contextual information about the metric value in the description text box.
+- Add any metadata key/value pairs if there are any pertinent data regarding the metric value.
+
+Click **OK** to save the metric value and return to the analysis dockable window.
+
+![metric value form](/images/software-help/analyses/metric-value.png)
+
+## Export an Analysis
+
+Right click on an analysis in the QRiS project tree and select **Export Metrics Table**. Pick the desired file format and then specify a file location. Click **OK** to export the analysis. All metric values for all data capture events and sample frame polygons will be exported to the specified format.
+
+## Delete an Analysis
+
+Right click on an analysis in the QRiS project tree and select **Delete**. This will delete the analysis and all of its metric values. You cannot undo this action.
+
