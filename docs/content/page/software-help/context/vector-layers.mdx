@@ -1,0 +1,35 @@
+---
+title: Vector Layers
+banner: true
+description: Contextual vector layers
+---
+
+It can be hard to anticipate all the types of map layers that are useful for a particular riverscape. QRiS allows you to import your own vector layers to add context to your map. For example, you may want to add a layer showing the location of a proposed dam, or the boundaries of a protected area. You can also add layers that are not spatially referenced, such as a table of data that you want to display in a popup.
+
+QRiS makes a copy of the vector layer within the project folder structure. This means that you can edit the layer symbology and style without affecting the original layer. You can also add new fields to the attribute table, and edit the values of existing fields. This is useful if you want to add new information to the layer, such as a description of the layer, or a link to a website.
+
+## Add a Vector Layer
+
+Right click on the **Context** folder in the QRiS project tree, and select **Import Existing Vector Context Feature Class**. This will open the QGIS file browser window. Navigate to the folder containing the vector layer you want to add, and select the file. Provide a name and description for the layer. QRiS will import the layer and add it to the project tree under the Context folder.
+
+## Edit a Vector Layer
+
+Right click on the layer in the project tree, and select **Properties**. You can edit the name and description, but not the location of the data. You can also use QGIS built in tools to edit the features within the QRiS copy of the layer.
+
+## Delete a Vector Layer
+
+Right click on the layer in the project tree, and select **Delete**. This will delete the QRiS copy of the layer, but will not affect the original layer.
+
+## Contextual Options
+
+There are several options available when you right click on a vector layer in the QRiS project tree that depend on the geometry type of the layer.
+
+### Polygon Layers
+
+- You can promote a polygon layer to an [AOI](/software-help/aoi) by selecting **Promote to AOI**. This will create a new AOI layer, and add the selected polygon to the AOI layer.
+- You can [generate a centerline](/software-help/profiles/#centerline-tool) down the middle of the polygon.
+- You can [generate a sampling frame](/software-help/sampling/#sampling-frame) from the polygon.
+
+### Line Layers
+
+- You can promote the line layer to a [profile](/software-help/profiles) by selecting **Promote to Profile**. This will create a new profile layer, and add the selected line to the profile layer.
