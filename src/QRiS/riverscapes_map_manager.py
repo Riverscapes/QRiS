@@ -448,12 +448,15 @@ class RiverscapesMapManager():
                 if 'metadata' not in metadata_fields:
                     metadata_fields.update({'metadata': {}})
                 metadata_fields['metadata'].update({key: field_type})
+                added_fields.append(key)
 
         # create a virtual field for each key
         for upper_key, new_fields in metadata_fields.items():
             for key, field_type in new_fields.items():
 
-                virtual_field = QgsField(key, field_type)
+                field_name = f"{key} ({upper_key})" if upper_key == 'metadata' else key
+
+                virtual_field = QgsField(field_name, field_type)
                 feature_layer.addExpressionField(f"""map_get(map_get(json_to_map("metadata"), '{upper_key}'), '{key}')""", virtual_field)
 
                 if key == "Photo Path":
