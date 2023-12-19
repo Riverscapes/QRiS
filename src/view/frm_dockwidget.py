@@ -549,6 +549,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def open_analysis(self, analysis: Analysis):
 
+        mask: Mask = analysis.mask
+        fc_path = f"{self.project.project_file}|layername=mask_features|subset=mask_id = {mask.id}"
+        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
+        if temp_layer.featureCount() < 1:
+            QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The sample frame for this analysis does not contain any features.\n\nPlease add features to this sample frame to proceed.')
+            return
+
         if self.analysis_doc_widget is None:
             self.analysis_doc_widget = FrmAnalysisDocWidget(self)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)

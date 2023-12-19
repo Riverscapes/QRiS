@@ -1,7 +1,7 @@
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis import core, gui, utils
+from qgis.core import QgsVectorLayer
 
 from ..model.analysis import Analysis, insert_analysis
 from ..model.db_item import DBItemModel, DBItem
@@ -141,6 +141,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         mask = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         if mask is None:
             QtWidgets.QMessageBox.warning(self, 'Missing Sample Frame', 'You must select a sample frame to continue.')
+            self.cboSampleFrame.setFocus()
+            return
+        
+        # determine if there are any features in the mask
+        fc_path = f"{self.project.project_file}|layername=mask_features|subset=mask_id = {mask.id}"
+        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
+        if temp_layer.featureCount() < 1:
+            QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The selected sample frame does not contain any features. Please select a different sample frame.')
             self.cboSampleFrame.setFocus()
             return
 
