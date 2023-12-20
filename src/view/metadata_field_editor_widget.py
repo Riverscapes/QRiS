@@ -27,7 +27,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             elif isinstance(widget, QComboBox):
                 data[name] = widget.currentText()
         self.dict_values = data
-        self.current_value = json.dumps(data)
+        formatted_data = {}
+        formatted_data['attributes'] = data
+        self.current_value = json.dumps(formatted_data)
 
         return self.current_value
 
