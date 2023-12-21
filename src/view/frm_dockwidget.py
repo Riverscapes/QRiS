@@ -187,8 +187,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.is_context is True]
         [self.add_child_to_project_tree(self.context_node, item) for item in self.project.scratch_vectors.values()]
 
-        gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
-        [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
+        # gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
+        # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
         [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
@@ -529,8 +529,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.frm_event = FrmEvent(self, self.project, event_type_id)
 
-        # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
-        # self.assessment_dialog.dataChange.connect(self.build_tree_view)
         result = self.frm_event.exec_()
         if result is not None and result != 0:
             self.add_event_to_project_tree(parent_node, self.frm_event.the_event, self.frm_event.chkAddToMap.isChecked())
@@ -886,6 +884,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 icon = data_item.icon
             elif data_item == STREAM_GAGE_MACHINE_CODE:
                 icon = 'database'
+            elif data_item == CATCHMENTS_MACHINE_CODE:
+                icon = 'waterdrop-blue'
 
             print(data_item)
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
