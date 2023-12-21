@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [0.3.6] 2023 DEC 21
+
+### Changed
+- Updated schema for DCE layers
+- Updated schema for As-Built Surveys
+- Added default Notes field to all DCE layers
+- Updated qrave integration to use Riverscapes Viewer
+- Map Manager finds symbology based on logical folders (project folder, qirs resources folder, shared resources folder)
+- Additional icon updates
+
+### Fixed
+- Bug with importing dce features with same name in attribute table
+- Check to make sure sample frame has at lease one feature before creating or opening an analysis
+- Fixed attributes not updating when digitizing features
+- Fixed bug when loading attributes into Metadata Widget
+
 ## [0.3.5] 2023 DEC 14
 
 ### Changed
