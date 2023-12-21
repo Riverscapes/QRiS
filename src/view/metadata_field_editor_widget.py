@@ -18,7 +18,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
            Returns (Any): The current value the widget represents"""
 
-        data = self.dict_values
+        if self.loading:
+            return json.dumps(self.dict_values)
+        data = self.dict_values.get('attributes', {})
         for name, widget in self.widgets.items():
             if isinstance(widget, QLineEdit):
                 data[name] = widget.text()
@@ -26,10 +28,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 data[name] = widget.value()
             elif isinstance(widget, QComboBox):
                 data[name] = widget.currentText()
-        self.dict_values = data
-        formatted_data = {}
-        formatted_data['attributes'] = data
-        self.current_value = json.dumps(formatted_data)
+        self.dict_values['attributes'] = data
+        # formatted_data = {}
+        # formatted_data['attributes'] = data
+        self.current_value = json.dumps(self.dict_values)
 
         return self.current_value
 
@@ -81,7 +83,11 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             self.grid.addWidget(widget, row, 1, 1, 1)
 
             if 'default' in field.keys():
-                widget.setValue(field['default'])
+                if isinstance(widget, QComboBox):
+                    index = widget.findText(field['default'])
+                    widget.setCurrentIndex(index)
+                else:
+                    widget.setValue(field['default'])
 
             self.widgets[field['label']] = widget
             row += 1
@@ -92,22 +98,25 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
     def setValue(self, value):
         """Is called when the value of the widget needs to be changed. Updates the widget representation to reflect the new value."""
 
+        self.loading = True
         if value is None or value == NULL:
             pass
         else:
             values: dict = json.loads(value)
             self.dict_values = values
-            for name, val in values.items():
-                if name in self.widgets:
-                    if isinstance(self.widgets[name], QLineEdit):
-                        self.widgets[name].setText(val)
-                    elif isinstance(self.widgets[name], QDoubleSpinBox):
-                        self.widgets[name].setValue(val)
-                    elif isinstance(self.widgets[name], QComboBox):
-                        # get the index of the value in the combo box
-                        index = self.widgets[name].findText(val)
-                        # set the current index of the combo box
-                        self.widgets[name].setCurrentIndex(index)
+            if 'attributes' in values.keys():
+                for name, val in values['attributes'].items():
+                    if name in self.widgets:
+                        if isinstance(self.widgets[name], QLineEdit):
+                            self.widgets[name].setText(val)
+                        elif isinstance(self.widgets[name], QDoubleSpinBox):
+                            self.widgets[name].setValue(val)
+                        elif isinstance(self.widgets[name], QComboBox):
+                            # get the index of the value in the combo box
+                            index = self.widgets[name].findText(val)
+                            # set the current index of the combo box
+                            self.widgets[name].setCurrentIndex(index)
+        self.loading = False
 
     def onValueChanged(self, value):
         # self.valueChanged.emit(value)

@@ -331,8 +331,10 @@ class QRisMapManager(RiverscapesMapManager):
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
 
-        config: dict = event_layer.layer.metadata  # .get('fields', {})
-
+        config: dict = event_layer.layer.metadata # .get('fields', {})
+        if 'fields' not in config:
+            config['fields'] = []
+            
         # add 'values' to config from self.lookups if the field has 'lookup' as an attribute
         fields: list = config.get('fields', [])
         field: dict
@@ -342,6 +344,9 @@ class QRisMapManager(RiverscapesMapManager):
                     config['fields'][ix]['values'] = self.project.lookup_values[field['lookup']]
                 else:
                     config['fields'][ix]['values'] = []
+        # add a notes field if it doesn't exist
+        if 'notes' not in [field['machine_code'] for field in fields]:
+            config['fields'].append({'machine_code': 'notes', 'type': 'text', 'label': 'Notes'})
 
         # build virtual metadata fields for attribute table
         default_photo_path = os.path.join(os.path.dirname(self.project.project_file), 'photos', f'dce_{str(event_layer.event_id).zfill(3)}').replace('\\', '/')
