@@ -26,7 +26,7 @@ CREATE TABLE protocols (
 
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (1, 'LTPBR BASE', 'LTPBR_BASE', 0, 'Base LTPBR Layers');
 INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (4, 'Low-Tech Design', 'DESIGN', 1, 'Documentation of a design or as-built low-tech structures');
--- INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'Structural Elements', 'STRUCTURES', 0, 'Survey of primary structural element types');
+INSERT INTO protocols (id, name, machine_code, has_custom_ui, description) VALUES (5, 'As-Built', 'ASBUILT', 1, 'Documentation of as-built low-tech structures'); 
 
 CREATE TABLE methods (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,10 +38,8 @@ CREATE TABLE methods (
 );
 
 INSERT INTO methods (id, name, machine_code) VALUES (1, 'Methods', 'METHODS');
--- INSERT INTO methods (id, name, machine_code) VALUES (2, 'Riverscapes Context', 'RIVERSCAPESCONTEXT');
--- INSERT INTO methods (id, name, machine_code) VALUES (3, 'Test Orphaned Method', 'WEIRDO');
--- INSERT INTO methods (id, name, machine_code) VALUES (4, 'BRAT CIS', 'BRATCIS');
 INSERT INTO methods (id, name, machine_code) VALUES (5, 'LT-PBR Design', 'LTPBRDESIGN');
+INSERT INTO methods (id, name, machine_code) VALUES (6, 'LT-PBR As-Built', 'LTPBRASBUILT');
 
 CREATE TABLE protocol_methods (
     protocol_id INTEGER NOT NULL REFERENCES protocols(id) ON DELETE CASCADE,
@@ -51,16 +49,14 @@ CREATE TABLE protocol_methods (
 );
 
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 1);
--- INSERT INTO protocol_methods (protocol_id, method_id) VALUES (1, 2);
--- INSERT INTO protocol_methods (protocol_id, method_id) VALUES (2, 2);
--- INSERT INTO protocol_methods (protocol_id, method_id) VALUES (7, 4);
 INSERT INTO protocol_methods (protocol_id, method_id) VALUES (4, 5);
+INSERT INTO protocol_methods (protocol_id, method_id) VALUES (5, 6);
 
 
 CREATE TABLE layers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fc_name TEXT UNIQUE NOT NULL,
-    display_name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
     qml TEXT NOT NULL,
     is_lookup BOOLEAN,
     geom_type TEXT NOT NULL,
@@ -70,65 +66,48 @@ CREATE TABLE layers (
 );
 
 -- Layers
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "dam_integrity_id", "label": "Dam Integrity", "type": "list", "lookup": "dam_integrity"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list" ,"lookup": "beaver_maintenance"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (2, 'jam_area', 'Jam Areas', 'Polygon', 0, 'jam_area.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "beaver_maintenance"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "dam_integrity_id", "label": "Dam Integrity", "type": "list", "lookup": "dam_integrity"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "lkp_beaver_maintenance"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "beaver_maintenance"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (5, 'thalwegs', 'Thalwegs', 'Linestring', 0, 'thalwegs.qml', NULL, '{"fields": [{"machine_code": "type_id", "label": "Thalweg Type", "type": "list", "lookup": "thalweg_types"}]}'); -- type: primary, secondary - see GUT
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL, '{"fields": [{"machine_code": "type_id", "label": "Extent Type", "type": "list", "lookup": "active_extent_types"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (7, 'centerlines', 'Centerlines', 'Linestring', 0, 'centerlines.qml', NULL, '{}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (8, 'inundation_extents', 'Inundation Extents', 'Polygon', 0, 'inundation_extents.qml', NULL, '{"fields": [{"machine_code": "type_id", "label": "Extent Type", "type": "list", "lookup": "inundation_extent_types"}]}'); -- type: free flow, overflow, ponded
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (10, 'junctions', 'Junctions', 'Point', 0, 'junctions.qml', NULL, '{}'); -- type: convergence, divergence
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon', 0, 'temp.qml', NULL, '{}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'temp.qml', NULL, '{}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (14, 'cem_phases', 'Channel Evolution Model Stages', 'Polygon', 0, 'temp.qml', NULL, '{}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'temp.qml', NULL, '{}'); -- veg_classes
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (16, 'floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon', 0, 'temp.qml', NULL, '{}'); -- floating point accessibility
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'temp.qml', NULL, '{}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (1, 'dam_crests', 'Dam Crests', 'Linestring', 0, 'dam_crests.qml', NULL, '{"hierarchy": ["Assessments", "Beaver Dam Building"], "fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "dam_integrity_id", "label": "Dam Integrity", "type": "list", "lookup": "dam_integrity"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list" ,"lookup": "beaver_maintenance"}]}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (2, 'jam_area', 'Jam Areas', 'Polygon', 0, 'jam_area.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "beaver_maintenance"}]}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (3, 'dams', 'Dam Points', 'Point', 0, 'dams.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "dam_integrity_id", "label": "Dam Integrity", "type": "list", "lookup": "dam_integrity"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "lkp_beaver_maintenance"}]}');
+-- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (4, 'jams', 'Jam Points', 'Point', 0, 'jams.qml', NULL, '{"fields": [{"machine_code": "structure_source_id", "label": "Structure Source", "type": "list", "lookup": "structure_source"}, {"machine_code": "beaver_maintenance_id", "label": "Beaver Maintenance", "type": "list", "lookup": "beaver_maintenance"}]}');
+
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (5, 'active_channel', 'Active Channel(s) (bankfull)', 'Polygon', 0, 'active_channels.qml', NULL, '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (6, 'active_extents', 'Active Extents', 'Polygon', 0, 'active_extents.qml', NULL, '{"hierarchy": ["Observations", "Geomorphic Mapping", "Floodplain"], "fields": [{"machine_code": "type_id", "label": "Type", "type": "list", "lookup": "active_extent_types"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (7, 'centerlines', 'Centerline(s) of Active Channel(s)', 'Linestring', 0, 'centerlines.qml', NULL, '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"], "fields": [{"machine_code": "type_id", "label": "Type", "type": "list", "lookup": "centerline_types"}, {"machine_code": "description", "label": "Description", "type": "list", "lookup": "centerline_descriptions", "default": "Centerline"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (8, 'inundation_extents', 'Inundation', 'Polygon', 0, 'inundation_extents.qml', NULL, '{"hierarchy": ["Observations", "Hydraulic Mapping"], "fields": [{"machine_code": "type_id", "label": "Extent Type", "type": "list", "lookup": "inundation_extent_types"}]}'); -- type: free flow, overflow, ponded
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (10, 'channel_junctions', 'Channel Junctions', 'Point', 0, 'channel_junctions.qml', NULL, '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"], "fields": [{"machine_code": "junction_type", "label": "Type", "type": "list", "lookup": "junction_types"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (11, 'geomorphic_unit_extents', 'Geomorphic Units', 'Polygon', 0, 'geomorphic_unit_extents.qml', NULL, '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"], "fields": [{"machine_code": "geomorphic_unit_type_2_tier", "label": "Type 2 Tier", "type": "list", "lookup": "geomorphic_units_tier2_types"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (12, 'geomorphic_units', 'Geomorphic Unit Points', 'Point', 0, 'geomorphic_units.qml', NULL, '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"], "fields": [{"machine_code": "geomorphic_unit_type_2_tier", "label": "Type 2 Tier", "type": "list", "lookup": "geomorphic_units_tier2_types"}, {"machine_code": "length", "label": "Length", "type": "float"}, {"machine_code": "width", "label": "Width", "type": "float"}, {"machine_code": "depth", "label": "Depth", "type": "float"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (14, 'cem_phases', 'CEM', 'Polygon', 0, 'cem_phases.qml', NULL, '{"hierarchy": ["Assessments", "Geomorphic Condition"], "fields": [{"machine_code": "cem_stage", "label": "CEM Stage", "type": "integer", "max": 8}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (15, 'vegetation_extents', 'Vegetation Extents', 'Polygon', 0, 'vegetation_extents.qml', NULL, '{"hierarchy": ["Observations", "Vegetation Mapping"]}');
+
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (17, 'brat_vegetation', 'Brat Vegetation Suitability', 'Polygon', 0, 'brat_vegetation.qml', NULL, '{"hierarchy": ["Assessments", "Beaver Dam Building"], "fields": [{"machine_code": "vegetation_suitability", "label": "Suitability", "type": "integer"}]}');
+
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (19, 'zoi', 'Zones of Influence', 'Polygon', 0, 'zoi.qml', NULL, '{"fields": [{"machine_code": "zoi_type", "label": "ZOI Type", "type": "list", "lookup": "zoi_types"}, {"machine_code": "zoi_stage", "label": "ZOI Stage", "type": "list", "lookup": "zoi_stages"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL, '{"fields": []}'); --NULL);
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}'); 
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (25, 'brat_cis', 'BRAT CIS (Capacity Inference System)', 'Point', 0, 'none.qml', NULL, '{}');
-INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'none.qml', NULL, '{}');
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (30, 'observation_points', 'Observation Points', 'Point', 0, 'observation_points.qml', NULL, '{"fields": [{"machine_code": "observation_point_type", "label": "Observation Type", "type": "list", "lookup": "observation_point_types"}, {"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (31, 'observation_lines', 'Observation Lines', 'Linestring', 0, 'observation_lines.qml', NULL, '{"fields": [{"machine_code": "observation_line_type", "label": "Observation Type", "type": "list", "lookup": "observation_line_types"}]}');
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (32, 'observation_polygons', 'Observation Polygons', 'Polygon', 0, 'observation_polygons.qml', NULL, '{"fields": [{"machine_code": "observation_polygon_type", "label": "Observation Type", "type": "list", "lookup": "observation_polygon_types"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (20, 'complexes', 'Structure Complex Extents', 'Polygon', 0, 'complexes.qml', NULL, '{"hierarchy": ["Structures"], "fields": []}'); --NULL);
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (21, 'structure_points', 'Structure Points', 'Point', 0, 'structure_points.qml', NULL, '{"hierarchy": ["Structures"], "fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}'); 
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (22, 'structure_lines', 'Structure Lines', 'Linestring', 0, 'structure_lines.qml', NULL, '{"hierarchy": ["Structures"], "fields": [{"machine_code": "structure_type", "label": "Structure Type", "type": "list", "lookup": "structure_types"}]}');
+
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (25, 'brat_cis', 'BRAT CIS', 'Point', 0, 'brat_cis.qml', NULL, '{"hierarchy": ["Assessments", "Beaver Dam Building"], "fields": [{"machine_code": "streamside_vegetation", "label": "Streamside Vegetation Suitability", "type": "text"}, {"machine_code": "riparian_vegetation", "label": "Riparian/Upland Vegetation Suitability", "type": "text"}, {"machine_code": "dam_capacity", "label": "Dam Capacity", "type": "text"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (26, 'brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring', 0, 'brat_cis_reaches.qml', NULL, '{"hierarchy": ["Assessments", "Beaver Dam Building"]}');
+
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (30, 'observation_points', 'Observations', 'Point', 0, 'observation_points.qml', NULL, '{"hierarchy": ["Observations"], "fields": [{"machine_code": "observation_point_type", "label": "Observation Type", "type": "list", "lookup": "observation_point_types"}, {"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (31, 'observation_lines', 'Observations', 'Linestring', 0, 'observation_lines.qml', NULL, '{"hierarchy": ["Observations"], "fields": [{"machine_code": "observation_line_type", "label": "Observation Type", "type": "list", "lookup": "observation_line_types"}]}');
+INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (32, 'observation_polygons', 'Observations', 'Polygon', 0, 'observation_polygons.qml', NULL, '{"hierarchy": ["Observations"], "fields": [{"machine_code": "observation_polygon_type", "label": "Observation Type", "type": "list", "lookup": "observation_polygon_types"}]}');
+
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (33, 'observation_points_dce', 'Observations', 'Point', 0, 'observation_points_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (34, 'observation_lines_dce', 'Observations', 'Linestring', 0, 'observation_lines_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"]}');
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (35, 'observation_polygons_dce', 'Observations', 'Polygon', 0, 'observation_polygons_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"]}');
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (36, 'structural_elements_points', 'Structural Elements', 'Point', 0, 'structural_elements_points.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (37, 'structural_elements_lines', 'Structural Elements', 'Linestring', 0, 'structural_elements_lines.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_lines"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (38, 'structural_elements_areas', 'Structural Elements', 'Polygon', 0, 'structural_elements_areas.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_areas"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer"}, {"machine_code": "length", "label": "Length", "type": "float"}, {"machine_code": "width", "label": "Width", "type": "float"}, {"machine_code": "height", "label": "Height", "type": "float"}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (39, 'observation_points_asbuilt', 'Observations', 'Point', 0, 'observation_points_asbuilt.qml', NULL, '{"hierarchy": ["Observations"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
+
 -- Lookup Tables
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (100, 'lkp_metric_sources', 'Metric Sources', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (101, 'lkp_platform', 'Platform', 'NoGeometry', 1, 'temp.qml', NULL);
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (102, 'lkp_mask_types', 'Mask Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (103, 'lkp_structure_source', 'Structure Sources', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (104, 'lkp_dam_integrity', 'Dam Integrity', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (105, 'lkp_beaver_maintenance', 'Beaver Maintenance', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (106, 'lkp_thalweg_types', 'Thalweg Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (107, 'lkp_active_extent_types', 'Active Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (108, 'lkp_junction_types', 'Junction Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (109, 'lkp_geomorphic_unit_types', 'Geomorphic Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (110, 'lkp_vegetation_extent_types', 'Vegetation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (111, 'lkp_cem_phase_types', 'CEM Phase Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (112, 'lkp_floodplain_accessibility_types', 'Floodplain Accessibility Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (113, 'lkp_brat_vegetation_types', 'Brat Vegetation Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (114, 'lkp_context_layer_types', 'Context Layer Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (115, 'lkp_inundation_extent_types', 'Inundation Extent Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (116, 'lkp_primary_channel', 'Primary Channel Type', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (117, 'lkp_primary_unit', 'Primary Unit Type', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (118, 'lkp_structure_forced', 'Structure Forced', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (119, 'lkp_channel_unit_types', 'Channel Unit Types', 'NoGeometry', 1, 'temp.qml', NULL);
-
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (120, 'lkp_design_status', 'Design Status', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (121, 'lkp_structure_mimics', 'Structure Mimics', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (122, 'lkp_zoi_stage', 'ZOI Stage', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (123, 'structure_types', 'Structure Types', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (124, 'zoi_types', 'Zoi Types', 'NoGeometry', 1, 'temp.qml', NULL);
-
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (125, 'lkp_brat_base_streampower', 'Base Streampower', 'NoGeometry', 1, 'temp.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (126, 'lkp_brat_high_streampower', 'High flow Streampower', 'NoGeometry', 1, 'none.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (127, 'lkp_brat_slope', 'Slope', 'NoGeometry', 1, 'none.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (128, 'lkp_brat_dam_density', 'BRAT Dam Density', 'NoGeometry', 1, 'none.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (129, 'lkp_brat_vegetation_cis', 'BRAT Vegetation CIS', 'NoGeometry', 1, 'none.qml', NULL);
--- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (130, 'lkp_brat_combined_cis', 'BRAT Combined CIS', 'NoGeometry', 1, 'none.qml', NULL);
-
 INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (131, 'lkp_representation', 'Representation', 'NoGeometry', 1, 'temp.qml', NULL);
 -- -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (132, 'lkp_profiles', 'Profiles', 'NoGeometry', 1, 'none.qml', NULL);
 -- INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, description) VALUES (133, 'lkp_units', 'Unit Types', 'NoGeometry', 1, 'none.qml', NULL);
@@ -141,9 +120,9 @@ CREATE TABLE method_layers (
 );
 
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 1);
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 2);
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 2);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 3);
+-- INSERT INTO method_layers (method_id, layer_id) VALUES (1, 4);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 5);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 6);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 7);
@@ -153,12 +132,17 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (1, 11);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 12);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 14);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 15);
-INSERT INTO method_layers (method_id, layer_id) VALUES (1, 16);
 INSERT INTO method_layers (method_id, layer_id) VALUES (1, 17);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (2, 9);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 9);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (4, 25);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (4, 26);
+
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 25);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 26);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 33);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 34);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 35);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 36);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 37);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 38);
+
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 19);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 20);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 21);
@@ -166,8 +150,10 @@ INSERT INTO method_layers (method_id, layer_id) VALUES (5, 22);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 30);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 31);
 INSERT INTO method_layers (method_id, layer_id) VALUES (5, 32);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 5);
--- INSERT INTO method_layers (method_id, layer_id) VALUES (3, 7);
+
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 21);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 22);
+INSERT INTO method_layers (method_id, layer_id) VALUES (6, 39);
 
 --dce layers
 ALTER TABLE dce_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
@@ -580,181 +566,6 @@ INSERT INTO lkp_beaver_maintenance (id, name) VALUES (2, 'Old');
 INSERT INTO lkp_beaver_maintenance (id, name) VALUES (3, 'Fresh');
 INSERT INTO lkp_beaver_maintenance (id, name) VALUES (4, 'NA');
 
-
--- -- dam crests
--- ALTER TABLE dam_crests ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE dam_crests ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
--- ALTER TABLE dam_crests ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
--- ALTER TABLE dam_crests ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
--- ALTER TABLE dam_crests ADD description TEXT;
--- ALTER TABLE dam_crests ADD COLUMN metadata TEXT;
-
--- -- dam points
--- ALTER TABLE dams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE dams ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
--- ALTER TABLE dams ADD COLUMN dam_integrity_id INTEGER REFERENCES lkp_dam_integrity(id);
--- ALTER TABLE dams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
--- ALTER TABLE dams ADD COLUMN length NUMERIC;
--- ALTER TABLE dams ADD COLUMN height NUMERIC;
--- ALTER TABLE dams ADD description TEXT;
--- ALTER TABLE dams ADD COLUMN metadata TEXT;
-
--- -- jam points
--- ALTER TABLE jams ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE jams ADD COLUMN structure_source_id INTEGER REFERENCES lkp_structure_source(id);
--- ALTER TABLE jams ADD COLUMN beaver_maintenance_id INTEGER REFERENCES lkp_beaver_maintenance(id);
--- ALTER TABLE jams ADD COLUMN length NUMERIC;
--- ALTER TABLE jams ADD COLUMN width NUMERIC;
--- ALTER TABLE jams ADD COLUMN height NUMERIC;
--- ALTER TABLE jams ADD COLUMN wood_count INTEGER;
--- ALTER TABLE jams ADD description TEXT;
--- ALTER TABLE jams ADD COLUMN metadata TEXT;
-
--- -- thalwegs
--- CREATE TABLE lkp_thalweg_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_thalweg_types (id, name) VALUES (1, 'Primary');
--- INSERT INTO lkp_thalweg_types (id, name) VALUES (2, 'Non-Primary');
-
--- ALTER TABLE thalwegs ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE thalwegs ADD COLUMN type_id INTEGER REFERENCES lkp_thalweg_types(id);
--- ALTER TABLE thalwegs ADD description TEXT;
--- ALTER TABLE thalwegs ADD COLUMN metadata TEXT;
-
--- -- active extents
--- CREATE TABLE lkp_active_extent_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_active_extent_types (id, name) VALUES (1, 'Active');
--- INSERT INTO lkp_active_extent_types (id, name) VALUES (2, 'Inactive');
-
--- ALTER TABLE active_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE active_extents ADD COLUMN type_id INTEGER REFERENCES lkp_active_extent_types(id);
--- ALTER TABLE active_extents ADD description TEXT;
--- ALTER TABLE active_extents ADD metadata TEXT;
-
--- -- centerlines
--- ALTER TABLE centerlines ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE centerlines ADD COLUMN metadata TEXT;
-
--- -- inundation
--- CREATE TABLE lkp_inundation_extent_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_inundation_extent_types (id, name) VALUES (1, 'Free Flowing');
--- INSERT INTO lkp_inundation_extent_types (id, name) VALUES (2, 'Ponded');
--- INSERT INTO lkp_inundation_extent_types (id, name) VALUES (3, 'Overflow');
-
--- ALTER TABLE inundation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE inundation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_inundation_extent_types(id);
--- ALTER TABLE inundation_extents ADD description TEXT;
--- ALTER TABLE inundation_extents ADD metadata TEXT;
-
--- -- valley bottoms
--- ALTER TABLE valley_bottoms ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE valley_bottoms ADD COLUMN metadata TEXT;
-
--- -- junctions
--- CREATE TABLE lkp_junction_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_junction_types (id, name) VALUES (1, 'Confluence');
--- INSERT INTO lkp_junction_types (id, name) VALUES (2, 'Diffluence');
-
--- ALTER TABLE junctions ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE junctions ADD COLUMN type_id INTEGER REFERENCES lkp_junction_types(id) ON DELETE CASCADE;
--- ALTER TABLE junctions ADD COLUMN metadata TEXT;
-
--- -- geomorphic units
--- CREATE TABLE lkp_geomorphic_unit_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (1, 'Concavity');
--- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (2, 'Convexity');
--- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (3, 'Planner');
--- INSERT INTO lkp_geomorphic_unit_types (id, name) VALUES (4, 'Pond');
-
--- ALTER TABLE geomorphic_units ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE geomorphic_units ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
--- ALTER TABLE geomorphic_units ADD COLUMN metadata TEXT;
-
--- ALTER TABLE geomorphic_unit_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE geomorphic_unit_extents ADD COLUMN type_id INTEGER REFERENCES lkp_geomorphic_unit_types(id);
--- ALTER TABLE geomorphic_unit_extents ADD COLUMN metadata TEXT;
-
--- ALTER TABLE geomorphic_units_tier3 ADD COLUMN metadata TEXT;
-
--- -- cem phases
--- CREATE TABLE lkp_cem_phase_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_cem_phase_types (id, name) VALUES (1, 'Stage-1');
--- INSERT INTO lkp_cem_phase_types (id, name) VALUES (2, 'Stage-5');
--- INSERT INTO lkp_cem_phase_types (id, name) VALUES (3, 'Stage-0');
-
--- ALTER TABLE cem_phases ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE cem_phases ADD COLUMN type_id INTEGER REFERENCES lkp_cem_phase_types(id);
--- ALTER TABLE cem_phases ADD COLUMN metadata TEXT;
-
--- -- vegetation extents
--- CREATE TABLE lkp_vegetation_extent_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (1, 'Riparian');
--- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (2, 'Wetland');
--- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (3, 'Upland');
--- INSERT INTO lkp_vegetation_extent_types (id, name) VALUES (4, 'Other');
-
--- ALTER TABLE vegetation_extents ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE vegetation_extents ADD COLUMN type_id INTEGER REFERENCES lkp_vegetation_extent_types(id);
--- ALTER TABLE vegetation_extents ADD COLUMN metadata TEXT;
-
--- -- floodplain acessibility
--- CREATE TABLE lkp_floodplain_accessibility_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (1, 'Inaccessible');
--- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (2, 'Surface water Accessible');
--- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (3, 'Groundwater Accessible');
--- INSERT INTO lkp_floodplain_accessibility_types (id, name) VALUES (4, 'Fully Accessible');
-
--- ALTER TABLE floodplain_accessibilities ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE floodplain_accessibilities ADD COLUMN type_id INTEGER REFERENCES lkp_floodplain_accessibility_types(id);
--- ALTER TABLE floodplain_accessibilities ADD COLUMN metadata TEXT;
-
 -- -- brat vegetation
 -- CREATE TABLE lkp_brat_vegetation_types (
 --     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1008,84 +819,6 @@ INSERT INTO lkp_beaver_maintenance (id, name) VALUES (4, 'NA');
 -- ALTER TABLE brat_cis_reaches ADD COLUMN combined_density_id INT REFERENCES lkp_brat_dam_density(id);
 ----------------------------------------------------------------------------------------------------------------
 
--- channel unit layers
--- CREATE TABLE lkp_channel_unit_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT UNIQUE NOT NULL,
---     description TEXT,
---     metadata TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_channel_unit_types (id, name) VALUES (1, 'Concavity');
--- INSERT INTO lkp_channel_unit_types (id, name) VALUES (2, 'Convexity');
--- INSERT INTO lkp_channel_unit_types (id, name) VALUES (3, 'Planar');
--- INSERT INTO lkp_channel_unit_types (id, name) VALUES (4, 'Pond');
--- INSERT INTO lkp_channel_unit_types (id, name) VALUES (5, 'NA');
-
-
--- CREATE TABLE lkp_structure_forced (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT UNIQUE NOT NULL,
---     description TEXT,
---     metadata TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_structure_forced (id, name) VALUES (1, 'Artificial Structure');
--- INSERT INTO lkp_structure_forced (id, name) VALUES (2, 'Natural Structure');
--- INSERT INTO lkp_structure_forced (id, name) VALUES (3, 'Not Structure Forced');
--- INSERT INTO lkp_structure_forced (id, name) VALUES (4, 'NA');
-
-
--- CREATE TABLE lkp_primary_channel (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT UNIQUE NOT NULL,
---     description TEXT,
---     metadata TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_primary_channel (id, name) VALUES (1, 'Primary Channel');
--- INSERT INTO lkp_primary_channel (id, name) VALUES (2, 'Non-Primary Channel');
--- INSERT INTO lkp_primary_channel (id, name) VALUES (3, 'NA');
-
--- CREATE TABLE lkp_primary_unit (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT UNIQUE NOT NULL,
---     description TEXT,
---     metadata TEXT,
---     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_primary_unit (id, name) VALUES (1, 'Primary Unit');
--- INSERT INTO lkp_primary_unit (id, name) VALUES (2, 'Non-Primary Unit');
--- INSERT INTO lkp_primary_unit (id, name) VALUES (3, 'NA');
-
-
--- ALTER TABLE channel_unit_points ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_points ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_points ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_points ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_points ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_points ADD COLUMN length NUMERIC;
--- ALTER TABLE channel_unit_points ADD COLUMN width NUMERIC;
--- ALTER TABLE channel_unit_points ADD COLUMN depth NUMERIC;
--- ALTER TABLE channel_unit_points ADD COLUMN percent_wetted NUMERIC;
--- ALTER TABLE channel_unit_points ADD COLUMN description TEXT;
--- ALTER TABLE channel_unit_points ADD COLUMN metadata TEXT;
-
-
--- ALTER TABLE channel_unit_polygons ADD COLUMN event_id INTEGER REFERENCES events(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_polygons ADD COLUMN unit_type_id INTEGER REFERENCES lkp_channel_unit_types(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_polygons ADD COLUMN structure_forced_id INTEGER REFERENCES lkp_structure_forced(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_polygons ADD COLUMN primary_unit_id INTEGER REFERENCES lkp_primary_unit(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_polygons ADD COLUMN primary_channel_id INTEGER REFERENCES lkp_primary_channel(id) ON DELETE CASCADE;
--- ALTER TABLE channel_unit_polygons ADD COLUMN percent_wetted NUMERIC;
--- ALTER TABLE channel_unit_polygons ADD COLUMN description TEXT;
--- ALTER TABLE channel_unit_polygons ADD COLUMN metadata TEXT;
-
-
 -- Design Lookup Tables
 CREATE TABLE lkp_design_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1111,67 +844,7 @@ INSERT INTO lkp_design_sources (id, name, description) VALUES (1, 'Previous Site
 INSERT INTO lkp_design_sources (id, name, description) VALUES (2, 'Desktop Analysis (Remote)', NULL);
 INSERT INTO lkp_design_sources (id, name, description) VALUES (3, 'Field Work', NULL);
 
-
--- CREATE TABLE lkp_structure_mimics (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE,
---     description TEXT,
---     created DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_structure_mimics (id, name, description) VALUES (1, 'Beaver Dam', 'Structure has been designed to mimic the form and function of a beaver dam');
--- INSERT INTO lkp_structure_mimics (id, name, description) VALUES (2, 'Wood Jam', 'Structure has been designed to mimic the form and function of a wood jam or piece of woody debris');
--- INSERT INTO lkp_structure_mimics (id, name, description) VALUES (3, 'Other', 'Structure does not mimic a beaver dam, wood jam, or woody debris');
-
-
--- CREATE TABLE lkp_zoi_stage (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT,
---     description TEXT,
---     created DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (1, 'Baseflow', 'Extent is the expected influence during or in response to baseflow discharge');
--- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (2, 'Typical Flood', 'Extent is the expected influence during or in response to a typical flood event (e.g., 5 year recurrence interval)');
--- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (3, 'Large Flood', 'Extent the expected influence during or in response to a large flood event (e.g., 20 year recurrence interval)');
--- INSERT INTO lkp_zoi_stage (id, name, description) VALUES (4, 'Other', 'Extent is not related to flood event');
-
--- CREATE TABLE structure_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT,
---     mimics_id INTEGER REFERENCES lkp_structure_mimics(id) ON DELETE CASCADE,
---     construction_description TEXT,
---     function_description TEXT,
---     typical_posts INTEGER,
---     typical_length NUMERIC,
---     typical_width NUMERIC,
---     typical_height NUMERIC,
---     metadata TEXT,
---     created DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (1, 'BDA Large', 1);
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (2, 'BDA Small', 1);
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (3, 'BDA Postless', 1);
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (4, 'PALS Mid-Channel', 2);
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (5, 'PALS Bank Attached', 2);
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (6, 'Wood Jam', 2);
--- INSERT INTO structure_types (id, name, mimics_id) VALUES (7, 'Other', 3);
-
--- CREATE TABLE zoi_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT,
---     description TEXT,
---     created DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
-
--- INSERT INTO zoi_types (id, name, description) VALUES (1, 'Increase Channel Complexity', 'Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment');
--- INSERT INTO zoi_types (id, name, description) VALUES (2, 'Accelerate Incision Recovery', 'Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation');
--- INSERT INTO zoi_types (id, name, description) VALUES (3, 'Lateral Channel Migration', 'Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders');
--- INSERT INTO zoi_types (id, name, description) VALUES (4, 'Increase Floodplain Connectivity', 'Channel-spanning PALS and primary and secondary BDAs to force flow on to accessible floodplain surfaces. BDAs force connectivity during baseflow, PALS force overbank flows during high flow');
--- INSERT INTO zoi_types (id, name, description) VALUES (5, 'Facilitate Beaver Translocation', 'Use primary BDAs to create deep-water habitat for translocation; use secondary BDAs to support primary dams by reducing head drop and increased extent of ponded area for forage access and refuge from predation');
--- INSERT INTO zoi_types (id, name, description) VALUES (6, 'Other', 'Area of hydraulic feature creation (e.g., eddy, shear zone, hydraulic jet)');
-
+-- Master Lookup Lists --
 INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (1, 'zoi_types_orig', 'Increase Channel Complexity', '{"description": "Combination of structure types used to maximize hydraulic diversity. BDAs force upstream ponds at baseflow. PALS force areas of high and low flow velocity to alter patterns of erosion and deposition, promote sorting, large woody debris recruitment"}');
 INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (2, 'zoi_types_orig', 'Accelerate Incision Recovery', '{"description": "Use bank-attached and channel- spanning PALS to force bank erosion and channel widening; as well as channel-spanning PALS to force channel bed aggradation"}');
 INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (3, 'zoi_types_orig', 'Lateral Channel Migration', '{"description": "Use of log structures to enhance sediment erossion rates on outside and deposition rates on the inside of channel meanders"}');
@@ -1281,6 +954,33 @@ INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (106
 INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (107, 'structure_types', 'Tree Plug', '');
 INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (108, 'structure_types', 'Vanes', '');
 INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (109, 'structure_types', 'Wicker Weirs', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (110, 'inundation_extent_types', 'Ponded','');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (111, 'inundation_extent_types', 'Free Flowing','');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (112, 'inundation_extent_types', 'Overflow','');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (113, 'structural_element_lines', 'Dam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (114, 'structural_element_areas', 'Jam', ''); 
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (115, 'structural_element_points', 'Dam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (116, 'structural_element_points', 'Dam Complex', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (117, 'structural_element_points', 'Jam', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (118, 'structural_element_points', 'Jam Complex', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (119, 'structural_element_points', 'Other', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (120, 'structural_element_points', 'Root Mass', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (121, 'active_extent_types', 'Active', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (122, 'active_extent_types', 'Inactive', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (123, 'centerline_types', 'Non-Primary', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (124, 'centerline_types', 'Primary', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (125, 'centerline_descriptions', 'Centerline', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (126, 'centerline_descriptions', 'Thalweg', '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (127, 'geomorphic_units_tier2_types', "Bowl", '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (128, 'geomorphic_units_tier2_types', "Trough", '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (129, 'geomorphic_units_tier2_types', "Plane", '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (130, 'geomorphic_units_tier2_types', "Saddle", '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (131, 'geomorphic_units_tier2_types', "Mound", '');
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (132, 'junction_types', "Confluence (Anabranch)", "Confluence (Anabranch)");
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (133, 'junction_types', "Confluence (Tributary)", "Confluence (Tributary)");
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (134, 'junction_types', "Diffluence", "Diffluence");
+INSERT INTO lookup_list_values (id, list_name, list_value, metadata) VALUES (135, 'junction_types', "Channel Head", "Channel Head");
+
 
 
 -- Design Spatial Table Fields and Relationships
@@ -1434,7 +1134,6 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_dam_integrity', 'attributes', 'lkp_dam_integrity', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_beaver_maintenance', 'attributes', 'lkp_beaver_maintenance', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_thalweg_types', 'attributes', 'lkp_thalweg_types', 0);
--- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_active_extent_types', 'attributes', 'lkp_active_extent_types', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_junction_types', 'attributes', 'lkp_junction_types', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_geomorphic_unit_types', 'attributes', 'lkp_geomorphic_unit_types', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_vegetation_extent_types', 'attributes', 'lkp_vegetation_extent_types', 0);
@@ -1442,7 +1141,6 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('l
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_floodplain_accessibility_types', 'attributes', 'lkp_floodplain_accessibility_types', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_brat_vegetation_types', 'attributes', 'lkp_brat_vegetation_types', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_context_layer_types', 'attributes', 'lkp_context_layer_types', 0);
--- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_inundation_extent_types', 'attributes', 'lkp_inundation_extent_types', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_channel', 'attributes', 'lkp_primary_channel', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_primary_unit', 'attributes', 'lkp_primary_unit', 0);
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('lkp_structure_forced', 'attributes', 'lkp_structure_forced', 0);

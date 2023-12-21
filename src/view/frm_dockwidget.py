@@ -50,6 +50,7 @@ from ..model.cross_sections import CrossSections
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
+from .frm_asbuilt import FrmAsBuilt
 from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
 from .frm_analysis_properties import FrmAnalysisProperties
@@ -521,10 +522,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
-        if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-            self.frm_event = FrmEvent(self, self.project, event_type_id)
-        else:
+        if event_type_id == DESIGN_EVENT_TYPE_ID:
             self.frm_event = FrmDesign(self, self.project, event_type_id)
+        elif event_type_id == AS_BUILT_EVENT_TYPE_ID:
+            self.frm_event = FrmAsBuilt(self, self.project, event_type_id)
+        else:
+            self.frm_event = FrmEvent(self, self.project, event_type_id)
 
         # self.assessment_dialog.dateEdit_assessment_date.setDate(QDate.currentDate())
         # self.assessment_dialog.dataChange.connect(self.build_tree_view)
@@ -1156,10 +1159,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if isinstance(db_item, Project):
             frm = FrmNewProject(os.path.dirname(db_item.project_file), parent=self, project=db_item)
         elif isinstance(db_item, Event):
-            if db_item.event_type.id == DATA_CAPTURE_EVENT_TYPE_ID:
-                frm = FrmEvent(self, self.project, event=db_item)
-            else:
+            if db_item.event_type.id == DESIGN_EVENT_TYPE_ID:
                 frm = FrmDesign(self, self.project, db_item.event_type.id, event=db_item)
+            elif db_item.event_type.id == AS_BUILT_EVENT_TYPE_ID:
+                frm = FrmAsBuilt(self, self.project, db_item.event_type.id, event=db_item)
+            else:
+                frm = FrmEvent(self, self.project, event=db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, Profile):
