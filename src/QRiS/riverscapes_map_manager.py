@@ -45,8 +45,20 @@ class RiverscapesMapManager():
         super().__init__()
         self.product_key = product_key
         settings = Settings()
-        self.symbology_folder = settings.getValue('symbologyDir')
+        self.symbology_folders = settings.getValue('symbologyDir')
         self.layer_order = ['Basemaps']
+
+    def get_symbology_qml(self, symbology_key: str) -> str:
+        
+        if symbology_key is None:
+            return None
+        symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+        qml = None
+        for symbology_folder in self.symbology_folders:
+            qml = os.path.join(symbology_folder, symbology_filename)
+            if os.path.exists(qml):
+                break
+        return qml
 
     def get_product_key_layers(self) -> list:
 
@@ -225,9 +237,9 @@ class RiverscapesMapManager():
         # QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
-        symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
-        qml = os.path.join(self.symbology_folder, symbology_filename)
-        layer.loadNamedStyle(qml)
+        qml = self.get_symbology_qml(symbology_key)
+        if qml is not None:
+            layer.loadNamedStyle(qml)
 
         if id_field is not None:
             # id_value = db_item.event_id if id_field == 'event_id' else db_item.id
@@ -276,9 +288,8 @@ class RiverscapesMapManager():
         QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
-        if symbology_key is not None:
-            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
-            qml = os.path.join(self.symbology_folder, symbology_filename)
+        qml = self.get_symbology_qml(symbology_key)
+        if qml is not None:
             layer.loadNamedStyle(qml)
 
         # Finally add the new layer here
@@ -318,9 +329,8 @@ class RiverscapesMapManager():
             layer.setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
 
         # Apply symbology
-        if symbology_key is not None:
-            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
-            qml = os.path.join(self.symbology_folder, symbology_filename)
+        qml = self.get_symbology_qml(symbology_key)
+        if qml is not None:
             layer.loadNamedStyle(qml)
 
         # Finally add the new layer here
@@ -335,9 +345,8 @@ class RiverscapesMapManager():
 
         raster_layer = QgsRasterLayer(raster_path, raster.name)
         QgsProject.instance().addMapLayer(raster_layer, False)
-        if symbology_key is not None:
-            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
-            qml = os.path.join(self.symbology_folder, symbology_filename)
+        qml = self.get_symbology_qml(symbology_key)
+        if qml is not None:
             raster_layer.loadNamedStyle(qml)
         tree_layer_node = parent_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, raster))
@@ -354,9 +363,8 @@ class RiverscapesMapManager():
 
         raster_layer = QgsRasterLayer(raster_path, raster.name)
         QgsProject.instance().addMapLayer(raster_layer, False)
-        if symbology_key is not None:
-            symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
-            qml = os.path.join(self.symbology_folder, symbology_filename)
+        qml = self.get_symbology_qml(symbology_key)
+        if qml is not None:
             raster_layer.loadNamedStyle(qml)
         tree_layer_node = parent_group.addLayer(raster_layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
