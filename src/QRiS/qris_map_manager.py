@@ -34,7 +34,10 @@ class QRisMapManager(RiverscapesMapManager):
 
     def __init__(self, project: Project) -> None:
         super().__init__('QRiS')
-        self.project = project
+        self.project: Project = project
+        # add the project folder to the front of symbology_folders
+        self.symbology_folders.insert(0, os.path.dirname(self.project.project_file))
+
         self.layer_order = [
             CrossSections.CROSS_SECTIONS_MACHINE_CODE,
             Profile.PROFILE_MACHINE_CODE,
