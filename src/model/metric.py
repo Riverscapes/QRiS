@@ -13,7 +13,7 @@ class Metric(DBItem):
         self.default_unit_id = default_unit_id
         self.metric_function = metric_function
         self.metric_params = metric_params
-        self.icon = 'metric'
+        self.icon = 'calculate'
         self.metadata = metadata
 
         self.tolerance = self.metadata['tolerance'] if self.metadata and 'tolerance' in self.metadata else None  # no tolerance = no testing for tolerance

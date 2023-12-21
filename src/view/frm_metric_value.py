@@ -278,7 +278,7 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         self.cmdCalculate = QtWidgets.QPushButton()
         # self.cmdCalculate.setText('Calculate')
-        self.cmdCalculate.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/gis'))
+        self.cmdCalculate.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/calculate'))
         self.cmdCalculate.setToolTip('Calculate Metric From GIS')
         self.cmdCalculate.setSizePolicy(sizePolicy)
         self.cmdCalculate.clicked.connect(self.cmd_calculate_metric_clicked)

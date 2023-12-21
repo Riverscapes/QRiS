@@ -21,7 +21,7 @@
         "issueUrl": "https://github.com/Riverscapes/QRiS/discussions",
         "changelogUrl": "https://github.com/Riverscapes/QRiS/releases",
         "resourcesUrl": "https://xml.riverscapes.net",
-        "acknowledgementsUrl": "https://qris.riverscapes.net/dotnethack.html",
+        "acknowledgementsUrl": "https://qris.riverscapes.net/about/acknowledgements",
         "qris_project_path": "QRIS_PROJECT_PATH"
     }
 }
