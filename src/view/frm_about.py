@@ -27,8 +27,8 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.lblIssues.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['issueUrl']))
         self.lblChangelog.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['changelogUrl']))
 
-        self.acknowledgements = requests.get(CONSTANTS['acknowledgementsUrl']).text
-        self.lblAcknowledgements.setText(self.acknowledgements)
+        # self.acknowledgements = requests.get(CONSTANTS['acknowledgementsUrl']).text
+        self.lblAcknowledgements.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['acknowledgementsUrl']))
 
     def setupUi2(self):
 
