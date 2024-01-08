@@ -1,10 +1,31 @@
+import os
 import requests
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ..QRiS.settings import CONSTANTS
 
 from .. import __version__
 
+html = """
+<p>QGIS Riverscapes Studio or QRiS (pronounced curious) is a flagship, professional-grade tool of the <a href="http://riverscapes.net">Riverscapes Consortium</a>. The free, <a href="https://github.com/Riverscapes/QRiS">open-source software</a> is a <a href="https://plugins.qgis.org/">plugin</a> to the free, open-source <a href="https://plugins.qgis.org/">QGIS</a> software. The tool is targeted at anyone interested in understanding and analyzing their riverscape - including:  practitioners, managers, analysts, researchers and students with some familiarity with GIS. It helps users with analysis, monitoring, assessment of riverscapes as well as preparation of the design and as-builts of <a href="http://lowtechpbr.restoration.usu.edu/resources/Topics/04_Design/">low-tech process-based restoration designs</a>. </p>
+<p><strong>QRiS is currently in Beta Testing</strong> and is only available as an experimental plugin library of GIS.</p>
+<h2 id="funding">Funding</h2>
+<p>We are grateful to generous grant support from early adopters for the vision behind the Riverscape Studio at the <a href="https://www.blm.gov/programs/aquatics">Bureau of Land Management</a>, the <a href="https://www.fs.usda.gov/detail/r4/landmanagement/resourcemanagement/?cid=stelprd3845865">US Forest Service</a>, <a href="https://www.fisheries.noaa.gov/about/northwest-fisheries-science-center">NOAA Fisheries</a>, <a href="https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/programs/initiatives/?cid=stelprdb1046975">NRCS Working Lands for Wildlife</a> and <a href="https://anabranchsolutons.com">Anabranch Solutions</a> who funded the professional software development of QRiS.  Without their support, this free software would not exist.</p>
+
+<p>The <a href="https://www.fs.usda.gov/detail/r4/landmanagement/resourcemanagement/?cid=stelprd3845865">US Forest Service</a>, <a href="https://www.fisheries.noaa.gov/about/northwest-fisheries-science-center">NOAA Fisheries</a>, <a href="https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/programs/initiatives/?cid=stelprdb1046975">NRCS Working Lands for Wildlife</a> and <a href="https://anabranchsolutons.com">Anabranch Solutions</a> were early supporters who paid for development of <a href="https://riverscapes.net/Tools/discrimination.html#tool-grade">proof of concepts</a> and Alpha pre-release versions of the code.  </p>
+<p>Specifically, the following supporters and visionaries behind the <a href="http://lowtechpbr.restoration.usu.edu/">Low-Tech Process-Based Restoration</a> made QRiS a reality by raising the funds to develop it.</p>
+<ul>
+<li><a href="https://www.researchgate.net/profile/Alden-Shallcross">Alden Shalcross</a> (BLM Montana-Dakotas),</li>
+<li><a href="https://scholar.google.com/citations?user=JsXtmykAAAAJ&amp;hl=en">Scott Miller</a> (BLM National), </li>
+<li><a href="https://www.researchgate.net/profile/Jeremy_Maestas">Jeremy Maestas</a> (NRCS)</li>
+<li><a href="https://www.researchgate.net/profile/W-Saunders">Carl Saunders</a>   (US Forest Service)</li>
+<li><a href="https://www.researchgate.net/profile/Chris-Jordan-7">Chris Jordan</a> (<a href="https://www.fisheries.noaa.gov/about/northwest-fisheries-science-center">NOAA Fisheries</a>)</li>
+<li><a href="https://www.researchgate.net/profile/Nick_Weber2">Nick Weber</a>, <a href="https://www.researchgate.net/profile/Joseph_Wheaton">Joe Wheaton</a>, <a href="https://www.researchgate.net/profile/Stephen_Bennett8">Steve Bennett</a> and <a href="https://www.researchgate.net/profile/Nick_Bouwes">Nick Bouwes</a> (<a href="https://anabranchsolutons.com">Anabranch Solutions</a>)</li>
+</ul>
+<h2 id="qris-development-team">QRiS Development Team</h2>
+<p>QRiS is developed by <a href="http://northarrowresearch.com">North Arrow Research</a>. The QRiS Development Team is led by <a href="https://www.researchgate.net/profile/Philip-Bailey-2">Philip Bailey</a> (Owner of <a href="http://northarrowresearch.com">North Arrow Research</a> and Adjunct Professor at <a href="https://qcnr.usu.edu/wats/">Utah State University</a>),  <a href="http://joewheaton.org">Joseph Wheaton</a> (Professor of Riverscapes at Utah State University) and <a href="https://www.researchgate.net/profile/Nick_Weber2">Nick Weber</a> (<a href="http://anabranchsolutions.com">Anabranch Solutions</a>). The initial plugin was set up by <a href="https://github.com/KellyMWhitehead">Kelly Whitehead</a> and the early releases bringing the LTPBR design functionality were developed by <a href="https://github.com/nick4rivers">Nick Weber</a>. See <a href="https://github.com/Riverscapes/QRiS/graphs/contributors">Contributors on GitHub</a> for the full list of code contributors to QRiS. </p>
+"""
 
 class FrmAboutDialog(QtWidgets.QDialog):
     """
@@ -28,7 +49,8 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.lblChangelog.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['changelogUrl']))
 
         # self.acknowledgements = requests.get(CONSTANTS['acknowledgementsUrl']).text
-        self.lblAcknowledgements.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['acknowledgementsUrl']))
+        # self.lblAcknowledgements.setText('<a href="{0}">{0}</a>'.format(CONSTANTS['acknowledgementsUrl']))
+        self.lblAcknowledgements.setHtml(html)
 
     def setupUi2(self):
 
