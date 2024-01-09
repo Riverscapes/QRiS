@@ -256,7 +256,9 @@ class RiverscapesMapManager():
         QgsProject.instance().addMapLayer(layer, False)
         tree_layer_node = parent_group.addLayer(layer)
         tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, db_item))
-
+        tree_layer_node.setCustomProperty("showFeatureCount", True)
+        tree_layer_node.setExpanded(False)
+        
         if zoom:
             iface.setActiveLayer(layer)
             iface.zoomToActiveLayer()
