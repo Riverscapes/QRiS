@@ -780,7 +780,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 # prepare sql string for each metric
                 sql_metric = ", ".join([f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in analysis.analysis_metrics.items()])
-                sql = f"""CREATE VIEW {analysis_view} AS SELECT * from mask_features JOIN (SELECT mask_feature_id, {sql_metric} FROM metric_values JOIN metrics on metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis_id} Group BY mask_feature_id) AS x ON mask_features.fid = x.mask_feature_id"""
+                sql = f"""CREATE VIEW {analysis_view} AS SELECT * from mask_features JOIN (SELECT mask_feature_id, {sql_metric} FROM metric_values JOIN metrics on metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis.id} Group BY mask_feature_id) AS x ON mask_features.fid = x.mask_feature_id"""
                 self.create_spatial_view(view_name=analysis_view,
                                         fc_name=None,
                                         field_name=None,
