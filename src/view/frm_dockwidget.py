@@ -926,6 +926,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             row = row + row_adjustment
             child_node = event_node.child(row)
             layer = child_node.data(QtCore.Qt.UserRole)
+            if isinstance(layer, str):
+                continue
             if layer not in event.event_layers:
                 self.map_manager.remove_db_item_layer(self.project.map_guid, layer)
                 event_node.removeRow(row)
