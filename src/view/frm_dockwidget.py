@@ -294,7 +294,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if len(self.project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             else:
-                self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
+                self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
+                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, MASK_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
+                    self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
 
@@ -350,7 +352,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     else:
-                        self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                        if isinstance(model_data, Project) or isinstance(model_data, Event):
+                            self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                            if isinstance(model_data, Event):
+                                self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
+                        else:
+                            self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
                     raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
@@ -475,7 +482,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         raster_layer = self.basemap_manager.create_basemap_raster_layer(basemap_name, basemap_uri, basemap_provider)
         # if trigger_repaint is True:
 
-    def add_tree_group_to_map(self, model_item: QtGui.QStandardItem):
+    def add_tree_group_to_map(self, model_item: QtGui.QStandardItem, features_only=False):
         """Add all children of a group node to the map ToC
         """
 
@@ -485,7 +492,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             for row in range(0, model_item.rowCount()):
                 child_item = model_item.child(row)
+                if features_only is True and isinstance(child_item.data(QtCore.Qt.UserRole), EventLayer):
+                    event_layer: EventLayer = child_item.data(QtCore.Qt.UserRole)
+                    fc_name = Layer.DCE_LAYER_NAMES[event_layer.layer.geom_type]
+                    temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}', 'temp', 'ogr')
+                    if temp_layer.featureCount() == 0:
+                        continue
                 self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
+                self.add_tree_group_to_map(child_item, features_only)
 
     def expand_tree(self):
         self.treeView.expandAll()
