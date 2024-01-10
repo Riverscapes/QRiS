@@ -72,8 +72,8 @@ class FrmEvent(QtWidgets.QDialog):
             if any(date is not None for date in [event.end.day, event.end.year, event.end.month]):
                 self.optDateRange.setChecked(True)
 
-            self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
-            self.chkAddToMap.setVisible(False)
+            # self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
+            # self.chkAddToMap.setVisible(False)
 
             for event_layer in event.event_layers:
                 item = QtGui.QStandardItem(event_layer.layer.name)
@@ -526,8 +526,8 @@ class FrmEvent(QtWidgets.QDialog):
         # self.tabGrid.addWidget(self.vwProtocols)
 
         self.chkAddToMap = QtWidgets.QCheckBox()
-        self.chkAddToMap.setChecked(True)
-        self.chkAddToMap.setText('Add to Map')
+        self.chkAddToMap.setChecked(False)
+        self.chkAddToMap.setText('Add New Layers to Map')
         self.vert.addWidget(self.chkAddToMap)
 
         # Surface Rasters

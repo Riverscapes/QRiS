@@ -26,7 +26,7 @@ import os
 from functools import partial
 from osgeo import ogr
 
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog, QgsLayerTreeNode
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint
@@ -158,6 +158,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """
         self.project = Project(project_file)
         self.map_manager = QRisMapManager(self.project)
+        self.map_manager.edit_mode_changed.connect(self.on_edit_session_change)
 
         self.model = QtGui.QStandardItemModel()
         self.treeView.setModel(self.model)
@@ -199,7 +200,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        self.treeView.expandAll()
+        for node in [project_node, inputs_node, surfaces_node, aoi_node, sampling_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
+            self.treeView.expand(self.model.indexFromItem(node))
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
                 region = self.settings.getValue('basemapRegion')
@@ -256,6 +258,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Remove project from map
         # remove_db_item_layer(self.project, self.project)
+        # disconnect the map manager
+        if self.map_manager is not None:
+            if self.map_manager.receivers(self.map_manager.edit_mode_changed) > 0:
+                self.map_manager.edit_mode_changed.disconnect()
         self.model = None
         self.qris_project = None
 
@@ -872,7 +878,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm.export_complete.connect(self.save_complete)
         frm.exec_()
 
-    def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False) -> QtGui.QStandardItem:
+    def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False, collapsed: bool=False) -> QtGui.QStandardItem:
         """
         Looks at all child nodes of the parent_node and returns the existing QStandardItem
         that has the DBitem attached. It will also update the existing node with the latest name
@@ -913,6 +919,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
             target_node.setData(data_item, QtCore.Qt.UserRole)
             parent_node.appendRow(target_node)
+            if collapsed is True:
+                self.treeView.collapse(parent_node.index())
 
             if add_to_map is True and isinstance(data_item, DBItem):
                 self.add_db_item_to_map(target_node, data_item)
@@ -932,7 +940,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """
 
         # Event, protocols and layers
-        event_node = self.add_child_to_project_tree(parent_node, event, add_to_map)
+        event_node = self.add_child_to_project_tree(parent_node, event, add_to_map, collapsed=True)
 
         # remove event layers that no longer exist in the event
         row_adjustment = 0
@@ -952,8 +960,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 node = event_node
                 if event_layer.layer.hierarchy is not None:
                     for level in event_layer.layer.hierarchy:
-                        node = self.add_child_to_project_tree(node, level, add_to_map)
-                self.add_child_to_project_tree(node, event_layer, add_to_map)
+                        node = self.add_child_to_project_tree(node, level, add_to_map, collapsed=True)
+                self.add_child_to_project_tree(node, event_layer, add_to_map, collapsed=True)
 
     def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new base map to the project"""
@@ -1222,6 +1230,43 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # -- PRODUCTION --
         metrics_task.on_complete.connect(self.geospatial_summary_complete)
         QgsApplication.taskManager().addTask(metrics_task)
+ 
+
+    def on_edit_session_change(self, mode):
+
+        self.traverse_tree(self.model.invisibleRootItem(), mode, self.set_edit_text)
+                    
+    def traverse_tree(self, node: QtGui.QStandardItem, mode, func: callable):
+
+        func(node, mode)
+
+        for row in range(0, node.rowCount()):
+            child_node = node.child(row)
+            escape = self.traverse_tree(child_node, mode, func)
+            if escape is True:
+                break
+
+    def set_edit_text(self, node: QtGui.QStandardItem, mode):
+
+        if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
+            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.project.map_guid, node.data(QtCore.Qt.UserRole), None)
+            if layer_node is not None:
+                if isinstance(layer_node, QgsLayerTreeNode):
+                    if layer_node.layer().isEditable():
+                        if mode is True:
+                            node.setText(node.data(QtCore.Qt.UserRole).name + ' (Editing)')
+                            # make the text bold
+                            font = node.font()
+                            font.setBold(True)
+                            node.setFont(font)
+                            return True
+                    else:
+                        node.setText(node.data(QtCore.Qt.UserRole).name)
+                        # make the text normal
+                        font = node.font()
+                        font.setBold(False)
+                        node.setFont(font)
+            
 
     @ pyqtSlot(bool, Mask, dict or None, dict or None)
     def geospatial_summary_complete(self, result, model_data, polygons, data):
