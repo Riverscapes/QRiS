@@ -210,6 +210,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.basemap_manager = RiverscapesMapManager('Basemaps')
                 self.treeView.expanded.connect(self.expand_tree_item)
 
+        # Reconnect any qirs layers back to the edit session signals
+        self.traverse_tree(self.model.invisibleRootItem(), None, self.reconnect_layer_edits)
+
         return
 
     def expand_tree_item(self, idx: QModelIndex):
@@ -1266,7 +1269,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         font = node.font()
                         font.setBold(False)
                         node.setFont(font)
-            
+    
+    def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
+
+        if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
+            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.project.map_guid, node.data(QtCore.Qt.UserRole), None)
+            if layer_node is not None:
+                if isinstance(layer_node, QgsLayerTreeNode):
+                    layer: QgsVectorLayer = layer_node.layer()
+                    layer.editingStarted.connect(self.map_manager.start_edits)
+                    layer.editingStopped.connect(self.map_manager.stop_edits)
 
     @ pyqtSlot(bool, Mask, dict or None, dict or None)
     def geospatial_summary_complete(self, result, model_data, polygons, data):
