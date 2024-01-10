@@ -211,7 +211,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.treeView.expanded.connect(self.expand_tree_item)
 
         # Reconnect any qirs layers back to the edit session signals
-        self.traverse_tree(self.model.invisibleRootItem(), None, self.reconnect_layer_edits)
+        self.traverse_tree(self.model.invisibleRootItem(), self.reconnect_layer_edits)
 
         return
 
@@ -914,6 +914,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
             if isinstance(data_item, DBItem):
                 target_node = QtGui.QStandardItem(data_item.name)
+                if isinstance(data_item, EventLayer): 
+                    fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
+                    temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
+                    if temp_layer.featureCount() == 0:
+                        target_node.setText(data_item.name + ' (Empty)')
+                        font = target_node.font()
+                        font.setItalic(True)
+                        target_node.setFont(font)
             else:
                 if data_item in GROUP_FOLDER_LABELS:
                     target_node = QtGui.QStandardItem(GROUP_FOLDER_LABELS[data_item])
@@ -1237,38 +1245,52 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def on_edit_session_change(self, mode):
 
-        self.traverse_tree(self.model.invisibleRootItem(), mode, self.set_edit_text)
+        self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text)
                     
-    def traverse_tree(self, node: QtGui.QStandardItem, mode, func: callable):
+    def traverse_tree(self, node: QtGui.QStandardItem, func: callable):
 
-        func(node, mode)
+        func(node)
 
         for row in range(0, node.rowCount()):
             child_node = node.child(row)
-            escape = self.traverse_tree(child_node, mode, func)
+            escape = self.traverse_tree(child_node, func)
             if escape is True:
                 break
 
-    def set_edit_text(self, node: QtGui.QStandardItem, mode):
+    def set_edit_text(self, node: QtGui.QStandardItem):
 
         if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
             layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.project.map_guid, node.data(QtCore.Qt.UserRole), None)
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
-                    if layer_node.layer().isEditable():
-                        if mode is True:
+                    layer = layer_node.layer()
+                    if layer.isEditable():
                             node.setText(node.data(QtCore.Qt.UserRole).name + ' (Editing)')
                             # make the text bold
                             font = node.font()
                             font.setBold(True)
+                            font.setItalic(False)
                             node.setFont(font)
+                            node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
                             return True
                     else:
-                        node.setText(node.data(QtCore.Qt.UserRole).name)
-                        # make the text normal
-                        font = node.font()
-                        font.setBold(False)
-                        node.setFont(font)
+                        feature_count = layer.featureCount()
+                        if feature_count == 0:
+                            # set text to italic, non-bold and gray font
+                            node.setText(node.data(QtCore.Qt.UserRole).name + ' (Empty)')
+                            font = node.font()
+                            font.setItalic(True)
+                            font.setBold(False)
+                            node.setFont(font)
+                            node.setForeground(QtGui.QBrush(QtGui.QColor(128, 128, 128)))
+                        else:
+                            node.setText(node.data(QtCore.Qt.UserRole).name)
+                            # make the text normal
+                            font = node.font()
+                            font.setBold(False)
+                            font.setItalic(False)
+                            node.setFont(font)
+                            node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
     
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
