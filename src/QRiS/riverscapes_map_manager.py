@@ -4,7 +4,7 @@ import json
 from textwrap import dedent
 
 from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
-from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.PyQt.QtCore import Qt, QVariant, pyqtSlot, pyqtSignal, QObject
 from qgis.utils import iface
 
 from ..QRiS.path_utilities import is_url
@@ -39,7 +39,9 @@ from qgis.core import (
 )
 
 
-class RiverscapesMapManager():
+class RiverscapesMapManager(QObject):
+
+    edit_mode_changed = pyqtSignal(bool)
 
     def __init__(self, product_key) -> None:
         super().__init__()
@@ -72,6 +74,8 @@ class RiverscapesMapManager():
         for layer in self.get_product_key_layers():
             if layer.layer().type() == QgsMapLayer.VectorLayer:
                 layer.layer().setReadOnly(False)
+        
+        self.edit_mode_changed.emit(False)
 
     def start_edits(self):
 
@@ -83,6 +87,8 @@ class RiverscapesMapManager():
         active_layer = iface.activeLayer()
         # set active layer to editable true
         active_layer.setReadOnly(False)
+
+        self.edit_mode_changed.emit(True)
 
     def get_edit_mode(self):
 
