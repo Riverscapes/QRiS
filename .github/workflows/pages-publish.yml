@@ -35,6 +35,9 @@ jobs:
           node-version-file: ./docs/.nvmrc
           cache-dependency-path: ./docs/package.json
           cache: yarn
+      
+      - name: Get correct version of Yarn
+        run: corepack enable; yarn set version berry
 
       - name: Setup Pages
         id: pages
