@@ -42,7 +42,7 @@ from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
 
-from .model.project import apply_db_migrations
+from .model.project import apply_db_migrations, test_project
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
 
@@ -427,6 +427,14 @@ class QRiSToolbar:
             self.open_qris_project(dialog_return[0])
 
     def open_qris_project(self, db_path: str):
+
+        # Check if the darn thing is a qris project in the first place!
+        try:
+            test_project(db_path)
+        except Exception as ex:
+            QtWidgets.QMessageBox.warning(None, 'QRiS Project Load Error', f'Error loading QRiS project: {str(ex)}')
+            QgsMessageLog.logMessage(f'Error loading QRiS project: {str(ex)}', 'QRiS', Qgis.Critical)
+            return
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
