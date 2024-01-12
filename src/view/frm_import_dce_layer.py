@@ -213,7 +213,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         if result is True:
             extra_message = '' if source_feats == out_feats else f' (additional features were created due to exploding multi-part geometries.)'
-            extra_message += f' {skip_feats} features were skipped due to missing geometry.'
+            extra_message += f' {skip_feats} features were skipped due to missing or invalid geometry.'
             iface.messageBar().pushMessage('Import Feature Class Complete.', f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.fc_name}.{extra_message}", level=Qgis.Info, duration=5)
             iface.mapCanvas().refreshAllLayers()
             iface.mapCanvas().refresh()

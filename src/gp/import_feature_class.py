@@ -109,9 +109,20 @@ class ImportFeatureClass(QgsTask):
             for src_feature in src_layer:
 
                 geom: ogr.Geometry = src_feature.GetGeometryRef()
+
+
                 if geom is None:
                     self.skipped_feats += 1
                     continue
+
+                if geom.IsEmpty():
+                    self.skipped_feats += 1
+                    continue
+
+                if not geom.IsValid():
+                    geom = geom.MakeValid()
+                    if not geom.IsValid():
+                        continue
 
                 if clip_geom is not None:
                     geom = clip_geom.Intersection(geom)
@@ -139,6 +150,9 @@ class ImportFeatureClass(QgsTask):
                         g = geom
                     else:
                         g = geom.GetGeometryRef(i)
+                        g.MakeValid()
+                        if not g.IsValid():
+                            continue
                     dst_feature = ogr.Feature(dst_layer_def)
                     dst_feature.SetGeometry(g)
                     if self.attributes is not None:
