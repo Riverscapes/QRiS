@@ -247,3 +247,15 @@ def apply_db_migrations(db_path: str):
     except Exception as ex:
         conn.rollback()
         raise ex
+
+def test_project(db_path):
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = dict_factory
+        curs = conn.cursor()
+
+        # cherck if the project table exists
+        curs.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="projects"')
+        if curs.fetchone() is None:
+            raise Exception(f'The file {db_path} is not a QRiS project file.')
+
