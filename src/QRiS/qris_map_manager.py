@@ -10,7 +10,7 @@ from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
 from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE, get_raster_symbology
-from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, Event
+from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, AS_BUILT_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
@@ -254,11 +254,13 @@ class QRisMapManager(RiverscapesMapManager):
         if event_layer.layer.is_lookup:
             return
 
-        machine_code = DESIGN_MACHINE_CODE if event.event_type.id == DESIGN_EVENT_TYPE_ID else EVENT_MACHINE_CODE
+        machine_code = EVENT_MACHINE_CODE
         group_name = 'Data Capture Events'
         if event.event_type.id == DESIGN_EVENT_TYPE_ID:
+            machine_code = DESIGN_MACHINE_CODE
             group_name = 'Designs'
         if event.event_type.id == AS_BUILT_EVENT_TYPE_ID:
+            machine_code = AS_BUILT_MACHINE_CODE
             group_name = 'As-Builts'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
