@@ -1,5 +1,26 @@
 # QRiS Plugin
 
+## [0.3.7] 2023 JAN 12
+
+### Added
+- Right click menu to add all child layers to map
+- Feature Count turned on for QRiS layers
+- Layer in Edit Session highlighted in Project Tree
+- Project Tree opens in partially collapsed state
+- Project Tree layers indicate if they are empty containers (no features)
+- Check that gpkg is a valid QRiS project on opening
+
+### Fixed
+- Acknowledgements Text
+- Bug when adding layer to tree in hierarchy
+- Bug when exporting project with an analysis
+- Import DCE Layer bug with certain invalid geometries
+- Null json values cause error when opening a project
+- As-Built Group placement in layer ToC
+
+### Removed
+- References to old qrave plugin
+
 ## [0.3.6] 2023 DEC 21
 
 ### Changed
