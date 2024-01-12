@@ -74,7 +74,10 @@ def check_metadata(project_file: str):
             c.execute(f"SELECT metadata FROM {layer}")
             rows = c.fetchall()
             for row in rows:
-                meta = json.loads(row[0])
+                value = row[0]
+                if value is None:
+                    continue
+                meta = json.loads(value)
                 # if meta is empty, continue
                 if not meta:
                     continue
