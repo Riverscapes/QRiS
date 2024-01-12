@@ -37,7 +37,8 @@
       },
       "files.exclude": {
         "**/node_modules/**": true
-      }
+      },
+      "terminal.integrated.defaultProfile.linux": "zsh"
     },
     "extensions": {
       "recommendations": [
