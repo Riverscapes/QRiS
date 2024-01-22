@@ -6,12 +6,7 @@ CREATE TABLE migrations (
 );
 
 -- INSERT INTO migrations (file_name) VALUES ('001_initial_schema.sql');
-INSERT INTO migrations (file_name) VALUES ('002_raster_change.sql');
-INSERT INTO migrations (file_name) VALUES ('003_metrics_update.sql');
-INSERT INTO migrations (file_name) VALUES ('004_metadata.sql');
-INSERT INTO migrations (file_name) VALUES ('005_raster_symbology.sql');
-INSERT INTO migrations (file_name) VALUES ('006_layer_metadata.sql');
-INSERT INTO migrations (file_name) VALUES ('007_metadata_thalweg.sql');
+
 
 -- LOOKUP TABLES
 CREATE TABLE protocols (
