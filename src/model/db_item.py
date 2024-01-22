@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 
 import sqlite3
 
+DB_MODE_NEW = 'new'
 DB_MODE_CREATE = 'create'
 DB_MODE_IMPORT = 'import'
 DB_MODE_IMPORT_TEMPORARY = 'import_temporary'

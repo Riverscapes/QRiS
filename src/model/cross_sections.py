@@ -14,6 +14,8 @@ class CrossSections(DBItem):
         self.description = description
         self.metadata = metadata
         self.icon = 'line'
+        self.fc_name = 'cross_section_features'
+        self.fc_id_column_name = 'cross_section_id'
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 

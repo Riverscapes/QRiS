@@ -20,6 +20,8 @@ class Mask(DBItem):
         self.mask_type = mask_type
         self.metadata = metadata
         self.icon = 'mask' if mask_type.id == AOI_MASK_TYPE_ID else 'mask_regular'
+        self.fc_name = 'mask_features'
+        self.fc_id_column_name = 'mask_id'
 
     def update(self, db_path: str, name: str, description: str, metadata=None) -> None:
 
