@@ -22,6 +22,8 @@ class Profile(DBItem):
         self.description = description
         self.metadata = metadata
         self.icon = 'line'
+        self.fc_name = 'profile_centerlines' if profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE else 'profile_features'
+        self.fc_id_column_name = 'profile_id'
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 

@@ -405,14 +405,28 @@ CREATE TABLE masks (
 ALTER TABLE aoi_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
 ALTER TABLE aoi_features ADD COLUMN metadata TEXT;
 
--- Regular masks refer to the mask that they belong to and have a display label
-ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
-ALTER TABLE mask_features ADD COLUMN display_label TEXT;
-ALTER TABLE mask_features ADD COLUMN display_order INTEGER;
--- ALTER TABLE mask_features ADD COLUMN name TEXT;
-ALTER TABLE mask_features ADD COLUMN position INTEGER;
-ALTER TABLE mask_features ADD COLUMN description TEXT;
-ALTER TABLE mask_features ADD COLUMN metadata TEXT;
+-- -- Regular masks refer to the mask that they belong to and have a display label
+-- ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
+-- ALTER TABLE mask_features ADD COLUMN display_label TEXT;
+-- ALTER TABLE mask_features ADD COLUMN display_order INTEGER;
+-- -- ALTER TABLE mask_features ADD COLUMN name TEXT;
+-- ALTER TABLE mask_features ADD COLUMN position INTEGER;
+-- ALTER TABLE mask_features ADD COLUMN description TEXT;
+-- ALTER TABLE mask_features ADD COLUMN metadata TEXT;
+
+CREATE TABLE sample_frames(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE sample_frame_features ADD COLUMN sample_frame_id INTEGER REFERENCES sample_frames(id) ON DELETE CASCADE;
+ALTER TABLE sample_frame_features ADD COLUMN display_label TEXT;
+ALTER TABLE sample_frame_features ADD COLUMN flow_path TEXT;
+ALTER TABLE sample_frame_features ADD COLUMN flows_into INTEGER;
+ALTER TABLE sample_frame_features ADD COLUMN metadata TEXT;
 
 -- units
 CREATE TABLE lkp_units (
@@ -1109,6 +1123,7 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('e
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_rasters', 'attributes', 'event_rasters', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
+INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('sample_frames', 'attributes', 'sample_frames', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metrics', 'attributes', 'metrics', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metric_levels', 'attributes', 'metric_levels', 0);
