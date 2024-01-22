@@ -6,6 +6,7 @@ from .riverscapes_map_manager import RiverscapesMapManager
 
 from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.mask import Mask, MASK_MACHINE_CODE, AOI_MACHINE_CODE, AOI_MASK_TYPE_ID
+from ..model.sample_frame import SampleFrame, SAMPLE_FRAME_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint
@@ -89,6 +90,29 @@ class QRisMapManager(RiverscapesMapManager):
             feature_layer.setCustomProperty("labeling/fieldName", 'display_label')
 
         return feature_layer
+    
+    def build_sample_frame_layer(self, sample_frame: SampleFrame) -> QgsMapLayer:
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        group_layer = self.get_group_layer(self.project.map_guid, SAMPLE_FRAME_MACHINE_CODE, 'Sampling Frames', project_group, True)
+
+        existing_layer = self.get_db_item_layer(self.project.map_guid, sample_frame, group_layer)
+        if existing_layer is not None:
+            return existing_layer
+
+        fc_path = f'{self.project.project_file}|layername=sample_frame_features'
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, sample_frame, 'sample_frame_id', 'sampling_frames')
+
+        # setup fields
+        self.set_hidden(feature_layer, 'fid', 'Sample Frame Feature ID')
+        self.set_hidden(feature_layer, 'sample_frame_id', 'Sample Frame ID')
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_hidden(feature_layer, 'metadata', 'Metadata')
+        self.set_virtual_dimension(feature_layer, 'area')
+        self.set_metadata_virtual_fields(feature_layer)
+
+        return feature_layer
+
 
     def build_profile_layer(self, profile: Profile) -> QgsMapLayer:
 
