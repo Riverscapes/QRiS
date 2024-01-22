@@ -6,6 +6,7 @@ from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCo
 
 from .analysis import Analysis, load_analyses
 from .mask import Mask, load_masks
+from .sample_frame import SampleFrame, load_sample_frames
 from .layer import Layer, load_layers, load_non_method_layers
 from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
@@ -29,31 +30,8 @@ PROJECT_MACHINE_CODE = 'Project'
 # feature class, layer name, geometry
 project_layers = [
     ('aoi_features', 'AOI Features', 'Polygon'),
-    ('mask_features', 'Mask Features', 'Polygon'),
-    # ('dam_crests', 'Dam Crests', 'Linestring'),
-    # ('dams', 'Dam Points', 'Point'),
-    # ('jams', 'Jam Points', 'Point'),
-    # ('thalwegs', 'Thalwegs', 'Linestring'),
-    # ('active_extents', 'Active Extents', 'Polygon'),
-    # ('centerlines', 'Centerlines', 'Linestring'),
-    # ('inundation_extents', 'Inundation Extents', 'Polygon'),
-    # ('valley_bottoms', 'Valley Bottoms', 'Polygon'),
-    # ('junctions', 'Junctions', 'Point'),
-    # ('geomorphic_unit_extents', 'Geomorphic Unit Extents', 'Polygon'),
-    # ('geomorphic_units', 'Geomorphic Unit Points', 'Point'),
-    # ('geomorphic_units_tier3', 'Tier 3 Geomorphic Units', 'Point'),
-    # ('cem_phases', 'Channel Evolution Model Stages', 'Polygon'),
-    # ('vegetation_extents', 'Riparian Vegetation', 'Polygon'),
-    # ('floodplain_accessibilities', 'Floodplain Accessibility', 'Polygon'),
-    # ('brat_vegetation', 'BRAT Vegetation', 'Polygon'),
-    # ('zoi', 'Zones of Influence', 'Polygon'),
-    # ('complexes', 'Complexes', 'Polygon'),
-    # ('structure_points', 'Structure Points', 'Point'),
-    # ('structure_lines', 'Structure Lines', 'Linestring'),
-    # ('channel_unit_points', 'Channel Unit Points', 'Point'),
-    # ('channel_unit_polygons', 'Channel Unit Polygons', 'Polygon'),
-    # ('brat_cis', 'BRAT CIS', 'Point'),
-    # ('brat_cis_reaches', 'BRAT CIS Reaches', 'Linestring'),
+    # ('mask_features', 'Mask Features', 'Polygon'),
+    ('sample_frame_features', 'Sample Frame Features', 'Polygon'),
     ('pour_points', 'Pour Points', 'Point'),
     ('catchments', 'Catchments', 'Polygon'),
     ('stream_gages', 'Stream Gages', 'Point'),
@@ -96,6 +74,8 @@ class Project(DBItem):
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in lkp_tables}
 
             self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
+            self.aois = load_masks(curs, self.lookup_tables['lkp_mask_types'])
+            self.sample_frames = load_sample_frames(curs)
             self.layers = load_layers(curs)
             self.non_method_layers = load_non_method_layers(curs)
             self.methods = load_methods(curs, self.layers)
@@ -104,7 +84,7 @@ class Project(DBItem):
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
             self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.surface_rasters())
             self.metrics = load_metrics(curs)
-            self.analyses = load_analyses(curs, self.masks, self.metrics)
+            self.analyses = load_analyses(curs, self.sample_frames, self.metrics)
             self.pour_points = load_pour_points(curs)
             self.stream_gages = load_stream_gages(curs)
             self.profiles = load_profiles(curs)
@@ -128,6 +108,8 @@ class Project(DBItem):
 
         if isinstance(db_item, Mask):
             self.masks.pop(db_item.id)
+        elif isinstance(db_item, SampleFrame):
+            self.sample_frames.pop(db_item.id)
         elif isinstance(db_item, Raster):
             self.rasters.pop(db_item.id)
         elif isinstance(db_item, Event):
@@ -155,11 +137,6 @@ class Project(DBItem):
 
         with sqlite3.connect(self.project_file) as conn:
             conn.execute('UPDATE projects SET metadata = ? WHERE id = ?', [json.dumps(self.metadata), self.id])
-
-    # def basemaps(self) -> dict:
-    #     """ Returns a dictionary of just those rasters that are basemaps"""
-
-    #     return {id: raster for id, raster in self.rasters.items() if raster.raster_type_id == RASTER_TYPE_BASEMAP}
 
     def scratch_rasters(self) -> dict:
         """ Returns a dictionary of all project rasters EXCEPT basemaps"""

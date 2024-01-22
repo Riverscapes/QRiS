@@ -40,7 +40,7 @@ from ..model.analysis_metric import AnalysisMetric
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
-from ..model.mask import MASK_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask, get_sample_frame_ids
+from ..model.sample_frame import get_sample_frame_ids
 from ..model.metric_value import MetricValue, load_metric_values, print_uncertanty
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError
@@ -66,7 +66,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.txtName.setText(analysis.name)
 
         # Set Sample Frames
-        frame_ids = get_sample_frame_ids(self.project.project_file, self.analysis.mask.id)
+        frame_ids = get_sample_frame_ids(self.project.project_file, self.analysis.sample_frame.id)
         self.segments_model = DBItemModel(frame_ids)
         self.cboSampleFrame.setModel(self.segments_model)
 

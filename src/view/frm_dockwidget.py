@@ -38,8 +38,9 @@ from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
-from ..model.mask import MASK_MACHINE_CODE, AOI_MACHINE_CODE, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID, DIRECTIONAL_MASK_TYPE_ID, Mask
+from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
+from ..model.mask import AOI_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask
+from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, SampleFrame
 from ..model.protocol import Protocol
 from ..model.method import Method
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
@@ -53,6 +54,7 @@ from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_asbuilt import FrmAsBuilt
 from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
+from .frm_sample_frame import FrmSampleFrame
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
@@ -65,7 +67,7 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
-from .frm_sampleframe import FrmSampleFrame
+# from .frm_sampleframe import FrmSampleFrame
 from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
@@ -99,7 +101,7 @@ GROUP_FOLDER_LABELS = {
     INPUTS_NODE_TAG: 'Inputs',
     SURFACE_MACHINE_CODE: 'Surfaces',
     AOI_MACHINE_CODE: 'AOIs',
-    MASK_MACHINE_CODE: 'Sampling Frames',
+    SAMPLE_FRAME_MACHINE_CODE: 'Sample Frames',
     EVENT_MACHINE_CODE: 'Data Capture Events',
     BASEMAP_MACHINE_CODE: 'Basemaps',
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
@@ -173,10 +175,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(surfaces_node, item) for item in self.project.rasters.values() if item.is_context is False]
 
         aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
-        [self.add_child_to_project_tree(aoi_node, item) for item in self.project.masks.values() if item.mask_type.id == AOI_MASK_TYPE_ID]
+        [self.add_child_to_project_tree(aoi_node, item) for item in self.project.aois.values() if item.mask_type.id == AOI_MASK_TYPE_ID]
 
-        sampling_frames_node = self.add_child_to_project_tree(inputs_node, MASK_MACHINE_CODE)
-        [self.add_child_to_project_tree(sampling_frames_node, item) for item in self.project.masks.values() if item.mask_type.id != AOI_MASK_TYPE_ID]
+        sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
+        [self.add_child_to_project_tree(sample_frames_node, item) for item in self.project.sample_frames.values()]
 
         profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
         [self.add_child_to_project_tree(profiles_node, item) for item in self.project.profiles.values()]
@@ -200,7 +202,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        for node in [project_node, inputs_node, surfaces_node, aoi_node, sampling_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
+        for node in [project_node, inputs_node, surfaces_node, aoi_node, sample_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
@@ -304,7 +306,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
-                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, MASK_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
+                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
                     self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
@@ -318,19 +320,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
 
                 elif model_data == AOI_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT_TEMPORARY))
-                    self.add_context_menu_item(self.menu, 'Create New AOI', 'new', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
+                    self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
+                    self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT_TEMPORARY), False)
+                    self.add_context_menu_item(self.menu, 'Create New (Empty) AOI', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
 
-                elif model_data == MASK_MACHINE_CODE:
-                    import_mask_menu = self.menu.addMenu('Import Existing')
-                    self.add_context_menu_item(import_mask_menu, 'Regular Sample Frames', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_IMPORT_TEMPORARY))
-                    self.add_context_menu_item(import_mask_menu, 'Directional Sample Frames', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_IMPORT), False)
-
-                    add_mask_menu = self.menu.addMenu('Create New')
-                    self.add_context_menu_item(add_mask_menu, 'Regular Sample Frames', 'new', lambda: self.add_mask(model_item, REGULAR_MASK_TYPE_ID, DB_MODE_CREATE))
-                    self.add_context_menu_item(add_mask_menu, 'Directional Sample Frames', 'new', lambda: self.add_mask(model_item, DIRECTIONAL_MASK_TYPE_ID, DB_MODE_CREATE), False)
+                elif model_data == SAMPLE_FRAME_MACHINE_CODE:
+                    new_sample_frame_menu = self.menu.addMenu('Create New Sample Frame ...  ')
+                    self.add_context_menu_item(new_sample_frame_menu, 'Empty Sample Frame (Manual)', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_NEW))   
+                    self.add_context_menu_item(new_sample_frame_menu, 'From QRiS Features', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_CREATE))
+                    
+                    import_sample_frame_menu = self.menu.addMenu('Import Sample Frame From ...  ')
+                    self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_sample_frame_menu, 'Temporary Layer', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_TEMPORARY), False)
+                    self.add_context_menu_item(import_sample_frame_menu, 'QRiS Project', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_COPY), False)
 
                 elif model_data == CATCHMENTS_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
@@ -374,6 +376,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         or isinstance(model_data, Event) \
                         or isinstance(model_data, Raster) \
                         or isinstance(model_data, Mask) \
+                        or isinstance(model_data, SampleFrame) \
                         or isinstance(model_data, Profile) \
                         or isinstance(model_data, CrossSections) \
                         or isinstance(model_data, PourPoint) \
@@ -383,9 +386,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, Mask):
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
-                    if model_data.mask_type.id == AOI_MASK_TYPE_ID:
-                        self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                        self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
+                    # if model_data.mask_type.id == AOI_MASK_TYPE_ID:
+                        # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -393,8 +396,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, ScratchVector):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
-                        self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
-                        self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
+                        self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
 
                 if isinstance(model_data, Profile):
                     self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
@@ -402,7 +405,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, CrossSections):
                     self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
-                    self.add_context_menu_item(self.menu, 'Generate Sampling Frame', 'gis', lambda: self.generate_sampling_frame(model_data))
+                    self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
@@ -427,7 +430,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
                         self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
                 if isinstance(model_data, PourPoint):
-                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_mask(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
+                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE), False)
 
                 if not isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
@@ -444,8 +447,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_db_item_to_map(self, tree_node: QtGui.QStandardItem, db_item: DBItem):
 
         if isinstance(db_item, Mask):
-            # build_mask_layer(self.project, db_item)
             self.map_manager.build_mask_layer(db_item)
+        elif isinstance(db_item, SampleFrame):
+            self.map_manager.build_sample_frame_layer(db_item)
         elif isinstance(db_item, Raster):
             self.map_manager.build_raster_layer(db_item)
             # check if raster is a dem, and if there is an associated hillshade in the metadata. if so, add both to map
@@ -558,8 +562,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_analysis(self, parent_node):
 
-        if len([sampling_frame for sampling_frame in self.project.masks.values() if sampling_frame.mask_type.id != AOI_MASK_TYPE_ID]) == 0:
-            QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No sampling frames were found in the current QRiS Project.\n\nPlease prepare a sampling frame before running an analysis.')
+        if len(self.project.sample_frames.values()) == 0:
+            QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No sample frames were found in the current QRiS Project.\n\nPlease prepare a sample frame before running an analysis.')
             return
         if len(self.project.events) == 0:
             QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No data capture events were found in the current QRiS Project.\n\nPlease prepare a data capture or design event before running an analysis.')
@@ -573,8 +577,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def open_analysis(self, analysis: Analysis):
 
-        mask: Mask = analysis.mask
-        fc_path = f"{self.project.project_file}|layername=mask_features|subset=mask_id = {mask.id}"
+        sample_frame: SampleFrame = analysis.sample_frame
+        fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
         temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
         if temp_layer.featureCount() < 1:
             QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The sample frame for this analysis does not contain any features.\n\nPlease add features to this sample frame to proceed.')
@@ -867,7 +871,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
 
-    def generate_sampling_frame(self, db_item: DBItem):
+    def generate_sample_frame(self, db_item: DBItem):
 
         cross_sections = None
         polygon = None
@@ -914,9 +918,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
             if isinstance(data_item, DBItem):
                 target_node = QtGui.QStandardItem(data_item.name)
-                if isinstance(data_item, EventLayer): 
-                    fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
-                    temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
+                if  not any(isinstance(data_item, data_class) for data_class in [Project, Event, Analysis]):
+                    if isinstance(data_item, EventLayer): 
+                        fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
+                        temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
+                    else:
+                        temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
                     if temp_layer.featureCount() == 0:
                         target_node.setText(data_item.name + ' (Empty)')
                         font = target_node.font()
@@ -1021,13 +1028,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         return frm_toc.layer
 
-    def add_mask(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
-        """Initiates adding a new mask"""
+    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
+        """Initiates adding a new aoi"""
 
-        str_type = "AOI" if mask_type_id == AOI_MASK_TYPE_ID else "Sample Frame"
         import_source_path = None
         if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new {str_type}.', QgsWkbTypes.GeometryType.PolygonGeometry)
+            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new AOI.', QgsWkbTypes.GeometryType.PolygonGeometry)
             if import_source_path is None:
                 return
 
@@ -1036,7 +1042,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmMaskAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
+        if mask_type_id == AOI_MASK_TYPE_ID:
+            frm = FrmMaskAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
+
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_aoi(db_item)
@@ -1051,6 +1059,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.qris_mask, frm.chkAddToMap.isChecked())
+
+    def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int):
+        """Initiates adding a new sample frame"""
+
+        import_source_path = None
+        if mode == DB_MODE_IMPORT:
+            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Sample Frame.', QgsWkbTypes.GeometryType.PolygonGeometry)
+            if import_source_path is None:
+                return
+
+        if mode == DB_MODE_IMPORT_TEMPORARY:
+            import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry])
+            if import_source_path is None:
+                return
+
+        frm = FrmSampleFrame(self, self.project, import_source_path)
+
+        result = frm.exec_()
+        if result != 0:
+            self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
 
     def add_profile(self, parent_node: QtGui.QStandardItem, mode: int):
 
@@ -1202,6 +1230,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm = FrmEvent(self, self.project, event=db_item)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
+        elif isinstance(db_item, SampleFrame):
+            frm = FrmSampleFrame(self, self.project, None, db_item)
         elif isinstance(db_item, Profile):
             frm = FrmProfile(self, self.project, None, db_item)
         elif isinstance(db_item, CrossSections):

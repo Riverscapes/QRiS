@@ -761,7 +761,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 geopackage_layers = []
                 # analysis: Analysis = analysis
-                sample_frame: Mask = analysis.mask
+                sample_frame: Mask = analysis.sample_frame
 
                 # flatten the table of analysis metrics
                 analysis_metrics = []
