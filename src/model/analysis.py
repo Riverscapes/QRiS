@@ -2,7 +2,7 @@ from email.mime import base
 import sqlite3
 from .db_item import DBItem
 from .raster import Raster
-from .mask import Mask
+from .sample_frame import SampleFrame
 from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
@@ -10,11 +10,11 @@ ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 
 class Analysis(DBItem):
 
-    def __init__(self, id: int, name: str, description: str, mask: Mask):
+    def __init__(self, id: int, name: str, description: str, sample_frame: SampleFrame):
         super().__init__('analyses', id, name)
         self.description = description
         self.icon = 'analysis'
-        self.mask = mask
+        self.sample_frame = sample_frame
         self.analysis_metrics = None
 
     def update(self, db_path: str, name: str, description: str, analysis_metrics: dict) -> None:
@@ -38,14 +38,14 @@ class Analysis(DBItem):
                 raise ex
 
 
-def load_analyses(curs: sqlite3.Cursor, masks: dict, metrics: dict) -> dict:
+def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> dict:
 
     curs.execute('SELECT * FROM analyses')
     analyses = {row['id']: Analysis(
         row['id'],
         row['name'],
         row['description'],
-        masks[row['mask_id']]
+        sample_frames[row['mask_id']]
     ) for row in curs.fetchall()}
 
     for analysis_id, analysis in analyses.items():
@@ -55,7 +55,7 @@ def load_analyses(curs: sqlite3.Cursor, masks: dict, metrics: dict) -> dict:
     return analyses
 
 
-def insert_analysis(db_path: str, name: str, description: str, mask: Mask, analysis_metrics: dict) -> Analysis:
+def insert_analysis(db_path: str, name: str, description: str, sample_frame: SampleFrame, analysis_metrics: dict) -> Analysis:
     """
     active metrics is a dictionary with metric_id keyed to metric_level_id
     """
@@ -65,9 +65,9 @@ def insert_analysis(db_path: str, name: str, description: str, mask: Mask, analy
         try:
             curs = conn.cursor()
             curs.execute('INSERT INTO analyses (name, description, mask_id) VALUES (?, ?, ?)', [
-                name, description if description is not None and len(description) > 0 else None, mask.id])
+                name, description if description is not None and len(description) > 0 else None, sample_frame.id])
             analysis_id = curs.lastrowid
-            analysis = Analysis(analysis_id, name, description, mask)
+            analysis = Analysis(analysis_id, name, description, sample_frame)
 
             store_analysis_metrics(curs, analysis_id, analysis_metrics)
             analysis.analysis_metrics = analysis_metrics

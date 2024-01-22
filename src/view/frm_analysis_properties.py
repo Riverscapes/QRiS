@@ -6,7 +6,7 @@ from qgis.core import QgsVectorLayer
 from ..model.analysis import Analysis, insert_analysis
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
-from ..model.mask import REGULAR_MASK_TYPE_ID
+from ..model.sample_frame import SampleFrame
 from ..model.analysis_metric import AnalysisMetric
 from .utilities import validate_name, add_standard_form_buttons
 from ..QRiS.settings import CONSTANTS
@@ -23,7 +23,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.setupUi()
 
         # Masks (filtered to just regular masks )
-        self.sampling_frames = {id: mask for id, mask in project.masks.items() if mask.mask_type.id == REGULAR_MASK_TYPE_ID}
+        self.sampling_frames = {id: sample_frame for id, sample_frame in project.sample_frames.items()}
         self.sampling_frames_model = DBItemModel(self.sampling_frames)
         self.cboSampleFrame.setModel(self.sampling_frames_model)
 
@@ -138,14 +138,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        mask = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
-        if mask is None:
+        sample_frame: SampleFrame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        if sample_frame is None:
             QtWidgets.QMessageBox.warning(self, 'Missing Sample Frame', 'You must select a sample frame to continue.')
             self.cboSampleFrame.setFocus()
             return
         
         # determine if there are any features in the mask
-        fc_path = f"{self.project.project_file}|layername=mask_features|subset=mask_id = {mask.id}"
+        fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
         temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
         if temp_layer.featureCount() < 1:
             QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The selected sample frame does not contain any features. Please select a different sample frame.')
@@ -178,7 +178,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), mask, analysis_metrics)
+                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics)
                 self.project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
