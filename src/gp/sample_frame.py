@@ -59,7 +59,7 @@ class SampleFrameTask(QgsTask):
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())
             out_feature.setGeometry(geom)
-            out_feature['mask_id'] = self.id
+            out_feature['sample_frame_id'] = self.id
             out_feature['display_label'] = str(i)
             out_layer.dataProvider().addFeature(out_feature)
         out_layer.commitChanges()

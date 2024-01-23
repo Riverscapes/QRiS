@@ -10,13 +10,14 @@ from qgis.core import QgsApplication, QgsVectorLayer, QgsWkbTypes
 from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
 from ..model.scratch_vector import ScratchVector
-from ..model.mask import AOI_MASK_TYPE_ID
+from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.sample_frame import SampleFrame, insert_sample_frame
 
 from .frm_new_attribute import FrmNewAttribute
 
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.sample_frame import SampleFrameTask
 
 from .metadata import MetadataWidget
 from .utilities import validate_name, validate_name_unique, add_standard_form_buttons
@@ -37,6 +38,7 @@ class FrmSampleFrame(QDialog):
         self.qris_project = project
         self.sample_frame = sample_frame
         self.import_source_path = import_source_path
+        self.create_sample_frame = create_sample_frame
 
         super(FrmSampleFrame, self).__init__(parent)
         self.setWindowTitle(f'Create New (Empty) Sample Frame')
@@ -54,7 +56,7 @@ class FrmSampleFrame(QDialog):
         
         if create_sample_frame is True:
             self.tab_inputs = SampleFrameInputsCreate(self, self.qris_project)
-            self.setWindowTitle(f'Create Sample Frame')
+            self.setWindowTitle(f'Create New Sample Frame from Existing Layers')
             
         self.tab_properties = SampleFrameProperties(self, self.sample_frame)
         
@@ -142,20 +144,32 @@ class FrmSampleFrame(QDialog):
                 # # enable the buttons
                 # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
                 # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
+        if self.create_sample_frame is True:
+            try:
+                db_item_polygon = self.tab_inputs.cboFramePolygon.currentData(Qt.UserRole)
+                if isinstance(db_item_polygon, Mask):
+                    polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features')
+                    polygon_layer.setSubsetString(f'mask_id = {db_item_polygon.id}')
+                else:
+                    polygon_layer = QgsVectorLayer(f'{db_item_polygon.gpkg_path}|layername={db_item_polygon.fc_name}')
+                cross_sections = self.tab_inputs.cboCrossSections.currentData(Qt.UserRole)
+                cross_sections_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
+                cross_sections_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
+                out_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
+                task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
+                task.sample_frame_complete.connect(self.on_import_complete)
+                QgsApplication.taskManager().addTask(task)
+            except Exception as ex:
+                try:
+                    self.sample_frame.delete(self.qris_project.project_file)
+                except Exception as ex:
+                    print(f'Error attempting to delete sample_frame after the importing of features failed.')
+                    QMessageBox.warning(self, f'Error Importing Sample Frame Features', str(ex))
+                    # enable the buttons
+                    # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
+                    # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
+                return
             
-        # TODO create sample frame from qris features
-        # db_item_polygon = self.cboFramePolygon.currentData(QtCore.Qt.UserRole)
-        # if isinstance(db_item_polygon, Mask):
-        #     polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features')
-        #     polygon_layer.setSubsetString(f'mask_id = {db_item_polygon.id}')
-        # else:
-        #     polygon_layer = QgsVectorLayer(f'{db_item_polygon.gpkg_path}|layername={db_item_polygon.fc_name}')
-        # cross_sections = self.cboCrossSections.currentData(QtCore.Qt.UserRole)
-        # cross_sections_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
-        # cross_sections_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
-        # out_path = f'{self.qris_project.project_file}|layername=mask_features'
-        # task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
-
         super().accept()
 
     def get_field_map(self):
@@ -322,6 +336,12 @@ class SampleFrameInputsCreate(QWidget):
         #     index = self.polygons_model.getItemIndex(polygon_init)
         #     if index is not None:
         #         self.cboFramePolygon.setCurrentIndex(index)
+
+        # Centerlines
+        centerlines = {id: centerline for id, centerline in self.qris_project.profiles.items()}
+        self.centerlines_model = DBItemModel(centerlines)
+        self.cboCenterline.setModel(self.centerlines_model)
+
 
     def setupUi(self):
             
