@@ -5,8 +5,9 @@ CREATE TABLE migrations (
   created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- INSERT INTO migrations (file_name) VALUES ('001_initial_schema.sql');
-
+-- MIGRATIONS
+INSERT INTO migrations (file_name) VALUES ('001_design_layer_updates.sql');
+INSERT INTO migrations (file_name) VALUES ('002_sample_frames.sql');
 
 -- LOOKUP TABLES
 CREATE TABLE protocols (
@@ -93,9 +94,9 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (33, 'observation_points_dce', 'Observations', 'Point', 0, 'observation_points_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (34, 'observation_lines_dce', 'Observations', 'Linestring', 0, 'observation_lines_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"]}');
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (35, 'observation_polygons_dce', 'Observations', 'Polygon', 0, 'observation_polygons_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"]}');
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (36, 'structural_elements_points', 'Structural Elements', 'Point', 0, 'structural_elements_points.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (36, 'structural_elements_points', 'Structural Elements', 'Point', 0, 'structural_elements_points.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer", "default": 1, "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "length", "label": "Length", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "width", "label": "Width", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "height", "label": "Height", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (37, 'structural_elements_lines', 'Structural Elements', 'Linestring', 0, 'structural_elements_lines.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_lines"}]}' );
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (38, 'structural_elements_areas', 'Structural Elements', 'Polygon', 0, 'structural_elements_areas.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_areas"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer"}, {"machine_code": "length", "label": "Length", "type": "float"}, {"machine_code": "width", "label": "Width", "type": "float"}, {"machine_code": "height", "label": "Height", "type": "float"}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (38, 'structural_elements_areas', 'Structural Elements', 'Polygon', 0, 'structural_elements_areas.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_areas"}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (39, 'observation_points_asbuilt', 'Observations', 'Point', 0, 'observation_points_asbuilt.qml', NULL, '{"hierarchy": ["Observations"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
 
 -- Lookup Tables
@@ -427,6 +428,10 @@ ALTER TABLE sample_frame_features ADD COLUMN display_label TEXT;
 ALTER TABLE sample_frame_features ADD COLUMN flow_path TEXT;
 ALTER TABLE sample_frame_features ADD COLUMN flows_into INTEGER;
 ALTER TABLE sample_frame_features ADD COLUMN metadata TEXT;
+
+CREATE INDEX ix_sample_frame_features_sample_frame_id ON sample_frame_features(sample_frame_id);
+CREATE INDEX ix_sample_frame_features_flows_into ON sample_frame_features(flows_into);
+CREATE INDEX ix_sample_frame_features_flow_path ON sample_frame_features(flow_path);
 
 -- units
 CREATE TABLE lkp_units (
