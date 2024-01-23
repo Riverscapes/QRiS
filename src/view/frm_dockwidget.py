@@ -1073,8 +1073,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
+        
+        create = False
+        if mode == DB_MODE_CREATE:
+            create = True
 
-        frm = FrmSampleFrame(self, self.project, import_source_path)
+        frm = FrmSampleFrame(self, self.project, import_source_path, create_sample_frame=create)
 
         result = frm.exec_()
         if result != 0:

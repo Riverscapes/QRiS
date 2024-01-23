@@ -5,7 +5,7 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, QSize, QVariant
 from PyQt5.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout,  QGridLayout, QTabWidget, QGroupBox, QTreeView, QListWidget, QListWidgetItem, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
-from qgis.core import QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsApplication, QgsVectorLayer, QgsWkbTypes
 
 from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
@@ -14,6 +14,9 @@ from ..model.mask import AOI_MASK_TYPE_ID
 from ..model.sample_frame import SampleFrame, insert_sample_frame
 
 from .frm_new_attribute import FrmNewAttribute
+
+from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
+from ..gp.import_temp_layer import ImportTemporaryLayer
 
 from .metadata import MetadataWidget
 from .utilities import validate_name, validate_name_unique, add_standard_form_buttons
@@ -46,12 +49,13 @@ class FrmSampleFrame(QDialog):
             self.tab_inputs = SampleFrameInputs(self, self.qris_project, self.import_source_path)
             self.tab_attributes = SampleFrameAttributesAddFields(self, self.import_source_path)
             self.setWindowTitle(f'Import New Sample Frame From Feature Class')
-        elif create_sample_frame is True:
-            self.tab_inputs = SampleFrameInputsCreate(self, self.qris_project)
-            self.setWindowTitle(f'Create Sample Frame')
         else:
             self.tab_attributes = SampleFrameAttributes(self, self.sample_frame)
         
+        if create_sample_frame is True:
+            self.tab_inputs = SampleFrameInputsCreate(self, self.qris_project)
+            self.setWindowTitle(f'Create Sample Frame')
+            
         self.tab_properties = SampleFrameProperties(self, self.sample_frame)
         
         if sample_frame is not None:
@@ -102,35 +106,80 @@ class FrmSampleFrame(QDialog):
 
         if self.import_source_path is not None:
             try:
+                # set the ok and cancel buttons to disabled
+                # self.buttonBox.button(QMessageBox.Ok).setEnabled(False)
+                # self.buttonBox.button(QMessageBox.Cancel).setEnabled(False)
+
+                out_field_map = self.get_field_map()
                 clip_mask = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
                 clip_mask_id = None
                 if clip_mask is not None:
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
-                mask_layer_name = "aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "mask_features"
                 # if self.layer_id == 'memory':
-                #     import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, mask_layer_name, 'mask_id', self.qris_mask.id, clip_mask_id, proj_gpkg=self.qris_project.project_file)
+                #    import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, 'sample_frame_features', 'sample_frame_id', self.sample_frame.id, clip_mask_id, proj_gpkg=self.qris_project.project_file)
                
-                # mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
-                # attributes = {self.cboAttribute.currentData(Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                # layer_attributes = {'mask_id': self.qris_mask.id}
-                # import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, attributes, clip_mask_id, self.attribute_filter)
+                sample_frame_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
+                attributes = {self.tab_inputs.cboDisplayLabel.currentText(): 'display_label', self.tab_inputs.cboFlowPathField.currentText(): 'flow_path', self.tab_inputs.cboTopologyField.currentText(): 'topology'}
+                attributes['sample_frame_id'] = self.sample_frame.id
+                import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, proj_gpkg=self.qris_project.project_file)
                 # # DEBUG
                 # result = import_mask_task.run()
                 # self.on_import_complete(result)
                 # PRODUCTION
-                # import_mask_task.import_complete.connect(self.on_import_complete)
-                # QgsApplication.taskManager().addTask(import_mask_task)
+                import_mask_task.import_complete.connect(self.on_import_complete)
+                QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
                 except Exception as ex:
                     print(f'Error attempting to delete sample_frame after the importing of features failed.')
                     QMessageBox.warning(self, f'Error Importing Sample Frame Features', str(ex))
+                    # enable the buttons
+                    # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
+                    # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
                 return
-
-
+            # finally:
+                # # enable the buttons
+                # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
+                # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
+            
+        # TODO create sample frame from qris features
+        # db_item_polygon = self.cboFramePolygon.currentData(QtCore.Qt.UserRole)
+        # if isinstance(db_item_polygon, Mask):
+        #     polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features')
+        #     polygon_layer.setSubsetString(f'mask_id = {db_item_polygon.id}')
+        # else:
+        #     polygon_layer = QgsVectorLayer(f'{db_item_polygon.gpkg_path}|layername={db_item_polygon.fc_name}')
+        # cross_sections = self.cboCrossSections.currentData(QtCore.Qt.UserRole)
+        # cross_sections_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
+        # cross_sections_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
+        # out_path = f'{self.qris_project.project_file}|layername=mask_features'
+        # task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
 
         super().accept()
+
+    def get_field_map(self):
+
+        field_map = []
+        # if self.tab_inputs is not None:
+        #     for field in self.tab_inputs.load_fields():
+        #         field_map.append(ImportFieldMap(field, field, True))
+        if self.tab_attributes is not None:
+            for field in self.tab_attributes.get_fields():
+                field_map.append(ImportFieldMap(field, field, parent='attributes'))
+        return field_map
+
+
+    def on_import_complete(self, result):
+
+        if not result:
+            QMessageBox.warning(self, f'Error Importing sample frame Features', str(self.exception))
+            try:
+                self.sample_frame.delete(self.qris_project.project_file)
+            except Exception as ex:
+                print(f'Error attempting to delete sample frame after the importing of features failed.')
+            return
+
 
     def setupUi(self):
 
@@ -514,8 +563,6 @@ class SampleFrameAttributesAddFields(QWidget):
             return layer.fields().names()
         
     def get_fields(self):
-
-
 
         return [chk.text() for chk in self.chk_fields if chk.isChecked()]
 
