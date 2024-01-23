@@ -12,6 +12,11 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
     # def __init__(self, layer: QgsVectorLayer, fieldIdx: int, editor: QWidget, parent: QWidget):
     #     super().__init__(layer, fieldIdx, editor, parent)
 
+    def __init__(self, vl: QgsVectorLayer, fieldIdx: int, editor: QWidget, parent: QWidget) -> None:
+        super().__init__(vl, fieldIdx, editor, parent)
+        self.dict_values = {}
+        self.loading = False
+
     def value(self) -> QVariant:
         """Will be used to access the widget's value. Read the value from the widget and return it properly formatted to be saved in the attribute.
            If an invalid variant is returned this will be interpreted as no change. Be sure to return a NULL QVariant if it should be set to NULL.
