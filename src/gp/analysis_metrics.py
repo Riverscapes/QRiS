@@ -2,16 +2,40 @@
 
 import os
 import math
+import json
+import sqlite3
 
 import osgeo
 from osgeo import ogr, gdal, osr
 
 from .zonal_statistics import zonal_statistics
-
+from ..model.layer import Layer
+from ..model.profile import Profile
 
 class MetricInputMissingError(Exception):
     """Raised when a metric input is missing."""
     pass
+
+
+def normalization_factor(project_file: str, sample_frame_feature_id: int, profile: Profile) -> float:
+
+    # clip the profile to the mask feature
+    sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
+
+    ds: ogr.DataSource = ogr.Open(project_file)
+    profile_layer: ogr.Layer = ds.GetLayerByName(profile.fc_name)
+    profile_layer.SetAttributeFilter(f"profile_id = {profile.id}")
+    profile_feature: ogr.Feature = profile_layer.GetNextFeature()
+    profile_geom: ogr.Geometry = profile_feature.GetGeometryRef().Clone()
+
+    clipped_geom = profile_geom.Intersection(sample_frame_geom)
+    epsg = get_utm_zone_epsg(profile_geom.Centroid().GetX())
+    utm_srs = osr.SpatialReference()
+    utm_srs.ImportFromEPSG(epsg)
+    clipped_geom.TransformTo(utm_srs)
+    length = clipped_geom.Length()
+    
+    return length
 
 
 def get_utm_zone_epsg(longitude: float) -> int:
@@ -28,41 +52,93 @@ def get_utm_zone_epsg(longitude: float) -> int:
     return epsg
 
 
-def get_mask_geom(project_file: str, mask_feature_id: int) -> ogr.Geometry:
-    """Get the geometry of the mask feature.
+def get_sample_frame_geom(project_file: str, sample_frame_feature_id: int) -> ogr.Geometry:
+    """Get the geometry of the sample frame feature.
 
     Args:
-        project_file (str): [description]
-        mask_feature_id (int): [description]
+        project_file (str): source qris gpkg path
+        sample_frame_feature_id (int): sample frame feature id
 
     Returns:
-        ogr.Geometry: [description]
+        ogr.Geometry: sample frame polygon geometry
     """
-    ds = ogr.Open(project_file)
-    mask_layer = ds.GetLayerByName('mask_features')
-    mask_layer.SetAttributeFilter(f"fid = {mask_feature_id}")
-    mask_feature = mask_layer.GetNextFeature()
-    mask_geom = mask_feature.GetGeometryRef().Clone()
-    return mask_geom
+    ds: ogr.DataSource = ogr.Open(project_file)
+    sample_frame_layer: ogr.Layer = ds.GetLayerByName('sample_frame_features')
+    sample_frame_layer.SetAttributeFilter(f"fid = {sample_frame_feature_id}")
+    sample_frame_feature: ogr.Feature = sample_frame_layer.GetNextFeature()
+    sample_frame_geom: ogr.Geometry = sample_frame_feature.GetGeometryRef().Clone()
+    return sample_frame_geom
+
+def get_dce_layer_source(project_file: str, machine_code: str) -> (str, int):
+
+    with sqlite3.connect(project_file) as conn:
+        c = conn.cursor()
+        c.execute(f"SELECT id, geom_type FROM layers WHERE fc_name = '{machine_code}'")
+        layer_data = c.fetchone()
+        layer_id = layer_data[0]
+        geom_type = layer_data[1]
+        layer_source = Layer.DCE_LAYER_NAMES[geom_type]
+    
+    return layer_id, layer_source
 
 
 def count(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict) -> int:
     """Count the number of features in the specified layers that intersect the mask feature.
-
-       CalculationID: 1
+    
+        CalculationID: 1
     """
+    
+    sample_frame_geom = get_sample_frame_geom(project_file, mask_feature_id)
 
-    mask_geom = get_mask_geom(project_file, mask_feature_id)
+    total_feature_count = 0
+    for metric_layer in metric_params['layers']:
+        layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
+        ds: ogr.DataSource = ogr.Open(project_file)
+        layer: ogr.Layer = ds.GetLayerByName(layer_name)
+        layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
+        layer.SetSpatialFilter(sample_frame_geom)
+        attribute_filter = metric_layer.get('attribute_filter', None)
+        for feature in layer:
+            feature_count = 0
+            metadata: dict = json.loads(feature.GetField('metadata'))
+            if attribute_filter is not None:
+                if metadata is None:
+                    continue
+                attributes = metadata.get('attributes', None)
+                if attributes is not None:
+                    if attribute_filter['field_name'] in attributes:
+                        if attributes[attribute_filter['field_name']] != attribute_filter['field_value']:
+                            continue
+                else:
+                    continue
+            count_field = metric_layer.get('count_field', None)
+            if count_field is not None:
+                feature_count += attributes.get(count_field, 1)
+            else:
+                feature_count += 1
+            if layer_name in ['dce_lines', 'dce_polygons']:
+                geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+                if geom.Intersects(sample_frame_geom):
+                    clipped_geom = geom.Intersection(sample_frame_geom)
+                    epsg = get_utm_zone_epsg(geom.Centroid().GetX())
+                    utm_srs = osr.SpatialReference()
+                    utm_srs.ImportFromEPSG(epsg)
+                    clipped_geom.TransformTo(utm_srs)
+                    geom.TransformTo(utm_srs)
+                    if layer_name == 'dce_lines':
+                        proportion = clipped_geom.Length() / geom.Length()
+                    else:
+                        proportion = clipped_geom.Area() / geom.Area()
+                    feature_count *= proportion
+            total_feature_count += round(feature_count)    # round to nearest integer
+            geom = None
+            clipped_geom = None
+            feature = None
 
-    feature_count = 0
-    for layer_name in metric_params['layers']:
-        ds = ogr.Open(project_file)
-        layer = ds.GetLayerByName(layer_name)
-        layer.SetAttributeFilter(f"event_id = {event_id}")
-        layer.SetSpatialFilter(mask_geom)
-        feature_count += layer.GetFeatureCount()
+        layer = None
+        ds = None
 
-    return feature_count
+    return total_feature_count
 
 
 def length(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
@@ -71,7 +147,7 @@ def length(project_file: str, mask_feature_id: int, event_id: int, metric_params
        CalculationID: 2
     """
 
-    mask_geom = get_mask_geom(project_file, mask_feature_id)
+    mask_geom = get_sample_frame_geom(project_file, mask_feature_id)
 
     total_length = 0
     for layer_name in metric_params['layers']:
@@ -98,7 +174,7 @@ def area(project_file: str, mask_feature_id: int, event_id: int, metric_params: 
        CalculationID: 3
     """
 
-    mask_geom = get_mask_geom(project_file, mask_feature_id)
+    mask_geom = get_sample_frame_geom(project_file, mask_feature_id)
 
     total_area = 0
     for layer_name in metric_params['layers']:
@@ -127,7 +203,7 @@ def sinuosity(project_file: str, mask_feature_id: int, event_id: int, metric_par
 
     # TODO Note that centerlines are not currently associated with an event_id, so the event_id is not used in this calculation.
 
-    mask_geom = get_mask_geom(project_file, mask_feature_id)
+    mask_geom = get_sample_frame_geom(project_file, mask_feature_id)
 
     layer_name = metric_params['layers'][0]
     ds = ogr.Open(project_file)
@@ -165,7 +241,7 @@ def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_para
     if not os.path.exists(raster_layer):
         raise Exception(f'Expected Raster layer {raster_layer} does not exist.')
 
-    mask_geom = get_mask_geom(project_file, mask_feature_id)
+    mask_geom = get_sample_frame_geom(project_file, mask_feature_id)
 
     layer_name = metric_params['layers'][0]
     ds = ogr.Open(project_file)

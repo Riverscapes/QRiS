@@ -499,6 +499,8 @@ INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (5, 3, 'Valley Bottom Area', 1, 2, '{"layers": ["valley_bottoms"]}', NULL);
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (6, 4, 'Centelrine Sinuosity', 1,  NULL, '{"layers": ["profile_centerlines"]}', '{"min_value": 1, "precision": 4, "tolerance": 0.1}');
 
+INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (7, 1, 'Jam Density', 1, NULL, '{"layers": [{"layer_name": "structural_elements_points", "count_field": "structure_count", "attribute_filter": {"field_name": "structural_element_type", "values": ["Jam", "Jam Complex"]}}, {"layer_name": "structural_elements_lines", "attribute_filter": {"field_name": "structural_element_type", "values": ["Jam", "Jam Complex"]}}, {"layer_name": "structural_elements_areas", "attribute_filter": {"field_name": "structural_element_type", "values": ["Jam", "Jam Complex"]}}]}', '{"min_value": 0}');
+
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -520,7 +522,7 @@ CREATE TABLE analysis_metrics (
 
 CREATE TABLE metric_values (
     analysis_id INTEGER REFERENCES analyses(id) ON DELETE CASCADE,
-    mask_feature_id INTEGER REFERENCES mask_features(fid) ON DELETE CASCADE,
+    mask_feature_id INTEGER REFERENCES sample_frame_features(fid) ON DELETE CASCADE,
     metric_id INTEGER REFERENCES metrics(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
 --     metric_source_id INTEGER REFERENCES metric_sources(id) ON DELETE CASCADE,

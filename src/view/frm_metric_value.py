@@ -1,5 +1,4 @@
 import os
-import plistlib
 import traceback
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -11,8 +10,10 @@ from ..model.metric_value import MetricValue
 from ..model.metric import Metric
 from ..model.analysis import Analysis
 from ..model.event import Event
+
 from .utilities import add_standard_form_buttons
 from ..gp import analysis_metrics
+from ..gp.analysis_metrics import normalization_factor
 from ..QRiS.settings import CONSTANTS
 from ..QRiS.path_utilities import parse_posix_path
 
@@ -24,7 +25,7 @@ UNCERTAINTY_MINMAX = 'Min/Max'
 
 class FrmMetricValue(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, metrics, analysis: Analysis, event: Event, mask_feature_id: int, metric_value: MetricValue):
+    def __init__(self, parent, project: Project, metrics, analysis: Analysis, event: Event, sample_frame_id: int, metric_value: MetricValue):
         super().__init__(parent)
         self.setupUi()
 
@@ -38,7 +39,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.project = project
         self.analysis = analysis
         self.data_capture_event = event
-        self.mask_feature_id = mask_feature_id
+        self.sample_frame_id = sample_frame_id
         # self.metrics = metrics
 
         metric_name_text = f'{metric_value.metric.name} ({self.project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
@@ -101,7 +102,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.metric_value.uncertainty = {self.cboManualUncertainty.currentText(): self.ValManualPlusMinus.value()}
 
         try:
-            self.metric_value.save(self.project.project_file, self.analysis, self.data_capture_event, self.mask_feature_id)
+            self.metric_value.save(self.project.project_file, self.analysis, self.data_capture_event, self.sample_frame_id)
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, 'Error Saving Metric Value', str(ex))
             return
@@ -157,7 +158,16 @@ class FrmMetricValue(QtWidgets.QDialog):
             return
 
         # modify metric params as needed.
-        metric_params = self.metric_value.metric.metric_params
+        metric_params: dict = self.metric_value.metric.metric_params
+        normalization_value = 1.0
+        if "normalization" in metric_params:
+            if metric_params["normalization"] == "centerline":
+                if self.analysis.profile is not None:
+                    profile = self.project.profiles[self.analysis.metadata["profile"]]
+                    normalization_value = normalization_factor(self.project.project_file, self.sample_frame_id, profile)
+                else:
+                    QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', f'Required {metric_params["normalization"]} not found for metric generation.')
+                    return
         if 'rasters' in metric_params:
             rasters = {}
             for raster_name in metric_params['rasters']:
@@ -171,8 +181,9 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
-            result = metric_calculation(self.project.project_file, self.mask_feature_id, self.data_capture_event.id, metric_params)
-            self.metric_value.automated_value = result
+            result = metric_calculation(self.project.project_file, self.sample_frame_id, self.data_capture_event.id, metric_params)
+            normalized_result = result / normalization_value
+            self.metric_value.automated_value = normalized_result
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
             QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)

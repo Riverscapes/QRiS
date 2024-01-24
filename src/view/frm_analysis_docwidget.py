@@ -28,12 +28,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
 from qgis.utils import iface
 
-from .frm_analysis_properties import FrmAnalysisProperties
-
-# from qgis.core import QgsMapLayer
-# from qgis.gui import QgsDataSourceSelectDialog
-# from qgis.utils import iface
-
 from ..model.project import Project
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.analysis_metric import AnalysisMetric
@@ -41,14 +35,17 @@ from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
 from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.sample_frame import get_sample_frame_ids
+from ..model.metric import Metric
 from ..model.metric_value import MetricValue, load_metric_values, print_uncertanty
+
 from ..gp import analysis_metrics
-from ..gp.analysis_metrics import MetricInputMissingError
+from ..gp.analysis_metrics import MetricInputMissingError, normalization_factor
 from ..QRiS.path_utilities import parse_posix_path
 
 from .frm_metric_value import FrmMetricValue
 from .frm_calculate_all_metrics import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
+from .frm_analysis_properties import FrmAnalysisProperties
 
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
@@ -177,22 +174,30 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
-            mask_features = [self.cboSampleFrame.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(QtCore.Qt.UserRole)]
+            sample_frame_features = [self.cboSampleFrame.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(QtCore.Qt.UserRole)]
             data_capture_events = [self.cboEvent.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboEvent.count())] if frm.rdoAllDCE.isChecked() else [self.cboEvent.currentData(QtCore.Qt.UserRole)]
 
             errors = False
             missing_data = False
-            for mask_feature in mask_features:
+            for sample_frame_feature in sample_frame_features:
                 for data_capture_event in data_capture_events:
-                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, self.project.metrics)
+                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, self.project.metrics)
                     for analysis_metric in self.analysis.analysis_metrics.values():
-                        metric = analysis_metric.metric
-                        metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
+                        metric: Metric = analysis_metric.metric
+                        metric_value: MetricValue = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
                         if metric_value.automated_value is not None and not frm.chkOverwrite.isChecked():
                             continue
                         if metric.metric_function is None:
                             # Metric is not defined in database. continue
                             continue
+                        normalization_value = 1.0
+                        if "normalization" in metric.metric_params:
+                            if metric.metric_params["normalization"] == "centerline":
+                                if self.analysis.metadata["profile"] is not None:
+                                    profile = self.project.profiles[self.analysis.metadata["profile"]]
+                                    normalization_value = normalization_factor(self.project.project_file, sample_frame_feature.id, profile)
+                                else:
+                                    continue
                         try:
                             if 'rasters' in metric.metric_params:
                                 rasters = {}
@@ -205,12 +210,13 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                                 metric.metric_params['rasters'] = rasters
 
                             metric_calculation = getattr(analysis_metrics, metric.metric_function)
-                            result = metric_calculation(self.project.project_file, mask_feature.id, data_capture_event.id, metric.metric_params)
-                            metric_value.automated_value = result
+                            result = metric_calculation(self.project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params)
+                            normalized_value = result / normalization_value
+                            metric_value.automated_value = normalized_value
                             if frm.chkForceActive.isChecked():
                                 metric_value.is_manual = False
-                            metric_value.save(self.project.project_file, self.analysis, data_capture_event, mask_feature.id, metric.default_unit_id)
-                            QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {mask_feature.id}', 'QRiS_Metrics', Qgis.Info)
+                            metric_value.save(self.project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
+                            QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {sample_frame_feature.id}', 'QRiS_Metrics', Qgis.Info)
                         except MetricInputMissingError as ex:
                             missing_data = True
                             QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)

@@ -22,15 +22,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         super(FrmAnalysisProperties, self).__init__(parent)
         self.setupUi()
 
-        # Masks (filtered to just regular masks )
+        # Sample Frames
         self.sampling_frames = {id: sample_frame for id, sample_frame in project.sample_frames.items()}
         self.sampling_frames_model = DBItemModel(self.sampling_frames)
         self.cboSampleFrame.setModel(self.sampling_frames_model)
 
-        # self.metrics_model = QtGui.QStandardItemModel(len(project.metrics), 2)
+        # Profiles
+        self.profiles = {id: profile for id, profile in project.profiles.items()}
+        self.profiles_model = DBItemModel(self.profiles)
+        self.cboProfile.setModel(self.profiles_model)
+
         metrics = list(project.metrics.values())
         self.metricsTable.setRowCount(len(metrics))
-        # self.metricsTable.setColumnCount(2)
 
         for row in range(len(metrics)):
 
@@ -71,13 +74,20 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
             self.txtName.setText(analysis.name)
             self.txtDescription.setPlainText(analysis.description)
-            # self.chkAddToMap.setCheckState(Qt.Unchecked)
-            # self.chkAddToMap.setVisible(False)
+            
+            # Set the sample frame
+            index = self.cboSampleFrame.findData(analysis.sample_frame)
+            self.cboSampleFrame.setCurrentIndex(index)
 
-            # TODO: Set dropdowns when existing analysis
+            # Set the profile
+            if analysis.profile is not None:
+                profile: DBItem = self.profiles[analysis.profile]
+                index = self.cboProfile.findData(profile)
+                self.cboProfile.setCurrentIndex(index)
 
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
+            self.cboProfile.setEnabled(False)
         else:
             self.setWindowTitle('Create New Analysis')
 
@@ -107,6 +117,12 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         self.cboSampleFrame = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboSampleFrame, 1, 1, 1, 1)
+
+        self.lblProfile = QtWidgets.QLabel('Profile')
+        self.grdLayout1.addWidget(self.lblProfile, 2, 0, 1, 1)
+        
+        self.cboProfile = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboProfile, 2, 1, 1, 1)
 
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
@@ -144,6 +160,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboSampleFrame.setFocus()
             return
         
+        # write the profile id to the analysis and analysis metadata
+        metadata = self.analysis.metadata if self.analysis is not None else {}
+        metadata['profile'] = self.analysis.profile
+
         # determine if there are any features in the mask
         fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
         temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
@@ -168,7 +188,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         if self.analysis is not None:
             try:
-                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics)
+                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics, metadata)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -178,7 +198,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics)
+                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics, metadata)
                 self.project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
