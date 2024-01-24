@@ -5,9 +5,13 @@ CREATE TABLE migrations (
   created_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- MIGRATIONS
-INSERT INTO migrations (file_name) VALUES ('001_design_layer_updates.sql');
-INSERT INTO migrations (file_name) VALUES ('002_sample_frames.sql');
+-- INSERT INTO migrations (file_name) VALUES ('001_initial_schema.sql');
+INSERT INTO migrations (file_name) VALUES ('002_raster_change.sql');
+INSERT INTO migrations (file_name) VALUES ('003_metrics_update.sql');
+INSERT INTO migrations (file_name) VALUES ('004_metadata.sql');
+INSERT INTO migrations (file_name) VALUES ('005_raster_symbology.sql');
+INSERT INTO migrations (file_name) VALUES ('006_layer_metadata.sql');
+INSERT INTO migrations (file_name) VALUES ('007_metadata_thalweg.sql');
 
 -- LOOKUP TABLES
 CREATE TABLE protocols (
@@ -94,9 +98,9 @@ INSERT INTO layers (id, fc_name, display_name, geom_type, is_lookup, qml, descri
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (33, 'observation_points_dce', 'Observations', 'Point', 0, 'observation_points_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (34, 'observation_lines_dce', 'Observations', 'Linestring', 0, 'observation_lines_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"]}');
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (35, 'observation_polygons_dce', 'Observations', 'Polygon', 0, 'observation_polygons_dce.qml', NULL, '{"hierarchy": ["Observations", "Other"]}');
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (36, 'structural_elements_points', 'Structural Elements', 'Point', 0, 'structural_elements_points.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer", "default": 1, "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "length", "label": "Length", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "width", "label": "Width", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "height", "label": "Height", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (36, 'structural_elements_points', 'Structural Elements', 'Point', 0, 'structural_elements_points.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}]}' );
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (37, 'structural_elements_lines', 'Structural Elements', 'Linestring', 0, 'structural_elements_lines.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_lines"}]}' );
-INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (38, 'structural_elements_areas', 'Structural Elements', 'Polygon', 0, 'structural_elements_areas.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_areas"}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
+INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (38, 'structural_elements_areas', 'Structural Elements', 'Polygon', 0, 'structural_elements_areas.qml', NULL, '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_areas"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer"}, {"machine_code": "length", "label": "Length", "type": "float"}, {"machine_code": "width", "label": "Width", "type": "float"}, {"machine_code": "height", "label": "Height", "type": "float"}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' );
 INSERT INTO layers(id, fc_name, display_name, geom_type, is_lookup, qml, description, metadata) VALUES (39, 'observation_points_asbuilt', 'Observations', 'Point', 0, 'observation_points_asbuilt.qml', NULL, '{"hierarchy": ["Observations"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}]}'); 
 
 -- Lookup Tables
@@ -406,32 +410,14 @@ CREATE TABLE masks (
 ALTER TABLE aoi_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
 ALTER TABLE aoi_features ADD COLUMN metadata TEXT;
 
--- -- Regular masks refer to the mask that they belong to and have a display label
--- ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
--- ALTER TABLE mask_features ADD COLUMN display_label TEXT;
--- ALTER TABLE mask_features ADD COLUMN display_order INTEGER;
--- -- ALTER TABLE mask_features ADD COLUMN name TEXT;
--- ALTER TABLE mask_features ADD COLUMN position INTEGER;
--- ALTER TABLE mask_features ADD COLUMN description TEXT;
--- ALTER TABLE mask_features ADD COLUMN metadata TEXT;
-
-CREATE TABLE sample_frames(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    description TEXT,
-    metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-ALTER TABLE sample_frame_features ADD COLUMN sample_frame_id INTEGER REFERENCES sample_frames(id) ON DELETE CASCADE;
-ALTER TABLE sample_frame_features ADD COLUMN display_label TEXT;
-ALTER TABLE sample_frame_features ADD COLUMN flow_path TEXT;
-ALTER TABLE sample_frame_features ADD COLUMN flows_into INTEGER;
-ALTER TABLE sample_frame_features ADD COLUMN metadata TEXT;
-
-CREATE INDEX ix_sample_frame_features_sample_frame_id ON sample_frame_features(sample_frame_id);
-CREATE INDEX ix_sample_frame_features_flows_into ON sample_frame_features(flows_into);
-CREATE INDEX ix_sample_frame_features_flow_path ON sample_frame_features(flow_path);
+-- Regular masks refer to the mask that they belong to and have a display label
+ALTER TABLE mask_features ADD COLUMN mask_id INTEGER REFERENCES masks(id) ON DELETE CASCADE;
+ALTER TABLE mask_features ADD COLUMN display_label TEXT;
+ALTER TABLE mask_features ADD COLUMN display_order INTEGER;
+-- ALTER TABLE mask_features ADD COLUMN name TEXT;
+ALTER TABLE mask_features ADD COLUMN position INTEGER;
+ALTER TABLE mask_features ADD COLUMN description TEXT;
+ALTER TABLE mask_features ADD COLUMN metadata TEXT;
 
 -- units
 CREATE TABLE lkp_units (
@@ -499,8 +485,6 @@ INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (5, 3, 'Valley Bottom Area', 1, 2, '{"layers": ["valley_bottoms"]}', NULL);
 INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (6, 4, 'Centelrine Sinuosity', 1,  NULL, '{"layers": ["profile_centerlines"]}', '{"min_value": 1, "precision": 4, "tolerance": 0.1}');
 
-INSERT INTO metrics (id, calculation_id, name, default_level_id, unit_id, metric_params, metadata) VALUES (7, 1, 'Jam Density', 1, NULL, '{"layers": [{"layer_name": "structural_elements_points", "count_field": "structure_count", "attribute_filter": {"field_name": "structural_element_type", "values": ["Jam", "Jam Complex"]}}, {"layer_name": "structural_elements_lines", "attribute_filter": {"field_name": "structural_element_type", "values": ["Jam", "Jam Complex"]}}, {"layer_name": "structural_elements_areas", "attribute_filter": {"field_name": "structural_element_type", "values": ["Jam", "Jam Complex"]}}]}', '{"min_value": 0}');
-
 CREATE TABLE analyses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -522,7 +506,7 @@ CREATE TABLE analysis_metrics (
 
 CREATE TABLE metric_values (
     analysis_id INTEGER REFERENCES analyses(id) ON DELETE CASCADE,
-    mask_feature_id INTEGER REFERENCES sample_frame_features(fid) ON DELETE CASCADE,
+    mask_feature_id INTEGER REFERENCES mask_features(fid) ON DELETE CASCADE,
     metric_id INTEGER REFERENCES metrics(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
 --     metric_source_id INTEGER REFERENCES metric_sources(id) ON DELETE CASCADE,
@@ -1130,7 +1114,6 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('e
 -- INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_methods', 'attributes', 'event_methods', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('event_rasters', 'attributes', 'event_rasters', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('masks', 'attributes', 'masks', 0);
-INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('sample_frames', 'attributes', 'sample_frames', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('calculations', 'attributes', 'calculations', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metrics', 'attributes', 'metrics', 0);
 INSERT INTO gpkg_contents (table_name, data_type, identifier, srs_id) VALUES ('metric_levels', 'attributes', 'metric_levels', 0);
