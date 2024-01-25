@@ -6,8 +6,10 @@ from qgis.core import QgsVectorLayer
 from ..model.analysis import Analysis, insert_analysis
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
+from ..model.profile import Profile
 from ..model.sample_frame import SampleFrame
 from ..model.analysis_metric import AnalysisMetric
+
 from .utilities import validate_name, add_standard_form_buttons
 from ..QRiS.settings import CONSTANTS
 
@@ -160,9 +162,13 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboSampleFrame.setFocus()
             return
         
+        profile: Profile = self.cboProfile.currentData(QtCore.Qt.UserRole)
+
+
         # write the profile id to the analysis and analysis metadata
         metadata = self.analysis.metadata if self.analysis is not None else {}
-        metadata['profile'] = self.analysis.profile
+        if profile is not None:
+            metadata['profile'] = profile.id
 
         # determine if there are any features in the mask
         fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
