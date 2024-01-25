@@ -30,7 +30,7 @@ PROJECT_MACHINE_CODE = 'Project'
 # feature class, layer name, geometry
 project_layers = [
     ('aoi_features', 'AOI Features', 'Polygon'),
-    # ('mask_features', 'Mask Features', 'Polygon'),
+    ('mask_features', 'Mask Features', 'Polygon'),
     ('sample_frame_features', 'Sample Frame Features', 'Polygon'),
     ('pour_points', 'Pour Points', 'Point'),
     ('catchments', 'Catchments', 'Polygon'),
