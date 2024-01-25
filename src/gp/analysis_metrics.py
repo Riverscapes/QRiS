@@ -107,7 +107,7 @@ def count(project_file: str, mask_feature_id: int, event_id: int, metric_params:
                 attributes = metadata.get('attributes', None)
                 if attributes is not None:
                     if attribute_filter['field_name'] in attributes:
-                        if attributes[attribute_filter['field_name']] != attribute_filter['field_value']:
+                        if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
                             continue
                 else:
                     continue

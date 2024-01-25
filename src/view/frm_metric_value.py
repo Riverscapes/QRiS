@@ -192,7 +192,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.rdoAutomated.setEnabled(False)
             return
 
-        self.txtAutomated.setText(f'{result: .{self.metric_value.metric.precision}f}'if isinstance(result, float) and self.metric_value.metric.precision is not None else str(result))
+        self.txtAutomated.setText(f'{normalized_result: .{self.metric_value.metric.precision}f}'if isinstance(normalized_result, float) and self.metric_value.metric.precision is not None else str(normalized_result))
         self.rdoAutomated.setChecked(True)
         self.rdoAutomated.setEnabled(True)
 
