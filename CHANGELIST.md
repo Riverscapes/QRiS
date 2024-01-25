@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [0.3.8] 2023 JAN 25
+
+### Added
+- Dam Density Metric
+- Jam Density Metric
+
+### Changed
+- Sample Frame database schema changed
+- Create new Sample Frame
+- Create Sample Frame from QRiS layers
+- Import Sample Frame from Feature Class
+- Reset schema migrations
+
+### Fixed
+- Metadata attribute editior widget bug fixed
+
 ## [0.3.7] 2023 JAN 12
 
 ### Added
