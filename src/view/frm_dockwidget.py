@@ -918,7 +918,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
             if isinstance(data_item, DBItem):
                 target_node = QtGui.QStandardItem(data_item.name)
-                if  not any(isinstance(data_item, data_class) for data_class in [Project, Event, Analysis]):
+                if  not any(isinstance(data_item, data_class) for data_class in [Project, Event, Analysis, PourPoint, Raster, StreamGage]):
                     if isinstance(data_item, EventLayer): 
                         fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
                         temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
