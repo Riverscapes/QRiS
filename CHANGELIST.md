@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [0.3.9] 2023 JAN 30
+
+### Changed
+- Layer names changed to remove parentheses
+- Updated user messages when importing dce feature classes
+
+### Fixed
+- Spelling error with Structure Type list
+- Bug when loading surfaces in project tree prevents project from opening
+
 ## [0.3.8] 2023 JAN 25
 
 ### Added
