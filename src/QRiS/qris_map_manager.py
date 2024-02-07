@@ -211,7 +211,7 @@ class QRisMapManager(RiverscapesMapManager):
         point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
         QgsProject.instance().addMapLayer(point_feature_layer, False)
         pour_point_group_layer.addLayer(point_feature_layer)
-        qml = parse_posix_path(os.path.join(self.symbology_folder, 'pour_point.qml'))
+        qml = self.get_symbology_qml("pour_point") 
         point_feature_layer.loadNamedStyle(qml)
 
         catchment_fc_path = self.project.project_file + '|layername=' + 'catchments'
@@ -219,7 +219,7 @@ class QRisMapManager(RiverscapesMapManager):
         catchment_feature_layer = QgsVectorLayer(catchment_fc_path, 'Catchment', 'ogr')
         catchment_feature_layer.setSubsetString('pour_point_id = ' + str(pour_point.id))
         QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
-        qml = parse_posix_path(os.path.join(self.symbology_folder, 'catchment.qml'))
+        qml = self.get_symbology_qml('catchment')
         catchment_feature_layer.loadNamedStyle(qml)
         QgsProject.instance().addMapLayer(catchment_feature_layer, False)
         pour_point_group_layer.addLayer(catchment_feature_layer)
@@ -249,7 +249,7 @@ class QRisMapManager(RiverscapesMapManager):
         symbology = None
         symbology_key = get_raster_symbology(self.project.project_file, raster.raster_type_id)
         if symbology_key is not None:
-            symbology = parse_posix_path(os.path.join(os.path.dirname(self.symbology_folder), symbology_key))
+            symbology = self.get_symbology_qml(symbology_key)
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster, symbology)
 
         return raster_layer
