@@ -56,10 +56,18 @@ class RiverscapesMapManager(QObject):
             return None
         symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
         qml = None
-        for symbology_folder in self.symbology_folders:
-            qml = os.path.join(symbology_folder, symbology_filename)
-            if os.path.exists(qml):
-                break
+        # check if we can split the file name into a folder and file name
+        split = os.path.split(symbology_filename)
+        if len(split) == 2 and split[0] != '':
+            base_symbology_folder = os.path.dirname(self.symbology_folders[1])
+            symbology_folder = os.path.join(base_symbology_folder, split[0])
+            if os.path.exists(symbology_folder):
+                qml = os.path.join(symbology_folder, split[1])
+        else:
+            for symbology_folder in self.symbology_folders:
+                qml = os.path.join(symbology_folder, symbology_filename)
+                if os.path.exists(qml):
+                    break
         return qml
 
     def get_product_key_layers(self) -> list:
