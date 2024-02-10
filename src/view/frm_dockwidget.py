@@ -728,8 +728,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             result = frm.exec_()
             if result != QtWidgets.QDialog.Accepted:
                 return
-            import_source_path = QgsVectorLayer(f'{self.project.project_file}|layername={db_item.layer.fc_name}')
-            import_source_path.setSubsetString('event_id = ' + str(frm.qris_event.id))
+            import_source_path = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}')
+            import_source_path.setSubsetString('event_id = ' + str(frm.qris_event.id) + ' AND event_layer_id = ' + str(db_item.layer.id))
             import_source_layer = import_source_path
 
         # Get feature count of import source
@@ -751,17 +751,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif mode == DB_MODE_COPY:
             feats = []
             source_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}')
-            feat_count = source_layer.featureCount() + 1
+            new_fid = max([f.id() for f in source_layer.getFeatures()]) + 1
             for feature in import_source_path.getFeatures():
                 new_feature = QgsFeature()
                 new_feature.setFields(feature.fields())
                 new_feature.setGeometry(feature.geometry())
                 new_feature.setAttributes(feature.attributes())
                 new_feature.setAttribute('event_id', db_item.event_id)
-                new_feature.setId(feat_count)
-                new_feature['fid'] = feat_count
+                new_feature.setAttribute('event_layer_id', db_item.layer.id)
+                new_feature.setId(new_fid)
+                new_feature['fid'] = new_fid
                 feats.append(new_feature)
-                feat_count += 1
+                new_fid += 1
             source_layer.startEditing()
             source_layer.addFeatures(feats)
             source_layer.commitChanges()
