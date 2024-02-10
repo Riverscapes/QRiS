@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [0.3.10] 2023 FEB 09
+
+### Fixed
+- Project tree layer remains "empty" after digitizing
+- Pour Point symbology
+- Catchment Polygon symbology folder error
+- Surfaces (rasters) symbology error
+- Import Existing Vector Layer to Context bugs
+- Import Temporary Layer to Context bug
+- Import Profile form bug
+- Re-added Add Photo to Observation Points
+- Copy from Existing DCE produces Coordinate Reference Error
+
 ## [0.3.9] 2023 JAN 30
 
 ### Changed
