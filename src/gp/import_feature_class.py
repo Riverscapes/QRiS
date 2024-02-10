@@ -85,6 +85,7 @@ class ImportFeatureClass(QgsTask):
 
             dst_srs = dst_layer.GetSpatialRef()
             dst_layer_def = dst_layer.GetLayerDefn()
+            dst_fid_column = dst_layer.GetFIDColumn()
 
             clip_geom = None
             if self.clip_mask_id is not None:
@@ -197,7 +198,8 @@ class ImportFeatureClass(QgsTask):
                         # copy the field values from the source layer
                         for i in range(src_feature.GetFieldCount()):
                             src_field: ogr.FieldDefn = src_feature.GetFieldDefnRef(i)
-                            dst_feature.SetField(src_field.GetNameRef(), src_feature.GetField(i))
+                            if src_field.GetNameRef() != dst_fid_column:
+                                dst_feature.SetField(src_field.GetNameRef(), src_feature.GetField(i))
 
                     err = dst_layer.CreateFeature(dst_feature)
                     dst_feature = None
