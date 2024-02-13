@@ -1,7 +1,8 @@
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsApplication, QgsVectorLayer
+from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.utils import iface
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
@@ -143,36 +144,41 @@ class FrmMaskAOI(QtWidgets.QDialog):
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
                 mask_layer_name = "aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "mask_features"
                 if self.layer_id == 'memory':
-                    import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, mask_layer_name, 'mask_id', self.qris_mask.id, clip_mask_id, proj_gpkg=self.qris_project.project_file)
+                    import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, mask_layer_name, {'mask_id': self.qris_mask.id}, clip_mask_id, proj_gpkg=self.qris_project.project_file)
                 else:
                     mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
                     attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
                     layer_attributes = {'mask_id': self.qris_mask.id}
                     import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, attributes, clip_mask_id, self.attribute_filter)
                 # DEBUG
-                result = import_mask_task.run()
-                self.on_import_complete(result)
+                # result = import_mask_task.run()
+                # self.on_import_complete(result)
                 # PRODUCTION
-                # import_mask_task.import_complete.connect(self.on_import_complete)
-                # QgsApplication.taskManager().addTask(import_mask_task)
+                import_mask_task.import_complete.connect(self.on_import_complete)
+                QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
                     self.qris_mask.delete(self.qris_project.project_file)
-                except Exception as ex:
-                    print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
-                    QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(ex))
+                    QgsApplication.messageLog().logMessage(f'Error Importing {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
+                    iface.messageBar().pushMessage(f'Error Importing {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
+                except Exception as ex_delete:
+                    QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
+                    iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
 
         super(FrmMaskAOI, self).accept()
 
     def on_import_complete(self, result: bool):
 
-        if not result:
-            QtWidgets.QMessageBox.warning(self, f'Error Importing {self.str_mask_type} Features', str(self.exception))
+        if result is True:
+            iface.messageBar().pushMessage(f'{self.str_mask_type} Imported', f'{self.str_mask_type} "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
+        else:
+            QgsApplication.messageLog().logMessage(f'Error Importing {self.str_mask_type} Features', 'QRIS', level=Qgis.Critical)
             try:
                 self.qris_mask.delete(self.qris_project.project_file)
             except Exception as ex:
-                print(f'Error attempting to delete {self.str_mask_type} after the importing of features failed.')
+                QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
+                iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
             return
 
     def setupUi(self):

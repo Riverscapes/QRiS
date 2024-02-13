@@ -321,7 +321,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 elif model_data == AOI_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing AOI', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT_TEMPORARY), False)
+                    self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT_TEMPORARY))
                     self.add_context_menu_item(self.menu, 'Create New (Empty) AOI', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
 
                 elif model_data == SAMPLE_FRAME_MACHINE_CODE:
@@ -331,8 +331,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     
                     import_sample_frame_menu = self.menu.addMenu('Import Sample Frame From ...  ')
                     self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_sample_frame_menu, 'Temporary Layer', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_TEMPORARY), False)
-                    self.add_context_menu_item(import_sample_frame_menu, 'QRiS Project', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_COPY), False)
+                    self.add_context_menu_item(import_sample_frame_menu, 'Temporary Layer', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_TEMPORARY))
+                    # self.add_context_menu_item(import_sample_frame_menu, 'QRiS Project', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_COPY), False)
 
                 elif model_data == CATCHMENTS_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
@@ -396,8 +396,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, ScratchVector):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
-                        self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
+                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
                         self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(self.menu, 'Promote to Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
 
                 if isinstance(model_data, Profile):
                     self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
@@ -431,7 +432,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Import From Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
                         self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
                 if isinstance(model_data, PourPoint):
-                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE), False)
+                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE), True)
 
                 if not isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
@@ -476,7 +477,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             event = event_node.data(QtCore.Qt.UserRole)
             self.map_manager.build_event_single_layer(event, db_item)
         elif isinstance(db_item, Project):
-            [self.map_manager.build_mask_layer(mask) for mask in self.project.masks.values()]
+            [self.map_manager.build_sample_frame_layer(sample_frame) for sample_frame in self.project.sample_frames.values()]
+            [self.map_manager.build_mask_layer(mask) for mask in self.project.aois.values()]
             [self.map_manager.build_raster_layer(raster) for raster in self.project.surface_rasters().values()]
             [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
@@ -1075,12 +1077,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
-        
+
         create = False
         if mode == DB_MODE_CREATE:
             create = True
 
         frm = FrmSampleFrame(self, self.project, import_source_path, create_sample_frame=create)
+
+        if mode == DB_MODE_PROMOTE:
+            db_item = parent_node.data(QtCore.Qt.UserRole)
+            frm.promote_to_sample_frame(db_item)
+
+            # find the Sample Frames Node in the model
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+            sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
+            parent_node = sample_frame_node
 
         result = frm.exec_()
         if result != 0:
