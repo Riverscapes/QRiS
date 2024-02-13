@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [0.3.11] 2023 FEB 12
+
+### Fixed
+- Reenable Import Temporary Layer to aoi and sample frames
+- Reenable Promote Catchments to AOI
+
+### Added
+- Promote Context Vector Polygons to Sample Frames
+
 ## [0.3.10] 2023 FEB 09
 
 ### Fixed
