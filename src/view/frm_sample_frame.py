@@ -9,12 +9,14 @@ from qgis.core import QgsApplication, QgsVectorLayer, QgsWkbTypes
 
 from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
+from ..model.pour_point import PourPoint
 from ..model.scratch_vector import ScratchVector
 from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.sample_frame import SampleFrame, insert_sample_frame
 
 from .frm_new_attribute import FrmNewAttribute
 
+from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
 from ..gp.sample_frame import SampleFrameTask
@@ -46,6 +48,7 @@ class FrmSampleFrame(QDialog):
         # Figure out what tabs we need 
         self.tab_inputs = None
         self.tab_attributes = None # just in case
+        self.attribute_filter = None
 
         if self.import_source_path is not None:
             self.tab_inputs = SampleFrameInputs(self, self.qris_project, self.import_source_path)
@@ -67,6 +70,29 @@ class FrmSampleFrame(QDialog):
         self.metadata_widget = MetadataWidget(self, metadata_json)
 
         self.setupUi()
+
+    def promote_to_sample_frame(self, db_item: DBItem):
+
+        self.tab_properties.txtName.setText(db_item.name)
+        self.setWindowTitle(f'Promote {db_item.name} to Sample Frame')
+
+        db_path = self.qris_project.project_file
+        id_field = None
+        if isinstance(db_item, PourPoint):
+            layer_name = 'catchments'
+            id_field = 'pour_point_id'
+        elif isinstance(db_item, ScratchVector):
+            layer_name = db_item.fc_name
+            db_path = db_item.gpkg_path
+        else:
+            layer_name = db_item.db_table_name
+            id_field = db_item.id_column_name
+        self.import_source_path = f'{db_path}|layername={layer_name}'
+        self.attribute_filter = f'{id_field} = {db_item.id}' if id_field is not None else None
+
+        self.tab_inputs = SampleFrameInputs(self, self.qris_project, self.import_source_path)
+        self.tabs.addTab(self.tab_inputs, "Inputs")
+        self.basepath, self.layer_name, self.layer_id = layer_path_parser(self.import_source_path)
 
     def accept(self):
          
@@ -113,8 +139,10 @@ class FrmSampleFrame(QDialog):
                 # self.buttonBox.button(QMessageBox.Cancel).setEnabled(False)
 
                 out_field_map = self.get_field_map()
-                clip_mask = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
+                clip_mask = None
                 clip_mask_id = None
+                if self.tab_inputs is not None:
+                    clip_mask = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
                 if clip_mask is not None:
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
                 # if self.layer_id == 'memory':
@@ -123,7 +151,7 @@ class FrmSampleFrame(QDialog):
                 sample_frame_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
                 attributes = {self.tab_inputs.cboDisplayLabel.currentText(): 'display_label', self.tab_inputs.cboFlowPathField.currentText(): 'flow_path', self.tab_inputs.cboTopologyField.currentText(): 'topology'}
                 attributes['sample_frame_id'] = self.sample_frame.id
-                import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, proj_gpkg=self.qris_project.project_file)
+                import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
                 # # DEBUG
                 # result = import_mask_task.run()
                 # self.on_import_complete(result)
@@ -258,8 +286,9 @@ class SampleFrameInputs(QWidget):
         # get the aoi from the project
         self.cboClipToAOI.clear()
 
-        aois = {f'aoi_{id}': mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
-        aois[0] = DBItem('None', 0, 'None - Retain full dataset extent')
+        aois = {id: mask for id, mask in self.qris_project.aois.items()}
+        no_aoi = DBItem('None', 0, 'None - Retain full dataset extent')
+        aois[0] = no_aoi
         aoi_model = DBItemModel(aois)
         self.cboClipToAOI.setModel(aoi_model)
 
