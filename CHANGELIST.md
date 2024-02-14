@@ -1,5 +1,10 @@
 # QRiS Plugin
 
+## [0.3.12] 2023 FEB 13
+
+### Fixed
+- Fix tuple typing bug that prevented installation on some systems
+
 ## [0.3.11] 2023 FEB 12
 
 ### Fixed
