@@ -15,6 +15,7 @@ from ..model.db_item import DBItem
 from ..model.profile import Profile
 from ..model.project import Project
 
+from typing import Tuple
 
 def check_geometry_type(path) -> int:
 
@@ -43,7 +44,7 @@ def flip_line_geometry(project: Project, profile: Profile):
     feature_layer.commitChanges()
 
 
-def layer_path_parser(path: str) -> tuple[str, str, object]:
+def layer_path_parser(path: str) -> Tuple[str, str, object]:
     """
     Parse a layer path into a path, layer name, and identifier (for ogr GetLayer).
     """
@@ -121,7 +122,7 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
         raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
 
 
-def get_field_names(path: str) -> tuple[list, list]:
+def get_field_names(path: str) -> Tuple[list, list]:
 
     path, _name, identifier = layer_path_parser(path)
 
