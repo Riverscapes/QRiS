@@ -72,7 +72,6 @@ from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
-from .frm_export_design import FrmExportDesign
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
 
@@ -413,10 +412,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Export Project to Riverscapes Project', 'qris_icon', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
-
-                # if isinstance(model_data, Event):
-                #     if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:
-                #         self.add_context_menu_item(self.menu, 'Export LTPBR Design...', 'qris_icon', lambda: self.export_design(model_data))
 
                 if isinstance(model_data, EventLayer):
                     if model_data.name == 'BRAT CIS (Capacity Inference System)':
@@ -796,25 +791,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if result == QtWidgets.QDialog.Accepted:
             iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
-
-    def export_design(self, event: Event):
-
-        # select the output directory
-        basedir = os.path.dirname(self.project.project_file)
-        out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Output Directory", basedir)
-        if out_dir == "":
-            return
-
-        # check if there is already a project.rs.xml file in the output directory
-        if os.path.exists(os.path.join(out_dir, 'project.rs.xml')):
-            # warn the user that a project has already been exported to this directory
-            result = QtWidgets.QMessageBox.question(self, 'Export Design', 'A design has already been exported to this directory.\n\nWould you like to overwrite the existing design?',
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-            if result == QtWidgets.QMessageBox.No:
-                return
-
-        frm = FrmExportDesign(self, self.project, event, out_dir)
-        frm.exec_()
 
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
