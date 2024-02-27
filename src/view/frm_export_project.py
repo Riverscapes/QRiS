@@ -6,6 +6,7 @@ import sqlite3
 from osgeo import ogr, gdal
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 from qgis.core import QgsVectorLayer
 
 from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
@@ -181,14 +182,14 @@ class FrmExportProject(QtWidgets.QDialog):
         self.export_tree.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.export_tree.expandAll()
 
-    def handle_item_changed(self, item):
+    def handle_item_changed(self, item: QtGui.QStandardItem):
         if item.hasChildren():
             self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
             self.update_child_check_state(item)
             self.export_layers_model.itemChanged.connect(self.handle_item_changed)
         self.update_check_state(item.parent())
 
-    def update_child_check_state(self, item):
+    def update_child_check_state(self, item: QtGui.QStandardItem):
         for i in range(item.rowCount()):
             child = item.child(i)
             if child is not None:
@@ -196,7 +197,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 if child.hasChildren():
                     self.update_child_check_state(child)
 
-    def update_check_state(self, item):
+    def update_check_state(self, item: QtGui.QStandardItem):
         if item is not None and item.hasChildren():
             check_states = [item.child(i).checkState() for i in range(item.rowCount())]
             if all(state == QtCore.Qt.Checked for state in check_states):
@@ -260,11 +261,7 @@ class FrmExportProject(QtWidgets.QDialog):
             # get the extent of all layers
             envelope = None
             for layer in ['dce_points', 'dce_lines', 'dce_polygons']:  # self.qris_project.layers.values():
-                # if layer.geom_type == "NoGeometry":
-                # continue
                 geom = None
-                # lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer.fc_name}', layer.name, "ogr")
-                # lyr.setSubsetString(f"event_id = {layer.event_id}")
                 lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer}', layer, "ogr")
                 for f in lyr.getFeatures():
                     if geom is None:
@@ -278,6 +275,38 @@ class FrmExportProject(QtWidgets.QDialog):
                     envelope = hull
                 else:
                     envelope = envelope.combine(hull)
+
+            for layer in self.qris_project.get_vector_dbitems():
+                geom = None
+
+                if isinstance(layer, PourPoint):
+                    fc_name = 'catchments'
+                    id_field = 'pour_point_id'
+                elif isinstance(layer, ScratchVector):
+                    fc_name = layer.fc_name
+                    id_field = None
+                else:
+                    fc_name = layer.fc_name
+                    id_field = layer.fc_id_column_name
+    
+                lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}', layer.name, "ogr")
+                
+                if id_field is not None:
+                    lyr.setSubsetString(f"{id_field} = {layer.id}")
+    
+                for f in lyr.getFeatures():
+                    if geom is None:
+                        geom = f.geometry()
+                    else:
+                        geom = geom.combine(f.geometry())
+                if geom is None:
+                    continue
+                hull = geom.convexHull()
+                if envelope is None:
+                    envelope = hull
+                else:
+                    envelope = envelope.combine(hull)
+
         else:
             # get the extent of the selected AOI
             aoi_id = self.cbo_project_bounds_aoi.currentData()
@@ -286,21 +315,27 @@ class FrmExportProject(QtWidgets.QDialog):
             lyr.setSubsetString(f"mask_id = {aoi.id}")
             envelope = lyr.getFeatures().__next__().geometry()
 
-        extent = envelope.boundingBox()
-        centroid = envelope.centroid().asPoint()
-        geojson = envelope.asJson()
-        # write to file
-        geojson_filename = "project_bounds.geojson"
-        geojson_path = os.path.abspath(os.path.join(self.txt_outpath.text(), geojson_filename).replace("\\", "/"))
-        with open(geojson_path, 'w') as f:
-            f.write(geojson)
+        if envelope is not None:
+            envelope_hull = envelope.convexHull()
+            
+            extent = envelope_hull.boundingBox()
+            centroid = envelope_hull.centroid().asPoint()
+            geojson = envelope_hull.asJson()
+            # write to file
+            geojson_filename = "project_bounds.geojson"
+            geojson_path = os.path.abspath(os.path.join(self.txt_outpath.text(), geojson_filename).replace("\\", "/"))
+            with open(geojson_path, 'w') as f:
+                f.write(geojson)
 
-        project_bounds = ProjectBounds(centroid=Coords(centroid.x(), centroid.y()),
-                                       bounding_box=BoundingBox(minLat=extent.yMinimum(),
-                                                                minLng=extent.xMinimum(),
-                                                                maxLat=extent.yMaximum(),
-                                                                maxLng=extent.xMaximum()),
-                                       filepath=geojson_filename)
+            project_bounds = ProjectBounds(centroid=Coords(centroid.x(), centroid.y()),
+                                        bounding_box=BoundingBox(minLat=extent.yMinimum(),
+                                                                    minLng=extent.xMinimum(),
+                                                                    maxLat=extent.yMaximum(),
+                                                                    maxLng=extent.xMaximum()),
+                                        filepath=geojson_filename)
+        else:
+            project_bounds = None
+            QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Project will still be created but without bounds.")
 
         xml_path = os.path.abspath(os.path.join(self.txt_outpath.text(), "project.rs.xml").replace("\\", "/"))
 
@@ -597,7 +632,7 @@ class FrmExportProject(QtWidgets.QDialog):
             src_ds = ogr.Open(scratch_gpkg_path(self.qris_project.project_file), 0)
 
             # create a new GeoPackage
-            dst_ds = ogr.GetDriverByName('GPKG').CreateDataSource(out_geopackage)
+            dst_ds = ogr.GetDriverByName('GPKG').CreateDataSource(context_gpkg)
 
             # iterate over the layers in the source GeoPackage
             for i in range(src_ds.GetLayerCount()):

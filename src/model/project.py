@@ -23,6 +23,7 @@ from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
 from ..QRiS.path_utilities import parse_posix_path
+from typing import Generator
 
 PROJECT_MACHINE_CODE = 'Project'
 
@@ -161,6 +162,25 @@ class Project(DBItem):
                 lookups[row['list_name']].append(row['list_value'])
         return lookups
 
+    def get_vector_dbitems(self) -> Generator[DBItem, None, None]:
+
+        # yield all vector dbitems
+        for dbitem in self.aois.values():
+            yield dbitem
+        for dbitem in self.sample_frames.values():
+            yield dbitem
+        for dbitem in self.pour_points.values():
+            yield dbitem
+        for dbitem in self.stream_gages.values():
+            yield dbitem
+        for dbitem in self.profiles.values():
+            yield dbitem
+        for dbitem in self.cross_sections.values():
+            yield dbitem
+        for dbitem in self.scratch_vectors.values():
+            yield dbitem
+        # for dbitem in self.layers.values():
+        #     yield dbitem
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
     """
