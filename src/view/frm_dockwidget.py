@@ -1289,6 +1289,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
                     layer = layer_node.layer()
+                    if not isinstance(layer, QgsVectorLayer):
+                        return
                     if layer.isEditable():
                             node.setText(node.data(QtCore.Qt.UserRole).name + ' (Editing)')
                             # make the text bold
