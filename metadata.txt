@@ -4,7 +4,7 @@
 
 [general]
 name=QRiS DEV_COPY
-qgisMinimumVersion=3.0
+qgisMinimumVersion=3.28
 description=QGIS Riverscapes Studio (QRiS)
 version=0.0.0dev
 author=North Arrow Research
