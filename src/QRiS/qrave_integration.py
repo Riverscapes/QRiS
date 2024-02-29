@@ -72,7 +72,15 @@ class QRaveIntegration(QObject):
         project_meta = data.project.meta
         layer_meta = data.data.meta
         out_meta = {'project_metadata': project_meta, 'layer_metadata': layer_meta}
+        proj_type = data.project.project_type
+        symbology = layer.bl_attr.get('symbology', None)
+        if symbology is not None:
+            out_meta['symbology'] = os.path.join(proj_type,symbology)
+        layer_uri = layer.layer_uri.lower()
         if layer.layer_type == 'raster':
+            path = layer.layer_uri
+        # check if the layer is a shapefile
+        elif layer_uri.endswith('.shp'):
             path = layer.layer_uri
         else:
             path = f'{layer.layer_uri}|layername={layer.layer_name}'

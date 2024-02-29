@@ -187,10 +187,15 @@ class QRisMapManager(RiverscapesMapManager):
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         group_layer = self.get_group_layer(self.project.map_guid, CONTEXT_MACHINE_CODE, 'Context', project_group, True)
         fc_path: str = vector.gpkg_path + '|layername=' + vector.fc_name
+        symbology = None
+        if vector.metadata is not None:
+            system_metadata: dict = vector.metadata.get('system', None)
+            if system_metadata is not None:
+                symbology = system_metadata.get('symbology', None)
         existing_layer = self.get_db_item_layer(self.project.map_guid, vector, None)
         if existing_layer is not None:
             return
-        layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, vector, None, 'vector')
+        layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, vector, None, symbology)
 
         return layer
 

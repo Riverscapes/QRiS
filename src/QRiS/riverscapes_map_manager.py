@@ -47,27 +47,33 @@ class RiverscapesMapManager(QObject):
         super().__init__()
         self.product_key = product_key
         settings = Settings()
-        self.symbology_folders = settings.getValue('symbologyDir')
+        self.symbology_folders: list = settings.getValue('symbologyDir')
         self.layer_order = ['Basemaps']
 
     def get_symbology_qml(self, symbology_key: str) -> str:
         
         if symbology_key is None:
             return None
-        symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+        raw_symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
         qml = None
         # check if we can split the file name into a folder and file name
-        split = os.path.split(symbology_filename)
-        if len(split) == 2 and split[0] != '':
+        split = os.path.split(raw_symbology_filename)
+        proj_folder = split[0]
+        symbology_filename = split[1]
+
+        symbology_folders = self.symbology_folders.copy()
+
+        if len(split) == 2 and proj_folder != '':
             base_symbology_folder = os.path.dirname(self.symbology_folders[1])
-            symbology_folder = os.path.join(base_symbology_folder, split[0])
-            if os.path.exists(symbology_folder):
-                qml = os.path.join(symbology_folder, split[1])
-        else:
-            for symbology_folder in self.symbology_folders:
-                qml = os.path.join(symbology_folder, symbology_filename)
-                if os.path.exists(qml):
-                    break
+            symbology_folders.insert(2, os.path.join(base_symbology_folder, proj_folder))
+
+        # look through the local folder, qris folder, project folder (if specified) and shared folder
+        for symbology_folder in symbology_folders:
+            qml = os.path.join(symbology_folder, symbology_filename)
+            if os.path.exists(qml):
+                return qml
+
+        # if we can't find the symbology file, return None and let the layer use the default symbology        
         return qml
 
     def get_product_key_layers(self) -> list:
