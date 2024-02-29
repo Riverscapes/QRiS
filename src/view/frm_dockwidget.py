@@ -806,6 +806,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # refresh map
             iface.mapCanvas().refreshAllLayers()
             iface.mapCanvas().refresh()
+            self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text)
         else:
             iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
 
@@ -1285,10 +1286,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         QgsApplication.taskManager().addTask(metrics_task)
  
 
-    def on_edit_session_change(self, mode):
+    def on_edit_session_change(self):
 
         self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text)
-                    
+               
     def traverse_tree(self, node: QtGui.QStandardItem, func: callable):
 
         func(node)
