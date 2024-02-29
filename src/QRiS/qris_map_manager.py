@@ -253,6 +253,12 @@ class QRisMapManager(RiverscapesMapManager):
         raster_path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
         symbology = None
         symbology_key = get_raster_symbology(self.project.project_file, raster.raster_type_id)
+        if symbology_key is None:
+            # look for symbology in system metadata
+            if raster.metadata is not None:
+                system_metadata: dict = raster.metadata.get('system', None)
+                if system_metadata is not None:
+                    symbology = system_metadata.get('symbology', None)
         if symbology_key is not None:
             symbology = self.get_symbology_qml(symbology_key)
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster, symbology)

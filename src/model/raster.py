@@ -92,7 +92,7 @@ def insert_raster(db_path: str, name: str, path: str, raster_type_id: int, descr
             curs = conn.cursor()
             curs.execute('INSERT INTO rasters (name, path, raster_type_id, description, is_context, metadata) VALUES (?, ?, ?, ?, ?, ?)', [name, path, raster_type_id, description, int(is_context), metadata_str])
             id = curs.lastrowid
-            result = Raster(id, name, path, raster_type_id, description)
+            result = Raster(id, name, path, raster_type_id, description, is_context=is_context, metadata=metadata)
             conn.commit()
 
         except Exception as ex:

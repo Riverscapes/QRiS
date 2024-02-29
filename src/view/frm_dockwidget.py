@@ -971,7 +971,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context)
         if meta is not None:
-            frm.metadata = meta
+            if 'project_metadata' in meta:
+                for key, value in meta['project_metadata'].items():
+                    frm.metadata_widget.add_metadata(key, value)
+            if 'layer_metadata' in meta:
+                for key, value in meta['layer_metadata'].items():
+                    frm.metadata_widget.add_metadata(key, value)
+            if 'symbology' in meta:
+                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
