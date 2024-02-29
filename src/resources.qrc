@@ -25,6 +25,7 @@
         <file alias="qris_icon">../Images/qris_icon.svg</file>
         <file alias="camera">../Images/camera.svg</file>
         <file alias="slider">../Images/slider.svg</file>
+        <file alias="settings">../Images/settings.svg</file>
         <file alias="watershed">../Images/watershed.svg</file>
 
         <!-- Node Icons -->
