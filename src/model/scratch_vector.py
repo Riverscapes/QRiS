@@ -127,7 +127,7 @@ def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str,
             curs = conn.cursor()
             curs.execute('INSERT INTO scratch_vectors (name, fc_name, vector_type_id, description, metadata) VALUES (?, ?, ?, ?, ?)', [name, fc_name, vector_type_id, description, metadata_json])
             id = curs.lastrowid
-            result = ScratchVector(id, name, fc_name, gpkg_path, vector_type_id, description)
+            result = ScratchVector(id, name, fc_name, gpkg_path, vector_type_id, description, metadata)
             conn.commit()
 
         except Exception as ex:
