@@ -101,7 +101,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             self.table.setItem(row, 3, status_item)
 
         self.table.doubleClicked.connect(self.edit_metric_value)
-
+        self.table.resizeColumnToContents(0)
+        
         self.load_table_values()
 
     def load_table_values(self):
@@ -129,6 +130,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                     self.set_status(row, metric_value)
                 self.table.item(row, 1).setText(f'{metric_value_text: .{metric.precision}f}'if isinstance(metric_value_text, float) and metric.precision is not None else str(metric_value_text))
                 self.table.item(row, 2).setText(str(uncertainty_text) if uncertainty_text is not None else '')
+
+        self.table.resizeColumnToContents(1)
 
     def set_status(self, row, metric_value: MetricValue = None):
 
