@@ -41,6 +41,7 @@ from . import resources
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
+from .view.frm_settings import FrmSettings
 
 from .model.project import apply_db_migrations, test_project
 from .QRiS.qrave_integration import QRaveIntegration
@@ -53,6 +54,13 @@ ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 LAST_PROJECT_FOLDER = 'last_project_folder'
 RECENT_PROJECT_LIST = 'recent_projects'
+DOCK_WIDGET_LOCATION = 'dock_widget_location'
+
+default_dock_widget_location = 'left'
+dock_widget_locations = {
+    'left': QtCore.Qt.LeftDockWidgetArea,
+    'right': QtCore.Qt.RightDockWidgetArea,
+}
 
 
 class QRiSToolbar:
@@ -225,6 +233,7 @@ class QRiSToolbar:
         # --- HELP MENU --
         help_menu = self.add_toolbar_menu('Help')
         self.add_menu_action(help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
+        self.add_menu_action(help_menu, 'settings', 'Settings', self.show_settings, True, 'QRiS Settings')
         self.add_menu_action(help_menu, 'qris_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
 
         canvas = self.iface.mapCanvas()
@@ -346,8 +355,12 @@ class QRiSToolbar:
         # connect to provide cleanup on closing of dockwidget
         self.dockwidget.closingPlugin.connect(self.onClosePlugin)
 
+        # Get the dockwidget location from the settings
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
+
         # show the dockwidget
-        self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dockwidget)
+        self.iface.addDockWidget(dock_widget_locations[dock_location], self.dockwidget)
         self.dockwidget.show()
 
     def toggle_widget(self, forceOn=False):
@@ -631,6 +644,14 @@ class QRiSToolbar:
         self.frm_about = FrmAboutDialog(self.iface.mainWindow())
         self.frm_about.exec_()
         self.frm_about = None
+
+    def show_settings(self):
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+
+        self.settings_dialog = FrmSettings(settings, DOCK_WIDGET_LOCATION, default_dock_widget_location)
+        self.settings_dialog.exec_()
+        self.settings_dialog = None
 
     def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
 
