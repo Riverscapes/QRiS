@@ -27,6 +27,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.raster = raster
         self.hillshade_raster_path = None
         self.hillshade = None
+        self.metadata = None
 
         super(FrmRaster, self).__init__(parent)
         new_keys = ['source', 'aquisition date'] if self.raster is None else None
@@ -110,12 +111,12 @@ class FrmRaster(QtWidgets.QDialog):
             return
 
         metadata_json = self.metadata_widget.get_json()
-        metadata = json.loads(metadata_json) if metadata_json is not None else None
+        self.metadata = json.loads(metadata_json) if metadata_json is not None else None
 
         if self.raster is not None:
             try:
                 raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
-                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=metadata, raster_type_id=raster_type)
+                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=self.metadata, raster_type_id=raster_type)
                 # TODO update hillshade if exists
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -186,11 +187,13 @@ class FrmRaster(QtWidgets.QDialog):
                 self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, metadata)
                 self.project.rasters[self.raster.id] = self.raster
                 if self.chkHillshade.isChecked() is True:
-                    hillshade_metadata = {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}
+                    hillshade_metadata = {'system': {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}}
                     self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
                     self.project.rasters[self.hillshade.id] = self.hillshade
-                    metadata['hillsahde_raster'] = self.hillshade_project_path
-                    metadata['hillshade_raster_id'] = self.hillshade.id
+                    if 'system' not in metadata:
+                        metadata['system'] = dict()
+                    metadata['system']['hillsahde_raster'] = self.hillshade_project_path
+                    metadata['system']['hillshade_raster_id'] = self.hillshade.id
                     self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=metadata)
 
             except Exception as ex:
