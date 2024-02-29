@@ -29,6 +29,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.scratch_vector = scratch_vector
         self.import_source_path = import_source_path
         self.layer_id = None
+        self.metadata = None
 
         super(FrmScratchVector, self).__init__(parent)
         metadata_json = json.dumps(scratch_vector.metadata) if scratch_vector is not None else None

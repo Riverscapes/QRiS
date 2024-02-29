@@ -11,7 +11,9 @@ class MetadataWidget(QtWidgets.QWidget):
         self.json_meta = None
         self.new_keys = new_keys
         self.metadata = dict()
-        self.table = None
+        self.system_metadata = dict()
+        self.attribute_metadat = dict()
+        self.table: QtWidgets.QTableWidget = None
 
         if json_meta is not None:
             self.load_json(json_meta)
@@ -22,10 +24,43 @@ class MetadataWidget(QtWidgets.QWidget):
 
         self.json_meta = json_meta
         self.metadata = json.loads(self.json_meta)
+        self.check_metadata()
 
     def add_metadata(self, key: str, value: str):
+         
+        if 'metadata' not in self.metadata:
+            self.metadata['metadata'] = dict()
+        self.metadata['metadata'][key] = value
 
-        self.metadata[key] = value
+        # add a row to the table
+        self.table.insertRow(self.table.rowCount())
+        self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+        self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
+
+    def add_system_metadata(self, key: str, value: str):
+            
+            if 'system' not in self.metadata:
+                self.metadata['system'] = dict()
+            self.metadata['system'][key] = value
+
+    def add_attribute_metadata(self, key: str, value: str):
+            
+            if 'attributes' not in self.metadata:
+                self.metadata['attributes'] = dict()
+            self.metadata['attributes'][key] = value
+
+    def check_metadata(self):
+
+        # if none or epmty, return
+        if self.metadata is None or len(self.metadata) == 0:
+            return
+        
+        # if root keys are not in ['metadata', 'system' or 'attributes'] then move the key associated values to  'metadata']
+        for key, values in self.metadata.items():
+            if key not in ['metadata', 'system', 'attributes']:
+                self.metadata['metadata'] = {key: values}
+                del self.metadata[key]
+
 
     def create_table_ui(self):
 
@@ -46,10 +81,11 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setSortingEnabled(True)
 
         if self.metadata is not None:
-            for key, value in self.metadata.items():
-                self.table.insertRow(self.table.rowCount())
-                self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
-                self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
+            if 'metadata' in self.metadata:
+                for key, value in self.metadata['metadata'].items():
+                    self.table.insertRow(self.table.rowCount())
+                    self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+                    self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
 
         if self.new_keys is not None:
             for key in self.new_keys:
@@ -126,8 +162,14 @@ class MetadataWidget(QtWidgets.QWidget):
 
     def get_json(self) -> str:
 
-        self.metadata = dict()
         for row in range(self.table.rowCount()):
-            self.metadata[self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+            # if the key is in self.metadata['metadata'] then update the value
+            if self.table.item(row, 0).text() in self.metadata['metadata']:
+                self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+            else:
+                # add to 'metadata'
+                if 'metadata' not in self.metadata:
+                    self.metadata['metadata'] = dict()
+                self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
 
         return json.dumps(self.metadata)
