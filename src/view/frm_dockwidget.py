@@ -944,18 +944,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Event, protocols and layers
         event_node = self.add_child_to_project_tree(parent_node, event, add_to_map, collapsed=True)
 
-        # remove event layers that no longer exist in the event
-        row_adjustment = 0
-        for row in range(0, event_node.rowCount()):
-            row = row + row_adjustment
-            child_node = event_node.child(row)
-            layer = child_node.data(QtCore.Qt.UserRole)
-            if isinstance(layer, str):
-                continue
-            if layer not in event.event_layers:
-                self.map_manager.remove_db_item_layer(self.project.map_guid, layer)
-                event_node.removeRow(row)
-                row_adjustment -= 1
+        self.check_and_remove_event_layers(event_node, event)
+        self.remove_empty_child_nodes(event_node)
 
         for event_layer in event.event_layers:
             if event_layer.layer.is_lookup is False:
@@ -1347,6 +1337,38 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     layer.editingStarted.connect(self.map_manager.start_edits)
                     layer.editingStopped.connect(self.map_manager.stop_edits)
 
+    def check_and_remove_event_layers(self, node: QtGui.QStandardItem, event: Event, nodes_to_remove: list = []):
+        i = 0
+        while i < node.rowCount():
+            child = node.child(i)
+            if self.is_removed_event_layer(child, event):
+                # If the child is a removed event layer, remove it from the tree
+                node.removeRow(i)
+            else:
+                # If the child is not a removed event layer, check its children
+                self.check_and_remove_event_layers(child, event, nodes_to_remove)
+                i += 1
+
+    def is_removed_event_layer(self, node: QtGui.QStandardItem, event: Event):
+        # This method should return True if the node represents an event layer that has been removed from the event,
+        # and False otherwise. You'll need to implement this method based on how you're representing event layers in your tree.
+        layer = node.data(QtCore.Qt.UserRole)
+        if isinstance(layer, EventLayer):
+            return layer not in event.event_layers
+        
+    def remove_empty_child_nodes(self, node: QtGui.QStandardItem):
+
+        for row in range(0, node.rowCount()):
+            child_node = node.child(row)
+            if isinstance(child_node.data(QtCore.Qt.UserRole), DBItem):
+                continue
+            if child_node.rowCount() == 0:
+                node.removeRow(row)
+                self.remove_empty_child_nodes(node.parent())
+            else:
+                self.remove_empty_child_nodes(child_node)
+
+
     @ pyqtSlot(bool, Mask, dict or None, dict or None)
     def geospatial_summary_complete(self, result, model_data, polygons, data):
 
@@ -1369,10 +1391,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
 
         # Remove the item from the project tree
-        model_item.parent().removeRow(model_item.row())
-
-        # Remove the item from the project
-        self.project.remove(db_item)
+        if isinstance(db_item, EventLayer):
+            event = self.project.events[db_item.event_id]
+            # Traverse up the tree to find the event node
+            parent = model_item.parent()
+            while parent.data(QtCore.Qt.UserRole) != event:
+                parent = parent.parent()
+            events_node = parent
+            self.project.remove(db_item)
+            self.check_and_remove_event_layers(events_node, event)
+            self.remove_empty_child_nodes(events_node)
+        else:
+            model_item.parent().removeRow(model_item.row())
+            # Remove the item from the project
+            self.project.remove(db_item)
 
         # Delete the item from the database
         db_item.delete(self.project.project_file)
