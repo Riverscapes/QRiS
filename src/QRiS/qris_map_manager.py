@@ -215,9 +215,11 @@ class QRisMapManager(RiverscapesMapManager):
         point_feature_layer = QgsVectorLayer(point_fc_path, 'Pour Point', 'ogr')
         point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
         QgsProject.instance().addMapLayer(point_feature_layer, False)
-        pour_point_group_layer.addLayer(point_feature_layer)
+        pour_point_layer_node = pour_point_group_layer.addLayer(point_feature_layer)
         qml = self.get_symbology_qml("pour_point") 
         point_feature_layer.loadNamedStyle(qml)
+        point_machine_code = f'pour_point_{pour_point.id}'
+        pour_point_layer_node.setCustomProperty(self.product_key, f'{self.product_key}::{self.project.map_guid}::{point_machine_code}')
 
         catchment_fc_path = self.project.project_file + '|layername=' + 'catchments'
         # catchment_feature_layer = self.create_db_item_feature_layer(self.project.map_guid, pour_point_group_layer, catchment_fc_path, pour_point, 'fid', 'catchment')
@@ -227,9 +229,29 @@ class QRisMapManager(RiverscapesMapManager):
         qml = self.get_symbology_qml('catchment')
         catchment_feature_layer.loadNamedStyle(qml)
         QgsProject.instance().addMapLayer(catchment_feature_layer, False)
-        pour_point_group_layer.addLayer(catchment_feature_layer)
+        catchment_layer_node = pour_point_group_layer.addLayer(catchment_feature_layer)
+        catchment_machine_code = f'catchment_{pour_point.id}'
+        catchment_layer_node.setCustomProperty(self.product_key, f'{self.product_key}::{self.project.map_guid}::{catchment_machine_code}')
+
 
         return point_feature_layer, catchment_feature_layer
+
+    def remove_pour_point_layers(self, pour_point: PourPoint) -> None:
+
+        pour_point_machine_code = f'pour_point_{pour_point.id}'
+        pour_point_layer = self.get_machine_code_layer(self.project.map_guid, pour_point_machine_code, None)
+        if pour_point_layer is not None:
+            parent_group = pour_point_layer.parent()
+            parent_group.removeChildNode(pour_point_layer)
+            self.remove_empty_groups(parent_group)
+
+        catchment_machine_code = f'catchment_{pour_point.id}'
+        catchment_layer = self.get_machine_code_layer(self.project.map_guid, catchment_machine_code, None)
+        if catchment_layer is not None:
+            parent_group = catchment_layer.parent()
+            parent_group.removeChildNode(catchment_layer)
+            self.remove_empty_groups(parent_group)
+
 
     def build_raster_layer(self, raster: Raster) -> QgsMapLayer:
 
