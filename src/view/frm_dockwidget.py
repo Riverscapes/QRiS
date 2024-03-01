@@ -1363,7 +1363,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         # Remove the layer from the map first
-        self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
+        if isinstance(db_item, PourPoint):
+            self.map_manager.remove_pour_point_layers(db_item)
+        else:
+            self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
 
         # Remove the item from the project tree
         model_item.parent().removeRow(model_item.row())
