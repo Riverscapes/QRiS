@@ -223,6 +223,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if item_data and item_data.data and isinstance(item_data.data, self.qrave.QRaveBaseMap):
                 item_data.data.load_layers()
 
+    def collapse_tree_children(self, idx: QModelIndex):
+        # collapse the grandchildren of the tree, but not the children
+        item = self.model.itemFromIndex(idx)
+        # if the item is collapsed, then expand it
+        if not self.treeView.isExpanded(idx):
+            self.treeView.expand(idx)
+        for row in range(0, item.rowCount()):
+            self.treeView.collapse(item.child(row).index())
+
+    def expand_tree_children(self, idx: QModelIndex):
+        # Traverse the tree and expand all children
+        item = self.model.itemFromIndex(idx)
+        self.treeView.expand(idx)
+        for row in range(0, item.rowCount()):
+            self.expand_tree_children(item.child(row).index())
+
     def setup_blank_map(self, trigger_repaint=False):
 
         if self.qrave is not None:
@@ -299,6 +315,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         model_data = model_item.data(QtCore.Qt.UserRole)
 
         if isinstance(model_data, str):
+            self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
+            self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
+            self.menu.addSeparator()
+
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
                 if len(self.project.analyses) > 0:
@@ -363,6 +383,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     else:
                         if isinstance(model_data, Project) or isinstance(model_data, Event):
+                            self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
+                            self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
+                            self.menu.addSeparator()
                             self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                             if isinstance(model_data, Event):
                                 self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
