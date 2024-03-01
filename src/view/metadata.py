@@ -56,11 +56,11 @@ class MetadataWidget(QtWidgets.QWidget):
             return
         
         # if root keys are not in ['metadata', 'system' or 'attributes'] then move the key associated values to  'metadata']
-        for key, values in self.metadata.items():
+        out_metadata = self.metadata.get('metadata', dict())
+        for key, value in self.metadata.items():
             if key not in ['metadata', 'system', 'attributes']:
-                self.metadata['metadata'] = {key: values}
-                del self.metadata[key]
-
+                out_metadata[key] = value
+        self.metadata['metadata'] = out_metadata
 
     def create_table_ui(self):
 
