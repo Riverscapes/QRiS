@@ -1,5 +1,30 @@
 # QRiS Plugin
 
+## [0.3.13] 2023 MAR 01
+
+### Fixed
+- Improved export RS project stability
+- Bug with project bounds extents
+- "No Feature Count" raster error when traversing tree
+- Make sure associated hillshade is added to map if raster is a DEM
+- Make sure event layer display name is not empty when copying from existing DCE
+- Resize analysis column width on to fit contents
+- Remove pour point and catchment from map when deleted from project
+- Remove event layer and empty parent nodes from project tree when removed or deleted from the dce
+- Updated save centerline to work with metadata widget and store system metadata
+
+### Added
+- Retain symbology when importing from Riverscapes Viewer
+- QRIS settings menu with ability to change default dock side
+- Expand and collapse child node context menus added to project tree
+
+### Changed
+- Minimum QGIS version set to 3.28
+- Metadata Widget to store three different types of metadata: system, attribute and (user) metadata
+
+### Removed
+- Unused export design as rs project form and code
+
 ## [0.3.12] 2023 FEB 13
 
 ### Fixed
