@@ -829,7 +829,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # refresh map
             iface.mapCanvas().refreshAllLayers()
             iface.mapCanvas().refresh()
-            self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text)
+            self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
         else:
             iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
 
@@ -925,17 +925,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
             if isinstance(data_item, DBItem):
                 target_node = QtGui.QStandardItem(data_item.name)
-                if  not any(isinstance(data_item, data_class) for data_class in [Project, Event, Analysis, PourPoint, Raster, StreamGage, ScratchVector]):
-                    if isinstance(data_item, EventLayer): 
-                        fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
-                        temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
-                    else:
-                        temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
-                    if temp_layer.featureCount() == 0:
-                        target_node.setText(data_item.name + ' (Empty)')
-                        font = target_node.font()
-                        font.setItalic(True)
-                        target_node.setFont(font)
+                self.set_node_text(target_node, data_item) 
             else:
                 if data_item in GROUP_FOLDER_LABELS:
                     target_node = QtGui.QStandardItem(GROUP_FOLDER_LABELS[data_item])
@@ -951,7 +941,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_db_item_to_map(target_node, data_item)
 
         elif isinstance(data_item, DBItem):
-            target_node.setText(data_item.name)
+            self.set_node_text(target_node, data_item)
 
             # Check if the item is in the map and update its name if it is
             _layer = self.map_manager.get_db_item_layer(self.project.map_guid, data_item, None)
@@ -1309,9 +1299,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         for row in range(0, node.rowCount()):
             child_node = node.child(row)
-            escape = self.traverse_tree(child_node, func)
-            if escape is True:
-                break
+            self.traverse_tree(child_node, func)
 
     def set_edit_text(self, node: QtGui.QStandardItem):
 
@@ -1350,6 +1338,44 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             node.setFont(font)
                             node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
     
+    def set_node_text(self, node: QtGui.QStandardItem, data_item: DBItem = None):
+
+        data_item = node.data(QtCore.Qt.UserRole) if data_item is None else data_item
+        
+        if data_item is None:
+            return
+        
+        if isinstance(data_item, str):
+            if data_item in GROUP_FOLDER_LABELS:
+                node.setText(GROUP_FOLDER_LABELS[data_item])
+            else:
+                node.setText(data_item)
+            return
+        
+        if isinstance(data_item, DBItem):
+            if any(isinstance(data_item, data_class) for data_class in [Project, Event, Analysis, PourPoint, Raster, StreamGage, ScratchVector]):
+                node.setText(data_item.name)
+                return
+            
+            if isinstance(data_item, EventLayer): 
+                fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
+                temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
+            else:
+                temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
+            if temp_layer.featureCount() == 0:
+                node.setText(data_item.name + ' (Empty)')
+                font = node.font()
+                font.setItalic(True)
+                node.setFont(font)
+            else:
+                node.setText(data_item.name)
+                # make the text normal
+                font = node.font()
+                font.setBold(False)
+                font.setItalic(False)
+                node.setFont(font)
+                node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
         if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
