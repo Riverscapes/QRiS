@@ -400,6 +400,8 @@ class RiverscapesMapManager(QObject):
     def create_basemap_raster_layer(self, basemap_name: str, basemap_path: str, provider: str):
 
         basemap_group = self.get_group_layer('Basemaps', 'Basemaps', 'Riverscapes Basemaps', add_missing=True, add_to_bottom=True)
+        if provider.lower() in ['wms', 'xyz']:
+            basemap_path = basemap_path.replace('%3F', '?').replace('%3A', ':').replace('%2F', '/').replace('%3D', '=')
         raster_layer = QgsRasterLayer(basemap_path, basemap_name, provider)
         QgsProject.instance().addMapLayer(raster_layer, False)
         raster_layer.triggerRepaint()
