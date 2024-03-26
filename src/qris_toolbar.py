@@ -648,8 +648,11 @@ class QRiSToolbar:
     def show_settings(self):
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        qris_project = None
+        if self.dockwidget is not None:
+            qris_project = self.dockwidget.project
 
-        self.settings_dialog = FrmSettings(settings, DOCK_WIDGET_LOCATION, default_dock_widget_location)
+        self.settings_dialog = FrmSettings(settings, DOCK_WIDGET_LOCATION, default_dock_widget_location,qris_project)
         self.settings_dialog.exec_()
         self.settings_dialog = None
 

@@ -182,6 +182,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
             errors = False
             missing_data = False
+            analysis_params = self.analysis.metadata
             for sample_frame_feature in sample_frame_features:
                 for data_capture_event in data_capture_events:
                     metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, self.project.metrics)
@@ -213,7 +214,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                                 metric.metric_params['rasters'] = rasters
 
                             metric_calculation = getattr(analysis_metrics, metric.metric_function)
-                            result = metric_calculation(self.project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params)
+                            result = metric_calculation(self.project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params, analysis_params)
                             normalized_value = result / normalization_value
                             metric_value.automated_value = normalized_value
                             if frm.chkForceActive.isChecked():

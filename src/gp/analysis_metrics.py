@@ -69,7 +69,7 @@ def get_sample_frame_geom(project_file: str, sample_frame_feature_id: int) -> og
     sample_frame_geom: ogr.Geometry = sample_frame_feature.GetGeometryRef().Clone()
     return sample_frame_geom
 
-def get_dce_layer_source(project_file: str, machine_code: str) -> (str, int):
+def get_dce_layer_source(project_file: str, machine_code: str) -> tuple[str, int]:
 
     with sqlite3.connect(project_file) as conn:
         c = conn.cursor()
@@ -82,7 +82,7 @@ def get_dce_layer_source(project_file: str, machine_code: str) -> (str, int):
     return layer_id, layer_source
 
 
-def count(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict) -> int:
+def count(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict) -> int:
     """Count the number of features in the specified layers that intersect the mask feature.
     
         CalculationID: 1
@@ -141,7 +141,7 @@ def count(project_file: str, mask_feature_id: int, event_id: int, metric_params:
     return total_feature_count
 
 
-def length(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
+def length(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
     """Get the total length of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 2
@@ -168,7 +168,7 @@ def length(project_file: str, mask_feature_id: int, event_id: int, metric_params
     return total_length
 
 
-def area(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
+def area(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
     """Get the total area of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 3
@@ -195,7 +195,7 @@ def area(project_file: str, mask_feature_id: int, event_id: int, metric_params: 
     return total_area
 
 
-def sinuosity(project_file: str, mask_feature_id: int, event_id: int, metric_params: str):
+def sinuosity(project_file: str, mask_feature_id: int, event_id: int, metric_params: str, analysis_params: dict):
     """Get the sinuosity of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 4
@@ -231,7 +231,7 @@ def sinuosity(project_file: str, mask_feature_id: int, event_id: int, metric_par
     return length / distance
 
 
-def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict):
+def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
     """Get the gradient of the features in the specified layers that intersect the mask feature.
 
        CalculationID: 5
