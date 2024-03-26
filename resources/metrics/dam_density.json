@@ -1,0 +1,54 @@
+{
+  "$schema": "./qris_metrics.schema.json",
+  "name": "Dam Density",
+  "machine_name": "dam_density", 
+  "calculation_name": "count",
+  "default_level": "METRIC",
+  "units": "meters",
+  "description": "The number of dams per square kilometer.",
+  "definition_url": "https://whatever.com", 
+  "metadata": {},
+  "metric_params": {
+    "layers": [
+      {
+        "layer_name": "structural_elements_points",
+        "count_field": "Structure Count",
+        "layer_type": "point",
+        "attribute_filter": {
+          "field_name": "Type",
+          "values": [
+            "Dam",
+            "Dam Complex"
+          ]
+        }
+      },
+      {
+        "layer_name": "structural_elements_lines",
+        "attribute_filter": {
+          "field_name": "Type",
+          "values": [
+            "Dam",
+            "Dam Complex"
+          ]
+        }
+      },
+      {
+        "layer_name": "structural_elements_areas",
+        "attribute_filter": {
+          "field_name": "Type",
+          "values": [
+            "Dam",
+            "Dam Complex"
+          ]
+        }
+      }
+    ],
+    "normalization": "CENTERLINE",
+    "surfaces": [
+      {
+        "surface_name": "dem",
+        "surface_type": "raster"
+      }
+    ]
+  }
+}
