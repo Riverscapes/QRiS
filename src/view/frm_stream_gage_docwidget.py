@@ -1,7 +1,7 @@
-import os
-from re import M
+import numpy as np
 import sqlite3
 from datetime import date
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib
 from qgis import core, gui, utils
@@ -25,7 +25,7 @@ from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 # https://stackoverflow.com/questions/31406193/matplotlib-is-not-worked-with-qgis
 # https://matplotlib.org/3.1.1/gallery/user_interfaces/embedding_in_qt_sgskip.html
 try:
-    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
     import matplotlib.dates as mdates
     import matplotlib.ticker as ticker
@@ -53,8 +53,13 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.dtStart.setDate(date(date.today().year - 1, date.today().month, date.today().day))
         self.dtEnd.setDate(date.today())
 
-        map_layer = self.map_manager.build_stream_gage_layer()
-        map_layer.selectionChanged.connect(self.on_map_selection_changed)
+        # lets plot a few sample points
+        t = np.arange(0.0, 2.0, 0.01)
+        s = 1 + np.sin(2 * np.pi * t)
+        self._static_ax.plot(t, s)
+
+        # map_layer = self.map_manager.build_stream_gage_layer()
+        # map_layer.selectionChanged.connect(self.on_map_selection_changed)
 
     def load_stream_gages(self):
 
@@ -70,7 +75,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.lst_gages.setModel(self.stream_gage_model)
         self.lst_gages.selectionModel().selectionChanged.connect(self.on_site_changed)
 
-    def on_map_selection_changed(selected, deselected, clearAndSelect: bool):
+    def on_map_selection_changed(self, selected, deselected, clearAndSelect: bool):
         print('here')
 
     def on_site_changed(self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection):
@@ -245,6 +250,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.cmdGage = QtWidgets.QPushButton()
         self.cmdGage.setText('Download Gages')
         self.cmdGage.setToolTip('Download Stream Gage Locations for Current Map Extent')
+        self.cmdGage.setEnabled(False)
         self.cmdGage.clicked.connect(self.download_stream_gages)
         self.left_vert.addWidget(self.cmdGage)
 
