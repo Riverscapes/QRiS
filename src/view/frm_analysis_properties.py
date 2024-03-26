@@ -7,6 +7,7 @@ from ..model.analysis import Analysis, insert_analysis
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
 from ..model.profile import Profile
+from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
 from ..model.analysis_metric import AnalysisMetric
 
@@ -33,6 +34,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.profiles = {id: profile for id, profile in project.profiles.items()}
         self.profiles_model = DBItemModel(self.profiles)
         self.cboProfile.setModel(self.profiles_model)
+
+        # DEMs
+        self.surfaces = {id: surface for id, surface in project.rasters.items() if surface.raster_type_id == 4}
+        self.surfaces_model = DBItemModel(self.surfaces)
+        self.cboDEM.setModel(self.surfaces_model)
 
         metrics = list(project.metrics.values())
         self.metricsTable.setRowCount(len(metrics))
@@ -86,10 +92,17 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 profile: DBItem = self.profiles[analysis.profile]
                 index = self.cboProfile.findData(profile)
                 self.cboProfile.setCurrentIndex(index)
+            
+            # set the dem
+            if analysis.metadata is not None and 'dem' in analysis.metadata:
+                dem: Raster = self.surfaces[analysis.metadata['dem']]
+                index = self.cboDEM.findData(dem)
+                self.cboDEM.setCurrentIndex(index)
 
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
             self.cboProfile.setEnabled(False)
+            self.cboDEM.setEnabled(False)
         else:
             self.setWindowTitle('Create New Analysis')
 
@@ -125,6 +138,12 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         
         self.cboProfile = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboProfile, 2, 1, 1, 1)
+
+        self.lblDEM = QtWidgets.QLabel('DEM')
+        self.grdLayout1.addWidget(self.lblDEM, 3, 0, 1, 1)
+
+        self.cboDEM = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboDEM, 3, 1, 1, 1)
 
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
@@ -163,12 +182,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             return
         
         profile: Profile = self.cboProfile.currentData(QtCore.Qt.UserRole)
-
+        dem: Raster = self.cboDEM.currentData(QtCore.Qt.UserRole)
 
         # write the profile id to the analysis and analysis metadata
         metadata = self.analysis.metadata if self.analysis is not None else {}
         if profile is not None:
             metadata['profile'] = profile.id
+        if dem is not None:
+            metadata['dem'] = dem.id
 
         # determine if there are any features in the mask
         fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
