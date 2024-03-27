@@ -2,7 +2,7 @@ import sqlite3
 import json
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QSpacerItem
+from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QSpacerItem
 
 from ..model.project import Project
 from ..model.metric import insert_metric
@@ -33,7 +33,6 @@ class FrmSettings(QDialog):
 
     def accept(self):
 
-
         if self.left_radio.isChecked():
             self.settings.setValue(self.dock_widget_location, 'left')
         else:
@@ -53,7 +52,7 @@ class FrmSettings(QDialog):
                 curs.execute('SELECT id, name FROM lkp_units') 
                 self.units = {row[0]: row[1] for row in curs.fetchall()}
 
-            headers = ['Name', 'Calculation', 'Default Level', 'Units', 'Description', 'Definition URL', 'Metadata', "Metric Params"]
+            headers = ['Export', 'Name', 'Machine Name', 'Calculation', 'Default Level', 'Units', 'Description', 'Definition URL', 'Metadata', "Metric Params"]
             self.metrics_table.setRowCount(len(self.qris_project.metrics))
             self.metrics_table.setColumnCount(len(headers))
             self.metrics_table.setHorizontalHeaderLabels(headers)
@@ -61,14 +60,20 @@ class FrmSettings(QDialog):
             for i, metric in enumerate(self.qris_project.metrics.values()):
                 metadata = json.dumps(metric.metadata) if metric.metadata is not None else ''
                 metric_params = json.dumps(metric.metric_params) if metric.metric_params is not None else ''
-                self.metrics_table.setItem(i, 0, QTableWidgetItem(metric.name))
-                self.metrics_table.setItem(i, 1, QTableWidgetItem(metric.metric_function))
-                self.metrics_table.setItem(i, 2, QTableWidgetItem(self.levels.get(metric.default_level_id, None)))
-                self.metrics_table.setItem(i, 3, QTableWidgetItem(self.units.get(metric.default_unit_id, None if metric.default_unit_id is not None else None)))
-                self.metrics_table.setItem(i, 4, QTableWidgetItem(metric.description))
-                self.metrics_table.setItem(i, 5, QTableWidgetItem(metric.definition_url))
-                self.metrics_table.setItem(i, 6, QTableWidgetItem(metadata))
-                self.metrics_table.setItem(i, 7, QTableWidgetItem(metric_params))
+                
+                # add an exprot metric button
+                export_button = QPushButton("Export")
+                export_button.clicked.connect(lambda _, i=i: self.export_metric(i))
+                self.metrics_table.setCellWidget(i, 0, export_button)
+                self.metrics_table.setItem(i, 1, QTableWidgetItem(metric.name))
+                self.metrics_table.setItem(i, 2, QTableWidgetItem(metric.machine_name))
+                self.metrics_table.setItem(i, 3, QTableWidgetItem(metric.metric_function))
+                self.metrics_table.setItem(i, 4, QTableWidgetItem(self.levels.get(metric.default_level_id, None)))
+                self.metrics_table.setItem(i, 5, QTableWidgetItem(self.units.get(metric.default_unit_id, None if metric.default_unit_id is not None else None)))
+                self.metrics_table.setItem(i, 6, QTableWidgetItem(metric.description))
+                self.metrics_table.setItem(i, 7, QTableWidgetItem(metric.definition_url))
+                self.metrics_table.setItem(i, 8, QTableWidgetItem(metadata))
+                self.metrics_table.setItem(i, 9, QTableWidgetItem(metric_params))
         else:             
             self.metrics_table.setRowCount(1)
             self.metrics_table.setColumnCount(1)
@@ -79,53 +84,61 @@ class FrmSettings(QDialog):
             self.metrics_table.setItem(0, 0, QTableWidgetItem("No project loaded. Load a project to view metrics."))
             # stretch the row to fill the table
             self.metrics_table.horizontalHeader().setSectionResizeMode(0, 1)
+            
+            self.metrics_save_button.setEnabled(False)
+            self.metrics_import_button.setEnabled(False)
 
     def import_metrics(self):
         import_file = QFileDialog.getOpenFileName(self, "Import Metrics File", "", "JSON Files (*.json)")
         if import_file[0]:
             with open(import_file[0], 'r') as file:
-                metrics = json.load(file)
+                metric = json.load(file)
 
-            for metric in metrics:
-                # first check if the metric is already in the table
                 for i in range(self.metrics_table.rowCount()):
-                    if self.metrics_table.item(i, 0).text() == metric['name']:
-                        continue
+                    if self.metrics_table.item(i, 2).text() == metric['machine_name']:
+                        QMessageBox.warning(self, "Import Metrics", f"Metric {metric['machine_name']} already exists in the table.")
+                        return
                         
                 self.metrics_table.setRowCount(self.metrics_table.rowCount() + 1)
                 row = self.metrics_table.rowCount() - 1
 
-                self.metrics_table.setItem(row, 0, QTableWidgetItem(metric['name']))
-                self.metrics_table.setItem(row, 1, QTableWidgetItem(metric['calculation_name']))
-                self.metrics_table.setItem(row, 2, QTableWidgetItem(metric['default_level']))
-                self.metrics_table.setItem(row, 3, QTableWidgetItem(metric['units']))
-                self.metrics_table.setItem(row, 4, QTableWidgetItem(metric['description']))
-                self.metrics_table.setItem(row, 5, QTableWidgetItem(metric['definition_url']))
-                self.metrics_table.setItem(row, 6, QTableWidgetItem(json.dumps(metric['metadata'])))
-                self.metrics_table.setItem(row, 7, QTableWidgetItem(json.dumps(metric['metric_params'])))
+                # add an exprot metric button
+                export_button = QPushButton("Export")
+                export_button.clicked.connect(lambda _, i=i: self.export_metric(i))
+                self.metrics_table.setCellWidget(i, 0, export_button)
+                self.metrics_table.setItem(row, 1, QTableWidgetItem(metric['name']))
+                self.metrics_table.setItem(row, 2, QTableWidgetItem(metric['machine_name']))
+                self.metrics_table.setItem(row, 3, QTableWidgetItem(metric['calculation_name']))
+                self.metrics_table.setItem(row, 4, QTableWidgetItem(metric['default_level']))
+                self.metrics_table.setItem(row, 5, QTableWidgetItem(metric['units']))
+                self.metrics_table.setItem(row, 6, QTableWidgetItem(metric['description']))
+                self.metrics_table.setItem(row, 7, QTableWidgetItem(metric['definition_url']))
+                self.metrics_table.setItem(row, 8, QTableWidgetItem(json.dumps(metric['metadata'])))
+                self.metrics_table.setItem(row, 9, QTableWidgetItem(json.dumps(metric['metric_params'])))
                 
-    def export_metrics(self):
-        export_file = QFileDialog.getSaveFileName(self, "Export Metrics File", "", "JSON Files (*.json)")
+    def export_metric(self, index_row):
+
+        initial_file = self.metrics_table.item(index_row, 2).text()
+        export_file = QFileDialog.getSaveFileName(self, "Export Metrics File", initial_file, "JSON Files (*.json)")
 
         if export_file[0]:
 
-            out_metrics = []
-            # lets export whats in the table
-            for i in range(self.metrics_table.rowCount()):
+            i = index_row
 
-                out_metrics.append({
-                    'name': self.metrics_table.item(i, 0).text(),
-                    'calculation_name': self.metrics_table.item(i, 1).text(),
-                    'default_level': self.metrics_table.item(i, 2).text(),
-                    'units': self.metrics_table.item(i, 3).text(),
-                    'description': self.metrics_table.item(i, 4).text(),
-                    'definition_url': self.metrics_table.item(i, 5).text(),
-                    'metadata': json.loads(self.metrics_table.item(i, 6).text()),
-                    'metric_params': json.loads(self.metrics_table.item(i, 7).text())
-                })
+            out_metric = {
+                'name': self.metrics_table.item(i, 1).text(),
+                'machine_name': self.metrics_table.item(i, 2).text(),
+                'calculation_name': self.metrics_table.item(i, 3).text(),
+                'default_level': self.metrics_table.item(i, 4).text(),
+                'units': self.metrics_table.item(i, 5).text() if self.metrics_table.item(i, 5).text() != '' else None,
+                'description': self.metrics_table.item(i, 6).text() if self.metrics_table.item(i, 6).text() != '' else None,
+                'definition_url': self.metrics_table.item(i, 7).text() if self.metrics_table.item(i, 7).text() != '' else None,
+                'metadata': json.loads(self.metrics_table.item(i, 8).text()),
+                'metric_params': json.loads(self.metrics_table.item(i, 9).text())
+            }
 
             with open(export_file[0], 'w') as file:
-                json.dump(out_metrics, file, indent=4)
+                json.dump(out_metric, file, indent=4)
 
             # successful export message in message box
             QMessageBox.information(self, "Export Metrics", f"Metrics exported successfully to {export_file[0]}")
@@ -135,15 +148,18 @@ class FrmSettings(QDialog):
         saved_metrics = 0
         # lets add any new metrics in the table to the project
         for i in range(self.metrics_table.rowCount()):
-            name = self.metrics_table.item(i, 0).text()
-            default_level = self.metrics_table.item(i, 2).text()
-            description = self.metrics_table.item(i, 4).text()
-            metric_function = self.metrics_table.item(i, 1).text()
-            metric_params = json.loads(self.metrics_table.item(i, 7).text())
-            metadata = json.loads(self.metrics_table.item(i, 6).text())
+            name = self.metrics_table.item(i, 1).text()
+            machine_name = self.metrics_table.item(i, 2).text()
+            description = self.metrics_table.item(i, 6).text()
+            metric_function = self.metrics_table.item(i, 3).text()
+            metric_params = json.loads(self.metrics_table.item(i, 9).text())
+            metadata = json.loads(self.metrics_table.item(i, 8).text())
+            default_level = self.metrics_table.item(i, 4).text()
+            default_unit = self.metrics_table.item(i, 5).text()
+            definition_url = self.metrics_table.item(i, 7).text()
 
             if all(name != metric.name for metric in self.qris_project.metrics.values()):
-                metric_id, metric = insert_metric(self.qris_project.project_file, name, description, default_level, metric_function, metric_params, self.metrics_table.item(i, 3).text(), self.metrics_table.item(i, 5).text(), metadata)
+                metric_id, metric = insert_metric(self.qris_project.project_file, name, machine_name, description, default_level, metric_function, metric_params, default_unit, definition_url, metadata)
                 self.qris_project.metrics[metric_id] = metric
                 saved_metrics += 1
 
@@ -163,6 +179,7 @@ class FrmSettings(QDialog):
         self.tabs = QTabWidget()
         self.vert.addWidget(self.tabs)
 
+        self.vertGeneral = QVBoxLayout()
         self.grid = QGridLayout()
 
         self.label = QLabel("Default Dock widget location")
@@ -176,8 +193,8 @@ class FrmSettings(QDialog):
         # add a label to the layout to explain settings will take effect after restarting qgis
         self.grid.addWidget(QLabel("Settings will take effect after restarting QGIS"))
 
-        # insert vertical spacer to push everything to the top
-        self.grid.addItem(QSpacerItem(1, 1, 1, 1), 2, 0)
+        self.vertGeneral.addLayout(self.grid)
+        self.vertGeneral.addStretch(1)
 
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
@@ -187,9 +204,11 @@ class FrmSettings(QDialog):
 
         self.tabSettings = QWidget()
         self.tabs.addTab(self.tabSettings, "General")
-        self.tabSettings.setLayout(self.grid)
+        self.tabSettings.setLayout(self.vertGeneral)
 
-        self.metrics_layout = QGridLayout()
+        self.metrics_layout = QVBoxLayout()
+        self.metrics_button_hlayout = QHBoxLayout()
+        self.metrics_button_layout = QVBoxLayout()
 
         # lets add a table widget to display the metrics
         self.metrics_table = QTableWidget()
@@ -198,15 +217,16 @@ class FrmSettings(QDialog):
         # add buttons for importing and exporting metrics to json
         self.metrics_import_button = QPushButton("Import Metrics File")
         self.metrics_import_button.clicked.connect(self.import_metrics)
-        self.metrics_layout.addWidget(self.metrics_import_button)
-
-        self.metrics_export_button = QPushButton("Export Metrics File")
-        self.metrics_export_button.clicked.connect(self.export_metrics)
-        self.metrics_layout.addWidget(self.metrics_export_button)
+        self.metrics_button_layout.addWidget(self.metrics_import_button)
 
         self.metrics_save_button = QPushButton("Save Metrics")
         self.metrics_save_button.clicked.connect(self.save_metrics)
-        self.metrics_layout.addWidget(self.metrics_save_button)
+        self.metrics_button_layout.addWidget(self.metrics_save_button)
+
+        self.metrics_button_hlayout.addStretch(1)
+        self.metrics_button_hlayout.addLayout(self.metrics_button_layout)
+
+        self.metrics_layout.addLayout(self.metrics_button_hlayout)
 
         self.tabMetrics = QWidget()
         self.tabs.addTab(self.tabMetrics, "Metrics")
