@@ -6,8 +6,9 @@ from .db_item import DBItem
 
 class Metric(DBItem):
 
-    def __init__(self, id: int, name: str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None):
+    def __init__(self, id: int, name: str, machine_name:str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None):
         super().__init__('metrics', id, name)
+        self.machine_name = machine_name
         self.description = description
         self.default_level_id = default_level_id
         self.default_unit_id = default_unit_id
@@ -32,6 +33,7 @@ def load_metrics(curs: sqlite3.Cursor) -> dict:
     return {row['id']: Metric(
         row['id'],
         row['name'],
+        row['machine_name'],
         row['description'],
         row['default_level_id'],
         metric_functions.get(row['calculation_id'], None),
@@ -41,7 +43,7 @@ def load_metrics(curs: sqlite3.Cursor) -> dict:
         json.loads(row['metadata']) if row['metadata'] else None
     ) for row in curs.fetchall()}
 
-def insert_metric(db_path: str, name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None) -> Metric:
+def insert_metric(db_path: str, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None) -> Metric:
 
     metric = None
     description = description if len(description) > 0 else None
@@ -73,9 +75,9 @@ def insert_metric(db_path: str, name: str, description: str, metric_level, metri
             else:
                 unit_id = None
 
-            curs.execute('INSERT INTO metrics (name, description, default_level_id, calculation_id, metric_params, unit_id, definition_url, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str])
+            curs.execute('INSERT INTO metrics (name, machine_name, description, default_level_id, calculation_id, metric_params, unit_id, definition_url, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [name, machine_name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str])
             id = curs.lastrowid
-            metric = Metric(id, name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata)
+            metric = Metric(id, name, machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata)
             conn.commit()
 
         except Exception as ex:

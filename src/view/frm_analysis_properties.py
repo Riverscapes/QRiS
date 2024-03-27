@@ -31,14 +31,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.cboSampleFrame.setModel(self.sampling_frames_model)
 
         # Profiles
-        self.profiles = {id: profile for id, profile in project.profiles.items()}
-        self.profiles_model = DBItemModel(self.profiles)
-        self.cboProfile.setModel(self.profiles_model)
+        self.centerlines = {id: profile for id, profile in project.profiles.items()}
+        self.centerlines_model = DBItemModel(self.centerlines)
+        self.cboProfile.setModel(self.centerlines_model)
 
         # DEMs
-        self.surfaces = {id: surface for id, surface in project.rasters.items() if surface.raster_type_id == 4}
-        self.surfaces_model = DBItemModel(self.surfaces)
-        self.cboDEM.setModel(self.surfaces_model)
+        self.dems = {id: surface for id, surface in project.rasters.items() if surface.raster_type_id == 4}
+        self.dems_model = DBItemModel(self.dems)
+        self.cboDEM.setModel(self.dems_model)
 
         metrics = list(project.metrics.values())
         self.metricsTable.setRowCount(len(metrics))
@@ -89,13 +89,13 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
             # Set the profile
             if analysis.profile is not None:
-                profile: DBItem = self.profiles[analysis.profile]
+                profile: DBItem = self.centerlines[analysis.profile]
                 index = self.cboProfile.findData(profile)
                 self.cboProfile.setCurrentIndex(index)
             
             # set the dem
             if analysis.metadata is not None and 'dem' in analysis.metadata:
-                dem: Raster = self.surfaces[analysis.metadata['dem']]
+                dem: Raster = self.dems[analysis.metadata['dem']]
                 index = self.cboDEM.findData(dem)
                 self.cboDEM.setCurrentIndex(index)
 
@@ -187,7 +187,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         # write the profile id to the analysis and analysis metadata
         metadata = self.analysis.metadata if self.analysis is not None else {}
         if profile is not None:
-            metadata['profile'] = profile.id
+            metadata['centerline'] = profile.id
         if dem is not None:
             metadata['dem'] = dem.id
 

@@ -58,12 +58,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
 
-        self.project = project
+        self.qris_project = project
         self.analysis = analysis
         self.txtName.setText(analysis.name)
 
         # Set Sample Frames
-        frame_ids = get_sample_frame_ids(self.project.project_file, self.analysis.sample_frame.id)
+        frame_ids = get_sample_frame_ids(self.qris_project.project_file, self.analysis.sample_frame.id)
         self.segments_model = DBItemModel(frame_ids)
         self.cboSampleFrame.setModel(self.segments_model)
 
@@ -85,7 +85,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             analysis_metric = analysis_metrics[row]
             metric = analysis_metric.metric
             label_metric = QtWidgets.QTableWidgetItem()
-            metric_text = f'{metric.name} ({self.project.units[metric.default_unit_id].display})' if metric.default_unit_id is not None else f'{metric.name}'
+            metric_text = f'{metric.name} ({self.qris_project.units[metric.default_unit_id].display})' if metric.default_unit_id is not None else f'{metric.name}'
             label_metric.setText(metric_text)
             self.table.setItem(row, 0, label_metric)
             label_metric.setData(QtCore.Qt.UserRole, analysis_metric)
@@ -112,7 +112,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         if event is not None and mask_feature_id is not None:
             # Load latest metric values from DB
-            metric_values = load_metric_values(self.project.project_file, self.analysis, event, mask_feature_id, self.project.metrics)
+            metric_values = load_metric_values(self.qris_project.project_file, self.analysis, event, mask_feature_id, self.qris_project.metrics)
 
             # Loop over active metrics and load values into grid
             for row in range(self.table.rowCount()):
@@ -182,10 +182,15 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
             errors = False
             missing_data = False
-            analysis_params = self.analysis.metadata
+            analysis_params = {}
+            if 'centerline' in self.analysis.metadata:
+                analysis_params['centerline'] = self.qris_project.profiles[self.analysis.metadata['centerline']]
+            if 'dem' in self.analysis.metadata:
+                analysis_params['dem'] = self.qris_project.dems[self.analysis.metadata['dem']]
+
             for sample_frame_feature in sample_frame_features:
                 for data_capture_event in data_capture_events:
-                    metric_values = load_metric_values(self.project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, self.project.metrics)
+                    metric_values = load_metric_values(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, self.qris_project.metrics)
                     for analysis_metric in self.analysis.analysis_metrics.values():
                         metric: Metric = analysis_metric.metric
                         metric_value: MetricValue = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
@@ -194,32 +199,13 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                         if metric.metric_function is None:
                             # Metric is not defined in database. continue
                             continue
-                        normalization_value = 1.0
-                        if "normalization" in metric.metric_params:
-                            if metric.metric_params["normalization"] == "centerline":
-                                if self.analysis.metadata["profile"] is not None:
-                                    profile = self.project.profiles[self.analysis.metadata["profile"]]
-                                    normalization_value = normalization_factor(self.project.project_file, sample_frame_feature.id, profile)
-                                else:
-                                    continue
                         try:
-                            if 'rasters' in metric.metric_params:
-                                rasters = {}
-                                for raster_name in metric.metric_params['rasters']:
-                                    raster_id = [k for k, v in self.project.lookup_tables['lkp_raster_types'].items() if v.name == raster_name][0]
-                                    project_rasters = [r for r in data_capture_event.rasters if r.raster_type_id == raster_id]
-                                    if len(project_rasters) == 0:
-                                        raise MetricInputMissingError(f'Required raster {raster_name} for {metric.name} not found in project')
-                                    rasters[raster_name] = {'path': parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path))}
-                                metric.metric_params['rasters'] = rasters
-
                             metric_calculation = getattr(analysis_metrics, metric.metric_function)
-                            result = metric_calculation(self.project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params, analysis_params)
-                            normalized_value = result / normalization_value
-                            metric_value.automated_value = normalized_value
+                            result = metric_calculation(self.qris_project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params, analysis_params)
+                            metric_value.automated_value = result
                             if frm.chkForceActive.isChecked():
                                 metric_value.is_manual = False
-                            metric_value.save(self.project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
+                            metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
                             QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {sample_frame_feature.id}', 'QRiS_Metrics', Qgis.Info)
                         except MetricInputMissingError as ex:
                             missing_data = True
@@ -243,7 +229,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # open modal dialog to select export file
         current_sample_frame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         current_data_capture_event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        frm = FrmExportMetrics(self, self.project, self.analysis, current_data_capture_event, current_sample_frame)
+        frm = FrmExportMetrics(self, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
@@ -251,11 +237,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def cmdProperties_clicked(self):
 
-        frm = FrmAnalysisProperties(self, self.project, self.analysis)
+        frm = FrmAnalysisProperties(self, self.qris_project, self.analysis)
         result = frm.exec_()
         if result is not None and result != 0:
             self.txtName.setText(frm.analysis.name)
-            self.configure_analysis(self.project, frm.analysis, None)
+            self.configure_analysis(self.qris_project, frm.analysis, None)
             self.build_table()
 
     def edit_metric_value(self, mi):
@@ -268,7 +254,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         if metric_value is None:
             metric_value = MetricValue(metric, None, None, True, None, None, metric.default_unit_id, {})
 
-        frm = FrmMetricValue(self, self.project, self.project.metrics, self.analysis, event, mask_feature.id, metric_value)
+        frm = FrmMetricValue(self, self.qris_project, self.qris_project.metrics, self.analysis, event, mask_feature.id, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:
             self.load_table_values()

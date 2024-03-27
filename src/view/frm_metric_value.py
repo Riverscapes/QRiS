@@ -36,13 +36,13 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.cmdPrevious.setVisible(False)
 
         self.metric_value = metric_value
-        self.project = project
+        self.qris_project = project
         self.analysis = analysis
         self.data_capture_event = event
         self.sample_frame_id = sample_frame_id
         # self.metrics = metrics
 
-        metric_name_text = f'{metric_value.metric.name} ({self.project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
+        metric_name_text = f'{metric_value.metric.name} ({self.qris_project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
         self.txtMetric.setText(metric_name_text)
 
         if metric_value.metric.min_value is not None:
@@ -102,7 +102,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.metric_value.uncertainty = {self.cboManualUncertainty.currentText(): self.ValManualPlusMinus.value()}
 
         try:
-            self.metric_value.save(self.project.project_file, self.analysis, self.data_capture_event, self.sample_frame_id)
+            self.metric_value.save(self.qris_project.project_file, self.analysis, self.data_capture_event, self.sample_frame_id)
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, 'Error Saving Metric Value', str(ex))
             return
@@ -159,31 +159,16 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         # modify metric params as needed.
         metric_params: dict = self.metric_value.metric.metric_params
-        normalization_value = 1.0
-        if "normalization" in metric_params:
-            if metric_params["normalization"] == "centerline":
-                if self.analysis.profile is not None:
-                    profile = self.project.profiles[self.analysis.metadata["profile"]]
-                    normalization_value = normalization_factor(self.project.project_file, self.sample_frame_id, profile)
-                else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', f'Required {metric_params["normalization"]} not found for metric generation.')
-                    return
-        if 'rasters' in metric_params:
-            rasters = {}
-            for raster_name in metric_params['rasters']:
-                raster_id = [k for k, v in self.project.lookup_tables['lkp_raster_types'].items() if v.name == raster_name][0]
-                project_rasters = [r for r in self.data_capture_event.rasters if r.raster_type_id == raster_id]
-                if len(project_rasters) == 0:
-                    QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', f'No raster found for {raster_name}.')
-                    return
-                rasters[raster_name] = {'path': parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), project_rasters[0].path))}
-            metric_params['rasters'] = rasters
+        analysis_params = {}
+        if 'centerline' in self.analysis.metadata:
+            analysis_params['centerline'] = self.qris_project.profiles[self.analysis.metadata['centerline']]
+        if 'dem' in self.analysis.metadata:
+            analysis_params['dem'] = self.qris_project.dems[self.analysis.metadata['dem']]
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
-            result = metric_calculation(self.project.project_file, self.sample_frame_id, self.data_capture_event.id, metric_params)
-            normalized_result = result / normalization_value
-            self.metric_value.automated_value = normalized_result
+            result = metric_calculation(self.qris_project.project_file, self.sample_frame_id, self.data_capture_event.id, metric_params, analysis_params)
+            self.metric_value.automated_value = result
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
             QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)
@@ -192,7 +177,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.rdoAutomated.setEnabled(False)
             return
 
-        self.txtAutomated.setText(f'{normalized_result: .{self.metric_value.metric.precision}f}'if isinstance(normalized_result, float) and self.metric_value.metric.precision is not None else str(normalized_result))
+        self.txtAutomated.setText(f'{result: .{self.metric_value.metric.precision}f}'if isinstance(result, float) and self.metric_value.metric.precision is not None else str(result))
         self.rdoAutomated.setChecked(True)
         self.rdoAutomated.setEnabled(True)
 
