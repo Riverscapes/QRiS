@@ -163,7 +163,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         if 'centerline' in self.analysis.metadata:
             analysis_params['centerline'] = self.qris_project.profiles[self.analysis.metadata['centerline']]
         if 'dem' in self.analysis.metadata:
-            analysis_params['dem'] = self.qris_project.dems[self.analysis.metadata['dem']]
+            analysis_params['dem'] = self.qris_project.rasters[self.analysis.metadata['dem']]
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
