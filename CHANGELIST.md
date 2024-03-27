@@ -1,5 +1,19 @@
 # QRiS Plugin
 
+## [0.3.14] 2023 MAR 27
+
+### Added
+- First version of custom metrics tool
+- JSON Schema for custom metrics
+- JSON metric definition files for jam and dam densities
+
+### Fixed
+- Basemap url bug in QGIS 3.30+
+- DCE Event layer text does not update when DCE layer is imported
+
+### Changed
+- Max Cross Section length changed to 5km
+
 ## [0.3.13] 2023 MAR 01
 
 ### Fixed
