@@ -241,7 +241,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.dblExtension.setDecimals(1)
         self.dblExtension.setValue(25.0)
         self.dblExtension.setSuffix(' m')
-        self.dblExtension.setRange(0.0, 1000.0)
+        self.dblExtension.setRange(0.0, 5000.0)
         self.grid.addWidget(self.dblExtension, 6, 1, 1, 1)
 
         self.cmdReset = QtWidgets.QPushButton('Reset')
