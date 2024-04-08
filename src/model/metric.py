@@ -4,6 +4,8 @@ import json
 from .db_item import DBItem
 
 
+METRIC_SCHEMA = './qris_metrics.schema.json'
+
 class Metric(DBItem):
 
     def __init__(self, id: int, name: str, machine_name:str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None):
