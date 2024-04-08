@@ -5,7 +5,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QSpacerItem
 
 from ..model.project import Project
-from ..model.metric import insert_metric
+from ..model.metric import METRIC_SCHEMA, insert_metric
 
 class FrmSettings(QDialog):
     def __init__(self, settings: QSettings, dock_widget_location: str, default_dock_widget_location:str, qris_project: Project):
@@ -126,6 +126,7 @@ class FrmSettings(QDialog):
             i = index_row
 
             out_metric = {
+                '$schema': METRIC_SCHEMA,
                 'name': self.metrics_table.item(i, 1).text(),
                 'machine_name': self.metrics_table.item(i, 2).text(),
                 'calculation_name': self.metrics_table.item(i, 3).text(),
