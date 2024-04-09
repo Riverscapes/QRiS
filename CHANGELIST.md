@@ -1,5 +1,11 @@
 # QRiS Plugin
 
+## [0.3.15] 2023 APR 09
+
+### Added
+- Area Proportion metric calculation
+- Ablilty to delete metrics from the project
+
 ## [0.3.14] 2023 MAR 27
 
 ### Added
