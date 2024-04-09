@@ -2,7 +2,8 @@ import sqlite3
 import json
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QSpacerItem
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem
 
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
@@ -52,10 +53,11 @@ class FrmSettings(QDialog):
                 curs.execute('SELECT id, name FROM lkp_units') 
                 self.units = {row[0]: row[1] for row in curs.fetchall()}
 
-            headers = ['Export', 'Name', 'Machine Name', 'Calculation', 'Default Level', 'Units', 'Description', 'Definition URL', 'Metadata', "Metric Params"]
+            headers = ['', 'Name', 'Machine Name', 'Calculation', 'Default Level', 'Units', 'Description', 'Definition URL', 'Metadata', "Metric Params", ""]
             self.metrics_table.setRowCount(len(self.qris_project.metrics))
             self.metrics_table.setColumnCount(len(headers))
             self.metrics_table.setHorizontalHeaderLabels(headers)
+            self.metrics_table.verticalHeader().hide()
 
             for i, metric in enumerate(self.qris_project.metrics.values()):
                 metadata = json.dumps(metric.metadata) if metric.metadata is not None else ''
@@ -63,6 +65,7 @@ class FrmSettings(QDialog):
                 
                 # add an exprot metric button
                 export_button = QPushButton("Export")
+                export_button.setStyleSheet("padding: 3px;") 
                 export_button.clicked.connect(lambda _, i=i: self.export_metric(i))
                 self.metrics_table.setCellWidget(i, 0, export_button)
                 self.metrics_table.setItem(i, 1, QTableWidgetItem(metric.name))
@@ -74,7 +77,18 @@ class FrmSettings(QDialog):
                 self.metrics_table.setItem(i, 7, QTableWidgetItem(metric.definition_url))
                 self.metrics_table.setItem(i, 8, QTableWidgetItem(metadata))
                 self.metrics_table.setItem(i, 9, QTableWidgetItem(metric_params))
-        else:             
+                delete_button = QPushButton()
+                delete_button.setIcon(QIcon(':/plugins/qris_toolbar/delete'))
+                delete_button.setStyleSheet("padding: 0px;") 
+                delete_button.clicked.connect(lambda _, i=i: self.delete_metric(i))
+                self.metrics_table.setCellWidget(i, 10, delete_button)
+
+            # Set the column widths to fit the contents of cells with buttons
+            self.metrics_table.resizeColumnsToContents()
+            for i in range(self.metrics_table.columnCount()):
+                if self.metrics_table.columnWidth(i) > 250:
+                    self.metrics_table.setColumnWidth(i, 250)
+        else:   
             self.metrics_table.setRowCount(1)
             self.metrics_table.setColumnCount(1)
             # hide column headers
@@ -96,16 +110,22 @@ class FrmSettings(QDialog):
 
                 for i in range(self.metrics_table.rowCount()):
                     if self.metrics_table.item(i, 2).text() == metric['machine_name']:
-                        QMessageBox.warning(self, "Import Metrics", f"Metric {metric['machine_name']} already exists in the table.")
+                        QMessageBox.warning(self, "Import Metric", f"Metric {metric['machine_name']} already exists.")
                         return
-                        
+                        # TODO - add overwrite option. this will impact the database and/or existing metrics in the project 
+                        # # user can decide to overwrite the metric
+                        # reply = QMessageBox.question(self, "Import Metric", f"Metric {metric['machine_name']} already exists. Overwrite?", QMessageBox.Yes | QMessageBox.No)
+                        # if reply == QMessageBox.No:
+                        #     return
+
                 self.metrics_table.setRowCount(self.metrics_table.rowCount() + 1)
                 row = self.metrics_table.rowCount() - 1
 
                 # add an exprot metric button
                 export_button = QPushButton("Export")
-                export_button.clicked.connect(lambda _, i=i: self.export_metric(i))
-                self.metrics_table.setCellWidget(i, 0, export_button)
+                export_button.setStyleSheet("padding: 3px;")
+                export_button.clicked.connect(lambda _, i=row: self.export_metric(i))
+                self.metrics_table.setCellWidget(row, 0, export_button)
                 self.metrics_table.setItem(row, 1, QTableWidgetItem(metric['name']))
                 self.metrics_table.setItem(row, 2, QTableWidgetItem(metric['machine_name']))
                 self.metrics_table.setItem(row, 3, QTableWidgetItem(metric['calculation_name']))
@@ -115,6 +135,49 @@ class FrmSettings(QDialog):
                 self.metrics_table.setItem(row, 7, QTableWidgetItem(metric['definition_url']))
                 self.metrics_table.setItem(row, 8, QTableWidgetItem(json.dumps(metric['metadata'])))
                 self.metrics_table.setItem(row, 9, QTableWidgetItem(json.dumps(metric['metric_params'])))
+                delete_button = QPushButton()
+                delete_button.setIcon(QIcon(':/plugins/qris_toolbar/delete'))
+                delete_button.clicked.connect(lambda _, i=row: self.delete_metric(i))
+                self.metrics_table.setCellWidget(row, 10, delete_button)
+
+        if self.metrics_table.rowCount() == 1:
+            self.metrics_table.resizeColumnsToContents()
+            for i in range(self.metrics_table.columnCount()):
+                if self.metrics_table.columnWidth(i) > 250:
+                    self.metrics_table.setColumnWidth(i, 250)
+
+    def delete_metric(self, index_row):
+
+        metric_name = self.metrics_table.item(index_row, 1).text()
+        metric_machine_name = self.metrics_table.item(index_row, 2).text()
+
+        # User warning
+        reply = QMessageBox.question(self, "Delete Metric", f"Are you sure you want to delete metric {metric_name}?\nAll calculated metric values associated with this metric will be also be deleted. Changes will be applied to the project immediately.", QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+
+        self.metrics_table.removeRow(index_row)
+
+        # if the metric is in the project, remove it
+        for metric_id, metric in self.qris_project.metrics.items():
+            if metric.machine_name == metric_machine_name:
+                # now remove it from the database
+                try:
+                    with sqlite3.connect(self.qris_project.project_file) as conn:
+                        curs = conn.cursor()
+                        curs.execute('DELETE FROM metric_values WHERE metric_id = ?', [metric_id])
+                        curs.execute('DELETE FROM analysis_metrics WHERE metric_id = ?', [metric_id])
+                        curs.execute('DELETE FROM metrics WHERE machine_name = ?', [metric_machine_name])
+                    del self.qris_project.metrics[metric_id]
+                    # loop through the analyses and remove the metric from the analysis metrics
+                    for analysis in self.qris_project.analyses.values():
+                        if metric_id in analysis.analysis_metrics:
+                            del analysis.analysis_metrics[metric_id]
+                    conn.commit()
+                except Exception as e:
+                    QMessageBox.warning(self, "Delete Metric", f"Error deleting metric {metric_name}: {str(e)}")
+                    conn.rollback()
+                break
                 
     def export_metric(self, index_row):
 
