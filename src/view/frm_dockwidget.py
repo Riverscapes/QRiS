@@ -1007,10 +1007,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if meta is not None:
             if 'project_metadata' in meta:
                 for key, value in meta['project_metadata'].items():
-                    frm.metadata_widget.add_metadata(key, value)
+                    frm.metadata_widget.add_metadata(key, value[0])
             if 'layer_metadata' in meta:
                 for key, value in meta['layer_metadata'].items():
-                    frm.metadata_widget.add_metadata(key, value)
+                    frm.metadata_widget.add_metadata(key, value[0])
             if 'symbology' in meta:
                 frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
         result = frm.exec_()
