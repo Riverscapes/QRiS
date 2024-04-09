@@ -162,14 +162,10 @@ class MetadataWidget(QtWidgets.QWidget):
 
     def get_json(self) -> str:
 
+        if self.table.rowCount() > 0:
+            if 'metadata' not in self.metadata:
+                self.metadata['metadata'] = dict()
         for row in range(self.table.rowCount()):
-            # if the key is in self.metadata['metadata'] then update the value
-            if self.table.item(row, 0).text() in self.metadata['metadata']:
-                self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
-            else:
-                # add to 'metadata'
-                if 'metadata' not in self.metadata:
-                    self.metadata['metadata'] = dict()
-                self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
 
         return json.dumps(self.metadata)
