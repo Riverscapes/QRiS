@@ -1,0 +1,1 @@
+INSERT INTO calculations (name, metric_function) VALUES ('Area Proportion', 'area_proportion');

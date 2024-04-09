@@ -332,3 +332,80 @@ def gradient(project_file: str, mask_feature_id: int, event_id: int, metric_para
     length = clipped_geom.Length()
 
     return (stats_end['minimum'] - stats_start['minimum']) / length
+
+
+def area_proportion(project_file: str, mask_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
+        sample_frame_geom = get_sample_frame_geom(project_file, mask_feature_id)
+
+        numerator_layers = [layer for layer in metric_params['layers'] if layer['usage'] == 'numerator' or 'usage' not in layer]
+        numerator_area = 0.0
+        
+        for metric_layer in numerator_layers:
+            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
+            ds: ogr.DataSource = ogr.Open(project_file)
+            layer: ogr.Layer = ds.GetLayerByName(layer_name)
+            layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
+            layer.SetSpatialFilter(sample_frame_geom)
+            attribute_filter = metric_layer.get('attribute_filter', None)
+            for feature in layer:
+                metadata: dict = json.loads(feature.GetField('metadata'))
+                if attribute_filter is not None:
+                    if metadata is None:
+                        continue
+                    attributes = metadata.get('attributes', None)
+                    if attributes is not None:
+                        if attribute_filter['field_name'] in attributes:
+                            if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
+                                continue
+                    else:
+                        continue
+                geom = feature.GetGeometryRef().Clone()
+                if geom.Intersects(sample_frame_geom):
+                    clipped_geom = geom.Intersection(sample_frame_geom)
+                    numerator_area += clipped_geom.GetArea()
+                geom = None
+                clipped_geom = None
+                feature = None
+            layer = None
+            ds = None
+
+        denominator_layers = [layer for layer in metric_params['layers'] if layer['usage'] == 'denominator']
+        denominator_area = 0.0
+
+        if len(denominator_layers) == 0:
+            # use the sample frame area as the denominator
+            denominator_area = sample_frame_geom.GetArea()
+        else:
+            for metric_layer in denominator_layers:
+                layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
+                ds: ogr.DataSource = ogr.Open(project_file)
+                layer: ogr.Layer = ds.GetLayerByName(layer_name)
+                layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
+                layer.SetSpatialFilter(sample_frame_geom)
+                attribute_filter = metric_layer.get('attribute_filter', None)
+                for feature in layer:
+                    metadata: dict = json.loads(feature.GetField('metadata'))
+                    if attribute_filter is not None:
+                        if metadata is None:
+                            continue
+                        attributes = metadata.get('attributes', None)
+                        if attributes is not None:
+                            if attribute_filter['field_name'] in attributes:
+                                if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
+                                    continue
+                        else:
+                            continue
+                    geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+                    if geom.Intersects(sample_frame_geom):
+                        clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                        denominator_area += clipped_geom.GetArea()
+                    geom = None
+                    clipped_geom = None
+                    feature = None
+                layer = None
+                ds = None
+
+        if denominator_area == 0.0:
+            return 0.0
+        else:
+            return numerator_area / denominator_area
