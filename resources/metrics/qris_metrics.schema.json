@@ -45,6 +45,9 @@
                   "type": "string",
                   "pattern": "^[a-z][a-z0-9_]{3,}$"
                 },
+                "usage": {
+                  "type": "string"
+                },
                 "count_field": {
                   "type": "string"
                 },
