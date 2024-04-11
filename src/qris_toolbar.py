@@ -46,6 +46,7 @@ from .view.frm_settings import FrmSettings
 from .model.project import apply_db_migrations, test_project
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
+from .view.metadata_field_editor_widget import initialize_metadata_widget
 
 from .gp.watershed_attributes import WatershedAttributes
 from .gp.update_metadata import update_metadata, check_metadata
@@ -80,6 +81,9 @@ class QRiSToolbar:
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+
+        # initialize Metadata Widget
+        initialize_metadata_widget()
 
         self.qproject = QgsProject.instance()
 
