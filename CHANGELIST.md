@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [0.3.14] 2023 APR 11
+
+### Fixed
+- Better handling of RS project metadata
+- Failure adding metadata to surface on import
+
+### Changed
+- initialize MetadataWidget on toolbar load
+
 ## [0.3.15] 2023 APR 09
 
 ### Added
