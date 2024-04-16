@@ -976,14 +976,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context)
+        frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context, add_new_keys=False)
         if meta is not None:
             if 'project_metadata' in meta:
                 for key, value in meta['project_metadata'].items():
-                    frm.metadata_widget.add_metadata(key, value)
+                    key = f'Project {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
             if 'layer_metadata' in meta:
                 for key, value in meta['layer_metadata'].items():
-                    frm.metadata_widget.add_metadata(key, value)
+                    key = f'Layer {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
             if 'symbology' in meta:
                 frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
         result = frm.exec_()
@@ -1007,9 +1009,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if meta is not None:
             if 'project_metadata' in meta:
                 for key, value in meta['project_metadata'].items():
+                    key = f'Project {key}'
                     frm.metadata_widget.add_metadata(key, value[0])
             if 'layer_metadata' in meta:
                 for key, value in meta['layer_metadata'].items():
+                    key = f'Layer {key}'
                     frm.metadata_widget.add_metadata(key, value[0])
             if 'symbology' in meta:
                 frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])

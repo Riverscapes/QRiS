@@ -19,7 +19,7 @@ from ..QRiS.path_utilities import parse_posix_path
 
 class FrmRaster(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface, project: Project, import_source_path: str, is_context: bool, raster: Raster = None):
+    def __init__(self, parent, iface, project: Project, import_source_path: str, is_context: bool, raster: Raster = None, add_new_keys=True):
 
         self.iface = iface
         self.project = project
@@ -30,7 +30,9 @@ class FrmRaster(QtWidgets.QDialog):
         self.metadata = None
 
         super(FrmRaster, self).__init__(parent)
-        new_keys = ['source', 'aquisition date'] if self.raster is None else None
+        new_keys = None
+        if add_new_keys:
+            new_keys = ['source', 'aquisition date'] if self.raster is None else None
         metadata_json = json.dumps(raster.metadata) if raster is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json, new_keys)
 
