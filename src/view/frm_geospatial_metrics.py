@@ -69,8 +69,8 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         QtWidgets.QMessageBox.warning(None, 'Export Zonal Statistics', 'This Feature Is Not Implemented.')
 
     def on_settings(self):
-        frm = FrmOptions(self, None)
-        frm.exec_()
+        # frm = FrmOptions(self, None)
+        # frm.exec_()
         QtWidgets.QMessageBox.warning(None, 'Settings', 'This Feature Is Not Implemented.')
 
     def accept(self):
@@ -116,4 +116,4 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         self.tree = QtWidgets.QTreeView()
         self.vert.addWidget(self.tree)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'zonal_statistics'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'zonal-statistics'))

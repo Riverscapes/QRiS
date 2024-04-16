@@ -1281,6 +1281,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def geospatial_summary(self, model_item, model_data: Mask):
 
+        # Check the feature count of the aoi, make sure there is one and only one polygon feature
+        aoi_layer = QgsVectorLayer(f'{self.project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
+        if aoi_layer.featureCount() != 1:
+            QtWidgets.QMessageBox.warning(self, 'Geospatial Summary', 'The selected AOI must contain exactly one polygon feature.')
+            return
+
         metrics_task = MetricsTask(self.project, model_data)
         # -- DEBUG --
         # metrics_task.run()
