@@ -152,7 +152,7 @@ class FrmCrossSections(QtWidgets.QDialog):
                             out_feature.setGeometry(out_geom)
                         out_layer.dataProvider().addFeature(out_feature)
                     out_layer.commitChanges()
-                    super(FrmCrossSections, self).accept()
+
             except Exception as ex:
                 try:
                     self.cross_sections.delete(self.project.project_file)
@@ -161,6 +161,8 @@ class FrmCrossSections(QtWidgets.QDialog):
                 QtWidgets.QMessageBox.warning(self, 'Error Importing Cross Sections Features', str(ex))
                 self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
                 return
+
+            super(FrmCrossSections, self).accept()
 
     def on_import_complete(self, result: bool):
 
