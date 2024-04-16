@@ -356,37 +356,13 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_hidden(feature_layer, 'event_id', 'Event ID')
         self.metadata_field(feature_layer, event_layer, 'metadata')
 
-        # send to layer specific field handlers
-        # layer_name = event_layer.layer.fc_name
-        # if layer_name == 'dam_crests':
-        #     self.configure_dam_crests(feature_layer)
-        # elif layer_name == 'thalwegs':
-        #     self.configure_thalwegs(feature_layer)
-        # elif layer_name == 'inundation_extents':
-        #     self.configure_inundation_extents(feature_layer)
-        # elif layer_name == 'dams':
-        #     self.configure_dams(feature_layer)
-        # elif layer_name == 'jams':
-        #     self.configure_jams(feature_layer)
-        # elif layer_name == 'channel_unit_points':
-        #     self.configure_channel_unit_points(feature_layer)
-        # elif layer_name == 'channel_unit_polygons':
-        #     self.configure_channel_unit_polygons(feature_layer)
-        # elif layer_name == 'active_extents':
-        #     self.configure_active_extents(feature_layer)
-        # elif layer_name == 'zoi':
-        #     self.configure_zoi(feature_layer)
-        # elif layer_name == 'structure_points':
-        #     self.configure_structure_points(feature_layer)
-        # elif layer_name == 'structure_lines':
-        #     self.configure_structure_lines(feature_layer)
-        # elif layer_name == 'complexes':
-        #     self.configure_complexes(feature_layer)
-        # elif layer_name in ['brat_cis', 'brat_cis_reaches']:
-        #     self.add_brat_cis(feature_layer)
-        # else:
-        #     # TODO: Should probably have a notification for layers not found....
-        #     pass
+        # add length field for line layers
+        if event_layer.layer.geom_type == 'Linestring':
+            self.set_virtual_dimension(feature_layer, 'length')
+
+        # add area field for polygon layers
+        if event_layer.layer.geom_type == 'Polygon':
+            self.set_virtual_dimension(feature_layer, 'area')
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
 
