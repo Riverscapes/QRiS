@@ -34,7 +34,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
-        self.setWindowTitle(f'Create New Cross Sections layer' if self.cross_sections is None else f'Edit Cross Sections Properties')
+        window_title = 'Create New Cross Sections layer' if self.cross_sections is None else 'Edit Cross Sections Properties'
 
         # The attribute picker is only visible when creating a new regular mask
         show_attribute_filter = import_source_path is not None
@@ -46,11 +46,13 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.cboMaskClip.setVisible(show_mask_clip)
 
         if import_source_path is not None:
+            window_title = 'Import Cross Sections'
             if isinstance(import_source_path, QgsVectorLayer):
+                window_title = 'Import Cross Sections from Temporary Layer'
                 self.layer_name = import_source_path.name()
                 self.layer_id = 'memory'
-                show_attribute_filter = False
-                show_mask_clip = False
+                # show_attribute_filter = False
+                # show_mask_clip = False
             else:
                 # find if import_source_path is shapefile, geopackage, or other
                 self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
@@ -60,10 +62,12 @@ class FrmCrossSections(QtWidgets.QDialog):
 
             if show_attribute_filter:
                 vector_layer = import_source_path if isinstance(import_source_path, QgsVectorLayer) else QgsVectorLayer(import_source_path)
+                self.no_attribute = DBItem('None', 0, 'None - No cross section ids')
                 self.attributes = {i: DBItem('None', i, vector_layer.attributeDisplayName(i)) for i in vector_layer.attributeList()}
+                self.attributes[-1] = self.no_attribute
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
-                # self.cboAttribute.setModelColumn(1)
+                self.cboAttribute.setCurrentIndex(self.attribute_model.getItemIndex(self.no_attribute))
         if show_mask_clip:
             # Masks (filtered to just AOI)
             self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
@@ -80,6 +84,7 @@ class FrmCrossSections(QtWidgets.QDialog):
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
 
+        self.setWindowTitle(window_title)
         self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
 
@@ -124,12 +129,18 @@ class FrmCrossSections(QtWidgets.QDialog):
                 if clip_mask is not None:
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
                 if self.import_source_path is not None:
+                    attributes = {'cross_section_id': self.cross_sections.id}
+                    # if the selected value of cboAttribute is not the no_attribute, then set the attribute to the display_label
+                    if self.cboAttribute.isVisible() and self.cboAttribute.currentData(QtCore.Qt.UserRole) != self.no_attribute:
+                        attributes['display_label'] = self.cboAttribute.currentData(QtCore.Qt.UserRole).name
                     if self.layer_id == 'memory':
-                        task = ImportTemporaryLayer(self.import_source_path, self.project.project_file, 'cross_section_features', 'cross_section_id', self.cross_sections.id, clip_mask_id, proj_gpkg=self.project.project_file)
-                        task.import_complete.connect(self.on_import_complete)
-                        QgsApplication.taskManager().addTask(task)
+                        task = ImportTemporaryLayer(self.import_source_path, self.project.project_file, 'cross_section_features', attributes, clip_mask_id, proj_gpkg=self.project.project_file)
+                        result = task.run()
+                        self.on_import_complete(result)
+                        # this is getting stuck if run as a task:
+                        # task.import_complete.connect(self.on_import_complete)
+                        # QgsApplication.taskManager().addTask(task)
                     else:
-                        attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
                         import_existing(self.import_source_path, self.project.project_file, 'cross_section_features', self.cross_sections.id, 'cross_section_id', attributes, clip_mask_id)
                         super(FrmCrossSections, self).accept()
                 elif self.output_features is not None:
@@ -167,11 +178,11 @@ class FrmCrossSections(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if not result:
-            QtWidgets.QMessageBox.warning(self, f'Error Importing Cross Section Features', str(self.exception))
+            iface.messageBar().pushMessage('Error Importing Cross Section Features', str(self.exception), level=Qgis.Critical)
             try:
                 self.cross_sections.delete(self.qris_project.project_file)
             except Exception as ex:
-                print(f'Error attempting to delete Cross Section after the importing of features failed.')
+                iface.messageBar().pushMessage('Error Deleting Cross Sections on Failed Import', str(ex), level=Qgis.Critical)
             return
         else:
             iface.messageBar().pushMessage('Cross Section Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
@@ -197,7 +208,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblAttribute = QtWidgets.QLabel('Attribute')
+        self.lblAttribute = QtWidgets.QLabel('Display Label Attribute')
         self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()

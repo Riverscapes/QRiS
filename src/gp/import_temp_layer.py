@@ -18,7 +18,7 @@ class ImportTemporaryLayer(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool)
 
-    def __init__(self, source_layer: str, output_dataset_path: str, output_layer_name: str, attributes: dict=None, mask_clip_id=None, proj_gpkg=None):
+    def __init__(self, source_layer: QgsVectorLayer, output_dataset_path: str, output_layer_name: str, attributes: dict=None, mask_clip_id=None, proj_gpkg=None):
         super().__init__(f'Import Temporary Layer', QgsTask.CanCancel)
 
         self.source_layer = source_layer.clone()
