@@ -1,6 +1,20 @@
 # QRiS Plugin
 
-## [0.3.14] 2023 APR 11
+## [0.3.17] 2023 APR 17
+
+### Fixed
+ - Bug when creating manual cross sections
+ - Duplicate Metadata warning when imorting Riverscapes layers from Viewer
+ - Bug when importing temporary layer to cross sections
+ - Update Zonal statistics tool help url link
+
+### Changed
+- Temporarily disabled Zonal Statistics Tool settings (units not currently implemented)
+
+### Added
+- Re-added length and area virtual fields to dce layers
+
+## [0.3.16] 2023 APR 11
 
 ### Fixed
 - Better handling of RS project metadata
