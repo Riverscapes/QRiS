@@ -1,5 +1,10 @@
 # QRiS Plugin
 
+## [0.3.18] 2023 MAY 01
+
+### Added
+- Stream Gage Explorer
+
 ## [0.3.17] 2023 APR 17
 
 ### Fixed
