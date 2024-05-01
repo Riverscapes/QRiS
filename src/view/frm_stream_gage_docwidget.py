@@ -1,32 +1,32 @@
 import numpy as np
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib
-from qgis import core, gui, utils
-from qgis.core import QgsApplication, Qgis, QgsMessageLog
+
+from qgis.core import QgsApplication, Qgis, QgsMessageLog, QgsVectorLayer, QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsRectangle
 from PyQt5.QtCore import pyqtSlot
 
 from ..QRiS.settings import CONSTANTS
+from ..QRiS.qris_map_manager import QRisMapManager
 
-# from qgis.core import QgsMapLayer
-# from qgis.gui import QgsDataSourceSelectDialog
-# from qgis.utils import iface
+from .utilities import add_help_button
 
 from ..model.project import Project
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
 from ..model.db_item import dict_factory
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
-from ..gp.stream_gage_task import StreamGageTask
 
+from ..gp.stream_gage_task import StreamGageTask
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 
 # https://stackoverflow.com/questions/31406193/matplotlib-is-not-worked-with-qgis
 # https://matplotlib.org/3.1.1/gallery/user_interfaces/embedding_in_qt_sgskip.html
 try:
-    from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
     from matplotlib.figure import Figure
+    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
     import matplotlib.ticker as ticker
 except ImportError:
@@ -35,8 +35,6 @@ except ImportError:
 
 # Help on selection changed event
 # https://stackoverflow.com/questions/10156842/howto-get-the-selectionchanged-signal
-
-from ..QRiS.qris_map_manager import QRisMapManager
 
 
 class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
@@ -53,12 +51,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.dtStart.setDate(date(date.today().year - 1, date.today().month, date.today().day))
         self.dtEnd.setDate(date.today())
 
-        # lets plot a few sample points
-        t = np.arange(0.0, 2.0, 0.01)
-        s = 1 + np.sin(2 * np.pi * t)
-        self._static_ax.plot(t, s)
-
-        # map_layer = self.map_manager.build_stream_gage_layer()
+        map_layer = self.map_manager.build_stream_gage_layer()
         # map_layer.selectionChanged.connect(self.on_map_selection_changed)
 
     def load_stream_gages(self):
@@ -87,7 +80,8 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.load_discharge_plot()
         self.load_metadata()
 
-        map_layer = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+        map_layer_tree = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+        map_layer: QgsVectorLayer = map_layer_tree.layer()
         if map_layer is None:
             return
 
@@ -156,15 +150,21 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         if data is None:
             return
 
-        dates = [item[0] for item in data]
+        dates = [datetime.strptime(item[0], '%Y-%m-%d') for item in data]
         disch = [item[1] for item in data]
+        # remove empty string values
+        disch = [item if item != '' else None for item in disch]
         self._static_ax.plot(dates, disch, ".")
         self._static_ax.set_ylabel('Discharge (CFS)')
         self._static_ax.set_xlabel('Date')
 
         self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
-        # self._static_ax.xaxis.set_ticks(range(start, end, 30))
         self._static_ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+        self._static_ax.tick_params(axis='x', rotation=45)
+        
+        # Adjust the bottom margin
+        plt.subplots_adjust(bottom=0.75)
+        
         self.static_canvas.draw()
 
     def download_discharges(self):
@@ -196,7 +196,12 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
     def download_stream_gages(self):
 
-        extent = self.iface.mapCanvas().extent()
+        extent: QgsRectangle = self.iface.mapCanvas().extent()
+        source_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        target_crs = QgsCoordinateReferenceSystem('EPSG:4326')
+        transform = QgsCoordinateTransform(source_crs, target_crs, QgsProject.instance())
+        extent = transform.transform(extent)
+
         task = StreamGageTask(self.project.project_file, extent.yMinimum(), extent.yMaximum(), extent.xMinimum(), extent.xMaximum())
         task.on_task_complete.connect(self.on_download_gages_complete)
         # task.run()
@@ -225,7 +230,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
                 f.write('measurement_date,discharge (cfs)\n')
                 [f.write(f'{row[0]},{row[1]}\n') for row in data]
 
-        self.iface.messageBar().pushMessage('Discharge Export', 'Data successfully exported to ' + dialog_return[0], level=Qgis.Info, duration=5)
+            self.iface.messageBar().pushMessage('Discharge Export', 'Data successfully exported to ' + dialog_return[0], level=Qgis.Info, duration=5)
 
     def setupUi(self):
 
@@ -250,7 +255,6 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.cmdGage = QtWidgets.QPushButton()
         self.cmdGage.setText('Download Gages')
         self.cmdGage.setToolTip('Download Stream Gage Locations for Current Map Extent')
-        self.cmdGage.setEnabled(False)
         self.cmdGage.clicked.connect(self.download_stream_gages)
         self.left_vert.addWidget(self.cmdGage)
 
@@ -287,6 +291,9 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.cmdExport.setText('Export')
         self.cmdExport.clicked.connect(self.export)
         self.button_horiz.addWidget(self.cmdExport)
+
+        self.cmdHelp = add_help_button(self, 'context/stream-gage-explorer')
+        self.button_horiz.addWidget(self.cmdHelp)
 
         self.static_canvas = FigureCanvas(Figure(figsize=(5, 3)))
         self._static_ax = self.static_canvas.figure.subplots()
