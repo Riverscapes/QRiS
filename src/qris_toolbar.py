@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 import os.path
-import requests
+
 from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
@@ -36,6 +36,8 @@ from .QRiS.settings import CONSTANTS
 
 # Initialize Qt resources from file resources.py
 from . import resources
+
+from .lib.environment import load_env_vars
 
 # Import the code for the DockWidget
 from .view.frm_dockwidget import QRiSDockWidget
@@ -81,6 +83,9 @@ class QRiSToolbar:
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+
+        # Load environment variables
+        load_env_vars()
 
         # initialize Metadata Widget
         initialize_metadata_widget()
