@@ -189,7 +189,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.is_context is True]
         [self.add_child_to_project_tree(self.context_node, item) for item in self.project.scratch_vectors.values()]
 
-        # gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
+        gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
         # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
@@ -361,8 +361,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Context Vector Feature Class', 'new', lambda: self.add_context_vector(model_item))
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_TEMPORARY))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
-                    pass
-                    # self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
+                    self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_TEMPORARY))
@@ -624,7 +623,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def stream_gage_explorer(self):
 
         if self.stream_gage_doc_widget is None:
-            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.map_manager, self.project)
+            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.stream_gage_doc_widget)
 
         # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
