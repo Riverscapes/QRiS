@@ -74,6 +74,7 @@ from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
+from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -321,6 +322,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
+                self.add_context_menu_item(self.menu, 'Time Series Analysis', 'new', lambda: self.start_time_series_analysis())
                 if len(self.project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             else:
@@ -618,6 +620,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def export_analysis_table(self, analysis: Analysis = None):
 
         frm = FrmExportMetrics(self, self.project, analysis)
+        frm.exec_()
+
+    def start_time_series_analysis(self):
+        frm = FrmClimateEngineExplorer(self, self.project)
         frm.exec_()
 
     def stream_gage_explorer(self):
