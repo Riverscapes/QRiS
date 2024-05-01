@@ -6,6 +6,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
 
 from .frm_climate_engine import FrmClimateEngine
+from ..lib.climate_engine import get_api_key
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
 
@@ -31,8 +32,6 @@ class FrmSettings(QDialog):
         else:
             self.right_radio.setChecked(True)
 
-        self.txtClimateEngineAPIKey.setText(settings.value('climate_engine_api_key', ''))
-
         self.load_metrics()
 
     def accept(self):
@@ -43,8 +42,6 @@ class FrmSettings(QDialog):
             self.settings.setValue(self.dock_widget_location, 'right')
 
         super().accept()
-
-        self.settings.setValue('climate_engine_api_key', self.txtClimateEngineAPIKey.text())
 
     def load_metrics(self):
 
@@ -239,10 +236,9 @@ class FrmSettings(QDialog):
 
 
     def test_api(self):
-        self.settings.setValue('climate_engine_api_key', self.txtClimateEngineAPIKey.text())
-        api_key = self.settings.value('climate_engine_api_key', '')
-        if api_key == '':
-            QMessageBox.warning(self, "Test API Key", "Please enter a valid Climate Engine API key.")
+        api_key = get_api_key() # self.settings.value('climate_engine_api_key', '')
+        if api_key == '' or api_key is None:
+            QMessageBox.warning(self, "Test API Key", "API key not found.")
             return
 
         frm_climate_engine = FrmClimateEngine()
@@ -271,11 +267,6 @@ class FrmSettings(QDialog):
 
         # add a label to the layout to explain settings will take effect after restarting qgis
         self.grid.addWidget(QLabel("Settings will take effect after restarting QGIS"))
-
-        self.lblClimateEngineAPIKey = QLabel("Climate Engine API Key")
-        self.grid.addWidget(self.lblClimateEngineAPIKey, 3, 0)
-        self.txtClimateEngineAPIKey = QLineEdit()
-        self.grid.addWidget(self.txtClimateEngineAPIKey, 3, 1)
 
         self.btnTest = QPushButton("Run Climate Engine")
         self.btnTest.clicked.connect(self.test_api)

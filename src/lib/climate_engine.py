@@ -6,20 +6,14 @@ from osgeo import ogr
 
 from qgis.core import QgsGeometry
 
-from PyQt5.QtCore import QSettings
 
 CLIMATE_ENGINE_URL = 'https://api.climateengine.org'
 
 def get_api_key():
-    from ..qris_toolbar import ORGANIZATION, APPNAME
-    
-    settings = QSettings(ORGANIZATION, APPNAME)
-    api_key = None
-    try:
-        api_key = settings.value('climate_engine_api_key')
-    except KeyError as e:
-        print(e)
-        api_key = None
+
+    # Get the API key from environment variable
+    api_key = os.getenv('CLIMATE_ENGINE_API_KEY')
+
     return api_key
 
 
