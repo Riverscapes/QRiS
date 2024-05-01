@@ -4,6 +4,8 @@ import requests
 
 from osgeo import ogr
 
+from qgis.core import QgsGeometry
+
 from PyQt5.QtCore import QSettings
 
 CLIMATE_ENGINE_URL = 'https://api.climateengine.org'
@@ -68,9 +70,13 @@ def get_dataset_timeseries_polygon(dataset: str, variable: str, start_date: str,
         return None
     
     coordinates = []
-    for i in range(geometry.GetPointCount()):
-        pt = geometry.GetPoint(i)
-        coordinates.append([pt[0], pt[1]])
+    if isinstance(geometry, QgsGeometry):
+        for pt in geometry.asPolygon()[0]:
+            coordinates.append([pt.x(), pt.y()])
+    else:
+        for i in range(geometry.GetPointCount()):
+            pt = geometry.GetPoint(i)
+            coordinates.append([pt[0], pt[1]])
 
     params = {'dataset': dataset,
               'variable': variable,
