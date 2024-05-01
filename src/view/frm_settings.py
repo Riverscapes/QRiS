@@ -5,7 +5,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
 
-from ..lib.climate_engine import get_dataset_date_range
+from .frm_climate_engine import FrmClimateEngine
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
 
@@ -245,9 +245,8 @@ class FrmSettings(QDialog):
             QMessageBox.warning(self, "Test API Key", "Please enter a valid Climate Engine API key.")
             return
 
-        response = get_dataset_date_range('RAP_PRODUCTION_16DAY')
-        if response is not None:
-            QMessageBox.information(self, "Test API", f"API key is valid. RAP_PRODUCTION_16DAY date range: {response}")
+        frm_climate_engine = FrmClimateEngine()
+        frm_climate_engine.exec_()
 
     def setup_ui(self):
 
@@ -278,7 +277,7 @@ class FrmSettings(QDialog):
         self.txtClimateEngineAPIKey = QLineEdit()
         self.grid.addWidget(self.txtClimateEngineAPIKey, 3, 1)
 
-        self.btnTest = QPushButton("Test")
+        self.btnTest = QPushButton("Run Climate Engine")
         self.btnTest.clicked.connect(self.test_api)
         self.grid.addWidget(self.btnTest, 4, 0, 1, 2)
 

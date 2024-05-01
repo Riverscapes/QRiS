@@ -1,0 +1,354 @@
+{
+    "ACIS NRCC NN Daily Precipitation": {
+        "path": "projects/climate-engine-pro/assets/public/acis-nrcc-nn/daily",
+        "id": "ACIS_NRCC_NN"
+    },
+    "ANUSPLIN Gridded Climate for Canada - Daily": {
+        "path": "projects/climate-engine-pro/assets/ce-anusplin-daily",
+        "id": "ANUSPLIN_DAILY"
+    },
+    "ANUSPLIN Gridded Climate for Canada - Monthly": {
+        "path": "projects/climate-engine-pro/assets/cfe-anusplin-monthly",
+        "id": "ANUSPLIN_MONTHLY"
+    },
+    "Canadian Drought Outlook": {
+        "path": "projects/climate-engine-pro/assets/ce-aafc-cdo-monthly",
+        "id": "CDOUTLOOK"
+    },
+    "Copernicus Emergency Management Service Fire Danger Indices": {
+        "path": "projects/climate-engine-pro/assets/ce-cems-fire-daily",
+        "id": "CEMS"
+    },
+    "CHIRPS Daily": {
+        "path": "UCSB-CHG/CHIRPS/DAILY",
+        "id": "CHIRPS_DAILY"
+    },
+    "CHIRPS Pentad": {
+        "path": "UCSB-CHG/CHIRPS/PENTAD",
+        "id": "CHIRPS_PENTAD"
+    },
+    "CHIRPS Preliminary Pentad": {
+        "path": "projects/climate-engine-pro/assets/ce-chirps-prelim-pentad",
+        "id": "CHIRPS_PRELIM_PENTAD"
+    },
+    "CFS gridMET 28-Day Forecasts": {
+        "path": "projects/climate-engine/cfsv2/forecast",
+        "id": "CFS_GRIDMET"
+    },
+    "CFSV2 Reanalysis": {
+        "path": "NOAA/CFSV2/FOR6H",
+        "id": "CFSV2"
+    },
+    "CONUS404": {
+        "path": "projects/openet/assets/meteorology/conus404/daily",
+        "id": "CONUS404"
+    },
+    "DAYMET - 1km - Daily": {
+        "path": "NASA/ORNL/DAYMET_V4",
+        "id": "DAYMET"
+    },
+    "USGS 1/10-deg static earthquake damage risk dataset": {
+        "path": "projects/climate-engine-pro/assets/earthquake_hazard/ProbMMI_VI_100Yrs_VariableVs30",
+        "id": "EH"
+    },
+    "ERA5 Daily": {
+        "path": "ECMWF/ERA5/DAILY",
+        "id": "ERA5"
+    },
+    "ERA5 Land Daily": {
+        "path": "ECMWF/ERA5_LAND/DAILY_RAW",
+        "id": "ERA5_LAND_DAILY"
+    },
+    "ERA5 Ag Daily": {
+        "path": "projects/ce-datasets/assets/ce-ag-era5/daily-legacy",
+        "id": "ERA5_AG"
+    },
+    "ERA5 HEAT": {
+        "path": "projects/climate-engine-pro/assets/ce-era5-heat",
+        "id": "ERA5_HEAT"
+    },
+    "ESI 4 Week": {
+        "path": "projects/climate-engine/esi/4wk",
+        "id": "ESI_4wk"
+    },
+    "ESI 12 Week": {
+        "path": "projects/climate-engine/esi/12wk",
+        "id": "ESI_12wk"
+    },
+    "FLDAS": {
+        "path": "NASA/FLDAS/NOAH01/C/GL/M/V001",
+        "id": "FLDAS"
+    },
+    "FRET 7-Day Forecasts": {
+        "path": "projects/climate-engine/fret/forecast",
+        "id": "FRET"
+    },
+    "Global Ensemble Prediction System 2 week": {
+        "path": "projects/climate-engine-pro/assets/ce-geps2w-forecast",
+        "id": "GEPS_2WK"
+    },
+    "Global Ensemble Prediction System 4 week": {
+        "path": "projects/climate-engine-pro/assets/ce-geps4w-forecast",
+        "id": "GEPS_4WK"
+    },
+    "GLDAS": {
+        "path": "NASA/GLDAS/V021/NOAH/G025/T3H",
+        "id": "GLDAS"
+    },
+    "GPM 11km - Daily": {
+        "path": "projects/climate-engine-pro/assets/ce-gpm-imerg-daily",
+        "id": "GPM_DAILY"
+    },
+    "GRIDMET": {
+        "path": "IDAHO_EPSCOR/GRIDMET",
+        "id": "GRIDMET"
+    },
+    "GRIDMET DROUGHT": {
+        "path": "GRIDMET/DROUGHT",
+        "id": "GRIDMET_DROUGHT"
+    },
+    "HRDPA": {
+        "path": "projects/climate-engine-pro/assets/ce-hrdpa-daily",
+        "id": "HRDPA"
+    },
+    "HRDPS": {
+        "path": "projects/climate-engine-pro/assets/ce-hrdps-daily",
+        "id": "HRDPS"
+    },
+    "Landsat 5 Top of Atmosphere": {
+        "path": "LANDSAT/LT05/C02/T1_TOA",
+        "id": "LANDSAT5_TOA"
+    },
+    "Landsat 7 Top of Atmosphere": {
+        "path": "LANDSAT/LE07/C02/T1_TOA",
+        "id": "LANDSAT7_TOA"
+    },
+    "Landsat 8 Top of Atmosphere": {
+        "path": "LANDSAT/LC08/C02/T1_RT_TOA",
+        "id": "LANDSAT8_TOA"
+    },
+    "Landsat 9 Top of Atmosphere": {
+        "path": "LANDSAT/LC09/C02/T1_TOA",
+        "id": "LANDSAT9_TOA"
+    },
+    "Landsat 4,5,7,8 (Merged) Top of Atmosphere": {
+        "path": "LANDSAT/LT05/C02/T1_TOA\nLANDSAT/LE07/C02/T1_TOA\nLANDSAT/LC08/C02/T1_RT_TOA\nLANDSAT/LC09/C02/T1_RT_TOA",
+        "id": "LANDSAT_TOA"
+    },
+    "Landsat 5 Surface Reflectance": {
+        "path": "LANDSAT/LT05/C02/T1_L2",
+        "id": "LANDSAT5_SR"
+    },
+    "Landsat 7 Surface Reflectance": {
+        "path": "LANDSAT/LE07/C02/T1_L2",
+        "id": "LANDSAT7_SR"
+    },
+    "Landsat 8 Surface Reflectance": {
+        "path": "LANDSAT/LC08/C02/T1_L2",
+        "id": "LANDSAT8_SR"
+    },
+    "Landsat 9 Surface Reflectance": {
+        "path": "LANDSAT/LC09/C02/T1_L2",
+        "id": "LANDSAT9_SR"
+    },
+    "Landsat 4,5,7,8 (Merged) Surface Reflectance": {
+        "path": "LANDSAT/LT05/C02/T1_L2\nLANDSAT/LE07/C02/T1_L2\nLANDSAT/LC08/C02/T1_L2\nLANDSAT/LC09/C02/T1_L2",
+        "id": "LANDSAT_SR"
+    },
+    "MERRA2 Reanalysis": {
+        "path": "projects/climate-engine/merra2/daily",
+        "id": "MERRA2"
+    },
+    "MERRA2 Fire Weather Index (NASA)": {
+        "path": "projects/climate-engine-pro/assets/ce-merra2_fwi-daily",
+        "id": "MERRA2_FWI"
+    },
+    "MODIS TERRA NET ET 16-day": {
+        "path": "MODIS/006/MOD16A2",
+        "id": "MOD16_TERRANET_ET"
+    },
+    "MODIS Burned Area - Monthly": {
+        "path": "MODIS/006/MCD64A1",
+        "id": "MODIS_BURNAREA"
+    },
+    "MODIS Aqua, Terra (Merged) 16-day composite": {
+        "path": "MODIS/006/MCD43A4",
+        "id": "MODIS_16DAY"
+    },
+    "MODIS Aqua 16-day composite": {
+        "path": "MODIS/006/MOD13Q1 or MODIS/006/MOD13A1",
+        "id": "MODIS_AQUA_16DAY"
+    },
+    "MODIS Terra 16-day composite": {
+        "path": "MODIS/006/MYD13Q1 or MODIS/006/MYD13A1",
+        "id": "MODIS_TERRA_16DAY"
+    },
+    "MODIS Aqua 8-day composite": {
+        "path": "MODIS/006/MYD11A2",
+        "id": "MODIS_AQUA_8DAY"
+    },
+    "MODIS Terra 8-day composite": {
+        "path": "MODIS/006/MOD11A2",
+        "id": "MODIS_TERRA_8DAY"
+    },
+    "MODIS Aqua daily data": {
+        "path": "MODIS/006/MYD09GA or MODIS/006/MYD11A1 or MODIS/006/MYD10A1",
+        "id": "MODIS_AQUA_DAILY"
+    },
+    "MODIS Terra daily data": {
+        "path": "MODIS/006/MOD09GA or MODIS/006/MOD11A1 or MODIS/006/MOD10A1",
+        "id": "MODIS_TERRA_DAILY"
+    },
+    "North American Drought Monitor": {
+        "path": "projects/climate-engine/nadm/monthly",
+        "id": "NADM"
+    },
+    "NCEP": {
+        "path": "NCEP_RE/sea_level_pressure",
+        "id": "NCEP"
+    },
+    "NClimGrid-Daily 5-km": {
+        "path": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/daily",
+        "id": "NCLIMGRID_DAILY"
+    },
+    "NClimGrid-Monthly 5-km": {
+        "path": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/monthly",
+        "id": "NCLIMGRID_MONTHLY"
+    },
+    "NLDAS2 DAILY reanalysis": {
+        "path": "projects/eddi-noaa/nldas/daily",
+        "id": "NLDAS2_DAILY"
+    },
+    "NOAA AVHRR Pathfinder V 5.2 4-km sea surface": {
+        "path": "NOAA/AVHRR_Pathfinder_V52_L3",
+        "id": "PFV52"
+    },
+    "NOAA CDR PERSIANN": {
+        "path": "NOAA/PERSIANN-CDR",
+        "id": "NOAA_CDR_PERSIANN"
+    },
+    "NOAA CPC Global Unified Gauge-Based Analysis": {
+        "path": "projects/climate-engine-pro/assets/noaa-cpc-daily-global/daily",
+        "id": "NOAA_CPC_DAILY_GLOBAL"
+    },
+    "NOAA CPC Conus Unified Gauge-Based Analysis": {
+        "path": "projects/climate-engine-pro/assets/noaa-cpc-daily-conus/daily",
+        "id": "NOAA_CPC_DAILY_CONUS"
+    },
+    "NOAA Satellite Precipitation - CMORPH": {
+        "path": "pprojects/climate-engine-pro/assets/noaa-cpc-cmorph/daily",
+        "id": "NOAA_CPC_CMORPH"
+    },
+    "OISST": {
+        "path": "NOAA/CDR/OISST/V2_1",
+        "id": "OISST"
+    },
+    "OpenET Conus": {
+        "path": "OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0",
+        "id": "OPENET_CONUS"
+    },
+    "PML_V2 Evapotranspiration dataset": {
+        "path": "CAS/IGSNRR/PML/V2",
+        "id": "PML_ET"
+    },
+    "PRISM Daily": {
+        "path": "OREGONSTATE/PRISM/AN81d",
+        "id": "PRISM"
+    },
+    "PRISM Monthly": {
+        "path": "OREGONSTATE/PRISM/AN81m",
+        "id": "PRISM_MONTHLY"
+    },
+    "RAP Vegetation Cover": {
+        "path": "projects/rangeland-analysis-platform/vegetation-cover-v3",
+        "id": "RAP_COVER"
+    },
+    "RAP Herbaceous Production": {
+        "path": "projects/rangeland-analysis-platform/npp-partitioned-v3",
+        "id": "RAP_PRODUCTION"
+    },
+    "RAP Herbaceous Production 16 Day": {
+        "path": "projects/rap-data-365417/assets/npp-partitioned-16day-v3",
+        "id": "RAP_PRODUCTION_16DAY"
+    },
+    "RCMAP Rangeland Component Timeseries v5 (1985-2023)": {
+        "path": "USGS/NLCD_RELEASES/2023_REL/RCMAP/V6/COVER",
+        "id": "RCMAP"
+    },
+    "RDPA": {
+        "path": "projects/climate-engine-pro/assets/ce-rdpa-daily",
+        "id": "RDPA"
+    },
+    "RDPS": {
+        "path": "projects/climate-engine-pro/assets/ce-rdps-daily",
+        "id": "RDPS"
+    },
+    "Real-Time Mesoscale Analysis (RTMA)": {
+        "path": "projects/climate-engine/rtma/daily",
+        "id": "RTMA"
+    },
+    "Sentinel 2, top-of-atmosphere": {
+        "path": "COPERNICUS/S2",
+        "id": "SENTINEL2_TOA"
+    },
+    "Sentinel 2, surface reflectance": {
+        "path": "COPERNICUS/S2_SR",
+        "id": "SENTINEL2_SR"
+    },
+    "Sentinel 5P ATMOSPHERE": {
+        "path": "COPERNICUS/S5P/OFFL/L3_CH4",
+        "id": "SENTINEL5P_ATMOSPHERE"
+    },
+    "SNODAS": {
+        "path": "projects/climate-engine/snodas/daily",
+        "id": "SNODAS"
+    },
+    "TerraClimate": {
+        "path": "IDAHO_EPSCOR/TERRACLIMATE",
+        "id": "TERRACLIMATE"
+    },
+    "TRMM 28-km (1/4-deg) precipitation dataset (NASA)": {
+        "path": "TRMM/3B42",
+        "id": "TMM_DAILY"
+    },
+    "US Drought Outlook": {
+        "path": "projects/climate-engine-pro/assets/ce-cpc-usdo-monthly",
+        "id": "USDOUTLOOK"
+    },
+    "USDM Drought monitor rasters": {
+        "path": "projects/climate-engine/usdm/weekly",
+        "id": "USDM_DROUGHT_MONITOR"
+    },
+    "USFS Tree Canopy Cover v2021-4": {
+        "path": "USGS/NLCD_RELEASES/2021_REL/TCC/v2021-4",
+        "id": "USFS_TCC"
+    },
+    "USGS MODIS ETa dekadal": {
+        "path": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_dekadal",
+        "id": "USGS_ET_MODIS_DEKADAL"
+    },
+    "USGS MODIS ETa monthly": {
+        "path": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_monthly",
+        "id": "USGS_ET_MODIS_MONTHLY"
+    },
+    "USGS MODIS ETa annual": {
+        "path": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_annual",
+        "id": "USGS_ET_MODIS_ANNUAL"
+    },
+    "USGS VIIRS ETa dekadal": {
+        "path": "projects/usgs-ssebop/viirs_et_v6_dekadal",
+        "id": "USGS_ET_VIIRS_DEKADAL"
+    },
+    "USGS VIIRS ETa monthly": {
+        "path": "projects/usgs-ssebop/viirs_et_v6_monthly",
+        "id": "USGS_ET_VIIRS_MONTHLY"
+    },
+    "USGS VIIRS ETa annual": {
+        "path": "projects/usgs-ssebop/viirs_et_v6_annual",
+        "id": "USGS_ET_MODIS_ANNUAL"
+    },
+    "USDA 30-m static wildfire risk dataset (WRC)": {
+        "path": "projects/climate-engine-pro/assets/ce-wrc-static",
+        "id": "WRC"
+    }
+}
