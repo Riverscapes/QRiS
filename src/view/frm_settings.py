@@ -3,8 +3,9 @@ import json
 
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
 
+from ..lib.climate_engine import get_dataset_date_range
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
 
@@ -30,6 +31,8 @@ class FrmSettings(QDialog):
         else:
             self.right_radio.setChecked(True)
 
+        self.txtClimateEngineAPIKey.setText(settings.value('climate_engine_api_key', ''))
+
         self.load_metrics()
 
     def accept(self):
@@ -40,6 +43,8 @@ class FrmSettings(QDialog):
             self.settings.setValue(self.dock_widget_location, 'right')
 
         super().accept()
+
+        self.settings.setValue('climate_engine_api_key', self.txtClimateEngineAPIKey.text())
 
     def load_metrics(self):
 
@@ -233,6 +238,17 @@ class FrmSettings(QDialog):
             QMessageBox.information(self, "Save Metrics", "No new metrics to save.")
 
 
+    def test_api(self):
+        self.settings.setValue('climate_engine_api_key', self.txtClimateEngineAPIKey.text())
+        api_key = self.settings.value('climate_engine_api_key', '')
+        if api_key == '':
+            QMessageBox.warning(self, "Test API Key", "Please enter a valid Climate Engine API key.")
+            return
+
+        response = get_dataset_date_range('RAP_PRODUCTION_16DAY')
+        if response is not None:
+            QMessageBox.information(self, "Test API", f"API key is valid. RAP_PRODUCTION_16DAY date range: {response}")
+
     def setup_ui(self):
 
         self.resize(500, 300)
@@ -256,6 +272,15 @@ class FrmSettings(QDialog):
 
         # add a label to the layout to explain settings will take effect after restarting qgis
         self.grid.addWidget(QLabel("Settings will take effect after restarting QGIS"))
+
+        self.lblClimateEngineAPIKey = QLabel("Climate Engine API Key")
+        self.grid.addWidget(self.lblClimateEngineAPIKey, 3, 0)
+        self.txtClimateEngineAPIKey = QLineEdit()
+        self.grid.addWidget(self.txtClimateEngineAPIKey, 3, 1)
+
+        self.btnTest = QPushButton("Test")
+        self.btnTest.clicked.connect(self.test_api)
+        self.grid.addWidget(self.btnTest, 4, 0, 1, 2)
 
         self.vertGeneral.addLayout(self.grid)
         self.vertGeneral.addStretch(1)
