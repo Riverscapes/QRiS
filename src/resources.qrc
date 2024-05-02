@@ -27,6 +27,7 @@
         <file alias="slider">../Images/slider.svg</file>
         <file alias="settings">../Images/settings.svg</file>
         <file alias="watershed">../Images/watershed.svg</file>
+        <file alias="climate_engine">../Images/climate_engine.svg</file>
 
         <!-- Node Icons -->
         <file alias="analysis">../Images/analysis.png</file>

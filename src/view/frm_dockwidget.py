@@ -74,7 +74,7 @@ from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
-from .frm_climate_engine_explorer import FrmClimateEngineExplorer
+from .frm_climate_engine_explorer import CLIMATE_ENGINE_MACHINE_CODE, FrmClimateEngineExplorer
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -109,6 +109,7 @@ GROUP_FOLDER_LABELS = {
     CATCHMENTS_MACHINE_CODE: 'Watershed Catchments',
     CONTEXT_NODE_TAG: 'Context',
     STREAM_GAGE_MACHINE_CODE: 'Stream Gages',
+    CLIMATE_ENGINE_MACHINE_CODE: 'Climate Engine',
     Profile.PROFILE_MACHINE_CODE: 'Profiles',
     CrossSections.CROSS_SECTIONS_MACHINE_CODE: 'Cross Sections'
 }
@@ -145,6 +146,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
+        self.climate_engine_doc_widget = None
         self.stream_gage_doc_widget = None
         self.centerline_doc_widget = None
         self.cross_sections_doc_widget = None
@@ -195,6 +197,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
         [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
+
+        climate_engine_node = self.add_child_to_project_tree(self.context_node, CLIMATE_ENGINE_MACHINE_CODE)
 
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
         [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
@@ -265,6 +269,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.slider_doc_widget.close()
             self.slider_doc_widget = None
 
+        if self.climate_engine_doc_widget is not None:
+            self.climate_engine_doc_widget.close()
+            self.climate_engine_doc_widget = None
+
         if self.stream_gage_doc_widget is not None:
             self.stream_gage_doc_widget.close()
             self.stream_gage_doc_widget = None
@@ -322,12 +330,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
-                self.add_context_menu_item(self.menu, 'Time Series Analysis', 'new', lambda: self.start_time_series_analysis())
+                self.add_context_menu_item(self.menu, 'Climate Engine Explorer', 'climate_engine_gray', lambda: self.climate_engine_explorer())
                 if len(self.project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
-                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
+                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
                     self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
@@ -354,9 +362,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_sample_frame_menu, 'Temporary Layer', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_TEMPORARY))
                     # self.add_context_menu_item(import_sample_frame_menu, 'QRiS Project', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_COPY), False)
-
-                elif model_data == CATCHMENTS_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
                     self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, True))
@@ -364,6 +369,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_TEMPORARY))
                 elif model_data == STREAM_GAGE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
+                elif model_data == CATCHMENTS_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
+                elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
+                    self.add_context_menu_item(self.menu, 'Explore Climate Engine', 'refresh', lambda: self.climate_engine_explorer())
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_TEMPORARY))
@@ -622,9 +631,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmExportMetrics(self, self.project, analysis)
         frm.exec_()
 
-    def start_time_series_analysis(self):
-        frm = FrmClimateEngineExplorer(self, self.project)
-        frm.exec_()
+    def climate_engine_explorer(self):
+
+        if self.climate_engine_doc_widget is None:
+            self.climate_engine_doc_widget = FrmClimateEngineExplorer(self, self.project, self.map_manager)
+            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.climate_engine_doc_widget)
+            
+        self.climate_engine_doc_widget.show()
 
     def stream_gage_explorer(self):
 
@@ -925,6 +938,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 icon = 'database'
             elif data_item == CATCHMENTS_MACHINE_CODE:
                 icon = 'waterdrop-blue'
+            elif data_item == CLIMATE_ENGINE_MACHINE_CODE:
+                icon = 'climate_engine'
 
             print(data_item)
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
