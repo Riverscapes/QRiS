@@ -1,7 +1,7 @@
 import json
 import sqlite3
 import webbrowser
-from datetime import date, datetime
+from datetime import datetime
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -12,14 +12,13 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtCore import Qt
 
 from .frm_climate_engine_download import FrmClimateEngineDownload
 from .utilities import add_help_button
-from ..model.db_item import DBItemModel, CheckableDBItemModel
+from .widgets.sample_frames import SampleFrameWidget
+from .widgets.date_range import DateRangeWidget
 from ..model.project import Project
-from ..model.sample_frame import SampleFrame
-from ..model.sample_frame import get_sample_frame_ids
 from ..lib.climate_engine import get_datasets
 
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -37,37 +36,35 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.qris_map_manager = qris_map_manager
         self.datasets = get_datasets()
 
+        self.sample_frame_widget = SampleFrameWidget(self, self.qris_project)
+        self.sample_frame_widget.cbo_sample_frame.currentIndexChanged.connect(self.load_climate_engine_metrics)
+        self.sample_frame_widget.sample_frame_changed.connect(self.create_plot)
+
+        self.date_range_widget = DateRangeWidget(self)
+        self.date_range_widget.date_range_changed.connect(self.create_plot)
+
         self.setWindowTitle('Climate Engine Explorer')
         self.setupUi()
 
-        # Sample Frames
-        self.sample_frames = {id: sample_frame for id, sample_frame in self.qris_project.sample_frames.items()}
-        self.sample_frames_model = DBItemModel(self.sample_frames)
-        self.cbo_sample_frame.setModel(self.sample_frames_model)
-        self.cbo_sample_frame.currentIndexChanged.connect(self.load_sample_frames)
-        self.cbo_sample_frame.currentIndexChanged.connect(self.load_climate_engine_metrics)
-        self.load_sample_frames()
         self.load_climate_engine_metrics()
 
     def set_date_range(self):
 
-        # we will need to get the min and max date from the selected dataset
-        # then set the min and max date for the date range
-        # also set the start and end date to the min and max date respectively
+        # need to get the date range for the selected time series
+        time_series_ids = self.lst_climate_engine.selectedIndexes()
+        if time_series_ids is None or len(time_series_ids) == 0:
+            return
+        time_series_id = time_series_ids[0].data(Qt.UserRole)
 
-        # make sure the start date is not greater than the end date
+        with sqlite3.connect(self.qris_project.project_file) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT * FROM time_series WHERE time_series_id = ?', (time_series_id,))
+            time_series = curs.fetchone()
+            metadata = json.loads(time_series[5])
+            start_date = metadata['start_date'] if 'start_date' in metadata else None
+            end_date = metadata['end_date'] if 'end_date' in metadata else None
 
-        pass
-    def load_sample_frames(self):
-        
-        # clear the list view
-        self.lst_sample_frame_features.setModel(None)
-        sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
-        frame_ids = get_sample_frame_ids(self.qris_project.project_file, sample_frame.id)
-        self.sample_frames_model = CheckableDBItemModel(frame_ids)
-        self.sample_frames_model.dataChanged.connect(self.create_plot)
-        self.lst_sample_frame_features.setModel(self.sample_frames_model)
-        self.lst_sample_frame_features.update()
+        self.date_range_widget.set_date_range_bounds(start_date, end_date)
 
     def load_climate_engine_metrics(self):
             
@@ -76,10 +73,10 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         # get a list of the checked sample frame feature ids from the list view
         sample_frame_features = []
-        for i in range(self.sample_frames_model.rowCount(None)):
-            index = self.sample_frames_model.index(i)
+        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
+            index = self.sample_frame_widget.sample_frames_model.index(i)
             # if self.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
-            sample_frame_features.append(self.sample_frames_model.data(index, Qt.UserRole))
+            sample_frame_features.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole))
         if len(sample_frame_features) == 0:
             return
         sample_frame_feature_ids = [feature.id for feature in sample_frame_features]
@@ -104,6 +101,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             item.setData(row[0], Qt.UserRole)
             self.time_series_model.appendRow(item)
         self.lst_climate_engine.setModel(self.time_series_model)
+        self.lst_climate_engine.selectionModel().selectionChanged.connect(self.set_date_range)
         self.lst_climate_engine.selectionModel().selectionChanged.connect(self.create_plot)
         self.lst_climate_engine.update()
 
@@ -122,17 +120,16 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         time_series_id = time_series_ids[0].data(Qt.UserRole)
 
         # get the date range
-        start_date = self.date_start.date().toPyDate()
-        end_date = self.date_end.date().toPyDate()
+        start_date, end_date = self.date_range_widget.get_date_range()
 
         # get the data for the selected time series
         data = {}
         # need to grab the data for each checked sample frame feature
         sample_frame_feature_ids = []
-        for i in range(self.sample_frames_model.rowCount(None)):
-            index = self.sample_frames_model.index(i)
-            if self.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
-                sample_frame_feature_ids.append(self.sample_frames_model.data(index, Qt.UserRole).id)
+        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
+            index = self.sample_frame_widget.sample_frames_model.index(i)
+            if self.sample_frame_widget.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
+                sample_frame_feature_ids.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole).id)
         
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
@@ -186,16 +183,6 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
     def export_data(self):
         pass
 
-    def btn_select_all_clicked(self):
-        for i in range(self.sample_frames_model.rowCount(None)):
-            index = self.sample_frames_model.index(i)
-            self.sample_frames_model.setData(index, Qt.Checked, Qt.CheckStateRole)
-
-    def btn_select_none_clicked(self):
-        for i in range(self.sample_frames_model.rowCount(None)):
-            index = self.sample_frames_model.index(i)
-            self.sample_frames_model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
-
     def setupUi(self):
 
         self.dockWidgetContents = QtWidgets.QWidget(self)
@@ -222,29 +209,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.tab_sample_frame.setLayout(self.vert_sample_frame)
         self.tab_widget_left.addTab(self.tab_sample_frame, 'Sample Frame')
 
-        self.horiz_sample_frame = QtWidgets.QHBoxLayout(self.widget_left)
-        self.vert_sample_frame.addLayout(self.horiz_sample_frame)
-
-        self.cbo_sample_frame = QtWidgets.QComboBox(self.widget_left)
-        self.horiz_sample_frame.addWidget(self.cbo_sample_frame)
-
-        self.lst_sample_frame_features = QtWidgets.QListView(self.widget_left)
-        self.lst_sample_frame_features.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.lst_sample_frame_features.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.vert_sample_frame.addWidget(self.lst_sample_frame_features)
-
-        self.horiz_sample_frame_buttons = QtWidgets.QHBoxLayout(self.widget_left)
-        self.vert_sample_frame.addLayout(self.horiz_sample_frame_buttons)
-
-        self.btn_select_all = QtWidgets.QPushButton('Select All')
-        self.btn_select_all.clicked.connect(self.btn_select_all_clicked)
-        self.horiz_sample_frame_buttons.addWidget(self.btn_select_all)
-
-        self.btn_select_none = QtWidgets.QPushButton('Select None')
-        self.btn_select_none.clicked.connect(self.btn_select_none_clicked)
-        self.horiz_sample_frame_buttons.addWidget(self.btn_select_none)
-
-        self.horiz_sample_frame_buttons.addStretch()
+        self.vert_sample_frame.addWidget(self.sample_frame_widget)
 
         # Climate Engine Tab
         self.tab_climate_engine = QtWidgets.QWidget(self.widget_left)
@@ -281,32 +246,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.horiz_right_top = QtWidgets.QHBoxLayout(self)
         self.vert_right.addLayout(self.horiz_right_top)
 
-        today = QDate(date.today())
-        last_year = today.addYears(-1)
-
-        self.lbl_date_range = QtWidgets.QLabel('Date Range')
-        font = self.lbl_date_range.font()
-        font.setBold(True)
-        self.lbl_date_range.setFont(font)
-        self.horiz_right_top.addWidget(self.lbl_date_range)
-
-        self.lbl_from = QtWidgets.QLabel('From')
-        self.horiz_right_top.addWidget(self.lbl_from)
-
-        self.date_start = QtWidgets.QDateEdit(self)
-        self.date_start.setCalendarPopup(True)
-        self.date_start.setDate(last_year)
-        self.date_start.dateChanged.connect(self.date_range_changed)
-        self.horiz_right_top.addWidget(self.date_start)
-
-        self.lbl_to = QtWidgets.QLabel('To')
-        self.horiz_right_top.addWidget(self.lbl_to)
-
-        self.date_end = QtWidgets.QDateEdit(self)
-        self.date_end.setCalendarPopup(True)
-        self.date_end.setDate(today)
-        self.date_end.dateChanged.connect(self.date_range_changed)
-        self.horiz_right_top.addWidget(self.date_end)
+        self.horiz_right_top.addWidget(self.date_range_widget)
 
         self.lbl_chart_type = QtWidgets.QLabel('X-Axis Represents')
         font = self.lbl_chart_type.font()
