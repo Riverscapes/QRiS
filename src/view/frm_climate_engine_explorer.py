@@ -61,10 +61,11 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             curs.execute('SELECT * FROM time_series WHERE time_series_id = ?', (time_series_id,))
             time_series = curs.fetchone()
             metadata = json.loads(time_series[5])
-            start_date = metadata['start_date'] if 'start_date' in metadata else None
-            end_date = metadata['end_date'] if 'end_date' in metadata else None
+            start_date = datetime.strptime(metadata['start_date'], '%Y-%m-%d') if 'start_date' in metadata else None
+            end_date = datetime.strptime(metadata['end_date'], '%Y-%m-%d') if 'end_date' in metadata else None
 
-        self.date_range_widget.set_date_range_bounds(start_date, end_date)
+        if start_date is not None and end_date is not None:
+            self.date_range_widget.set_date_range_bounds(start_date, end_date)
 
     def load_climate_engine_metrics(self):
             
@@ -266,7 +267,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.btn_export = QtWidgets.QPushButton('Export')
         self.horiz_right_top.addWidget(self.btn_export)
 
-        self.btn_help = add_help_button(self, 'climate-engine-explorer')
+        self.btn_help = add_help_button(self, 'context/climate-engine-explorer')
         self.horiz_right_top.addWidget(self.btn_help)
 
         self.chart_canvas = FigureCanvas(Figure())
