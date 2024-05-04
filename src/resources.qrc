@@ -10,6 +10,7 @@
         <file alias="close">../Images/close.svg</file>
         <file alias="delete">../Images/delete.svg</file>
         <file alias="detrend">../Images/detrend.png</file>
+        <file alias="download">../Images/download.svg</file>
         <file alias="expand">../Images/expand.svg</file>
         <file alias="folder">../Images/folder.svg</file>
         <file alias="help">../Images/help.svg</file>
