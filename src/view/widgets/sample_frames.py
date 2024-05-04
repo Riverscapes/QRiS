@@ -1,3 +1,4 @@
+from qgis.core import QgsVectorLayer
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -13,7 +14,6 @@ class SampleFrameWidget(QtWidgets.QWidget):
     sample_frame_changed = pyqtSignal()
 
     def __init__(self, parent: QtWidgets.QWidget, qris_project: Project):
-
         super().__init__(parent)
 
         self.qris_project = qris_project
@@ -47,6 +47,22 @@ class SampleFrameWidget(QtWidgets.QWidget):
         for i in range(self.sample_frames_model.rowCount(None)):
             index = self.sample_frames_model.index(i)
             self.sample_frames_model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+
+    def selected_sample_frame(self):
+        return self.cbo_sample_frame.currentData(Qt.UserRole)
+    
+    def selected_features_count(self):
+        return sum([1 for i in range(self.sample_frames_model.rowCount(None)) if self.sample_frames_model.data(self.sample_frames_model.index(i), Qt.CheckStateRole) == Qt.Checked])
+
+    def get_selected_sample_frame_features(self):
+
+        sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
+
+        fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
+        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
+
+        for feature in temp_layer.getFeatures():
+            yield feature
 
     def setupUi(self):
 
