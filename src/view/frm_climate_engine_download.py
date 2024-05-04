@@ -8,8 +8,9 @@ from PyQt5.QtCore import QDate
 
 from qgis.core import QgsProject, QgsVectorLayer
 from qgis.utils import iface
-from qgis.gui import QgsMapToolEmitPoint, QgsMapToolIdentifyFeature
 
+from .widgets.sample_frames import SampleFrameWidget
+from .utilities import add_help_button
 from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
@@ -19,32 +20,19 @@ from ..lib.climate_engine import get_datasets, get_dataset_variables, get_datase
 class FrmClimateEngineDownload(QtWidgets.QDialog):
 
     def __init__(self, parent: QtWidgets.QWidget = None, qris_project: Project = None):
+        super().__init__(parent)
 
         self.iface = iface
         self.layer_geometry = None
         self.qris_project = qris_project
-        self.sample_frame: SampleFrame = None
+        self.sample_frame_widget = SampleFrameWidget(self, qris_project)
 
-        super().__init__(parent)
-
-        self.setWindowTitle('Climate Engine')
+        self.setWindowTitle('Download Climate Engine Metrics')
         self.setupUi()
-
-        # Sample Frames
-        self.sample_frames = {id: sample_frame for id, sample_frame in self.qris_project.sample_frames.items()}
-        self.sample_frames_model = DBItemModel(self.sample_frames)
-        self.cboSampleFrames.setModel(self.sample_frames_model)
-        self.cboSampleFrames.currentIndexChanged.connect(self.on_sample_frame_changed)
-        self.cboSampleFrames.setCurrentIndex(0)
-        self.sample_frame = self.cboSampleFrames.currentData()
 
         # Datasets
         self.datasets = get_datasets()
         self.cboDataset.addItems(self.datasets.keys())
-
-    def on_sample_frame_changed(self, index):
-
-        self.sample_frame = self.cboSampleFrames.currentData()
 
     def on_dataset_changed(self, index):
 
@@ -89,8 +77,12 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
     def retrieve_timeseries(self):
 
-        if self.sample_frame is None:
+        if self.sample_frame_widget.selected_sample_frame() is None:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Select a sample frame')
+            return
+
+        if self.sample_frame_widget.selected_features_count() == 0:
+            QtWidgets.QMessageBox.warning(self, 'Error', 'Select at least one sample frame')
             return
 
         if self.lboxVariables.count() == 0:
@@ -111,14 +103,11 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         start_date = self.dateStartDate.date().toString('yyyy-MM-dd')
         end_date = self.dateEndDate.date().toString('yyyy-MM-dd')
 
-        fc_path = f"{self.qris_project.project_file}|layername={self.sample_frame.fc_name}|subset={self.sample_frame.fc_id_column_name} = {self.sample_frame.id}"
-        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
-
         status = True
 
         time_series_ids = {}
 
-        for feature in temp_layer.getFeatures():
+        for feature in self.sample_frame_widget.get_selected_sample_frame_features():
             geometry = feature.geometry()
             feature_id = feature.id()
 
@@ -152,7 +141,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                     if name in time_series_ids:
                         time_series_id = time_series_ids[name]
                     else:   
-                        metadata = {'units': units}
+                        metadata = {'units': units, 'start_date': start_date, 'end_date': end_date}
                         metadata_json = json.dumps(metadata)
                         cursor.execute('INSERT INTO time_series (name, source, url, metadata) VALUES (?, ?, ?, ?)', (name, 'Climate Engine', 'https://www.climateengine.org/', metadata_json))
                         time_series_id = cursor.lastrowid
@@ -160,12 +149,11 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
                     cursor.executemany('INSERT INTO sample_frame_time_series (sample_frame_fid, time_series_id, time_value, value) VALUES (?, ?, ?, ?)', [(feature_id, time_series_id, date, value) for date, value in values])
 
-                    # for date, value in values.items():
-                    #     cursor.execute('INSERT INTO sample_frame_time_series (sample_frame_fid, time_series_id, time_value, value) VALUES (?, ?, ?, ?)', (feature_id, time_series_id, date, value)) 
-
         if status is True:
             self.lblStatus.setText('Timeseries retrieved successfully')
-            QtWidgets.QMessageBox.information(self, 'Timeseries', f'{result}')
+            QtWidgets.QMessageBox.information(self, 'Climate Engine Download', 'Climate Engine Timeseries retrieved successfully')
+            self.btn_close.setText('Close')
+            self.btnGetTimeseries.setEnabled(False)
         else:
             self.lblStatus.setText('Error retrieving timeseries')
 
@@ -183,10 +171,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.lblSampleFrames = QtWidgets.QLabel('Sample Frames')
         self.grid.addWidget(self.lblSampleFrames, 0, 0)
 
-        self.cboSampleFrames = QtWidgets.QComboBox()
-        self.grid.addWidget(self.cboSampleFrames, 0, 1)
-
-        self.lblSampleFrameFeatures = QtWidgets.QLabel('Sample Frame Features')
+        self.grid.addWidget(self.sample_frame_widget, 0, 1)
 
         self.lblDataset = QtWidgets.QLabel('Dataset')
         self.grid.addWidget(self.lblDataset, 1, 0)
@@ -214,15 +199,22 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.grid.addWidget(self.dateEndDate, 4, 1)
         self.dateEndDate.setEnabled(False)
 
-        self.horizTimeseries = QtWidgets.QHBoxLayout()
-        self.vert.addLayout(self.horizTimeseries)
+        self.horiz_buttons = QtWidgets.QHBoxLayout()
+        self.vert.addLayout(self.horiz_buttons)
 
-        self.horizTimeseries.addStretch()
+        self.btnHelp = add_help_button(self, 'context/climate-engine-download')
+        self.horiz_buttons.addWidget(self.btnHelp)
+
+        self.horiz_buttons.addStretch()
 
         self.btnGetTimeseries = QtWidgets.QPushButton('Get Timeseries')
         self.btnGetTimeseries.clicked.connect(self.retrieve_timeseries)
-        self.horizTimeseries.addWidget(self.btnGetTimeseries)
+        self.horiz_buttons.addWidget(self.btnGetTimeseries)
         self.btnGetTimeseries.setEnabled(False)
+
+        self.btn_close = QtWidgets.QPushButton('Cancel')
+        self.btn_close.clicked.connect(self.close)
+        self.horiz_buttons.addWidget(self.btn_close)
 
         self.lblStatus = QtWidgets.QLabel()
         self.vert.addWidget(self.lblStatus)
