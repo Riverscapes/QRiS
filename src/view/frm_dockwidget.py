@@ -74,6 +74,7 @@ from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
+from .frm_climate_engine_download import FrmClimateEngineDownload
 from .frm_climate_engine_explorer import CLIMATE_ENGINE_MACHINE_CODE, FrmClimateEngineExplorer
 
 from ..QRiS.settings import Settings, CONSTANTS
@@ -330,9 +331,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
-                self.add_context_menu_item(self.menu, 'Climate Engine Explorer', 'climate_engine_gray', lambda: self.climate_engine_explorer())
                 if len(self.project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
+            elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
+                self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
+                self.add_context_menu_item(self.menu, 'Explore Climate Engine', 'refresh', lambda: self.climate_engine_explorer())
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
@@ -371,8 +374,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
                 elif model_data == CATCHMENTS_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
-                elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Explore Climate Engine', 'refresh', lambda: self.climate_engine_explorer())
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(self.menu, 'Import from Temporary Layer', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_TEMPORARY))
@@ -631,7 +632,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmExportMetrics(self, self.project, analysis)
         frm.exec_()
 
+    def climate_engine_downloader(self):
+
+        if len(self.project.sample_frames) == 0:
+            QtWidgets.QMessageBox.warning(self, 'No Sample Frames', 'No sample frames exist in the current QRiS project. Please create or import sample frames before using the Climate Engine Downloader.')
+            return
+        
+        frm = FrmClimateEngineDownload(self, self.project)
+        frm.exec_()
+
     def climate_engine_explorer(self):
+
+        if len(self.project.sample_frames) == 0:
+            QtWidgets.QMessageBox.warning(self, 'No Sample Frames', 'No sample frames exist in the current QRiS project. Please create or import sample frames before using the Climate Engine Explorer.')
+            return
 
         if self.climate_engine_doc_widget is None:
             self.climate_engine_doc_widget = FrmClimateEngineExplorer(self, self.project, self.map_manager)
