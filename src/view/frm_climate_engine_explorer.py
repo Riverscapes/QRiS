@@ -152,22 +152,24 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         if self.rdo_space.isChecked():
             for sample_frame_feature_id, values in data.items():
                 self._static_ax.plot([value[0] for value in values], [value[1] for value in values], label=sample_frame_feature_id)
-            self._static_ax.legend()
+            self._static_ax.legend(title='Sample Frame Feature')
         elif self.rdo_time.isChecked():
             for sample_frame_feature_id, values in data.items():
                 self._static_ax.plot([value[0] for value in values], [value[1] for value in values], label=sample_frame_feature_id)
-            self._static_ax.legend()
+            self._static_ax.legend(title='Sample Frame Feature')
         self._static_ax.set_ylabel(y_label)
-
         # Set the major locator to month and the major formatter to 'Month Year'
-        self._static_ax.xaxis.set_major_locator(mdates.MonthLocator())
-        self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+        # self._static_ax.xaxis.set_major_locator(mdates.MonthLocator())
+        # self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
 
-        # Set the minor locator to day, but don't set a formatter so the minor ticks won't be labeled
-        self._static_ax.xaxis.set_minor_locator(mdates.DayLocator())
+        # # Set the minor locator to day, but don't set a formatter so the minor ticks won't be labeled
+        # self._static_ax.xaxis.set_minor_locator(mdates.DayLocator())
 
-        self._static_ax.xaxis.set_tick_params(rotation=45)
-        self._static_ax.grid(True)
+        # self._static_ax.xaxis.set_tick_params(rotation=45)
+        # self._static_ax.grid(True)
+        self.chart_canvas.figure.autofmt_xdate()
+        # Use a more precise date string for the x axis locations in the toolbar.
+        self._static_ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
         self.chart_canvas.draw()
 
 
