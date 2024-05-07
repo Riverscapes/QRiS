@@ -188,6 +188,17 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         # get the selected time series ids
         time_series_ids = self.lst_climate_engine.selectedIndexes()
         if time_series_ids is None or len(time_series_ids) == 0:
+            QtWidgets.QMessageBox.warning(self, 'Export Climate Change Data', 'No time series selected')
+            return
+        # need to grab the data for each checked sample frame feature
+        sample_frame_feature_ids = []
+        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
+            index = self.sample_frame_widget.sample_frames_model.index(i)
+            if self.sample_frame_widget.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
+                sample_frame_feature_ids.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole).id)
+
+        if len(sample_frame_feature_ids) == 0:
+            QtWidgets.QMessageBox.warning(self, 'Export Climate Change Data', 'No sample frame features selected')
             return
         time_series_id = time_series_ids[0].data(Qt.UserRole)
 
@@ -196,12 +207,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         # get the data for the selected time series
         data = {}
-        # need to grab the data for each checked sample frame feature
-        sample_frame_feature_ids = []
-        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
-            index = self.sample_frame_widget.sample_frames_model.index(i)
-            if self.sample_frame_widget.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
-                sample_frame_feature_ids.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole).id)
+
         
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
@@ -218,7 +224,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 data[sample_frame_feature_id] = [(datetime.strptime(row[0], '%Y-%m-%d'), row[1]) for row in curs.fetchall()]
 
         # write the data to a CSV file
-        file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Export Data', '', 'CSV Files (*.csv)')[0]
+        file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Export Data', f'{dataset_name}_{variable_id}', 'CSV Files (*.csv)')[0]
         if file_name == '':
             return
         with open(file_name, 'w') as file:
