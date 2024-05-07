@@ -6,15 +6,13 @@ import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QDate
 
-from qgis.core import QgsProject, QgsVectorLayer
 from qgis.utils import iface
 
 from .widgets.sample_frames import SampleFrameWidget
 from .utilities import add_help_button
-from ..model.db_item import DBItemModel
+
 from ..model.project import Project
-from ..model.sample_frame import SampleFrame
-from ..lib.climate_engine import get_datasets, get_dataset_variables, get_dataset_date_range, get_dataset_timeseries_polygon
+from ..lib.climate_engine import get_datasets, get_dataset_variables, get_dataset_date_range, get_dataset_timeseries_polygon, open_climate_engine_website
 
 
 class FrmClimateEngineDownload(QtWidgets.QDialog):
@@ -201,6 +199,11 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
         self.horiz_buttons = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz_buttons)
+
+        self.btn_climate_engine = QtWidgets.QPushButton('Climate Engine')
+        self.btn_climate_engine.setStyleSheet('QPushButton {text-decoration: underline; color: blue;}')
+        self.btn_climate_engine.clicked.connect(open_climate_engine_website)
+        self.horiz_buttons.addWidget(self.btn_climate_engine)
 
         self.btnHelp = add_help_button(self, 'context/climate-engine-download')
         self.horiz_buttons.addWidget(self.btnHelp)

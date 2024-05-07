@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import webbrowser
 
 from osgeo import ogr
 
@@ -8,7 +9,9 @@ from qgis.core import QgsGeometry
 
 from typing import List
 
-CLIMATE_ENGINE_URL = 'https://api.climateengine.org'
+CLIMATE_ENGINE_API = 'https://api.climateengine.org'
+CLIMATE_ENGINE_URL = 'https://www.climateengine.org/'
+CLIMATE_ENGINE_MACHINE_CODE = 'Climate Engine'
 
 def get_api_key():
 
@@ -29,7 +32,7 @@ def get_dataset_variables(dataset: str) -> list:
     api_key = get_api_key()
     if  api_key is None:
         return None
-    url = f'{CLIMATE_ENGINE_URL}/metadata/dataset_variables'
+    url = f'{CLIMATE_ENGINE_API}/metadata/dataset_variables'
     headers = {'accept': 'application/json',    
                'Authorization': api_key}
     params = {'dataset': dataset}
@@ -45,7 +48,7 @@ def get_dataset_date_range(dataset: str) -> dict:
     api_key = get_api_key()
     if api_key is None:
         return None
-    url = f'{CLIMATE_ENGINE_URL}/metadata/dataset_dates'
+    url = f'{CLIMATE_ENGINE_API}/metadata/dataset_dates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
     
@@ -83,7 +86,7 @@ def get_dataset_timeseries_polygon(dataset: str, variables: List[str], start_dat
               'end_date': end_date,
               'coordinates': f'[{coordinates}]'}
 
-    url = f'{CLIMATE_ENGINE_URL}/timeseries/native/polygons'
+    url = f'{CLIMATE_ENGINE_API}/timeseries/native/polygons'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
     response = requests.get(url, params=params, headers=headers)
@@ -119,7 +122,7 @@ def get_dataset_zonal_stats_polygon(dataset: str, variables: List[str], start_da
               'end_date': end_date,
               'coordinates': f'[{coordinates}]'}
 
-    url = f'{CLIMATE_ENGINE_URL}/timeseries/native/polygons'
+    url = f'{CLIMATE_ENGINE_API}/timeseries/native/polygons'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
     response = requests.get(url, params=params, headers=headers)
@@ -128,3 +131,8 @@ def get_dataset_zonal_stats_polygon(dataset: str, variables: List[str], start_da
         return response.json()
     else:
         return None
+    
+def open_climate_engine_website():
+
+    webbrowser.open(CLIMATE_ENGINE_URL)
+    
