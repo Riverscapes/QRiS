@@ -75,7 +75,8 @@ from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
 from .frm_climate_engine_download import FrmClimateEngineDownload
-from .frm_climate_engine_explorer import CLIMATE_ENGINE_MACHINE_CODE, FrmClimateEngineExplorer
+from .frm_climate_engine_explorer import FrmClimateEngineExplorer
+from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager

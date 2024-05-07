@@ -1,6 +1,5 @@
 import json
 import sqlite3
-import webbrowser
 from datetime import datetime
 
 import matplotlib
@@ -19,12 +18,9 @@ from .utilities import add_help_button
 from .widgets.sample_frames import SampleFrameWidget
 from .widgets.date_range import DateRangeWidget
 from ..model.project import Project
-from ..lib.climate_engine import get_datasets
+from ..lib.climate_engine import get_datasets, open_climate_engine_website
 
 from ..QRiS.qris_map_manager import QRisMapManager
-
-CLIMATE_ENGINE_URL = 'https://www.climateengine.org/'
-CLIMATE_ENGINE_MACHINE_CODE = 'Climate Engine'
 
 class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
@@ -172,11 +168,6 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self._static_ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
         self.chart_canvas.draw()
 
-
-    def open_climate_engine(self):
-
-        webbrowser.open(CLIMATE_ENGINE_URL)
-
     def show_climate_engine_download(self):
 
         frm = FrmClimateEngineDownload(parent=self, qris_project=self.qris_project)
@@ -276,12 +267,12 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.tab_climate_engine.setLayout(self.vert_climate_engine)
         self.tab_widget_left.addTab(self.tab_climate_engine, 'Climate Engine Metrics')
 
-        self.horiz_climate_engine = QtWidgets.QHBoxLayout(self.widget_left)
+        self.horiz_climate_engine = QtWidgets.QHBoxLayout(self)
         self.vert_climate_engine.addLayout(self.horiz_climate_engine)
 
         self.btn_climate_engine = QtWidgets.QPushButton('Climate Engine')
         self.btn_climate_engine.setStyleSheet('QPushButton {text-decoration: underline; color: blue;}')
-        self.btn_climate_engine.clicked.connect(self.open_climate_engine)
+        self.btn_climate_engine.clicked.connect(open_climate_engine_website)
         self.horiz_climate_engine.addWidget(self.btn_climate_engine)
 
         # add a spacer between the buttons
