@@ -326,16 +326,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         model_data = model_item.data(QtCore.Qt.UserRole)
 
         if isinstance(model_data, str):
-            self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
-            self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
-            self.menu.addSeparator()
+            if model_data not in [STREAM_GAGE_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE]:
+                self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
+                self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
+                self.menu.addSeparator()
 
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
                 if len(self.project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
+                # self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
                 self.add_context_menu_item(self.menu, 'Explore Climate Engine', 'refresh', lambda: self.climate_engine_explorer())
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
