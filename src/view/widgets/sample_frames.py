@@ -69,11 +69,8 @@ class SampleFrameWidget(QtWidgets.QWidget):
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
 
-        self.horiz_sample_frame = QtWidgets.QHBoxLayout(self)
-        self.vert.addLayout(self.horiz_sample_frame)
-
         self.cbo_sample_frame = QtWidgets.QComboBox(self)
-        self.horiz_sample_frame.addWidget(self.cbo_sample_frame)
+        self.vert.addWidget(self.cbo_sample_frame)
 
         self.lst_sample_frame_features = QtWidgets.QListView(self)
         self.lst_sample_frame_features.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)

@@ -179,6 +179,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.vert.addLayout(self.grid)
 
         self.lblSampleFrames = QtWidgets.QLabel('Sample Frames')
+        self.lblSampleFrames.setAlignment(QtCore.Qt.AlignTop)
         self.grid.addWidget(self.lblSampleFrames, 0, 0)
 
         self.sample_frame_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -191,6 +192,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.grid.addWidget(self.cboDataset, 1, 1)
 
         self.lblVariable = QtWidgets.QLabel('Variables')
+        self.lblVariable.setAlignment(QtCore.Qt.AlignTop)
         self.grid.addWidget(self.lblVariable, 2, 0)
 
         self.lboxVariables = QtWidgets.QListWidget()
