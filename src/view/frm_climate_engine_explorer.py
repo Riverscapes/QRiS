@@ -102,10 +102,6 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine.selectionModel().selectionChanged.connect(self.create_plot)
         self.lst_climate_engine.update()
 
-    def date_range_changed(self):
-
-        self.create_plot()
-
     def create_plot(self):
 
         self._static_ax.clear()
@@ -296,6 +292,12 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.horiz_right_top = QtWidgets.QHBoxLayout(self)
         self.vert_right.addLayout(self.horiz_right_top)
 
+        self.lbl_date_range = QtWidgets.QLabel('Date Range')
+        font = self.lbl_date_range.font()
+        font.setBold(True)
+        self.lbl_date_range.setFont(font)
+        self.horiz_right_top.addWidget(self.lbl_date_range)
+
         self.horiz_right_top.addWidget(self.date_range_widget)
 
         self.lbl_chart_type = QtWidgets.QLabel('X-Axis Represents')
@@ -313,9 +315,6 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.rdo_space.setEnabled(False)
         self.rdo_space.setToolTip('Not yet implemented')
         self.horiz_right_top.addWidget(self.rdo_space)
-
-        self.rdo_time = QtWidgets.QRadioButton('Time')
-        self.horiz_right_top.addWidget(self.rdo_time)
         
         self.horiz_right_top.addStretch()
 
