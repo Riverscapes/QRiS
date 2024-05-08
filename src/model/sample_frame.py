@@ -82,14 +82,17 @@ def insert_sample_frame(db_path: str, name: str, description: str, metadata: dic
 
 def get_sample_frame_ids(db_path: str, sample_frame_id: int) -> Dict[int, DBItem]:
 
-    labels = None
+    labels = {}
     try:
         with sqlite3.connect(db_path) as conn:
             curs = conn.cursor()
-            curs.execute('SELECT DISTINCT fid, display_label FROM sample_frame_features WHERE sample_frame_id = ?', [sample_frame_id])
-            labels = {row[1]: DBItem('None', row[0], row[1]) for row in curs.fetchall()}
+            curs.execute('SELECT fid, display_label FROM sample_frame_features WHERE sample_frame_id = ?', [sample_frame_id])
+            values = curs.fetchall()
+            for value in values:
+                label = value[1] if value[1] is not None and value[1] != '' else f'Feature {value[0]}'
+                labels[label] =  DBItem('None', value[0], label)
     except Exception as ex:
-        labels = []
+        labels = {}
         raise ex
 
     return labels
