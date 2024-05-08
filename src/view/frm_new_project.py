@@ -55,6 +55,8 @@ class FrmNewProject(QtWidgets.QDialog):
             self.txtName.setText(project.name)
             self.txtDescription.setPlainText(project.description)
 
+        self.txtName.setFocus()
+
     def update_project_folder(self):
 
         text = self.txtName.text().strip()
