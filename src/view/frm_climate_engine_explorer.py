@@ -304,8 +304,14 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lbl_chart_type.setFont(font)
         self.horiz_right_top.addWidget(self.lbl_chart_type)
 
+        self.rdo_time = QtWidgets.QRadioButton('Time')
+        self.rdo_time.setChecked(True)
+        self.horiz_right_top.addWidget(self.rdo_time)
+
         self.rdo_space = QtWidgets.QRadioButton('Space')
-        self.rdo_space.setChecked(True)
+        self.rdo_space.setChecked(False)
+        self.rdo_space.setEnabled(False)
+        self.rdo_space.setToolTip('Not yet implemented')
         self.horiz_right_top.addWidget(self.rdo_space)
 
         self.rdo_time = QtWidgets.QRadioButton('Time')
