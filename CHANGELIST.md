@@ -1,5 +1,10 @@
 # QRiS Plugin
 
+## [0.3.19] 2023 MAY 09
+
+### Added
+- Climate Engine Explorer
+
 ## [0.3.18] 2023 MAY 01
 
 ### Added
