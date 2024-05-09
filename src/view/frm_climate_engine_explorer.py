@@ -32,7 +32,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.qris_map_manager = qris_map_manager
         self.datasets = get_datasets()
 
-        self.sample_frame_widget = SampleFrameWidget(self, self.qris_project)
+        self.sample_frame_widget = SampleFrameWidget(self, self.qris_project, self.qris_map_manager, first_index_empty=True)
         self.sample_frame_widget.cbo_sample_frame.currentIndexChanged.connect(self.load_climate_engine_metrics)
         self.sample_frame_widget.sample_frame_changed.connect(self.create_plot)
 
@@ -118,11 +118,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         # get the data for the selected time series
         data = {}
         # need to grab the data for each checked sample frame feature
-        sample_frame_feature_ids = []
-        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
-            index = self.sample_frame_widget.sample_frames_model.index(i)
-            if self.sample_frame_widget.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
-                sample_frame_feature_ids.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole).id)
+        sample_frame_feature_ids = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
         
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
