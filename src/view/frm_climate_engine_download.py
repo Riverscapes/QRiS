@@ -99,6 +99,15 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         if self.lboxVariables.count() == 0:
             return
 
+        # if date range is over 10 years, warn user
+        if self.date_range_widget.get_date_range() is not None:
+            start_date, end_date = self.date_range_widget.get_date_range()
+            date_diff = end_date - start_date
+            if date_diff.days > 3650:
+                result = QtWidgets.QMessageBox.warning(self, 'Warning', 'The date range is over 10 years. This may take a long time to download, especially for several sample frame features. Do you want to continue?', QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if result == QtWidgets.QMessageBox.No:
+                    return
+
         variables = []
         for i in range(self.lboxVariables.count()):
             item = self.lboxVariables.item(i)
@@ -120,6 +129,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         for feature in self.sample_frame_widget.get_selected_sample_frame_features():
             geometry = feature.geometry()
             feature_id = feature.id()
+            self.lblStatus.setText(f'Downloading timeseries for feature {feature_id}')
 
             result = get_dataset_timeseries_polygon(dataset, variables, start_date, end_date, geometry)        
 
@@ -142,8 +152,13 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                 for column in df.columns:
                     if column == 'Date':
                         continue
-                    variable, units = column.split(' (')
-                    units = units.replace(')', '')
+                    splits = column.split(' (')
+                    if len(splits) == 1:
+                        variable = column
+                        units = ''                    
+                    else:    
+                        variable, units = splits 
+                        units = units.replace(')', '')
                     df_values = df[['Date', column]]
                     df_values = df_values.set_index('Date')
                     values = list(df_values.itertuples(name=None))
