@@ -66,12 +66,17 @@ class DBItemModel(QAbstractListModel):
     obj = self.cboComboBox.currentData(Qt.UserRole)
     """
 
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, non_selectable_item: DBItem = None):
         """The raw data should be dictionary of database IDs keyed to display strings"""
         super().__init__()
 
+        self.non_selectable_index = None
+
         # Store the data as list of tuples (ID, string)
         self._data = [(key, value) for key, value in data.items()] or []
+        if non_selectable_item is not None:
+            self._data.insert(0, (0, non_selectable_item))
+            self.non_selectable_index = 0
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
@@ -106,6 +111,13 @@ class DBItemModel(QAbstractListModel):
     def rowCount(self, index):
         return len(self._data)
 
+    def flags(self, index):
+        default_flags = super(DBItemModel, self).flags(index)
+        if self.non_selectable_index is None:
+            return default_flags
+        if index.row() == self.non_selectable_index: 
+            return default_flags & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled
+        return default_flags
 
 class CheckableDBItemModel(QAbstractListModel):
     def __init__(self, data: dict):
