@@ -10,7 +10,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon, QCursor
 from PyQt5.QtCore import Qt
 
 from .frm_climate_engine_download import FrmClimateEngineDownload
@@ -221,6 +221,45 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         QtWidgets.QMessageBox.information(self, 'Export Climate Change Data', f'Data exported successfully to {file_name}')
 
 
+    def delete_time_series(self):
+
+        # Confirm deletion
+        reply = QtWidgets.QMessageBox.question(self, 'Delete Time Series', 'Are you sure you want to delete the selected time series?', QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.No:
+            return
+
+        time_series_ids = self.lst_climate_engine.selectedIndexes()
+        if time_series_ids is None or len(time_series_ids) == 0:
+            return
+        
+        time_series_id = time_series_ids[0].data(Qt.UserRole)
+        with sqlite3.connect(self.qris_project.project_file) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute('DELETE FROM sample_frame_time_series WHERE time_series_id = ?', (time_series_id,))
+                curs.execute('DELETE FROM time_series WHERE time_series_id = ?', (time_series_id,))
+                conn.commit()
+                QtWidgets.QMessageBox.information(self, 'Delete Time Series', 'Time series deleted successfully.')
+            except Exception as e:
+                conn.rollback()
+                QtWidgets.QMessageBox.warning(self, 'Delete Time Series', f'Error deleting time series: {e}')
+                return
+            
+        self.load_climate_engine_metrics()
+        self.lst_climate_engine.setCurrentIndex(self.time_series_model.index(0, 0))
+        self.create_plot()
+
+    def on_context(self, event):
+        index = self.lst_climate_engine.indexAt(event)
+        if not index.isValid():
+            return
+
+        menu = QtWidgets.QMenu()
+        delete_action = QtWidgets.QAction(QIcon(f':/plugins/qris_toolbar/delete'), 'Delete Time Series', self)
+        delete_action.triggered.connect(self.delete_time_series)
+        menu.addAction(delete_action)
+        menu.exec_(QCursor.pos())
+
     def setupUi(self):
 
         self.dockWidgetContents = QtWidgets.QWidget(self)
@@ -273,6 +312,8 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine = QtWidgets.QListView(self.widget_left)
         self.lst_climate_engine.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.lst_climate_engine.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.lst_climate_engine.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.lst_climate_engine.customContextMenuRequested.connect(self.on_context)
         self.vert_climate_engine.addWidget(self.lst_climate_engine)
 
         # ok lets add the right side
