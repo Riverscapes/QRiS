@@ -78,6 +78,8 @@ class StreamGageTask(QgsTask):
         if response.status_code == 200:
             csv_raw = [line for line in response.text.split('\n') if not (line.startswith('#') or line.startswith('5s'))]
             return csv.DictReader(csv_raw, delimiter='\t')
+        elif response.status_code == 404:
+            return []
         else:
             raise Exception(response)
 
@@ -131,7 +133,10 @@ class StreamGageTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            QgsMessageLog.logMessage(f'Stream Gage Download Complete. {self.gages_downloaded} gages downloaded.', MESSAGE_CATEGORY, Qgis.Success)
+            if self.gages_downloaded == 0:
+                QgsMessageLog.logMessage('No Stream Gages found in the area.', MESSAGE_CATEGORY, Qgis.Info)
+            else:
+                QgsMessageLog.logMessage(f'Stream Gage Download Complete. {self.gages_downloaded} gages downloaded.', MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
