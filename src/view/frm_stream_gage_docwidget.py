@@ -84,6 +84,8 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.load_metadata()
 
         map_layer_tree = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+        if map_layer_tree is None:
+            return
         map_layer: QgsVectorLayer = map_layer_tree.layer()
         if map_layer is None:
             return
@@ -290,7 +292,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
             return
 
         menu = QtWidgets.QMenu()
-        delete_action = QtWidgets.QAction(QtGui.QIcon(f':/plugins/qris_toolbar/delete'), 'Delete Time Series', self)
+        delete_action = QtWidgets.QAction(QtGui.QIcon(f':/plugins/qris_toolbar/delete'), 'Delete Stream Gage', self)
         delete_action.triggered.connect(self.delete_gage)
         menu.addAction(delete_action)
         menu.exec_(QtGui.QCursor.pos())
