@@ -174,11 +174,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.warning(self, 'Export Climate Change Data', 'No time series selected')
             return
         # need to grab the data for each checked sample frame feature
-        sample_frame_feature_ids = []
-        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
-            index = self.sample_frame_widget.sample_frames_model.index(i)
-            if self.sample_frame_widget.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
-                sample_frame_feature_ids.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole).id)
+        sample_frame_feature_ids = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
 
         if len(sample_frame_feature_ids) == 0:
             QtWidgets.QMessageBox.warning(self, 'Export Climate Change Data', 'No sample frame features selected')
