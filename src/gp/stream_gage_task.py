@@ -20,7 +20,7 @@ BASE_REQUEST = 'https://waterservices.usgs.gov/nwis/site/'
 class StreamGageTask(QgsTask):
 
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    on_task_complete = pyqtSignal(bool, int)
+    on_task_complete = pyqtSignal(bool, int, int)
 
     """
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
@@ -36,6 +36,7 @@ class StreamGageTask(QgsTask):
         self.max_lng = max_lng
         self.gage_data = None
         self.gages_downloaded = 0
+        self.gages_saved = 0
 
     def run(self):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
@@ -85,6 +86,12 @@ class StreamGageTask(QgsTask):
 
     def save_gage_data(self, gage_data):
 
+        # Check for existing gages
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT site_code FROM stream_gages')
+            existing_gages = [row[0] for row in cursor.fetchall()]
+
         gpkg_driver = ogr.GetDriverByName('GPKG')
         dst_dataset = gpkg_driver.Open(self.db_path, 1)
         dst_layer = dst_dataset.GetLayerByName('stream_gages')
@@ -92,11 +99,13 @@ class StreamGageTask(QgsTask):
         dst_layer_def = dst_layer.GetLayerDefn()
 
         # transform = osr.CoordinateTransformation(src_srs, dst_srs)
+        self.gages_saved = 0
         self.gages_downloaded = 0
         for gage in gage_data:
-
+            self.gages_downloaded += 1
+            if gage['site_no'] in existing_gages:
+                continue
             try:
-
                 geom = ogr.Geometry(ogr.wkbPoint)
                 geom.AddPoint(float(gage['dec_long_va']), float(gage['dec_lat_va']))
 
@@ -115,7 +124,7 @@ class StreamGageTask(QgsTask):
                 # Store the entire gage record in the metadata
                 dst_feature.SetField('metadata', json.dumps(gage))
                 err = dst_layer.CreateFeature(dst_feature)
-                self.gages_downloaded += 1
+                self.gages_saved += 1
             except Exception as ex:
                 if 'UNIQUE constraint failed: stream_gages.site_code' not in str(ex):
                     raise ex
@@ -135,8 +144,10 @@ class StreamGageTask(QgsTask):
         if result:
             if self.gages_downloaded == 0:
                 QgsMessageLog.logMessage('No Stream Gages found in the area.', MESSAGE_CATEGORY, Qgis.Info)
+            elif self.gages_saved == 0:
+                QgsMessageLog.logMessage('No new Stream Gages saved.', MESSAGE_CATEGORY, Qgis.Info)
             else:
-                QgsMessageLog.logMessage(f'Stream Gage Download Complete. {self.gages_downloaded} gages downloaded.', MESSAGE_CATEGORY, Qgis.Success)
+                QgsMessageLog.logMessage(f'Stream Gage Download Complete. {self.gages_downloaded} gages were downloaded and {self.gages_saved} new gages were saved.', MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
@@ -153,7 +164,7 @@ class StreamGageTask(QgsTask):
                     MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
-        self.on_task_complete.emit(result, self.gages_downloaded)
+        self.on_task_complete.emit(result, self.gages_downloaded, self.gages_saved)
 
     def cancel(self):
         QgsMessageLog.logMessage(
