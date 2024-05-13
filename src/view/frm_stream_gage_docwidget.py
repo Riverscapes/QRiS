@@ -214,7 +214,10 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
     def on_download_gages_complete(self, success: bool, rowsAffected: int):
 
         if success:
-            self.iface.messageBar().pushMessage('Stream Gages Downloaded', f'{rowsAffected} gage records downloaded.', level=Qgis.Info, duration=5)
+            if rowsAffected == 0:
+                self.iface.messageBar().pushMessage('Stream Gages', 'No stream gage locations were found in the current map extent.', level=Qgis.Info, duration=5)
+            else:
+                self.iface.messageBar().pushMessage('Stream Gages Downloaded', f'{rowsAffected} stream gage locations downloaded.', level=Qgis.Info, duration=5)
         else:
             self.iface.messageBar().pushMessage('Stream Gage Download Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
