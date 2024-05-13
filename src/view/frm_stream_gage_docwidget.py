@@ -56,14 +56,17 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
     def load_stream_gages(self):
 
-        conn = sqlite3.connect(self.project.project_file)
-        curs = conn.cursor()
-        curs.execute('SELECT fid, site_name, site_code FROM stream_gages')
-        self.stream_gage_model = QtGui.QStandardItemModel()
-        for row in curs.fetchall():
-            item = QtGui.QStandardItem(row[1])
-            item.setData((row[0], row[2]), QtCore.Qt.UserRole)
-            self.stream_gage_model.appendRow(item)
+        # clear the list view
+        self.lst_gages.setModel(None)
+
+        with sqlite3.connect(self.project.project_file) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT fid, site_name, site_code FROM stream_gages')
+            self.stream_gage_model = QtGui.QStandardItemModel()
+            for row in curs.fetchall():
+                item = QtGui.QStandardItem(row[1])
+                item.setData((row[0], row[2]), QtCore.Qt.UserRole)
+                self.stream_gage_model.appendRow(item)
 
         self.lst_gages.setModel(self.stream_gage_model)
         self.lst_gages.selectionModel().selectionChanged.connect(self.on_site_changed)
@@ -232,6 +235,61 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
             self.iface.messageBar().pushMessage('Discharge Export', 'Data successfully exported to ' + dialog_return[0], level=Qgis.Info, duration=5)
 
+    def delete_gage(self):
+        
+        # Confirm deletion
+        result = QtWidgets.QMessageBox.question(self, 'Delete Stream Gage', 'Are you sure you want to delete this stream gage and all associated discharge data?', QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if result == QtWidgets.QMessageBox.No:
+            return
+        
+        lst_item = self.stream_gage_model.itemFromIndex(self.lst_gages.currentIndex())
+        if lst_item is None:
+            return
+        
+        site_id, site_code = lst_item.data(QtCore.Qt.UserRole)
+        with sqlite3.connect(self.project.project_file) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute('DELETE FROM stream_gage_discharges WHERE stream_gage_id = ?', [site_id])
+                conn.commit()
+            except sqlite3.Error as e:
+                conn.rollback()
+                self.iface.messageBar().pushMessage('Error Deleting Discharge Data', str(e), level=Qgis.Critical, duration=5)
+                return
+        # now use ogr to delete the feature
+        fc_path = f"{self.project.project_file}|layername=stream_gages|subset=fid = {site_id}"
+        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
+        temp_layer.startEditing()
+        for feature in temp_layer.getFeatures():
+            temp_layer.deleteFeature(feature.id())
+        temp_layer.commitChanges()
+        temp_layer.updateExtents()
+        self.iface.mapCanvas().refresh()
+        self.iface.mapCanvas().refreshAllLayers()
+        
+        # let the user know
+        self.iface.messageBar().pushMessage('Stream Gage Deleted', f'Stream Gage {site_code} and associated discharge data deleted.', level=Qgis.Info, duration=5)
+        
+        self.load_stream_gages()
+        # clear the plot and metadata
+        self._static_ax.cla()
+        self.static_canvas.draw()
+        self.tableMeta.setModel(None)
+        
+        self.load_discharge_plot()
+        self.load_metadata()
+
+    def on_gage_context_menu(self, point):
+        index = self.lst_gages.indexAt(point)
+        if not index.isValid():
+            return
+
+        menu = QtWidgets.QMenu()
+        delete_action = QtWidgets.QAction(QtGui.QIcon(f':/plugins/qris_toolbar/delete'), 'Delete Time Series', self)
+        delete_action.triggered.connect(self.delete_gage)
+        menu.addAction(delete_action)
+        menu.exec_(QtGui.QCursor.pos())
+
     def setupUi(self):
 
         minDate = QtCore.QDate(1970, 1, 1)
@@ -260,6 +318,8 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         self.lst_gages = QtWidgets.QListView()
         # self.lst_gages.setMaximumWidth(400)
+        self.lst_gages.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.lst_gages.customContextMenuRequested.connect(self.on_gage_context_menu)
         self.left_vert.addWidget(self.lst_gages)
 
         self.right_widget = QtWidgets.QWidget()
