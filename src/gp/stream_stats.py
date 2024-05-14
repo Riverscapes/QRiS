@@ -1,9 +1,11 @@
 import requests
 import json
 import os
-from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsTask, QgsMessageLog, Qgis
-from ..model.pour_point import save_pour_point, PourPoint
+
+from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsPointXY, QgsGeometry
 from qgis.PyQt.QtCore import pyqtSignal
+
+from ..model.pour_point import save_pour_point, PourPoint
 
 MESSAGE_CATEGORY = 'QRiS_StreamStatsTask'
 
@@ -40,7 +42,7 @@ class StreamStats(QgsTask):
         QgsMessageLog.logMessage(f'Started {self.name} Stream Stats API Request ', MESSAGE_CATEGORY, Qgis.Info)
 
         try:
-            state_code = get_state_from_coordinates(self.latitude, self.longitude)
+            state_code, status = get_state_from_coordinates(self.latitude, self.longitude)
 
             if state_code is None:
                 self.exception = Exception('Failed to determine US State of the point. Ensure that the point within the United States.')
@@ -131,7 +133,7 @@ def transform_geometry(geometry, map_epsg: int, output_epsg: int):
 
 # Makes all 4 api calls. Currently not working consistently due to time delays
 def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool, get_flow_statistics: bool, new_file_dir=None):
-    state_code = get_state_from_coordinates(lat, lon)
+    state_code, status = get_state_from_coordinates(lat, lon)
     watershed_data = delineate_watershed(lat, lon, state_code, new_file_dir)
     workspace_id = watershed_data["workspaceID"]
 
@@ -206,24 +208,22 @@ def save_json(dict, directory, file_name):
 
 # Uses coordinates to determine U.S. state using API
 def get_state_from_coordinates(latitude: float, longitude: float):
-    url = "https://nominatim.openstreetmap.org/reverse"
-    parameters = {
-        "lat": latitude,
-        "lon": longitude,
-        "format": "json"
-    }
+    """https://www.usgs.gov/streamstats/about"""
 
-    response = requests.get(url, params=parameters)
-    location_data = response.json()
+    # Get the states layer from the resources gpkg
+    db_path = os.path.join(os.path.dirname(__file__), '..','..','resources', 'us_states.gpkg')
 
-    if location_data is None:
-        raise Exception('Unable to determine US State. No response from Open Street Map.')
-    elif 'error' in location_data:
-        if 'geocode' in location_data['error']:
-            return None
-        else:
-            raise Exception(location_data['error'])
-    else:
-        location_code = location_data["address"]["ISO3166-2-lvl4"]
-        # Extracts state abbreviation from location code
-        return location_code[location_code.index("-") + 1:]
+    # Load the layer
+    states_layer = QgsVectorLayer(f"{db_path}|layername=states", "states", "ogr")
+
+    # Create a point geometry
+    point = QgsGeometry.fromPointXY(QgsPointXY(longitude, latitude))
+
+    # Intersect the point with the states layer
+    states_layer.selectByRect(point.boundingBox())
+    for feature in states_layer.selectedFeatures():
+        if feature.geometry().intersects(point):
+            return feature['STATE_ABBR'], feature['STATUS']
+    
+    return None, None
+    

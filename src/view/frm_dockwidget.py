@@ -1191,10 +1191,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         transformed_point = transform_geometry(raw_map_point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), 4326)
 
         try:
-            state_code = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
+            state_code, status = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
             if state_code is None:
-                QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'This is a service by USGS and is only available in some US States. See https://streamstats.usgs.gov/ss/ for more information.')
+                QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'This is a service by USGS and is only available in some US States.\n\nSee https://www.usgs.gov/streamstats/about for more information.')
                 return
+            if status != 'FULLY IMPLEMENTED':
+                if status == 'NOT IMPLEMENTED':
+                    QtWidgets.QMessageBox.warning(self, 'Stream Stats Warning', f'Stream Stats is not available in {state_code}.\n\nSee https://www.usgs.gov/streamstats/about for more information.')
+                    return
+                else:
+                    QtWidgets.QMessageBox.warning(self, 'Stream Stats Warning', f'Stream Stats is not fully implemented in {state_code} ({status}). You may attempt to run Stream Stats at the location, however results might not be available at this time.\n\nSee https://www.usgs.gov/streamstats/about for more information.')
         except Exception as ex:
             QtWidgets.QMessageBox.warning(self, 'Error Determining US State', str(ex))
             return

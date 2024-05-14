@@ -45,10 +45,9 @@ def copy_plugin():
         ['src', '**', '*.json'],
         ['src', '**', '*.css'],
         ['src', '**', '*.html'],
-        # ['src', '**', '*.ui'],
         ['src', '**', '*.sql'],
         ['src', '**', '*.qml'],
-        # ['resources', '**', '*.?ml'],
+        [ 'resources', '**', 'us_states.gpkg'],
         # ['resources', '**', '*.json'],
     ]
     files = []
