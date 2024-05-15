@@ -67,7 +67,6 @@ from .frm_centerline_docwidget import FrmCenterlineDocWidget
 from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
-# from .frm_sampleframe import FrmSampleFrame
 from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
@@ -424,7 +423,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
                     # if model_data.mask_type.id == AOI_MASK_TYPE_ID:
                         # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
+                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -432,7 +431,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, ScratchVector):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
-                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
+                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DBMODE_CREATE))
                         self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
                         self.add_context_menu_item(self.menu, 'Promote to Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
 
@@ -442,7 +441,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, CrossSections):
                     self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
-                    self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.generate_sample_frame(model_data))
+                    self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
@@ -913,20 +912,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
 
-    def generate_sample_frame(self, db_item: DBItem):
-
-        cross_sections = None
-        polygon = None
-
-        if isinstance(db_item, CrossSections):
-            cross_sections = db_item
-        if isinstance(db_item, Mask) or isinstance(db_item, ScratchVector):
-            polygon = db_item
-
-        frm = FrmSampleFrame(self, self.project, polygon, cross_sections)
-        frm.export_complete.connect(self.save_complete)
-        frm.exec_()
-
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False, collapsed: bool=False) -> QtGui.QStandardItem:
         """
         Looks at all child nodes of the parent_node and returns the existing QStandardItem
@@ -1121,20 +1106,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             create = True
 
         frm = FrmSampleFrame(self, self.project, import_source_path, create_sample_frame=create)
-
+        
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_sample_frame(db_item)
-
-            # find the Sample Frames Node in the model
-            rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
-            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
-            sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
-            parent_node = sample_frame_node
+        if mode == DB_MODE_CREATE:
+            cross_sections = parent_node if isinstance(parent_node, CrossSections) else None
+            polygon = parent_node if any(isinstance(parent_node, item) for item in [Mask, ScratchVector]) else None
+            frm.set_inputs(cross_sections, polygon)
 
         result = frm.exec_()
         if result != 0:
+            if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
+                # find the Sample Frames Node in the model
+                rootNode = self.model.invisibleRootItem()
+                project_node = self.add_child_to_project_tree(rootNode, self.project)
+                inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+                sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
+                parent_node = sample_frame_node
             self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
 
     def add_profile(self, parent_node: QtGui.QStandardItem, mode: int):

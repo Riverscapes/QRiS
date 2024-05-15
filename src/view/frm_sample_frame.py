@@ -5,7 +5,8 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, QSize, QVariant
 from PyQt5.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout,  QGridLayout, QTabWidget, QGroupBox, QTreeView, QListWidget, QListWidgetItem, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
-from qgis.core import QgsApplication, QgsVectorLayer, QgsWkbTypes
+from qgis.core import Qgis, QgsApplication, QgsVectorLayer, QgsWkbTypes
+from qgis.utils import iface
 
 from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
@@ -70,6 +71,13 @@ class FrmSampleFrame(QDialog):
         self.metadata_widget = MetadataWidget(self, metadata_json)
 
         self.setupUi()
+
+    def set_inputs(self, cross_sections=None, polygon=None):
+            
+        if cross_sections is not None:
+            self.tab_inputs.cboCrossSections.setCurrentIndex(self.tab_inputs.cross_sections_model.getItemIndex(cross_sections))
+        if polygon is not None:
+            self.tab_inputs.cboFramePolygon.setCurrentIndex(self.tab_inputs.polygons_model.getItemIndex(polygon))
 
     def promote_to_sample_frame(self, db_item: DBItem):
 
@@ -211,17 +219,17 @@ class FrmSampleFrame(QDialog):
                 field_map.append(ImportFieldMap(field, field, parent='attributes'))
         return field_map
 
-
     def on_import_complete(self, result):
-
-        if not result:
-            QMessageBox.warning(self, f'Error Importing sample frame Features', str(self.exception))
+        if result is True:
+            iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.tab_properties.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
+        else:
+            QgsApplication.messageLog().logMessage(f'Error Importing Sample Frame Features', 'QRIS', level=Qgis.Critical)
             try:
                 self.sample_frame.delete(self.qris_project.project_file)
             except Exception as ex:
-                print(f'Error attempting to delete sample frame after the importing of features failed.')
+                QgsApplication.messageLog().logMessage(f'Error Deleting sample frame: {str(ex)}', 'QRIS', level=Qgis.Critical)
+                iface.messageBar().pushMessage(f'Error Deleting sample frame', str(ex), level=Qgis.Critical, duration=5)
             return
-
 
     def setupUi(self):
 
@@ -470,16 +478,16 @@ class SampleFrameAttributes(QWidget):
 
         def load_attributes(self):
                 
-                # add to model
-                for field in self.sample_frame.fields:
-                    item = QStandardItem(field['label'])
-                    item.setData(field['values'], Qt.UserRole)
-                    self.model.appendRow(item)
-        
-                    # add attributes as children
-                    for attribute in field['values']:
-                        child_item = QStandardItem(attribute)
-                        item.appendRow(child_item)
+            # add to model
+            for field in self.sample_frame.fields:
+                item = QStandardItem(field['label'])
+                item.setData(field['values'], Qt.UserRole)
+                self.model.appendRow(item)
+    
+                # add attributes as children
+                for attribute in field['values']:
+                    child_item = QStandardItem(attribute)
+                    item.appendRow(child_item)
 
         def selection_changed(self, selected, deselected):
 
