@@ -96,7 +96,6 @@ class SampleFrameTask(QgsTask):
                 raise self.exception
 
         self.sample_frame_complete.emit(result)
-        self.cancel()
 
     def cancel(self):
         QgsMessageLog.logMessage(
