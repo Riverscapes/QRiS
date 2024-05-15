@@ -1,6 +1,7 @@
 
 import json
 import sqlite3
+import webbrowser
 import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -206,9 +207,22 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.cboDataset = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboDataset, 1, 1)
 
+        self.vert_variables = QtWidgets.QVBoxLayout()
+        self.grid.addLayout(self.vert_variables, 2, 0)
+
         self.lblVariable = QtWidgets.QLabel('Variables')
         self.lblVariable.setAlignment(QtCore.Qt.AlignTop)
-        self.grid.addWidget(self.lblVariable, 2, 0)
+        self.vert_variables.addWidget(self.lblVariable)
+
+        self.btn_variable_description = QtWidgets.QPushButton()
+        icon = QtGui.QIcon(':/plugins/qris_toolbar/help')
+        self.btn_variable_description.setIcon(icon)
+        self.btn_variable_description.setIconSize(QtCore.QSize(16, 16))
+        self.btn_variable_description.setFixedSize(24, 24)
+        self.btn_variable_description.clicked.connect(lambda: webbrowser.open('https://docs.climateengine.org/docs/build/html/variables.html'))
+        self.btn_variable_description.setToolTip('Climate Engine Variable Descriptions')
+        self.vert_variables.addWidget(self.btn_variable_description)
+        self.vert_variables.addStretch() 
 
         self.lboxVariables = QtWidgets.QListWidget()
         self.grid.addWidget(self.lboxVariables, 2, 1)
