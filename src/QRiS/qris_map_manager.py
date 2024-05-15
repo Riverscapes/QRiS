@@ -44,6 +44,7 @@ class QRisMapManager(RiverscapesMapManager):
             Profile.PROFILE_MACHINE_CODE,
             AOI_MACHINE_CODE,
             MASK_MACHINE_CODE,
+            SAMPLE_FRAME_MACHINE_CODE,
             f'{EVENT_MACHINE_CODE}_ROOT',
             f'{DESIGN_MACHINE_CODE}_ROOT',
             STREAM_GAGE_MACHINE_CODE,
@@ -61,7 +62,7 @@ class QRisMapManager(RiverscapesMapManager):
             symbology = 'mask'  # TODO do aois need a different mask type? make the reference here...
             layer_name = 'aoi_features'
         else:
-            group_layer_name = 'Sampling Frames'
+            group_layer_name = 'Sample Frames'
             mask_machine_code = MASK_MACHINE_CODE
             symbology = 'sampling_frames'
             layer_name = 'mask_features'
@@ -94,7 +95,7 @@ class QRisMapManager(RiverscapesMapManager):
     def build_sample_frame_layer(self, sample_frame: SampleFrame) -> QgsMapLayer:
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(self.project.map_guid, SAMPLE_FRAME_MACHINE_CODE, 'Sampling Frames', project_group, True)
+        group_layer = self.get_group_layer(self.project.map_guid, SAMPLE_FRAME_MACHINE_CODE, 'Sample Frames', project_group, True)
 
         existing_layer = self.get_db_item_layer(self.project.map_guid, sample_frame, group_layer)
         if existing_layer is not None:
