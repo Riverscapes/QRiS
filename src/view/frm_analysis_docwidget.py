@@ -82,26 +82,32 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         analysis_metrics = list(metric for metric in self.analysis.analysis_metrics.values() if metric.level_id == 2) if self.rdoIndicators.isChecked() else list(self.analysis.analysis_metrics.values())
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
+            edit_icon = QtGui.QIcon(':/plugins/qris_toolbar/options')
+            item = QtWidgets.QTableWidgetItem()
+            self.table.setItem(row, 0, item)
+            item.setIcon(edit_icon)
+        
             analysis_metric = analysis_metrics[row]
             metric = analysis_metric.metric
             label_metric = QtWidgets.QTableWidgetItem()
             metric_text = f'{metric.name} ({self.qris_project.units[metric.default_unit_id].display})' if metric.default_unit_id is not None else f'{metric.name}'
             label_metric.setText(metric_text)
-            self.table.setItem(row, 0, label_metric)
+            self.table.setItem(row, 1, label_metric)
             label_metric.setData(QtCore.Qt.UserRole, analysis_metric)
-            label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
+            # label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
 
             label_value = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 1, label_value)
+            self.table.setItem(row, 2, label_value)
 
             label_uncertainty = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 2, label_uncertainty)
+            self.table.setItem(row, 3, label_uncertainty)
 
             status_item = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 3, status_item)
+            self.table.setItem(row, 4, status_item)
 
+        self.table.itemClicked.connect(lambda item: self.edit_metric_value(item) if item.column() == 0 else None)
         self.table.doubleClicked.connect(self.edit_metric_value)
-        self.table.resizeColumnToContents(0)
+        self.table.resizeColumnToContents(1)
         
         self.load_table_values()
 
@@ -116,27 +122,26 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
             # Loop over active metrics and load values into grid
             for row in range(self.table.rowCount()):
-
-                metric = self.table.item(row, 0).data(QtCore.Qt.UserRole).metric
+                metric = self.table.item(row, 1).data(QtCore.Qt.UserRole).metric
                 metric_value_text = ''
                 uncertainty_text = ''
                 self.set_status(row)
-                self.table.item(row, 1).setData(QtCore.Qt.UserRole, None)
+                self.table.item(row, 2).setData(QtCore.Qt.UserRole, None)
                 if metric.id in metric_values:
                     metric_value = metric_values[metric.id]
                     metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
                     uncertainty_text = print_uncertanty(metric_value.uncertainty) if metric_value.is_manual else None
                     self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
                     self.set_status(row, metric_value)
-                self.table.item(row, 1).setText(f'{metric_value_text: .{metric.precision}f}'if isinstance(metric_value_text, float) and metric.precision is not None else str(metric_value_text))
-                self.table.item(row, 2).setText(str(uncertainty_text) if uncertainty_text is not None else '')
+                self.table.item(row, 2).setText(f'{metric_value_text: .{metric.precision}f}'if isinstance(metric_value_text, float) and metric.precision is not None else str(metric_value_text))
+                self.table.item(row, 3).setText(str(uncertainty_text) if uncertainty_text is not None else '')
 
-        self.table.resizeColumnToContents(1)
+        self.table.resizeColumnToContents(2)
 
     def set_status(self, row, metric_value: MetricValue = None):
 
-        status_item = self.table.item(row, 3)
-        metric = self.table.item(row, 0).data(QtCore.Qt.UserRole).metric
+        status_item = self.table.item(row, 4)
+        metric = self.table.item(row, 1).data(QtCore.Qt.UserRole).metric
 
         # Default Status none exists or selected
         status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_none')
@@ -246,8 +251,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def edit_metric_value(self, mi):
 
-        metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
-        metric = self.table.item(mi.row(), 0).data(QtCore.Qt.UserRole).metric
+        metric_value = self.table.item(mi.row(), 2).data(QtCore.Qt.UserRole)
+        metric = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole).metric
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
 
@@ -359,16 +364,19 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horiz.addItem(self.spacerItem)
 
-        self.table = QtWidgets.QTableWidget(0, 4)
+        self.table = QtWidgets.QTableWidget(0, 5)
         self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.table.setHorizontalHeaderLabels(['Metric', 'Value', 'Uncertainty', 'Status'])
-        self.table.setColumnWidth(0, int(self.table.width() * 0.8))
-        self.table.setColumnWidth(1, 100)
+        self.table.setHorizontalHeaderLabels(['', 'Metric', 'Value', 'Uncertainty', 'Status'])
+        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed) 
+        self.table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)
+        self.table.setColumnWidth(0, 16)
+        self.table.setColumnWidth(1, int(self.table.width() * 0.8))
         self.table.setColumnWidth(2, 100)
-        self.table.setColumnWidth(3, 50)
+        self.table.setColumnWidth(3, 100)
+        self.table.setColumnWidth(4, 50)
         self.table.setIconSize(QtCore.QSize(32, 16))
         self.vert.addWidget(self.table)
 
