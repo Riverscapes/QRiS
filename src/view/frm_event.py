@@ -457,9 +457,14 @@ class FrmEvent(QtWidgets.QDialog):
         self.cmdAddFromDCE = QtWidgets.QPushButton('Add From DCE >>', self)
         self.cmdAddFromDCE.clicked.connect(self.on_add_from_dce_clicked)
         self.vert_add.addWidget(self.cmdAddFromDCE)
+        self.vert_remove = QtWidgets.QVBoxLayout(self)
+        self.vert_buttons.addLayout(self.vert_remove)
         self.cmdRemoveLayer = QtWidgets.QPushButton('<< Remove', self)
         self.cmdRemoveLayer.clicked.connect(self.on_remove_layer)
-        self.vert_buttons.addWidget(self.cmdRemoveLayer)
+        self.vert_remove.addWidget(self.cmdRemoveLayer)
+        self.cmdRemoveAllLayers = QtWidgets.QPushButton('<< Remove All', self)
+        self.cmdRemoveAllLayers.clicked.connect(lambda: self.layers_model.removeRows(0, self.layers_model.rowCount()))
+        self.vert_remove.addWidget(self.cmdRemoveAllLayers)
 
         # Layers list
         self.vert_layers = QtWidgets.QVBoxLayout(self)
