@@ -92,6 +92,10 @@ class FrmEvent(QtWidgets.QDialog):
 
     def load_hierarchical_tree(self):
 
+        layer_names = [layer.name for protocol in self.qris_project.protocols.values() for method in protocol.methods for layer in method.layers]
+        layer_names += [layer.name for layer in self.qris_project.non_method_layers.values()]
+        duplicate_layers = [item for item in set(layer_names) if layer_names.count(item) > 1]
+
         # Rebuild the tree
         self.tree_model = QtGui.QStandardItemModel(self)
         for protocol in self.qris_project.protocols.values():
@@ -109,7 +113,8 @@ class FrmEvent(QtWidgets.QDialog):
                 # method_si.setCheckable(True)
 
                 for layer in method.layers:
-                    layer_si = QtGui.QStandardItem(layer.name)
+                    layer_name = layer.name if layer.name not in duplicate_layers else f'{layer.name} ({layer.geom_type})'
+                    layer_si = QtGui.QStandardItem(layer_name)
                     layer_si.setEditable(False)
                     layer_si.setData(layer, QtCore.Qt.UserRole)
                     # layer_si.setCheckable(True)
@@ -132,7 +137,8 @@ class FrmEvent(QtWidgets.QDialog):
         non_method_si.setEditable(False)
         non_method_si.setData(None, QtCore.Qt.UserRole)
         for non_method_layer in self.qris_project.non_method_layers.values():
-            layer_si = QtGui.QStandardItem(non_method_layer.name)
+            layer_name = non_method_layer.name if non_method_layer.name not in duplicate_layers else f'{non_method_layer.name} ({non_method_layer.geom_type})'
+            layer_si = QtGui.QStandardItem(layer_name)
             layer_si.setEditable(False)
             layer_si.setData(non_method_layer, QtCore.Qt.UserRole)
             non_method_si.appendRow(layer_si)
@@ -143,6 +149,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.layer_tree.setExpanded(self.tree_model.indexFromItem(non_method_si), False)
 
         self.layer_tree.doubleClicked.connect(self.on_double_click_tree)
+
 
     # def load_alphabetical_tree(self):
 
@@ -269,6 +276,7 @@ class FrmEvent(QtWidgets.QDialog):
                 self.add_selected_layers(item.child(i))
         else:
             tree_layer = item.data(QtCore.Qt.UserRole)
+            tree_name = item.text()
             # check if in list already
             for i in range(self.layers_model.rowCount()):
                 list_layer = self.layers_model.item(i).data(QtCore.Qt.UserRole)
@@ -276,7 +284,7 @@ class FrmEvent(QtWidgets.QDialog):
                 if tree_layer == list_layer:
                     return
             # If got to here then the layer selected in the tree is not in use
-            layer_item = QtGui.QStandardItem(tree_layer.name)
+            layer_item = QtGui.QStandardItem(tree_name)
             layer_item.setData(tree_layer, QtCore.Qt.UserRole)
             layer_item.setEditable(False)
             self.layers_model.appendRow(layer_item)
