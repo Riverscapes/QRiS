@@ -73,7 +73,6 @@ from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
-from .frm_climate_engine_download import FrmClimateEngineDownload
 from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 
@@ -141,9 +140,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.treeView.customContextMenuRequested.connect(self.open_menu)
-        # self.treeView.doubleClicked.connect(self.default_tree_action)
-        # self.treeView.clicked.connect(self.item_change)
-        # self.treeView.expanded.connect(self.expand_tree_item)
+        self.treeView.doubleClicked.connect(self.double_click_tree_item)
 
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
@@ -221,6 +218,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.traverse_tree(self.model.invisibleRootItem(), self.reconnect_layer_edits)
 
         return
+    
+    def double_click_tree_item(self, idx: QModelIndex):
+
+        model_item = self.model.itemFromIndex(idx)
+        model_data = model_item.data(QtCore.Qt.UserRole)
+
+        if isinstance(model_data, DBItem):
+            if isinstance(model_data, Event):
+                return
+            self.add_db_item_to_map(model_item, model_data)
+        if isinstance(model_data, Analysis):
+            self.open_analysis(model_data)
+        if isinstance(model_data, str):
+            if model_data == CLIMATE_ENGINE_MACHINE_CODE:
+                self.climate_engine_explorer()
+            if model_data == STREAM_GAGE_MACHINE_CODE:
+                self.stream_gage_explorer()
 
     def expand_tree_item(self, idx: QModelIndex):
         item = self.model.itemFromIndex(idx)
@@ -551,14 +565,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
                 self.add_tree_group_to_map(child_item, features_only)
 
-    def expand_tree(self):
-        self.treeView.expandAll()
-        return
-
-    def collapse_tree(self):
-        self.treeView.collapseAll()
-        return
-
     def set_project_srs(self, project: Project):
 
         # Get the current map CRS
@@ -632,15 +638,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def export_analysis_table(self, analysis: Analysis = None):
 
         frm = FrmExportMetrics(self, self.project, analysis)
-        frm.exec_()
-
-    def climate_engine_downloader(self):
-
-        if len(self.project.sample_frames) == 0:
-            QtWidgets.QMessageBox.warning(self, 'No Sample Frames', 'No sample frames exist in the current QRiS project. Please create or import sample frames before using the Climate Engine Downloader.')
-            return
-        
-        frm = FrmClimateEngineDownload(self, self.project)
         frm.exec_()
 
     def climate_engine_explorer(self):
