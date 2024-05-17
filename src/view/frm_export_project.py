@@ -27,6 +27,8 @@ from ..QRiS.path_utilities import parse_posix_path
 from .utilities import add_standard_form_buttons
 
 
+PROJECT_MACHINE_NAME = 'RiverscapesStudio'
+
 class FrmExportProject(QtWidgets.QDialog):
 
     def __init__(self, parent, project: QRiSProject, outpath: str = None):
@@ -34,7 +36,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         self.qris_project = project
 
-        self.setWindowTitle("Export QRiS to Riverscapes Project")
+        self.setWindowTitle("Export QRiS to Riverscapes Studio Project")
         self.setupUi()
 
         self.set_output_path(outpath)
@@ -253,7 +255,8 @@ class FrmExportProject(QtWidgets.QDialog):
             os.mkdir(self.txt_outpath.text())
 
         # copy the geopackage layers to the new project folder
-        out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), "qris.gpkg").replace("\\", "/"))
+        out_name = os.path.split(self.qris_project.project_file)[1]
+        out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), out_name).replace("\\", "/"))
         shutil.copy(self.qris_project.project_file, out_geopackage)
 
         # Project Bounds
@@ -353,7 +356,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         self.rs_project = Project(name=self.txt_rs_name.text(),
                                   proj_path=xml_path,
-                                  project_type='QRiS',
+                                  project_type=PROJECT_MACHINE_NAME,
                                   meta_data=MetaData(values=metadata_values),
                                   description=self.txt_description.toPlainText(),
                                   bounds=project_bounds)
@@ -564,7 +567,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 pour_point_gpkgs.append(Geopackage(xml_id=f'pour_points_{pour_point.id}_gpkg',
                                                 name=pour_point.name,
-                                                path='qris.gpkg',
+                                                path=out_name,
                                                 layers=pour_point_layers))
 
         # context vectors
@@ -620,7 +623,7 @@ class FrmExportProject(QtWidgets.QDialog):
         
         inputs_gpkg = Geopackage(xml_id=f'inputs_gpkg',
                     name=f'Inputs',
-                    path='qris.gpkg',
+                    path=out_name,
                     layers=input_layers)
         
         out_gpkgs = [inputs_gpkg]
@@ -765,7 +768,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 events_gpkg = Geopackage(xml_id=f'{event.id}_gpkg',
                                 name=f'{event.name}',
-                                path='qris.gpkg',
+                                path=out_name,
                                 layers=geopackage_layers)
 
                 # # self.rs_project.common_datasets.append(gpkg)
@@ -831,7 +834,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 analysis_gpkg = Geopackage(xml_id=f'{analysis.id}_gpkg',
                                 name=f'{analysis.name}',
-                                path='qris.gpkg',
+                                path=out_name,
                                 layers=geopackage_layers)
 
                 realization = Realization(xml_id=f'analysis_{analysis.id}',
