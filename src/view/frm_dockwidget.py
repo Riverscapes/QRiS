@@ -343,6 +343,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
                 self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
                 self.menu.addSeparator()
+            if model_data in [EVENT_MACHINE_CODE, SURFACE_MACHINE_CODE]:
+                sort_icon = QtGui.QIcon(':/plugins/qris_toolbar/sort')
+                sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
+                self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
+                self.add_context_menu_item(sort_menu, 'Date', 'date', lambda: self.sort_children(model_item, 'date'), False)
+                self.menu.addSeparator()
 
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
@@ -490,6 +496,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if slot is not None:
             action.triggered.connect(slot)
+
+    def sort_children(self, tree_node: QtGui.QStandardItem, sort_key: str):
+
+        if sort_key == 'name':
+            # determine the sort order based on the current children. 
+            # we will toggle between ascending and descending. we need to check every item in the list to see if they are in order
+            current_order = True
+            for i in range(0, tree_node.rowCount() - 1):
+                if tree_node.child(i).text() > tree_node.child(i + 1).text():
+                    current_order = False
+                    break
+
+            tree_node.sortChildren(0, QtCore.Qt.DescendingOrder if current_order else QtCore.Qt.AscendingOrder)
 
     def add_db_item_to_map(self, tree_node: QtGui.QStandardItem, db_item: DBItem):
 
