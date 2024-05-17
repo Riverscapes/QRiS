@@ -1,5 +1,32 @@
 # QRiS Plugin
 
+## [0.3.20] 2023 MAY 17
+
+### Added
+- Right Click delete for downloaded stream gages and climate engine metrics
+- Provide descriptions of Climate Engine variables as url link #383
+- Add edit button to left of metric calculations in Analysis #255
+- Add 'Remove All' button to regular DCE #388
+- Double click layer in project tree adds to map #390
+- Sort DCE and surfaces by name
+
+### Fixed
+- Bug preventing Climate Engine data export
+- Error when no Stream Gages found to download #376
+- Stream Gage error if map layer not in map #377
+- Watershed Cachements/StreamStats Error #378
+- Error When Generating Sample Frames from Cross Sections #361
+
+### Changed
+- Better stream gage download messages
+- Make Sample Frames appear above Surfaces when Added to QGIS #381
+- Specify geometry type for duplicates in available layers for regular DCE #389
+- update project export project type to Riverscapes Studio
+
+### Removed
+- Remove gpkg references to old lookup tables
+
+
 ## [0.3.19] 2023 MAY 09
 
 ### Added
