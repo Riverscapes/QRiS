@@ -5,6 +5,7 @@
         <file alias="add_to_map">../Images/add_to_map.svg</file>
         <file alias="arrow_down">../Images/arrow_down.png</file>
         <file alias="arrow_up">../Images/arrow_up.png</file>
+        <file alias="alpha">../Images/alpha.svg</file>
         <file alias="calculate">../Images/calculate.svg</file>
         <file alias="collapse">../Images/collapse.svg</file>
         <file alias="close">../Images/close.svg</file>
@@ -22,6 +23,7 @@
         <file alias="options">../Images/edit.svg</file>
         <file alias="protocol">../Images/protocol.png</file>
         <file alias="refresh">../Images/refresh.svg</file>
+        <file alias="sort">../Images/sort.svg</file>
         <file alias="table">../Images/table.svg</file>
         <file alias="qris_icon">../Images/qris_icon.svg</file>
         <file alias="camera">../Images/camera.svg</file>
