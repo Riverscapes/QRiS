@@ -15,7 +15,7 @@ class MetadataWidget(QtWidgets.QWidget):
         self.attribute_metadat = dict()
         self.table: QtWidgets.QTableWidget = None
 
-        if json_meta is not None:
+        if json_meta is not None and json_meta != '' and json_meta != 'null':
             self.load_json(json_meta)
 
         self.create_table_ui()
