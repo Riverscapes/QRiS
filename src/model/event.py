@@ -46,6 +46,9 @@ class Event(DBItem):
         self.rasters = rasters.copy() if rasters else []
         self.metadata = metadata
 
+        # use the start date as text
+        self.date = f'{self.start.year}-{self.start.month}-{self.start.day}' if self.start else None
+
         self.icon = 'calendar'
         if self.event_type.id == DESIGN_EVENT_TYPE_ID:
             self.icon = 'design'
@@ -89,6 +92,7 @@ class Event(DBItem):
                 self.platform = platform
                 self.representation = representation
                 self.metadata = metadata
+                self.date = f'{self.start.year}-{self.start.month}-{self.start.day}' if self.start else None
                 conn.commit()
 
             except Exception as ex:

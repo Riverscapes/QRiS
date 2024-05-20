@@ -30,7 +30,9 @@ class Raster(DBItem):
         self.is_context = is_context
         self.description = description
         self.icon = 'raster'
-        self.metadata = metadata
+        self.metadata: dict = metadata
+
+        self.date = self.metadata.get('system', {}).get('date', None) if self.metadata else None
 
     def update(self, db_path: str, name: str, description: str = None, metadata=None, raster_type_id=None) -> None:
 
@@ -52,6 +54,7 @@ class Raster(DBItem):
                 self.description = out_description
                 self.metadata = out_metadata
                 self.raster_type_id = out_raster_type_id
+                self.date = self.metadata.get('system', {}).get('date', None) if self.metadata else None
 
             except Exception as ex:
                 conn.rollback()

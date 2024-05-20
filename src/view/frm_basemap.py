@@ -90,6 +90,9 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtDescription.setPlainText(raster.description)
             self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexById(raster.raster_type_id))
 
+            if raster.date is not None:
+                self.txtDate.setDate(QtCore.QDate.fromString(raster.date, 'yyyy-MM-dd'))
+
             self.lblSourcePath.setVisible(False)
             self.txtSourcePath.setVisible(False)
             self.lblMask.setVisible(False)
@@ -111,6 +114,9 @@ class FrmRaster(QtWidgets.QDialog):
 
         if not self.metadata_widget.validate():
             return
+
+        if self.txtDate.date() != self.txtDate.minimumDate():
+            self.metadata_widget.add_system_metadata('date', self.txtDate.date().toString('yyyy-MM-dd'))
 
         metadata_json = self.metadata_widget.get_json()
         self.metadata = json.loads(metadata_json) if metadata_json is not None else None
@@ -293,12 +299,21 @@ class FrmRaster(QtWidgets.QDialog):
         self.cboMask = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboMask, 4, 1, 1, 1)
 
+        self.lblDate = QtWidgets.QLabel('Aquisition Date')
+        self.grid.addWidget(self.lblDate, 5, 0, 1, 1)
+
+        self.txtDate = QtWidgets.QDateEdit()
+        self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
+        self.txtDate.setSpecialValueText("No Date")
+        self.txtDate.setDate(self.txtDate.minimumDate())
+        self.grid.addWidget(self.txtDate, 5, 1, 1, 1)
+
         self.lblDescription = QtWidgets.QLabel()
         self.lblDescription.setText('Description')
-        self.grid.addWidget(self.lblDescription, 5, 0, 1, 1)
+        self.grid.addWidget(self.lblDescription, 6, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription, 5, 1, 1, 1)
+        self.grid.addWidget(self.txtDescription, 6, 1, 1, 1)
 
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
