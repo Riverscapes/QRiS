@@ -1,22 +1,27 @@
 import sqlite3
 import json
 
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
+from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
 
 from .frm_climate_engine import FrmClimateEngine
 from ..lib.climate_engine import get_api_key
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
 
+DOCK_WIDGET_LOCATION = 'dock_widget_location'
+REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
+
+default_dock_widget_location = 'left'
+
 class FrmSettings(QDialog):
-    def __init__(self, settings: QSettings, dock_widget_location: str, default_dock_widget_location:str, qris_project: Project):
+    def __init__(self, settings: QSettings, qris_project: Project):
         super().__init__()
 
         self.settings = settings
-        self.dock_widget_location = dock_widget_location
-        self.default_dock_widget_location = default_dock_widget_location
+        # self.dock_widget_location = dock_widget_location
+        # self.default_dock_widget_location = default_dock_widget_location
         self.qris_project = qris_project
         self.levels = {}
         self.units = {}
@@ -25,21 +30,32 @@ class FrmSettings(QDialog):
         self.setup_ui()
 
         # Get the dockwidget location from the settings
-        dock_location = settings.value(self.dock_widget_location, self.default_dock_widget_location)
-
+        dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
         if dock_location == 'left':
             self.left_radio.setChecked(True)
         else:
             self.right_radio.setChecked(True)
+
+        # Get the remove layers on close setting
+        remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, False)
+        if remove_layers_on_close.lower() == "true":
+            self.chk_remove_layers_on_close.setChecked(True)
+        else:
+            self.chk_remove_layers_on_close.setChecked(False)
 
         self.load_metrics()
 
     def accept(self):
 
         if self.left_radio.isChecked():
-            self.settings.setValue(self.dock_widget_location, 'left')
+            self.settings.setValue(DOCK_WIDGET_LOCATION, 'left')
         else:
-            self.settings.setValue(self.dock_widget_location, 'right')
+            self.settings.setValue(DOCK_WIDGET_LOCATION, 'right')
+
+        if self.chk_remove_layers_on_close.isChecked():
+            self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, True)
+        else:
+            self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, False)
 
         super().accept()
 
@@ -255,6 +271,11 @@ class FrmSettings(QDialog):
         self.vert.addWidget(self.tabs)
 
         self.vertGeneral = QVBoxLayout()
+        
+        self.chk_remove_layers_on_close = QCheckBox("Remove QRiS Project map layers on project close")
+        self.chk_remove_layers_on_close.setToolTip("Check this box to remove all layers from the project when it is closed.")
+        self.vertGeneral.addWidget(self.chk_remove_layers_on_close)
+        
         self.grid = QGridLayout()
 
         self.label = QLabel("Default Dock widget location")
@@ -265,12 +286,8 @@ class FrmSettings(QDialog):
         self.grid.addWidget(self.left_radio, 1, 0)
         self.grid.addWidget(self.right_radio, 1, 1)
 
-        # add a label to the layout to explain settings will take effect after restarting qgis
-        self.grid.addWidget(QLabel("Settings will take effect after restarting QGIS"))
-
-        self.btnTest = QPushButton("Run Climate Engine")
-        self.btnTest.clicked.connect(self.test_api)
-        self.grid.addWidget(self.btnTest, 4, 0, 1, 2)
+        # # add a label to the layout to explain settings will take effect after restarting qgis
+        # self.grid.addWidget(QLabel("Settings will take effect after restarting QGIS"))
 
         self.vertGeneral.addLayout(self.grid)
         self.vertGeneral.addStretch(1)
