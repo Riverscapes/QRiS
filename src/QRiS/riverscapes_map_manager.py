@@ -224,6 +224,14 @@ class RiverscapesMapManager(QObject):
             parent_group.removeChildNode(layer)
             self.remove_empty_groups(parent_group)
 
+    def remove_all_layers(self, project_key: str) -> None:
+
+        for layer in self.get_product_key_layers():
+            if layer.customProperty(self.product_key).startswith(f'{self.product_key}::{project_key}'):
+                parent_group = layer.parent()
+                parent_group.removeChildNode(layer)
+                self.remove_empty_groups(parent_group)
+
     def test_for_zoom(self) -> bool:
         """Returns True if the map should zoom to the new layer."""
 

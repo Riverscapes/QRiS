@@ -43,7 +43,7 @@ from .lib.environment import load_env_vars
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
-from .view.frm_settings import FrmSettings
+from .view.frm_settings import FrmSettings, REMOVE_LAYERS_ON_CLOSE, DOCK_WIDGET_LOCATION, default_dock_widget_location
 
 from .model.project import apply_db_migrations, test_project
 from .QRiS.qrave_integration import QRaveIntegration
@@ -57,9 +57,7 @@ ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 LAST_PROJECT_FOLDER = 'last_project_folder'
 RECENT_PROJECT_LIST = 'recent_projects'
-DOCK_WIDGET_LOCATION = 'dock_widget_location'
 
-default_dock_widget_location = 'left'
 dock_widget_locations = {
     'left': QtCore.Qt.LeftDockWidgetArea,
     'right': QtCore.Qt.RightDockWidgetArea,
@@ -278,6 +276,11 @@ class QRiSToolbar:
     def close_project(self):
         if self.dockwidget is not None:
             # self.dockwidget.destroy_docwidget()
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, False)
+            if remove_layers.lower() == 'true':
+                if self.dockwidget.map_manager is not None:
+                    self.dockwidget.map_manager.remove_all_layers(self.dockwidget.project.map_guid)
             self.dockwidget.close()
             self.iface.removeDockWidget(self.dockwidget)
             # self.dockwidget = None
@@ -661,7 +664,7 @@ class QRiSToolbar:
         if self.dockwidget is not None:
             qris_project = self.dockwidget.project
 
-        self.settings_dialog = FrmSettings(settings, DOCK_WIDGET_LOCATION, default_dock_widget_location,qris_project)
+        self.settings_dialog = FrmSettings(settings, qris_project)
         self.settings_dialog.exec_()
         self.settings_dialog = None
 
