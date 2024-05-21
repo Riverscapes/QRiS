@@ -752,7 +752,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     if layer_fields is not None and len(layer_fields) > 0:
                         field_names = [field['label'] for field in layer_fields]
                         out_fields = ", ".join([f'json_extract(metadata, \'$.{field}\') AS "{field}"' for field in field_names])
-                    sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event.id} and event_layer_id == {layer.layer.id}"
+                    sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event.id} AND event_layer_id == {layer.layer.id}"
                     self.create_spatial_view(view_name=view_name,
                                             fc_name=fc_name,
                                             field_name='event_id',
@@ -818,7 +818,9 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 # prepare sql string for each metric
                 sql_metric = ", ".join([f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in analysis.analysis_metrics.items()])
-                sql = f"""CREATE VIEW {analysis_view} AS SELECT * from mask_features JOIN (SELECT mask_feature_id, {sql_metric} FROM metric_values JOIN metrics on metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis.id} Group BY mask_feature_id) AS x ON mask_features.fid = x.mask_feature_id"""
+                sql = f"""CREATE VIEW {analysis_view} AS SELECT * FROM mask_features JOIN (SELECT mask_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis.id} GROUP BY mask_feature_id) AS x ON mask_features.fid = x.mask_feature_id"""
+                if sql_metric == '':
+                    sql = f"CREATE VIEW {analysis_view} AS SELECT * FROM mask_features WHERE mask_id == {sample_frame.id}"
                 self.create_spatial_view(view_name=analysis_view,
                                         fc_name=None,
                                         field_name=None,
