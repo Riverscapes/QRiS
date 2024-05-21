@@ -542,18 +542,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
-            event = event_node.data(QtCore.Qt.UserRole)
+            event: Event = event_node.data(QtCore.Qt.UserRole)
             for event_layer in event.event_layers:
                 if event_layer.layer in db_item.layers:
                     self.map_manager.build_event_single_layer(event, event_layer)
+            [self.map_manager.build_raster_layer(raster) for raster in event.rasters]
         elif isinstance(db_item, EventLayer):
             # determine parent node
             event_node = tree_node
             # traverse up the tree until we find the event node
             while not isinstance(event_node.data(QtCore.Qt.UserRole), Event):
                 event_node = event_node.parent()
-            event = event_node.data(QtCore.Qt.UserRole)
+            event: Event = event_node.data(QtCore.Qt.UserRole)
             self.map_manager.build_event_single_layer(event, db_item)
+            [self.map_manager.build_raster_layer(raster) for raster in event.rasters]
         elif isinstance(db_item, Project):
             [self.map_manager.build_sample_frame_layer(sample_frame) for sample_frame in self.project.sample_frames.values()]
             [self.map_manager.build_mask_layer(mask) for mask in self.project.aois.values()]
