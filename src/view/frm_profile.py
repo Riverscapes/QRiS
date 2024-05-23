@@ -103,13 +103,15 @@ class FrmProfile(QtWidgets.QDialog):
 
             if self.import_source_path is not None:
                 try:
+                    fc_path = f'{self.qris_project.project_file}|layername=profile_features'
+                    
                     clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                     clip_mask = None if clip_mask.id == 0 else clip_mask
                     clip_aoi_id = None
                     if clip_mask is not None:
                         clip_aoi_id = clip_mask.id if clip_mask.id > 0 else None
                     if self.layer_id == 'memory':
-                        task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, 'profile_features', {'profile_id': self.profile.id}, mask_clip_id=clip_aoi_id, proj_gpkg=self.qris_project.project_file)
+                        task = ImportTemporaryLayer(self.import_source_path, fc_path, {'profile_id': self.profile.id}, clip_mask_id=clip_aoi_id, proj_gpkg=self.qris_project.project_file)
                         # DEBUG task.run()
                         task.import_complete.connect(self.on_import_complete)
                         QgsApplication.taskManager().addTask(task)

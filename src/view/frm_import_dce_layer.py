@@ -1,12 +1,13 @@
 from PyQt5 import QtCore, QtWidgets
 
-from qgis.core import Qgis, QgsApplication
+from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.utils import iface
 
 from ..model.project import Project
 from ..model.db_item import DBItem
 from ..gp.feature_class_functions import get_field_names, get_field_values
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
+from ..gp.import_temp_layer import ImportTemporaryLayer
 
 from .frm_field_value_map import FrmFieldValueMap
 from .utilities import add_standard_form_buttons
@@ -25,13 +26,22 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         self.qris_project = project
         self.db_item = db_item
-        self.import_path = import_path
+        self.temp_layer = None
+        if isinstance(import_path, QgsVectorLayer):
+            self.import_path = import_path.name()
+            self.temp_layer = import_path
+        else:
+            self.import_path = import_path
         source = 'dce_points' if db_item.layer.geom_type == 'Point' else 'dce_lines' if db_item.layer.geom_type == 'Linestring' else 'dce_polygons'
         self.target_path = f'{project.project_file}|layername={source}'
         self.qris_event = next((event for event in self.qris_project.events.values() if event.id == db_item.event_id), None)
         self.field_status = None
         self.field_maps: List[ImportFieldMap] = []
-        self.input_fields, self.input_field_types = get_field_names(self.import_path)
+        if self.temp_layer is None:
+            self.input_fields, self.input_field_types = get_field_names(self.import_path)
+        else:
+            self.input_fields = [field.name() for field in self.temp_layer.fields()]
+            self.input_field_types = [field.typeName() for field in self.temp_layer.fields()]
 
         # Get the fields from the layer metadata if it exists
         self.target_fields = {}
@@ -109,7 +119,15 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         input_field = self.tblFields.item(row, 0).text()
 
         # get the field values
-        values = get_field_values(self.import_path, input_field)
+        if self.temp_layer is not None:
+            # iterate through the features in the layer and get the unique values for the field
+            values = []
+            for feature in self.temp_layer.getFeatures():
+                value = feature[input_field]
+                if value not in values:
+                    values.append(value)
+        else:
+            values = get_field_values(self.import_path, input_field)
         # get dict of target fields and values
         fields = {}
         for target_field_name, target_field in self.target_fields.items():
@@ -193,7 +211,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         try:
             layer_attributes = {'event_id': self.db_item.event_id, 'event_layer_id': self.db_item.layer.id}
-            import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, field_maps)
+            
+            if self.temp_layer is not None:
+                import_task = ImportTemporaryLayer(self.temp_layer, self.target_path, layer_attributes, field_maps)
+            else:
+                import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, field_maps)
             self.buttonBox.setEnabled(False)
             # DEBUG
             # result = import_task.run()
@@ -250,7 +272,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblInputFC = QtWidgets.QLabel('Input Feature Class')
+        self.lblInputFC = QtWidgets.QLabel('Input Feature Class') if self.temp_layer is None else QtWidgets.QLabel('Input Temporary Layer')
         self.grid.addWidget(self.lblInputFC, 0, 0)
         self.txtInputFC = QtWidgets.QLineEdit()
         self.txtInputFC.setReadOnly(True)

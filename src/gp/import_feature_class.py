@@ -13,11 +13,12 @@ MESSAGE_CATEGORY = 'QRiS_ImportFeatureClassTask'
 
 # create a data class to store 'src_field', 'dest_field', and optional 'map' values
 class ImportFieldMap:
-    def __init__(self, src_field: str, dest_field: str=None, map: dict = None, parent=None):
+    def __init__(self, src_field: str, dest_field: str=None, map: dict = None, parent=None, direct_copy=False):
         self.src_field = src_field
         self.dest_field = dest_field
         self.map = map
         self.parent = parent
+        self.direct_copy = direct_copy
 
 class ImportFeatureClass(QgsTask):
     """
@@ -171,6 +172,10 @@ class ImportFeatureClass(QgsTask):
                                 value = None
                             if field_map.dest_field == 'display_label':
                                 value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else value
+                            if field_map.direct_copy is True:
+                                # we need to copy the value directly to the output field
+                                dst_feature.SetField(field_map.dest_field, value)
+                                continue
                             if field_map.dest_field is not None:
                                 if field_map.parent is not None:
                                     # this is a child field. we need to add it to the parent

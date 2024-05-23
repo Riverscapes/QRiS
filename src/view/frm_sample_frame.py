@@ -52,9 +52,14 @@ class FrmSampleFrame(QDialog):
         self.attribute_filter = None
 
         if self.import_source_path is not None:
-            self.tab_inputs = SampleFrameInputs(self, self.qris_project, self.import_source_path)
-            self.tab_attributes = SampleFrameAttributesAddFields(self, self.import_source_path)
-            self.setWindowTitle(f'Import New Sample Frame From Feature Class')
+            if isinstance(self.import_source_path, QgsVectorLayer):
+                self.tab_inputs = SampleFrameInputs(self, self.qris_project, self.import_source_path)
+                self.tab_attributes = SampleFrameAttributesAddFields(self, self.import_source_path)
+                self.setWindowTitle(f'Import New Sample Frame From Temporary Layer')
+            else:
+                self.tab_inputs = SampleFrameInputs(self, self.qris_project, self.import_source_path)
+                self.tab_attributes = SampleFrameAttributesAddFields(self, self.import_source_path)
+                self.setWindowTitle(f'Import New Sample Frame From Feature Class')
         else:
             self.tab_attributes = SampleFrameAttributes(self, self.sample_frame)
         
@@ -71,6 +76,7 @@ class FrmSampleFrame(QDialog):
         self.metadata_widget = MetadataWidget(self, metadata_json)
 
         self.setupUi()
+        self.txtName.setFocus()
 
     def set_inputs(self, cross_sections=None, polygon=None):
             
@@ -105,13 +111,13 @@ class FrmSampleFrame(QDialog):
     def accept(self):
          
         # validate name
-        if not validate_name(self, self.tab_properties.txtName):
+        if not validate_name(self, self.txtName):
             return  
         
         # validate name is unique
         if self.sample_frame is None:
-            if not validate_name_unique(self.qris_project.project_file, 'sample_frames', 'name', self.tab_properties.txtName.text()):
-                QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.tab_properties.txtName.text()}' already exists. Please choose a unique name.")
+            if not validate_name_unique(self.qris_project.project_file, 'sample_frames', 'name', self.txtName.text()):
+                QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 return
 
         metadata_json = self.metadata_widget.get_json()
@@ -128,14 +134,14 @@ class FrmSampleFrame(QDialog):
 
         try:
             if self.sample_frame is not None:
-                self.sample_frame.update(self.qris_project.project_file, self.tab_properties.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
+                self.sample_frame.update(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
             else:
-                self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.tab_properties.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
+                self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
                 self.qris_project.sample_frames[self.sample_frame.id] = self.sample_frame
         except Exception as ex:
             if 'unique' in str(ex).lower():
-                QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.tab_properties.txtName.text()}' already exists. Please choose a unique name.")
-                self.tab_properties.txtName.setFocus()
+                QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+                self.txtName.setFocus()
             else:
                 QMessageBox.warning(self, 'Error Saving sample frame', str(ex))
             return
@@ -143,29 +149,40 @@ class FrmSampleFrame(QDialog):
         if self.import_source_path is not None:
             try:
                 # set the ok and cancel buttons to disabled
-                # self.buttonBox.button(QMessageBox.Ok).setEnabled(False)
-                # self.buttonBox.button(QMessageBox.Cancel).setEnabled(False)
+                self.buttonBox.setEnabled(False)
 
+                sample_frame_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
                 out_field_map = self.get_field_map()
+                if self.tab_inputs is not None:
+                    if isinstance(self.tab_inputs, SampleFrameInputs):
+                        if self.tab_inputs.cboDisplayLabel.currentIndex() > 0:
+                            out_field_map.append(ImportFieldMap(self.tab_inputs.cboDisplayLabel.currentText(), 'display_label', direct_copy=True))
+                        if self.tab_inputs.cboFlowPathField.currentIndex() > 0:
+                            out_field_map.append(ImportFieldMap(self.tab_inputs.cboFlowPathField.currentText(), 'flow_path', direct_copy=True))
+                        if self.tab_inputs.cboTopologyField.currentIndex() > 0:
+                            out_field_map.append(ImportFieldMap(self.tab_inputs.cboTopologyField.currentText(), 'topology', direct_copy=True))
+
                 clip_mask = None
                 clip_mask_id = None
                 if self.tab_inputs is not None:
                     clip_mask = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
                 if clip_mask is not None:
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
-                # if self.layer_id == 'memory':
-                #    import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, 'sample_frame_features', 'sample_frame_id', self.sample_frame.id, clip_mask_id, proj_gpkg=self.qris_project.project_file)
-               
-                sample_frame_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
-                attributes = {self.tab_inputs.cboDisplayLabel.currentText(): 'display_label', self.tab_inputs.cboFlowPathField.currentText(): 'flow_path', self.tab_inputs.cboTopologyField.currentText(): 'topology'}
+                
+                attributes = {}
                 attributes['sample_frame_id'] = self.sample_frame.id
-                import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
+                
+                if isinstance(self.import_source_path, QgsVectorLayer):
+                    import_mask_task = ImportTemporaryLayer(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
+                else:
+
+                    import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
                 # # DEBUG
-                # result = import_mask_task.run()
-                # self.on_import_complete(result)
+                result = import_mask_task.run()
+                self.on_import_complete(result)
                 # PRODUCTION
-                import_mask_task.import_complete.connect(self.on_import_complete)
-                QgsApplication.taskManager().addTask(import_mask_task)
+                # import_mask_task.import_complete.connect(self.on_import_complete)
+                # QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
@@ -173,8 +190,7 @@ class FrmSampleFrame(QDialog):
                     print(f'Error attempting to delete sample_frame after the importing of features failed.')
                     QMessageBox.warning(self, f'Error Importing Sample Frame Features', str(ex))
                     # enable the buttons
-                    # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
-                    # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
+                    self.buttonBox.setEnabled(True)
                 return
             # finally:
                 # # enable the buttons
@@ -205,8 +221,6 @@ class FrmSampleFrame(QDialog):
                     # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
                     # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
                 return
-            
-        super().accept()
 
     def get_field_map(self):
 
@@ -221,7 +235,8 @@ class FrmSampleFrame(QDialog):
 
     def on_import_complete(self, result):
         if result is True:
-            iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.tab_properties.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
+            iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
+            super().accept()
         else:
             QgsApplication.messageLog().logMessage(f'Error Importing Sample Frame Features', 'QRIS', level=Qgis.Critical)
             try:
@@ -238,6 +253,15 @@ class FrmSampleFrame(QDialog):
 
         self.vert = QVBoxLayout(self)
         self.setLayout(self.vert)
+
+        self.horiz_name = QHBoxLayout()
+        self.vert.addLayout(self.horiz_name)
+
+        self.lblName = QLabel('Name')
+        self.horiz_name.addWidget(self.lblName)
+        self.txtName = QLineEdit()
+        self.horiz_name.addWidget(self.txtName)
+
         self.tabs = QTabWidget(self)
         self.vert.addWidget(self.tabs)
 
@@ -251,7 +275,8 @@ class FrmSampleFrame(QDialog):
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'sampling-frames'))
+        self.buttonBox = add_standard_form_buttons(self, 'sampling-frames')
+        self.vert.addLayout(self.buttonBox)
 
 
 class SampleFrameInputs(QWidget):
@@ -261,9 +286,10 @@ class SampleFrameInputs(QWidget):
 
         self.qris_project = qris_project
         self.import_feature_class = import_feature_class
+        name = self.import_feature_class.name() if isinstance(self.import_feature_class, QgsVectorLayer) else self.import_feature_class
 
         self.setupUi()
-        self.txtImport.setText(self.import_feature_class)
+        self.txtImport.setText(name)
         self.load_fields()
         self.load_clip_to_aoi()
 
@@ -282,7 +308,10 @@ class SampleFrameInputs(QWidget):
 
             # use QgsVectorLayer to get fields
             if self.import_feature_class is not None:
-                layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
+                if isinstance(self.import_feature_class, QgsVectorLayer):
+                    layer = self.import_feature_class
+                else:
+                    layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
                 fields = layer.fields()
                 for field in fields:
                     self.cboDisplayLabel.addItem(field.name())
@@ -434,11 +463,6 @@ class SampleFrameProperties(QWidget):
         self.vert = QVBoxLayout(self)
         self.grid = QGridLayout()
         self.vert.addLayout(self.grid)
-
-        self.lblName = QLabel('Name')
-        self.grid.addWidget(self.lblName, 0, 0)
-        self.txtName = QLineEdit()
-        self.grid.addWidget(self.txtName, 0, 1)
 
         self.lblLabelField = QLabel('Labels Field Name')
         self.grid.addWidget(self.lblLabelField, 1, 0)
@@ -616,7 +640,10 @@ class SampleFrameAttributesAddFields(QWidget):
 
         # use QgsVectorLayer to get fields
         if self.import_feature_class is not None:
-            layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
+            if isinstance(self.import_feature_class, QgsVectorLayer):
+                layer = self.import_feature_class
+            else:
+                layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
             return layer.fields().names()
         
     def get_fields(self):

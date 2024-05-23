@@ -122,7 +122,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                 if clip_aoi is not None:
                     clip_aoi_id = clip_aoi.id if clip_aoi.id > 0 else None
                 if self.layer_id == 'memory':
-                    task = ImportTemporaryLayer(self.import_source_path, out_path, self.fc_name, mask_clip_id=clip_aoi_id, proj_gpkg=self.project.project_file)
+                    task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask_id=clip_aoi_id, proj_gpkg=self.project.project_file)
                 else:
                     task = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=clip_aoi_id, proj_gpkg=self.project.project_file)
                 # Call the run command directly during development to run the process synchronousely.

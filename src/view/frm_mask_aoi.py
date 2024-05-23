@@ -11,7 +11,7 @@ from ..model.pour_point import PourPoint
 from ..model.scratch_vector import ScratchVector
 
 from ..gp.feature_class_functions import layer_path_parser
-from ..gp.import_feature_class import ImportFeatureClass
+from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
 
 from .metadata import MetadataWidget
@@ -128,6 +128,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
             else:
                 self.qris_mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText(), metadata)
                 self.qris_project.masks[self.qris_mask.id] = self.qris_mask
+                self.qris_project.aois[self.qris_mask.id] = self.qris_mask
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -138,18 +139,19 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
         if self.import_source_path is not None:
             try:
+                mask_layer_name = "aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "mask_features"
+                mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
+                layer_attributes = {'mask_id': self.qris_mask.id}
+                field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, 'display_label', direct_copy=True)] if self.cboAttribute.isVisible() else None
                 clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                 clip_mask_id = None
                 if clip_mask is not None:
                     clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
-                mask_layer_name = "aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "mask_features"
+                
                 if self.layer_id == 'memory':
-                    import_mask_task = ImportTemporaryLayer(self.import_source_path, self.qris_project.project_file, mask_layer_name, {'mask_id': self.qris_mask.id}, clip_mask_id, proj_gpkg=self.qris_project.project_file)
+                    import_mask_task = ImportTemporaryLayer(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
                 else:
-                    mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
-                    attributes = {self.cboAttribute.currentData(QtCore.Qt.UserRole).name: 'display_label'} if self.cboAttribute.isVisible() else {}
-                    layer_attributes = {'mask_id': self.qris_mask.id}
-                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, attributes, clip_mask_id, self.attribute_filter)
+                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
                 # DEBUG
                 # result = import_mask_task.run()
                 # self.on_import_complete(result)
