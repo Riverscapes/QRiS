@@ -9,13 +9,20 @@ from .layer import Layer
 from .event_layer import EventLayer
 from .raster import Raster
 EVENT_MACHINE_CODE = 'Event'
+DCE_MACHINE_CODE = 'DCE'
 DESIGN_MACHINE_CODE = 'Design'
 AS_BUILT_MACHINE_CODE = 'AsBuilt'
 
 # Database ID of the design event type. Used to determine which icon to use
+DCE_EVENT_TYPE_ID = 1
 DESIGN_EVENT_TYPE_ID = 2
 AS_BUILT_EVENT_TYPE_ID = 3
 
+EVENT_TYPE_LOOKUP = {
+    DCE_EVENT_TYPE_ID: DCE_MACHINE_CODE,
+    DESIGN_EVENT_TYPE_ID: DESIGN_MACHINE_CODE,
+    AS_BUILT_EVENT_TYPE_ID: AS_BUILT_MACHINE_CODE
+}
 
 class Event(DBItem):
     """ Data Capture Event class"""

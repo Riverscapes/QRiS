@@ -12,7 +12,7 @@ from qgis.core import QgsVectorLayer
 from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
 
 from ...__version__ import __version__ as qris_version
-from ..model.event import Event
+from ..model.event import Event, EVENT_TYPE_LOOKUP
 from ..model.analysis import Analysis
 from ..model.profile import Profile
 from ..model.pour_point import PourPoint
@@ -693,10 +693,10 @@ class FrmExportProject(QtWidgets.QDialog):
                 if event_item.checkState() == QtCore.Qt.Unchecked:
                     continue
                 event: Event = event_item.data(QtCore.Qt.UserRole)
-                event_type = "DCE" if event.event_type.id == 1 else "Design"
+                event_type = EVENT_TYPE_LOOKUP[event.event_type.id]
 
                 if 'events' not in keep_layers:
-                    keep_layers['events'] = {'id_field': 'event_id', 'id_values': []}
+                    keep_layers['events'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['events']['id_values'].append(str(event.id))
                 if 'event_layers' not in keep_layers:
                     keep_layers['event_layers'] = {'id_field': 'event_id', 'id_values': []}
@@ -856,8 +856,9 @@ class FrmExportProject(QtWidgets.QDialog):
             if layer in keep_layers:
                 keep_layer = keep_layers[layer]
                 lyr.SetAttributeFilter(f"{keep_layer['id_field']} NOT IN ({', '.join(keep_layer['id_values'])})")
-            for feat in lyr:
-                lyr.DeleteFeature(feat.GetFID())
+            if lyr.GetFeatureCount() != 0:  
+                for feat in lyr:
+                    lyr.DeleteFeature(feat.GetFID())
             lyr.SetAttributeFilter(None)
             lyr = None
         ds_gpkg = None
