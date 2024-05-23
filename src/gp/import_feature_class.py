@@ -166,7 +166,7 @@ class ImportFeatureClass(QgsTask):
                         metadata = {}
                         field_map: ImportFieldMap = None
                         for field_map in self.field_map:
-                            value = src_feature.GetField(field_map.src_field)
+                            value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else src_feature.GetField(field_map.src_field)
                             # change empty stringd to None
                             if value == '':
                                 value = None
