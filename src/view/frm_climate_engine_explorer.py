@@ -17,9 +17,11 @@ from .frm_climate_engine_download import FrmClimateEngineDownload
 from .utilities import add_help_button
 from .widgets.sample_frames import SampleFrameWidget
 from .widgets.date_range import DateRangeWidget
-from ..model.project import Project
-from ..lib.climate_engine import get_datasets, open_climate_engine_website
 
+from ..model.project import Project
+from ..model.db_item import dict_factory
+from ..model.basin_characteristics_table_view import BasinCharsTableModel
+from ..lib.climate_engine import get_datasets, open_climate_engine_website
 from ..QRiS.qris_map_manager import QRisMapManager
 
 class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
@@ -100,6 +102,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine.setModel(self.time_series_model)
         self.lst_climate_engine.selectionModel().selectionChanged.connect(self.set_date_range)
         self.lst_climate_engine.selectionModel().selectionChanged.connect(self.create_plot)
+        self.lst_climate_engine.selectionModel().selectionChanged.connect(self.load_metadata)
         self.lst_climate_engine.update()
 
     def create_plot(self):
@@ -159,6 +162,31 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         # Use a more precise date string for the x axis locations in the toolbar.
         self._static_ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
         self.chart_canvas.draw()
+
+    def load_metadata(self):
+
+        # get the selected time series ids
+        time_series_ids = self.lst_climate_engine.selectedIndexes()
+        if time_series_ids is None or len(time_series_ids) == 0:
+            return
+        time_series_id = time_series_ids[0].data(Qt.UserRole)
+
+        fields = {
+            'name': 'Name',
+            'source': 'Source',
+            'url': 'URL',
+            'description': 'Description',
+            'metadata': 'Metadata',
+        }
+
+        with sqlite3.connect(self.qris_project.project_file) as conn:
+            conn.row_factory = dict_factory
+            curs = conn.cursor()
+            curs.execute('SELECT {} FROM time_series where time_series_id = ?'.format(','.join(fields.keys())), (time_series_id,))
+            row = curs.fetchone()
+            metadata_values = [(val, row[key]) for key, val in fields.items()]
+            self.metadata_model = BasinCharsTableModel(metadata_values, ['Name', 'Value'])
+        self.table_metadata.setModel(self.metadata_model)
 
     def show_climate_engine_download(self):
 
@@ -361,7 +389,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.chart_canvas = FigureCanvas(Figure())
         self._static_ax = self.chart_canvas.figure.subplots()
 
-        self.table_metadata = QtWidgets.QTableWidget(self)
+        self.table_metadata = QtWidgets.QTableView(self)
         self.table_metadata.verticalHeader().hide()
 
         self.tab_widget_right = QtWidgets.QTabWidget(self)
