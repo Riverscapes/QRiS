@@ -36,6 +36,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.sample_frame_widget = SampleFrameWidget(self, self.qris_project, self.qris_map_manager, first_index_empty=True)
         self.sample_frame_widget.cbo_sample_frame.currentIndexChanged.connect(self.load_climate_engine_metrics)
+        self.sample_frame_widget.sample_frame_changed.connect(self.load_climate_engine_metrics)
         self.sample_frame_widget.sample_frame_changed.connect(self.create_plot)
 
         self.date_range_widget = DateRangeWidget(self)
@@ -71,14 +72,10 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine.setModel(None)
 
         # get a list of the checked sample frame feature ids from the list view
-        sample_frame_features = []
-        for i in range(self.sample_frame_widget.sample_frames_model.rowCount(None)):
-            index = self.sample_frame_widget.sample_frames_model.index(i)
-            # if self.sample_frames_model.data(index, Qt.CheckStateRole) == Qt.Checked:
-            sample_frame_features.append(self.sample_frame_widget.sample_frames_model.data(index, Qt.UserRole))
-        if len(sample_frame_features) == 0:
+        sample_frame_feature_ids = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
+        if len(sample_frame_feature_ids) == 0:
             return
-        sample_frame_feature_ids = [feature.id for feature in sample_frame_features]
+
         # get a list of the time series ids for the selected sample frame features
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
