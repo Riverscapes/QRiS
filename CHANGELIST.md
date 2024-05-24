@@ -1,6 +1,30 @@
 # QRiS Plugin
 
-## [0.3.20] 2023 MAY 17
+## [0.3.21] 2024 MAY 24
+
+### Added
+- Sort by Date for DCE's in Project Tree #392
+- Sort by Date and Raster Type for Surfaces in Project Tree #393
+- Remove all project layers on project close option in settings #314
+- Add associated surfaces when layer is added to map #387
+- Attribute Value Mapping when importing from Temporary Layer #323
+- Populate Climate Engine Metadata Tab #400
+- Full Date Range button for Climate Engine Explorer chart
+- Add Orthomosaic and Satellite as Raster Types #384
+
+### Fixed
+- Export Project bug when no metrics are in analysis
+- Bug when importing temporary layers #226
+- Error When Trying to Import Existing Feature Layer as Sample Frame #362
+- Metadata DCE type in project.rs.xml is wrong for AsBuilts #406
+- Visualization issues for some Climate Engine timeseries #382
+- Fix project export spatial views for symbology #40-5
+
+### Changed
+- Refactored ImportTemporaryLayer to better match ImportFeatureClass
+
+
+## [0.3.20] 2024 MAY 17
 
 ### Added
 - Right Click delete for downloaded stream gages and climate engine metrics
@@ -27,17 +51,17 @@
 - Remove gpkg references to old lookup tables
 
 
-## [0.3.19] 2023 MAY 09
+## [0.3.19] 2024 MAY 09
 
 ### Added
 - Climate Engine Explorer
 
-## [0.3.18] 2023 MAY 01
+## [0.3.18] 2024 MAY 01
 
 ### Added
 - Stream Gage Explorer
 
-## [0.3.17] 2023 APR 17
+## [0.3.17] 2024 APR 17
 
 ### Fixed
  - Bug when creating manual cross sections
@@ -51,7 +75,7 @@
 ### Added
 - Re-added length and area virtual fields to dce layers
 
-## [0.3.16] 2023 APR 11
+## [0.3.16] 2024 APR 11
 
 ### Fixed
 - Better handling of RS project metadata
@@ -60,13 +84,13 @@
 ### Changed
 - initialize MetadataWidget on toolbar load
 
-## [0.3.15] 2023 APR 09
+## [0.3.15] 2024 APR 09
 
 ### Added
 - Area Proportion metric calculation
 - Ablilty to delete metrics from the project
 
-## [0.3.14] 2023 MAR 27
+## [0.3.14] 2024 MAR 27
 
 ### Added
 - First version of custom metrics tool
@@ -80,7 +104,7 @@
 ### Changed
 - Max Cross Section length changed to 5km
 
-## [0.3.13] 2023 MAR 01
+## [0.3.13] 2024 MAR 01
 
 ### Fixed
 - Improved export RS project stability
@@ -105,12 +129,12 @@
 ### Removed
 - Unused export design as rs project form and code
 
-## [0.3.12] 2023 FEB 13
+## [0.3.12] 2024 FEB 13
 
 ### Fixed
 - Fix tuple typing bug that prevented installation on some systems
 
-## [0.3.11] 2023 FEB 12
+## [0.3.11] 2024 FEB 12
 
 ### Fixed
 - Reenable Import Temporary Layer to aoi and sample frames
@@ -119,7 +143,7 @@
 ### Added
 - Promote Context Vector Polygons to Sample Frames
 
-## [0.3.10] 2023 FEB 09
+## [0.3.10] 2024 FEB 09
 
 ### Fixed
 - Project tree layer remains "empty" after digitizing
@@ -132,7 +156,7 @@
 - Re-added Add Photo to Observation Points
 - Copy from Existing DCE produces Coordinate Reference Error
 
-## [0.3.9] 2023 JAN 30
+## [0.3.9] 2024 JAN 30
 
 ### Changed
 - Layer names changed to remove parentheses
@@ -142,7 +166,7 @@
 - Spelling error with Structure Type list
 - Bug when loading surfaces in project tree prevents project from opening
 
-## [0.3.8] 2023 JAN 25
+## [0.3.8] 2024 JAN 25
 
 ### Added
 - Dam Density Metric
@@ -158,7 +182,7 @@
 ### Fixed
 - Metadata attribute editior widget bug fixed
 
-## [0.3.7] 2023 JAN 12
+## [0.3.7] 2024 JAN 12
 
 ### Added
 - Right click menu to add all child layers to map
