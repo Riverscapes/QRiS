@@ -114,7 +114,8 @@ GROUP_FOLDER_LABELS = {
     CrossSections.CROSS_SECTIONS_MACHINE_CODE: 'Cross Sections'
 }
 
-USER_ROLES = {'date': QtCore.Qt.UserRole + 1}
+USER_ROLES = {'date': QtCore.Qt.UserRole + 1,
+              'raster_type': QtCore.Qt.UserRole + 2}
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget):
@@ -350,6 +351,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
                 self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
                 self.add_context_menu_item(sort_menu, 'Date', 'time', lambda: self.sort_children(model_item, 'date'))
+                self.add_context_menu_item(sort_menu, 'Raster Type', 'category', lambda: self.sort_children(model_item, 'raster_type'))
                 self.menu.addSeparator()
 
             if model_data == ANALYSIS_MACHINE_CODE:
@@ -518,6 +520,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
                 if (tree_node.child(i).data(USER_ROLES['date']) or QtCore.QDate()) > (tree_node.child(i + 1).data(USER_ROLES['date']) or QtCore.QDate()):
+                    current_order = False
+                    break
+        elif sort_key == 'raster_type':
+            tree_node.model().setSortRole(USER_ROLES['raster_type'])
+            for i in range(0, tree_node.rowCount()):
+                item = tree_node.child(i)
+                db_item = item.data(QtCore.Qt.UserRole)
+                type_name = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
+                combined = f"{type_name}|{db_item.name}"
+                item.setData(combined, USER_ROLES['raster_type'])
+            current_order = True
+            for i in range(0, tree_node.rowCount() - 1):
+                type_name = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id]
+                if tree_node.child(i).data(USER_ROLES['raster_type']) > tree_node.child(i + 1).data(USER_ROLES['raster_type']):
                     current_order = False
                     break
 
