@@ -325,12 +325,12 @@ class FrmRaster(QtWidgets.QDialog):
         self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
         self.chkHillshade.setChecked(False)
         self.chkHillshade.setEnabled(False)
-        self.grid.addWidget(self.chkHillshade, 6, 1, 1, 1)
+        self.grid.addWidget(self.chkHillshade, 7, 1, 1, 1)
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setText('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.grid.addWidget(self.chkAddToMap, 7, 1, 1, 1)
+        self.grid.addWidget(self.chkAddToMap, 8, 1, 1, 1)
 
         help_page = 'context-layers' if self.is_context else 'surfaces'
         self.vert.addLayout(add_standard_form_buttons(self, help_page))
