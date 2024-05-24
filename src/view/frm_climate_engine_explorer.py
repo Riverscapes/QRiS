@@ -137,6 +137,14 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                              (time_series_id, sample_frame_feature_id, start_date, end_date))
                 data[sample_frame_feature_id] = [(datetime.strptime(row[0], '%Y-%m-%d'), row[1]) for row in curs.fetchall()]
 
+        # check the data if there is only one plot point per sample frame
+        if all(len(values) <= 1 for values in data.values()):
+            marker = 'o'
+            markersize = 10
+        else:
+            marker = 'None'
+            markersize = 5
+
         # create the plot
         self._static_ax.set_xlabel('Date')
         self._static_ax.set_title(f'{dataset_name} ({variable_id})')
@@ -149,6 +157,12 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 self._static_ax.plot([value[0] for value in values], [value[1] for value in values], label=sample_frame_feature_id)
             self._static_ax.legend(title='Sample Frame Feature')
         self._static_ax.set_ylabel(y_label)
+
+        # apply the marker
+        for line in self._static_ax.lines:
+            line.set_marker(marker)
+            line.set_markersize(markersize)
+
         # Set the major locator to month and the major formatter to 'Month Year'
         # self._static_ax.xaxis.set_major_locator(mdates.MonthLocator())
         # self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
@@ -175,8 +189,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             'name': 'Name',
             'source': 'Source',
             'url': 'URL',
-            'description': 'Description',
-            'metadata': 'Metadata',
+            'description': 'Description'
         }
 
         with sqlite3.connect(self.qris_project.project_file) as conn:
@@ -185,6 +198,10 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             curs.execute('SELECT {} FROM time_series where time_series_id = ?'.format(','.join(fields.keys())), (time_series_id,))
             row = curs.fetchone()
             metadata_values = [(val, row[key]) for key, val in fields.items()]
+            # now grab and parse the metadata json
+            curs.execute('SELECT metadata FROM time_series where time_series_id = ?', (time_series_id,))
+            metadata = json.loads(curs.fetchone()['metadata'])
+            metadata_values.extend([(key, metadata[key]) for key in metadata.keys()])
             self.metadata_model = BasinCharsTableModel(metadata_values, ['Name', 'Value'])
         self.table_metadata.setModel(self.metadata_model)
 
@@ -360,6 +377,10 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.horiz_right_top.addWidget(self.lbl_date_range)
 
         self.horiz_right_top.addWidget(self.date_range_widget)
+
+        self.btn_date_range = QtWidgets.QPushButton('Full Range')
+        self.btn_date_range.clicked.connect(self.date_range_widget.set_dates_to_bounds)
+        self.horiz_right_top.addWidget(self.btn_date_range)
 
         self.lbl_chart_type = QtWidgets.QLabel('X-Axis Represents')
         font = self.lbl_chart_type.font()
