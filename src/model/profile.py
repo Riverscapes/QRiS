@@ -2,6 +2,8 @@ import json
 import sqlite3
 from enum import IntEnum
 
+from qgis.core import QgsVectorLayer
+
 from .db_item import DBItem
 
 
@@ -24,6 +26,11 @@ class Profile(DBItem):
         self.icon = 'line'
         self.fc_name = 'profile_centerlines' if profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE else 'profile_features'
         self.fc_id_column_name = 'profile_id'
+
+    def feature_count(self, db_path: str) -> int:
+        temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset={self.fc_id_column_name} = {self.id}', 'temp', 'ogr')
+        return temp_layer.featureCount()
+
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 

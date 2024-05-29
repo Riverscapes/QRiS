@@ -54,6 +54,10 @@ class DBItem():
             except Exception as ex:
                 conn.rollback()
                 raise ex
+            
+    def feature_count(self, db_path: str) -> int:
+
+        return None
 
 
 class DBItemModel(QAbstractListModel):
