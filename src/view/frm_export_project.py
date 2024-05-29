@@ -7,7 +7,7 @@ from osgeo import ogr, gdal
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsMessageLog
 
 from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
 
@@ -267,11 +267,15 @@ class FrmExportProject(QtWidgets.QDialog):
                 geom = None
                 lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer}', layer, "ogr")
                 for f in lyr.getFeatures():
+                    feature_geom = f.geometry()
+                    if feature_geom.isNull() or feature_geom.isEmpty():
+                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', QgsMessageLog.WARNING)
+                        continue
                     if geom is None:
                         geom = f.geometry()
                     else:
                         geom = geom.combine(f.geometry())
-                if geom is None:
+                if geom is None or geom.isNull() or geom.isEmpty():
                     continue
                 hull = geom.convexHull()
                 if envelope is None:
@@ -281,7 +285,6 @@ class FrmExportProject(QtWidgets.QDialog):
 
             for layer in self.qris_project.get_vector_dbitems():
                 geom = None
-
                 if isinstance(layer, PourPoint):
                     fc_name = 'catchments'
                     id_field = 'pour_point_id'
@@ -291,18 +294,19 @@ class FrmExportProject(QtWidgets.QDialog):
                 else:
                     fc_name = layer.fc_name
                     id_field = layer.fc_id_column_name
-    
                 lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}', layer.name, "ogr")
-                
                 if id_field is not None:
                     lyr.setSubsetString(f"{id_field} = {layer.id}")
-    
                 for f in lyr.getFeatures():
+                    feature_geom = f.geometry()
+                    if feature_geom.isNull() or feature_geom.isEmpty():
+                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', QgsMessageLog.WARNING)
+                        continue
                     if geom is None:
-                        geom = f.geometry()
+                        geom = feature_geom
                     else:
-                        geom = geom.combine(f.geometry())
-                if geom is None:
+                        geom = geom.combine(feature_geom)
+                if geom is None or geom.isNull() or geom.isEmpty():
                     continue
                 hull = geom.convexHull()
                 if envelope is None:
@@ -318,9 +322,8 @@ class FrmExportProject(QtWidgets.QDialog):
             lyr.setSubsetString(f"mask_id = {aoi.id}")
             envelope = lyr.getFeatures().__next__().geometry()
 
-        if envelope is not None:
+        if envelope is not None and not envelope.isNull() and not envelope.isEmpty():
             envelope_hull = envelope.convexHull()
-            
             extent = envelope_hull.boundingBox()
             centroid = envelope_hull.centroid().asPoint()
             geojson = envelope_hull.asJson()
