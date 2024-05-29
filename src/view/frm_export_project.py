@@ -151,7 +151,7 @@ class FrmExportProject(QtWidgets.QDialog):
         inputs_node.appendRow(context_node)
 
         # DCE and Designs
-        events_node = QtGui.QStandardItem("Data Capture Events and Designs")
+        events_node = QtGui.QStandardItem("Data Capture Events")
         events_node.setCheckable(True)
         events_node.setCheckState(QtCore.Qt.Checked)
         for event in self.qris_project.events.values():
@@ -688,7 +688,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     all_photo_metadata[metadata['Photo Path']] = metadata
 
         # find the Events node in the tree
-        events_nodes = self.export_layers_model.findItems("Data Capture Events and Designs")
+        events_nodes = self.export_layers_model.findItems("Data Capture Events")
         if events_nodes:
             events_node = events_nodes[0]
             for i in range(events_node.rowCount()):
@@ -696,6 +696,8 @@ class FrmExportProject(QtWidgets.QDialog):
                 if event_item.checkState() == QtCore.Qt.Unchecked:
                     continue
                 event: Event = event_item.data(QtCore.Qt.UserRole)
+                if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
+                    continue
                 event_type = EVENT_TYPE_LOOKUP[event.event_type.id]
 
                 if 'events' not in keep_layers:
@@ -732,9 +734,9 @@ class FrmExportProject(QtWidgets.QDialog):
                 # prepare the datasets
                 geopackage_layers = []
                 for layer in event.event_layers:
-                    geom_type = layer.layer.geom_type
-                    if geom_type == "NoGeometry":
+                    if self.chk_exclude_empty_layers.isChecked() and layer.feature_count(self.qris_project.project_file) == 0:
                         continue
+                    geom_type = layer.layer.geom_type
                     if geom_type == "Point":
                         fc_name = 'dce_points'
                     elif geom_type == "Linestring":
@@ -1006,10 +1008,19 @@ class FrmExportProject(QtWidgets.QDialog):
         self.tabProperties.setLayout(self.grid)
 
         # Export Tab
+        self.vert_export = QtWidgets.QVBoxLayout()
+        self.tabExport = QtWidgets.QWidget()
+        self.tabExport.setLayout(self.vert_export)
+        self.tabs.addTab(self.tabExport, 'Export Layers')
+
         self.export_tree = QtWidgets.QTreeView()
         self.export_tree.setHeaderHidden(True)
-        self.tabs.addTab(self.export_tree, 'Export Layers')
+        self.vert_export.addWidget(self.export_tree)
 
+        self.chk_exclude_empty_layers = QtWidgets.QCheckBox("Exclude Empty DCE Layers")
+        self.chk_exclude_empty_layers.setChecked(True)
+        self.chk_exclude_empty_layers.setToolTip("Check this box to exclude Data Capture Event, Design, AsBuilt and Planning layers that have no features from the export")
+        self.vert_export.addWidget(self.chk_exclude_empty_layers)
 
         # add standard form buttons
         self.vert.addLayout(add_standard_form_buttons(self, "export_metrics"))
