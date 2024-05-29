@@ -1,4 +1,6 @@
 
+from qgis.core import QgsVectorLayer
+
 from .layer import Layer
 from .db_item import DBItem
 
@@ -22,3 +24,8 @@ class EventLayer(DBItem):
             self.icon = 'line'
         elif self.layer.geom_type == 'Polygon':
             self.icon = 'polygon'
+
+    def feature_count(self, db_path: str) -> int:
+        fc_name = Layer.DCE_LAYER_NAMES[self.layer.geom_type]
+        temp_layer = QgsVectorLayer(f'{db_path}|layername={fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
+        return temp_layer.featureCount()

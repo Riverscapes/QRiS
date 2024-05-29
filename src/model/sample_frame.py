@@ -2,6 +2,8 @@ import json
 import sqlite3
 from typing import Dict
 
+from qgis.core import QgsVectorLayer
+
 from .db_item import DBItem
 
 SAMPLE_FRAME_MACHINE_CODE = 'SampleFrame'
@@ -23,6 +25,11 @@ class SampleFrame(DBItem):
         self.icon = 'mask_regular'
         self.fc_name = 'sample_frame_features'
         self.fc_id_column_name = 'sample_frame_id'
+    
+    def feature_count(self, db_path: str) -> int:
+        temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset={self.fc_id_column_name} = {self.id}', 'temp', 'ogr')
+        return temp_layer.featureCount()
+
 
     def update(self, db_path: str, name: str, description: str, metadata: dict=None) -> None:
 

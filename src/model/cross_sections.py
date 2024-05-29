@@ -1,6 +1,8 @@
 import json
 import sqlite3
 
+from qgis.core import QgsVectorLayer
+
 from .db_item import DBItem
 
 
@@ -16,6 +18,11 @@ class CrossSections(DBItem):
         self.icon = 'line'
         self.fc_name = 'cross_section_features'
         self.fc_id_column_name = 'cross_section_id'
+
+    def feature_count(self, db_path: str) -> int:
+        temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset={self.fc_id_column_name} = {self.id}', 'temp', 'ogr')
+        return temp_layer.featureCount()
+
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
 
