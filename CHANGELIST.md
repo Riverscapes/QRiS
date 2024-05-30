@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [0.3.22] 2024 MAY 30
+
+### Added
+- Add a source dropdown in surfaces properties. #395
+
+### Fixed
+- Adding a Null geometry to envelope causes null envelope error when exporting project #308
+
+### Changed
+- Skip empty DCE layers when exporting QRIS project #409
+
 ## [0.3.21] 2024 MAY 24
 
 ### Added
