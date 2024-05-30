@@ -1,7 +1,8 @@
 import os
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
 
@@ -39,23 +40,24 @@ class FrmRaster(QtWidgets.QDialog):
         self.setupUi()
 
         raster_types = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_types'].items()}
+        
+        raster_sources = project.lookup_values['raster_sources']
+        self.raster_sources_model = QStandardItemModel()
+        for raster_source in raster_sources:
+            item = QStandardItem(raster_source)
+            item.setData(raster_source, QtCore.Qt.DisplayRole)
+            self.raster_sources_model.appendRow(item)
+        self.cboRasterSource.setModel(self.raster_sources_model)
+        self.cboRasterSource.setCurrentIndex(-1)
 
         # If scratch raster then exclude BaseMaps
-        # if self.is_context is True:
         raster_types.pop(2)  # Remove type basemap
 
         self.raster_types_model = DBItemModel(raster_types)
         self.cboRasterType.setModel(self.raster_types_model)
 
-        if is_context is True:
-            #     # Select and lock in the rsater type for basemaps
-            #     self.cboRasterType.setEnabled(False)
-            #     basemap_raster_type = self.raster_types_model.getItemIndexById(RASTER_TYPE_BASEMAP)
-            #     self.cboRasterType.setCurrentIndex(basemap_raster_type)
-
-            self.setWindowTitle('Create New Context Raster' if self.raster is None else 'Edit Context Raster Properties')
-        else:
-            self.setWindowTitle('Create New Surface Raster' if self.raster is None else 'Edit Surface Raster Properties')
+        raster_type = 'Context' if is_context is True else 'Surface'
+        self.setWindowTitle(f'Import {raster_type} Raster' if self.raster is None else f'Edit {raster_type} Raster Properties')
 
         if raster is None:
             self.txtName.textChanged.connect(self.on_name_changed)
@@ -93,6 +95,17 @@ class FrmRaster(QtWidgets.QDialog):
             if raster.date is not None:
                 self.txtDate.setDate(QtCore.QDate.fromString(raster.date, 'yyyy-MM-dd'))
 
+            if self.raster.metadata is not None:
+                if 'system' in self.raster.metadata:
+                    if 'source_type' in self.raster.metadata['system']:
+                        source_type = self.raster.metadata['system']['source_type']
+                        if source_type not in raster_sources:
+                            self.raster_sources_model.appendRow(QStandardItem(source_type))
+                        for i in range(self.raster_sources_model.rowCount()):
+                            if self.raster_sources_model.item(i).text() == source_type:
+                                self.cboRasterSource.setCurrentIndex(i)
+                                break
+
             self.lblSourcePath.setVisible(False)
             self.txtSourcePath.setVisible(False)
             self.lblMask.setVisible(False)
@@ -117,6 +130,11 @@ class FrmRaster(QtWidgets.QDialog):
 
         if self.txtDate.date() != self.txtDate.minimumDate():
             self.metadata_widget.add_system_metadata('date', self.txtDate.date().toString('yyyy-MM-dd'))
+
+        if self.cboRasterSource.currentData(QtCore.Qt.UserRole) is not None:
+            self.metadata_widget.add_system_metadata('source_type', self.cboRasterSource.currentData(QtCore.Qt.UserRole))
+        else:
+            self.metadata_widget.add_system_metadata('source_type', self.cboRasterSource.currentText())
 
         metadata_json = self.metadata_widget.get_json()
         self.metadata = json.loads(metadata_json) if metadata_json is not None else None
@@ -284,36 +302,43 @@ class FrmRaster(QtWidgets.QDialog):
         self.cboRasterType = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboRasterType, 2, 1, 1, 1)
 
+        self.lblRasterSource = QtWidgets.QLabel('Raster Source')
+        self.grid.addWidget(self.lblRasterSource, 3, 0, 1, 1)
+
+        self.cboRasterSource = QtWidgets.QComboBox()
+        self.cboRasterSource.setEditable(True)
+        self.grid.addWidget(self.cboRasterSource, 3, 1, 1, 1)
+
         self.lblProjectPath = QtWidgets.QLabel()
         self.lblProjectPath.setText('Project Path')
-        self.grid.addWidget(self.lblProjectPath, 3, 0, 1, 1)
+        self.grid.addWidget(self.lblProjectPath, 4, 0, 1, 1)
 
         self.txtProjectPath = QtWidgets.QLineEdit()
         self.txtProjectPath.setReadOnly(True)
-        self.grid.addWidget(self.txtProjectPath, 3, 1, 1, 1)
+        self.grid.addWidget(self.txtProjectPath, 4, 1, 1, 1)
 
         self.lblMask = QtWidgets.QLabel()
         self.lblMask.setText('Clip to AOI')
-        self.grid.addWidget(self.lblMask, 4, 0, 1, 1)
+        self.grid.addWidget(self.lblMask, 5, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()
-        self.grid.addWidget(self.cboMask, 4, 1, 1, 1)
+        self.grid.addWidget(self.cboMask, 5, 1, 1, 1)
 
         self.lblDate = QtWidgets.QLabel('Aquisition Date')
-        self.grid.addWidget(self.lblDate, 5, 0, 1, 1)
+        self.grid.addWidget(self.lblDate, 6, 0, 1, 1)
 
         self.txtDate = QtWidgets.QDateEdit()
         self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
         self.txtDate.setSpecialValueText("No Date")
         self.txtDate.setDate(self.txtDate.minimumDate())
-        self.grid.addWidget(self.txtDate, 5, 1, 1, 1)
+        self.grid.addWidget(self.txtDate, 6, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel()
         self.lblDescription.setText('Description')
-        self.grid.addWidget(self.lblDescription, 6, 0, 1, 1)
+        self.grid.addWidget(self.lblDescription, 7, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription, 6, 1, 1, 1)
+        self.grid.addWidget(self.txtDescription, 7, 1, 1, 1)
 
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
@@ -325,7 +350,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
         self.chkHillshade.setChecked(False)
         self.chkHillshade.setEnabled(False)
-        self.grid.addWidget(self.chkHillshade, 7, 1, 1, 1)
+        self.grid.addWidget(self.chkHillshade, 8, 1, 1, 1)
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setText('Add to Map')
