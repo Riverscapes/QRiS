@@ -1,7 +1,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from ..model.event import Event, insert as insert_event
+from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
@@ -100,8 +100,13 @@ class FrmEvent(QtWidgets.QDialog):
         self.tree_model = QtGui.QStandardItemModel(self)
         for protocol in self.qris_project.protocols.values():
             protocol_si = QtGui.QStandardItem(protocol.name)
-            if protocol.has_custom_ui == 1 and self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-                continue
+            if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
+                if protocol.has_custom_ui == 1:
+                    continue
+            if self.event_type_id == PLANNING_EVENT_TYPE_ID:
+                if protocol.machine_code.lower() != PLANNING_MACHINE_CODE.lower():
+                    continue
+
             protocol_si.setData(protocol, QtCore.Qt.UserRole)
             protocol_si.setEditable(False)
             # protocol_si.setCheckable(True)

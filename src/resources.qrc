@@ -22,6 +22,7 @@
         <file alias="new_folder">../Images/new_folder.png</file>
         <file alias="new">../Images/add.svg</file>
         <file alias="options">../Images/edit.svg</file>
+        <file alias="plan">../Images/plan.svg</file>
         <file alias="protocol">../Images/protocol.png</file>
         <file alias="refresh">../Images/refresh.svg</file>
         <file alias="sort">../Images/sort.svg</file>

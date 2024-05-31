@@ -35,7 +35,7 @@ from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project, PROJECT_MACHINE_CODE
-from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, Event
+from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
@@ -351,9 +351,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
                 self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
                 self.add_context_menu_item(sort_menu, 'Date', 'time', lambda: self.sort_children(model_item, 'date'))
-                self.add_context_menu_item(sort_menu, 'Raster Type', 'category', lambda: self.sort_children(model_item, 'raster_type'))
+                if model_data == SURFACE_MACHINE_CODE:
+                    self.add_context_menu_item(sort_menu, 'Raster Type', 'category', lambda: self.sort_children(model_item, 'raster_type'))
                 self.menu.addSeparator()
-
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
                 if len(self.project.analyses) > 0:
@@ -370,12 +370,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
-
                     ltpbr_menu = QtWidgets.QMenu('Low-Tech Process-Based Restoration', self)
-                    self.add_context_menu_item(ltpbr_menu, 'Add New Design', 'new', lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
-                    self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'new', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
+                    ltpbr_menu.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/new'))
+                    self.add_context_menu_item(ltpbr_menu, 'Add New Planning Event', 'plan', lambda: self.add_event(model_item, PLANNING_EVENT_TYPE_ID))
+                    self.add_context_menu_item(ltpbr_menu, 'Add New Design', 'design', lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
+                    self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'as-built', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
                     self.menu.addMenu(ltpbr_menu)
-
                 elif model_data == SURFACE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
                 elif model_data == AOI_MACHINE_CODE:
