@@ -12,17 +12,20 @@ EVENT_MACHINE_CODE = 'Event'
 DCE_MACHINE_CODE = 'DCE'
 DESIGN_MACHINE_CODE = 'Design'
 AS_BUILT_MACHINE_CODE = 'AsBuilt'
+PLANNING_MACHINE_CODE = 'Planning'
 
 # Database ID of the design event type. Used to determine which icon to use
 DCE_EVENT_TYPE_ID = 1
 DESIGN_EVENT_TYPE_ID = 2
 AS_BUILT_EVENT_TYPE_ID = 3
+PLANNING_EVENT_TYPE_ID = 4
 
 EVENT_TYPE_LOOKUP = {
     DCE_EVENT_TYPE_ID: DCE_MACHINE_CODE,
     DESIGN_EVENT_TYPE_ID: DESIGN_MACHINE_CODE,
-    AS_BUILT_EVENT_TYPE_ID: AS_BUILT_MACHINE_CODE
-}
+    AS_BUILT_EVENT_TYPE_ID: AS_BUILT_MACHINE_CODE,
+    PLANNING_EVENT_TYPE_ID: PLANNING_MACHINE_CODE
+    }
 
 class Event(DBItem):
     """ Data Capture Event class"""
@@ -61,6 +64,8 @@ class Event(DBItem):
             self.icon = 'design'
         if self.event_type.id == AS_BUILT_EVENT_TYPE_ID:
             self.icon = 'as-built'
+        if self.event_type.id == PLANNING_EVENT_TYPE_ID:
+            self.icon = 'plan'
 
     def update(self, db_path: str, name: str, description: str, layers: List[Layer], rasters: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, representation: DBItem, metadata: dict) -> None:
 
