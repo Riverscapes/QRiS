@@ -6,14 +6,16 @@ from qgis.utils import Qgis, iface
 
 from ..model.mask import get_sample_frame_ids
 from ..model.metric_value import MetricValue, load_metric_values
-from ..model.db_item import DBItemModel
+from ..model.analysis import Analysis
+from ..model.project import Project
+from ..model.metric import Metric
 
 from .utilities import add_standard_form_buttons
 
 
 class FrmExportMetrics(QtWidgets.QDialog):
 
-    def __init__(self, parent, project, analysis=None, current_dce=None, current_sf=None):
+    def __init__(self, parent, project:Project, analysis: Analysis=None, current_dce=None, current_sf=None):
         super().__init__(parent)
 
         self.project = project
@@ -22,9 +24,9 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.current_sf = current_sf
 
         if self.analysis is not None:
-            self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, self.analysis.mask.id)}
+            self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, self.analysis.sample_frame.id)}
         else:
-            self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, analysis.mask.id) for analysis in self.project.analyses.values()}
+            self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, analysis.sample_frame.id) for analysis in self.project.analyses.values()}
 
         self.setWindowTitle("Export Metrics Table")
         self.setupUi()
@@ -71,14 +73,14 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
             data_capture_events = list(self.project.events.values()) if self.rdoAllDCE.isChecked() else [self.current_dce]
             for analysis, sample_frame_ids in self.analyses.items():
-                mask_features = list(sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
-                for mask_feature in mask_features:
+                sample_frame_features = list(sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
+                for sample_frame_feature in sample_frame_features:
                     for data_capture_event in data_capture_events:
-                        metric_values = load_metric_values(self.project.project_file, analysis, data_capture_event, mask_feature.id, self.project.metrics)
-                        values = {'analysis_name': analysis.name, 'sample_frame_id': mask_feature.id, 'data_capture_event_id': data_capture_event.id, 'mask_feature_name': mask_feature.name, 'data_capture_event_name': data_capture_event.name}
+                        metric_values = load_metric_values(self.project.project_file, analysis, data_capture_event, sample_frame_feature.id, self.project.metrics)
+                        values = {'analysis_name': analysis.name, 'sample_frame_id': sample_frame_feature.id, 'data_capture_event_id': data_capture_event.id, 'sample_frame_feature_name': sample_frame_feature.name, 'data_capture_event_name': data_capture_event.name}
                         for analysis_metric in analysis.analysis_metrics.values():
-                            metric = analysis_metric.metric
-                            metric_value = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
+                            metric: Metric = analysis_metric.metric
+                            metric_value: MetricValue = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
                             value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.automated_value
                             value = value if value is not None else ''
                             values.update({metric.name: value})
@@ -187,4 +189,4 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.vert.addStretch()
 
         # add standard form buttons
-        self.vert.addLayout(add_standard_form_buttons(self, "export_metrics"))
+        self.vert.addLayout(add_standard_form_buttons(self, "metrics"))

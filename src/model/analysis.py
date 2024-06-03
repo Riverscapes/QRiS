@@ -18,7 +18,7 @@ class Analysis(DBItem):
         self.sample_frame = sample_frame
         self.analysis_metrics = None
         self.metadata = metadata
-        self.profile = metadata.get('profile', None) if metadata is not None else None # really just the profile id
+        self.profile = metadata.get('centerline', None) if metadata is not None else None # really just the profile id
         self.dem = metadata.get('dem', None) if metadata is not None else None 
 
     def update(self, db_path: str, name: str, description: str, analysis_metrics: dict, metadata: dict = None) -> None:
