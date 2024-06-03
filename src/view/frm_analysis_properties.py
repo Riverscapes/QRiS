@@ -92,12 +92,16 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 profile: DBItem = self.centerlines[analysis.profile]
                 index = self.cboProfile.findData(profile)
                 self.cboProfile.setCurrentIndex(index)
+            else:
+                self.cboProfile.setCurrentIndex(-1)
             
             # set the dem
             if analysis.metadata is not None and 'dem' in analysis.metadata:
                 dem: Raster = self.dems[analysis.metadata['dem']]
                 index = self.cboDEM.findData(dem)
                 self.cboDEM.setCurrentIndex(index)
+            else:
+                self.cboDEM.setCurrentIndex(-1)
 
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
