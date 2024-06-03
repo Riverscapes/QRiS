@@ -37,8 +37,8 @@ class FrmSettings(QDialog):
             self.right_radio.setChecked(True)
 
         # Get the remove layers on close setting
-        remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, False)
-        if remove_layers_on_close.lower() == "true":
+        remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, False, type=bool)
+        if remove_layers_on_close is True:
             self.chk_remove_layers_on_close.setChecked(True)
         else:
             self.chk_remove_layers_on_close.setChecked(False)

@@ -277,8 +277,8 @@ class QRiSToolbar:
         if self.dockwidget is not None:
             # self.dockwidget.destroy_docwidget()
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, False)
-            if remove_layers.lower() == 'true':
+            remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, False, type=bool)
+            if remove_layers is True:
                 if self.dockwidget.map_manager is not None:
                     self.dockwidget.map_manager.remove_all_layers(self.dockwidget.project.map_guid)
             self.dockwidget.close()
