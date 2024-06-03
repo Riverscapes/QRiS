@@ -110,6 +110,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
 
+    def toggle_all_metrics(self, level_id: str):
+            
+            for row in range(self.metricsTable.rowCount()):
+                cboStatus: QtWidgets.QComboBox = self.metricsTable.cellWidget(row, 1)
+                # find from text
+                idx = cboStatus.findText(level_id)
+                cboStatus.setCurrentIndex(idx)
+
     def setupUi(self):
 
         self.setMinimumSize(500, 500)
@@ -148,11 +156,17 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
 
+        # Metrics and Indicators Tab
+        self.metrics_tab = QtWidgets.QWidget()
+        self.tabWidget.addTab(self.metrics_tab, 'Metrics and Indicators')
+
+        self.vert_metrics = QtWidgets.QVBoxLayout(self.metrics_tab)
+        self.metrics_tab.setLayout(self.vert_metrics)
+
         self.metricsTable = QtWidgets.QTableWidget(0, 3)
         self.metricsTable.resize(500, 500)
         self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.metricsTable.resizeColumnsToContents()
-        self.tabWidget.addTab(self.metricsTable, 'Metrics and Indicators')
         # self.metricsTable.horizontalHeader().setStretchLastSection(True)
         self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status', None])
         header = self.metricsTable.horizontalHeader()
@@ -160,11 +174,30 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
         header.resizeSection(2, 10)
-
         self.metricsTable.verticalHeader().setVisible(False)
         self.metricsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.metricsTable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.vert_metrics.addWidget(self.metricsTable)
 
+        self.horiz_metric_buttons = QtWidgets.QHBoxLayout()
+        self.vert_metrics.addLayout(self.horiz_metric_buttons)
+        self.horiz_metric_buttons.addStretch()
+
+        self.lbl_metric_set_all = QtWidgets.QLabel('Set All to:')
+        self.horiz_metric_buttons.addWidget(self.lbl_metric_set_all)
+        self.cmd_set_all_metrics = QtWidgets.QPushButton('Metric')
+        self.cmd_set_all_metrics.clicked.connect(lambda: self.toggle_all_metrics('Metric'))
+        self.horiz_metric_buttons.addWidget(self.cmd_set_all_metrics)
+
+        self.cmd_set_all_indicators = QtWidgets.QPushButton('Indicator')
+        self.cmd_set_all_indicators.clicked.connect(lambda: self.toggle_all_metrics('Indicator'))
+        self.horiz_metric_buttons.addWidget(self.cmd_set_all_indicators)
+
+        self.cmd_clear_all = QtWidgets.QPushButton('None')
+        self.cmd_clear_all.clicked.connect(lambda: self.toggle_all_metrics('None'))
+        self.horiz_metric_buttons.addWidget(self.cmd_clear_all)
+
+        # Description Tab
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
 
