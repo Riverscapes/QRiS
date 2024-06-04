@@ -21,6 +21,8 @@ from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.project import Project as QRiSProject
 from ..model.raster import Raster
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
+from ..model.stream_gage import StreamGage
+from ..model.sample_frame import SampleFrame
 
 from ..QRiS.path_utilities import parse_posix_path
 
@@ -35,6 +37,10 @@ class FrmExportProject(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.qris_project = project
+        
+        # Layer Model
+        self.export_layers_model = QtGui.QStandardItemModel()
+        self.export_layers_model.itemChanged.connect(self.handle_item_changed)
 
         self.setWindowTitle("Export QRiS to Riverscapes Studio Project")
         self.setupUi()
@@ -45,10 +51,6 @@ class FrmExportProject(QtWidgets.QDialog):
         for aoi_id, aoi in self.qris_project.masks.items():
             if aoi.mask_type.id == AOI_MASK_TYPE_ID:
                 self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
-
-        # Layer Model
-        self.export_layers_model = QtGui.QStandardItemModel()
-        self.export_layers_model.itemChanged.connect(self.handle_item_changed)
 
         # Inputs
         inputs_node = QtGui.QStandardItem("Inputs")
@@ -72,13 +74,12 @@ class FrmExportProject(QtWidgets.QDialog):
         sample_frames_node = QtGui.QStandardItem("Sample Frames")
         sample_frames_node.setCheckable(True)
         sample_frames_node.setCheckState(QtCore.Qt.Checked)
-        for sample_frame in self.qris_project.masks.values():
-            if sample_frame.mask_type.id != AOI_MASK_TYPE_ID:
-                item = QtGui.QStandardItem(sample_frame.name)
-                item.setCheckable(True)
-                item.setCheckState(QtCore.Qt.Checked)
-                item.setData(sample_frame, QtCore.Qt.UserRole)
-                sample_frames_node.appendRow(item)
+        for sample_frame in self.qris_project.sample_frames.values():
+            item = QtGui.QStandardItem(sample_frame.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(sample_frame, QtCore.Qt.UserRole)
+            sample_frames_node.appendRow(item)
         inputs_node.appendRow(sample_frames_node)
 
         # Profiles
@@ -289,8 +290,9 @@ class FrmExportProject(QtWidgets.QDialog):
                     fc_name = 'catchments'
                     id_field = 'pour_point_id'
                 elif isinstance(layer, ScratchVector):
-                    fc_name = layer.fc_name
-                    id_field = None
+                    continue
+                if isinstance(layer, StreamGage):
+                    continue
                 else:
                     fc_name = layer.fc_name
                     id_field = layer.fc_id_column_name
@@ -442,9 +444,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 if sample_frame_item.checkState() == QtCore.Qt.Unchecked:
                     continue
 
-                sample_frame: Mask = sample_frame_item.data(QtCore.Qt.UserRole)
-                if sample_frame.mask_type.id == AOI_MASK_TYPE_ID:
-                    continue
+                sample_frame: SampleFrame = sample_frame_item.data(QtCore.Qt.UserRole)
 
                 if 'mask_features' not in keep_layers:
                     keep_layers['mask_features'] = {'id_field': 'mask_id', 'id_values': []}
@@ -929,6 +929,12 @@ class FrmExportProject(QtWidgets.QDialog):
         else:
             self.cbo_project_bounds_aoi.setEnabled(False)
 
+    def set_checkbox_state(self, state: bool):
+        
+        for i in range(self.export_layers_model.rowCount()):
+            item = self.export_layers_model.item(i)
+            item.setCheckState(QtCore.Qt.Checked if state else QtCore.Qt.Unchecked)
+
     def setupUi(self):
 
         self.setMinimumSize(500, 300)
@@ -1017,10 +1023,23 @@ class FrmExportProject(QtWidgets.QDialog):
         self.export_tree.setHeaderHidden(True)
         self.vert_export.addWidget(self.export_tree)
 
+        self.horiz_export = QtWidgets.QHBoxLayout()
+        self.vert_export.addLayout(self.horiz_export)
+
         self.chk_exclude_empty_layers = QtWidgets.QCheckBox("Exclude Empty DCE Layers")
         self.chk_exclude_empty_layers.setChecked(True)
         self.chk_exclude_empty_layers.setToolTip("Check this box to exclude Data Capture Event, Design, AsBuilt and Planning layers that have no features from the export")
-        self.vert_export.addWidget(self.chk_exclude_empty_layers)
+        self.horiz_export.addWidget(self.chk_exclude_empty_layers)
+
+        self.horiz_export.addStretch()
+
+        self.btn_select_all = QtWidgets.QPushButton("Select All")
+        self.btn_select_all.clicked.connect(lambda: self.set_checkbox_state(True))
+        self.horiz_export.addWidget(self.btn_select_all)
+
+        self.btn_select_none = QtWidgets.QPushButton("Select None")
+        self.btn_select_none.clicked.connect(lambda: self.set_checkbox_state(False))
+        self.horiz_export.addWidget(self.btn_select_none)
 
         # add standard form buttons
         self.vert.addLayout(add_standard_form_buttons(self, "export_metrics"))
