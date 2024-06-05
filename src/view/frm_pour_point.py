@@ -37,7 +37,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
             # Load the basin characteristics
             if pour_point.basin_chars is not None and 'parameters' in pour_point.basin_chars:
-                basin_data = [(param['name'], param['code'], param['unit'], param['value']) for param in pour_point.basin_chars['parameters']]
+                basin_data = [(param['name'], param['code'], param['unit'], param.get('value', 'N/A')) for param in pour_point.basin_chars['parameters']]
                 self.basin_model = BasinCharsTableModel(basin_data, ['Name', 'Code', 'Units', 'Value'])
                 self.basinTable.setModel(self.basin_model)
 
