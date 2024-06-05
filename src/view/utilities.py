@@ -48,10 +48,10 @@ def add_standard_form_buttons(form: QtWidgets.QDialog, help_slug: str) -> QtWidg
     return form.horiz
 
 
-def add_help_button(form: QtWidgets.QDialog, help_slug: str) -> QtWidgets.QWidget:
+def add_help_button(form: QtWidgets.QDialog, help_slug: str, label: str='Help') -> QtWidgets.QWidget:
 
     form.cmdHelp = QtWidgets.QPushButton()
-    form.cmdHelp.setText('Help')
+    form.cmdHelp.setText(label)
     form.cmdHelp.setToolTip('Open online help documentation in browser')
     form.cmdHelp.setToolTipDuration(2000)
     help_url = CONSTANTS['webUrl'].rstrip('/') + '/software-help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS

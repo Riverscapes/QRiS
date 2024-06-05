@@ -293,4 +293,4 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.metadata = QtWidgets.QTableWidget()
         self.tab.addTab(self.metadata, 'Metadata')
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'analysis'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'analyses'))

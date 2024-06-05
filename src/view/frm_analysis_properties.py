@@ -205,7 +205,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'analysis'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'analyses'))
 
     def accept(self):
 

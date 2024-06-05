@@ -42,6 +42,7 @@ from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError, normalization_factor
 from ..QRiS.path_utilities import parse_posix_path
 
+from .utilities import add_help_button
 from .frm_metric_value import FrmMetricValue
 from .frm_calculate_all_metrics import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
@@ -147,21 +148,34 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_none')
         status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_none')
 
+        status_text = None
+
         if metric_value is not None:
             # set icons for value existence
             if metric_value.manual_value is not None:
                 status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_exists')
+                status_text = 'Manual Value'
             if metric_value.automated_value is not None:
                 status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_exists')
+                status_text = 'Automated Value' if status_text is None else 'Manual and Automated Values'
+            if status_text is not None:
+                status_text = f'{status_text} exists for this metric.'
             # set icons for value selection
-            if metric_value.is_manual and metric_value.manual_value is not None:
+            if metric_value.is_manual == 1 and metric_value.manual_value is not None:
                 status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_selected')
+                status_text = f'{status_text} (Manual Value Selected)'
                 if metric_value.automated_value is not None:
                     # set warining icon if manual value is more than 10% different from automated value
                     if metric.tolerance is not None and abs(metric_value.manual_value - metric_value.automated_value) > metric.tolerance * metric_value.automated_value:
                         status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_selected_warning')
-            if not metric_value.is_manual and metric_value.automated_value is not None:
+                        status_text = f'{status_text} (Manual Value Selected - Warning: Manual value differs from Automated value by more than {metric.tolerance * 100}%.)'
+            if metric_value.is_manual != 1 and metric_value.automated_value is not None:
                 status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_selected')
+                status_text = f'{status_text} (Automated Value Selected)'
+
+        if status_text is None:
+            status_text = 'No Values currently exist for this metric.'
+        status_item.setToolTip(status_text)
 
         icon = QtGui.QIcon()
         icon.actualSize(QtCore.QSize(32, 16))
@@ -251,7 +265,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def edit_metric_value(self, mi):
 
-        metric_value = self.table.item(mi.row(), 2).data(QtCore.Qt.UserRole)
+        metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
         metric = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole).metric
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
@@ -383,6 +397,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # add export table button at the bottom right of the dock
         self.horizExport = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horizExport)
+
+        self.horizExport.addWidget(add_help_button(self, 'analyses'))
+        self.horizExport.addWidget(add_help_button(self, 'analyses/#metric-table', 'Icon Legend'))
 
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizExport.addItem(self.spacerItem)
