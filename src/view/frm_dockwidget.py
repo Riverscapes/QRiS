@@ -456,9 +456,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, ScratchVector):
                     self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
-                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DBMODE_CREATE))
-                        self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
-                        self.add_context_menu_item(self.menu, 'Promote to Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
+                        promote_menu = self.menu.addMenu('Promote to ...')
+                        self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(promote_menu, 'Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
 
                 if isinstance(model_data, Profile):
                     self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))

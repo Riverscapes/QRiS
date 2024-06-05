@@ -87,7 +87,7 @@ class FrmSampleFrame(QDialog):
 
     def promote_to_sample_frame(self, db_item: DBItem):
 
-        self.tab_properties.txtName.setText(db_item.name)
+        self.txtName.setText(db_item.name)
         self.setWindowTitle(f'Promote {db_item.name} to Sample Frame')
 
         db_path = self.qris_project.project_file
