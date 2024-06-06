@@ -101,6 +101,7 @@ module.exports = {
       },
       {
         title: 'Technical Reference',
+        url: '/technical-reference/database',
         items: [
           {
             title: 'Database',
