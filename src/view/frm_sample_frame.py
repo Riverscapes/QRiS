@@ -68,15 +68,16 @@ class FrmSampleFrame(QDialog):
             self.setWindowTitle(f'Create New Sample Frame from Existing Layers')
             
         self.tab_properties = SampleFrameProperties(self, self.sample_frame)
-        
-        if sample_frame is not None:
-            self.setWindowTitle(f'Sample Frame Properties')
 
         metadata_json = json.dumps(sample_frame.user_metadata) if sample_frame is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
 
         self.setupUi()
-        self.txtName.setFocus()
+        if sample_frame is not None:
+            self.setWindowTitle(f'Sample Frame Properties')
+            self.txtName.setText(self.sample_frame.name)
+        else:
+            self.txtName.setFocus()
 
     def set_inputs(self, cross_sections=None, polygon=None):
             
@@ -137,7 +138,8 @@ class FrmSampleFrame(QDialog):
                 self.sample_frame.update(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
             else:
                 self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
-                self.qris_project.sample_frames[self.sample_frame.id] = self.sample_frame
+                self.qris_project.sample_frames[self.sample_frame.id] = self.sample_frame            
+            super().accept()
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -451,7 +453,6 @@ class SampleFrameProperties(QWidget):
         self.txtFlowField.setText(flow_path_field_name)
 
         if self.sample_frame is not None:
-            self.txtName.setText(self.sample_frame.name)
             self.txtDescription.setText(self.sample_frame.description)
             self.txtDefaultFlowPathName.setText(self.sample_frame.default_flow_path_name)
             self.txtDefaultFlowPathName.setEnabled(False)
