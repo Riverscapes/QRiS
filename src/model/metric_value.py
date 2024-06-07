@@ -17,9 +17,25 @@ class MetricValue():
         self.is_manual = is_manual
         self.uncertainty = uncertainty
         self.unit_id = unit_id
-
+        self.display_unit = metric.display_unit if metric.display_unit is not None else metric.base_unit
         self.metadata = metadata
         self.description = description
+            
+    def current_value(self):
+        return self.manual_value if self.is_manual else self.automated_value
+    
+    def current_value_as_string(self):
+        value = self.current_value()
+        if isinstance(value, float) and self.metric.precision is not None:
+            return f'{value: .{self.metric.precision}f}'
+        return str(value)
+    
+    def uncertainty_as_string(self):
+        if self.uncertainty is None:
+            return ''
+        if self.is_manual:
+            return print_uncertanty(self.uncertainty)
+        return ''
 
     def save(self, db_path: str, analysis: Analysis, event: Event, sample_frame_feature_id: int, unit_id: int = None):
 
