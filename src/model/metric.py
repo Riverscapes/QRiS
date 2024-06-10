@@ -2,9 +2,12 @@ import sqlite3
 import json
 
 from .db_item import DBItem
+from ..gp.analysis_metrics import analysis_metric_unit_type
 
 
 METRIC_SCHEMA = './qris_metrics.schema.json'
+
+default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
 
 class Metric(DBItem):
 
@@ -19,7 +22,14 @@ class Metric(DBItem):
         self.icon = 'calculate'
         self.definition_url = definition_url
         self.metadata = metadata
-
+        # This is the base unit as defined in the metric calculation function
+        self.unit_type = analysis_metric_unit_type.get(self.metric_function, None)
+        self.base_unit = default_units.get(self.unit_type, None)
+        self.normalized = True if metric_params is not None and 'normalization' in metric_params else False
+        if self.normalized:
+            self.base_unit = 'meters'
+            if self.unit_type == 'distance':
+                self.unit_type = 'ratio'
         self.tolerance = self.metadata['tolerance'] if self.metadata and 'tolerance' in self.metadata else None  # no tolerance = no testing for tolerance
         self.min_value = self.metadata['min_value'] if self.metadata and 'min_value' in self.metadata else None
         self.max_value = self.metadata['max_value'] if self.metadata and 'max_value' in self.metadata else None

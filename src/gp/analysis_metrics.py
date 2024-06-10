@@ -8,10 +8,21 @@ import sqlite3
 import osgeo
 from osgeo import ogr, gdal, osr
 
+from qgis.core import QgsUnitTypes
+
 from .zonal_statistics import zonal_statistics
 from ..model.layer import Layer
 from ..model.profile import Profile
 from ..model.raster import Raster
+
+analysis_metric_unit_type = {
+    'count': 'count',
+    'length': 'distance',
+    'area': 'area',
+    'sinuosity': 'ratio',
+    'gradient': 'ratio',
+    'area_proportion': 'ratio'
+}
 
 class MetricInputMissingError(Exception):
     """Raised when a metric input is missing."""
