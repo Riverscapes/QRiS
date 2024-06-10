@@ -7,7 +7,7 @@ from .sample_frame import SampleFrame
 from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
-
+default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
 
 class Analysis(DBItem):
 
@@ -19,11 +19,13 @@ class Analysis(DBItem):
         self.analysis_metrics = None
         self.metadata = metadata
         self.profile = metadata.get('centerline', None) if metadata is not None else None # really just the profile id
-        self.dem = metadata.get('dem', None) if metadata is not None else None 
-
+        self.dem = metadata.get('dem', None) if metadata is not None else None
+        self.units = metadata.get('units', default_units) if metadata is not None else default_units
+    
     def update(self, db_path: str, name: str, description: str, analysis_metrics: dict, metadata: dict = None) -> None:
 
         description = description if len(description) > 0 else None
+        self.metadata['units'] = self.units
         metadata_str = json.dumps(metadata) if metadata is not None else None
 
         with sqlite3.connect(db_path) as conn:

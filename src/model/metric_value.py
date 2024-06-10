@@ -1,11 +1,12 @@
 import typing
 import sqlite3
 import json
+
 from .metric import Metric
 from .event import Event
 from .analysis import Analysis
 from .db_item import dict_factory
-
+from ..lib.unit_conversion import convert_units
 
 class MetricValue():
 
@@ -17,15 +18,17 @@ class MetricValue():
         self.is_manual = is_manual
         self.uncertainty = uncertainty
         self.unit_id = unit_id
-        self.display_unit = metric.display_unit if metric.display_unit is not None else metric.base_unit
         self.metadata = metadata
         self.description = description
             
-    def current_value(self):
-        return self.manual_value if self.is_manual else self.automated_value
+    def current_value(self, display_unit: str = None):
+        value = self.manual_value if self.is_manual else self.automated_value
+        if display_unit is not None:
+            value = convert_units(value, self.metric.base_unit, display_unit, invert=self.metric.normalized)
+        return value
     
-    def current_value_as_string(self):
-        value = self.current_value()
+    def current_value_as_string(self, display_unit: str = None):
+        value = self.current_value(display_unit)
         if isinstance(value, float) and self.metric.precision is not None:
             return f'{value: .{self.metric.precision}f}'
         return str(value)

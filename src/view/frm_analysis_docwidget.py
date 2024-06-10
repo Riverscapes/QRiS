@@ -36,10 +36,11 @@ from ..model.event import EVENT_MACHINE_CODE, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.sample_frame import get_sample_frame_ids
 from ..model.metric import Metric
-from ..model.metric_value import MetricValue, load_metric_values, print_uncertanty
+from ..model.metric_value import MetricValue, load_metric_values
 
+from ..lib.unit_conversion import short_unit_name
 from ..gp import analysis_metrics
-from ..gp.analysis_metrics import MetricInputMissingError, normalization_factor
+from ..gp.analysis_metrics import MetricInputMissingError
 from ..QRiS.path_utilities import parse_posix_path
 
 from .utilities import add_help_button
@@ -47,7 +48,17 @@ from .frm_metric_value import FrmMetricValue
 from .frm_calculate_all_metrics import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
 from .frm_analysis_properties import FrmAnalysisProperties
+from .frm_analysis_units import FrmAnalysisUnits
 
+column = {
+    'edit': 0,
+    'metric': 1,
+    'units': 2,
+    'value': 3,
+    'uncertainty': 4,
+    'status': 5,
+    'warnings': 6
+}
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
@@ -55,7 +66,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_QuitOnClose)
+        # Store the connections so they can be disconnected when the form is closed
+        self.connections = {}
         self.setupUi()
+
+        self.frmMetricValue = None
 
     def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
 
@@ -77,37 +92,51 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def build_table(self):
 
+        # Disconnect the signals if they're already connected
+        for signal in [self.table.itemClicked, self.table.doubleClicked]:
+            if signal in self.connections:
+                signal.disconnect(self.connections.pop(signal))
+
         self.table.clearContents()
 
         self.table.setRowCount(0)
         analysis_metrics = list(metric for metric in self.analysis.analysis_metrics.values() if metric.level_id == 2) if self.rdoIndicators.isChecked() else list(self.analysis.analysis_metrics.values())
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
+            analysis_metric: AnalysisMetric = analysis_metrics[row]
+            metric: Metric = analysis_metric.metric
+            
             edit_icon = QtGui.QIcon(':/plugins/qris_toolbar/options')
             item = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 0, item)
             item.setIcon(edit_icon)
+            self.table.setItem(row, column['edit'], item)
         
-            analysis_metric = analysis_metrics[row]
-            metric = analysis_metric.metric
             label_metric = QtWidgets.QTableWidgetItem()
-            metric_text = f'{metric.name} ({self.qris_project.units[metric.default_unit_id].display})' if metric.default_unit_id is not None else f'{metric.name}'
-            label_metric.setText(metric_text)
-            self.table.setItem(row, 1, label_metric)
+            label_metric.setText(metric.name)
+            self.table.setItem(row, column['metric'], label_metric)
             label_metric.setData(QtCore.Qt.UserRole, analysis_metric)
-            # label_metric.setFlags(QtCore.Qt.ItemIsEnabled)
+
+            label_units = QtWidgets.QTableWidgetItem()
+            display_unit = short_unit_name(self.analysis.units.get(metric.unit_type, None))
+            if metric.normalized:
+                if display_unit != 'ratio':
+                    normalization_unit = self.analysis.units['distance'] # TODO only normaization by distance is supported, need to add support for other Normalization types
+                    display_unit = f'{display_unit}/{short_unit_name(normalization_unit)}'
+            label_units.setText(display_unit)
+            self.table.setItem(row, column['units'], label_units)           
 
             label_value = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 2, label_value)
+            self.table.setItem(row, column['value'], label_value)
 
             label_uncertainty = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 3, label_uncertainty)
+            self.table.setItem(row, column['uncertainty'], label_uncertainty)
 
             status_item = QtWidgets.QTableWidgetItem()
-            self.table.setItem(row, 4, status_item)
+            self.table.setItem(row, column['status'], status_item)
 
-        self.table.itemClicked.connect(lambda item: self.edit_metric_value(item) if item.column() == 0 else None)
-        self.table.doubleClicked.connect(self.edit_metric_value)
+        # Connect the signals and store the connections
+        self.connections[self.table.itemClicked] = self.table.itemClicked.connect(lambda item: self.edit_metric_value(item) if item.column() == column['edit'] else None)
+        self.connections[self.table.doubleClicked] = self.table.doubleClicked.connect(self.edit_metric_value)
         self.table.resizeColumnToContents(1)
         
         self.load_table_values()
@@ -123,31 +152,36 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
             # Loop over active metrics and load values into grid
             for row in range(self.table.rowCount()):
-                metric = self.table.item(row, 1).data(QtCore.Qt.UserRole).metric
+                analysis_metric: AnalysisMetric = self.table.item(row, column['metric']).data(QtCore.Qt.UserRole)
+                metric: Metric = analysis_metric.metric
+                metric_value = None
                 metric_value_text = ''
                 uncertainty_text = ''
-                self.set_status(row)
-                self.table.item(row, 2).setData(QtCore.Qt.UserRole, None)
                 if metric.id in metric_values:
                     metric_value = metric_values[metric.id]
-                    metric_value_text = metric_value.manual_value if metric_value.is_manual else metric_value.automated_value
-                    uncertainty_text = print_uncertanty(metric_value.uncertainty) if metric_value.is_manual else None
-                    self.table.item(row, 1).setData(QtCore.Qt.UserRole, metric_value)
-                    self.set_status(row, metric_value)
-                self.table.item(row, 2).setText(f'{metric_value_text: .{metric.precision}f}'if isinstance(metric_value_text, float) and metric.precision is not None else str(metric_value_text))
-                self.table.item(row, 3).setText(str(uncertainty_text) if uncertainty_text is not None else '')
-
+                    display_unit = self.analysis.units.get(metric.unit_type, None)
+                    if metric.normalized:
+                        if display_unit != 'ratio':
+                            display_unit = self.analysis.units['distance']
+                    display_unit = None if display_unit in ['count', 'ratio'] else display_unit
+                    metric_value_text = metric_value.current_value_as_string(display_unit)
+                    uncertainty_text = metric_value.uncertainty_as_string()
+                self.table.item(row, column['value']).setData(QtCore.Qt.UserRole, metric_value)
+                self.table.item(row, column['value']).setText(metric_value_text)
+                self.table.item(row, column['uncertainty']).setText(uncertainty_text)
+                self.set_status(row)
         self.table.resizeColumnToContents(2)
 
-    def set_status(self, row, metric_value: MetricValue = None):
+    def set_status(self, row):
 
-        status_item = self.table.item(row, 4)
-        metric = self.table.item(row, 1).data(QtCore.Qt.UserRole).metric
+        # Get the metric, value and status item for the row
+        status_item = self.table.item(row, column['status'])
+        metric: Metric = self.table.item(row, 1).data(QtCore.Qt.UserRole).metric
+        metric_value: MetricValue = self.table.item(row, column['value']).data(QtCore.Qt.UserRole)
 
         # Default Status none exists or selected
         status_manual_icon = QtGui.QPixmap(':/plugins/qris_toolbar/manual_none')
         status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_none')
-
         status_text = None
 
         if metric_value is not None:
@@ -173,10 +207,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 status_auto_icon = QtGui.QPixmap(':/plugins/qris_toolbar/auto_selected')
                 status_text = f'{status_text} (Automated Value Selected)'
 
+        # set the tool tip
         if status_text is None:
             status_text = 'No Values currently exist for this metric.'
         status_item.setToolTip(status_text)
-
+        # set the Icons
         icon = QtGui.QIcon()
         icon.actualSize(QtCore.QSize(32, 16))
         pixmap = QtGui.QPixmap(32, 16)
@@ -265,18 +300,23 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def edit_metric_value(self, mi):
 
-        metric_value = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole)
-        metric = self.table.item(mi.row(), 1).data(QtCore.Qt.UserRole).metric
+        metric_value = self.table.item(mi.row(), column['value']).data(QtCore.Qt.UserRole)
+        if metric_value is None:
+            metric: Metric = self.table.item(mi.row(), column['metric']).data(QtCore.Qt.UserRole).metric
+            metric_value = MetricValue(metric, None, None, True, None, None, metric.default_unit_id, {})
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
-
-        if metric_value is None:
-            metric_value = MetricValue(metric, None, None, True, None, None, metric.default_unit_id, {})
 
         frm = FrmMetricValue(self, self.qris_project, self.qris_project.metrics, self.analysis, event, mask_feature.id, metric_value)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.load_table_values()
+            self.build_table()
+
+    def open_units_dialog(self):
+        dialog = FrmAnalysisUnits(self, self.analysis)
+        result = dialog.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            self.build_table()
 
     def resizeEvent(self, event):
         if self.table.columnWidth(0) > self.table.width():
@@ -284,18 +324,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         QtWidgets.QDockWidget.resizeEvent(self, event)
 
     def closeEvent(self, event):
-        if self.table.receivers(self.table.doubleClicked) > 0:
-            self.table.doubleClicked.disconnect()
-        if self.cmdProperties.receivers(self.cmdProperties.clicked) > 0:
-            self.cmdProperties.clicked.disconnect()
-        if self.cboEvent.receivers(self.cboEvent.currentIndexChanged) > 0:
-            self.cboEvent.currentIndexChanged.disconnect()
-        if self.cboSampleFrame.receivers(self.cboSampleFrame.currentIndexChanged) > 0:
-            self.cboSampleFrame.currentIndexChanged.disconnect()
-        if self.cmdCalculate.receivers(self.cmdCalculate.clicked) > 0:
-            self.cmdCalculate.clicked.disconnect()
-        if self.rdoAll.receivers(self.rdoAll.toggled) > 0:
-            self.rdoAll.toggled.disconnect()
+        for signal in list(self.connections.keys()):
+            signal.disconnect(self.connections.pop(signal))
         QtWidgets.QDockWidget.closeEvent(self, event)
 
     def setupUi(self):
@@ -309,8 +339,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Analysis')
+        self.lblName = QtWidgets.QLabel('Analysis')
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.horizName = QtWidgets.QHBoxLayout()
@@ -321,38 +350,34 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.txtName.setReadOnly(True)
         self.horizName.addWidget(self.txtName)
 
-        self.cmdProperties = QtWidgets.QPushButton()
-        self.cmdProperties.setText('Properties')
-        self.cmdProperties.clicked.connect(self.cmdProperties_clicked)
+        self.cmdProperties = QtWidgets.QPushButton('Properties')
+        self.connections[self.cmdProperties.clicked] = self.cmdProperties.clicked.connect(self.cmdProperties_clicked)
         self.cmdProperties.setToolTip('Edit analysis properties, indcluding metrics and indicators')
         self.cmdProperties.setToolTipDuration(2000)
         self.horizName.addWidget(self.cmdProperties)
 
-        self.lblEvent = QtWidgets.QLabel()
-        self.lblEvent.setText('Data Capture Event')
+        self.lblEvent = QtWidgets.QLabel('Data Capture Event')
         self.grid.addWidget(self.lblEvent, 1, 0, 1, 1)
 
         self.horizEvent = QtWidgets.QHBoxLayout()
         self.grid.addLayout(self.horizEvent, 1, 1, 1, 1)
 
         self.cboEvent = QtWidgets.QComboBox()
-        self.cboEvent.currentIndexChanged.connect(self.load_table_values)
+        self.connections[self.cboEvent.currentIndexChanged] = self.cboEvent.currentIndexChanged.connect(self.load_table_values)
         self.horizEvent.addWidget(self.cboEvent)
 
-        self.cmdCalculate = QtWidgets.QPushButton()
-        self.cmdCalculate.setText('Calculate All')
-        self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
+        self.cmdCalculate = QtWidgets.QPushButton('Calculate All')
+        self.connections[self.cmdCalculate.clicked] = self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
         self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.cmdCalculate.setToolTip('Options to calculate metrics and indicators for the selected event and sample frame')
         self.cmdCalculate.setToolTipDuration(2000)
         self.horizEvent.addWidget(self.cmdCalculate, 0)
 
-        self.lblSegment = QtWidgets.QLabel()
-        self.lblSegment.setText('Sample Frame Label')
+        self.lblSegment = QtWidgets.QLabel('Sample Frame Label')
         self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
 
         self.cboSampleFrame = QtWidgets.QComboBox()
-        self.cboSampleFrame.currentIndexChanged.connect(self.load_table_values)
+        self.connections[self.cboSampleFrame.currentIndexChanged] = self.cboSampleFrame.currentIndexChanged.connect(self.load_table_values)
         self.grid.addWidget(self.cboSampleFrame, 2, 1, 1, 1)
 
         self.lblDisplay = QtWidgets.QLabel('Display Values')
@@ -362,14 +387,19 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         self.rdoAll = QtWidgets.QRadioButton('Metrics and Indicators')
         self.rdoAll.setChecked(True)
-        self.rdoAll.toggled.connect(self.build_table)
+        self.connections[self.rdoAll.toggled] = self.rdoAll.toggled.connect(self.build_table)
         self.layoutDisplay.addWidget(self.rdoAll)
 
         self.rdoIndicators = QtWidgets.QRadioButton('Indicators Only')
         self.rdoIndicators.setChecked(False)
         self.layoutDisplay.addWidget(self.rdoIndicators)
 
-        self.layoutDisplay.addStretch(1)
+        self.layoutDisplay.addStretch()
+        self.btnUnits = QtWidgets.QPushButton('Units')
+        self.btnUnits.setToolTip('Change metric display units')
+        self.connections[self.btnUnits.clicked] = self.btnUnits.clicked.connect(self.open_units_dialog)
+        self.layoutDisplay.addWidget(self.btnUnits)
+
         self.grid.addLayout(self.layoutDisplay, 3, 1, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
@@ -378,19 +408,22 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horiz.addItem(self.spacerItem)
 
-        self.table = QtWidgets.QTableWidget(0, 5)
+        self.table = QtWidgets.QTableWidget(0, 7)
         self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.table.setHorizontalHeaderLabels(['', 'Metric', 'Value', 'Uncertainty', 'Status'])
+        self.table.setHorizontalHeaderLabels(['', 'Metric', 'Units', 'Value', 'Uncertainty', 'Status', ''])
         self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed) 
         self.table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)
-        self.table.setColumnWidth(0, 16)
-        self.table.setColumnWidth(1, int(self.table.width() * 0.8))
-        self.table.setColumnWidth(2, 100)
-        self.table.setColumnWidth(3, 100)
-        self.table.setColumnWidth(4, 50)
+        self.table.setColumnWidth(column['edit'], 16)
+        self.table.setColumnWidth(column['metric'], int(self.table.width() * 0.8))
+        self.table.setColumnWidth(column['units'], 75)
+        self.table.setColumnWidth(column['value'], 100)
+        self.table.setColumnWidth(column['uncertainty'], 100)
+        self.table.setColumnWidth(column['status'], 50)
+        self.table.setColumnWidth(column['warnings'], 16)
+
         self.table.setIconSize(QtCore.QSize(32, 16))
         self.vert.addWidget(self.table)
 
@@ -406,7 +439,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         self.cmdExport = QtWidgets.QPushButton()
         self.cmdExport.setText('Export Metrics Table')
-        self.cmdExport.clicked.connect(self.export_table)
+        self.connections[self.cmdExport.clicked] = self.cmdExport.clicked.connect(self.export_table)
         self.cmdExport.setToolTip('Export the table to a csv, json, or Excel file')
         self.horizExport.addWidget(self.cmdExport, 0)
 
