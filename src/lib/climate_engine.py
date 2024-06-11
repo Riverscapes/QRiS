@@ -28,7 +28,7 @@ def get_datasets() -> dict:
     return datasets
 
 
-def get_dataset_variables(dataset: str) -> list:
+def get_dataset_variables(dataset: str) -> dict:
     api_key = get_api_key()
     if  api_key is None:
         return None
@@ -39,7 +39,7 @@ def get_dataset_variables(dataset: str) -> list:
     response = requests.get(url, params=params, headers=headers)
     if response.status_code == 200:
         content = response.json()
-        return content['variables']
+        return {name: description for name, description in zip(content['variables'], content['variable names'])}
     else:
         return None
     
