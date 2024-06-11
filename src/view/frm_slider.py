@@ -9,7 +9,7 @@ from ..model.raster import Raster, RASTER_SLIDER_MACHINE_CODE
 from ..model.project import Project
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
-from .double_slider import DoubleSlider
+from .widgets.double_slider import DoubleSlider
 from .utilities import add_help_button
 from ..QRiS.qris_map_manager import QRisMapManager
 
