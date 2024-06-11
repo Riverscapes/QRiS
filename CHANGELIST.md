@@ -1,5 +1,27 @@
 # QRiS Plugin
 
+## [0.3.23] 2024 JUN 10
+
+### Added
+- Planning Layers and DCE type #391
+- Select all / none buttons for metrics on create analysis form #414
+- Add select all/none button for layers in Export Project form
+- Metric units and unit conversions #415
+
+### Fixed
+- Fix type for Remove Layer setting on project close #418
+- Analysis Bugs #417
+- Export project bug with sample frames #308
+- Error when trying to go to properties of a watershed catchment #420
+- Error promoting context polygon to Sample Frame #423
+- Bug when opening Sample Frame Properties Form
+
+### Changed
+- Ignore stream gages during project export
+- Better descriptions for Analysis Icons #386
+- Improved signal/slot connections for Analysis Form
+
+
 ## [0.3.22] 2024 MAY 30
 
 ### Added
