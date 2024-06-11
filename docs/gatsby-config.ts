@@ -118,7 +118,7 @@ module.exports = {
             items: [
               {
                 title: 'Stream Gage Tool',
-                url: '/software-help/stream-gage-explorer',
+                url: '/software-help/stream-gage-tool',
               },
               {
                 title: 'Watershed Catchments',
@@ -130,7 +130,6 @@ module.exports = {
       },
       {
         title: 'Technical Reference',
-        url: '/technical-reference/database',
         items: [
           {
             title: 'Database',
