@@ -5,8 +5,6 @@ from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
 
-from .frm_climate_engine import FrmClimateEngine
-from ..lib.climate_engine import get_api_key
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
 
@@ -249,16 +247,6 @@ class FrmSettings(QDialog):
             QMessageBox.information(self, "Save Metrics", f"{saved_metrics} metrics saved to project.")
         else:
             QMessageBox.information(self, "Save Metrics", "No new metrics to save.")
-
-
-    def test_api(self):
-        api_key = get_api_key() # self.settings.value('climate_engine_api_key', '')
-        if api_key == '' or api_key is None:
-            QMessageBox.warning(self, "Test API Key", "API key not found.")
-            return
-
-        frm_climate_engine = FrmClimateEngine()
-        frm_climate_engine.exec_()
 
     def setup_ui(self):
 

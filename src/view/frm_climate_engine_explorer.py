@@ -86,14 +86,17 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 return
             time_series_ids = [time_series_id[0] for time_series_id in time_series_ids]
             placeholders = ', '.join('?' for _ in time_series_ids)
-            curs.execute(f'SELECT time_series_id, name FROM time_series WHERE time_series_id IN ({placeholders})', time_series_ids)
+            curs.execute(f'SELECT time_series_id, name, metadata FROM time_series WHERE time_series_id IN ({placeholders})', time_series_ids)
             time_series_rows = curs.fetchall()
 
         # load the time series names into the list view
         self.time_series_model = QStandardItemModel()
         for row in time_series_rows:
             # the name should be the display, the time series id should be the data
-            item = QStandardItem(row[1])
+            # lets see if description is in the metadata, if so append it to the text name
+            metadata = json.loads(row[2])
+            name = f'{row[1]} ({metadata["description"]})' if metadata and 'description' in metadata else row[1]
+            item = QStandardItem(name)
             item.setData(row[0], Qt.UserRole)
             self.time_series_model.appendRow(item)
         self.lst_climate_engine.setModel(self.time_series_model)
@@ -144,7 +147,8 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         # create the plot
         self._static_ax.set_xlabel('Date')
-        self._static_ax.set_title(f'{dataset_name} ({variable_id})')
+        description = metadata['description'] if 'description' in metadata else variable_id
+        self._static_ax.set_title(f'{dataset_name} ({description})')
         if self.rdo_space.isChecked():
             for sample_frame_feature_id, values in data.items():
                 self._static_ax.plot([value[0] for value in values], [value[1] for value in values], label=sample_frame_feature_id)

@@ -63,19 +63,18 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.lboxVariables.setEnabled(False)
 
         dataset = self.cboDataset.currentText()
-
         dataset_id = self.datasets.get(dataset)['id']
         variables = get_dataset_variables(dataset_id)
 
         if variables is not None:
-            for variable in variables:
-                item = QtWidgets.QListWidgetItem(variable)
+            for variable, description in variables.items():
+                item = QtWidgets.QListWidgetItem(description)
+                item.setData(QtCore.Qt.UserRole, variable)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
                 item.setCheckState(QtCore.Qt.Unchecked)
                 self.lboxVariables.addItem(item)
             self.lboxVariables.setEnabled(True)
         
-
         date_range = get_dataset_date_range(dataset_id)
 
         if date_range is not None:
@@ -109,22 +108,19 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                 if result == QtWidgets.QMessageBox.No:
                     return
 
-        variables = []
+        variables = {}
         for i in range(self.lboxVariables.count()):
             item = self.lboxVariables.item(i)
             if item.checkState() == QtCore.Qt.Checked:
-                variables.append(item.text())
+                variables[item.data(QtCore.Qt.UserRole)] = item.text()
         
         if len(variables) == 0:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Select at least one variable')
             return
 
         dataset = self.datasets.get(self.cboDataset.currentText())['id']
-
         start_date, end_date = self.date_range_widget.get_date_range()
-
         status = True
-
         time_series_ids = {}
 
         for feature in self.sample_frame_widget.get_selected_sample_frame_features():
@@ -132,7 +128,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
             feature_id = feature.id()
             self.lblStatus.setText(f'Downloading timeseries for feature {feature_id}')
 
-            result = get_dataset_timeseries_polygon(dataset, variables, start_date, end_date, geometry)        
+            result = get_dataset_timeseries_polygon(dataset, list(variables.keys()), start_date, end_date, geometry)        
 
             if result is None:
                 status = False
@@ -167,12 +163,11 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                     if name in time_series_ids:
                         time_series_id = time_series_ids[name]
                     else:   
-                        metadata = {'units': units, 'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d')}
+                        metadata = {'units': units, 'start_date': start_date.strftime('%Y-%m-%d'), 'end_date': end_date.strftime('%Y-%m-%d'), 'description': variables[variable]}
                         metadata_json = json.dumps(metadata)
                         cursor.execute('INSERT INTO time_series (name, source, url, metadata) VALUES (?, ?, ?, ?)', (name, 'Climate Engine', 'https://www.climateengine.org/', metadata_json))
                         time_series_id = cursor.lastrowid
                         time_series_ids[name] = time_series_id
-
                     cursor.executemany('INSERT INTO sample_frame_time_series (sample_frame_fid, time_series_id, time_value, value) VALUES (?, ?, ?, ?)', [(feature_id, time_series_id, date, value) for date, value in values])
 
         if status is True:
