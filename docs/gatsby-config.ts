@@ -4,6 +4,9 @@ module.exports = {
   // You need pathPrefix if you're hosting GitHub Pages at a Project Pages or if your
   // site will live at a subdirectory like https://example.com/mypathprefix/.
   // pathPrefix: '/mypathprefix',
+  flags: {
+    DEV_SSR: true
+  },
   siteMetadata: {
     title: `QRiS`,
     author: {
@@ -66,6 +69,10 @@ module.exports = {
             url: '/software-help/projects',
           },
           {
+            title: 'Data Capture Events',
+            url: '/software-help/dce',
+          },
+          {
             title: 'Profiles',
             url: '/software-help/profiles',
           },
@@ -82,26 +89,43 @@ module.exports = {
             url: '/software-help/cross-sections',
           },
           {
-            title: 'Sampling Frames',
-            url: '/software-help/sampling-frames',
+            title: 'Sample Frames',
+            url: '/software-help/sample-frames',
+          },
+          {
+            title: 'Analyses',
+            url: '/software-help/analyses',
+          },
+          {
+            title: 'Metrics',
+            url: '/software-help/metrics',
           },
           {
             title: 'Zonal Statistics',
             url: '/software-help/zonal-statistics',
           },
           {
-            title: 'Stream Gage Tool',
-            url: '/software-help/zonal-statistics',
-          },
-          {
             title: 'Basemaps',
             url: '/software-help/basemaps',
+          },
+          {
+            title: 'Context',
+            url: '/software-help/context',
+            items: [
+              {
+                title: 'Stream Gage Tool',
+                url: '/software-help/stream-gage-tool',
+              },
+              {
+                title: 'Watershed Catchments',
+                url: '/software-help/watershed-catchments',
+              }
+            ]
           }
         ],
       },
       {
         title: 'Technical Reference',
-        url: '/technical-reference/database',
         items: [
           {
             title: 'Database',
