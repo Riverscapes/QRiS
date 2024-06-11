@@ -1,0 +1,153 @@
+---
+title: Managing Metrics
+banner: true
+description: Learn how to create and manage custom metrics in QRiS
+---
+
+## Introduction
+A QRiS Metric is a value representing a property of an associated Design, As-Built or Data Capture Event within a Sample Frame polygon. Metric values can be manually entered or derived from a simple calculation using one or more DCE layers, with or without additional input layers, such as DEMs, valley centerlines, etc. Uncertantiy values can also be stored with manually entered metric values.
+
+QRiS Metric definitions are stored within each QRiS Project geopackage. New metrics can be defined within a json definition file and imported into a project. Existing metrics can be edited or deleted.
+
+## Viewing Metrics
+The current list of metrics stored within a QRiS Project can be viewed under Help/Settings and navigating to the Metrics tab. The Metrics tab displays a list of all metrics defined within the project, including the metric name, description, calculation function, metric paramaters, and other metadata. 
+
+## Exporting Metrics to JSON Files
+
+Each metric in the list can be exported to a JSON file by clicking the `Export` button and selecting a location to save the file. The JSON file contains all the information needed to recreate the metric in another QRiS Project or allow for editing and re-importing back into the same project.
+
+The schema for the JSON file is as follows:
+
+### Metric Definition
+
+| Field Name       | Description                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------|
+| name             | Display name of the metric                                                                    |
+| machine_name     | Unique identifier for the metric, do not use spaces or special characters                     |
+| calculation_name | Name of the calculation function                                                              |
+| default_level    | Default level for the metric, can be "Metric" or "Indicator"                                  |
+| units            | Units of the metric, Not yet implemented (leave as null)                                      |
+| description      | (Optional) Description of the metric                                                         |
+| definition_url   | (Optional) URL to a document describing the metric                                            |
+| metadata        | (Optional) Additional metadata for the metric, including min_value, max_value, precision, and tolerance |
+metric_params   | Parameters for the calculation function                                                      |
+
+### Metadata
+
+| Field Name | Description                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------|
+| min_value  | (Optional) Minimum value for manually entered metric values                                  |
+| max_value  | (Optional) Maximum value for manually entered metric values                                  |
+| precision  | (Optional) Number of decimal places for manually entered metric values                       |
+| tolerance  | (Optional) Used to set warining icon if manual value is more than 10% different from automated value |
+
+## Metric Params
+
+| Field Name | Description                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------|
+| layers     | List of DCE layers to use in the calculation                                                  |
+| normalization | (Optional) Name of the analysis parameter to use for normalization (e.g. metric value per length or area). Currently can be only be "centerline" |
+| surfaces | (Optional) List of surfaces to use in the calculation                                |
+
+### Layer
+
+| Field Name       | Description                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------|
+| layer_name       | Name of the DCE layer                                                                         |
+| count_field      | (Optional) For count calculations, the field to count                                         |
+| attribute_filter| (Optional) Filter to apply to the layer                                                       |
+
+### Attribute Filter
+
+| Field Name | Description                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------|
+| field_name | (Required if attribute_filter is used) Field to filter on                                     |
+| values     | (Required if attribute_filter is used) List of values to filter on                            |
+
+### Surfaces
+
+| Field Name | Description                                                                                   |
+|------------|-----------------------------------------------------------------------------------------------|
+| surface_name | Name of the analysis parameter of the surface. Currently only dem is supprted for use with the gradient calculation.                                                                     |
+
+### Analysis Parameters
+
+Analysis parameters are non-dce layers and rasters that can be used in the metric calculation. The user must specify the layer or surface to use for each analysis parameter when creating the analyis. 
+
+| Analysis Parameter | Description                                                                                   |
+|--------------------|-----------------------------------------------------------------------------------------------|
+| centerline         | Valley centerline layer, generally used for normalization (e.g. dam density per length of valley bottom).  |
+| dem                | Digital Elevation Model, currently used for supporting the gradient calculation.
+
+### Example Metric JSON
+
+```json
+{
+    "name": "Dam Density", // Display name of the metric
+    "machine_name": "machine_code", // Unique identifier for the metric, do not use spaces or special characters
+    "calculation_name": "count", // Name of the calculation function
+    "default_level": "Metric", // Default level for the metric, can be "Metric" or "Indicator"
+    "units": null, // Units of the metric, Not yet implemented (leave as null)
+    "description": null, // (Optional) Description of the metric
+    "definition_url": null, // (Optional) URL to a document describing the metric
+    "metadata": {
+        "min_value": 0, // (Optional) Minimum value for manually entered metric values 
+        "max_value": 100, // (Optional) Maximum value for manually entered metric values
+        "precision": 2, // (Optional) Number of decimal places for manually entered metric values
+        "tolerance": 0.1 // (Optional) Used to set warining icon if manual value is more than 10% different from automated value
+    },
+    "metric_params": { // Parameters for the calculation function
+        "layers": [ // List of DCE layers to use in the calculation
+            {
+                "layer_name": "structural_elements_points", // Name of the DCE layer
+                "count_field": "Structure Count", // (Optional) For count calculations, the field to count
+                "attribute_filter": { // (Optional) Filter to apply to the layer
+                    "field_name": "Type", // (Required if attribute_filter is used) Field to filter on
+                    "values": [ // (Required if attribute_filter is used) List of values to filter on
+                        "Dam",
+                        "Dam Complex"
+                    ]
+                }
+            },
+            {
+                "layer_name": "structural_elements_lines",
+                "attribute_filter": {
+                    "field_name": "Type",
+                    "values": [
+                        "Dam",
+                        "Dam Complex"
+                    ]
+                }
+            },
+            {
+                "layer_name": "structural_elements_areas",
+                "attribute_filter": {
+                    "field_name": "Type",
+                    "values": [
+                        "Dam",
+                        "Dam Complex"
+                    ]
+                }
+            }
+        ],
+        "normalization": "centerline" // (Optional) Analysis Parameter to use for normalization. Currently can be only be "centerline"
+    }
+}
+```
+
+
+
+## Creating New Metrics
+Steps to create a new metric JSON file.
+Rules that must be followed
+How to validate (i.e. Visual Studio Code helping check for errors)
+
+
+## Editing Existing Metrics
+Rules that must be followed (i.e. don't change machine code)
+## Deleting Metrics
+**not yet implemented**
+
+Implications ( i.e. cascade delete on metric values in a project?)
+## Importing Metrics
+How to import JSON files back into QRiS Project
