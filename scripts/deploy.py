@@ -37,6 +37,7 @@ def copy_plugin():
         ['__init__.py'],
         ['CHANGELOG.md'],
         ['README.md'],
+        ['LICENSE'],
         ['config.json'],
         ['secrets.json'],
         ['.env'],
