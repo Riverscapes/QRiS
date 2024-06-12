@@ -153,6 +153,7 @@ module.exports = {
           name: `Riverscapes Gatsby Template Site`,
           short_name: `RiverscapesTemplate`,
           start_url: `/`,
+          iconUrl: `./static/qris-icon.png`,
         },
       },
     },
