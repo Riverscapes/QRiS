@@ -44,12 +44,12 @@ from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
 from .view.frm_settings import FrmSettings, REMOVE_LAYERS_ON_CLOSE, DOCK_WIDGET_LOCATION, default_dock_widget_location
-
-from .model.project import apply_db_migrations, test_project
-from .QRiS.qrave_integration import QRaveIntegration
-from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
+from .model.project import apply_db_migrations, test_project
+from .model.metric import load_metric_from_definition_file
+from .QRiS.qrave_integration import QRaveIntegration
+from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
 from .gp.watershed_attributes import WatershedAttributes
 from .gp.update_metadata import update_metadata, check_metadata
 
@@ -484,6 +484,11 @@ class QRiSToolbar:
                 update_metadata(db_path)
 
         self.toggle_widget(forceOn=True)
+
+        # update metrics definitions
+        self.update_metrics(db_path)
+        
+        # now we can create the project object and load the tree
         self.set_project_path_settings(db_path)
         self.dockwidget.build_tree_view(db_path)
         self.qrave.qrave_to_qris.connect(self.dockwidget.qris_from_qrave)
@@ -625,6 +630,27 @@ class QRiSToolbar:
         except Exception as ex:
             QtWidgets.QMessageBox.warning(None, 'QRiS Database Migration Error', 'Error Appling QRiS Database Migrations check the QGIS log for details.')
             QgsMessageLog.logMessage(f'Error Appling QRiS Database Migrations: {str(ex)}', 'QRiS', Qgis.Critical)
+
+    def update_metrics(self, db_path):
+
+        if not os.path.exists(self.qrave.metric_definitions_folder):
+            QgsMessageLog.logMessage(f'QRiS Metrics folder not found: {self.qrave.metric_definitions_folder}. No Metric Definitions will be added.', 'QRiS', Qgis.Warning)
+            return
+
+        new_metrics = []
+        for metric_file in os.listdir(self.qrave.metric_definitions_folder):
+            if metric_file.endswith('.json'):
+                metric_file = os.path.join(self.qrave.metric_definitions_folder, metric_file)
+                try:
+                    metric_id, metric = load_metric_from_definition_file(metric_file, db_path)
+                    if metric is not None:
+                        new_metrics.append(metric)
+                except Exception as ex:
+                    QtWidgets.QMessageBox.warning(None, 'QRiS Metric Load Error', f'Error loading metric definition: {str(ex)}')
+                    QgsMessageLog.logMessage(f'Error loading metric definition: {str(ex)}', 'QRiS', Qgis.Critical)
+        if len(new_metrics) > 0:
+            self.iface.messageBar().pushMessage('QRiS Metrics Loaded', f'Loaded {len(new_metrics)} new metrics.', level=Qgis.Info, duration=5)
+            QgsMessageLog.logMessage(f'Loaded {len(new_metrics)} new metrics.', 'QRiS', Qgis.Info)
 
     def configure_watershed_attribute_menu(self):
 

@@ -4,6 +4,7 @@ import importlib
 from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal
 from qgis.utils import plugins
 from qgis.PyQt.QtGui import QStandardItem, QIcon
+from qgis.PyQt.QtWidgets import QMenu
 
 from .path_utilities import parse_posix_path
 
@@ -23,6 +24,7 @@ class QRaveIntegration(QObject):
         self.plugin_instance = None
         self.symbology_folders = None
         self.qrave_map_layer = None
+        self.metric_definitions_folder = None
 
         # Attemp to find RAVE plugin using lower case names
         plugins_lower_case = {k.lower(): k for k in plugins.keys()}
@@ -35,6 +37,7 @@ class QRaveIntegration(QObject):
             self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
             self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS')),
                                       parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
+            self.metric_definitions_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'metrics'))
 
             self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
             self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
@@ -48,7 +51,7 @@ class QRaveIntegration(QObject):
                     self.plugin_instance.dockwidget.layerMenuOpen.disconnect()
                 self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
 
-    def qrave_add_to_map_menu_item(self, menu, item: QStandardItem, data):
+    def qrave_add_to_map_menu_item(self, menu: QMenu, item: QStandardItem, data):
         """Custom menu to show at the bottom of the QRave context menu
 
         Args:
@@ -60,7 +63,7 @@ class QRaveIntegration(QObject):
         menu.addSeparator()
         menu.addCustomAction(QIcon(f':/plugins/qris_toolbar/add_to_map'), "Add to QRiS", lambda: self.add_to_qris(item, data))
 
-    def add_to_qris(self, item, data):
+    def add_to_qris(self, item: QStandardItem, data):
         """_summary_
 
         Args:
