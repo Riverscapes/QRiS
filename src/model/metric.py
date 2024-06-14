@@ -11,7 +11,7 @@ default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio'
 
 class Metric(DBItem):
 
-    def __init__(self, id: int, name: str, machine_name:str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None):
+    def __init__(self, id: int, name: str, machine_name:str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None, version: int = 1):
         super().__init__('metrics', id, name)
         self.machine_name = machine_name
         self.description = description
@@ -22,6 +22,7 @@ class Metric(DBItem):
         self.icon = 'calculate'
         self.definition_url = definition_url
         self.metadata = metadata
+        self.version = version
         # This is the base unit as defined in the metric calculation function
         self.unit_type = analysis_metric_unit_type.get(self.metric_function, None)
         self.base_unit = default_units.get(self.unit_type, None)
@@ -52,10 +53,11 @@ def load_metrics(curs: sqlite3.Cursor) -> dict:
         json.loads(row['metric_params']) if row['metric_params'] else None,
         row['unit_id'],
         row['definition_url'],
-        json.loads(row['metadata']) if row['metadata'] else None
+        json.loads(row['metadata']) if row['metadata'] else None,
+        row['version']
     ) for row in curs.fetchall()}
 
-def insert_metric(db_path: str, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None) -> Metric:
+def insert_metric(db_path: str, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
 
     metric = None
     description = description if len(description) > 0 else None
@@ -65,6 +67,11 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
+            # make sure the metric_name and version are unique
+            curs.execute('SELECT id FROM metrics WHERE name = ? AND version = ?', [name, version])
+            metric_ids = curs.fetchone()
+            if metric_ids is not None:
+                raise ValueError(f"Metric '{name}' version '{version}' already exists in database.")
             # get the metric level id
             curs.execute('SELECT id FROM metric_levels WHERE name = ?', [metric_level])
             metric_level_ids = curs.fetchone()
@@ -87,9 +94,9 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
             else:
                 unit_id = None
 
-            curs.execute('INSERT INTO metrics (name, machine_name, description, default_level_id, calculation_id, metric_params, unit_id, definition_url, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [name, machine_name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str])
+            curs.execute('INSERT INTO metrics (name, machine_name, description, default_level_id, calculation_id, metric_params, unit_id, definition_url, metadata, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [name, machine_name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, version])
             id = curs.lastrowid
-            metric = Metric(id, name, machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata)
+            metric = Metric(id, name, machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
             conn.commit()
 
         except Exception as ex:
@@ -98,3 +105,20 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
             raise ex
 
     return id, metric
+
+def load_metric_from_definition_file(def_file: str, db_path) -> dict:
+    with open(def_file, 'r') as f:
+        metric_def: dict = json.load(f)
+    # check if the metric already exists in the database based on machine_name and version
+    with sqlite3.connect(db_path) as conn:
+        curs = conn.cursor()
+        curs.execute('SELECT id FROM metrics WHERE machine_name = ? AND version = ?', [metric_def['machine_name'], metric_def['version']])
+        metric_ids = curs.fetchone()
+        if metric_ids is not None:
+            return metric_ids[0], None
+    
+    description = metric_def.get('description', "")
+    unit = metric_def.get('unit', None)
+    definition_url = metric_def.get('definition_url', None)
+    metric_id, metric = insert_metric(db_path, metric_def['name'], metric_def['machine_name'], description, metric_def['default_level'], metric_def['calculation_name'], metric_def['metric_params'], unit, definition_url, metric_def['metadata'], metric_def['version'])
+    return metric_id, metric
