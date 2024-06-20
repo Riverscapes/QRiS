@@ -19,6 +19,7 @@ from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
 from .profile import Profile, load_profiles
 from .cross_sections import CrossSections, load_cross_sections
+from .valley_bottom import ValleyBottom, load_valley_bottoms
 from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
@@ -39,6 +40,7 @@ project_layers = [
     ('profile_centerlines', 'Centerlines', 'Linestring'),
     ('profile_features', 'Profiles', 'Linestring'),
     ('cross_section_features', 'Cross Sections', 'Linestring'),
+    ('valley_bottom_features', 'Valley Bottoms', 'Polygon'),
     ('dce_points', 'DCE Points', 'Point'),
     ('dce_lines', 'DCE Lines', 'Linestring'),
     ('dce_polygons', 'DCE Polygons', 'Polygon')
@@ -90,6 +92,7 @@ class Project(DBItem):
             self.stream_gages = load_stream_gages(curs)
             self.profiles = load_profiles(curs)
             self.cross_sections = load_cross_sections(curs)
+            self.valley_bottoms = load_valley_bottoms(curs)
 
             self.units = load_units(curs)
 
@@ -125,6 +128,8 @@ class Project(DBItem):
             self.profiles.pop(db_item.id)
         elif isinstance(db_item, CrossSections):
             self.cross_sections.pop(db_item.id)
+        elif isinstance(db_item, ValleyBottom):
+            self.valley_bottoms.pop(db_item.id)
         elif isinstance(db_item, EventLayer):
             event_layer_index = list(event_layer.id for event_layer in self.events[db_item.event_id].event_layers).index(db_item.id)
             self.events[db_item.event_id].event_layers.pop(event_layer_index)
@@ -178,6 +183,8 @@ class Project(DBItem):
         for dbitem in self.cross_sections.values():
             yield dbitem
         for dbitem in self.scratch_vectors.values():
+            yield dbitem
+        for dbitem in self.valley_bottoms.values():
             yield dbitem
         # for dbitem in self.layers.values():
         #     yield dbitem

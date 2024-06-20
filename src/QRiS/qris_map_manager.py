@@ -15,6 +15,7 @@ from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHI
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
+from ..model.valley_bottom import ValleyBottom
 
 from .path_utilities import parse_posix_path
 
@@ -43,6 +44,7 @@ class QRisMapManager(RiverscapesMapManager):
             CrossSections.CROSS_SECTIONS_MACHINE_CODE,
             Profile.PROFILE_MACHINE_CODE,
             AOI_MACHINE_CODE,
+            ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE,
             MASK_MACHINE_CODE,
             SAMPLE_FRAME_MACHINE_CODE,
             f'{EVENT_MACHINE_CODE}_ROOT',
@@ -166,6 +168,28 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_metadata_virtual_fields(feature_layer)
 
         return feature_layer
+    
+    def build_valley_bottom_layer(self, valley_bottom: ValleyBottom) -> QgsMapLayer:
+            
+            project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+            group_layer = self.get_group_layer(self.project.map_guid, ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE, 'Valley Bottoms', project_group, True)
+    
+            existing_layer = self.get_db_item_layer(self.project.map_guid, valley_bottom, group_layer)
+            if existing_layer is not None:
+                return existing_layer
+    
+            fc_path = f'{self.project.project_file}|layername=valley_bottom_features'
+            feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'valley_bottom_id', 'valley_bottoms')
+    
+            # setup fields
+            self.set_hidden(feature_layer, 'fid', 'Valley Bottom Feature ID')
+            self.set_hidden(feature_layer, 'valley_bottom_id', 'Valley Bottom ID')
+            self.set_multiline(feature_layer, 'description', 'Description')
+            self.set_hidden(feature_layer, 'metadata', 'Metadata')
+            self.set_virtual_dimension(feature_layer, 'area')
+            self.set_metadata_virtual_fields(feature_layer)
+    
+            return feature_layer
 
     def build_stream_gage_layer(self) -> QgsMapLayer:
 
