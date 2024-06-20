@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [0.3.24] 2024 JUN 20
+
+### Added
+- User friendly variable descriptions for Climate Engine Explorer #383
+- Import Metric Definitions using Riverscapes Viewer #426
+
+### Fixed
+- Missing Planning layers for Planing DCE
+
 ## [0.3.23] 2024 JUN 10
 
 ### Added
