@@ -372,7 +372,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
-                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE]):
+                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE, ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE]):
                     self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
@@ -1187,17 +1187,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        create = False
-        if mode == DB_MODE_CREATE:
-            create = True
-
-        frm = FrmValleyBottom(self, self.project, import_source_path, create_valley_bottom=create)
+        frm = FrmValleyBottom(self, self.project, import_source_path)
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_valley_bottom(db_item)
-        if mode == DB_MODE_CREATE:
-            pass
             
         result = frm.exec_()
         if result != 0:
