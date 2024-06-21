@@ -12,7 +12,7 @@ class ValleyBottom(DBItem):
     VALLEY_BOTTOM_MACHINE_CODE = 'Valley Bottom'
 
     def __init__(self, id: int, name: str, description: str, metadata: dict = None):
-        super().__init__('valley_bottom', id, name)
+        super().__init__('valley_bottoms', id, name)
         self.description = description
         self.metadata = metadata
         self.icon = 'polygon'
