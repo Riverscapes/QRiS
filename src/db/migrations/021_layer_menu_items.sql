@@ -1,0 +1,10 @@
+-- Update layer metadata to include menu items
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Geomorphic Mapping", "Floodplain"], "fields": [{"machine_code": "type_id", "label": "Type", "type": "list", "lookup": "active_extent_types"}], "menu_items": ["copy_from_valley_bottom"]}' WHERE fc_name = 'active_extents';
+UPDATE layers SET metadata = '{"hierarchy": ["Assessments", "Geomorphic Condition"], "fields": [{"machine_code": "cem_stage", "label": "CEM Stage", "type": "integer", "max": 8}], "menu_items": ["copy_from_valley_bottom"]}' WHERE fc_name = 'cem_phases';
+UPDATE layers SET metadata = '{"hierarchy": ["Assessments"], "menu_items": ["copy_from_valley_bottom"]}' WHERE fc_name = 'recovery_potential';
+
+UPDATE layers SET metadata = '{"hierarchy": ["Observations"], "fields": [{"machine_code": "observation_point_type", "label": "Observation Type", "type": "list", "lookup": "observation_point_types"}, {"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}], "menu_items": ["import_photos"]}' WHERE fc_name = 'observation_points';
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Other"], "fields": [{"machine_code": "photo_path", "label": "Photo Path", "type": "attachment"}], "menu_items": ["import_photos"]}' WHERE fc_name = 'observation_points_dce';
+
+UPDATE layers SET metadata = '{"hierarchy": ["Assessments", "Beaver Dam Building"], "fields": [{"machine_code": "streamside_vegetation", "label": "Streamside Vegetation Suitability", "type": "text"}, {"machine_code": "riparian_vegetation", "label": "Riparian/Upland Vegetation Suitability", "type": "text"}, {"machine_code": "dam_capacity", "label": "Dam Capacity", "type": "text"}], "menu_items": ["export_brat"]}' WHERE fc_name = 'brat_cis';
+UPDATE layers SET metadata = '{"hierarchy": ["Assessments", "Beaver Dam Building"], "menu_items": ["export_brat", "import_brat_reaches"]}' WHERE fc_name = 'brat_cis_reaches';

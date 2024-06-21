@@ -29,6 +29,7 @@
         <file alias="table">../Images/table.svg</file>
         <file alias="qris_icon">../Images/qris_icon.svg</file>
         <file alias="camera">../Images/camera.svg</file>
+        <file alias="save">../Images/save.svg</file>
         <file alias="slider">../Images/slider.svg</file>
         <file alias="settings">../Images/settings.svg</file>
         <file alias="time">../Images/time.svg</file>
