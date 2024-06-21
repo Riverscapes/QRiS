@@ -46,6 +46,7 @@
         <file alias="mask_regular">../Images/mask_regular.png</file>
         <file alias="waterdrop">../Images/water-drop.svg</file>
         <file alias="waterdrop-blue">../Images/water-drop-blue.svg</file>
+        <file alias="stream-gage">../Images/stream_gage.svg</file>
 
         <!-- Layer Icons -->
         <file alias="vector">../Images/layers/vector.svg</file>
