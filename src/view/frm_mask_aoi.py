@@ -167,8 +167,8 @@ class FrmMaskAOI(QtWidgets.QDialog):
                     QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
                     iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
-
-        super(FrmMaskAOI, self).accept()
+        else:
+            super(FrmMaskAOI, self).accept()
 
     def on_import_complete(self, result: bool):
 
@@ -182,6 +182,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
                 iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
             return
+        super(FrmMaskAOI, self).accept()
 
     def setupUi(self):
 

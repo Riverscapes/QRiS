@@ -144,7 +144,7 @@ class FrmValleyBottom(QtWidgets.QDialog):
                 else:
                     import_task = ImportFeatureClass(self.import_source_path, valley_bottom_path, layer_attributes, field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
                 # DEBUG
-                # result = import_mask_task.run()
+                # result = import_task.run()
                 # self.on_import_complete(result)
                 # PRODUCTION
                 import_task.import_complete.connect(self.on_import_complete)
@@ -158,8 +158,8 @@ class FrmValleyBottom(QtWidgets.QDialog):
                     QgsApplication.messageLog().logMessage(f'Error Deleting Valley Bottom: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
                     iface.messageBar().pushMessage(f'Error Deleting Valley Bottom', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
-
-        super(FrmValleyBottom, self).accept()
+        else:
+            super(FrmValleyBottom, self).accept()
 
     def on_import_complete(self, result: bool):
 
@@ -173,6 +173,8 @@ class FrmValleyBottom(QtWidgets.QDialog):
                 QgsApplication.messageLog().logMessage(f'Error Deleting Valley Bottom: {str(ex)}', 'QRIS', level=Qgis.Critical)
                 iface.messageBar().pushMessage(f'Error Deleting Valley Bottom', str(ex), level=Qgis.Critical, duration=5)
             return
+        
+        super(FrmValleyBottom, self).accept()
 
     def setupUi(self):
 
