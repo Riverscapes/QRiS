@@ -24,6 +24,11 @@ class EventLayer(DBItem):
             self.icon = 'line'
         elif self.layer.geom_type == 'Polygon':
             self.icon = 'polygon'
+        
+        self.menu_items = None
+        if self.layer.metadata is not None:
+            if 'menu_items' in self.layer.metadata:
+                self.menu_items = self.layer.metadata['menu_items']
 
     def feature_count(self, db_path: str) -> int:
         fc_name = Layer.DCE_LAYER_NAMES[self.layer.geom_type]

@@ -69,6 +69,7 @@ from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
 from .frm_import_dce_layer import FrmImportDceLayer
+from .frm_layer_picker import FrmLayerPicker
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
@@ -83,7 +84,6 @@ from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
 
 from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
-from ..gp.import_temp_layer import ImportTemporaryLayer
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.metrics_task import MetricsTask
@@ -478,19 +478,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
 
                 if isinstance(model_data, EventLayer):
-                    if model_data.name == 'BRAT CIS (Capacity Inference System)':
-                        self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', None, lambda: self.export_brat_cis(model_data))
-                    if model_data.name == 'Observations':
-                        if model_data.icon == 'point':
+                    if model_data.menu_items is not None:
+                        if 'import_photos' in model_data.menu_items:
                             self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_item, model_data))
-                    if model_data.name == 'BRAT CIS Reaches':
-                        self.add_context_menu_item(self.menu, 'Import Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
-                        # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
-                    else:
-                        self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
-                        import_menu = self.menu.addMenu('Import Features From ...')
-                        self.add_context_menu_item(import_menu, 'Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
-                        self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
+                        # if 'validate_brat_capacity' in model_data.menu_items:
+                            # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
+                    self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
+                    import_menu = self.menu.addMenu('Import Features From ...')
+                    self.add_context_menu_item(import_menu, 'Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
+                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
+                    if model_data.menu_items is not None:
+                        if 'copy_from_valley_bottom' in model_data.menu_items:
+                            self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'polygon', lambda: self.copy_valley_bottom(model_data))
+                        if 'import_brat_results' in model_data.menu_items:
+                            self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
+                        if 'export_brat' in model_data.menu_items:
+                            self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE), True)
 
@@ -876,6 +879,40 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
             frm.import_complete.connect(partial(self.import_dce_complete, db_item))
             frm.exec_()
+
+    def copy_valley_bottom(self, db_item: DBItem):
+
+        # check if there are any valley bottoms in the project
+        if len(self.project.valley_bottoms) == 0:
+            QtWidgets.QMessageBox.information(self, 'Copy Valley Bottom', 'No valley bottoms were found in the current project.')
+            return
+        # now use the layer picker to select the valley bottom to copy
+        valley_bottoms = [vb for vb in self.project.valley_bottoms.values()]
+        frm = FrmLayerPicker(self, "Select Valley Bottom to Copy", valley_bottoms)
+        result = frm.exec_()
+        if result == QtWidgets.QDialog.Accepted:
+            if frm.layer is None:
+                return
+            # now copy the valley bottom
+            valley_bottom_layer = QgsVectorLayer(f'{self.project.project_file}|layername=valley_bottom_features')
+            valley_bottom_layer.setSubsetString(f'valley_bottom_id = {frm.layer.id} ')
+            feats = []
+            out_layer = QgsVectorLayer(f'{self.project.project_file}|layername={Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]}')
+            new_fid = 1 if out_layer.featureCount() == 0 else max([f.id() for f in out_layer.getFeatures()]) + 1
+            for feature in valley_bottom_layer.getFeatures():
+                new_feature = QgsFeature()
+                new_feature.setGeometry(feature.geometry())
+                new_feature.setFields(out_layer.fields())
+                new_feature.setAttribute('event_id', db_item.event_id)
+                new_feature.setAttribute('event_layer_id', db_item.layer.id)
+                new_feature.setId(new_fid)
+                new_feature['fid'] = new_fid
+                feats.append(new_feature)
+                new_fid += 1
+            out_layer.startEditing()
+            out_layer.addFeatures(feats)
+            out_layer.commitChanges()
+            self.import_dce_complete(db_item, True) 
 
     def export_project(self, project: Project):
 
