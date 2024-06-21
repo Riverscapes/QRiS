@@ -984,7 +984,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(data_item, DBItem):
                 icon = data_item.icon
             elif data_item == STREAM_GAGE_MACHINE_CODE:
-                icon = 'database'
+                icon = 'stream-gage'
             elif data_item == CATCHMENTS_MACHINE_CODE:
                 icon = 'waterdrop-blue'
             elif data_item == CLIMATE_ENGINE_MACHINE_CODE:

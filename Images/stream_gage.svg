@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="24px"
+   viewBox="0 -960 960 960"
+   width="24px"
+   fill="#000000"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <rect
+     style="fill:#4dcbdc;fill-opacity:0.8;stroke-width:56.3637"
+     id="rect1"
+     width="399.71118"
+     height="427.4368"
+     x="278.41156"
+     y="-562.59924" />
+  <path
+     d="m 240,-800 q 0,-33 23.5,-56.5 Q 287,-880 320,-880 h 320 q 33,0 56.5,23.5 23.5,23.5 23.5,56.5 v 640 q 0,33 -23.5,56.5 Q 673,-80 640,-80 H 320 q -33,0 -56.5,-23.5 Q 240,-127 240,-160 Z m 80,0 v 640 H 640 V -280 H 480 v -80 h 160 v -80 H 480 v -80 h 160 v -80 H 480 v -80 h 160 v -120 z m 160,120 v 80 z m 0,160 v 80 z m 0,160 v 80 z m 0,-120 z"
+     id="path1" />
+</svg>
