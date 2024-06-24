@@ -61,19 +61,28 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.optSingleDate.toggled.connect(self.on_opt_date_change)
 
+        valley_bottoms: dict = qris_project.valley_bottoms.copy()
+        valley_bottoms[0] = DBItem('', 0, 'None')
+        self.valley_bottom_model = DBItemModel(valley_bottoms)
+        self.valley_bottom_model.sort_data_by_key()
+        self.cboValleyBottom.setModel(self.valley_bottom_model)
+        self.cboValleyBottom.setCurrentIndex(0)
+
         if event is not None:
             self.txtName.setText(event.name)
             self.txtDescription.setPlainText(event.description)
             self.cboPlatform.setCurrentIndex(event.platform.id - 1)
             self.cboRepresentation.setCurrentIndex(event.representation.id - 1)
+            self.metadata = event.metadata
 
             self.uc_start.set_date_spec(event.start)
             self.uc_end.set_date_spec(event.end)
             if any(date is not None for date in [event.end.day, event.end.year, event.end.month]):
                 self.optDateRange.setChecked(True)
 
-            # self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
-            # self.chkAddToMap.setVisible(False)
+            if event.metadata is not None:
+                if 'valley_bottom_id' in event.metadata:
+                    self.cboValleyBottom.setCurrentIndex(self.valley_bottom_model.getItemIndexById(event.metadata['valley_bottom_id']))
 
             for event_layer in event.event_layers:
                 item = QtGui.QStandardItem(event_layer.layer.name)
@@ -366,6 +375,15 @@ class FrmEvent(QtWidgets.QDialog):
                         surface_rasters.append(raster)
                         break
 
+        if self.metadata is None:
+            self.metadata = {}
+        
+        if self.cboValleyBottom.currentText() != 'None':
+            self.metadata['valley_bottom_id'] = self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id
+        else:
+            if 'valley_bottom_id' in self.metadata:
+                del self.metadata['valley_bottom_id']
+
         try:
             if self.the_event is not None:
                 # Check if any GIS data might be lost
@@ -532,6 +550,12 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.cboRepresentation = QtWidgets.QComboBox()
         self.tabGrid.addWidget(self.cboRepresentation, 5, 1, 1, 1)
+
+        self.lblValleyBottom = QtWidgets.QLabel('Associated Valley Bottom')
+        self.tabGrid.addWidget(self.lblValleyBottom, 10, 0, 1, 1)
+
+        self.cboValleyBottom = QtWidgets.QComboBox()
+        self.tabGrid.addWidget(self.cboValleyBottom, 10, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)
