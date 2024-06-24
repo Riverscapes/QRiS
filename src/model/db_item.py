@@ -83,6 +83,9 @@ class DBItemModel(QAbstractListModel):
             self._data.insert(0, (0, non_selectable_item))
             self.non_selectable_index = 0
 
+    def sort_data_by_key(self):
+        self._data.sort(key=lambda x: x[0])
+
     def data(self, index, role):
         if role == Qt.DisplayRole:
             _id, value = self._data[index.row()]

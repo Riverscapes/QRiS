@@ -41,10 +41,13 @@ class FrmDesign(FrmEvent):
             self, self.qris_project.project_file, 'lkp_design_sources')
 
         # Add the checkboxes to the form
-        self.lblDesignSources = QtWidgets.QLabel(self)
-        self.lblDesignSources.setText('Design Sources')
+        self.lblDesignSources = QtWidgets.QLabel('Design Sources', self)
+        self.lblDesignSources.setAlignment(QtCore.Qt.AlignTop)
         self.tabGrid.addWidget(self.lblDesignSources, 8, 0, 1, 1)
-        [self.tabGrid.addWidget(widget, self.tabGrid.rowCount(), 1, 1, 1) for widget in self.design_source_widgets]
+        self.groupBoxDesignSources = QtWidgets.QGroupBox(self)
+        self.groupBoxDesignSources.setLayout(QtWidgets.QVBoxLayout())
+        [self.groupBoxDesignSources.layout().addWidget(widget) for widget in self.design_source_widgets]
+        self.tabGrid.addWidget(self.groupBoxDesignSources, 8, 1, 1, 1)
 
         if event is not None:
             self.chkAddToMap.setVisible(False)
@@ -67,10 +70,11 @@ class FrmDesign(FrmEvent):
 
     def accept(self):
 
-        self.metadata = {
-            'statusId': self.cboStatus.currentData(QtCore.Qt.UserRole).id,
-            'designers': self.txtDesigners.toPlainText()
-        }
+        if self.metadata is None:
+            self.metadata = {}
+        
+        self.metadata['statusId'] =  self.cboStatus.currentData(QtCore.Qt.UserRole).id
+        self.metadata['designers'] =  self.txtDesigners.toPlainText()
 
         design_source_ids = []
         for widget in self.design_source_widgets:
