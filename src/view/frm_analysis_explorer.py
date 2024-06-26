@@ -5,39 +5,27 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 
+from ..model.project import Project
+from ..model.db_item import DBItemModel
+from ..model.analysis import Analysis
+from ..model.metric import Metric
+from ..model.sample_frame import get_sample_frame_ids
 
 class FrmAnalysisExplorer(QtWidgets.QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, qris_project: Project = None):
         super(FrmAnalysisExplorer, self).__init__(parent)
+
+        self.qris_project = qris_project
+
+        self.widgetAnalysisExplorer = QWidgetAnalysisExplorer(self, self.qris_project)
+
         self.setupUi(self)
 
         self.setWindowTitle('Analysis Explorer')
-
-    def browse_gpkg(self):
-
-        # File dialog
-        dlg = QtWidgets.QFileDialog()
-        dlg.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dlg.setNameFilter('GeoPackage (*.gpkg)')
-        result = dlg.exec_()
-        
-        if result:
-            if os.path.exists(dlg.selectedFiles()[0]):
-                self.txtGPKG.setText(dlg.selectedFiles()[0])
-                self.gpkg = dlg.selectedFiles()[0]
-                self.load_geopackage()
-
-
-    def load_geopackage(self):
-
-        if self.gpkg is None:
-            return
-        
-        self.widgetAnalysisExplorer.start_widget(self.gpkg)
-            
 
 
     def setupUi(self, Dialog):
@@ -48,37 +36,30 @@ class FrmAnalysisExplorer(QtWidgets.QDialog):
         self.grid = QtWidgets.QGridLayout()
         self.vlayout.addLayout(self.grid)
 
-        self.lblGPKG = QtWidgets.QLabel('GeoPackage')
-        self.grid.addWidget(self.lblGPKG, 0, 0)
-
-        self.txtGPKG = QtWidgets.QLineEdit()
-        self.txtGPKG.setReadOnly(True)
-        self.grid.addWidget(self.txtGPKG, 0, 1)
-
-        self.btnGPKG = QtWidgets.QPushButton('...')
-        self.btnGPKG.clicked.connect(self.browse_gpkg)
-        self.grid.addWidget(self.btnGPKG, 0, 2)
-
-        self.widgetAnalysisExplorer = QWidgetAnalysisExplorer()
         self.vlayout.addWidget(self.widgetAnalysisExplorer)
 
 
 
 class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, qris_project: Project = None):
         super(QWidgetAnalysisExplorer, self).__init__(parent)
+
+        self.qris_project = qris_project
         self.setupUi()
 
         self.setWindowTitle('Analysis Explorer')
 
-        self.metrics = []
-        self.sample_frame_features = []
-        self.events = []
-
         self.cmbAnalysisType.addItems(['Metric over Time', 'Metric over Riverscape'])
-        # Connect the currentIndexChanged signal to the on_analysis_type_changed method
         self.cmbAnalysisType.currentIndexChanged.connect(self.on_analysis_type_changed)
+        self.cmbAnalysisType.setEnabled(True)
+
+        self.cmbAnalysis.setModel(DBItemModel(self.qris_project.analyses))
+        self.cmbAnalysis.currentIndexChanged.connect(self.on_analysis_changed)
+        self.cmbAnalysis.setEnabled(True)
+
+        self.on_analysis_changed(0)
+        self.metric_over_time()
 
     def on_analysis_type_changed(self, index):
         # Call the appropriate method based on the selected index
@@ -86,46 +67,19 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
             self.metric_over_time()
         elif index == 1:
             self.metric_over_riverscape()
-        
-    def start_widget(self, gpkg):
-
-        self.gpkg = gpkg
-
-        with sqlite3.connect(self.gpkg) as conn:
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            # get the analyses
-            cursor.execute('SELECT * FROM analyses')
-            self.analyses = cursor.fetchall()
-            self.cmbAnalysis.addItems([a['name'] for a in self.analyses])
-            self.cmbAnalysis.currentIndexChanged.connect(self.on_analysis_changed)
-
-        self.cmbAnalysis.setEnabled(True)
-        self.on_analysis_changed(0)
-        self.metric_over_time()
 
     def on_analysis_changed(self, index):
 
-        # ok lets get the metrics available for the selected analysis and load them into the metric combo box
-        analysis = self.analyses[index]
+        self.analysis: Analysis = self.cmbAnalysis.currentData(Qt.UserRole)
 
-        with sqlite3.connect(self.gpkg) as conn:
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            cursor.execute('select * from analysis_metrics Inner Join metrics on metric_id = analysis_metrics.metric_id WHERE analysis_metrics.analysis_id = ? Group BY id', (analysis['id'],))
-            self.metrics = cursor.fetchall()
-            self.cmbMetric.addItems([m['name'] for m in self.metrics])
+        metrics = DBItemModel(self.qris_project.metrics)
+        self.cmbMetric.setModel(metrics)
 
-            cursor.execute('SELECT * FROM sample_frame_features WHERE sample_frame_id = ?', (analysis['mask_id'],))
-            self.sample_frame_features = cursor.fetchall()
-            self.cmbSampleFrameFeature.addItems([sf['display_label'] for sf in self.sample_frame_features])
+        sample_frame_features = get_sample_frame_ids(self.qris_project.project_file, self.analysis.sample_frame.id)
+        self.cmbSampleFrameFeature.setModel(DBItemModel(sample_frame_features))
 
-            cursor.execute('SELECT * FROM events')
-            self.events = cursor.fetchall()
-            self.cmbEvent.addItems([e['name'] for e in self.events])
-
-        # make the plot type combo box enabled
-        self.cmbAnalysisType.setEnabled(True)
+        events = DBItemModel(self.qris_project.events)
+        self.cmbEvent.setModel(events)
 
     def metric_over_time(self):
     
@@ -136,25 +90,25 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbSampleFrameFeature.currentIndexChanged.connect(self.on_sample_frame_feature_changed)
         self.cmbMetric.currentIndexChanged.connect(self.on_metric_changed)
 
-        self.plot_metric_over_time(self.metrics[0]['id'])
+        self.plot_metric_over_time(self.cmbMetric.currentData(Qt.UserRole).id)
 
     def on_sample_frame_feature_changed(self, index):
         
-        metric_index = self.cmbMetric.currentIndex()
-        self.plot_metric_over_time(self.metrics[metric_index]['id'])  
+        metric = self.cmbMetric.currentData(Qt.UserRole)
+        self.plot_metric_over_time(metric.id)  
 
     def on_metric_changed(self, index):
 
-        metric_index = self.cmbMetric.currentIndex()
+        metric: Metric = self.cmbMetric.currentData(Qt.UserRole)
         if self.cmbAnalysisType.currentIndex() == 0:
-            self.plot_metric_over_time(self.metrics[metric_index]['id'])
+            self.plot_metric_over_time(metric.id)
         else:
-            self.plot_metric_over_riverscape(self.metrics[metric_index]['id'])
+            self.plot_metric_over_riverscape(metric.id)
 
     def on_event_changed(self, index):
 
-        metric_index = self.cmbMetric.currentIndex()
-        self.plot_metric_over_riverscape(self.metrics[metric_index]['id'])
+        metric = self.cmbMetric.currentData(Qt.UserRole)
+        self.plot_metric_over_riverscape(metric.id)
     
     def metric_over_riverscape(self):
 
@@ -165,11 +119,12 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbEvent.currentIndexChanged.connect(self.on_event_changed)
         self.cmbMetric.currentIndexChanged.connect(self.on_metric_changed)
 
-        self.plot_metric_over_riverscape(self.metrics[0]['id'])
+        self.plot_metric_over_riverscape(self.cmbMetric.currentData(Qt.UserRole).id)
 
     def get_metric_values(self, analysis_id, metric_id):
 
-        with sqlite3.connect(self.gpkg) as conn:
+        gpkg = self.qris_project.project_file
+        with sqlite3.connect(gpkg) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM metric_values WHERE analysis_id = ? AND metric_id = ?', (analysis_id, metric_id))
@@ -178,7 +133,8 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def get_event_dates(self):
 
-        with sqlite3.connect(self.gpkg) as conn:
+        gpkg = self.qris_project.project_file
+        with sqlite3.connect(gpkg) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM events')
@@ -196,8 +152,8 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def plot_metric_over_time(self, metric_id):
 
-        analysis_id = self.analyses[self.cmbAnalysis.currentIndex()]['id']
-        metric_name = self.metrics[self.cmbMetric.currentIndex()]['name']
+        analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
+        metric_name = self.cmbMetric.currentData(Qt.UserRole).name
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
@@ -223,31 +179,29 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def plot_metric_over_riverscape(self, metric_id):
 
-        analysis_id = self.analyses[self.cmbAnalysis.currentIndex()]['id']
+        analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
 
         event_date = self.cmbEvent.currentText()
-        event_id = None
-        for e in self.events:
-            if e['name'] == event_date:
-                event_id = e['id']
-                break
+        event_id = self.cmbEvent.currentData(Qt.UserRole).id
+
         x = []
         y = []
         x_label = []
         topology = []
 
-        for sample_frame_id in self.sample_frame_features:
+        sample_frame_features = get_sample_frame_ids(self.qris_project.project_file, self.analysis.sample_frame.id)
+
+        for sample_frame_feature in sample_frame_features.values():
             for m in metric_values:
-                if m['sample_frame_feature_id'] == sample_frame_id['fid']:
+                if m['sample_frame_feature_id'] == sample_frame_feature.id:
                     if m['event_id'] != event_id:
                         continue
-                    x.append(sample_frame_id['fid'])
+                    x.append(sample_frame_feature.id)
                     y.append(m['automated_value'] if m['is_manual'] == 0 else m['manual_value'])
-                    x_label.append(sample_frame_id['display_label'] if sample_frame_id['display_label'] is not None else sample_frame_id['fid'])
-                    topology.append(sample_frame_id['flows_into'])
+                    x_label.append(sample_frame_feature.name if sample_frame_feature.name is not None else sample_frame_feature.id)
 
         use_topology = True
         # Check if the topology is valid.

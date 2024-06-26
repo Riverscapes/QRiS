@@ -3,6 +3,7 @@
 
         <!-- General Icons -->
         <file alias="add_to_map">../Images/add_to_map.svg</file>
+        <file alias="analysis_summary">../Images/analysis_summary.svg</file>
         <file alias="arrow_down">../Images/arrow_down.png</file>
         <file alias="arrow_up">../Images/arrow_up.png</file>
         <file alias="alpha">../Images/alpha.svg</file>
