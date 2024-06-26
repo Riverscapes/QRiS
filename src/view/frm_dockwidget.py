@@ -57,6 +57,7 @@ from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
 from .frm_sample_frame import FrmSampleFrame
 from .frm_analysis_properties import FrmAnalysisProperties
+from .frm_analysis_explorer import FrmAnalysisExplorer
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
@@ -363,6 +364,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
                 if len(self.project.analyses) > 0:
+                    self.add_context_menu_item(self.menu, 'Annalysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
                 # self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
@@ -692,6 +694,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
         self.analysis_doc_widget.show()
+
+    def open_analysis_summary(self):
+
+        frm = FrmAnalysisExplorer(self, self.project)
+        frm.exec_()
 
     def export_analysis_table(self, analysis: Analysis = None):
 
