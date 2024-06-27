@@ -21,6 +21,8 @@
  *                                                                         *
  ***************************************************************************/
 """
+import json
+import sqlite3
 import os.path
 
 from PyQt5.QtCore import pyqtSlot
@@ -47,7 +49,7 @@ from .view.frm_settings import FrmSettings, REMOVE_LAYERS_ON_CLOSE, DOCK_WIDGET_
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
 from .model.project import apply_db_migrations, test_project
-from .model.metric import load_metric_from_definition_file
+from .model.metric import update_metric, insert_metric, verify_metric
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
 from .gp.watershed_attributes import WatershedAttributes
@@ -638,19 +640,42 @@ class QRiSToolbar:
             return
 
         new_metrics = []
+        updated_metrics = []
         for metric_file in os.listdir(self.qrave.metric_definitions_folder):
             if metric_file.endswith('.json'):
                 metric_file = os.path.join(self.qrave.metric_definitions_folder, metric_file)
                 try:
-                    metric_id, metric = load_metric_from_definition_file(metric_file, db_path)
-                    if metric is not None:
-                        new_metrics.append(metric)
+                    with open(metric_file, 'r') as f:
+                        metric_def: dict = json.load(f)
+                    # Fill in any optional fields that may be missing
+                    for field in ['description', 'unit', 'definition_url', 'metadata']:
+                        metric_def[field] = metric_def.get(field, None)
+                    with sqlite3.connect(db_path) as conn:
+                        # row dict factory
+                        conn.row_factory = sqlite3.Row
+                        curs = conn.cursor()
+                        curs.execute('SELECT * FROM metrics WHERE machine_name = ? AND version = ?', [metric_def['machine_name'], metric_def['version']])
+                        existing_metric = curs.fetchone()
+                        # check if the metric already exists in the database based on machine_name and version
+                        if existing_metric is not None:
+                            # now check if the any of the metric fields has been updated
+                            if not verify_metric(db_path, existing_metric[0], metric_def['name'], metric_def['machine_name'], metric_def['description'], metric_def['default_level'], metric_def['calculation_name'], metric_def['metric_params'], metric_def['unit'], metric_def['definition_url'], metric_def['metadata'], metric_def['version']):
+                                metric = update_metric(db_path, existing_metric[0], metric_def['name'], metric_def['machine_name'], metric_def['description'], metric_def['default_level'], metric_def['calculation_name'], metric_def['metric_params'], metric_def['unit'], metric_def['definition_url'], metric_def['metadata'], metric_def['version'])
+                                if metric is not None:
+                                    updated_metrics.append(metric)
+                        else:
+                            metric_id, metric = insert_metric(db_path, metric_def['name'], metric_def['machine_name'], metric_def['description'], metric_def['default_level'], metric_def['calculation_name'], metric_def['metric_params'], metric_def['unit'], metric_def['definition_url'], metric_def['metadata'], metric_def['version'])
+                            if metric is not None:
+                                new_metrics.append(metric)
                 except Exception as ex:
-                    QtWidgets.QMessageBox.warning(None, 'QRiS Metric Load Error', f'Error loading metric definition: {str(ex)}')
+                    self.iface.messageBar().pushMessage("QRiS Metric Load Error", f"Error loading metric definition: {str(ex)}", level=Qgis.Critical)
                     QgsMessageLog.logMessage(f'Error loading metric definition: {str(ex)}', 'QRiS', Qgis.Critical)
         if len(new_metrics) > 0:
             self.iface.messageBar().pushMessage('QRiS Metrics Loaded', f'Loaded {len(new_metrics)} new metrics.', level=Qgis.Info, duration=5)
             QgsMessageLog.logMessage(f'Loaded {len(new_metrics)} new metrics.', 'QRiS', Qgis.Info)
+        if len(updated_metrics) > 0:
+            self.iface.messageBar().pushMessage('QRiS Metrics Updated', f'Updated {len(updated_metrics)} metrics.', level=Qgis.Info, duration=5)
+            QgsMessageLog.logMessage(f'Updated {len(updated_metrics)} metrics.', 'QRiS', Qgis.Info)
 
     def configure_watershed_attribute_menu(self):
 

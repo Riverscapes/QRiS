@@ -106,19 +106,100 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
 
     return id, metric
 
-def load_metric_from_definition_file(def_file: str, db_path) -> dict:
-    with open(def_file, 'r') as f:
-        metric_def: dict = json.load(f)
-    # check if the metric already exists in the database based on machine_name and version
-    with sqlite3.connect(db_path) as conn:
-        curs = conn.cursor()
-        curs.execute('SELECT id FROM metrics WHERE machine_name = ? AND version = ?', [metric_def['machine_name'], metric_def['version']])
-        metric_ids = curs.fetchone()
-        if metric_ids is not None:
-            return metric_ids[0], None
+def update_metric(db_path: str, id: int, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
     
-    description = metric_def.get('description', "")
-    unit = metric_def.get('unit', None)
-    definition_url = metric_def.get('definition_url', None)
-    metric_id, metric = insert_metric(db_path, metric_def['name'], metric_def['machine_name'], description, metric_def['default_level'], metric_def['calculation_name'], metric_def['metric_params'], unit, definition_url, metric_def['metadata'], metric_def['version'])
-    return metric_id, metric
+        metric = None
+        description = description if len(description) > 0 else None
+        metadata_str = json.dumps(metadata) if metadata is not None else None
+        metric_params_str = json.dumps(metric_params) if metric_params is not None else None
+    
+        with sqlite3.connect(db_path) as conn:
+            try:
+                curs = conn.cursor()
+                # get the metric level id
+                curs.execute('SELECT id FROM metric_levels WHERE name = ?', [metric_level])
+                metric_level_ids = curs.fetchone()
+                if metric_level_ids is None:
+                    raise ValueError(f"Metric Level type '{metric_level}' not found in database.")
+                metric_level_id = metric_level_ids[0]
+                # get the calculation id
+                curs.execute('SELECT id FROM calculations WHERE metric_function = ?', [metric_function])
+                calculation_ids = curs.fetchone()
+                if calculation_ids is None:
+                    raise ValueError(f"Calculation '{metric_function}' not found in database.")
+                calculation_id = calculation_ids[0]
+                # get the unit id
+                if default_unit is not None and default_unit != '':
+                    curs.execute('SELECT id FROM lkp_units WHERE name = ?', [default_unit])
+                    unit_ids = curs.fetchone()
+                    if unit_ids is None:
+                        raise ValueError(f"Unit '{default_unit}' not found in database.")
+                    unit_id = unit_ids[0]
+                else:
+                    unit_id = None
+    
+                curs.execute('UPDATE metrics SET name = ?, description = ?, default_level_id = ?, calculation_id = ?, metric_params = ?, unit_id = ?, definition_url = ?, metadata = ? WHERE machine_name = ? and version = ?', [name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, machine_name, version])
+                metric = Metric(id, name, machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
+                conn.commit()
+    
+            except Exception as ex:
+                metric = None
+                conn.rollback()
+                raise ex
+    
+        return metric
+
+def verify_metric(db_path: str, id: int, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> bool:
+
+    description = description if len(description) > 0 else None
+
+    with sqlite3.connect(db_path) as conn:
+        try:
+            conn.row_factory = sqlite3.Row
+            curs = conn.cursor()
+            # get the metric for the machine_name and version
+            curs.execute('SELECT * FROM metrics WHERE machine_name = ? AND version = ?', [machine_name, version])
+            metric = curs.fetchone()
+
+            if name != metric['name'] or definition_url != metric['definition_url']:
+                return False
+            if description is not None:
+                if description != metric['description']:
+                    return False
+            else:
+                if metric['description'] is not None:
+                    return False
+            # get the metric level id
+            curs.execute('SELECT id FROM metric_levels WHERE name = ?', [metric_level])
+            metric_level_ids = curs.fetchone()
+            if metric_level_ids is None:
+                raise ValueError(f"Metric Level type '{metric_level}' not found in database.")
+            if metric_level_ids[0] != metric['default_level_id']:
+                return False
+            # get the calculation id
+            curs.execute('SELECT id FROM calculations WHERE metric_function = ?', [metric_function])
+            calculation_ids = curs.fetchone()
+            if calculation_ids is None:
+                raise ValueError(f"Calculation '{metric_function}' not found in database.")
+            if calculation_ids[0] != metric['calculation_id']:
+                return False
+            # get the unit id
+            if default_unit != metric['unit_id']:
+                return False
+            if metric_params is not None:
+                if metric_params != json.loads(metric['metric_params']):
+                    return False
+            else:
+                if metric['metric_params'] is not None:
+                    return False
+            if metadata is not None:
+                if metadata != json.loads(metric['metadata']):
+                    return False
+            else:
+                if metric['metadata'] is not None:
+                    return False
+
+        except Exception as ex:
+            raise ex
+        
+    return True
