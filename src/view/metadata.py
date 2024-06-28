@@ -121,6 +121,11 @@ class MetadataWidget(QtWidgets.QWidget):
 
         self.table.removeRow(self.table.currentRow())
 
+    def delete_item(self, metadata_type: str, key: str):
+
+        if metadata_type in self.metadata and key in self.metadata[metadata_type]:
+            del self.metadata[metadata_type][key]
+
     def validate(self) -> bool:
 
         missing_keys = []
@@ -159,6 +164,16 @@ class MetadataWidget(QtWidgets.QWidget):
                     return False
 
         return True
+
+    def get_data(self) -> dict:
+            
+        if self.table.rowCount() > 0:
+            if 'metadata' not in self.metadata:
+                self.metadata['metadata'] = dict()
+        for row in range(self.table.rowCount()):
+            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+
+        return self.metadata
 
     def get_json(self) -> str:
 
