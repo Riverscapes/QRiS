@@ -23,7 +23,6 @@ class FrmAsBuilt(FrmEvent):
 
         self.lblPhase.setVisible(True)
         self.txtPhase.setVisible(True)
-        self.txtPhase.setPlaceholderText('Phase 1, Phase 2, Pilot, Demo, Maintenance of Phase 1 etc.')
 
         self.lblAssociatedDesign = QtWidgets.QLabel('Design this As-Built is based on', self)
         self.tabGrid.addWidget(self.lblAssociatedDesign, 1, 0)
@@ -42,10 +41,10 @@ class FrmAsBuilt(FrmEvent):
         self.lblStartDate.setText('Date of As-Built Survey')
 
         self.lblConstructionDate = QtWidgets.QLabel('Date of Construction', self)
-        self.tabGrid.addWidget(self.lblConstructionDate, 5, 0)
+        self.tabGrid.addWidget(self.lblConstructionDate, 6, 0)
 
         self.uc_construction = FrmDatePicker(self)
-        self.tabGrid.addWidget(self.uc_construction, 5, 1)
+        self.tabGrid.addWidget(self.uc_construction, 6, 1)
 
         self.lblPlatform.setVisible(False)
         self.cboPlatform.setVisible(False)
@@ -54,11 +53,11 @@ class FrmAsBuilt(FrmEvent):
         self.cboRepresentation.setVisible(False)
 
         self.lblDesigners = QtWidgets.QLabel('Observer(s)', self)
-        self.tabGrid.addWidget(self.lblDesigners, 7, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblDesigners, 8, 0, 1, 1)
         self.tabGrid.setAlignment(self.lblDesigners, QtCore.Qt.AlignTop)
 
         self.txtDesigners = QtWidgets.QPlainTextEdit(self)
-        self.tabGrid.addWidget(self.txtDesigners, 7, 1, 1, 1)
+        self.tabGrid.addWidget(self.txtDesigners, 8, 1, 1, 1)
 
         # Create a checkbox widget for each design source
         self.design_source_widgets, self.design_sources = add_checkbox_widgets(
@@ -67,13 +66,13 @@ class FrmAsBuilt(FrmEvent):
         # Add the checkboxes to the form
         self.lblDesignSources = QtWidgets.QLabel('As-Built Observations', self)
         self.lblDesignSources.setAlignment(QtCore.Qt.AlignTop)
-        self.tabGrid.addWidget(self.lblDesignSources, 8, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblDesignSources, 9, 0, 1, 1)
         self.groupBoxDesignSources = QtWidgets.QGroupBox(self)
         self.groupBoxDesignSources.setLayout(QtWidgets.QVBoxLayout())
         [self.groupBoxDesignSources.layout().addWidget(widget) for widget in self.design_source_widgets]
         # add vertical spacer to group box layout
 
-        self.tabGrid.addWidget(self.groupBoxDesignSources, 8, 1)
+        self.tabGrid.addWidget(self.groupBoxDesignSources, 9, 1)
         self.tabGrid.setAlignment(self.groupBoxDesignSources, QtCore.Qt.AlignTop)
 
         surface_tab_index = self.tab.indexOf(self.surfaces_widget)
@@ -115,9 +114,6 @@ class FrmAsBuilt(FrmEvent):
                                 widget_id = widget.property('id')
                                 if widget_id == source_id:
                                     widget.setChecked(True)
-                
-                if 'phase' in self.metadata_widget.metadata['system']:
-                    self.txtPhase.setText(self.metadata_widget.metadata['system']['phase'])
 
                 if 'associatedDesignId' in self.metadata_widget.metadata['system']:
                     associated_design_id = self.metadata_widget.metadata['system']['associatedDesignId']
@@ -201,11 +197,6 @@ class FrmAsBuilt(FrmEvent):
             return
 
         self.metadata_widget.add_system_metadata('observers', self.txtDesigners.toPlainText())
-
-        if self.txtPhase.text() != '':
-            self.metadata_widget.add_system_metadata('phase', self.txtPhase.text())
-        else:
-            self.metadata_widget.delete_item('system', 'phase')
 
         if self.cboAssociatedDesign.currentData(QtCore.Qt.UserRole).id != 0:
             self.metadata_widget.add_system_metadata('associatedDesignId', self.cboAssociatedDesign.currentData(QtCore.Qt.UserRole).id)
