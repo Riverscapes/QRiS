@@ -364,7 +364,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
                 if len(self.project.analyses) > 0:
-                    self.add_context_menu_item(self.menu, 'Annalysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
+                    self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
                 # self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
