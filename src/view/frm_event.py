@@ -1,7 +1,9 @@
 
+import json
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, insert as insert_event
+from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, AS_BUILT_MACHINE_CODE, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
@@ -9,6 +11,8 @@ from ..model.layer import Layer
 
 from .frm_date_picker import FrmDatePicker
 from .frm_event_picker import FrmEventPicker
+from .metadata import MetadataWidget
+from .widgets.surface_library import SurfaceLibraryWidget
 
 from datetime import date, datetime
 from .utilities import validate_name, add_standard_form_buttons
@@ -24,10 +28,22 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.qris_project = qris_project
         self.protocols = []
-        self.metadata = None
         self.event_type_id = event_type_id
         # Note that "event" is already a method from QDialog(), hence the weird name
         self.the_event = event
+
+        init_metadata = None
+        if event is not None and event.metadata is not None:
+            # move any keys that are not 'metadata', 'system' or 'attributes' to 'system'
+            init_metadata = event.metadata
+            if 'system' not in init_metadata:
+                init_metadata['system'] = dict()
+            for key in list(init_metadata.keys()):
+                if key not in ['metadata', 'system', 'attributes']:
+                    init_metadata['system'][key] = init_metadata[key]
+                    del init_metadata[key]
+        self.metadata_widget = MetadataWidget(self, json.dumps(init_metadata))
+        self.surface_library = SurfaceLibraryWidget(self, qris_project)
 
         self.setupUi()
         self.setWindowTitle('Create New Data Capture Event' if event is None else 'Edit Data Capture Event')
@@ -39,19 +55,19 @@ class FrmEvent(QtWidgets.QDialog):
         self.layer_list.setModel(self.layers_model)
 
         # Surface Rasters
-        self.surface_raster_model = QtGui.QStandardItemModel()
-        rtypes = self.qris_project.lookup_tables['lkp_raster_types']
-        for surface in qris_project.surface_rasters().values():
-            item = QtGui.QStandardItem(f'{surface.name} ({rtypes[surface.raster_type_id].name})')
-            item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-            item.setData(surface, QtCore.Qt.UserRole)
-            self.surface_raster_model.appendRow(item)
+        # self.surface_raster_model = QtGui.QStandardItemModel()
+        # rtypes = self.qris_project.lookup_tables['lkp_raster_types']
+        # for surface in qris_project.surface_rasters().values():
+        #     item = QtGui.QStandardItem(f'{surface.name} ({rtypes[surface.raster_type_id].name})')
+        #     item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+        #     item.setData(surface, QtCore.Qt.UserRole)
+        #     self.surface_raster_model.appendRow(item)
 
-            checked_state = QtCore.Qt.Checked if event is not None and surface in event.rasters else QtCore.Qt.Unchecked
-            item.setData(QtCore.QVariant(checked_state), QtCore.Qt.CheckStateRole)
+        #     checked_state = QtCore.Qt.Checked if event is not None and surface in event.rasters else QtCore.Qt.Unchecked
+        #     item.setData(QtCore.QVariant(checked_state), QtCore.Qt.CheckStateRole)
 
-        self.vwRasterSurfaces.setModel(self.surface_raster_model)
-        self.vwRasterSurfaces.setModelColumn(1)
+        # self.vwRasterSurfaces.setModel(self.surface_raster_model)
+        # self.vwRasterSurfaces.setModelColumn(1)
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.representation_model = DBItemModel(qris_project.lookup_tables['lkp_representation'])
@@ -73,22 +89,23 @@ class FrmEvent(QtWidgets.QDialog):
             self.txtDescription.setPlainText(event.description)
             self.cboPlatform.setCurrentIndex(event.platform.id - 1)
             self.cboRepresentation.setCurrentIndex(event.representation.id - 1)
-            self.metadata = event.metadata
 
             self.uc_start.set_date_spec(event.start)
             self.uc_end.set_date_spec(event.end)
             if any(date is not None for date in [event.end.day, event.end.year, event.end.month]):
                 self.optDateRange.setChecked(True)
 
-            if event.metadata is not None:
-                if 'valley_bottom_id' in event.metadata:
-                    self.cboValleyBottom.setCurrentIndex(self.valley_bottom_model.getItemIndexById(event.metadata['valley_bottom_id']))
+            if self.metadata_widget.metadata is not None and 'system' in self.metadata_widget.metadata:
+                if 'valley_bottom_id' in self.metadata_widget.metadata['system']:
+                    self.cboValleyBottom.setCurrentIndex(self.valley_bottom_model.getItemIndexById(self.metadata_widget.metadata['system']['valley_bottom_id']))
 
             for event_layer in event.event_layers:
                 item = QtGui.QStandardItem(event_layer.layer.name)
                 item.setData(event_layer.layer, QtCore.Qt.UserRole)
                 item.setEditable(False)
                 self.layers_model.appendRow(item)
+
+            self.surface_library.set_selected_surface_ids([r.id for r in event.rasters])
 
         self.txtName.setFocus()
 
@@ -115,15 +132,18 @@ class FrmEvent(QtWidgets.QDialog):
             if self.event_type_id == PLANNING_EVENT_TYPE_ID:
                 if protocol.machine_code.lower() != PLANNING_MACHINE_CODE.lower():
                     continue
+            if self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
+                if protocol.machine_code.lower() != AS_BUILT_MACHINE_CODE.lower():
+                    continue
 
             protocol_si.setData(protocol, QtCore.Qt.UserRole)
             protocol_si.setEditable(False)
             # protocol_si.setCheckable(True)
 
             for method in protocol.methods:
-                method_si = QtGui.QStandardItem(method.name)
-                method_si.setEditable(False)
-                method_si.setData(method, QtCore.Qt.UserRole)
+                # method_si = QtGui.QStandardItem(method.name)
+                # method_si.setEditable(False)
+                # method_si.setData(method, QtCore.Qt.UserRole)
                 # method_si.setCheckable(True)
 
                 for layer in method.layers:
@@ -137,30 +157,31 @@ class FrmEvent(QtWidgets.QDialog):
                     #     layer_si.setCheckState(QtCore.Qt.Checked)
 
                     # if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or layer_si.checkState() == QtCore.Qt.Checked:
-                    method_si.appendRow(layer_si)
+                    # method_si.appendRow(layer_si)
+                    protocol_si.appendRow(layer_si)
 
-                if method_si.hasChildren():
-                    # if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or method_si.hasChildren():
-                    protocol_si.appendRow(method_si)
+                # if method_si.hasChildren():
+                #     # if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or method_si.hasChildren():
+                #     protocol_si.appendRow(method_si)
 
             if protocol_si.hasChildren():
                 # if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or protocol_si.hasChildren():
                 self.tree_model.appendRow(protocol_si)
 
-        non_method_si = QtGui.QStandardItem('Layers without a method')
-        non_method_si.setEditable(False)
-        non_method_si.setData(None, QtCore.Qt.UserRole)
-        for non_method_layer in self.qris_project.non_method_layers.values():
-            layer_name = non_method_layer.name if non_method_layer.name not in duplicate_layers else f'{non_method_layer.name} ({non_method_layer.geom_type})'
-            layer_si = QtGui.QStandardItem(layer_name)
-            layer_si.setEditable(False)
-            layer_si.setData(non_method_layer, QtCore.Qt.UserRole)
-            non_method_si.appendRow(layer_si)
-        self.tree_model.appendRow(non_method_si)
+        # non_method_si = QtGui.QStandardItem('Layers without a method')
+        # non_method_si.setEditable(False)
+        # non_method_si.setData(None, QtCore.Qt.UserRole)
+        # for non_method_layer in self.qris_project.non_method_layers.values():
+        #     layer_name = non_method_layer.name if non_method_layer.name not in duplicate_layers else f'{non_method_layer.name} ({non_method_layer.geom_type})'
+        #     layer_si = QtGui.QStandardItem(layer_name)
+        #     layer_si.setEditable(False)
+        #     layer_si.setData(non_method_layer, QtCore.Qt.UserRole)
+        #     non_method_si.appendRow(layer_si)
+        # self.tree_model.appendRow(non_method_si)
 
         self.layer_tree.setModel(self.tree_model)
         self.layer_tree.expandAll()
-        self.layer_tree.setExpanded(self.tree_model.indexFromItem(non_method_si), False)
+        # self.layer_tree.setExpanded(self.tree_model.indexFromItem(non_method_si), False)
 
         self.layer_tree.doubleClicked.connect(self.on_double_click_tree)
 
@@ -321,12 +342,13 @@ class FrmEvent(QtWidgets.QDialog):
         """check that only one surface type of id == 4 is checked"""
 
         checked_dems = 0
-        for i in range(self.surface_raster_model.rowCount()):
-            item = self.surface_raster_model.item(i)
-            if item.checkState() == QtCore.Qt.Checked:
-                raster = item.data(QtCore.Qt.UserRole)
-                if raster.raster_type_id == 4:
-                    checked_dems += 1
+        for raster in self.surface_library.get_selected_surfaces():
+        # for i in range(self.surface_raster_model.rowCount()):
+        #     item = self.surface_raster_model.item(i)
+        #     if item.checkState() == QtCore.Qt.Checked:
+        #         raster = item.data(QtCore.Qt.UserRole)
+            if raster.raster_type_id == 4:
+                checked_dems += 1
         return False if checked_dems > 1 else True
 
     def accept(self):
@@ -365,24 +387,24 @@ class FrmEvent(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
             return
 
-        surface_rasters = []
-        for row in range(self.surface_raster_model.rowCount()):
-            index = self.surface_raster_model.index(row, 0)
-            check = self.surface_raster_model.data(index, QtCore.Qt.CheckStateRole)
-            if check == QtCore.Qt.Checked:
-                for raster in self.qris_project.surface_rasters().values():
-                    if raster == self.surface_raster_model.data(index, QtCore.Qt.UserRole):
-                        surface_rasters.append(raster)
-                        break
-
-        if self.metadata is None:
-            self.metadata = {}
+        surface_rasters = self.surface_library.get_selected_surfaces()
+        # for row in range(self.surface_raster_model.rowCount()):
+        #     index = self.surface_raster_model.index(row, 0)
+        #     check = self.surface_raster_model.data(index, QtCore.Qt.CheckStateRole)
+        #     if check == QtCore.Qt.Checked:
+        #         for raster in self.qris_project.surface_rasters().values():
+        #             if raster == self.surface_raster_model.data(index, QtCore.Qt.UserRole):
+        #                 surface_rasters.append(raster)
+        #                 break
         
         if self.cboValleyBottom.currentText() != 'None':
-            self.metadata['valley_bottom_id'] = self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id
+            self.metadata_widget.add_system_metadata('valley_bottom_id', self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id)
         else:
-            if 'valley_bottom_id' in self.metadata:
-                del self.metadata['valley_bottom_id']
+            if 'system' in self.metadata_widget.metadata and 'valley_bottom_id' in self.metadata_widget.metadata['system']:
+                del self.metadata_widget.metadata['system']['valley_bottom_id']
+
+        if not self.metadata_widget.validate():
+            return
 
         try:
             if self.the_event is not None:
@@ -397,7 +419,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.cboRepresentation.currentData(QtCore.Qt.UserRole), self.metadata)
+                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.cboRepresentation.currentData(QtCore.Qt.UserRole), self.metadata_widget.get_data())
                 super().accept()
             else:
                 self.the_event = insert_event(
@@ -412,7 +434,7 @@ class FrmEvent(QtWidgets.QDialog):
                     self.cboRepresentation.currentData(QtCore.Qt.UserRole),
                     layers_in_use,
                     surface_rasters,
-                    self.metadata
+                    self.metadata_widget.get_data()
                 )
 
                 self.qris_project.events[self.the_event.id] = self.the_event
@@ -427,7 +449,7 @@ class FrmEvent(QtWidgets.QDialog):
 
     def setupUi(self):
 
-        self.resize(500, 500)
+        self.resize(575, 550)
         self.setMinimumSize(500, 400)
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
@@ -515,47 +537,57 @@ class FrmEvent(QtWidgets.QDialog):
         self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
         self.tab.addTab(self.tabGridWidget, 'Basic Properties')
 
+        self.lblValleyBottom = QtWidgets.QLabel('Associated Valley Bottom')
+        self.tabGrid.addWidget(self.lblValleyBottom, 0, 0, 1, 1)
+
+        self.cboValleyBottom = QtWidgets.QComboBox()
+        self.tabGrid.addWidget(self.cboValleyBottom, 0, 1, 1, 1)
+
+        # row 2: as-built associated design
+
+        self.lblPhase = QtWidgets.QLabel('Phase', self)
+        self.tabGrid.addWidget(self.lblPhase, 2, 0, 1, 1)
+        self.lblPhase.setVisible(False)
+
+        self.txtPhase = QtWidgets.QLineEdit(self)
+        self.tabGrid.addWidget(self.txtPhase, 2, 1, 1, 1)
+        self.txtPhase.setVisible(False)
+
         self.optSingleDate = QtWidgets.QRadioButton('Single Point in Time')
         self.optSingleDate.setChecked(True)
-        self.tabGrid.addWidget(self.optSingleDate, 0, 0, 1, 1)
+        self.tabGrid.addWidget(self.optSingleDate, 2, 0, 1, 1)
 
         self.optDateRange = QtWidgets.QRadioButton('Date Range')
-        self.tabGrid.addWidget(self.optDateRange, 1, 0, 1, 1)
+        self.tabGrid.addWidget(self.optDateRange, 3, 0, 1, 1)
 
         self.lblStartDate = QtWidgets.QLabel()
         self.lblStartDate.setText('Date')
-        self.tabGrid.addWidget(self.lblStartDate, 2, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblStartDate, 4, 0, 1, 1)
 
         self.uc_start = FrmDatePicker(self)
-        self.tabGrid.addWidget(self.uc_start, 2, 1, 1, 1)
+        self.tabGrid.addWidget(self.uc_start, 4, 1, 1, 1)
 
         self.lblEndDate = QtWidgets.QLabel()
         self.lblEndDate.setText('End Date')
         self.lblEndDate.setVisible(False)
-        self.tabGrid.addWidget(self.lblEndDate, 3, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblEndDate, 5, 0, 1, 1)
 
         self.uc_end = FrmDatePicker(self)
         self.uc_end.setVisible(False)
-        self.tabGrid.addWidget(self.uc_end, 3, 1, 1, 1)
+        self.tabGrid.addWidget(self.uc_end, 5, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel()
         self.lblPlatform.setText('Event completed at')
-        self.tabGrid.addWidget(self.lblPlatform, 4, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblPlatform, 6, 0, 1, 1)
 
         self.cboPlatform = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboPlatform, 4, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboPlatform, 6, 1, 1, 1)
 
         self.lblRepresentation = QtWidgets.QLabel("Representation")
-        self.tabGrid.addWidget(self.lblRepresentation, 5, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblRepresentation, 7, 0, 1, 1)
 
         self.cboRepresentation = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboRepresentation, 5, 1, 1, 1)
-
-        self.lblValleyBottom = QtWidgets.QLabel('Associated Valley Bottom')
-        self.tabGrid.addWidget(self.lblValleyBottom, 10, 0, 1, 1)
-
-        self.cboValleyBottom = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboValleyBottom, 10, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboRepresentation, 7, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)
@@ -573,12 +605,19 @@ class FrmEvent(QtWidgets.QDialog):
         self.vert.addWidget(self.chkAddToMap)
 
         # Surface Rasters
-        self.vwRasterSurfaces = QtWidgets.QListView()
-        self.tab.addTab(self.vwRasterSurfaces, 'Surfaces')
+        self.vert_surfaces = QtWidgets.QVBoxLayout(self)
+        self.surfaces_widget = QtWidgets.QWidget(self)
+        self.surfaces_widget.setLayout(self.vert_surfaces)
+        self.vert_surfaces.addWidget(self.surface_library)
+        self.tab.addTab(self.surfaces_widget, 'Surfaces')
+        # self.tab.addTab(self.surface_library, 'Surfaces')
 
         # Description
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tab.addTab(self.txtDescription, 'Description')
+
+        # Metadata
+        self.tab.addTab(self.metadata_widget, 'Metadata')
 
         help_text = 'events' if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'designs'
         self.vert.addLayout(add_standard_form_buttons(self, help_text))
