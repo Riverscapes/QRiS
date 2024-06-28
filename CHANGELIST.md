@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [0.3.25] 2024 JUN 28
+
+### Added
+- Riverscapes Valley Bottoms as new Input type
+- DCE Properties form allows for specifying associated valley bottoms #398
+- Initial Analysis Summary Explorer
+
+### Changed
+- Allow for metric definitions to be updated
+- Provide modifications to design as-built form #268
+- Provide modifications to design properties form #267
+
+
 ## [0.3.24] 2024 JUN 20
 
 ### Added
