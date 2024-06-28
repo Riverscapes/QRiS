@@ -3,7 +3,7 @@ import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, AS_BUILT_MACHINE_CODE, insert as insert_event
+from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, AS_BUILT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
@@ -31,6 +31,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.event_type_id = event_type_id
         # Note that "event" is already a method from QDialog(), hence the weird name
         self.the_event = event
+        self.mandatory_layers = None
 
         init_metadata = None
         if event is not None and event.metadata is not None:
@@ -46,7 +47,8 @@ class FrmEvent(QtWidgets.QDialog):
         self.surface_library = SurfaceLibraryWidget(self, qris_project)
 
         self.setupUi()
-        self.setWindowTitle('Create New Data Capture Event' if event is None else 'Edit Data Capture Event')
+        dce_type = 'Data Capture' if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'Planning'
+        self.setWindowTitle(f'Create New {dce_type} Event' if event is None else f'Edit {dce_type} Event')
 
         self.tree_model = None
         self.load_layer_tree()
@@ -98,6 +100,8 @@ class FrmEvent(QtWidgets.QDialog):
             if self.metadata_widget.metadata is not None and 'system' in self.metadata_widget.metadata:
                 if 'valley_bottom_id' in self.metadata_widget.metadata['system']:
                     self.cboValleyBottom.setCurrentIndex(self.valley_bottom_model.getItemIndexById(self.metadata_widget.metadata['system']['valley_bottom_id']))
+                if 'phase' in self.metadata_widget.metadata['system']:
+                    self.txtPhase.setText(self.metadata_widget.metadata['system']['phase'])
 
             for event_layer in event.event_layers:
                 item = QtGui.QStandardItem(event_layer.layer.name)
@@ -134,6 +138,9 @@ class FrmEvent(QtWidgets.QDialog):
                     continue
             if self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
                 if protocol.machine_code.lower() != AS_BUILT_MACHINE_CODE.lower():
+                    continue
+            if self.event_type_id == DESIGN_EVENT_TYPE_ID:
+                if protocol.machine_code.lower() != DESIGN_MACHINE_CODE.lower():
                     continue
 
             protocol_si.setData(protocol, QtCore.Qt.UserRole)
@@ -326,6 +333,10 @@ class FrmEvent(QtWidgets.QDialog):
 
     def on_remove_layer(self):
         for index in self.layer_list.selectedIndexes():
+            if self.mandatory_layers is not None:
+                layer = self.layers_model.itemFromIndex(index).data(QtCore.Qt.UserRole)
+                if layer.fc_name in self.mandatory_layers:
+                    continue
             self.layers_model.removeRow(index.row())
 
     def on_opt_date_change(self):
@@ -352,6 +363,16 @@ class FrmEvent(QtWidgets.QDialog):
         return False if checked_dems > 1 else True
 
     def accept(self):
+
+        selected_layers = []
+        for index in range(self.layers_model.rowCount()):
+            item = self.layers_model.item(index)
+            selected_layers.append(item.data(QtCore.Qt.UserRole).fc_name)
+        # make sure all mandatory layers are present
+        if self.mandatory_layers is not None:
+            if any(layer not in selected_layers for layer in self.mandatory_layers):
+                QtWidgets.QMessageBox.warning(self, 'Error', f'All mandatory layers ({",".join(self.mandatory_layers)}) must be selected.')
+                return
 
         if not self.check_surface_types():
             QtWidgets.QMessageBox.warning(self, 'Invalid Surface Types', 'Only one DEM can be selected')
@@ -400,8 +421,12 @@ class FrmEvent(QtWidgets.QDialog):
         if self.cboValleyBottom.currentText() != 'None':
             self.metadata_widget.add_system_metadata('valley_bottom_id', self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id)
         else:
-            if 'system' in self.metadata_widget.metadata and 'valley_bottom_id' in self.metadata_widget.metadata['system']:
-                del self.metadata_widget.metadata['system']['valley_bottom_id']
+            self.metadata_widget.delete_item('system', 'valley_bottom_id')
+
+        if self.txtPhase.text() != '':
+            self.metadata_widget.add_system_metadata('phase', self.txtPhase.text())
+        else:
+            self.metadata_widget.delete_item('system', 'phase')
 
         if not self.metadata_widget.validate():
             return
@@ -550,44 +575,45 @@ class FrmEvent(QtWidgets.QDialog):
         self.lblPhase.setVisible(False)
 
         self.txtPhase = QtWidgets.QLineEdit(self)
+        self.txtPhase.setPlaceholderText('Phase 1, Phase 2, Pilot, Demo, Maintenance of Phase 1 etc.')
         self.tabGrid.addWidget(self.txtPhase, 2, 1, 1, 1)
         self.txtPhase.setVisible(False)
 
         self.optSingleDate = QtWidgets.QRadioButton('Single Point in Time')
         self.optSingleDate.setChecked(True)
-        self.tabGrid.addWidget(self.optSingleDate, 2, 0, 1, 1)
+        self.tabGrid.addWidget(self.optSingleDate, 3, 0, 1, 1)
 
         self.optDateRange = QtWidgets.QRadioButton('Date Range')
-        self.tabGrid.addWidget(self.optDateRange, 3, 0, 1, 1)
+        self.tabGrid.addWidget(self.optDateRange, 4, 0, 1, 1)
 
         self.lblStartDate = QtWidgets.QLabel()
         self.lblStartDate.setText('Date')
-        self.tabGrid.addWidget(self.lblStartDate, 4, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblStartDate, 5, 0, 1, 1)
 
         self.uc_start = FrmDatePicker(self)
-        self.tabGrid.addWidget(self.uc_start, 4, 1, 1, 1)
+        self.tabGrid.addWidget(self.uc_start, 5, 1, 1, 1)
 
         self.lblEndDate = QtWidgets.QLabel()
         self.lblEndDate.setText('End Date')
         self.lblEndDate.setVisible(False)
-        self.tabGrid.addWidget(self.lblEndDate, 5, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblEndDate, 6, 0, 1, 1)
 
         self.uc_end = FrmDatePicker(self)
         self.uc_end.setVisible(False)
-        self.tabGrid.addWidget(self.uc_end, 5, 1, 1, 1)
+        self.tabGrid.addWidget(self.uc_end, 6, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel()
         self.lblPlatform.setText('Event completed at')
-        self.tabGrid.addWidget(self.lblPlatform, 6, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblPlatform, 7, 0, 1, 1)
 
         self.cboPlatform = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboPlatform, 6, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboPlatform, 7, 1, 1, 1)
 
         self.lblRepresentation = QtWidgets.QLabel("Representation")
-        self.tabGrid.addWidget(self.lblRepresentation, 7, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblRepresentation, 8, 0, 1, 1)
 
         self.cboRepresentation = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboRepresentation, 7, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboRepresentation, 8, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)
