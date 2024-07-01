@@ -4,7 +4,7 @@ import typing
 
 from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory
 from qgis.core import QgsVectorLayer, NULL
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QTextEdit, QLineEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox
 from PyQt5.QtCore import Qt, QVariant, QSettings
 
 
@@ -27,8 +27,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             return json.dumps(self.dict_values)
         data = self.dict_values.get('attributes', {})
         for name, widget in self.widgets.items():
-            if isinstance(widget, QLineEdit):
-                data[name] = widget.text()
+            if isinstance(widget, QTextEdit):
+                data[name] = widget.toPlainText()
             elif isinstance(widget, QDoubleSpinBox):
                 data[name] = widget.value()
             elif isinstance(widget, QComboBox):
@@ -83,9 +83,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget.setSingleStep(1)
                 widget.valueChanged.connect(self.onValueChanged)
             else:
-                widget = QLineEdit(editor)
+                widget = QTextEdit(editor)
                 widget.textChanged.connect(self.onTextChanged)
             self.grid.addWidget(widget, row, 1, 1, 1)
+            widget.setObjectName(field['machine_code'])
 
             if 'default' in field.keys():
                 if isinstance(widget, QComboBox):
@@ -101,7 +102,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         return True
 
     def setValue(self, value):
-        """Is called when the value of the widget needs to be changed. Updates the widget representation to reflect the new value."""
+        """Is called when the value of the widget needs to be changed. Updates the widget representation to reflect the new value or resets it to default if not present."""
 
         self.loading = True
         if value is None or value == NULL:
@@ -109,19 +110,37 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         else:
             values: dict = json.loads(value)
             self.dict_values = values
-            if 'attributes' in values.keys():
-                for name, val in values['attributes'].items():
-                    if name in self.widgets:
-                        if isinstance(self.widgets[name], QLineEdit):
-                            self.widgets[name].setText(val)
-                        elif isinstance(self.widgets[name], QDoubleSpinBox):
-                            self.widgets[name].setValue(val)
-                        elif isinstance(self.widgets[name], QComboBox):
-                            # get the index of the value in the combo box
-                            index = self.widgets[name].findText(val)
-                            # set the current index of the combo box
-                            self.widgets[name].setCurrentIndex(index)
-        self.loading = False
+            
+            # Iterate through all widgets, not just those in values['attributes']
+            for name, widget in self.widgets.items():
+                if 'attributes' in values and name in values['attributes']:
+                    val = values['attributes'][name]
+                    # Set the widget's value based on the type of the widget
+                    if isinstance(widget, QTextEdit):
+                        widget.setText(val)
+                    elif isinstance(widget, QDoubleSpinBox):
+                        widget.setValue(val)
+                    elif isinstance(widget, QComboBox):
+                        index = widget.findText(val)
+                        widget.setCurrentIndex(index)
+                else:
+                    # Reset the widget to its default value if the value is not in values['attributes']
+                    self.resetWidgetToDefault(widget)
+            self.loading = False
+
+    def resetWidgetToDefault(self, widget: QWidget):
+
+        fields: list = self.config('fields')
+        for field in fields:
+            if field['machine_code'] == widget.objectName():
+                default_value = field.get('default', '')
+                if isinstance(widget, QComboBox):
+                    index = widget.findText(default_value)
+                    widget.setCurrentIndex(index)
+                if isinstance(widget, QTextEdit):
+                    widget.setText(default_value)
+                else:
+                    widget.setValue(default_value)
 
     def onValueChanged(self, value):
         # self.valueChanged.emit(value)
