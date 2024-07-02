@@ -4,7 +4,7 @@ import xlwt
 from PyQt5 import QtCore, QtWidgets
 from qgis.utils import Qgis, iface
 
-from ..model.mask import get_sample_frame_ids
+from ..model.sample_frame import get_sample_frame_ids
 from ..model.metric_value import MetricValue, load_metric_values
 from ..model.analysis import Analysis
 from ..model.project import Project
