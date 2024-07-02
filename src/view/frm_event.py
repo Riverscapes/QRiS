@@ -131,7 +131,7 @@ class FrmEvent(QtWidgets.QDialog):
         for protocol in self.qris_project.protocols.values():
             protocol_si = QtGui.QStandardItem(protocol.name)
             if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-                if protocol.has_custom_ui == 1:
+                if protocol.has_custom_ui == 1 or protocol.machine_code.lower() == PLANNING_MACHINE_CODE.lower():
                     continue
             if self.event_type_id == PLANNING_EVENT_TYPE_ID:
                 if protocol.machine_code.lower() != PLANNING_MACHINE_CODE.lower():
