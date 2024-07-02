@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [0.3.26] 2024 JUL 02
+
+### Added
+- Promote Line Scratch Vector to Profile #424
+
+### Fixed
+- Attribute values not reseting to default when changing between features in DCE feature form
+- Migration Error for MacOS #432
+- Error when exporting all Metric Values from Analysis #430
+- Edit DCE Properties Error #321
+- Sample Frame Form bugs #421 and #422
+
+### Changed
+- Metadata Field Widget now uses MultiLineText for notes #429
+- Do not include Planning Layers in a Data Capture Event
+
+
 ## [0.3.25] 2024 JUN 28
 
 ### Added
