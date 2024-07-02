@@ -7,6 +7,7 @@ from qgis.utils import Qgis, iface
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.profile import Profile, insert_profile
+from ..model.scratch_vector import ScratchVector
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportTemporaryLayer
@@ -31,9 +32,17 @@ class FrmProfile(QtWidgets.QDialog):
 
         self.setWindowTitle(f'Create New Profile' if self.profile is None else f'Edit Profile Properties')
 
-        show_mask_clip = import_source_path is not None
-        self.lblMaskClip.setVisible(show_mask_clip)
-        self.cboMaskClip.setVisible(show_mask_clip)
+        # Masks (filtered to just AOI)
+        self.aois = {id: aoi for id, aoi in self.qris_project.aois.items()}
+        no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+        self.aois[0] = no_clipping
+        self.aoi_model = DBItemModel(self.aois)
+        self.cboMaskClip.setModel(self.aoi_model)
+        # Default to no mask clipping
+        self.cboMaskClip.setCurrentIndex(self.aoi_model.getItemIndex(no_clipping))
+
+        self.cboMaskClip.setVisible(False)
+        self.lblMaskClip.setVisible(False)
 
         if import_source_path is not None:
             if isinstance(import_source_path, QgsVectorLayer):
@@ -47,18 +56,8 @@ class FrmProfile(QtWidgets.QDialog):
             self.txtName.setText(self.layer_name)
             self.txtName.selectAll()
 
-            if show_mask_clip:
-                # Masks (filtered to just AOI)
-                self.aois = {id: aoi for id, aoi in self.qris_project.aois.items()}
-                no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-                self.aois[0] = no_clipping
-                self.aoi_model = DBItemModel(self.aois)
-                self.cboMaskClip.setModel(self.aoi_model)
-                # Default to no mask clipping
-                self.cboMaskClip.setCurrentIndex(self.aoi_model.getItemIndex(no_clipping))
-            else:
-                self.lblMaskClip.setVisible(False)
-                self.cboMaskClip.setVisible(False)
+            self.lblMaskClip.setVisible(True)
+            self.cboMaskClip.setVisible(True)
 
         if self.profile is not None:
             self.txtName.setText(profile.name)
@@ -68,6 +67,26 @@ class FrmProfile(QtWidgets.QDialog):
 
         self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
+
+    def promote_to_profile(self, db_item: DBItem):
+        self.txtName.setText(db_item.name)
+        self.setWindowTitle(f'Promote {db_item.name} to Profile')
+
+        db_path = self.qris_project.project_file
+        id_field = None
+        if isinstance(db_item, ScratchVector):
+            layer_name = db_item.fc_name
+            db_path = db_item.gpkg_path
+        else:
+            layer_name = db_item.db_table_name
+            id_field = db_item.id_column_name
+        self.import_source_path = f'{db_path}|layername={layer_name}'
+        self.attribute_filter = f'{id_field} = {db_item.id}' if id_field is not None else None
+
+        self.lblMaskClip.setVisible(True)
+        self.cboMaskClip.setVisible(True)
+
+        self.basepath, self.layer_name, self.layer_id = layer_path_parser(self.import_source_path)
 
     def accept(self):
 

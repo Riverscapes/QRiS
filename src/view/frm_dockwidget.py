@@ -458,12 +458,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
 
                 if isinstance(model_data, ScratchVector):
-                    self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
+                        self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                         promote_menu = self.menu.addMenu('Promote to ...')
                         self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
                         self.add_context_menu_item(promote_menu, 'Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
                         self.add_context_menu_item(promote_menu, 'Riverscape Valley Bottom', 'polygon', lambda: self.add_valley_bottom(model_item, DB_MODE_PROMOTE))
+                    if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.LineGeometry:
+                        promote_menu = self.menu.addMenu('Promote to ...')
+                        self.add_context_menu_item(promote_menu, 'Profile', 'gis', lambda: self.add_profile(model_item, DB_MODE_PROMOTE))
 
                 if isinstance(model_data, Profile):
                     self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
@@ -1262,8 +1265,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmProfile(self, self.project, import_source_path)
+
+        if mode == DB_MODE_PROMOTE:
+            db_item = parent_node.data(QtCore.Qt.UserRole)
+            frm.promote_to_profile(db_item)
+
         result = frm.exec_()
         if result != 0:
+            if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
+                # find the Profile Node in the model
+                rootNode = self.model.invisibleRootItem()
+                project_node = self.add_child_to_project_tree(rootNode, self.project)
+                inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+                parent_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
 
     def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int):
