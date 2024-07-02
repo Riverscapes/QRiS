@@ -231,7 +231,9 @@ def apply_db_migrations(db_path: str):
 
     try:
         migrations_dir = os.path.join(os.path.dirname(__file__), '..', 'db', 'migrations')
-        for migration_file in os.listdir(migrations_dir):
+        migration_files = os.listdir(migrations_dir)
+        sorted_migration_files = sorted(migration_files)
+        for migration_file in sorted_migration_files:
             curs.execute('SELECT * FROM migrations WHERE file_name LIKE ?', [migration_file])
             migration_row = curs.fetchone()
             if migration_row is None:
