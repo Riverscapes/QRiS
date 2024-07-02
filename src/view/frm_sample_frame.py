@@ -2,7 +2,7 @@ import os
 import json
 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import Qt, QSize, QVariant
+from PyQt5.QtCore import Qt, QSize, QVariant, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout,  QGridLayout, QTabWidget, QGroupBox, QTreeView, QListWidget, QListWidgetItem, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer, QgsWkbTypes
@@ -35,6 +35,8 @@ label_field_name = 'display_label'
 
 
 class FrmSampleFrame(QDialog):
+
+    complete = pyqtSignal(bool)
 
     def __init__(self, parent, project: Project, import_source_path: str = None, sample_frame: SampleFrame = None, create_sample_frame: bool = False):
         
@@ -177,14 +179,13 @@ class FrmSampleFrame(QDialog):
                 if isinstance(self.import_source_path, QgsVectorLayer):
                     import_mask_task = ImportTemporaryLayer(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
                 else:
-
                     import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
                 # # DEBUG
-                result = import_mask_task.run()
-                self.on_import_complete(result)
+                # result = import_mask_task.run()
+                # self.on_import_complete(result)
                 # PRODUCTION
-                # import_mask_task.import_complete.connect(self.on_import_complete)
-                # QgsApplication.taskManager().addTask(import_mask_task)
+                import_mask_task.import_complete.connect(self.on_import_complete)
+                QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
@@ -231,14 +232,16 @@ class FrmSampleFrame(QDialog):
         #     for field in self.tab_inputs.load_fields():
         #         field_map.append(ImportFieldMap(field, field, True))
         if self.tab_attributes is not None:
-            for field in self.tab_attributes.get_fields():
+            for field_dict in self.tab_attributes.get_fields():
+                field = field_dict['label']
                 field_map.append(ImportFieldMap(field, field, parent='attributes'))
         return field_map
 
     def on_import_complete(self, result):
         if result is True:
             iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
-            super().accept()
+            self.complete.emit(True)
+            super(FrmSampleFrame, self).accept()
         else:
             QgsApplication.messageLog().logMessage(f'Error Importing Sample Frame Features', 'QRIS', level=Qgis.Critical)
             try:
@@ -246,6 +249,7 @@ class FrmSampleFrame(QDialog):
             except Exception as ex:
                 QgsApplication.messageLog().logMessage(f'Error Deleting sample frame: {str(ex)}', 'QRIS', level=Qgis.Critical)
                 iface.messageBar().pushMessage(f'Error Deleting sample frame', str(ex), level=Qgis.Critical, duration=5)
+                super(FrmSampleFrame, self).accept()
             return
 
     def setupUi(self):
@@ -505,13 +509,14 @@ class SampleFrameAttributes(QWidget):
                 
             # add to model
             for field in self.sample_frame.fields:
-                item = QStandardItem(field['label'])
-                item.setData(field['values'], Qt.UserRole)
+                name = field if isinstance(field, str) else field['label']
+                values = list() if isinstance(field, str) else field['values']
+                item = QStandardItem(name)
+                item.setData(values, Qt.UserRole)
                 self.model.appendRow(item)
-    
                 # add attributes as children
-                for attribute in field['values']:
-                    child_item = QStandardItem(attribute)
+                for attribute in values:
+                    child_item = QStandardItem(str(attribute))
                     item.appendRow(child_item)
 
         def selection_changed(self, selected, deselected):
@@ -648,8 +653,23 @@ class SampleFrameAttributesAddFields(QWidget):
             return layer.fields().names()
         
     def get_fields(self):
+    
+        fields = [chk.text() for chk in self.chk_fields if chk.isChecked()]
+        outfields = []
+        layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
+        for field in fields:
+            outfield = {'machine_code': field.replace(' ', '_').lower(), 'label': field}
+            values = []
+            for feature in layer.getFeatures():
+                value = feature[field]
+                if isinstance(value, QVariant):
+                    value = None
+                if value not in values:
+                    values.append(value)
+            outfield['values'] = values
+            outfields.append(outfield)
 
-        return [chk.text() for chk in self.chk_fields if chk.isChecked()]
+        return outfields
 
     def setupUi(self):
 
