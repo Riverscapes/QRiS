@@ -1208,17 +1208,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             cross_sections = parent_node if isinstance(parent_node, CrossSections) else None
             polygon = parent_node if any(isinstance(parent_node, item) for item in [Mask, ScratchVector]) else None
             frm.set_inputs(cross_sections, polygon)
+        if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
+            # find the Sample Frames Node in the model
+            rootNode = self.model.invisibleRootItem()
+            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
+            sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
+            parent_node = sample_frame_node
 
-        result = frm.exec_()
-        if result != 0:
-            if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
-                # find the Sample Frames Node in the model
-                rootNode = self.model.invisibleRootItem()
-                project_node = self.add_child_to_project_tree(rootNode, self.project)
-                inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
-                sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
-                parent_node = sample_frame_node
-            self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
+        frm.complete.connect(partial(self.on_sample_frame_complete, parent_node, lambda: frm.sample_frame, frm.chkAddToMap.isChecked))
+        frm.exec_()
+
+    def on_sample_frame_complete(self, parent_node, sample_frame_method, add_to_map_method):
+        add_to_map = add_to_map_method()
+        self.add_child_to_project_tree(parent_node, sample_frame_method(), add_to_map)
 
     def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int):
         """Initiates adding a new valley bottom"""
