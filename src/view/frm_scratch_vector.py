@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 
 from ..model.scratch_vector import ScratchVector, insert_scratch_vector, scratch_gpkg_path, get_unique_scratch_fc_name
 from ..model.db_item import DBItemModel, DBItem

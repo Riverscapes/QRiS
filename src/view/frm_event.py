@@ -11,7 +11,7 @@ from ..model.layer import Layer
 
 from .frm_date_picker import FrmDatePicker
 from .frm_event_picker import FrmEventPicker
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 from .widgets.surface_library import SurfaceLibraryWidget
 
 from datetime import date, datetime

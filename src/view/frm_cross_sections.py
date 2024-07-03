@@ -12,7 +12,7 @@ from ..model.mask import AOI_MASK_TYPE_ID
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportTemporaryLayer
 
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 from typing import Dict
