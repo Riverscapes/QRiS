@@ -15,7 +15,7 @@ from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
 
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 

@@ -11,7 +11,7 @@ from ..QRiS.path_utilities import parse_posix_path
 from ..model.project import Project, project_layers
 from .utilities import validate_name, add_standard_form_buttons
 from ..gp.new_project import NewProjectTask
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 
 
 class FrmNewProject(QtWidgets.QDialog):

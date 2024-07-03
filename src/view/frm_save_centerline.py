@@ -7,7 +7,7 @@ from qgis.core import QgsVectorLayer, QgsFeature, QgsGeometry
 from ..model.project import Project
 from ..model.profile import Profile, insert_profile
 
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 
 from .utilities import validate_name, add_standard_form_buttons
 

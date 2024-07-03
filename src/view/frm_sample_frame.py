@@ -22,7 +22,7 @@ from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
 from ..gp.sample_frame import SampleFrameTask
 
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, validate_name_unique, add_standard_form_buttons
 
 # Text constants

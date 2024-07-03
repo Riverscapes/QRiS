@@ -13,7 +13,7 @@ from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
-from .metadata import MetadataWidget
+from .widgets.metadata import MetadataWidget
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 from ..QRiS.path_utilities import parse_posix_path
 
