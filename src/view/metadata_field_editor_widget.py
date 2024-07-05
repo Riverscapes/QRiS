@@ -4,7 +4,7 @@ import typing
 
 from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory
 from qgis.core import QgsVectorLayer, NULL
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox
 from PyQt5.QtCore import Qt, QVariant, QSettings
 
 
@@ -29,6 +29,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         for name, widget in self.widgets.items():
             if isinstance(widget, QTextEdit):
                 data[name] = widget.toPlainText()
+            elif isinstance(widget, QLineEdit):
+                data[name] = widget.text()
             elif isinstance(widget, QDoubleSpinBox):
                 data[name] = widget.value()
             elif isinstance(widget, QComboBox):
@@ -56,6 +58,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.grid = QGridLayout()
         self.vert.addLayout(self.grid)
         self.widgets = {}
+        self.derived_values = {}
 
         fields: list = self.config('fields')
         row = 0
@@ -67,7 +70,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             label = QLabel(field['label'])
             self.grid.addWidget(label, row, 0, 1, 1)
             widget = None
-            if field['type'] == 'list':
+            if 'derived_value' in field.keys():
+                widget = DependantComboBox(editor, field['derived_value'], field.get('default', ''))
+            elif field['type'] == 'list':
                 widget = QComboBox(editor)
                 widget.addItems(field['values'])
                 widget.currentIndexChanged.connect(self.onValueChanged)
@@ -82,6 +87,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     widget.setDecimals(field['precision'])
                 widget.setSingleStep(1)
                 widget.valueChanged.connect(self.onValueChanged)
+            elif field['type'] == 'text':
+                widget = QLineEdit(editor)
+                widget.textChanged.connect(self.onTextChanged)
             else:
                 widget = QTextEdit(editor)
                 widget.textChanged.connect(self.onTextChanged)
@@ -116,7 +124,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 if 'attributes' in values and name in values['attributes']:
                     val = values['attributes'][name]
                     # Set the widget's value based on the type of the widget
-                    if isinstance(widget, QTextEdit):
+                    if isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
                         widget.setText(val)
                     elif isinstance(widget, QDoubleSpinBox):
                         widget.setValue(val)
@@ -126,7 +134,24 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 else:
                     # Reset the widget to its default value if the value is not in values['attributes']
                     self.resetWidgetToDefault(widget)
+            
+            self.updateDependantWidgets()
             self.loading = False
+
+    def updateDependantWidgets(self):
+
+        widget_values = {}
+        for name, widget in self.widgets.items():
+            if isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
+                widget_values[name] = widget.text()
+            elif isinstance(widget, QDoubleSpinBox):
+                widget_values[name] = widget.value()
+            elif isinstance(widget, QComboBox):
+                widget_values[name] = widget.currentText()
+
+        for widget in self.widgets.values():
+            if isinstance(widget, DependantComboBox):
+                widget.set_dependent_value(widget_values)
 
     def resetWidgetToDefault(self, widget: QWidget):
 
@@ -137,7 +162,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 if isinstance(widget, QComboBox):
                     index = widget.findText(default_value)
                     widget.setCurrentIndex(index)
-                if isinstance(widget, QTextEdit):
+                elif isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
                     widget.setText(default_value)
                 else:
                     widget.setValue(default_value)
@@ -148,6 +173,56 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
     def onTextChanged(self):
         self.emitValueChanged()
+
+    def derived_value(self):
+
+        json_lookup = """[ "dam_capacity",
+                "derived_value": [
+                    {"value_lookup": [
+                        {"machine_code":"streamside_vegtation", 
+                         "value": "Unsuitable"},
+                        {"machine_code": "riparian_vegetation",
+                         "value": "Unsuitable"}
+                        ]
+                     "output": "None"
+                    },
+                    {
+                    "value_lookup": [
+                    {"machine_code":"streamside_vegtation",
+                        "value": "Suitable"},
+                    {"machine_code": "riparian_vegetation",
+                        "value": "Unsuitable"}
+                        ]
+                    "output": "Rare"
+                    },
+                    {
+                    "value_lookup": [
+                    {"machine_code":"streamside_vegtation",
+                        "value": "Suitable"},
+                    {"machine_code": "riparian_vegetation",
+                        "value": "Suitable"}
+                        ]
+                    "output": "Pervaisive"
+                    }
+                    ]
+            }
+        ]"""
+
+        # Create a mapping of machine_code to widgets for efficient lookup
+        widget_map = {widget.objectName(): widget for widget in self.widgets}
+
+        for field, value_lookups in self.derived_values:
+            widget = widget_map.get(field, None)
+            if widget is None:
+                continue  # or handle error
+
+            for value_lookup in value_lookups:
+                if all(widget_map.get(lookup['machine_code'], {}).text() == lookup['value'] for lookup in value_lookup['value_lookup']):
+                    # Assuming widget is a ComboBox, adjust accordingly
+                    index = widget.findText(value_lookup['output'])
+                    if index != -1:
+                        widget.setCurrentIndex(index)
+                    break
 
 
 class MetadataFieldEditConfigWidget(QgsEditorConfigWidget):
@@ -191,3 +266,49 @@ def initialize_metadata_widget():
     if widget.name() != "Metadata Field Editor":
         factory = MetadataFieldEditWidgetFactory()
         QgsGui.editorWidgetRegistry().registerWidget("MetadataFieldEdit", factory)
+
+class DependantComboBox(QWidget):
+
+    def __init__(self, parent:MetadataFieldEditWidget=None, dependency_map: typing.Dict[str, typing.List[str]] = {}, default_value=None):
+        
+        super(DependantComboBox, self).__init__(parent)
+        self.dependency_map = dependency_map
+        self.default_value = default_value
+        self.manual_value = None
+
+        self.initUI()
+
+
+    def onManual(self, state):
+        if state == Qt.Checked:
+            self.cboValues.setEnabled(True)
+            if self.manual_value is not None:
+                self.cboValues.setCurrentText(self.manual_value)
+        else:
+            self.cboValues.setEnabled(False)
+            self.manual_value = self.cboValues.currentText()
+            self.parent().updateDependantWidgets()
+
+    def set_dependent_value(self, widget_values: typing.Dict[str, str]):
+        if self.chkManual.isChecked():
+            return
+        for value_lookup in self.dependency_map.items():
+            for field, value in value_lookup.items():
+                if field in widget_values and widget_values[field] == value:
+                    self.cboValues.setCurrentText(value_lookup['output'])
+                    return
+        self.cboValues.setCurrentText(self.default_value)
+
+    def initUI(self):
+
+        self.hlayout = QHBoxLayout()
+        self.setLayout(self.hlayout)
+
+        self.cboValues = QComboBox()
+        self.hlayout.addWidget(self.cboValues)
+
+        self.chkManual = QCheckBox("Manual")
+        self.chkManual.setChecked(False)
+        self.chkManual.stateChanged.connect(self.onManual)
+        self.hlayout.addWidget(self.chkManual)
+
