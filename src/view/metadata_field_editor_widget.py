@@ -142,8 +142,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
         widget_values = {}
         for name, widget in self.widgets.items():
-            if isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
+            if isinstance(widget, QLineEdit):
                 widget_values[name] = widget.text()
+            elif isinstance(widget, QTextEdit):
+                widget_values[name] = widget.toPlainText()
             elif isinstance(widget, QDoubleSpinBox):
                 widget_values[name] = widget.value()
             elif isinstance(widget, QComboBox):
@@ -165,6 +167,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 elif isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
                     widget.setText(default_value)
                 else:
+                    if default_value == '':
+                        continue
                     widget.setValue(default_value)
 
     def onValueChanged(self, value):
