@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [0.3.27] 2024 AUG 09
+
+### Fixed
+- Attribute Bug on New DCE Layer Feature Creation #442
+- Fix bug when exporting project for upload to Riverscapes Data Exchange #419
+
+### Changed
+- Update rsxml to 2.0.6
+- Housekeeping: Move metadata widget to widgets folder
+
 ## [0.3.26] 2024 JUL 02
 
 ### Added
