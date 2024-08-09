@@ -256,7 +256,7 @@ class FrmExportProject(QtWidgets.QDialog):
             os.mkdir(self.txt_outpath.text())
 
         # copy the geopackage layers to the new project folder
-        out_name = os.path.split(self.qris_project.project_file)[1]
+        out_name = 'qris.gpkg' # os.path.split(self.qris_project.project_file)[1]
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), out_name).replace("\\", "/"))
         shutil.copy(self.qris_project.project_file, out_geopackage)
 
@@ -357,7 +357,12 @@ class FrmExportProject(QtWidgets.QDialog):
                 continue
             if value == "":
                 continue
-            metadata_values.append(Meta(key, value))
+            if key == "metadata":
+                dict_metadata = value
+                for k, v in dict_metadata.items():
+                    metadata_values.append(Meta(k, v))
+            else:
+                metadata_values.append(Meta(key, value))
 
         self.rs_project = Project(name=self.txt_rs_name.text(),
                                   proj_path=xml_path,
@@ -434,7 +439,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 input_layers.append(GeopackageLayer(lyr_name=view_name,
                                                     name=aoi.name,
-                                                    ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                    ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                    lyr_type='aoi'))
 
         # Sample Frames
         sample_frame_node = self.find_child_node(inputs_node, "Sample Frames")
@@ -463,7 +469,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 input_layers.append(GeopackageLayer(lyr_name=view_name,
                                                     name=sample_frame.name,
-                                                    ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                    ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                    lyr_type='sample_frame'))
 
         # Profiles
         profile_node = self.find_child_node(inputs_node, "Profiles")
@@ -492,7 +499,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 input_layers.append(GeopackageLayer(lyr_name=view_name,
                                                     name=profile.name,
-                                                    ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                    ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                    lyr_type='profile'))
 
         # Cross Sections
         xsection_node = self.find_child_node(inputs_node, "Cross Sections")
@@ -520,7 +528,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 input_layers.append(GeopackageLayer(lyr_name=view_name,
                                                     name=xsection.name,
-                                                    ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                    ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                    lyr_type='cross_section'))
 
 
         context_node = self.find_child_node(inputs_node, "Context")
@@ -550,7 +559,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 pour_point_layers.append(GeopackageLayer(lyr_name=view_name,
                                                         name=pour_point.name,
-                                                        ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                        ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                        lyr_type='pour_points'))
 
                 if 'catchments' not in keep_layers:
                     keep_layers['catchments'] = {'id_field': 'pour_point_id', 'id_values': []}
@@ -566,7 +576,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 pour_point_layers.append(GeopackageLayer(lyr_name=catchment_view,
                                                         name=pour_point.name,
-                                                        ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                        ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                        lyr_type='catchments'))
 
                 pour_point_gpkgs.append(Geopackage(xml_id=f'pour_points_{pour_point.id}_gpkg',
                                                 name=pour_point.name,
@@ -622,7 +633,8 @@ class FrmExportProject(QtWidgets.QDialog):
                 context_layers.append(GeopackageLayer(summary=f'context_{geom_type.lower()}',
                                                     lyr_name=context_vector.fc_name,
                                                     name=context_vector.name,
-                                                    ds_type=GeoPackageDatasetTypes.VECTOR))
+                                                    ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                    lyr_type='context'))
         
         inputs_gpkg = Geopackage(xml_id=f'inputs_gpkg',
                     name=f'Inputs',
@@ -768,10 +780,11 @@ class FrmExportProject(QtWidgets.QDialog):
 
                     gp_lyr = GeopackageLayer(lyr_name=view_name,
                                             name=layer.name,
-                                            ds_type=GeoPackageDatasetTypes.VECTOR)
+                                            ds_type=GeoPackageDatasetTypes.VECTOR,
+                                            lyr_type=layer.layer.fc_name)
                     geopackage_layers.append(gp_lyr)
 
-                events_gpkg = Geopackage(xml_id=f'{event.id}_gpkg',
+                events_gpkg = Geopackage(xml_id=f'dce_{event.id}_gpkg',
                                 name=f'{event.name}',
                                 path=out_name,
                                 layers=geopackage_layers)
@@ -836,7 +849,8 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 gp_lyr = GeopackageLayer(lyr_name=analysis_view,
                                         name=analysis.name,
-                                        ds_type=GeoPackageDatasetTypes.VECTOR)
+                                        ds_type=GeoPackageDatasetTypes.VECTOR,
+                                        lyr_type='analysis')
                 geopackage_layers.append(gp_lyr)
 
                 analysis_gpkg = Geopackage(xml_id=f'{analysis.id}_gpkg',
