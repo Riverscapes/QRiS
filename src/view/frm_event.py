@@ -56,21 +56,6 @@ class FrmEvent(QtWidgets.QDialog):
         self.layers_model = QtGui.QStandardItemModel()
         self.layer_list.setModel(self.layers_model)
 
-        # Surface Rasters
-        # self.surface_raster_model = QtGui.QStandardItemModel()
-        # rtypes = self.qris_project.lookup_tables['lkp_raster_types']
-        # for surface in qris_project.surface_rasters().values():
-        #     item = QtGui.QStandardItem(f'{surface.name} ({rtypes[surface.raster_type_id].name})')
-        #     item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-        #     item.setData(surface, QtCore.Qt.UserRole)
-        #     self.surface_raster_model.appendRow(item)
-
-        #     checked_state = QtCore.Qt.Checked if event is not None and surface in event.rasters else QtCore.Qt.Unchecked
-        #     item.setData(QtCore.QVariant(checked_state), QtCore.Qt.CheckStateRole)
-
-        # self.vwRasterSurfaces.setModel(self.surface_raster_model)
-        # self.vwRasterSurfaces.setModelColumn(1)
-
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.representation_model = DBItemModel(qris_project.lookup_tables['lkp_representation'])
         self.representation_model._data.sort(key=lambda a: a[0])
@@ -115,9 +100,6 @@ class FrmEvent(QtWidgets.QDialog):
 
     def load_layer_tree(self):
 
-        # if self.rdoAlphabetical.isChecked():
-        #     self.load_alphabetical_tree()
-        # else:
         self.load_hierarchical_tree()
 
     def load_hierarchical_tree(self):
@@ -193,98 +175,6 @@ class FrmEvent(QtWidgets.QDialog):
         self.layer_tree.doubleClicked.connect(self.on_double_click_tree)
 
 
-    # def load_alphabetical_tree(self):
-
-    #     # Retain a list of any checked layers so they can be checked again once the three is loaded
-    #     checked_layers = []
-    #     self.get_checked_layers(None, checked_layers)
-
-    #     # Rebuild the tree
-    #     sorted_layers = sorted(self.qris_project.layers.values(), key=lambda x: x.name)
-    #     self.tree_model = QtGui.QStandardItemModel(self)
-    #     for layer in sorted_layers:
-    #         item = QtGui.QStandardItem(layer.name)
-    #         item.setData(layer, QtCore.Qt.UserRole)
-    #         item.setCheckable(True)
-
-    #         if layer in checked_layers:
-    #             item.setCheckState(QtCore.Qt.Checked)
-
-    #         if self.chkActiveLayers.checkState() == QtCore.Qt.Unchecked or item.checkState() == QtCore.Qt.Checked:
-    #             self.tree_model.appendRow(item)
-
-    #     self.layer_tree.setModel(self.tree_model)
-    #     self.layer_tree.expandAll()
-
-    # def on_check_children(self, index: QtCore.QModelIndex) -> None:
-    #     modelItem = self.tree_model.itemFromIndex(index)
-    #     self.check_children(modelItem)
-
-    #     data = modelItem.data(QtCore.Qt.UserRole)
-    #     self.check_all_layers_of_type(None, data, modelItem.checkState())
-
-    # def check_all_layers_of_type(self, modelItem: QtGui.QStandardItem, layer, state: QtCore.Qt.CheckState) -> None:
-    #     """ Ensures that if the user checks a particular layer then all instances of that layer type
-    #     become checked in the tree."""
-
-    #     if not self.tree_model:
-    #         return
-
-    #     if modelItem is None:
-    #         modelItem = self.tree_model.invisibleRootItem()
-
-    #     if modelItem.hasChildren():
-    #         for i in range(modelItem.rowCount()):
-    #             self.check_all_layers_of_type(modelItem.child(i), layer, state)
-    #     else:
-    #         data = modelItem.data(QtCore.Qt.UserRole)
-    #         if data == layer and modelItem.checkState() != state:
-    #             modelItem.setCheckState(state)
-
-    # def get_checked_layers(self, modelItem: QtGui.QStandardItem, checked_layers: list) -> None:
-    #     """return a list of the layers that are currently checked.
-    #     This is used to get the state of checked items before rebuilding the tree"""
-
-    #     if not self.tree_model:
-    #         return
-
-    #     if modelItem is None:
-    #         modelItem = self.tree_model.invisibleRootItem()
-
-    #     if modelItem.hasChildren():
-    #         for i in range(modelItem.rowCount()):
-    #             self.get_checked_layers(modelItem.child(i), checked_layers)
-    #     else:
-    #         if modelItem.checkState() == QtCore.Qt.Checked:
-    #             checked_layers.append(modelItem.data(QtCore.Qt.UserRole))
-
-    # def get_checked_layer_tree(self) -> list:
-    #     """ Return a dictionary of the IDs of protocols, methods and layer IDs.
-    #     This is stored in the database to be able to recrete the tree on edit."""
-
-    #     layer_list = []
-    #     modelItem = self.tree_model.invisibleRootItem()
-    #     for p in range(modelItem.rowCount()):
-    #         protocol_item = modelItem.child(p)
-    #         protocol = protocol_item.data(QtCore.Qt.UserRole)
-    #         for m in range(protocol_item.rowCount()):
-    #             method_item = protocol_item.child(m)
-    #             method = method_item.data(QtCore.Qt.UserRole)
-    #             for li in range(method_item.rowCount()):
-    #                 layer_item = method_item.child(li)
-    #                 layer = layer_item.data(QtCore.Qt.UserRole)
-    #                 if layer_item.checkState() == QtCore.Qt.Checked:
-    #                     layer_list.append((protocol, method, layer))
-
-    #     return layer_list
-
-    # def check_children(self, item: QtGui.QStandardItem) -> None:
-    #     itemCheckState = item.checkState()
-    #     for i in range(item.rowCount()):
-    #         child = item.child(i)
-    #         child.setCheckState(itemCheckState)
-    #         self.check_children(child)
-
     def on_double_click_tree(self, index):
 
         item = self.layer_tree.model().itemFromIndex(index)
@@ -354,10 +244,6 @@ class FrmEvent(QtWidgets.QDialog):
 
         checked_dems = 0
         for raster in self.surface_library.get_selected_surfaces():
-        # for i in range(self.surface_raster_model.rowCount()):
-        #     item = self.surface_raster_model.item(i)
-        #     if item.checkState() == QtCore.Qt.Checked:
-        #         raster = item.data(QtCore.Qt.UserRole)
             if raster.raster_type_id == 4:
                 checked_dems += 1
         return False if checked_dems > 1 else True
@@ -409,14 +295,6 @@ class FrmEvent(QtWidgets.QDialog):
             return
 
         surface_rasters = self.surface_library.get_selected_surfaces()
-        # for row in range(self.surface_raster_model.rowCount()):
-        #     index = self.surface_raster_model.index(row, 0)
-        #     check = self.surface_raster_model.data(index, QtCore.Qt.CheckStateRole)
-        #     if check == QtCore.Qt.Checked:
-        #         for raster in self.qris_project.surface_rasters().values():
-        #             if raster == self.surface_raster_model.data(index, QtCore.Qt.UserRole):
-        #                 surface_rasters.append(raster)
-        #                 break
         
         if self.cboValleyBottom.currentText() != 'None':
             self.metadata_widget.add_system_metadata('valley_bottom_id', self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id)
@@ -498,21 +376,6 @@ class FrmEvent(QtWidgets.QDialog):
         self.horiz_layers = QtWidgets.QHBoxLayout(self.horiz_layer_widget)
         self.tab.addTab(self.horiz_layer_widget, 'Layers')
 
-        # self.horiz_layer_buttons = QtWidgets.QHBoxLayout(self)
-        # self.vert_layers.addLayout(self.horiz_layer_buttons)
-
-        # self.rdoAlphabetical = QtWidgets.QRadioButton('Alphatetical', self)
-        # self.horiz_layer_buttons.addWidget(self.rdoAlphabetical)
-
-        # self.rdoHierarchical = QtWidgets.QRadioButton('Hierarchical', self)
-        # self.rdoHierarchical.setChecked(True)
-        # self.rdoHierarchical.toggled.connect(self.load_layer_tree)
-        # self.horiz_layer_buttons.addWidget(self.rdoHierarchical)
-
-        # self.chkActiveLayers = QtWidgets.QCheckBox('Show Only Active Layers', self)
-        # self.chkActiveLayers.toggled.connect(self.load_layer_tree)
-        # self.horiz_layer_buttons.addWidget(self.chkActiveLayers)
-
         # layer tree
         self.vert_layer_tree = QtWidgets.QVBoxLayout(self)
         self.horiz_layers.addLayout(self.vert_layer_tree)
@@ -547,9 +410,6 @@ class FrmEvent(QtWidgets.QDialog):
         # Layers list
         self.vert_layers = QtWidgets.QVBoxLayout(self)
         self.horiz_layers.addLayout(self.vert_layers)
-        # self.grpLayersInUse = QtWidgets.QGroupBox('Layers In Use')
-        # self.vert_layers.addWidget(self.grpLayersInUse)
-        # self.grpLayersInUse.setLayout(self.vert_layers)
 
         self.lblLayersInUse = QtWidgets.QLabel('Layers In Use')
         self.vert_layers.addWidget(self.lblLayersInUse)
@@ -617,13 +477,6 @@ class FrmEvent(QtWidgets.QDialog):
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)
-
-        # self.lblProtocols = QtWidgets.QLabel()
-        # self.lblProtocols.setText('Protocols')
-        # self.tabGrid.addWidget(self.lblProtocols, 3, 0, 1, 1)
-
-        # self.vwProtocols = QtWidgets.QListView()
-        # self.tabGrid.addWidget(self.vwProtocols)
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setChecked(False)
