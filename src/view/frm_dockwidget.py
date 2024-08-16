@@ -52,6 +52,7 @@ from ..model.valley_bottom import ValleyBottom
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
+from .frm_planning_container import FrmPlanningContainer
 from .frm_asbuilt import FrmAsBuilt
 from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmMaskAOI
@@ -380,7 +381,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
                     ltpbr_menu = QtWidgets.QMenu('Low-Tech Process-Based Restoration', self)
                     ltpbr_menu.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/new'))
-                    self.add_context_menu_item(ltpbr_menu, 'Add New Planning Event', 'plan', lambda: self.add_event(model_item, PLANNING_EVENT_TYPE_ID))
+                    self.add_context_menu_item(ltpbr_menu, 'Add New Planning Container', 'plan', lambda: self.add_planning_container(model_item))
                     self.add_context_menu_item(ltpbr_menu, 'Add New Design', 'design', lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
                     self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'as-built', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
                     self.menu.addMenu(ltpbr_menu)
@@ -665,6 +666,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = self.frm_event.exec_()
         if result is not None and result != 0:
             self.add_event_to_project_tree(parent_node, self.frm_event.the_event, self.frm_event.chkAddToMap.isChecked())
+
+    def add_planning_container(self, parent_node):
+        """Initiates adding a new planning container"""
+        frm = FrmPlanningContainer(self, self.project)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            self.add_child_to_project_tree(parent_node, frm.planning_container, True)
 
     def add_analysis(self, parent_node):
 
@@ -1419,7 +1427,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             elif db_item.event_type.id == AS_BUILT_EVENT_TYPE_ID:
                 frm = FrmAsBuilt(self, self.project, db_item.event_type.id, event=db_item)
             else:
-                frm = FrmEvent(self, self.project, event=db_item)
+                frm = FrmEvent(self, self.project, event=db_item, event_type_id=db_item.event_type.id)
         elif isinstance(db_item, Mask):
             frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, SampleFrame):

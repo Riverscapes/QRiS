@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.project import Project
-from ..model.event import Event, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID
+from ..model.event import Event, DESIGN_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID
 from .frm_event import FrmEvent
 
 
@@ -166,12 +166,12 @@ class FrmDesign(FrmEvent):
 
         else:
             # iterate through the tree model and children to find the first 'structure_points' layer
-            for index in range(self.tree_model.rowCount()):
-                protocol_item = self.tree_model.item(index)
+            for index in range(self.layer_widget.tree_model.rowCount()):
+                protocol_item = self.layer_widget.tree_model.item(index)
                 for layer_index in range(protocol_item.rowCount()):
                     layer_item = protocol_item.child(layer_index)
                     if 'complexes' in layer_item.data(QtCore.Qt.UserRole).fc_name:
-                        self.add_selected_layers(layer_item)
+                        self.layer_widget.add_selected_layers(layer_item)
 
     def adjustSliderValue(self, value):
         # Calculate the nearest multiple of 5

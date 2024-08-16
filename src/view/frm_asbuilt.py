@@ -140,12 +140,12 @@ class FrmAsBuilt(FrmEvent):
         
         else:
             # iterate through the tree model and children to find the first 'structure_points' layer
-            for index in range(self.tree_model.rowCount()):
-                protocol_item = self.tree_model.item(index)
+            for index in range(self.layer_widget.tree_model.rowCount()):
+                protocol_item = self.layer_widget.tree_model.item(index)
                 for layer_index in range(protocol_item.rowCount()):
                     layer_item = protocol_item.child(layer_index)
                     if 'structure_points' in layer_item.data(QtCore.Qt.UserRole).fc_name:
-                        self.add_selected_layers(layer_item)
+                        self.layer_widget.add_selected_layers(layer_item)
                 
 
     def pick_dce_by_date(self):
@@ -189,8 +189,8 @@ class FrmAsBuilt(FrmEvent):
 
         # there must be at least one 'structure_points' or 'structure_lines' layer selected
         selected_layers = []
-        for index in range(self.layers_model.rowCount()):
-            item = self.layers_model.item(index)
+        for index in range(self.layer_widget.layers_model.rowCount()):
+            item = self.layer_widget.layers_model.item(index)
             selected_layers.append(item.data(QtCore.Qt.UserRole).fc_name)
         if any('structure_points' in layer or 'structure_lines' in layer for layer in selected_layers) is False:
             QtWidgets.QMessageBox.critical(self, 'Error', 'At least one structure layer must be selected.')
