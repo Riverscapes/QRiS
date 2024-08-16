@@ -12,6 +12,7 @@ from .method import Method, load as load_methods
 from .protocol import Protocol, load as load_protocols
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
+from .planning_container import PlanningContainer, load as load_planning_containers
 from .event_layer import EventLayer
 from .metric import Metric, load_metrics
 from .pour_point import PourPoint, load_pour_points
@@ -86,6 +87,7 @@ class Project(DBItem):
             self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
             self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.surface_rasters())
+            self.planning_containers = load_planning_containers(curs, self.events)
             self.metrics = load_metrics(curs)
             self.analyses = load_analyses(curs, self.sample_frames, self.metrics)
             self.pour_points = load_pour_points(curs)
