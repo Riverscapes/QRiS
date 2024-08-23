@@ -58,10 +58,10 @@ class FrmEvent(QtWidgets.QDialog):
         self.setWindowTitle(f'Create New {dce_type} Event' if event is None else f'Edit {dce_type} Event')
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
-        self.representation_model = DBItemModel(qris_project.lookup_tables['lkp_representation'])
-        self.representation_model._data.sort(key=lambda a: a[0])
+        # self.representation_model = DBItemModel(qris_project.lookup_tables['lkp_representation'])
+        # self.representation_model._data.sort(key=lambda a: a[0])
         self.cboPlatform.setModel(self.platform_model)
-        self.cboRepresentation.setModel(self.representation_model)
+        # self.cboRepresentation.setModel(self.representation_model)
 
         self.optSingleDate.toggled.connect(self.on_opt_date_change)
 
@@ -76,7 +76,7 @@ class FrmEvent(QtWidgets.QDialog):
             self.txtName.setText(event.name)
             self.txtDescription.setPlainText(event.description)
             self.cboPlatform.setCurrentIndex(event.platform.id - 1)
-            self.cboRepresentation.setCurrentIndex(event.representation.id - 1)
+            # self.cboRepresentation.setCurrentIndex(event.representation.id - 1)
 
             self.uc_start.set_date_spec(event.start)
             self.uc_end.set_date_spec(event.end)
@@ -196,7 +196,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), self.cboRepresentation.currentData(QtCore.Qt.UserRole), self.metadata_widget.get_data())
+                self.the_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), None, self.metadata_widget.get_data())
                 super().accept()
             else:
                 self.the_event = insert_event(
@@ -208,7 +208,7 @@ class FrmEvent(QtWidgets.QDialog):
                     '',
                     self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
                     self.cboPlatform.currentData(QtCore.Qt.UserRole),
-                    self.cboRepresentation.currentData(QtCore.Qt.UserRole),
+                    None, # self.cboRepresentation.currentData(QtCore.Qt.UserRole),
                     layers_in_use,
                     surface_rasters,
                     self.metadata_widget.get_data()
@@ -303,11 +303,11 @@ class FrmEvent(QtWidgets.QDialog):
         self.cboPlatform = QtWidgets.QComboBox()
         self.tabGrid.addWidget(self.cboPlatform, 7, 1, 1, 1)
 
-        self.lblRepresentation = QtWidgets.QLabel("Representation")
-        self.tabGrid.addWidget(self.lblRepresentation, 8, 0, 1, 1)
+        # self.lblRepresentation = QtWidgets.QLabel("Representation")
+        # self.tabGrid.addWidget(self.lblRepresentation, 8, 0, 1, 1)
 
-        self.cboRepresentation = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboRepresentation, 8, 1, 1, 1)
+        # self.cboRepresentation = QtWidgets.QComboBox()
+        # self.tabGrid.addWidget(self.cboRepresentation, 8, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)
