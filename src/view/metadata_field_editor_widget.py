@@ -76,6 +76,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget = QComboBox(editor)
                 widget.addItems(field['values'])
                 widget.currentIndexChanged.connect(self.onValueChanged)
+                if 'allow_custom_values' in field.keys() and str(field['allow_custom_values']).lower() == 'true':
+                    widget.setEditable(True)
+                    widget.lineEdit().editingFinished.connect(self.onTextChanged)            
             elif field['type'] in ['integer', 'double', 'float']:
                 widget = QDoubleSpinBox(editor)
                 min = field['min'] if 'min' in field else 0
@@ -129,8 +132,11 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     elif isinstance(widget, QDoubleSpinBox):
                         widget.setValue(val)
                     elif isinstance(widget, QComboBox):
-                        index = widget.findText(val)
-                        widget.setCurrentIndex(index)
+                        if widget.isEditable():
+                            widget.lineEdit().setText(val)
+                        else:
+                            index = widget.findText(val)
+                            widget.setCurrentIndex(index)
                 else:
                     # Reset the widget to its default value if the value is not in values['attributes']
                     self.resetWidgetToDefault(widget)
