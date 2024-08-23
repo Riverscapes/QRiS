@@ -88,6 +88,8 @@ class FrmEvent(QtWidgets.QDialog):
                     self.cboValleyBottom.setCurrentIndex(self.valley_bottom_model.getItemIndexById(self.metadata_widget.metadata['system']['valley_bottom_id']))
                 if 'phase' in self.metadata_widget.metadata['system']:
                     self.txtPhase.setText(self.metadata_widget.metadata['system']['phase'])
+                if 'date_label' in self.metadata_widget.metadata['system']:
+                    self.txtDateLabel.setText(self.metadata_widget.metadata['system']['date_label'])
 
             if self.layer_widget is not None:
                 for event_layer in event.event_layers:
@@ -179,6 +181,11 @@ class FrmEvent(QtWidgets.QDialog):
             self.metadata_widget.add_system_metadata('phase', self.txtPhase.text())
         else:
             self.metadata_widget.delete_item('system', 'phase')
+
+        if self.txtDateLabel.text() != '':
+            self.metadata_widget.add_system_metadata('date_label', self.txtDateLabel.text())
+        else:
+            self.metadata_widget.delete_item('system', 'date_label')
 
         if not self.metadata_widget.validate():
             return
@@ -298,10 +305,16 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.lblPlatform = QtWidgets.QLabel()
         self.lblPlatform.setText('Event completed at')
-        self.tabGrid.addWidget(self.lblPlatform, 7, 0, 1, 1)
+        self.tabGrid.addWidget(self.lblPlatform, 8, 0, 1, 1)
 
         self.cboPlatform = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboPlatform, 7, 1, 1, 1)
+        self.tabGrid.addWidget(self.cboPlatform, 8, 1, 1, 1)
+
+        self.lblDateLabel = QtWidgets.QLabel('Date Label')
+        self.tabGrid.addWidget(self.lblDateLabel, 7, 0, 1, 1)
+
+        self.txtDateLabel = QtWidgets.QLineEdit()
+        self.tabGrid.addWidget(self.txtDateLabel, 7, 1, 1, 1)
 
         # self.lblRepresentation = QtWidgets.QLabel("Representation")
         # self.tabGrid.addWidget(self.lblRepresentation, 8, 0, 1, 1)
