@@ -10,11 +10,10 @@ from ...view.frm_event_picker import FrmEventPicker
 class PlanningEventLibraryWidget(QtWidgets.QWidget):
 # Implement a Event Library grid picker, which loads events in event library, exposes their date, and type (columns) allows sorting), and has a checkbox 
 
-    def __init__(self, parent: QtWidgets.QWidget, qris_project: Project, event_types: list = None, event_phases: dict=None):
+    def __init__(self, parent: QtWidgets.QWidget, qris_project: Project, event_types: list = None):
         super().__init__(parent)
         self.qris_project = qris_project
         self.event_types = event_types
-        self.event_phases = event_phases
 
         self.setupUi()
 

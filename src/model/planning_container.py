@@ -18,7 +18,7 @@ class PlanningContainer(DBItem):
 
         super().__init__('planning_containers', id, name)
         self.description = description
-        self.planning_events = planning_events # dict of event_id and phase_id
+        self.planning_events = planning_events # dict of event_id and representation_id
         self.metadata = metadata
 
         self.icon = 'plan'
@@ -42,14 +42,14 @@ class PlanningContainer(DBItem):
                              [name, sql_description, sql_metadata, self.id])
 
                 update_intersect_table(curs, 'planning_container_events', 'planning_container_id', 'event_id', self.id, [event_id for event_id in planning_events.keys()])
-                # now update the table with the phases
-                curs.executemany('UPDATE planning_container_events SET phase_type = ? WHERE planning_container_id = ? AND event_id = ?', [(phase, self.id, event) for event, phase in planning_events.items()])
-                # drop any events that have a null phase
-                curs.execute('DELETE FROM planning_container_events WHERE planning_container_id = ? AND phase_type IS NULL', [self.id])
+                # now update the table with the representation_id
+                curs.executemany('UPDATE planning_container_events SET representation_id = ? WHERE planning_container_id = ? AND event_id = ?', [(representation_id, self.id, event) for event, representation_id in planning_events.items()])
+                # drop any events that have a null representation_id
+                curs.execute('DELETE FROM planning_container_events WHERE planning_container_id = ? AND representation_id IS NULL', [self.id])
 
                 self.name = name
                 self.description = description
-                self.planning_events = {event: phase for event, phase in planning_events.items() if phase is not None}
+                self.planning_events = {event: representation_id for event, representation_id in planning_events.items() if representation_id is not None}
                 self.metadata = metadata
                 conn.commit()
 
@@ -61,7 +61,7 @@ class PlanningContainer(DBItem):
 def load(curs: sqlite3.Cursor, events: dict) -> Dict[int, PlanningContainer]:
 
     curs.execute('SELECT * FROM planning_container_events')
-    planning_container_events = [(row['planning_container_id'], events[row['event_id']], row['phase_type']) for row in curs.fetchall()]
+    planning_container_events = [(row['planning_container_id'], events[row['event_id']], row['representation_id']) for row in curs.fetchall()]
 
     curs.execute('SELECT * FROM planning_containers')
     return {row['id']: PlanningContainer(
@@ -99,9 +99,9 @@ def insert(db_path: str,
             ])
             planning_container_id = curs.lastrowid
 
-            # drop any events that have a null phase
-            out_planning_events = {event_id: phase for event_id, phase in planning_events.items() if phase is not None}
-            curs.executemany('INSERT INTO planning_container_events (planning_container_id, event_id, phase_type) VALUES (?, ?, ?)', [(planning_container_id, event_id, phase) for event_id, phase in out_planning_events.items()])
+            # drop any events that have a null representation_id
+            out_planning_events = {event_id: representation_id for event_id, representation_id in planning_events.items() if representation_id is not None}
+            curs.executemany('INSERT INTO planning_container_events (planning_container_id, event_id, representation_id) VALUES (?, ?, ?)', [(planning_container_id, event_id, representation_id) for event_id, representation_id in out_planning_events.items()])
 
             planning_container = PlanningContainer(planning_container_id, name, description, out_planning_events, metadata)
             conn.commit()

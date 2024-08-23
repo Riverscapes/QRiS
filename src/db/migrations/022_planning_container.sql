@@ -12,7 +12,7 @@ CREATE TABLE planning_container_events
 (
     planning_container_id INTEGER REFERENCES planning_containers(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
-    phase_type TEXT,
+    representation_id INTEGER,
     metadata TEXT,
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
 
