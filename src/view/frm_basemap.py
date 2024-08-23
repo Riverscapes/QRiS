@@ -278,6 +278,9 @@ class FrmRaster(QtWidgets.QDialog):
 
         # Basic Properties Tab
         self.grid = QtWidgets.QGridLayout()
+        self.tabProperties = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabProperties.setLayout(self.grid)
 
         self.lblName = QtWidgets.QLabel()
         self.lblName.setText('Name')
@@ -324,38 +327,36 @@ class FrmRaster(QtWidgets.QDialog):
         self.cboMask = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboMask, 5, 1, 1, 1)
 
+        self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
+        self.chkHillshade.setChecked(False)
+        self.chkHillshade.setEnabled(False)
+        self.grid.addWidget(self.chkHillshade, 6, 1, 1, 1)
+
         self.lblDate = QtWidgets.QLabel('Aquisition Date')
-        self.grid.addWidget(self.lblDate, 6, 0, 1, 1)
+        self.grid.addWidget(self.lblDate, 7, 0, 1, 1)
 
         self.txtDate = QtWidgets.QDateEdit()
         self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
         self.txtDate.setSpecialValueText("No Date")
         self.txtDate.setDate(self.txtDate.minimumDate())
-        self.grid.addWidget(self.txtDate, 6, 1, 1, 1)
+        self.grid.addWidget(self.txtDate, 7, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel()
-        self.lblDescription.setText('Description')
-        self.grid.addWidget(self.lblDescription, 7, 0, 1, 1)
+        self.grid.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding), 10, 0, 1, 2)
+
+        # Description Tab
+        self.tabDescription = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabDescription, 'Description')
+        self.tabDescription.setLayout(QtWidgets.QVBoxLayout())
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription, 7, 1, 1, 1)
-
-        self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Basic Properties')
-        self.tabProperties.setLayout(self.grid)
+        self.tabDescription.layout().addWidget(self.txtDescription)
 
         # Metadata Tab
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
-        self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
-        self.chkHillshade.setChecked(False)
-        self.chkHillshade.setEnabled(False)
-        self.grid.addWidget(self.chkHillshade, 8, 1, 1, 1)
-
-        self.chkAddToMap = QtWidgets.QCheckBox()
-        self.chkAddToMap.setText('Add to Map')
+        self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.grid.addWidget(self.chkAddToMap, 8, 1, 1, 1)
+        self.vert.addWidget(self.chkAddToMap)
 
         help_page = 'context-layers' if self.is_context else 'surfaces'
         self.vert.addLayout(add_standard_form_buttons(self, help_page))
