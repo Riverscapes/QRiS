@@ -1,5 +1,34 @@
 # QRiS Plugin
 
+## [0.9.0] 2024 AUG 23
+
+### Added
+- Planning Container for DCEs #473
+- Date Label attribute for DCEs #479
+- New layers for Beaver Dam Censusing #448
+
+### Fixed
+- Don't collapse Data Capture Events node on project tree after every 'Add DCE' event #474
+- Overlapping checkboxes on Import Surfaces From #468
+
+### Changed
+- Risk Potential Layers moved to DCE's #473
+- Several Layer updates for upcoming LTPBR 2.0:
+  - Vegetation Extents #455
+  - Dam Crests #457
+  - Centerlines #458
+  - Active Channels #459
+  - Inundation #461
+  - Geomorphic Units Layers #460, #466
+  - Risk Potential Layers #467
+  - CEM Layer #332
+  - Structure Types #297
+
+### Removed
+- Planning DCEs #473
+- Representation attribute in DCEs #479
+
+
 ## [0.3.27] 2024 AUG 09
 
 ### Fixed
