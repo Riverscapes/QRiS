@@ -36,6 +36,7 @@ from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
 from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID, Event
+from ..model.planning_container import PlanningContainer
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
@@ -211,6 +212,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
         [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
+        [self.add_planning_container_to_project_tree(events_node, item) for item in self.project.planning_containers.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
@@ -434,19 +436,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     else:
-                        if isinstance(model_data, Project) or isinstance(model_data, Event):
+                        if any(isinstance(model_data, model_type) for model_type in [Project, Event, PlanningContainer]):
                             self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
                             self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
                             self.menu.addSeparator()
                             self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
-                            if isinstance(model_data, Event):
+                            if any(isinstance(model_data, model_type) for model_type in [Event, PlanningContainer]):
                                 self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                         else:
                             self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
                     raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, Mask, SampleFrame, Profile, CrossSections, ValleyBottom, PourPoint, ScratchVector, Analysis]):
+                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, Mask, SampleFrame, Profile, CrossSections, ValleyBottom, PourPoint, ScratchVector, Analysis, PlanningContainer]):
                     self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
 
                 if isinstance(model_data, Mask):
@@ -504,7 +506,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE), True)
 
                 if not isinstance(model_data, Project):
-                    self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
+                    # if an event is under a planning container node, then do not show the delete option
+                    if not (isinstance(model_data, Event) and isinstance(model_item.parent().data(QtCore.Qt.UserRole), PlanningContainer)):
+                        self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -672,7 +676,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmPlanningContainer(self, self.project)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_child_to_project_tree(parent_node, frm.planning_container, True)
+            self.add_child_to_project_tree(parent_node, frm.planning_container, False)
 
     def add_analysis(self, parent_node):
 
@@ -1072,6 +1076,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         return target_node
 
+    def add_planning_container_to_project_tree(self, parent_node: QtGui.QStandardItem, planning_container: PlanningContainer):
+        """
+        Adds a planning container to the project tree
+        """
+
+        # Planning Container
+        planning_container_node = self.add_child_to_project_tree(parent_node, planning_container, False)
+
+        # Events
+        for event_id in planning_container.planning_events.keys():
+            event = self.project.events[event_id]
+            self.add_event_to_project_tree(planning_container_node, event, False)
+        
+        # Remove events that are no longer in the planning container
+        for row in reversed(range(planning_container_node.rowCount())):
+            child_node = planning_container_node.child(row)
+            if child_node.data(QtCore.Qt.UserRole).id not in planning_container.planning_events.keys():
+                planning_container_node.removeRow(row)
+
+
     def add_event_to_project_tree(self, parent_node: QtGui.QStandardItem, event: Event, add_to_map: bool = False):
         """
         Most project data types can be added to the project tree using add_child_to_project_tree()
@@ -1079,7 +1103,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """
 
         # Event, protocols and layers
-        event_node = self.add_child_to_project_tree(parent_node, event, add_to_map, collapsed=True)
+        event_node = self.add_child_to_project_tree(parent_node, event, add_to_map, collapsed=False)
 
         self.check_and_remove_event_layers(event_node, event)
         self.remove_empty_child_nodes(event_node)
@@ -1446,6 +1470,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):
             frm = FrmAnalysisProperties(self, self.project, db_item)
+        elif isinstance(db_item, PlanningContainer):
+            frm = FrmPlanningContainer(self, self.project, db_item)
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
@@ -1462,6 +1488,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_child_to_project_tree(model_item.parent(), db_item, False)
                 elif isinstance(db_item, Event):
                     self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
+                elif isinstance(db_item, PlanningContainer):
+                    self.add_planning_container_to_project_tree(model_item.parent(), db_item)
                 else:
                     self.add_child_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
 
@@ -1545,7 +1573,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         
         if isinstance(data_item, DBItem):
-            if any(isinstance(data_item, data_class) for data_class in [Project, Event, Analysis, PourPoint, Raster, StreamGage, ScratchVector]):
+            if any(isinstance(data_item, data_class) for data_class in [Project, Event, PlanningContainer, Analysis, PourPoint, Raster, StreamGage, ScratchVector]):
                 node.setText(data_item.name)
                 return
             
@@ -1642,8 +1670,37 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.project.remove(db_item)
             self.check_and_remove_event_layers(events_node, event)
             self.remove_empty_child_nodes(events_node)
+            # check if the event is also in any planning containers, if so, then remove the event layer from that event as well
+            for planning_container in self.project.planning_containers.values():
+                if db_item.event_id in planning_container.planning_events:
+                    event = self.project.events[db_item.event_id]
+                    parent = model_item.parent()
+                    while parent.data(QtCore.Qt.UserRole) != event:
+                        parent = parent.parent()
+                    events_node = parent
+                    self.check_and_remove_event_layers(events_node, event)
+                    self.remove_empty_child_nodes(events_node)
         else:
             model_item.parent().removeRow(model_item.row())
+            if isinstance(db_item, Event):
+                # 1) check if the event is in any planning containers, if so, then remove the event from that planning container
+                # 2) we then need to remove the event from the planning container in the project tree, without causing a c++ wrapper error
+               for planning_container in self.project.planning_containers.values():
+                    if db_item.id in planning_container.planning_events:
+                        # Remove the event from the planning container
+                        planning_container.planning_events.pop(db_item.id)
+                        
+                        # Remove the corresponding UI element
+                        parent_item = model_item.parent()
+                        if parent_item is not None:
+                            for row in range(parent_item.rowCount()):
+                                child_item = parent_item.child(row)
+                                if child_item is not None and child_item.data(QtCore.Qt.UserRole).id == db_item.id:
+                                    parent_item.removeRow(row)
+                                    break
+                            # Optionally, remove empty child nodes if needed
+                            self.remove_empty_child_nodes(parent_item)
+
             # Remove the item from the project
             self.project.remove(db_item)
 
