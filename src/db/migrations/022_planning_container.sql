@@ -21,3 +21,8 @@ CREATE TABLE planning_container_events
 
 UPDATE lkp_representation SET name = 'Contemporary' WHERE id = 1;
 UPDATE lkp_representation SET name = 'Predicted' WHERE id = 3;
+
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 40);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 41);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 42);
+INSERT INTO method_layers (method_id, layer_id) VALUES (1, 43);
