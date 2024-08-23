@@ -71,7 +71,7 @@ class DBItemModel(QAbstractListModel):
     obj = self.cboComboBox.currentData(Qt.UserRole)
     """
 
-    def __init__(self, data: dict, non_selectable_item: DBItem = None):
+    def __init__(self, data: dict, non_selectable_item: DBItem = None, include_none: bool = False):
         """The raw data should be dictionary of database IDs keyed to display strings"""
         super().__init__()
 
@@ -82,6 +82,8 @@ class DBItemModel(QAbstractListModel):
         if non_selectable_item is not None:
             self._data.insert(0, (0, non_selectable_item))
             self.non_selectable_index = 0
+        if include_none:
+            self._data.insert(0, (0, DBItem(None, 0, 'None')))
 
     def sort_data_by_key(self):
         self._data.sort(key=lambda x: x[0])

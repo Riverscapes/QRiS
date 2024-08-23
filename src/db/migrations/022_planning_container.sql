@@ -10,12 +10,14 @@ CREATE TABLE planning_containers
 
 CREATE TABLE planning_container_events
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
     planning_container_id INTEGER REFERENCES planning_containers(id) ON DELETE CASCADE,
     event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
     phase_type TEXT,
     metadata TEXT,
-    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_planning_container_events PRIMARY KEY (planning_container_id, event_id)
 );
 
--- Add the planning layers to regular dce event types
+UPDATE lkp_representation SET name = 'Contemporary' WHERE id = 1;
+UPDATE lkp_representation SET name = 'Predicted' WHERE id = 3;
