@@ -676,7 +676,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmPlanningContainer(self, self.project)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_child_to_project_tree(parent_node, frm.planning_container, False)
+            self.add_planning_container_to_project_tree(parent_node, frm.planning_container)
 
     def add_analysis(self, parent_node):
 

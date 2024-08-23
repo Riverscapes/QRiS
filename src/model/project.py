@@ -135,6 +135,8 @@ class Project(DBItem):
         elif isinstance(db_item, EventLayer):
             event_layer_index = list(event_layer.id for event_layer in self.events[db_item.event_id].event_layers).index(db_item.id)
             self.events[db_item.event_id].event_layers.pop(event_layer_index)
+        elif isinstance(db_item, PlanningContainer):
+            self.planning_containers.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
