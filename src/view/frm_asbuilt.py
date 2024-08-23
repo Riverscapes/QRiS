@@ -49,8 +49,10 @@ class FrmAsBuilt(FrmEvent):
         self.lblPlatform.setVisible(False)
         self.cboPlatform.setVisible(False)
 
-        self.lblRepresentation.setVisible(False)
-        self.cboRepresentation.setVisible(False)
+        # self.lblRepresentation.setVisible(False)
+        # self.cboRepresentation.setVisible(False)
+        self.lblDateLabel.setVisible(False)
+        self.txtDateLabel.setVisible(False)
 
         self.lblDesigners = QtWidgets.QLabel('Observer(s)', self)
         self.tabGrid.addWidget(self.lblDesigners, 8, 0, 1, 1)
