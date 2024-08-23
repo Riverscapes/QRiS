@@ -24,8 +24,10 @@ class FrmDesign(FrmEvent):
         self.lblPlatform.setVisible(False)
         self.cboPlatform.setVisible(False)
         
-        self.lblRepresentation.setVisible(False)
-        self.cboRepresentation.setVisible(False)
+        # self.lblRepresentation.setVisible(False)
+        # self.cboRepresentation.setVisible(False)
+        self.lblDateLabel.setVisible(False)
+        self.txtDateLabel.setVisible(False)
 
         self.lblPercentComplete = QtWidgets.QLabel('Percent Complete', self)
         self.tabGrid.addWidget(self.lblPercentComplete, 7, 0)
