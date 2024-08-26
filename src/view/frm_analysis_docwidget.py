@@ -366,7 +366,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.connections[self.cboEvent.currentIndexChanged] = self.cboEvent.currentIndexChanged.connect(self.load_table_values)
         self.horizEvent.addWidget(self.cboEvent)
 
-        self.cmdCalculate = QtWidgets.QPushButton('Calculate All')
+        self.cmdCalculate = QtWidgets.QPushButton('Calculate...')
         self.connections[self.cmdCalculate.clicked] = self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
         self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.cmdCalculate.setToolTip('Options to calculate metrics and indicators for the selected event and sample frame')
