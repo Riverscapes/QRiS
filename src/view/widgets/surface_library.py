@@ -38,10 +38,27 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
         self.table.setColumnWidth(0, 30)
         self.table.resizeColumnsToContents()
 
+        if len(self.qris_project.rasters) == 0:
+            self.table.setRowCount(1)
+            no_surfaces_item = QtWidgets.QTableWidgetItem('No surfaces have been loaded in this QRiS project')
+            font = no_surfaces_item.font()
+            font.setItalic(True)
+            no_surfaces_item.setFont(font)
+            self.table.setItem(0, 0, no_surfaces_item)
+            self.table.setSpan(0, 0, 1, 4)
+            self.table.setShowGrid(False)
+            self.table.resizeColumnsToContents()
+            self.table.horizontalHeader().hide()
+            self.btnSelectAll.hide()
+            self.btnDeselectAll.hide()
+
     def set_selected_surface_ids(self, selected_surfaces: list):
         # set a list of selected surfaces by their ids
 
         for i in range(self.table.rowCount()):
+            # Skip the row with the "No surfaces available" message
+            if self.table.item(i, 0) and self.table.item(i, 0).text() == "No surfaces have been loaded in this QRiS project":
+                continue
             surface: Raster = self.table.item(i, 1).data(QtCore.Qt.UserRole)
             if surface.id in selected_surfaces:
                 self.table.cellWidget(i, 0).setChecked(True)
@@ -52,6 +69,9 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
 
         selected_surfaces = []
         for i in range(self.table.rowCount()):
+            # Skip the row with the "No surfaces available" message
+            if self.table.item(i, 0) and self.table.item(i, 0).text() == "No surfaces have been loaded in this QRiS project":
+                continue
             if self.table.cellWidget(i, 0).isChecked():
                 surface: Raster = self.table.item(i, 1).data(QtCore.Qt.UserRole)
                 selected_surfaces.append(surface)
@@ -62,6 +82,9 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
 
         selected_surfaces = []
         for i in range(self.table.rowCount()):
+            # Skip the row with the "No surfaces available" message
+            if self.table.item(i, 0) and self.table.item(i, 0).text() == "No surfaces have been loaded in this QRiS project":
+                continue
             if self.table.cellWidget(i, 0).isChecked():
                 surface: Raster = self.table.item(i, 1).data(QtCore.Qt.UserRole)
                 selected_surfaces.append(surface.id)
