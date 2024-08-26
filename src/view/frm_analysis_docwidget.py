@@ -155,7 +155,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 analysis_metric: AnalysisMetric = self.table.item(row, column['metric']).data(QtCore.Qt.UserRole)
                 metric: Metric = analysis_metric.metric
                 metric_value = None
-                metric_value_text = ''
+                metric_value_text = 'null'
                 uncertainty_text = ''
                 if metric.id in metric_values:
                     metric_value = metric_values[metric.id]
