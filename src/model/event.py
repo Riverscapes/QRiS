@@ -67,6 +67,20 @@ class Event(DBItem):
         if self.event_type.id == PLANNING_EVENT_TYPE_ID:
             self.icon = 'plan'
 
+    def date_as_string(self) -> str:
+
+        # format the date as a YYYY-MM-DD, but remove None values if part of the date does not exist (i.e. self.start.month = None). If an end date is provided, use it as well ("start_date to end_date")
+        # if start.month, start.year or start.day is None, do not include in the date string. these could be optional
+        start_date = f'{self.start.year or "0000"}-{self.start.month or "01"}-{self.start.day or "01"}' if not all(value is None for value in [self.start.year, self.start.month, self.start.day]) else None
+        end_date = f'{self.end.year or "0000"}-{self.end.month or "01"}-{self.end.day or "01"}' if not all(value is None for value in [self.end.year, self.end.month, self.end.day]) else None
+
+        if start_date and end_date:
+            return f'{start_date} to {end_date}'
+        elif start_date is None:
+            return 'No date provided'
+        else:
+            return start_date
+        
     def update(self, db_path: str, name: str, description: str, layers: List[Layer], rasters: list, start_date: DateSpec, end_date: DateSpec, platform: DBItem, representation: DBItem, metadata: dict) -> None:
 
         sql_description = description if description is not None and len(description) > 0 else None
