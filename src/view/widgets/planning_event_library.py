@@ -20,6 +20,9 @@ class PlanningEventLibraryWidget(QtWidgets.QWidget):
 
     def load_events(self, events):
 
+        # Clear the table
+        self.table.clearContents()
+
         # Load events from the project
         event: Event = None
         if self.event_types is not None:
