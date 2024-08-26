@@ -26,23 +26,25 @@ class PlanningEventLibraryWidget(QtWidgets.QWidget):
             events = [event for event in events if event.event_type.id in self.event_types]
         self.table.setRowCount(len(events))
         for i, event in enumerate(events):
-            
+            self._insert_event(event, i)
+        self.table.resizeColumnsToContents()
+
+    def _insert_event(self, event: Event, row: int):
+
             # Store the entire Event object in the first column using a custom role
             item = QtWidgets.QTableWidgetItem(event.name)
             item.setData(QtCore.Qt.UserRole, event)
-            self.table.setItem(i, 0, item)
+            self.table.setItem(row, 0, item)
             
             # Set other event properties in the table
-            self.table.setItem(i, 1, QtWidgets.QTableWidgetItem(event.date))
+            self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(event.date_as_string()))
 
             # Create a checkbox and add it to the cell widget
-            self.table.setCellWidget(i, 2, QtWidgets.QComboBox())
+            self.table.setCellWidget(row, 2, QtWidgets.QComboBox())
             representation_model = DBItemModel(self.qris_project.lookup_tables['lkp_representation'], include_none=True)
             representation_model._data.sort(key=lambda a: a[0])
-            self.table.cellWidget(i, 2).setModel(representation_model)
-            self.table.cellWidget(i, 2).setCurrentIndex(0)
-        
-        self.table.resizeColumnsToContents()
+            self.table.cellWidget(row, 2).setModel(representation_model)
+            self.table.cellWidget(row, 2).setCurrentIndex(0)
 
     def set_event_ids(self, events: dict):
         # set a list of selected events by their ids
@@ -68,7 +70,7 @@ class PlanningEventLibraryWidget(QtWidgets.QWidget):
         
         frm = FrmEventPicker(self, self.qris_project, 1)
         if frm.exec_():
-            event = frm.qris_event
+            event: Event = frm.qris_event
             # make sure the event is not already in the list
             for i in range(self.table.rowCount()):
                 if self.table.item(i, 0).data(QtCore.Qt.UserRole).id == event.id:
@@ -76,14 +78,7 @@ class PlanningEventLibraryWidget(QtWidgets.QWidget):
 
             row = self.table.rowCount()
             self.table.insertRow(row)
-            self.table.setItem(row, 0, QtWidgets.QTableWidgetItem(event.name))
-            self.table.setItem(row, 1, QtWidgets.QTableWidgetItem(event.date))
-            self.table.setCellWidget(row, 2, QtWidgets.QComboBox())
-            representation_model = DBItemModel(self.qris_project.lookup_tables['lkp_representation'], include_none=True)
-            representation_model._data.sort(key=lambda a: a[0])
-            self.table.cellWidget(row, 2).setModel(representation_model)
-            self.table.cellWidget(row, 2).setCurrentIndex(0)
-            self.table.item(row, 0).setData(QtCore.Qt.UserRole, event)
+            self._insert_event(event, row)
             self.table.resizeColumnsToContents()
 
     def remove_event(self):
