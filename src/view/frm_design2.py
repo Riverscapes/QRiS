@@ -5,8 +5,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.project import Project
 from ..model.event import Event, DESIGN_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID
-from .frm_event import FrmEvent
+from ..model.planning_container import PlanningContainer
 
+from .frm_event import FrmEvent
+from .widgets.planning_event_library import PlanningEventLibraryWidget
 
 class FrmDesign(FrmEvent):
 
@@ -17,6 +19,7 @@ class FrmDesign(FrmEvent):
         self.setWindowTitle(f'Create New {event_type}' if event is None else f'Edit {event_type}')
 
         self.mandatory_layers = ['complexes']
+        self.event_library = PlanningEventLibraryWidget(self, qris_project, [DCE_EVENT_TYPE_ID])
 
         self.lblPhase.setVisible(True)
         self.txtPhase.setVisible(True)
@@ -91,37 +94,22 @@ class FrmDesign(FrmEvent):
         self.grid_based_on_dces = QtWidgets.QGridLayout()
         self.vert_surfaces.addLayout(self.grid_based_on_dces)
 
-        self.lblExistingDCEs = QtWidgets.QLabel('Existing', self)
-        self.grid_based_on_dces.addWidget(self.lblExistingDCEs, 0, 0)
+        self.horiz_planning_container = QtWidgets.QHBoxLayout()
+        self.vert_surfaces.addLayout(self.horiz_planning_container)
 
-        dce_events = {key: value for key, value in self.qris_project.events.items() if value.event_type.id in [DCE_EVENT_TYPE_ID]}
-        dce_events[0] = DBItem('', 0, 'None')
-        planning_events = {key: value for key, value in self.qris_project.events.items() if value.event_type.id in [PLANNING_EVENT_TYPE_ID]}
-        planning_events[0] = DBItem('', 0, 'None')
+        self.lblPlanningContainer = QtWidgets.QLabel("Select DCE's From:", self)
+        self.horiz_planning_container.addWidget(self.lblPlanningContainer)
 
-        self.cboExistingDCEs = QtWidgets.QComboBox(self)
-        self.existing_dce_model = DBItemModel(dce_events)
-        self.existing_dce_model.sort_data_by_key()
-        self.cboExistingDCEs.setModel(self.existing_dce_model)
-        self.grid_based_on_dces.addWidget(self.cboExistingDCEs, 0, 1)
+        planning_containers = {key: value for key, value in self.qris_project.planning_containers.items()}
+        planning_containers[0] = DBItem('None', 0, 'Manually Specify DCEs')
+        planning_container_model = DBItemModel(planning_containers)
+        planning_container_model._data.sort(key=lambda a: a[0])
+        self.cboPlanningContainers = QtWidgets.QComboBox(self)
+        self.cboPlanningContainers.setModel(planning_container_model)
+        self.cboPlanningContainers.currentIndexChanged.connect(self.on_cboPlanningContainers_currentIndexChanged)
+        self.horiz_planning_container.addWidget(self.cboPlanningContainers)
 
-        self.lblHistoricalDCEs = QtWidgets.QLabel('Historic', self)
-        self.grid_based_on_dces.addWidget(self.lblHistoricalDCEs, 1, 0)
-
-        self.cboHistoricalDCEs = QtWidgets.QComboBox(self)
-        self.historical_dce_model = DBItemModel(dce_events)
-        self.historical_dce_model.sort_data_by_key()
-        self.cboHistoricalDCEs.setModel(self.historical_dce_model)
-        self.grid_based_on_dces.addWidget(self.cboHistoricalDCEs, 1, 1)
-
-        self.lblFutureRecoveryDCEs = QtWidgets.QLabel('Future (Recovery Potential)', self)
-        self.grid_based_on_dces.addWidget(self.lblFutureRecoveryDCEs, 2, 0)
-
-        self.cboFutureRecoveryDCEs = QtWidgets.QComboBox(self)
-        self.future_recovery_dce_model = DBItemModel(planning_events)
-        self.future_recovery_dce_model.sort_data_by_key()
-        self.cboFutureRecoveryDCEs.setModel(self.future_recovery_dce_model)
-        self.grid_based_on_dces.addWidget(self.cboFutureRecoveryDCEs, 2, 1)
+        self.vert_surfaces.addWidget(self.event_library)
 
         if event is not None:
             self.chkAddToMap.setVisible(False)
@@ -151,20 +139,33 @@ class FrmDesign(FrmEvent):
                 if 'percentComplete' in self.metadata_widget.metadata['system']:
                     self.sliderPercentComplete.setValue(int(self.metadata_widget.metadata['system']['percentComplete']))
 
-                if 'based_on_exising_dce_id' in self.metadata_widget.metadata['system']:
-                    existing_dce_id = self.metadata_widget.metadata['system']['based_on_exising_dce_id']
-                    existing_dce_index = self.existing_dce_model.getItemIndexById(existing_dce_id)
-                    self.cboExistingDCEs.setCurrentIndex(existing_dce_index)
-                
-                if 'based_on_historical_dce_id' in self.metadata_widget.metadata['system']:
-                    historical_dce_id = self.metadata_widget.metadata['system']['based_on_historical_dce_id']
-                    historical_dce_index = self.historical_dce_model.getItemIndexById(historical_dce_id)
-                    self.cboHistoricalDCEs.setCurrentIndex(historical_dce_index)
+                if 'planningContainerId' in self.metadata_widget.metadata['system']:
+                    planning_container_id = self.metadata_widget.metadata['system']['planningContainerId']
+                    planning_container: PlanningContainer = self.qris_project.planning_containers[planning_container_id]
+                    planning_container_index = self.cboPlanningContainers.findData(planning_container)
+                    self.cboPlanningContainers.setCurrentIndex(planning_container_index)
+                elif 'planning_events' in self.metadata_widget.metadata['system']:
+                    planning_events = {int(k): int(v) for k,v in self.metadata_widget.metadata['system']['planning_events'].items()}
+                    self.event_library.load_events([self.qris_project.events[int(event_id)] for event_id in planning_events.keys()])
+                    self.event_library.set_event_ids(planning_events)
+                    self.event_library.setEnabled(True)
+                else:
+                    self.event_library.setEnabled(True)
 
-                if 'based_on_planning_dce_id' in self.metadata_widget.metadata['system']:
-                    planning_dce_id = self.metadata_widget.metadata['system']['based_on_planning_dce_id']
-                    planning_dce_index = self.future_recovery_dce_model.getItemIndexById(planning_dce_id)
-                    self.cboFutureRecoveryDCEs.setCurrentIndex(planning_dce_index) 
+                # if 'based_on_exising_dce_id' in self.metadata_widget.metadata['system']:
+                #     existing_dce_id = self.metadata_widget.metadata['system']['based_on_exising_dce_id']
+                #     existing_dce_index = self.existing_dce_model.getItemIndexById(existing_dce_id)
+                #     self.cboExistingDCEs.setCurrentIndex(existing_dce_index)
+                
+                # if 'based_on_historical_dce_id' in self.metadata_widget.metadata['system']:
+                #     historical_dce_id = self.metadata_widget.metadata['system']['based_on_historical_dce_id']
+                #     historical_dce_index = self.historical_dce_model.getItemIndexById(historical_dce_id)
+                #     self.cboHistoricalDCEs.setCurrentIndex(historical_dce_index)
+
+                # if 'based_on_planning_dce_id' in self.metadata_widget.metadata['system']:
+                #     planning_dce_id = self.metadata_widget.metadata['system']['based_on_planning_dce_id']
+                #     planning_dce_index = self.future_recovery_dce_model.getItemIndexById(planning_dce_id)
+                #     self.cboFutureRecoveryDCEs.setCurrentIndex(planning_dce_index) 
 
         else:
             # iterate through the tree model and children to find the first 'structure_points' layer
@@ -174,6 +175,19 @@ class FrmDesign(FrmEvent):
                     layer_item = protocol_item.child(layer_index)
                     if 'complexes' in layer_item.data(QtCore.Qt.UserRole).fc_name:
                         self.layer_widget.add_selected_layers(layer_item)
+
+    def on_cboPlanningContainers_currentIndexChanged(self, index):
+
+        # if the user selects 'Manually Specify DCEs' then enable the event library. 
+        # Otherwise, disable the event library and set the events based on the selected planning container
+        if index == 0:
+            self.event_library.setEnabled(True)
+        else:
+            planning_container_id = self.cboPlanningContainers.currentData(QtCore.Qt.UserRole).id
+            planning_container: PlanningContainer = self.qris_project.planning_containers[planning_container_id]
+            self.event_library.load_events([self.qris_project.events[event_id] for event_id in planning_container.planning_events.keys()])
+            self.event_library.set_event_ids(planning_container.planning_events)
+            self.event_library.setEnabled(False)
 
     def adjustSliderValue(self, value):
         # Calculate the nearest multiple of 5
@@ -205,14 +219,27 @@ class FrmDesign(FrmEvent):
         self.metadata_widget.add_system_metadata('status', self.cboStatus.currentData(QtCore.Qt.UserRole).name)
         self.metadata_widget.add_system_metadata('percentComplete', self.sliderPercentComplete.value())
 
-        existing_dce_id = self.cboExistingDCEs.currentData(QtCore.Qt.UserRole).id
-        self.metadata_widget.add_system_metadata('based_on_exising_dce_id', existing_dce_id)
+        if self.cboPlanningContainers.currentIndex() == 0:
+            if 'planningContainerId' in self.metadata_widget.metadata['system']:
+                self.metadata_widget.delete_item('system', 'planningContainerId')
+            # see if any events have been selected manually. if so, then add them to the metadata as a list of event_id and representation_id named 'planning_events'
+            planning_events = self.event_library.get_event_values()
+            if len(planning_events) > 0:
+                self.metadata_widget.add_system_metadata('planning_events', planning_events)
+        else:
+            planning_container_id = self.cboPlanningContainers.currentData(QtCore.Qt.UserRole).id
+            self.metadata_widget.add_system_metadata('planningContainerId', planning_container_id)
+            if 'planning_events' in self.metadata_widget.metadata['system']:
+                self.metadata_widget.delete_item('system', 'planning_events')
 
-        historical_dce_id = self.cboHistoricalDCEs.currentData(QtCore.Qt.UserRole).id
-        self.metadata_widget.add_system_metadata('based_on_historical_dce_id', historical_dce_id)
+        # existing_dce_id = self.cboExistingDCEs.currentData(QtCore.Qt.UserRole).id
+        # self.metadata_widget.add_system_metadata('based_on_exising_dce_id', existing_dce_id)
 
-        future_recovery_dce_id = self.cboFutureRecoveryDCEs.currentData(QtCore.Qt.UserRole).id
-        self.metadata_widget.add_system_metadata('based_on_planning_dce_id', future_recovery_dce_id)
+        # historical_dce_id = self.cboHistoricalDCEs.currentData(QtCore.Qt.UserRole).id
+        # self.metadata_widget.add_system_metadata('based_on_historical_dce_id', historical_dce_id)
+
+        # future_recovery_dce_id = self.cboFutureRecoveryDCEs.currentData(QtCore.Qt.UserRole).id
+        # self.metadata_widget.add_system_metadata('based_on_planning_dce_id', future_recovery_dce_id)
 
         super().accept()
 
