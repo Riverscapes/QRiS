@@ -30,10 +30,15 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.sampling_frames_model = DBItemModel(self.sampling_frames)
         self.cboSampleFrame.setModel(self.sampling_frames_model)
 
-        # Profiles
+        # Valley Bottoms
+        self.valley_bottoms = {id: valley_bottom for id, valley_bottom in project.valley_bottoms.items()}
+        self.valley_bottoms_model = DBItemModel(self.valley_bottoms)
+        self.cboValleyBottom.setModel(self.valley_bottoms_model)
+
+        # Centerlines
         self.centerlines = {id: profile for id, profile in project.profiles.items()}
         self.centerlines_model = DBItemModel(self.centerlines)
-        self.cboProfile.setModel(self.centerlines_model)
+        self.cboCenterline.setModel(self.centerlines_model)
 
         # DEMs
         self.dems = {id: surface for id, surface in project.rasters.items() if surface.raster_type_id == 4}
@@ -87,13 +92,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             index = self.cboSampleFrame.findData(analysis.sample_frame)
             self.cboSampleFrame.setCurrentIndex(index)
 
-            # Set the profile
-            if analysis.profile is not None:
-                profile: DBItem = self.centerlines[analysis.profile]
-                index = self.cboProfile.findData(profile)
-                self.cboProfile.setCurrentIndex(index)
+            if analysis.metadata and 'valley_bottom' in analysis.metadata:
+                valley_bottom: DBItem = self.valley_bottoms[analysis.metadata['valley_bottom']]
+                index = self.cboValleyBottom.findData(valley_bottom)
+                self.cboValleyBottom.setCurrentIndex(index)
+
+            # Set the centerline
+            if analysis.metadata is not None and 'centerline' in analysis.metadata:
+                centerline: DBItem = self.centerlines[analysis.metadata['centerline']]
+                index = self.cboCenterline.findData(centerline)
+                self.cboCenterline.setCurrentIndex(index)
             else:
-                self.cboProfile.setCurrentIndex(-1)
+                self.cboCenterline.setCurrentIndex(-1)
             
             # set the dem
             if analysis.metadata is not None and 'dem' in analysis.metadata:
@@ -105,8 +115,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
-            self.cboProfile.setEnabled(False)
+            self.cboCenterline.setEnabled(False)
             self.cboDEM.setEnabled(False)
+            self.cboValleyBottom.setEnabled(False)
         else:
             self.setWindowTitle('Create New Analysis')
 
@@ -145,17 +156,26 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.cboSampleFrame = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboSampleFrame, 1, 1, 1, 1)
 
-        self.lblProfile = QtWidgets.QLabel('Profile')
-        self.grdLayout1.addWidget(self.lblProfile, 2, 0, 1, 1)
+        # self.groupboxInputs = QtWidgets.QGroupBox('Inputs')
+        # self.vert.addWidget(self.groupboxInputs)
+
+        self.lblValleyBottom = QtWidgets.QLabel('Valley Bottom')
+        self.grdLayout1.addWidget(self.lblValleyBottom, 2, 0, 1, 1)
+
+        self.cboValleyBottom = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboValleyBottom, 2, 1, 1, 1)
+
+        self.lblCenterline = QtWidgets.QLabel('Riverscape Centerline')
+        self.grdLayout1.addWidget(self.lblCenterline, 3, 0, 1, 1)
         
-        self.cboProfile = QtWidgets.QComboBox()
-        self.grdLayout1.addWidget(self.cboProfile, 2, 1, 1, 1)
+        self.cboCenterline = QtWidgets.QComboBox()
+        self.grdLayout1.addWidget(self.cboCenterline, 3, 1, 1, 1)
 
         self.lblDEM = QtWidgets.QLabel('DEM')
-        self.grdLayout1.addWidget(self.lblDEM, 3, 0, 1, 1)
+        self.grdLayout1.addWidget(self.lblDEM, 4, 0, 1, 1)
 
         self.cboDEM = QtWidgets.QComboBox()
-        self.grdLayout1.addWidget(self.cboDEM, 3, 1, 1, 1)
+        self.grdLayout1.addWidget(self.cboDEM, 4, 1, 1, 1)
 
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
@@ -218,15 +238,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboSampleFrame.setFocus()
             return
         
-        profile: Profile = self.cboProfile.currentData(QtCore.Qt.UserRole)
+        centerline: Profile = self.cboCenterline.currentData(QtCore.Qt.UserRole)
         dem: Raster = self.cboDEM.currentData(QtCore.Qt.UserRole)
+        valley_bottom: DBItem = self.cboValleyBottom.currentData(QtCore.Qt.UserRole)
 
         # write the profile id to the analysis and analysis metadata
         metadata = self.analysis.metadata if self.analysis is not None else {}
-        if profile is not None:
-            metadata['centerline'] = profile.id
+        if centerline is not None:
+            metadata['centerline'] = centerline.id
         if dem is not None:
             metadata['dem'] = dem.id
+        if valley_bottom is not None:
+            metadata['valley_bottom'] = valley_bottom.id
 
         # determine if there are any features in the mask
         fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"

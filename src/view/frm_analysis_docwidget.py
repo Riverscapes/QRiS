@@ -240,7 +240,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             if 'centerline' in self.analysis.metadata:
                 analysis_params['centerline'] = self.qris_project.profiles[self.analysis.metadata['centerline']]
             if 'dem' in self.analysis.metadata:
-                analysis_params['dem'] = self.qris_project.dems[self.analysis.metadata['dem']]
+                analysis_params['dem'] = self.qris_project.rasters[self.analysis.metadata['dem']]
+            if 'valley_bottom' in self.analysis.metadata:
+                analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[self.analysis.metadata['valley_bottom']]
 
             for sample_frame_feature in sample_frame_features:
                 for data_capture_event in data_capture_events:
