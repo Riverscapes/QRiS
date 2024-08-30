@@ -59,6 +59,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
             out_metadata = json.loads(metadata_json) if metadata_json is not None else None
 
             self.profile = insert_profile(self.project.project_file, self.txtName.text(), Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, self.txtDescription.toPlainText(), out_metadata)
+            self.project.profiles[self.profile.id] = self.profile
             out_layer = QgsVectorLayer(f'{self.project.project_file}|layername=profile_centerlines')
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())
