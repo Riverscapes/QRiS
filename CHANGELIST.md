@@ -1,5 +1,20 @@
 # QRiS Plugin
 
+## [0.9.1] 2024 AUG 30
+
+### Added
+- Metric Calculations for Riverscape Length and Area (ability to calculate metrics from user selected 'inputs' layers) #478
+
+### Fixed
+- Centerline not appearing in 'Create Sample Frame from QRIS features' until closing and reopening project #444
+- Cannot import temporary layer into Sample Frame #471
+
+### Changed
+- Change "Calculate All" text to "Calculate" in Analysis #465
+- Better DCE chooser for Basis for Design on Designs Form #482
+- Uncalculated metrics now show up as null in the analysis table #477
+
+
 ## [0.9.0] 2024 AUG 23
 
 ### Added
