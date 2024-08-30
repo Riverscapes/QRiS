@@ -647,20 +647,19 @@ class SampleFrameAttributesAddFields(QWidget):
         # use QgsVectorLayer to get fields
         if self.import_feature_class is not None:
             if isinstance(self.import_feature_class, QgsVectorLayer):
-                layer = self.import_feature_class
+                self.layer: QgsVectorLayer = self.import_feature_class
             else:
-                layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
-            return layer.fields().names()
+                self.layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
+            return self.layer.fields().names()
         
     def get_fields(self):
     
         fields = [chk.text() for chk in self.chk_fields if chk.isChecked()]
         outfields = []
-        layer = QgsVectorLayer(self.import_feature_class, 'temp', 'ogr')
         for field in fields:
             outfield = {'machine_code': field.replace(' ', '_').lower(), 'label': field}
             values = []
-            for feature in layer.getFeatures():
+            for feature in self.layer.getFeatures():
                 value = feature[field]
                 if isinstance(value, QVariant):
                     value = None
