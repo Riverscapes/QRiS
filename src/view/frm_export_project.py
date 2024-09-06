@@ -23,6 +23,7 @@ from ..model.raster import Raster
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.stream_gage import StreamGage
 from ..model.sample_frame import SampleFrame
+from ..model.valley_bottom import ValleyBottom
 
 from ..QRiS.path_utilities import parse_posix_path
 
@@ -56,6 +57,18 @@ class FrmExportProject(QtWidgets.QDialog):
         inputs_node = QtGui.QStandardItem("Inputs")
         inputs_node.setCheckable(True)
         inputs_node.setCheckState(QtCore.Qt.PartiallyChecked)
+
+        # Riverscapes Node
+        riverscapes_node = QtGui.QStandardItem("Riverscapes")
+        riverscapes_node.setCheckable(True)
+        riverscapes_node.setCheckState(QtCore.Qt.Checked)
+        for valley_bottom in self.qris_project.valley_bottoms.values():
+            item = QtGui.QStandardItem(valley_bottom.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(valley_bottom, QtCore.Qt.UserRole)
+            riverscapes_node.appendRow(item)
+        inputs_node.appendRow(riverscapes_node)
 
         # AOIs
         aois_node = QtGui.QStandardItem("AOIs")
@@ -291,7 +304,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     id_field = 'pour_point_id'
                 elif isinstance(layer, ScratchVector):
                     continue
-                if isinstance(layer, StreamGage):
+                elif isinstance(layer, StreamGage):
                     continue
                 else:
                     fc_name = layer.fc_name
@@ -409,6 +422,35 @@ class FrmExportProject(QtWidgets.QDialog):
                                             name=raster.name,
                                             path=raster.path,
                                             ds_type='Raster'))
+
+        # Valley Bottoms
+        valley_bottom_node = self.find_child_node(inputs_node, "Riverscapes")
+        if valley_bottom_node:
+            for i in range(valley_bottom_node.rowCount()):
+                valley_bottom_item = valley_bottom_node.child(i)
+                if valley_bottom_item.checkState() == QtCore.Qt.Unchecked:
+                    continue
+                valley_bottom: ValleyBottom = valley_bottom_item.data(QtCore.Qt.UserRole)
+
+                if 'valley_bottom_features' not in keep_layers:
+                    keep_layers['valley_bottom_features'] = {'id_field': 'valley_bottom_id', 'id_values': []}
+                keep_layers['valley_bottom_features']['id_values'].append(str(valley_bottom.id))
+                if 'valley_bottoms' not in keep_layers:
+                    keep_layers['valley_bottoms'] = {'id_field': 'id', 'id_values': []}
+                keep_layers['valley_bottoms']['id_values'].append(str(valley_bottom.id))
+
+                view_name = f'vw_valley_bottom_{valley_bottom.id}'
+                self.create_spatial_view(view_name=view_name,
+                                        fc_name='valley_bottom_features',
+                                        field_name='valley_bottom_id',
+                                        id_value=valley_bottom.id,
+                                        out_geopackage=out_geopackage,
+                                        geom_type='POLYGON')
+
+                input_layers.append(GeopackageLayer(lyr_name=view_name,
+                                                    name=valley_bottom.name,
+                                                    ds_type=GeoPackageDatasetTypes.VECTOR,
+                                                    lyr_type='valley_bottom'))
 
         # AOIs
         aoi_node = self.find_child_node(inputs_node, "AOIs")
@@ -608,9 +650,10 @@ class FrmExportProject(QtWidgets.QDialog):
                 keep_layers['rasters']['id_values'].append(str(raster.id))
 
                 raster_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path).replace("\\", "/"))
-                if not os.path.exists(os.path.dirname(raster_path)):
-                    os.makedirs(os.path.dirname(raster_path))
-                shutil.copy(raster_path, os.path.abspath(os.path.join(self.txt_outpath.text(), raster.path).replace("\\", "/")))
+                out_raster_path = os.path.abspath(os.path.join(self.txt_outpath.text(), raster.path).replace("\\", "/"))
+                if not os.path.exists(os.path.dirname(out_raster_path)):
+                    os.makedirs(os.path.dirname(out_raster_path))
+                shutil.copy(raster_path, out_raster_path)
 
                 raster_datasets.append(Dataset(xml_id=raster_xml_id,
                                             name=raster.name,
@@ -868,7 +911,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # open the geopackage using ogr
         ds_gpkg = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses','analysis_metrics', 'aoi_features', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers','mask_features', 'masks', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors']:
+        for layer in ['analyses','analysis_metrics', 'aoi_features', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers','mask_features', 'masks', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'valley_bottom_features', 'valley_bottoms']:
             # get the layer
             lyr = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list
