@@ -86,7 +86,7 @@ class Project(DBItem):
             self.protocols = load_protocols(curs, self.methods)
             self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
-            self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.surface_rasters())
+            self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.rasters)
             self.planning_containers = load_planning_containers(curs, self.events)
             self.metrics = load_metrics(curs)
             self.analyses = load_analyses(curs, self.sample_frames, self.metrics)
