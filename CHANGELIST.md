@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [0.9.2] 2024 SEPT 05
+
+### Added
+- Valley Bottoms to project export
+
+### Fixed
+- Project Export Bug with Pour Points in project
+- Bug when opening project when a context raster is associated with an event
+- Added missing tables to gpkg_contents
+
 ## [0.9.1] 2024 AUG 30
 
 ### Added
