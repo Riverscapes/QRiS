@@ -654,7 +654,7 @@ class QRiSToolbar:
                         # row dict factory
                         conn.row_factory = sqlite3.Row
                         curs = conn.cursor()
-                        curs.execute('SELECT * FROM metrics WHERE machine_name = ? AND version = ?', [metric_def['machine_name'], metric_def['version']])
+                        curs.execute('SELECT * FROM metrics WHERE name = ? AND version = ?', [metric_def['name'], metric_def['version']])
                         existing_metric = curs.fetchone()
                         # check if the metric already exists in the database based on machine_name and version
                         if existing_metric is not None:

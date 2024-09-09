@@ -158,7 +158,7 @@ def verify_metric(db_path: str, id: int, name: str, machine_name: str, descripti
             conn.row_factory = sqlite3.Row
             curs = conn.cursor()
             # get the metric for the machine_name and version
-            curs.execute('SELECT * FROM metrics WHERE machine_name = ? AND version = ?', [machine_name, version])
+            curs.execute('SELECT * FROM metrics WHERE name = ? AND version = ?', [name, version])
             metric = curs.fetchone()
 
             if name != metric['name'] or definition_url != metric['definition_url']:
