@@ -761,6 +761,9 @@ class FrmExportProject(QtWidgets.QDialog):
                 if 'event_layers' not in keep_layers:
                     keep_layers['event_layers'] = {'id_field': 'event_id', 'id_values': []}
                 keep_layers['event_layers']['id_values'].append(str(event.id))
+                if 'event_rasters' not in keep_layers:
+                    keep_layers['event_rasters'] = {'id_field': 'event_id', 'id_values': []}
+                keep_layers['event_rasters']['id_values'].append(str(event.id))
 
                 # Search for photos for the dce in the photos folder
                 photo_datasets = []
@@ -927,6 +930,12 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # use sqlite3 to vacuum the geopackage
         with sqlite3.connect(out_geopackage) as conn:
+            
+            # unfortunately, event_rasters table does not have an fid column, we need to delete the rows manually
+            curs = conn.cursor()
+            curs.execute("DELETE FROM event_rasters WHERE event_id NOT IN (SELECT id FROM events)")
+            conn.commit()  # Commit the transaction before executing VACUUM
+
             conn.execute("VACUUM")
 
         self.rs_project.write()
