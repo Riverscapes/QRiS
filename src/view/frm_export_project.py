@@ -494,17 +494,17 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 sample_frame: SampleFrame = sample_frame_item.data(QtCore.Qt.UserRole)
 
-                if 'mask_features' not in keep_layers:
-                    keep_layers['mask_features'] = {'id_field': 'mask_id', 'id_values': []}
-                keep_layers['mask_features']['id_values'].append(str(sample_frame.id))
-                if 'masks' not in keep_layers:
-                    keep_layers['masks'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['masks']['id_values'].append(str(sample_frame.id))
+                if 'sample_frame_features' not in keep_layers:
+                    keep_layers['sample_frame_features'] = {'id_field': 'sample_frame_id', 'id_values': []}
+                keep_layers['sample_frame_features']['id_values'].append(str(sample_frame.id))
+                if 'sample_frames' not in keep_layers:
+                    keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
+                keep_layers['sample_frames']['id_values'].append(str(sample_frame.id))
 
                 view_name = f'vw_sample_frame_{sample_frame.id}'
                 self.create_spatial_view(view_name=view_name,
-                                        fc_name='mask_features',
-                                        field_name='mask_id',
+                                        fc_name='sample_frame_features',
+                                        field_name='sample_frame_id',
                                         id_value=sample_frame.id,
                                         out_geopackage=out_geopackage,
                                         geom_type='POLYGON')
