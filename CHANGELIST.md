@@ -1,5 +1,19 @@
 # QRiS Plugin
 
+## [0.9.3] 2024 SEPT 11
+
+### Fixed
+- Metrics fail to update due to Unique Constraint Violation #491
+- Missing Sample Frame Features in project export
+- Delete unused event rasters in project export
+
+### Changed
+- Improved environment loading
+- RS Viewer dependency updated to 0.9.4
+
+### Removed
+- RSXML Module (replaced with Riverscapes Viewer dependency)
+
 ## [0.9.2] 2024 SEPT 05
 
 ### Added
