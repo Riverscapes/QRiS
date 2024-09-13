@@ -35,7 +35,7 @@ class QRaveIntegration(QObject):
             self.name = plugins_lower_case[matched_lower_case_name]
             self.plugin_instance = plugins[self.name]
             self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
-            self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'QRiS')),
+            self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
                                       parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
             self.metric_definitions_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'metrics'))
 
