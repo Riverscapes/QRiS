@@ -451,6 +451,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, Mask, SampleFrame, Profile, CrossSections, ValleyBottom, PourPoint, ScratchVector, Analysis, PlanningContainer]):
                     self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
 
+                if isinstance(model_data, ValleyBottom):
+                    self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+
                 if isinstance(model_data, Mask):
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
                     # if model_data.mask_type.id == AOI_MASK_TYPE_ID:
@@ -462,7 +465,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, ScratchVector):
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
-                        self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                        # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                         promote_menu = self.menu.addMenu('Promote to ...')
                         self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
                         self.add_context_menu_item(promote_menu, 'Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
