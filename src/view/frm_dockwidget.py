@@ -217,7 +217,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
 
-        for node in [project_node, inputs_node, surfaces_node, aoi_node, sample_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
+        for node in [project_node, inputs_node, riverscapes_node, surfaces_node, aoi_node, sample_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
