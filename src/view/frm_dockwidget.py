@@ -479,7 +479,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
 
                 if isinstance(model_data, CrossSections):
-                    self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
+                    # self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
                 if isinstance(model_data, Project):
