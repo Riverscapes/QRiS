@@ -16,6 +16,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         super().__init__(vl, fieldIdx, editor, parent)
         self.dict_values = {}
         self.loading = False
+        self.fields = []
 
     def value(self) -> QVariant:
         """Will be used to access the widget's value. Read the value from the widget and return it properly formatted to be saved in the attribute.
@@ -60,10 +61,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.widgets = {}
         self.derived_values = {}
 
-        fields: list = self.config('fields')
+        self.fields: list = self.config('fields')
         row = 0
         field: dict
-        for field in fields:
+        for field in self.fields:
             if field['label'] == 'Photo Path':
                 continue
             # generate a label and a widget for each field
@@ -105,11 +106,16 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     widget.setCurrentIndex(index)
                 else:
                     widget.setValue(field['default'])
+            
+            if 'visibility' in field.keys():
+                # we are going to check the value of the field that is being used to determine the visibility of this field later on.
+                widget.setEnabled(False)
 
             self.widgets[field['label']] = widget
             row += 1
 
     def valid(self) -> bool:
+        # This is required for intilaizing the widgets. It does not do anyting or validate the widget values. Don't remove or mess with it!
         return True
 
     def setValue(self, value):
@@ -160,6 +166,23 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         for widget in self.widgets.values():
             if isinstance(widget, DependantComboBox):
                 widget.set_dependent_value(widget_values)
+        
+        for name, widget in self.widgets.items():
+            field = next((f for f in self.fields if f['machine_code'] == widget.objectName()), None)
+            if field is None:
+                continue
+            if 'visibility' in field.keys():
+                if field['visibility'] == 'None':
+                    widget.setEnabled(False)
+                field_to_check = field['visibility']['field_name']
+                field_name_to_check = next((f for f in self.fields if f['machine_code'] == field_to_check), {}).get('label', '')
+                values_to_check = field['visibility']['values']
+                if widget_values.get(field_name_to_check, '') in values_to_check:
+                    widget.setEnabled(True)
+                else:
+                    widget.setEnabled(False)
+            else:
+                widget.setEnabled(True)
 
     def resetWidgetToDefault(self, widget: QWidget):
 
@@ -178,10 +201,11 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     widget.setValue(default_value)
 
     def onValueChanged(self, value):
-        # self.valueChanged.emit(value)
+        self.updateDependantWidgets()
         self.emitValueChanged()
 
     def onTextChanged(self):
+        self.updateDependantWidgets()
         self.emitValueChanged()
 
     def derived_value(self):
