@@ -1,5 +1,29 @@
 # QRiS Plugin
 
+## [0.9.4] 2024 SEPT 17
+
+### Added
+- Added the generate centerline tool to Riverscapes Valley Bottoms #440
+- Allow cross section clipping to be VB Polygon from Riverscapes Node #441
+- Structural Elements form updated to include attributes based on logic #304
+- Ability to update existing project export #363
+
+### Fixed
+- Error importing existing profiles when using mask/AOI clip #472
+- Metrics Failing to update due to Unique name constraint #491
+- Error when trying to edit properties of DCE (As Built) #451
+
+### Changed
+- Moved QRiS Symbology folder to RiverscapesStudio resources folder #487
+- Changes to Vegetation Extents layer #455
+- Changes to Geomorphic Units Layers #466
+- Make Sample Frames 'create from QRIS features' defualt polygon layer to Riverscapes node Valley Bottom #443
+
+### Removed
+- Removed the generate centerline tool from Context Polygons #440
+- Temporarily disbale BRAT CIS layers #454
+
+
 ## [0.9.3] 2024 SEPT 11
 
 ### Fixed
