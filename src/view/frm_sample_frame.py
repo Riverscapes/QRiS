@@ -167,19 +167,19 @@ class FrmSampleFrame(QDialog):
                             out_field_map.append(ImportFieldMap(self.tab_inputs.cboTopologyField.currentText(), 'topology', direct_copy=True))
 
                 clip_mask = None
-                clip_mask_id = None
                 if self.tab_inputs is not None:
-                    clip_mask = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
-                if clip_mask is not None:
-                    clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
+                    clip_item = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
+                    if clip_item is not None:
+                        if clip_item.id > 0:        
+                            clip_mask = ('aoi_features', 'mask_id', clip_item.id)
                 
                 attributes = {}
                 attributes['sample_frame_id'] = self.sample_frame.id
                 
                 if isinstance(self.import_source_path, QgsVectorLayer):
-                    import_mask_task = ImportTemporaryLayer(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
+                    import_mask_task = ImportTemporaryLayer(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
                 else:
-                    import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask_id, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
+                    import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
                 # # DEBUG
                 # result = import_mask_task.run()
                 # self.on_import_complete(result)

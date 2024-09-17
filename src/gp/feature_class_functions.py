@@ -60,7 +60,7 @@ def layer_path_parser(path: str) -> Tuple[str, str, object]:
         return path, vl.name(), "memory"
 
 
-def import_existing(source_path: str, dest_path: str, dest_layer_name: str, output_id: int, output_id_field: str, attributes: dict = {}, clip_mask_id: int = None) -> None:
+def import_existing(source_path: str, dest_path: str, dest_layer_name: str, output_id: int, output_id_field: str, attributes: dict = {}, clip_mask: tuple = None) -> None:
     """
     Copy the features from a source feature class to a destination mask feature class.
     The mask record must already exist. The attributes is a dictionary of source column
@@ -74,29 +74,30 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
         src_layer_name = None
     else:
         src_path, src_layer_name = source_path.split('|layername=')
-    src_dataset = ogr.Open(src_path)
-    src_layer = src_dataset.GetLayer(src_layer_name if src_layer_name is not None else 0)
+    src_dataset: ogr.DataSource = ogr.Open(src_path)
+    src_layer: ogr.Layer = src_dataset.GetLayer(src_layer_name if src_layer_name is not None else 0)
     src_srs = src_layer.GetSpatialRef()
     fid_field_name = src_layer.GetFIDColumn()
 
-    gpkg_driver = ogr.GetDriverByName('GPKG')
-    dst_dataset = gpkg_driver.Open(dest_path, 1)
-    dst_layer = dst_dataset.GetLayerByName(dest_layer_name)
+    gpkg_driver: ogr.Driver = ogr.GetDriverByName('GPKG')
+    dst_dataset: ogr.DataSource = gpkg_driver.Open(dest_path, 1)
+    dst_layer: ogr.Layer = dst_dataset.GetLayerByName(dest_layer_name)
     dst_srs = dst_layer.GetSpatialRef()
     dst_layer_def = dst_layer.GetLayerDefn()
 
-    clip_geom = None
-    if clip_mask_id is not None:
-        clip_layer = dst_dataset.GetLayer('aoi_features')
-        clip_layer.SetAttributeFilter(f'mask_id = {clip_mask_id}')
-        clip_feat = clip_layer.GetNextFeature()
+    clip_geom:ogr.Geometry = None
+    if clip_mask is not None:
+        clip_layer: ogr.Layer = dst_dataset.GetLayer(clip_mask[0])
+        clip_layer.SetAttributeFilter(f'{clip_mask[1]} = {clip_mask[2]}')
+        clip_feat: ogr.Feature = clip_layer.GetNextFeature()
         clip_geom = clip_feat.GetGeometryRef()
 
     transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
     feats = 0
+    src_feature: ogr.Feature = None
     for src_feature in src_layer:
-        geom = src_feature.GetGeometryRef()
+        geom:ogr.Geometry = src_feature.GetGeometryRef()
         geom.Transform(transform)
         if clip_geom is not None:
             geom = clip_geom.Intersection(geom)

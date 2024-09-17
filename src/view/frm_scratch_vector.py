@@ -110,21 +110,21 @@ class FrmScratchVector(QtWidgets.QDialog):
                 return
 
             try:
-                clip_aoi = self.cboMask.currentData(QtCore.Qt.UserRole)
-                clip_aoi = None if clip_aoi.id == 0 else clip_aoi
-
                 # Ensure that the scratch feature class name doesn't exist in scratch geopackage
                 # Do this because an error might have left a lingering feature class table etc
                 out_path, layer_name, _layer_id = layer_path_parser(self.txtProjectPath.text())
                 self.fc_name = layer_name
 
-                clip_aoi_id = None
-                if clip_aoi is not None:
-                    clip_aoi_id = clip_aoi.id if clip_aoi.id > 0 else None
+                clip_mask = None
+                clip_item = self.cboMask.currentData(QtCore.Qt.UserRole)
+                if clip_item is not None:
+                    if clip_item.id > 0:        
+                        clip_mask = ('aoi_features', 'mask_id', clip_item.id)
+
                 if self.layer_id == 'memory':
-                    task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask_id=clip_aoi_id, proj_gpkg=self.project.project_file)
+                    task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
                 else:
-                    task = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask_id=clip_aoi_id, proj_gpkg=self.project.project_file)
+                    task = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
                 result = task.run()

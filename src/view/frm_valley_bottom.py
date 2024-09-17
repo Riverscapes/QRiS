@@ -134,15 +134,16 @@ class FrmValleyBottom(QtWidgets.QDialog):
                 layer_attributes = {'valley_bottom_id': self.valley_bottom.id}
                 #field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, 'display_label', direct_copy=True)] if self.cboAttribute.isVisible() else None
                 field_map = None
-                clip_mask = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
-                clip_mask_id = None
-                if clip_mask is not None:
-                    clip_mask_id = clip_mask.id if clip_mask.id > 0 else None
+                clip_mask = None
+                clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+                if clip_item is not None:
+                    if clip_item.id > 0:        
+                        clip_mask = ('aoi_features', 'mask_id', clip_item.id)
                 
                 if self.layer_id == 'memory':
-                    import_task = ImportTemporaryLayer(self.import_source_path, valley_bottom_path, layer_attributes, field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
+                    import_task = ImportTemporaryLayer(self.import_source_path, valley_bottom_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
                 else:
-                    import_task = ImportFeatureClass(self.import_source_path, valley_bottom_path, layer_attributes, field_map, clip_mask_id, self.attribute_filter, self.qris_project.project_file)
+                    import_task = ImportFeatureClass(self.import_source_path, valley_bottom_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
                 # DEBUG
                 # result = import_task.run()
                 # self.on_import_complete(result)

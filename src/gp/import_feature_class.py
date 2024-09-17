@@ -28,11 +28,11 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, attributes:dict= None, field_map: List[ImportFieldMap] = None, clip_mask_id=None, attribute_filter: str = None, proj_gpkg=None):
+    def __init__(self, source_path: str, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
 
         self.source_path = source_path
-        self.clip_mask_id = clip_mask_id
+        self.clip_mask = clip_mask # (fc_name, field_name, feature_id)
         self.output_path = dest_path
         self.field_map = field_map
         self.attributes = attributes
@@ -89,13 +89,13 @@ class ImportFeatureClass(QgsTask):
             dst_fid_column = dst_layer.GetFIDColumn()
 
             clip_geom = None
-            if self.clip_mask_id is not None:
+            if self.clip_mask is not None:
                 if self.proj_gpkg is not None:
                     mask_dataset = ogr.Open(self.proj_gpkg)
                 else:
                     mask_dataset = dst_dataset
-                clip_layer: ogr.Layer = mask_dataset.GetLayer('aoi_features')
-                clip_layer.SetAttributeFilter(f'mask_id = {self.clip_mask_id}')
+                clip_layer: ogr.Layer = mask_dataset.GetLayer(self.clip_mask[0]) # 'aoi_features'
+                clip_layer.SetAttributeFilter(f'{self.clip_mask[1]} = {self.clip_mask[2]}') # 'mask_id'
                 # Gather all of the geoms and merge into a multipart geometry
                 clip_geom = ogr.Geometry(ogr.wkbMultiPolygon)
                 for clip_feat in clip_layer:
@@ -111,7 +111,6 @@ class ImportFeatureClass(QgsTask):
             for src_feature in src_layer:
 
                 geom: ogr.Geometry = src_feature.GetGeometryRef()
-
 
                 if geom is None:
                     self.skipped_feats += 1
