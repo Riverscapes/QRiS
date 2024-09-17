@@ -1,0 +1,14 @@
+-- Changes to Vegetation Extents layer #455
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Vegetation Mapping"], "fields": [{"machine_code": "vegetation_type", "label": "Type", "type": "list", "lookup": "vegetation_types"}, {"machine_code": "vegetation_tier_2_type", "label": "Type 2 Tier", "type": "list", "lookup": "vegetation_tier2_types", "allow_custom_values": "true"}, {"machine_code": "suitability", "label": "Brat Suitability", "type": "list", "lookup": "vegetation_suitability"}]}' WHERE fc_name = 'vegetation_extents';
+
+-- Changes to Geomorphic Unit Layers #446
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"], "fields": [{"machine_code": "geomorphic_unit_type", "label": "Type", "type": "list", "lookup": "geomorphic_unit_types", "required": true}, {"machine_code": "geomorphic_unit_type_2_tier", "label": "Type 2 Tier", "type": "list", "lookup": "geomorphic_units_tier2_types"}]}' WHERE fc_name = 'geomorphic_unit_extents';
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Geomorphic Mapping", "Channel"], "fields": [{"machine_code": "geomorphic_unit_type", "label": "Type", "type": "list", "lookup": "geomorphic_unit_types", "required": true}, {"machine_code": "geomorphic_unit_type_2_tier", "label": "Type 2 Tier", "type": "list", "lookup": "geomorphic_units_tier2_types"}, {"machine_code": "length", "label": "Length", "type": "float"}, {"machine_code": "width", "label": "Width", "type": "float"}, {"machine_code": "depth", "label": "Depth", "type": "float"}]}' WHERE fc_name = 'geomorphic_units'; 
+
+-- Fix Structural Elements layer #304
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer", "default": 1, "visibility": {"field_name": "structural_element_type", "values": ["Dam Complex","Jam Complex"]}}, {"machine_code": "length", "label": "Length", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "width", "label": "Width", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "height", "label": "Height", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam","Jam","Other","Root Mass"]}}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' WHERE fc_name = 'structural_element_points';
+
+-- Clean up gpkg_contents table
+DELETE FROM gpkg_contents WHERE table_name = 'zoi_types';
+DELETE FROM gpkg_contents WHERE table_name = 'structure_types';
+DELETE FROM gpkg_contents WHERE table_name = 'lkp_zoi_stage';
