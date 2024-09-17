@@ -21,11 +21,11 @@ class ImportTemporaryLayer(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_layer: QgsVectorLayer, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask_id=None, attribute_filter: str=None, proj_gpkg=None):
+    def __init__(self, source_layer: QgsVectorLayer, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None):
         super().__init__(f'Import Temporary Layer', QgsTask.CanCancel)
 
         self.source_layer = source_layer.clone()
-        self.clip_mask_id = clip_mask_id
+        self.clip_mask = clip_mask # (fc_name, field_name, feature_id)
         self.dest_path = dest_path
         self.attributes = attributes
         self.proj_gpkg = proj_gpkg
@@ -79,9 +79,9 @@ class ImportTemporaryLayer(QgsTask):
                 self.source_layer.dataProvider().addAttributes(fields)
                 self.source_layer.updateFields()
 
-            if self.clip_mask_id is not None:
-                clip_layer = QgsVectorLayer(f'{self.proj_gpkg}|layername=aoi_features')
-                clip_layer.setSubsetString(f'mask_id = {self.clip_mask_id}')
+            if self.clip_mask is not None:
+                clip_layer = QgsVectorLayer(f'{self.proj_gpkg}|layername={self.clip_mask[0]}') # aoi_features
+                clip_layer.setSubsetString(f'{self.clip_mask[1]} = {self.clip_mask[2]}') # mask_id
                 clip_transform = QgsCoordinateTransform(clip_layer.sourceCrs(), self.source_layer.sourceCrs(), QgsProject.instance().transformContext())
                 clip_feat = clip_layer.getFeatures()
                 clip_feat = next(clip_feat)
@@ -153,7 +153,7 @@ class ImportTemporaryLayer(QgsTask):
                         feat['metadata'] = json.dumps(metadata)
                 
                 geom = feat.geometry()
-                if self.clip_mask_id is not None:
+                if self.clip_mask is not None:
                     geom = geom.intersection(clip_geom)
                 geom.transform(out_transform)
                 feat.setGeometry(geom)
