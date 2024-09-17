@@ -125,7 +125,16 @@ class FrmAsBuilt(FrmEvent):
                 if 'constructionDate' in self.metadata_widget.metadata['system']:
                     # parse the date string
                     construction_date_json = self.metadata_widget.metadata['system']['constructionDate']
-                    construction_date_dict = json.loads(construction_date_json)
+                    try:
+                        construction_date_dict = json.loads(construction_date_json)
+                    except json.JSONDecodeError:
+                        construction_date_dict = None
+                        # manually extract the date parts from the string
+                        construction_date_parts = construction_date_json.strip('{}').split(', ')
+                        construction_date_dict = {}
+                        for part in construction_date_parts:
+                            key, value = part.split(': ')
+                            construction_date_dict[key.strip('"\'')] = int(value.strip('"\'')) if value.strip('"\'') != 'None' else None
                     # create a DateSpec object from the dictionary
                     construction_date = DateSpec(
                         construction_date_dict.get('year', None),
@@ -218,7 +227,7 @@ class FrmAsBuilt(FrmEvent):
             self.metadata_widget.delete_item('system', 'constructionDate')
         else:
             # Remove the None values from the dictionary, then convert to a json string
-            construction_date_str = str({key: value for key, value in dict_construction_date.items() if value is not None})
+            construction_date_str = json.dumps({key: value for key, value in dict_construction_date.items() if value is not None})
             self.metadata_widget.add_system_metadata('constructionDate', construction_date_str)
 
         design_source_ids = []
