@@ -399,9 +399,10 @@ class SampleFrameInputsCreate(QWidget):
         #     self.cboCrossSections.setCurrentIndex(self.cross_sections_model.getItemIndex(cross_sections_init))
 
         # Masks (filtered to just AOI)
-        masks = {f'mask_{id}': mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
-        context = {f'context_{id}': layer for id, layer in self.qris_project.scratch_vectors.items() if QgsVectorLayer(f'{layer.gpkg_path}|layername={layer.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry}
-        self.polygons = {**masks, **context}
+        aois = {f'aoi_{id}': aoi for id, aoi in self.qris_project.aois.items()}
+        valley_bottoms = {f'valley_bottom_{id}': valley_bottom for id, valley_bottom in self.qris_project.valley_bottoms.items()}
+        # context = {f'context_{id}': layer for id, layer in self.qris_project.scratch_vectors.items() if QgsVectorLayer(f'{layer.gpkg_path}|layername={layer.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry}
+        self.polygons = {**valley_bottoms, **aois}
         self.polygons_model = DBItemModel(self.polygons)
         self.cboFramePolygon.setModel(self.polygons_model)
         # if polygon_init is not None:
