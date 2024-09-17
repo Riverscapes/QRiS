@@ -101,7 +101,11 @@ def import_existing(source_path: str, dest_path: str, dest_layer_name: str, outp
         geom.Transform(transform)
         if clip_geom is not None:
             geom = clip_geom.Intersection(geom)
-            if geom.IsEmpty() or geom.GetArea() == 0.0:
+            if geom.IsEmpty() or geom is None:
+                continue
+            if geom.GetGeometryType() in [ogr.wkbPolygon, ogr.wkbMultiPolygon] and geom.GetArea() == 0.0:
+                continue
+            if geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString] and geom.Length() == 0.0:
                 continue
 
         dst_feature = ogr.Feature(dst_layer_def)
