@@ -83,6 +83,10 @@ class LayerTreeWidget(QtWidgets.QWidget):
                 # method_si.setCheckable(True)
 
                 for layer in method.layers:
+                    # TODO temporarlily Turn off Brat layers
+                    if layer.name in ["BRAT CIS", "BRAT CIS Reaches"]:
+                        continue
+
                     layer_name = layer.name if layer.name not in duplicate_layers else f'{layer.name} ({layer.geom_type})'
                     layer_si = QtGui.QStandardItem(layer_name)
                     layer_si.setEditable(False)
