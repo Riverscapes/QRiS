@@ -58,3 +58,13 @@ def add_help_button(form: QtWidgets.QDialog, help_slug: str, label: str='Help') 
     form.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
 
     return form.cmdHelp
+
+def message_box(title: str, message: str):
+    msg = QtWidgets.QMessageBox()
+    msg.setIcon(QtWidgets.QMessageBox.Warning)
+    msg.setText(message)
+    msg.setWindowTitle(title)
+    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
+    msg.setEscapeButton(QtWidgets.QMessageBox.Ok)
+    msg.exec_()
