@@ -72,7 +72,17 @@ class QRaveIntegration(QObject):
         """
 
         layer = item.data(Qt.UserRole).data
-        project_meta = data.project.meta
+        qrave_project = data.project
+        project_meta = qrave_project.meta
+
+        project_source_url = ('None','string')
+        if qrave_project.warehouse_meta is not None:
+            project_id = qrave_project.warehouse_meta.get('id', None)
+            if project_id is not None:
+                project_source_url = f'https://data.riverscapes.net/p/{project_id[0]}'
+        
+        project_meta['SourceUrl'] = (project_source_url, 'string')
+
         layer_meta = data.data.meta
         out_meta = {'project_metadata': project_meta, 'layer_metadata': layer_meta}
         proj_type = data.project.project_type
