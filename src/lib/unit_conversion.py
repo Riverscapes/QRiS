@@ -143,4 +143,4 @@ def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = Fal
     if invert:
         conversion_factor = 1 / conversion_factor
 
-    return value / conversion_factor
+    return value * conversion_factor
