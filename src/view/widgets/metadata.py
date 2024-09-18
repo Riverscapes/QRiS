@@ -1,6 +1,6 @@
 import json
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 
 class MetadataWidget(QtWidgets.QWidget):
@@ -85,7 +85,14 @@ class MetadataWidget(QtWidgets.QWidget):
                 for key, value in self.metadata['metadata'].items():
                     self.table.insertRow(self.table.rowCount())
                     self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
-                    self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
+
+                    if isinstance(value, str) and (value.startswith('http://') or value.startswith('https://')):
+                        # Create a QLabel with a hyperlink
+                        label = QtWidgets.QLabel(f'<a href="{value}">{value}</a>')
+                        label.setOpenExternalLinks(True)
+                        self.table.setCellWidget(self.table.rowCount() - 1, 1, label)
+                    else:
+                        self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
 
         if self.new_keys is not None:
             for key in self.new_keys:
@@ -181,6 +188,14 @@ class MetadataWidget(QtWidgets.QWidget):
             if 'metadata' not in self.metadata:
                 self.metadata['metadata'] = dict()
         for row in range(self.table.rowCount()):
-            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+            # check if the cell contains a QLabel with a hyperlink
+            if isinstance(self.table.cellWidget(row, 1), QtWidgets.QLabel):
+                # strip the HTML tags to get the URL
+                text = self.table.cellWidget(row, 1).text()
+                start = text.find('href="') + 6
+                end = text.find('"', start)
+                self.metadata['metadata'][self.table.item(row, 0).text()] = text[start:end]
+            else:
+                self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
 
         return json.dumps(self.metadata)
