@@ -1,0 +1,6 @@
+-- Remove Brat Vegetation Suitability Layer
+DELETE FROM layers WHERE fc_name = 'brat_vegetation';
+DELETE FROM event_layers WHERE layer_id = 17;
+
+-- Fix logic for Structural Elements layer
+UPDATE layers SET metadata = '{"hierarchy": ["Observations", "Structural Elements"], "fields": [{"machine_code": "structural_element_type", "label": "Type", "type": "list", "lookup": "structural_element_points"}, {"machine_code": "structure_count", "label": "Structure Count", "type": "integer", "default": 1, "visibility": {"field_name": "structural_element_type", "values": ["Dam Complex", "Jam Complex"]}}, {"machine_code": "length", "label": "Length", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam", "Jam", "Other", "Root Mass"]}}, {"machine_code": "width", "label": "Width", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam", "Jam", "Other", "Root Mass"]}}, {"machine_code": "height", "label": "Height", "type": "float", "visibility": {"field_name": "structural_element_type", "values": ["Dam", "Jam", "Root Mass", "Other"]}}, {"machine_code": "large_wood_count", "label": "Large Wood Count", "type": "integer"}]}' WHERE fc_name = 'structural_elements_points';
