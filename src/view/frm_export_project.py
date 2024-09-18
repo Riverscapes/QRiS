@@ -46,7 +46,8 @@ class FrmExportProject(QtWidgets.QDialog):
         self.setWindowTitle("Export QRiS to Riverscapes Studio Project")
         self.setupUi()
 
-        self.set_output_path(outpath)
+        if outpath is not None:
+            self.set_output_path(outpath)
 
         # populate the AOI combo box with aoi names
         for aoi_id, aoi in self.qris_project.masks.items():
@@ -254,18 +255,21 @@ class FrmExportProject(QtWidgets.QDialog):
         if self.opt_project_bounds_aoi.isChecked():
             # if Select AOI is selected, then warn the user to select an AOI
             if self.cbo_project_bounds_aoi.currentIndex() == 0:
-                message_box("Select an AOI", "Please select an AOI or select 'Use all QRiS layers'")
+                message_box("Select an AOI", "Please select an AOI or select 'Use all QRiS layers.'")
                 return
         if self.rdo_existing.isChecked():
             if self.txt_existing_path.text() == "":
-                message_box("Select Existing Project", "Please select an existing QRiS Riverscapes project file (.rs.xml)")
+                message_box("Select Existing Project", "Please select an existing QRiS Riverscapes project file (.rs.xml).")
                 return
             rs_project_existing = Project.load_project(self.txt_existing_path.text())
             if rs_project_existing is None:
-                message_box("Invalid Existing Project", "The existing project file does not exist or is not a valid Riverscapes project file")
+                message_box("Invalid Existing Project", "The existing project file does not exist or is not a valid Riverscapes project file.")
                 return
             if rs_project_existing.project_type != PROJECT_MACHINE_NAME:
-                message_box("Wrong Project Type", "The existing project file is not a Riverscapes Studio project")
+                message_box("Wrong Project Type", "The existing project file is not a Riverscapes Studio project.")
+                return
+            if rs_project_existing.warehouse is None:
+                message_box("Missing Warehouse", "The selected project file does was not previously uploaded to the Data Exchange.")
                 return
 
         # create a new project folder if it doesn't exist
@@ -1022,9 +1026,11 @@ class FrmExportProject(QtWidgets.QDialog):
         if self.rdo_new.isChecked():
             self.txt_existing_path.setEnabled(False)
             self.btn_existing.setEnabled(False)
+            self.lbl_existing.setEnabled(False)
         else:
             self.txt_existing_path.setEnabled(True)
             self.btn_existing.setEnabled(True)
+            self.lbl_existing.setEnabled(True)
 
     def setupUi(self):
 
@@ -1038,25 +1044,87 @@ class FrmExportProject(QtWidgets.QDialog):
         # add grid layout
         self.grid = QtWidgets.QGridLayout()
 
+        # add label and txt box for project name
+        self.lbl_project = QtWidgets.QLabel("Riverscapes Project Name")
+        self.lbl_project.setToolTip("Enter the name of the Riverscapes project")
+        self.grid.addWidget(self.lbl_project, 0, 0, 1, 1)
+
+        self.txt_rs_name = QtWidgets.QLineEdit()
+        self.txt_rs_name.setReadOnly(False)
+        self.txt_rs_name.setText(self.qris_project.name)
+        self.txt_rs_name.textChanged.connect(self.set_output_path)
+        self.grid.addWidget(self.txt_rs_name, 0, 1, 1, 1)
+
+        # add label and horizontal layout with textbox and small button for output path
+        self.lbl_output = QtWidgets.QLabel("Output Path")
+        self.lbl_output.setToolTip("Select the folder where the Riverscapes project will be saved")
+        self.grid.addWidget(self.lbl_output, 1, 0, 1, 1)
+
+        self.horiz_output = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horiz_output, 1, 1, 1, 1)
+
+        self.txt_outpath = QtWidgets.QLineEdit()
+        self.txt_outpath.setReadOnly(True)
+        self.horiz_output.addWidget(self.txt_outpath)
+
+        self.btn_output = QtWidgets.QPushButton("...")
+        self.btn_output.setMaximumWidth(30)
+        self.btn_output.clicked.connect(self.browse_path)
+        self.horiz_output.addWidget(self.btn_output)
+
+        # Project Bounds
+        self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
+        self.lbl_project_bounds.setToolTip("Select the extent of the project. This is used for display purposes on the Riverscapes Data Exchange")
+        self.grid.addWidget(self.lbl_project_bounds, 2, 0, 1, 1, QtCore.Qt.AlignTop)
+
+        self.vert_project_bounds = QtWidgets.QVBoxLayout()
+        self.grid.addLayout(self.vert_project_bounds, 2, 1, 1, 1)
+
+        self.opt_project_bounds_all = QtWidgets.QRadioButton("Use all QRiS layers")
+        self.opt_project_bounds_all.setToolTip("Use the extent of all QRiS layers in the project")
+        self.opt_project_bounds_all.setChecked(True)
+        self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
+        self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
+
+        self.horiz_project_bounds_aoi = QtWidgets.QHBoxLayout()
+        self.vert_project_bounds.addLayout(self.horiz_project_bounds_aoi)
+
+        self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI")
+        self.opt_project_bounds_aoi.setToolTip("Use the extent of a selected AOI")
+        self.opt_project_bounds_aoi.clicked.connect(self.change_project_bounds)
+        self.horiz_project_bounds_aoi.addWidget(self.opt_project_bounds_aoi)
+
+        self.cbo_project_bounds_aoi = QtWidgets.QComboBox()
+        self.cbo_project_bounds_aoi.addItem("Select AOI")
+        self.cbo_project_bounds_aoi.setEnabled(False)
+        self.horiz_project_bounds_aoi.addWidget(self.cbo_project_bounds_aoi)
+
         # New or Existing Project
         self.lbl_new_or_existing = QtWidgets.QLabel("Export Type")
-        self.grid.addWidget(self.lbl_new_or_existing, 0, 0, 1, 1)
+        self.lbl_new_or_existing.setToolTip("Select whether to create a new Riverscapes Studio project or update an existing project")
+        self.grid.addWidget(self.lbl_new_or_existing, 3, 0, 1, 1)
 
         self.group_new_or_existing = QtWidgets.QButtonGroup(self)
 
-        self.rdo_new = QtWidgets.QRadioButton("New RS Project")
+        self.rdo_new = QtWidgets.QRadioButton("New Riverscapes Studio Project")
+        self.rdo_new.setToolTip("Export as a new Riverscapes Studio project")
         self.group_new_or_existing.addButton(self.rdo_new)
         self.rdo_new.setChecked(True)
         self.rdo_new.clicked.connect(self.change_new_or_existing)
-        self.grid.addWidget(self.rdo_new, 0, 1, 1, 1)
+        self.grid.addWidget(self.rdo_new, 3, 1, 1, 1)
 
-        self.horiz_existing = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz_existing, 1, 1, 1, 1)
-
-        self.rdo_existing = QtWidgets.QRadioButton("Update Existing")
+        self.rdo_existing = QtWidgets.QRadioButton("Update Existing Riverscapes Studio Project")
+        self.rdo_existing.setToolTip("Update a previously uploaded Riverscapes Studio project")
         self.group_new_or_existing.addButton(self.rdo_existing)
         self.rdo_existing.clicked.connect(self.change_new_or_existing)
-        self.horiz_existing.addWidget(self.rdo_existing)
+        self.grid.addWidget(self.rdo_existing, 4, 1, 1, 1)
+
+        self.horiz_existing = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horiz_existing, 5, 1, 1, 1)
+
+        self.lbl_existing = QtWidgets.QLabel("Existing Project rs.xml file")
+        self.lbl_existing.setEnabled(False)
+        self.horiz_existing.addWidget(self.lbl_existing)
 
         self.txt_existing_path = QtWidgets.QLineEdit()
         self.txt_existing_path.setReadOnly(True)
@@ -1068,55 +1136,6 @@ class FrmExportProject(QtWidgets.QDialog):
         self.btn_existing.clicked.connect(self.browse_existing)
         self.btn_existing.setEnabled(False)
         self.horiz_existing.addWidget(self.btn_existing)
-
-        # add label and txt box for project name
-        self.lbl_project = QtWidgets.QLabel("Riverscapes Project Name")
-        self.grid.addWidget(self.lbl_project, 3, 0, 1, 1)
-
-        self.txt_rs_name = QtWidgets.QLineEdit()
-        self.txt_rs_name.setReadOnly(False)
-        self.txt_rs_name.setText(self.qris_project.name)
-        self.txt_rs_name.textChanged.connect(self.set_output_path)
-        self.grid.addWidget(self.txt_rs_name, 3, 1, 1, 1)
-
-        # add label and horizontal layout with textbox and small button for output path
-        self.lbl_output = QtWidgets.QLabel("Output Path")
-        self.grid.addWidget(self.lbl_output, 4, 0, 1, 1)
-
-        self.horiz_output = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz_output, 4, 1, 1, 1)
-
-        self.txt_outpath = QtWidgets.QLineEdit()
-        self.txt_outpath.setReadOnly(True)
-        self.horiz_output.addWidget(self.txt_outpath)
-
-        self.btn_output = QtWidgets.QPushButton("...")
-        self.btn_output.setMaximumWidth(30)
-        self.btn_output.clicked.connect(self.browse_path)
-        self.horiz_output.addWidget(self.btn_output)
-
-        self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
-        self.grid.addWidget(self.lbl_project_bounds, 5, 0, 1, 1, QtCore.Qt.AlignTop)
-
-        self.vert_project_bounds = QtWidgets.QVBoxLayout()
-        self.grid.addLayout(self.vert_project_bounds, 5, 1, 1, 1)
-
-        self.opt_project_bounds_all = QtWidgets.QRadioButton("Use all QRiS layers")
-        self.opt_project_bounds_all.setChecked(True)
-        self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
-        self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
-
-        self.horiz_project_bounds_aoi = QtWidgets.QHBoxLayout()
-        self.vert_project_bounds.addLayout(self.horiz_project_bounds_aoi)
-
-        self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI")
-        self.opt_project_bounds_aoi.clicked.connect(self.change_project_bounds)
-        self.horiz_project_bounds_aoi.addWidget(self.opt_project_bounds_aoi)
-
-        self.cbo_project_bounds_aoi = QtWidgets.QComboBox()
-        self.cbo_project_bounds_aoi.addItem("Select AOI")
-        self.cbo_project_bounds_aoi.setEnabled(False)
-        self.horiz_project_bounds_aoi.addWidget(self.cbo_project_bounds_aoi)
 
         # add multiline box for description
         self.lbl_description = QtWidgets.QLabel("Description")

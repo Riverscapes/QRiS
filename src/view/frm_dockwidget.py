@@ -941,21 +941,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def export_project(self, project: Project):
 
-        # select the output directory
-        basedir = os.path.dirname(self.project.project_file)
-        out_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Output Directory", basedir)
-        if out_dir == "":
-            return
-
-        # check if there is already a project.rs.xml file in the output directory
-        if os.path.exists(os.path.join(out_dir, 'project.rs.xml')):
-            # warn the user that a project has already been exported to this directory
-            result = QtWidgets.QMessageBox.question(self, 'Export Project', 'A project has already been exported to this directory.\n\nWould you like to overwrite the existing riverscapes project?',
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-            if result == QtWidgets.QMessageBox.No:
-                return
-
-        frm = FrmExportProject(self, self.project, out_dir)
+        frm = FrmExportProject(self, self.project)
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
