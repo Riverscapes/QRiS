@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [0.9.5] 2024 SEPT 18
+
+### Added
+- Clickable metadata hyperlinks #250
+- Source Project URL added when a layer is imported from Riverscapes Viewer #349
+
+### Fixed
+- Structural Elements attribute form logic #304
+- Wrong Unit Conversions for Analyses Metrics table #503
+
+### Changed
+- Modified Export Project form to enhance user experience when exporting an existing project #363
+
+### Removed
+- Brat Vegtation Suitability Layer #455
+
 ## [0.9.4] 2024 SEPT 17
 
 ### Added
