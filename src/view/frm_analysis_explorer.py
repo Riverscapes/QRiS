@@ -154,6 +154,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
         metric_name = self.cmbMetric.currentData(Qt.UserRole).name
+        sample_frame_feature_id = self.cmbSampleFrameFeature.currentData(Qt.UserRole).id
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
@@ -167,8 +168,9 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         for event_id, date in event_dates.items():
             for m in metric_values:
                 if m['event_id'] == event_id:
-                    x.append(date)
-                    y.append(m['automated_value'] if m['is_manual'] == 0 else m['manual_value'])
+                    if m['sample_frame_feature_id'] == sample_frame_feature_id:
+                        x.append(date)
+                        y.append(m['automated_value'] if m['is_manual'] == 0 else m['manual_value'])
             
         ax: plt = self.plot.figure.add_subplot(111)
         ax.bar(x, y)
@@ -180,6 +182,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
     def plot_metric_over_riverscape(self, metric_id):
 
         analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
+
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
