@@ -141,7 +141,6 @@ class FrmSampleFrame(QDialog):
             else:
                 self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
                 self.qris_project.sample_frames[self.sample_frame.id] = self.sample_frame            
-            super().accept()
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -186,6 +185,7 @@ class FrmSampleFrame(QDialog):
                 # PRODUCTION
                 import_mask_task.import_complete.connect(self.on_import_complete)
                 QgsApplication.taskManager().addTask(import_mask_task)
+                return
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
@@ -202,9 +202,9 @@ class FrmSampleFrame(QDialog):
         if self.create_sample_frame is True:
             try:
                 db_item_polygon = self.tab_inputs.cboFramePolygon.currentData(Qt.UserRole)
-                if isinstance(db_item_polygon, Mask):
-                    polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features')
-                    polygon_layer.setSubsetString(f'mask_id = {db_item_polygon.id}')
+                if isinstance(db_item_polygon, DBItem):
+                    polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={db_item_polygon.fc_name}')
+                    polygon_layer.setSubsetString(f'{db_item_polygon.fc_id_column_name} = {db_item_polygon.id}')
                 else:
                     polygon_layer = QgsVectorLayer(f'{db_item_polygon.gpkg_path}|layername={db_item_polygon.fc_name}')
                 cross_sections = self.tab_inputs.cboCrossSections.currentData(Qt.UserRole)
@@ -214,16 +214,18 @@ class FrmSampleFrame(QDialog):
                 task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
                 task.sample_frame_complete.connect(self.on_import_complete)
                 QgsApplication.taskManager().addTask(task)
+                return
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
+                    QgsApplication.messageLog().logMessage(f'Error Importing Sample Frame Features: {str(ex)}', 'QRIS', level=Qgis.Critical)
                 except Exception as ex:
-                    print(f'Error attempting to delete sample_frame after the importing of features failed.')
-                    QMessageBox.warning(self, f'Error Importing Sample Frame Features', str(ex))
-                    # enable the buttons
-                    # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
-                    # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
+                    QgsApplication.messageLog().logMessage(f'Error Deleting sample frame: {str(ex)}', 'QRIS', level=Qgis.Critical)
                 return
+            
+        self.complete.emit(True)
+        super(FrmSampleFrame, self).accept()
+        return
 
     def get_field_map(self):
 
