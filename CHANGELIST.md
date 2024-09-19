@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [1.0.0]
+
+### Added
+- Additional Tool Tips #200
+
+### Fixed
+- Create Sample Frames form bugs #506
+- Analysis over Time not working in Analysis Explorer #463
+- Better display of date labels in Analysis Exlorer #464
+
+### Changed
+- Better Aquisition Date usability for Import Raster Form #469
+
+### Removed
+- Experimental plugin designation #496
+
+
 ## [0.9.5] 2024 SEPT 18
 
 ### Added
@@ -15,6 +32,7 @@
 
 ### Removed
 - Brat Vegtation Suitability Layer #455
+
 
 ## [0.9.4] 2024 SEPT 17
 
