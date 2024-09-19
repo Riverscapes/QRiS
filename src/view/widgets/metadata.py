@@ -39,15 +39,20 @@ class MetadataWidget(QtWidgets.QWidget):
 
     def add_system_metadata(self, key: str, value: str):
             
-            if 'system' not in self.metadata:
-                self.metadata['system'] = dict()
-            self.metadata['system'][key] = value
+        if 'system' not in self.metadata:
+            self.metadata['system'] = dict()
+        self.metadata['system'][key] = value
+
+    def remove_system_metadata(self, key: str):
+                
+        if 'system' in self.metadata and key in self.metadata['system']:
+            del self.metadata['system'][key]
 
     def add_attribute_metadata(self, key: str, value: str):
             
-            if 'attributes' not in self.metadata:
-                self.metadata['attributes'] = dict()
-            self.metadata['attributes'][key] = value
+        if 'attributes' not in self.metadata:
+            self.metadata['attributes'] = dict()
+        self.metadata['attributes'][key] = value
 
     def check_metadata(self):
 
