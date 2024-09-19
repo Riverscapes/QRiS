@@ -130,6 +130,8 @@ class FrmRaster(QtWidgets.QDialog):
 
         if self.txtDate.date() != self.txtDate.minimumDate():
             self.metadata_widget.add_system_metadata('date', self.txtDate.date().toString('yyyy-MM-dd'))
+        else:
+            self.metadata_widget.remove_system_metadata('date')
 
         if self.cboRasterSource.currentData(QtCore.Qt.UserRole) is not None:
             self.metadata_widget.add_system_metadata('source_type', self.cboRasterSource.currentData(QtCore.Qt.UserRole))
@@ -255,6 +257,9 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtProjectPath.setText('')
             self.hillshade_project_path = None
 
+    def on_clear_date_clicked(self):
+        self.txtDate.setDate(self.txtDate.minimumDate())
+
     def set_hillshade(self):
         """check hillshade if raster type is dem"""
         raster = self.cboRasterType.currentData(QtCore.Qt.UserRole)
@@ -335,11 +340,21 @@ class FrmRaster(QtWidgets.QDialog):
         self.lblDate = QtWidgets.QLabel('Aquisition Date')
         self.grid.addWidget(self.lblDate, 7, 0, 1, 1)
 
-        self.txtDate = QtWidgets.QDateEdit()
+        self.horiz_date = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horiz_date, 7, 1, 1, 2)
+
+        self.txtDate = ClickableDateEdit()
         self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
         self.txtDate.setSpecialValueText("No Date")
         self.txtDate.setDate(self.txtDate.minimumDate())
-        self.grid.addWidget(self.txtDate, 7, 1, 1, 1)
+        self.txtDate.setCalendarPopup(True)
+        self.horiz_date.addWidget(self.txtDate)
+
+        self.btn_clear_date = QtWidgets.QPushButton('Clear')
+        self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
+        # make button size pushed to the right
+        self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))
+        self.horiz_date.addWidget(self.btn_clear_date)
 
         self.grid.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding), 10, 0, 1, 2)
 
@@ -360,3 +375,9 @@ class FrmRaster(QtWidgets.QDialog):
 
         help_page = 'context-layers' if self.is_context else 'surfaces'
         self.vert.addLayout(add_standard_form_buttons(self, help_page))
+
+class ClickableDateEdit(QtWidgets.QDateEdit):
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        if self.specialValueText() == self.text():
+            self.setDate(QtCore.QDate.currentDate())
