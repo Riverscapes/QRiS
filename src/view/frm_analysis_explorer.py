@@ -177,6 +177,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         ax.set_ylabel(metric_name)
         ax.set_xlabel('Time')
         ax.set_title(f'{metric_name} Over Time')
+        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right', fontsize='x-small')
         self.plot.draw()
 
     def plot_metric_over_riverscape(self, metric_id):
@@ -299,7 +300,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbSampleFrameFeature.setEnabled(False)
         self.grid.addWidget(self.cmbSampleFrameFeature, 5, 1)
 
-        self.plot = FigureCanvas(Figure(figsize=(5, 3)))
+        self.plot = FigureCanvas(Figure())
         self.vlayout.addWidget(self.plot)
 
 
