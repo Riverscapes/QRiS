@@ -85,6 +85,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
 
         # text box for field name
         self.txtField = QtWidgets.QLineEdit()
+        self.txtField.setToolTip('The field from the input file to map values for')
         self.txtField.setReadOnly(True)
         self.hLayout.addWidget(self.txtField)
 

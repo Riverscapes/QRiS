@@ -198,11 +198,11 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
         self.grid = QtWidgets.QGridLayout()
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Name')
+        self.lblName = QtWidgets.QLabel('Name')
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setToolTip('The name of the AOI or Sample Frame')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
@@ -210,17 +210,17 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()
+        self.cboAttribute.setToolTip('The attribute field to use for labeling the Sample Frames')
         self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
 
-        self.lblMaskClip = QtWidgets.QLabel()
-        self.lblMaskClip.setText('Clip to AOI')
+        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI')
         self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
+        self.cboMaskClip.setToolTip('Clip the AOI to the boundary of another AOI')
         self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel()
-        self.lblDescription.setText('Description')
+        self.lblDescription = QtWidgets.QLabel('Description')
         self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
@@ -238,5 +238,5 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        help = 'aoi' if self.mask_type.id == AOI_MASK_TYPE_ID else 'sampling-frames'
+        help = 'aoi' if self.mask_type.id == AOI_MASK_TYPE_ID else 'sample-frames'
         self.vert.addLayout(add_standard_form_buttons(self, help))
