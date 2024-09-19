@@ -277,6 +277,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         self.cmbAnalysisType = QtWidgets.QComboBox()
         self.cmbAnalysisType.setEnabled(False)
+        self.cmbAnalysisType.setToolTip('Select the type of analysis to perform, either a sample frame metric over time or a metric across a riverscape')
         self.grid.addWidget(self.cmbAnalysisType, 1, 1)
 
         self.lblMetric = QtWidgets.QLabel('Metric')
@@ -284,6 +285,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         self.cmbMetric = QtWidgets.QComboBox()
         self.cmbMetric.setEnabled(False)
+        self.cmbMetric.setToolTip('Select the metric to display')
         self.grid.addWidget(self.cmbMetric, 2, 1)
 
         self.lblEvent = QtWidgets.QLabel('Event')
@@ -291,6 +293,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         self.cmbEvent = QtWidgets.QComboBox()
         self.cmbEvent.setEnabled(False)
+        self.cmbEvent.setToolTip('Select the Data Capture Event to display')
         self.grid.addWidget(self.cmbEvent, 3, 1)
 
         self.lblSampleFrameFeature = QtWidgets.QLabel('Sample Frame Feature')
@@ -298,6 +301,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         self.cmbSampleFrameFeature = QtWidgets.QComboBox()
         self.cmbSampleFrameFeature.setEnabled(False)
+        self.cmbSampleFrameFeature.setToolTip('Select the sample frame feature to display')
         self.grid.addWidget(self.cmbSampleFrameFeature, 5, 1)
 
         self.plot = FigureCanvas(Figure())

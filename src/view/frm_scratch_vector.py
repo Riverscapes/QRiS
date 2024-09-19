@@ -198,6 +198,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setToolTip('Name of the context layer')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
@@ -212,6 +213,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.lblScratchLayerType, 2, 0, 1, 1)
 
         self.cboVectorType = QtWidgets.QComboBox()
+        self.cboVectorType.setToolTip('Type of context layer')
         self.grid.addWidget(self.cboVectorType, 2, 1, 1, 1)
 
         self.lblProjectPath = QtWidgets.QLabel('Project Path')
@@ -225,6 +227,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.lblMask, 4, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()
+        self.cboMask.setToolTip('Optionally clip the context layer to an Area of Interest')
         self.grid.addWidget(self.cboMask, 4, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel('Description')

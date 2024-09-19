@@ -287,52 +287,52 @@ class FrmRaster(QtWidgets.QDialog):
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Name')
+        self.lblName = QtWidgets.QLabel('Name')
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setToolTip('Name of the raster data')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblSourcePath = QtWidgets.QLabel()
-        self.lblSourcePath.setText('Source Path')
+        self.lblSourcePath = QtWidgets.QLabel('Source Path')
         self.grid.addWidget(self.lblSourcePath, 1, 0, 1, 1)
 
         self.txtSourcePath = QtWidgets.QLineEdit()
         self.txtSourcePath.setReadOnly(True)
         self.grid.addWidget(self.txtSourcePath, 1, 1, 1, 1)
 
-        self.lblRasterType = QtWidgets.QLabel()
-        self.lblRasterType.setText('Raster Type')
+        self.lblRasterType = QtWidgets.QLabel('Raster Type')
         self.grid.addWidget(self.lblRasterType, 2, 0, 1, 1)
 
         self.cboRasterType = QtWidgets.QComboBox()
+        self.cboRasterType.setToolTip('Type of raster data')
         self.grid.addWidget(self.cboRasterType, 2, 1, 1, 1)
 
         self.lblRasterSource = QtWidgets.QLabel('Raster Source')
         self.grid.addWidget(self.lblRasterSource, 3, 0, 1, 1)
 
         self.cboRasterSource = QtWidgets.QComboBox()
+        self.cboRasterSource.setToolTip('Source of the raster data. Use the dropdown to select from existing sources or type a new source.')
         self.cboRasterSource.setEditable(True)
         self.grid.addWidget(self.cboRasterSource, 3, 1, 1, 1)
 
-        self.lblProjectPath = QtWidgets.QLabel()
-        self.lblProjectPath.setText('Project Path')
+        self.lblProjectPath = QtWidgets.QLabel('Project Path')
         self.grid.addWidget(self.lblProjectPath, 4, 0, 1, 1)
 
         self.txtProjectPath = QtWidgets.QLineEdit()
         self.txtProjectPath.setReadOnly(True)
         self.grid.addWidget(self.txtProjectPath, 4, 1, 1, 1)
 
-        self.lblMask = QtWidgets.QLabel()
-        self.lblMask.setText('Clip to AOI')
+        self.lblMask = QtWidgets.QLabel('Clip to AOI')
         self.grid.addWidget(self.lblMask, 5, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()
+        self.cboMask.setToolTip('Optionally clip the raster to the selected area of interest')
         self.grid.addWidget(self.cboMask, 5, 1, 1, 1)
 
         self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
+        self.chkHillshade.setToolTip('Create a hillshade raster from the DEM')
         self.chkHillshade.setChecked(False)
         self.chkHillshade.setEnabled(False)
         self.grid.addWidget(self.chkHillshade, 6, 1, 1, 1)
@@ -344,6 +344,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.grid.addLayout(self.horiz_date, 7, 1, 1, 2)
 
         self.txtDate = ClickableDateEdit()
+        self.txtDate.setToolTip('Date the raster data was captured')
         self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
         self.txtDate.setSpecialValueText("No Date")
         self.txtDate.setDate(self.txtDate.minimumDate())
@@ -351,6 +352,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.horiz_date.addWidget(self.txtDate)
 
         self.btn_clear_date = QtWidgets.QPushButton('Clear')
+        self.btn_clear_date.setToolTip('Clear the acquisition date')
         self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
         # make button size pushed to the right
         self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))

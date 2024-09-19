@@ -132,7 +132,9 @@ class FrmExportMetrics(QtWidgets.QDialog):
         # Groupbox named "Data Capture Events" with radio buttons for "just the currently active DCE" or "All Data Capture Events"
         self.grpDCE = QtWidgets.QGroupBox('Data Capture Events')
         self.rdoActiveDCE = QtWidgets.QRadioButton('Just the currently active Data Capture Event')
+        self.rdoActiveDCE.setToolTip('Export metrics for the only currently active Data Capture Event')
         self.rdoAllDCE = QtWidgets.QRadioButton('All Data Capture Events')
+        self.rdoAllDCE.setToolTip('Export metrics for all Data Capture Events in the project')
         self.rdoActiveDCE.setChecked(True)
         self.grpDCE.setLayout(QtWidgets.QVBoxLayout())
         self.grpDCE.layout().addWidget(self.rdoActiveDCE)
@@ -140,9 +142,11 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.vert.addWidget(self.grpDCE)
 
         # groupbox named Sampling Frames with radio buttons for "just the currently active SF" or "All Sampling Frames"
-        self.grpSF = QtWidgets.QGroupBox('Sampling Frames')
-        self.rdoActiveSF = QtWidgets.QRadioButton('Just the currently active Sampling Frame')
-        self.rdoAllSF = QtWidgets.QRadioButton('All Sampling Frames')
+        self.grpSF = QtWidgets.QGroupBox('Sample Frames')
+        self.rdoActiveSF = QtWidgets.QRadioButton('Just the currently active Sample Frame')
+        self.rdoActiveSF.setToolTip('Export metrics for the only currently active Sample Frame')
+        self.rdoAllSF = QtWidgets.QRadioButton('All Sample Frames')
+        self.rdoAllSF.setToolTip('Export metrics for all Sample Frames in the project')
         self.rdoActiveSF.setChecked(True)
         self.grpSF.setLayout(QtWidgets.QVBoxLayout())
         self.grpSF.layout().addWidget(self.rdoActiveSF)
@@ -161,6 +165,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # drop down for export format
         self.combo_format = QtWidgets.QComboBox()
+        self.combo_format.setToolTip("Select the format to export the metrics table")
         self.combo_format.addItems(["CSV", "JSON", "Excel"])
         self.combo_format.currentTextChanged.connect(self.format_change)
         self.horiz_format.addWidget(self.combo_format)
@@ -177,11 +182,13 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # line edit for export location
         self.txtOutpath = QtWidgets.QLineEdit()
+        self.txtOutpath.setToolTip("Specify the location to save the exported metrics table")
         self.txtOutpath.setReadOnly(True)
         self.horizOutput.addWidget(self.txtOutpath)
 
         # button for export location
         self.btn_location = QtWidgets.QPushButton("...")
+        self.btn_location.setToolTip("Browse to the directory to save the exported metrics table")
         self.btn_location.clicked.connect(self.browse_path)
         self.horizOutput.addWidget(self.btn_location)
 

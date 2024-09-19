@@ -181,6 +181,7 @@ class FrmProfile(QtWidgets.QDialog):
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setToolTip('The name of the profile')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
@@ -188,6 +189,7 @@ class FrmProfile(QtWidgets.QDialog):
         self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
+        self.cboMaskClip.setToolTip('Optionally clip the profile to the selected AOI')
         self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel('Description')

@@ -268,6 +268,7 @@ class FrmSampleFrame(QDialog):
         self.lblName = QLabel('Name')
         self.horiz_name.addWidget(self.lblName)
         self.txtName = QLineEdit()
+        self.txtName.setToolTip('The name of the sample frame')
         self.horiz_name.addWidget(self.txtName)
 
         self.tabs = QTabWidget(self)
@@ -358,21 +359,25 @@ class SampleFrameInputs(QWidget):
         self.lblName = QLabel('Display Labels Field')
         self.grid.addWidget(self.lblName, 1, 0)
         self.cboDisplayLabel = QComboBox()
+        self.cboDisplayLabel.setToolTip('Field to use for display labels.')
         self.grid.addWidget(self.cboDisplayLabel, 1, 1, 1, 2)
         
         self.lblFlowPathField = QLabel(f'{flow_path} Field')
         self.grid.addWidget(self.lblFlowPathField, 2, 0)
         self.cboFlowPathField = QComboBox()
+        self.cboFlowPathField.setToolTip('Field to specify unique flow path names.')
         self.grid.addWidget(self.cboFlowPathField, 2, 1, 1, 2)
 
         self.lblTopologyField = QLabel('Topology Field')
         self.grid.addWidget(self.lblTopologyField, 3, 0)
         self.cboTopologyField = QComboBox()
+        self.cboTopologyField.setToolTip('Field to use for topology inference. Should be an integer field with unique ordered values.')
         self.grid.addWidget(self.cboTopologyField, 3, 1, 1, 2)
 
         self.lblClipToAOI = QLabel('Clip to AOI')
         self.grid.addWidget(self.lblClipToAOI, 4, 0)
         self.cboClipToAOI = QComboBox()
+        self.cboClipToAOI.setToolTip('Optionally clip the sample frame to the selected AOI')
         self.grid.addWidget(self.cboClipToAOI, 4, 1, 1, 2)
 
         self.vert.addStretch()

@@ -128,48 +128,48 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Name')
+        self.lblName = QtWidgets.QLabel('Name')
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setToolTip('Name of the saved vector layer')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblProjectPath = QtWidgets.QLabel()
-        self.lblProjectPath.setText('Project Path')
+        self.lblProjectPath = QtWidgets.QLabel('Project Path')
         self.grid.addWidget(self.lblProjectPath, 1, 0, 1, 1)
 
         self.txtProjectPath = QtWidgets.QLineEdit()
         self.txtProjectPath.setReadOnly(True)
         self.grid.addWidget(self.txtProjectPath, 1, 1, 1, 1)
 
-        self.lblVectorType = QtWidgets.QLabel()
-        self.lblVectorType.setText('Vector Type')
+        self.lblVectorType = QtWidgets.QLabel('Vector Type')
         self.grid.addWidget(self.lblVectorType, 2, 0, 1, 1)
 
         self.cboVectorType = QtWidgets.QComboBox()
+        self.cboVectorType.setToolTip('Type of vector data')
         self.grid.addWidget(self.cboVectorType, 2, 1, 1, 1)
 
-        self.lblSimplifyTolerance = QtWidgets.QLabel()
-        self.lblSimplifyTolerance.setText('Simplify Tolerance')
+        self.lblSimplifyTolerance = QtWidgets.QLabel('Simplify Tolerance')
+        self.lblSimplifyTolerance.setText()
         self.grid.addWidget(self.lblSimplifyTolerance, 3, 0, 1, 1)
 
         self.dbsSimplifyTolerance = QtWidgets.QDoubleSpinBox()
+        self.dbsSimplifyTolerance.setToolTip('Simplify tolerance for vectorization')
         self.grid.addWidget(self.dbsSimplifyTolerance, 3, 1, 1, 1)
 
-        self.lblSmoothingOffset = QtWidgets.QLabel()
-        self.lblSmoothingOffset.setText('Smooting Offset')
+        self.lblSmoothingOffset = QtWidgets.QLabel('Smooting Offset')
         self.grid.addWidget(self.lblSmoothingOffset, 4, 0, 1, 1)
 
         self.dbsSmoothingOffset = QtWidgets.QDoubleSpinBox()
+        self.dbsSmoothingOffset.setToolTip('Smoothing offset for vectorization')
         self.grid.addWidget(self.dbsSmoothingOffset, 4, 1, 1, 1)
 
-        self.lblMinPolygonSize = QtWidgets.QLabel()
-        self.lblMinPolygonSize.setText('Minimum Polygon Area')
+        self.lblMinPolygonSize = QtWidgets.QLabel('Minimum Polygon Area')
         self.grid.addWidget(self.lblMinPolygonSize, 5, 0, 1, 1)
 
         self.dbsMinPolygonSize = QtWidgets.QDoubleSpinBox()
+        self.dbsMinPolygonSize.setToolTip('Minimum polygon area for vectorization')
         self.grid.addWidget(self.dbsMinPolygonSize, 5, 1, 1, 1)
 
         # self.lblMask = QtWidgets.QLabel()
@@ -179,8 +179,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         # self.cboMask = QtWidgets.QComboBox()
         # self.grid.addWidget(self.cboMask, 4, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel()
-        self.lblDescription.setText('Description')
+        self.lblDescription = QtWidgets.QLabel('Description')
         self.grid.addWidget(self.lblDescription, 6, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()

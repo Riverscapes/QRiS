@@ -33,6 +33,7 @@ class FrmDesign(FrmEvent):
         self.txtDateLabel.setVisible(False)
 
         self.lblPercentComplete = QtWidgets.QLabel('Percent Complete', self)
+        self.lblPercentComplete.setToolTip('The percentage of the design that has been completed')
         self.tabGrid.addWidget(self.lblPercentComplete, 7, 0)
 
         self.horiz_slider = QtWidgets.QHBoxLayout()
@@ -61,6 +62,7 @@ class FrmDesign(FrmEvent):
 
         statuses = {key: DBItem('', key, value) for key, value in enumerate(['In Progress', 'Provisional (awaiting review)', 'Final'])}
         self.cboStatus = QtWidgets.QComboBox(self)
+        self.cboStatus.setToolTip('The status of the design')
         self.status_model = DBItemModel(statuses)
         self.cboStatus.setModel(self.status_model)
         self.tabGrid.addWidget(self.cboStatus, 8, 1, 1, 1)
@@ -70,6 +72,7 @@ class FrmDesign(FrmEvent):
         self.tabGrid.addWidget(self.lblDesigners, 9, 0, 1, 1)
 
         self.txtDesigners = QtWidgets.QPlainTextEdit(self)
+        self.txtDesigners.setToolTip('The name of the designer(s) of the design')
         self.tabGrid.addWidget(self.txtDesigners, 9, 1, 1, 1)
 
         # Create a checkbox widget for each design source

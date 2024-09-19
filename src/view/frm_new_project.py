@@ -161,12 +161,10 @@ class FrmNewProject(QtWidgets.QDialog):
         self.grid.addWidget(self.lblTags, 2, 0, 1, 1)
 
         self.txtTags = QtWidgets.QLineEdit()
-        self.toolTip = "Comma separated list of tags for the project"
-        self.txtTags.setToolTip(self.toolTip)
+        self.txtTags.setToolTip("Comma separated list of tags for the project")
         self.grid.addWidget(self.txtTags, 2, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel()
-        self.lblDescription.setText('Description')
+        self.lblDescription = QtWidgets.QLabel('Description')
         self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()

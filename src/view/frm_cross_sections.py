@@ -212,6 +212,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
+        self.txtName.setToolTip('Name of the cross sections layer')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
@@ -219,12 +220,14 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()
+        self.cboAttribute.setToolTip('Attribute to use as the display label for the cross sections')
         self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
 
         self.lblMaskClip = QtWidgets.QLabel('Clip to AOI/Valley Bottom')
         self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
+        self.cboMaskClip.setToolTip('Optionally clip the cross sections to the selected AOI or Valley Bottom')
         self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel('Description')

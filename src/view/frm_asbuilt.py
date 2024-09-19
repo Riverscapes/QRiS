@@ -28,6 +28,7 @@ class FrmAsBuilt(FrmEvent):
         self.tabGrid.addWidget(self.lblAssociatedDesign, 1, 0)
 
         self.cboAssociatedDesign = QtWidgets.QComboBox(self)
+        self.cboAssociatedDesign.setToolTip('Select the design that this as-built is based on.')
         self.tabGrid.addWidget(self.cboAssociatedDesign, 1, 1, 1, 1)
         designs:dict = {design_id: design for design_id, design in qris_project.events.items() if design.event_type.id == DESIGN_EVENT_TYPE_ID}
         designs[0] = DBItem('', 0, 'None')
@@ -59,6 +60,7 @@ class FrmAsBuilt(FrmEvent):
         self.tabGrid.setAlignment(self.lblDesigners, QtCore.Qt.AlignTop)
 
         self.txtDesigners = QtWidgets.QPlainTextEdit(self)
+        self.txtDesigners.setToolTip('Enter the name(s) of the person(s) who observed the as-built survey.')
         self.tabGrid.addWidget(self.txtDesigners, 8, 1, 1, 1)
 
         # Create a checkbox widget for each design source
