@@ -4,17 +4,19 @@ banner: true
 description: Explore geospatial data from the Climate Engine API.
 ---
 
-The Climate Engine Explorer is a tool for exploring and downloading climate data from the [Climate Engine API](https://www.climateengine.org/). 
+[Climate Engine](https://www.climateengine.org) brings together Earth scientists, financial specialists, and cloud computing experts to combine the world's best Earth and economic data leveraging the power of Google Cloud's geospatial processing and artifical intelligence and machine learning products. 
+
+You can access Climate Engine datasets within QRiS and retrieve time series for sample frame polygons to further your understanding of your riverscapes. Climate Engine time series variables are downloaded and stored within your QRiS project.
 
 ## Accessing the Climate Engine Explorer
 
-The Climate Engine Explorer can be accessed by right clicking on 'Climate Engine' under the Context Node in the QRiS Project Tree and selecting `Explore Climate Engine`. This will open the Climate Engine Explorer in a new dockable window.
+The Climate Engine Explorer can be accessed by right clicking on `Climate Engine` under the Context node in the QRiS Project Tree and selecting `Explore Climate Engine`. This will open the Climate Engine Explorer in a new dockable window.
 
 ![Climate Engine Project Tree](/images/software-help/climate-engine/climate-engine-project-tree.png)
 
 ## Downloading Climate Engine Metrics
 
-The Climate Engine Explorer is based on downloading Climate Engine Timeseries for Sample Frame Polygons. 
+The Climate Engine Explorer is based on downloading Climate Engine time series for [Sample Frame](https://qris.riverscapes.net/software-help/sample-frames/) polygons. The data are stored directly inside your QRiS project, so you can explore the data without needing to be connected to the internet or repeatedly downloading them.
 
 1. To begin, navigate to the Climate Engine Metrics Tab and click `Download Metrics`.
 
@@ -22,38 +24,38 @@ The Climate Engine Explorer is based on downloading Climate Engine Timeseries fo
 
 1. Choose the Sample Frame from the dropdown list. Next, check the Sample Frame Features you would like to download metrics for.
 
-1. Next, select the Climate Engine Metric Dataset from the Dataset dropdown list. After a few seconds, a list of available Variables will populate the Variable checkbox list. Select one or more Variables to download.
+1. Select the Climate Engine `Dataset` from the dropdown list. After a few seconds, a list of available variables will populate the checkbox list. Select one or more variables to download.
 
-1. Finally, specify the Date Range for the data you would like to download. Common ranges can be selected from the dropdown list, or you can specify a custom range. Note that each Dataset has a different date range of availability.
+1. Finally, specify the date range for the data you would like to download. Common ranges can be selected from the dropdown list, or you can specify a custom range. Note that each dataset has a different date range of availability.
 
     **Warning:** Downloading large date ranges can take a long time and may cause QRiS to become unresponsive, especially if there are more than a few sample frame polygons selected. It is recommended to download only the range of data that you need.
 
-1. Click the `Get Timeseries` button to download the data. A status message will indicate when the data has been downloaded and saved to the project.
+1. Click the `Get Timeseries` button to download the data. A status message will indicate when the data has been downloaded and saved to the QRiS project.
 
-Once the download is complete, you may close the form, or continue to download data for additional datasets, time periods, or sample frame polygons.
+Once the download is complete, you may close the form, or continue to download additional datasets, time periods, or sample frame polygons.
 
 ## Exploring Climate Engine Data
 
-Once you have data downloaded from Climate Engine, you can explore the data in the Climate Engine Explorer.
+Once you have downloaded some data, you can explore the data in the Climate Engine Explorer.
 
   ![Climate Engine Sample Frames](/images/software-help/climate-engine/climate-engine-sample-frames.png)
 
-2. On the Sample Frame Tab on the left panel, select the Sample Frame from the dropdown menu. A list of Sample Frame Features will populate the list below. Check the box next to the Sample Frame Feature(s) you would like to explore.
+On the Sample Frame Tab on the left panel, select the sample frame from the dropdown menu. A list of sample frame features will populate the list below. Check the box next to one or more features that you would like to explore.
 
-  **Note:** The the Sample Frame layer will get added to the map for visual reference. As the Sample Frame Features are checked in the Climate Engine Exploer, they will become selected features in the map. This is for visualization purposes only; selecting or deselcting features in the map will not affect the data or visualization in the Climate Engine Explorer.
+  **Note:** The the sample frame layer will get added to the map for visual reference. As the sample frame features are checked in the Climate Engine Exploer, they will become selected features in the map. This is for visualization purposes only; selecting or deselcting features in the map will not affect the data or visualization in the Climate Engine Explorer.
 
-      ![Climate Engine Metrics](/images/software-help/climate-engine/climate-engine-metrics.png)
+![Climate Engine Metrics](/images/software-help/climate-engine/climate-engine-metrics.png)
 
-2. On the Climate Engine Metrics Tab, select the metric timeseries you would like to explore. Only one metric can be selected at a time.
+On the Climate Engine Metrics tab, select the metric timeseries you would like to explore. Only one metric can be selected at a time.
 
-The timeseries plots will appear in the right panel for the selected Sample Frame Feature(s) and Climate Engine Metric. Only timeseries data that has been downloaded for the selected Sample Frame Feature(s) and Climate Engine Metric will be displayed.
+The timeseries plots will appear in the right panel for the selected sample frame feature(s) and climate engine metric. Only timeseries data that has been downloaded for the selected sample frame feature(s) and Climate Engine metric will be displayed.
 
-2. You can adjust the date range of the timeseries data by changing the from and to dates at the top of the timeseries plot. 
+You can adjust the date range of the timeseries data by changing the from and to dates at the top of the timeseries plot. 
 
     **Note:** An option for changing the plot type from Time to Space is currently under development and disabled in the current version of the Climate Engine Explorer.
 
 ## Exporting Climate Engine Data
 
-The Climate Engine Explorer allows you to export the timeseries data for the selected Sample Frame Feature(s) and Climate Engine Metric to a CSV file.
+The Climate Engine Explorer allows you to export the timeseries data for the selected sample frame feature(s) and Climate Engine metric to a CSV file.
 
 To export the data, click the `Export` button at the top of the timeseries plot. Select the location where you would like to save the CSV file and click `Save`.
