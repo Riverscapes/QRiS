@@ -26,29 +26,29 @@ module.exports = {
       },
       {
         title: 'About',
-        url: '/about/license',
+        url: '/About/license',
         items: [
           {
             title: 'Acknowledgements',
-            url: '/about/acknowledgements',
+            url: '/About/acknowledgements',
           },
           {
             title: 'License and Source Code',
-            url: '/about/license',
+            url: '/About/license',
           },
         ],
       },
       {
         title: 'Download',
-        url: '/download/install',
+        url: '/Download/install',
         items: [
           {
             title: 'Install',
-            url: '/download/install',
+            url: '/Download/install',
           },
           {
             title: 'Questions, Feature Requests and Bugs',
-            url: '/download/known-bugs',
+            url: '/Download/known-bugs',
           },
         ],
       },
