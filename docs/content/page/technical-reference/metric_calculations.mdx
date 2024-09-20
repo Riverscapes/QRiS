@@ -66,5 +66,19 @@ metric params:
 - `layers`: A list of one DCE [layer](../managing_metrics#layers) to calculate gradient from.
 - `surfaces`: a list of one `dem` [surface](../managing_metrics#surfaces) to use for elevation data.
 
+## Area Proportion
+The area proportion calculation calculates the proportion of the area of a polygon feature that falls within the sample frame or other specified layers.
+
+calculation_name: `area_proportion`
+
+metric params:
+- `layers`: A list of DCE [layers](../managing_metrics#layers) to calculate area proportions from.
+
+Each layer can have the following parameters:
+- `usage`: An optional field which represents that the layer should be used as a `nominator` or `denominator` in the calculation. 
+  - If not provided for a layer, then the layer will be used as a `nominator`.
+  - If no `denominator` is provided, the sample frame area will be used as the denominator.
+- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+
 
 *additional calculations will be added as needed*

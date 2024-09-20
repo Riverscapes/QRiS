@@ -127,6 +127,14 @@ module.exports = {
           {
             title: 'Database',
             url: '/technical-reference/database',
+          },
+          {
+            title: 'Managing Metrics',
+            url: '/technical-reference/managing_metrics',
+          },
+          {
+            title: 'Metric Calculations',
+            url: '/technical-reference/metric_calculations',
           }
         ],
       }
