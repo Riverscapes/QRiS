@@ -1,4 +1,51 @@
 ---
 title: Zonal Statistics
 banner: true
+description: Calculate statistics for a raster within a set of polygons
 ---
+
+The Zonal Statistics Tool calculates statistics of all raster and vector layers in the Map Table of Contents that intersect with a specified AOI polygon.
+
+## Usage
+
+1. Make sure the AOI layer has one polygon feature that covers the area of interest (AOI) for which you would like to calculate statistics.
+
+2. Add any layer(s) you would like to calculate statistics for to the Map Table of Contents.
+
+3. Right click on the AOI polygon layer in the Map Table of Contents and select `Zonal Statistics`. The Zonal Statistics Tool will open.
+
+4. The Zonal Statistics Tool will display a tree containing the vector and raster layers with various statistics. From here you may export the statistics.
+
+![Zonal Statistics Tool](/images/software-help/zonal-statistics-tool.png)
+
+## Statistics
+
+### Raster layers
+The following statistics are calculated for each raster layer:
+
+- **Minimum**: The minimum cell value in the raster that intersects the polygon.
+- **Maximum**: The maximum cell value in the raster that intersects the polygon.
+- **Mean**: The average of the cell values in the raster that intersect the polygon.
+- **Median**: The median of the cell values in the raster that intersect the polygon.
+- **Standard Deviation (std)**: The standard deviation of the cell values in the raster that intersect the polygon.
+- **Sum**: The sum of the cell values in the raster that intersect the polygon.
+- **Count**: The number of cells in the raster that intersect the polygon.
+
+### Vector layers
+The following statistics are calculated for each vector layer:
+
+- **Count**: The number of features in the vector layer that intersect the polygon.
+- **Area**: (Polygon geometries only) The total area of the features in the vector layer that intersect the polygon. Default units are square meters.
+- **Length**: (Line geometries only) The total length of the features in the vector layer that intersect the polygon. Default units are meters.
+
+## Exporting Statistics
+
+*This feature is not yet implemented.*
+
+To export the statistics, right click on the Zonal Statistics Tool and select `Export`. The statistics will be exported to a user specified file.
+
+## Settings
+
+*This feature is not yet implemented.*
+
+The Settings menu allows you to change the units of the area and length statistics. By default, the area is calculated in square meters and the length is calculated in meters. 
