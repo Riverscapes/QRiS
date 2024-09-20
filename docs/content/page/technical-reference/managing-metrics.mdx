@@ -13,10 +13,44 @@ QRiS Metric definitions are stored within each QRiS Project geopackage. New metr
 The current list of metrics stored within a QRiS Project can be viewed under Help/Settings and navigating to the Metrics tab. The Metrics tab displays a list of all metrics defined within the project, including the metric name, description, calculation function, metric paramaters, and other metadata. 
 
 ## Exporting Metrics to JSON Files
+Each metric in the list can be exported to a JSON file by clicking the `Export` button and selecting a location to save the file. The JSON file contains all the information needed to recreate the metric in another QRiS Project or allow for editing and re-importing back into the same project. (see [Metric JSON Schema](#metric-json-schema))
 
-Each metric in the list can be exported to a JSON file by clicking the `Export` button and selecting a location to save the file. The JSON file contains all the information needed to recreate the metric in another QRiS Project or allow for editing and re-importing back into the same project.
+## Creating New Metrics
+New metrics can be created by defining a new metric in a JSON file and importing it into a QRiS Project. The JSON file must follow the [Metric JSON Schema](#metric-json-schema).
 
-The schema for the JSON file is as follows:
+New metrics must have a unique `machine_name`, otherwise the import will overwrite an existing metric with the same `machine_name`.
+
+1. Create a new metric definition in a JSON file. It is recommended to export an existing metric and use it as a template for the new metric. The JSON file can be created in a text editor or using a JSON editor such as VS Code.
+2. Import the new metric into the QRiS Project by clicking the `Import` button and selecting the JSON file to import. The import process will validate the JSON file and add the metric to the metric table. If the metric already exists in the project, the import will overwrite the existing metric with the same `machine_name`.
+3. Review the metric table to ensure the new metric is present and correct.
+4. When you have reviewed the metric table, click the `Save` button to save the changes to the project geopackage. The geopackage will not be updated unless the `Save` button is clicked.
+
+## Editing Existing Metrics
+Metrics can be edited within a QRiS Project. The metric definition can be edited, including the metric name, description, calculation function, metric parameters, and other metadata.
+
+1. Export the metric to a JSON file by clicking the `Export` button next to the metric you wish to edit. Save the JSON file to a location on your computer.
+2. Open the JSON file in a text editor and make the desired changes to the metric definition. It is recommended to use VS Code or another JSON editor to ensure the JSON is valid and passes the schema validation.
+3. Save the changes to the JSON file.
+4. Import the edited metric back into the QRiS Project by clicking the `Import` button and selecting the edited JSON file. The import process will validate the JSON file and update the metric in the metric table. If the metric already exists in the project, the import will overwrite the existing metric with the same `machine_name`.
+5. Review the metric table to ensure the edited metric is present and correct.
+6. When you have reviewed the metric table, click the `Save` button to save the changes to the project geopackage. The geopackage will not be updated unless the `Save` button is clicked.
+
+## Deleting Metrics
+*not yet implemented in QRiS version 0.3.14*
+Metrics can be deleted from a project, however this action is not reversible. Deleting a metric will remove all metric values associated with the metric from the project geopackage.
+
+1. Click the `Delete` button next to the metric you wish to delete. This button is located on the right side of the metric table (you may need to scroll to the right to see it).
+2. A confirmation dialog will appear asking you to confirm the deletion. Click `Yes` to delete the metric or `No` to cancel the deletion.
+3. If you click `Yes`, the metric will be removed from the project geopackage and the metric table will be updated to reflect the change. **The geopackage will be updated immediately and the deletion cannot be undone.**
+
+## Importing Metrics
+New and edited metrics can be imported into a QRiS Project:
+
+1. Clicking the `Import` button and select the JSON file to import. The import process will validate the JSON file and add the metric to the metric table. If the metric already exists in the project, the import will overwrite the existing metric with the same `machine_name`.
+2. Review the metric table to ensure the new metric is present and correct.
+3. When you have reviewed the metric table, click the `Save` button to save the changes to the project geopackage. The geopackage will not be updated unless the `Save` button is clicked.
+
+### Metric JSON Schema
 
 ### Metric Definition
 
@@ -29,10 +63,12 @@ The schema for the JSON file is as follows:
 | units            | Units of the metric, Not yet implemented (leave as null)                                      |
 | description      | (Optional) Description of the metric                                                         |
 | definition_url   | (Optional) URL to a document describing the metric                                            |
-| metadata        | (Optional) Additional metadata for the metric, including min_value, max_value, precision, and tolerance |
-metric_params   | Parameters for the calculation function                                                      |
+| [metadata](#metadata)        | (Optional) Additional metadata for the metric, including min_value, max_value, precision, and tolerance |
+[metric_params](#metric-params)   | Parameters for the calculation function                                                      |
 
 ### Metadata
+
+Metadata is additional information about the metric. Some metadata fields are used to set constraints on manually entered metric values, such as min_value, max_value, and precision. 
 
 | Field Name | Description                                                                                   |
 |------------|-----------------------------------------------------------------------------------------------|
@@ -41,38 +77,45 @@ metric_params   | Parameters for the calculation function                       
 | precision  | (Optional) Number of decimal places for manually entered metric values                       |
 | tolerance  | (Optional) Used to set warining icon if manual value is more than 10% different from automated value |
 
-## Metric Params
+### Metric Params
 
 | Field Name | Description                                                                                   |
 |------------|-----------------------------------------------------------------------------------------------|
-| layers     | List of DCE layers to use in the calculation                                                  |
-| normalization | (Optional) Name of the analysis parameter to use for normalization (e.g. metric value per length or area). Currently can be only be "centerline" |
-| surfaces | (Optional) List of surfaces to use in the calculation                                |
+| [layers](#layer)     | List of DCE layers to use in the calculation                                                  |
+| normalization | (Optional) Name of the [analysis parameter](#analysis-parameters) to use for normalization (e.g. metric value per length or area). Currently can be only be "centerline" |
+| surfaces | (Optional) List of analysis parameter [surfaces](#surfaces) to use in the calculation                                |
 
 ### Layer
+
+Layers refer to DCE layers that are used in the metric calculation. Each layer must have a `layer_name` and can have additional parameters such as `usage`, `count_field`, and `attribute_filter`.
 
 | Field Name       | Description                                                                                   |
 |------------------|-----------------------------------------------------------------------------------------------|
 | layer_name       | Name of the DCE layer                                                                         |
+| usage            | (Optional, Required for some calculations) The usage of the layer in the calculation. (e.g. "denominator for area_proportion)|
 | count_field      | (Optional) For count calculations, the field to count                                         |
-| attribute_filter| (Optional) Filter to apply to the layer                                                       |
+| [attribute_filter](#attribute-filter)| (Optional) Filter to apply to the layer                                                       |
 
 ### Attribute Filter
 
+Attribute filters can be applied to a layer to filter by a specific field and list of values.
+
 | Field Name | Description                                                                                   |
 |------------|-----------------------------------------------------------------------------------------------|
-| field_name | (Required if attribute_filter is used) Field to filter on                                     |
-| values     | (Required if attribute_filter is used) List of values to filter on                            |
+| field_name | (Required) Field to filter on                                     |
+| values     | (Required) List of values to filter on                            |
 
 ### Surfaces
 
+Surfaces are raster datasets that can be used in the metric calculation. Each surface must have a `surface_name` which refers to the name of the [analysis parameter](#analysis-parameters) of the surface. The user will specify the actual raster to use for the analysis parameter when creating the analysis.
+
 | Field Name | Description                                                                                   |
 |------------|-----------------------------------------------------------------------------------------------|
-| surface_name | Name of the analysis parameter of the surface. Currently only dem is supprted for use with the gradient calculation.                                                                     |
+| surface_name | Name of the [analysis parameter](#analysis-parameters) of the surface. Currently only dem is supprted for use with the gradient calculation.                                                                     |
 
 ### Analysis Parameters
 
-Analysis parameters are non-dce layers and rasters that can be used in the metric calculation. The user must specify the layer or surface to use for each analysis parameter when creating the analyis. 
+Analysis parameters are non-dce layers and rasters that can be used in the metric calculation. The user will specify the layer or surface to use for each analysis parameter when creating the analyis. 
 
 | Analysis Parameter | Description                                                                                   |
 |--------------------|-----------------------------------------------------------------------------------------------|
@@ -134,20 +177,3 @@ Analysis parameters are non-dce layers and rasters that can be used in the metri
     }
 }
 ```
-
-
-
-## Creating New Metrics
-Steps to create a new metric JSON file.
-Rules that must be followed
-How to validate (i.e. Visual Studio Code helping check for errors)
-
-
-## Editing Existing Metrics
-Rules that must be followed (i.e. don't change machine code)
-## Deleting Metrics
-**not yet implemented**
-
-Implications ( i.e. cascade delete on metric values in a project?)
-## Importing Metrics
-How to import JSON files back into QRiS Project

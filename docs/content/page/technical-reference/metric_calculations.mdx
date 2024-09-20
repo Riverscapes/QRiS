@@ -1,0 +1,70 @@
+---
+title: Metric Calculations
+banner: true
+description: Descriptions of the calculation functions used to create Metrics in QRiS
+---
+
+The following calcuations functions are availble to create Metrics in QRiS. Each calculation function has a set of parameters that can be used to customize the calculation.
+
+## Count
+This calculation counts the number of features from any number of DCE layers (with the addition of an optional count field) that fall within the sample frame. DCE layers may have an optional attribute filter applied. For lines and polygons, the count is prorated by length and area respectively. This function can also apply a valley centerline normalization. 
+
+calculation_name: `count`
+
+metric params:
+- `layers`: A list of DCE [layers](../managing_metrics#layers) to count features from.
+
+Each layer can have the following parameters:
+- `count_field`: An optional field which represents feature count values. These values will be used instead of counting up the number of individual features.
+- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+
+To apply a valley centerline normalization, the following parameter can be used:
+- `normalization: centerline`
+
+## Length
+The length calculation sums the length of all features from any number of DCE layers that fall within the sample frame. DCE layers may have an optional attribute filter applied. This function can also apply a valley centerline normalization.
+
+calculation_name: `length`
+
+metric params:
+- `layers`: A list of DCE [layers](../managing_metrics#layers) to sum lengths from.
+
+Each layer can have the following parameters:
+- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+
+To apply a valley centerline normalization, the following parameter can be used:
+- `normalization: centerline'
+
+## Area
+The area calculation sums the area of all features from any number of DCE layers that fall within the sample frame. DCE layers may have an optional attribute filter applied. This function can also apply a valley centerline normalization.
+
+calculation_name: `area`
+
+metric params:
+- `layers`: A list of DCE [layers](../managing_metrics#layers) to sum areas from.
+
+Each layer can have the following parameters:
+- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+
+To apply a valley centerline normalization, the following parameter can be used:
+- `normalization: centerline`
+
+## Sinusoity
+The sinuosity calculation first clips a line feature to the sample frameElement, thene divides the length of the clipped line feature by the straight-line distance between the start and end points of the line.
+
+calculation_name: `sinuosity`
+
+metric params:
+- `layers`: A list of one DCE [layer](../managing_metrics#layers) to calculate sinuosity from.
+
+## Gradient
+The gradient calculation calculates the average gradient of a line feature. The gradient is calculated as the difference in elevation between the start and end points of the line divided by the length of the line. Elevation is determined by the DEM layer.
+
+calculation_name: `gradient`
+
+metric params:
+- `layers`: A list of one DCE [layer](../managing_metrics#layers) to calculate gradient from.
+- `surfaces`: a list of one `dem` [surface](../managing_metrics#surfaces) to use for elevation data.
+
+
+*additional calculations will be added as needed*
