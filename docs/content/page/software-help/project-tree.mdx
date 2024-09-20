@@ -6,18 +6,43 @@ description: The Project Tree is a hierarchical representation of the data and a
 
 The Project Tree is a hierarchical representation of the data and analysis tools in the project. The Project Tree is a dockable window that appears when a project is opened. The Project Tree can be used to navigate the project, view and manage data, and access qris tools.
 
-## Project
-
-
-
-### Inputs
-
-### Data Capture Events
-
-### Analyses
-
-## Basemaps
-
 # Using the Project Tree
 
 The project tree automatically appears when a project is opened. The project tree is a dockable window that can be moved around the screen or docked to the left or right side of the screen. The default docking side can be specified in the QRiS settings.
+
+# Project Tree Structure
+
+For all nodes within the project tree, right clicking will provide a context menu with options for that node. Most parent nodes provide options to:
+
+- **View Child nodes**: All of the child nodes for that parent node will be displayed in the project tree by expanding or collapsing the children of that node.
+- **Expand all Child Nodes**: All of the child nodes for that parent node will be displayed in the project tree by expanding all of the children of that node.
+- **Add All Layers to the Map**: All of the layers for that parent node will be added to the map. This is useful for adding all of the layers for a particular data source to the map, however some nodes may have a large number of layers and this may clutter the map.
+- **Add All Layers with Features to the Map**: All of the layers for that parent node that have features will be added to the map. This is useful for adding only the layers that have features to the map, rather than empty containers.
+- **Properties**: This will display the properties of the node in a separate window. This is useful for viewing or editing the properties of a particular node, such as the name, description or metadata.
+- **Delete**: This will delete the node and associated data from the QRiS Project. This action is not reversible and should be used with caution.
+
+## Project
+
+The name of the project is the top level of the project tree. The project node contains all of the data and analysis tools for the project. The following options are only available for the project node:
+
+- **Browse Containing Folder**: This will open the folder containing the project file in the file explorer.
+- **Export Project to Riverscapes Project**: This will export the project to a Riverscapes compatible project. This is useful for sharing the project with other Riverscapes users or uploading the project to the Riverscapes Data Exchange.
+- **Close Project**: This will close the project and remove it from the project tree. This will not delete the project file from the file system.
+
+### Inputs
+
+The Inputs Node organizes all of the input and contextual data for the QRiS Project. This is includes data that considered as raw, site-level or other contextual layers, including [Surfaces](/software-help/surfaces/), [Areas of Interest Polygons (AOIs)](/software-help/aoi/), [Sample Frames](/software-help/sample-frames/), [Profiles](/software-help/profiles/), and [Cross Sections](/software-help/cross-sections/). Each of these child nodes contain specialized tools for creating, importing and managing their respective layers (refer to the specific documentation data type for more information).
+
+The [Context Node](/software-help/context/) is a special container within the Inputs Node  that is used to store user imported vector and raster layers. This node also contains the [Watershed Catchment](/software-help/context/watershed-catchments/) and [Stream Gage](/software-help/context/stream-gage-tool/) tools.
+
+### Data Capture Events
+
+The [Data Capture Events (DCEs)](/software-help/dce/) Node stores the projects DCE's, As-Builts and Designs. This node provdes the ability to create new DCEs.
+
+### Analyses
+
+The [Analyses](/software-help/analyses/) Node stores the projects analyses. This node provides the ability to create new analyses and export the results of all analyses to a table.
+
+## Basemaps
+
+The Basemaps Node organizes all of the basemaps for the project. [Basemaps](/software-help/basemaps/) are used to provide context to the project and are typically used as a background layer for the project. 
