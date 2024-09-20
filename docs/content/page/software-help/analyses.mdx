@@ -7,13 +7,13 @@ description: Calculating river health metrics over time
 QRiS analyses help track river health over time. Before you can perform an analysis you need to have a project with the following:
 
 - One or more [data capture events](/software-help/dce) that represent the points in time for which you want to measure river health. These events represent past, present or future representations of your riverscape captured as assessments, designs, plans or monitoring events. Ideally each event should have geospatial features digitized that capture features that characterize the health of the river.
-- A [sampling frame](/software-help/sampling-frame) that subdivides your riverscape into the spatial units for which you want to report river health. Typically these are polygons that span valley wall to valley wall and represent the river reaches or sub-reaches.
+- A [sample frame](/software-help/sample-frames) that subdivides your riverscape into the spatial units for which you want to report river health. Typically these are polygons that span valley wall to valley wall and represent the river reaches or sub-reaches.
 
 ## Creating an analysis
 
 Right click on the **Analyses** folder in the QRiS project tree and select **New Analysis**. This will open the analysis properties form. Provide a name and description for the analysis. Select the sampling frame you want to use for the analysis. You cannot change this once the analysis has been created. If you make a mistake you will need to delete the analysis and start again.
 
-Pick from the list of available metrics the ones that you want to include in your analysis. You can always add or remove metrics later. Each of the available metrics can have one of three states:
+Pick from the list of available [metrics](/software-help/metrics) that you want to include in your analysis. You can always add or remove metrics later. Each of the available metrics can have one of three states:
 
 - **Exclude** - the metric will not be included in the analysis
 - **Metric** - the metric will be included and treated as detailed metric when users want to dig into the full details of the analysis.
@@ -47,7 +47,7 @@ Switch between showing just indicators (summary metrics) or all metrics using th
 
 ### Metric Table
 
-The metric table always reflects the currently selected data capture event and sample frame polygon. The table shows the metric values for each metric. The table can be sorted by clicking on the column headers. Click **Properties** to change which metrics and indicators are displayed.
+The metric table always reflects the currently selected data capture event and sample frame polygon. The table shows the metric values for each [metric](/software-help/metrics). The table can be sorted by clicking on the column headers. Click **Properties** to change which metrics and indicators are displayed.
 
 The value column shows each individual metric value. The status column indicates whether the value displayed is a manually entered value or one that was calculated by QRiS by analysing the data capture event geospatial data within the current sampling frame polygon. The status column can have one of the following values:
 
@@ -84,4 +84,3 @@ Right click on an analysis in the QRiS project tree and select **Export Metrics 
 ## Delete an Analysis
 
 Right click on an analysis in the QRiS project tree and select **Delete**. This will delete the analysis and all of its metric values. You cannot undo this action.
-

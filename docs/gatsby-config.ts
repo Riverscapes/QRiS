@@ -89,8 +89,16 @@ module.exports = {
             url: '/software-help/cross-sections',
           },
           {
-            title: 'Sampling Frames',
-            url: '/software-help/sampling-frames',
+            title: 'Sample Frames',
+            url: '/software-help/sample-frames',
+          },
+          {
+            title: 'Analyses',
+            url: '/software-help/analyses',
+          },
+          {
+            title: 'Metrics',
+            url: '/software-help/metrics',
           },
           {
             title: 'Analyses',
@@ -98,10 +106,6 @@ module.exports = {
           },
           {
             title: 'Zonal Statistics',
-            url: '/software-help/zonal-statistics',
-          },
-          {
-            title: 'Stream Gage Tool',
             url: '/software-help/zonal-statistics',
           },
           {
@@ -113,6 +117,10 @@ module.exports = {
             url: '/software-help/context',
             items: [
               {
+                title: 'Stream Gage Tool',
+                url: '/software-help/stream-gage-tool',
+              },
+              {
                 title: 'Watershed Catchments',
                 url: '/software-help/watershed-catchments',
               }
@@ -122,7 +130,6 @@ module.exports = {
       },
       {
         title: 'Technical Reference',
-        url: '/technical-reference/database',
         items: [
           {
             title: 'Database',

@@ -1,44 +1,50 @@
 ---
-title: Sampling Frames
+title: Sample Frames
 banner: true
 description: Riverscapes polygons for calculating metrics
 ---
 
-Sampling frames are polygon feature classes that divide up your riverscapes into smaller units. Typically these individual polygons span valley wall to valley wall and longitudinally represent coherent geomorphic units, or uniform sections of river.
+Sample frames are polygon feature classes that divide up your riverscapes into smaller units. Typically these individual polygons span valley wall to valley wall and longitudinally represent coherent geomorphic units, or uniform sections of river.
 
-Sampling frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics).
+Sample frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics).
 
-Sampling frames are stored within QRiS as a polygon feature class. One string attribute column can be specified as the column to be used for labels when the sampling frame is added to the map. This is useful for displaying the name of each polygon on the map. These labels can be brief names or text representations of the polygon ID etc.
+Sample frames are stored within QRiS as a polygon feature class. One string attribute column can be specified as the column to be used for labels when the sample frame is added to the map. This is useful for displaying the name of each polygon on the map. These labels can be brief names or text representations of the polygon ID etc.
+
+In addition to the display label column, there are several fields related to topology included in the sample frame feature class. "flow_path" is used to specify and differentiate between polygons that are connected to each other. "flow_path" is a string field that can be used to specify a unique identifier for each connected set of polygons, similar to NHD level path or stream name. For most cases of a simple stream, one flow_path is used and a default value can be specified. The "flows_into" field is used to specify the flow direction of the sample frame. This field simply references the fid of the downstream polgyon. 
 
 ![sampling frame overview](/images/software-help/sampling-frame-overview.png)
 
-## Add an Existing Sampling Frame
+## Create a New Sample Frame
 
-You can import an existing polygon feature class and use it as a sampling frame. To do this, right click on the **Sampling Frames** folder within the QRiS [project](/software-help/project) and select the **Add Existing Sampling Frame** menu option. Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project.
-
-## Create a New Sampling Frame
-
-You can create a new sampling frame by drawing a polygon on the map. To do this, right click on the **Sampling Frames** folder within the QRiS [project](/software-help/project) and select the **Create New Sampling** menu option. Provide a name and optional description and then click **OK**. Add the Sampling Frame to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the sampling frame on the map. Remember to stop editing and save your changes before the sampling frame is available for use when importing other data.
+You can create a new sample frame by drawing a polygon on the map. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Create New Sample Frame** menu option, then **Empty Sample Frame (Manual)**. Provide a name and optional Default Flow Path Name and/or description. You may also specify Categorical Fields and attributes on the Categories Tab and Metadata on the Metadata Tab. When you have prepared the Sample Frame properties click **OK**. Add the Sample Frame to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the sampling frame on the map. Remember to stop editing and save your changes before the sampling frame is available for use when importing other data.
 
 ![create sampling frame](/images/software-help/create-sampling-frame.png)
 
-## Sampling Frame Polygon Considerations
+### Create a New Sample Frame from Existing QRiS Layers
 
-Because sampling frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics), it is important to consider the following when creating your sampling frame:
+If you have a QRiS project with existing layers (aoi or scractch polygon, centerline and cross sections) you can create a new sample frame from these layers. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Create New Sample Frame** menu option, then **From Existing QRiS Features**. Provide a name and optional Default Flow Path Name and/or description. You may also specify Categorical Fields and attributes on the Categories Tab and Metadata on the Metadata Tab. When you have prepared the Sample Frame properties click **OK**. Add the Sample Frame to the map by clicking the **Add to Map** button. QRiS will generate the sample frame polygons and add it to your project.  
+
+## Import Sample Frame
+
+You can import an existing polygon feature class and use it as a sample frame. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Import Sample Frame From** menu option and select **Feature Class**. Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description. If you have topology information associated with the features, you can specify display_label, flow_path, and flows_into topolgy fields. If you would like to include other attributes as catagory fields, you may check or uncheck the fields in the catagories tab. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project.
+
+## Sample Frame Polygon Considerations
+
+Because sample frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics), it is important to consider the following when creating your sample frame:
 
 - Polygons should span valley wall to valley wall.
 - Polygons should be mutually exclusive (i.e. no overlap).
 - Polygons should, in most cases, be single part features.
 - Separate polygons should be used to represent different geomorphic units, uniform sections of river or planning areas.
 
-## Add an Sampling Frame to the Map
+## Add an Sample Frame to the Map
 
-You can add a sampling frame to the map by right clicking on any individual sampling frame in the QRiS project tree and selecting **Add to Map**. This will add the sampling frame to the map as a new layer. 
+You can add a sample frame to the map by right clicking on any individual sample frame in the QRiS project tree and selecting **Add to Map**. This will add the sample frame to the map as a new layer. 
 
-## Edit an Existing Sampling Frame
+## Edit an Existing Sample Frame
 
-You can edit a sampling frame by right clicking on any individual sampling frame in the QRiS project tree and selecting **Edit**. This will open the sampling frame in QGIS and allow you to edit the name and description. You can also add the it to the map and use the standard QGIS editing tools to edit the polygons. Remember to stop editing and save your changes before the sampling frame is available for use when importing other data. Layers that have already been imported using the sampling frame will not be updated when you edit the sampling frame. You will need to re-import the layers to see the changes.
+You can edit a sample frame by right clicking on any individual sample frame in the QRiS project tree and selecting **Properties**. This will open the sample frame in QGIS and allow you to edit the name, description and metadata. You can also add the it to the map and use the standard QGIS editing tools to edit the polygons. Remember to stop editing and save your changes before the sampling frame is available for use when importing other data. Layers that have already been imported using the sample frame will not be updated when you edit the sample frame. You will need to re-import the layers to see the changes.
 
-## Delete a Sampling Frame
+## Delete a Sample Frame
 
-You can delete a sampling frame by right clicking on it in the QRiS project tree and selecting **Delete**. This will remove the sampling frame  from the QRiS project. You will not be able to delete a sampling frame if it is being used by any [analyses](/software-help/analyses). You will need to delete any analyses that use the sampling frame before you can delete it.
+You can delete a sample frame by right clicking on it in the QRiS project tree and selecting **Delete**. This will remove the sample frame  from the QRiS project. You will not be able to delete a sample frame if it is being used by any [analyses](/software-help/analyses). You will need to delete any analyses that use the sample frame before you can delete it.
