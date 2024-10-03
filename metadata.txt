@@ -27,7 +27,7 @@ tags=python,riverscapes,planning
 
 homepage=https://riverscapes.github.io/QRiS/
 category=Plugins
-icon=qris_icon.png
+icon=icon.png
 
 # experimental flag
 experimental=False
