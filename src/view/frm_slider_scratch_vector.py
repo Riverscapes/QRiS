@@ -151,7 +151,6 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.cboVectorType, 2, 1, 1, 1)
 
         self.lblSimplifyTolerance = QtWidgets.QLabel('Simplify Tolerance')
-        self.lblSimplifyTolerance.setText()
         self.grid.addWidget(self.lblSimplifyTolerance, 3, 0, 1, 1)
 
         self.dbsSimplifyTolerance = QtWidgets.QDoubleSpinBox()
