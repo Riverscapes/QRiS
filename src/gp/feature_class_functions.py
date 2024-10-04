@@ -54,6 +54,9 @@ def layer_path_parser(path: str) -> Tuple[str, str, object]:
     elif ".gpkg|layername=" in path:
         path, layer_name = path.split('|layername=')
         return path, layer_name, layer_name
+    elif ".gdb|layername=" in path:
+        path, layer_name = path.split('|layername=')
+        return path, layer_name, layer_name
     else:
         # this represents an in-memory layer
         vl = QgsVectorLayer(path)
