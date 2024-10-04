@@ -28,7 +28,6 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.vector_type_id = vector_type_id
         self.scratch_vector = scratch_vector
         self.import_source_path = import_source_path
-        self.layer_id = None
         self.metadata = None
 
         super(FrmScratchVector, self).__init__(parent)
@@ -46,15 +45,13 @@ class FrmScratchVector(QtWidgets.QDialog):
             self.txtName.textChanged.connect(self.on_name_changed)
             self.txtSourcePath.textChanged.connect(self.on_name_changed)
 
-            if isinstance(import_source_path, QgsVectorLayer):
+            if isinstance(self.import_source_path, QgsVectorLayer):
                 self.layer_name = import_source_path.name()
-                self.layer_id = 'memory'
-                init_path = f'Temporary Layer: {self.layer_name}'
+                self.txtSourcePath.setText(f'Temporary Layer: {self.layer_name}')
             else:
-                init_path = import_source_path
-                self.layer_name = os.path.splitext(os.path.basename(import_source_path))[0]
+                _path, self.layer_name, *_ = layer_path_parser(self.import_source_path)
+                self.txtSourcePath.setText(self.import_source_path)
 
-            self.txtSourcePath.setText(init_path)
             self.txtName.setText(self.layer_name)
 
             # Masks (filtered to just AOI)
@@ -112,8 +109,7 @@ class FrmScratchVector(QtWidgets.QDialog):
             try:
                 # Ensure that the scratch feature class name doesn't exist in scratch geopackage
                 # Do this because an error might have left a lingering feature class table etc
-                out_path, layer_name, _layer_id = layer_path_parser(self.txtProjectPath.text())
-                self.fc_name = layer_name
+                _out_path, self.fc_name, _layer_id = layer_path_parser(self.txtProjectPath.text())
 
                 clip_mask = None
                 clip_item = self.cboMask.currentData(QtCore.Qt.UserRole)
@@ -121,10 +117,10 @@ class FrmScratchVector(QtWidgets.QDialog):
                     if clip_item.id > 0:        
                         clip_mask = ('aoi_features', 'mask_id', clip_item.id)
 
-                if self.layer_id == 'memory':
+                if isinstance(self.import_source_path, QgsVectorLayer):
                     task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
                 else:
-                    task = ImportFeatureClass(self.txtSourcePath.text(), self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
+                    task = ImportFeatureClass(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
                 result = task.run()
