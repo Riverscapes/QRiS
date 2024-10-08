@@ -216,6 +216,7 @@ class FrmRaster(QtWidgets.QDialog):
                 self.project.rasters[self.raster.id] = self.raster
                 if self.chkHillshade.isChecked() is True:
                     hillshade_metadata = {'system': {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}}
+                    hillshade_metadata.update(metadata)
                     self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
                     self.project.rasters[self.hillshade.id] = self.hillshade
                     if 'system' not in metadata:
