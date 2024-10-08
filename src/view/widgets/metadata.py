@@ -90,14 +90,8 @@ class MetadataWidget(QtWidgets.QWidget):
                 for key, value in self.metadata['metadata'].items():
                     self.table.insertRow(self.table.rowCount())
                     self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
-
-                    if isinstance(value, str) and (value.startswith('http://') or value.startswith('https://')):
-                        # Create a QLabel with a hyperlink
-                        label = QtWidgets.QLabel(f'<a href="{value}">{value}</a>')
-                        label.setOpenExternalLinks(True)
-                        self.table.setCellWidget(self.table.rowCount() - 1, 1, label)
-                    else:
-                        self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
+                    label_widget = MetadataValueLabel(str(value))
+                    self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
 
         if self.new_keys is not None:
             for key in self.new_keys:
@@ -128,9 +122,15 @@ class MetadataWidget(QtWidgets.QWidget):
     def add_row(self):
 
         self.table.insertRow(self.table.rowCount())
+        self.table.setCellWidget(self.table.rowCount() - 1, 1, MetadataValueLabel(''))
 
     def delete_row(self):
 
+        # need to delete from metadata dict as well
+        if self.table.currentRow() > -1:
+            if self.table.item(self.table.currentRow(), 0) is not None:
+                key = self.table.item(self.table.currentRow(), 0).text()
+                self.delete_item('metadata', key)
         self.table.removeRow(self.table.currentRow())
 
     def delete_item(self, metadata_type: str, key: str):
@@ -147,7 +147,7 @@ class MetadataWidget(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.warning(self, 'Missing Metadata Key', 'Please check the metadata table for any empty or missing keys.')
                 return False
 
-            if self.table.item(row, 1) is None or self.table.item(row, 1).text().strip() == '':
+            if self.table.cellWidget(row, 1) is None or self.table.cellWidget(row, 1).text.strip() == '':
                 # if the key is in the new_keys list and the value is empty, remove it
                 if self.new_keys is not None and self.table.item(row, 0).text() in self.new_keys:
                     missing_keys.append(self.table.item(row, 0).text())
@@ -183,7 +183,7 @@ class MetadataWidget(QtWidgets.QWidget):
             if 'metadata' not in self.metadata:
                 self.metadata['metadata'] = dict()
         for row in range(self.table.rowCount()):
-            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.cellWidget(row, 1).text
 
         return self.metadata
 
@@ -193,14 +193,51 @@ class MetadataWidget(QtWidgets.QWidget):
             if 'metadata' not in self.metadata:
                 self.metadata['metadata'] = dict()
         for row in range(self.table.rowCount()):
-            # check if the cell contains a QLabel with a hyperlink
-            if isinstance(self.table.cellWidget(row, 1), QtWidgets.QLabel):
-                # strip the HTML tags to get the URL
-                text = self.table.cellWidget(row, 1).text()
-                start = text.find('href="') + 6
-                end = text.find('"', start)
-                self.metadata['metadata'][self.table.item(row, 0).text()] = text[start:end]
-            else:
-                self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.item(row, 1).text()
+            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.cellWidget(row, 1).text
 
         return json.dumps(self.metadata)
+
+class MetadataValueLabel(QtWidgets.QWidget):
+    def __init__(self, text: str, editable: bool=True, parent=None):
+        super().__init__(parent)
+
+        self.text = text
+        self.editable = editable
+        self.label_layout = QtWidgets.QHBoxLayout(self)
+        if any(text.startswith(v) for v in ['http://','https://', 'www.']):
+            self.label = QtWidgets.QLabel(f'<a href="{text}">{text}</a>', self)
+            self.label.setOpenExternalLinks(True)
+        else:
+            self.label = QtWidgets.QLabel(text, self)
+
+        self.line_edit = QtWidgets.QLineEdit(text, self)
+        self.line_edit.hide()
+
+        self.label_layout.addWidget(self.label)
+        self.label_layout.addWidget(self.line_edit)
+        self.label_layout.setContentsMargins(0, 0, 0, 0)
+
+        if self.editable:
+            self.label.mouseDoubleClickEvent = self.edit
+            self.line_edit.editingFinished.connect(self.finish_editing)
+        else:
+            self.line_edit.setReadOnly(True)
+            # make the text a little darker to indicate it's not editable
+            self.label.setStyleSheet('color: #666;')
+
+    def edit(self, event):
+        self.label.hide()
+        self.line_edit.show()
+        self.line_edit.setFocus()
+
+    def finish_editing(self):
+        text = self.line_edit.text()
+        if any(text.startswith(v) for v in ['http://','https://', 'www.']):
+            self.label.setText(f'<a href="{text}">{text}</a>')
+            self.label.setOpenExternalLinks(True)
+        else:
+            self.label.setText(text)
+            self.label.setOpenExternalLinks(False)
+        self.label.show()
+        self.line_edit.hide()
+        self.text = text
