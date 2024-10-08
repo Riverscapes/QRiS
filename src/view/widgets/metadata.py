@@ -15,16 +15,18 @@ class MetadataWidget(QtWidgets.QWidget):
         self.attribute_metadat = dict()
         self.table: QtWidgets.QTableWidget = None
 
+        self.create_table_ui()
+
         if json_meta is not None and json_meta != '' and json_meta != 'null':
             self.load_json(json_meta)
-
-        self.create_table_ui()
 
     def load_json(self, json_meta: str):
 
         self.json_meta = json_meta
-        self.metadata = json.loads(self.json_meta)
+        if json_meta is not None and json_meta != '' and json_meta != 'null':
+            self.metadata = json.loads(self.json_meta)
         self.check_metadata()
+        self.load_table()
 
     def add_metadata(self, key: str, value: str):
          
@@ -85,19 +87,6 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setSortingEnabled(True)
 
-        if self.metadata is not None:
-            if 'metadata' in self.metadata:
-                for key, value in self.metadata['metadata'].items():
-                    self.table.insertRow(self.table.rowCount())
-                    self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
-                    label_widget = MetadataValueLabel(str(value))
-                    self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
-
-        if self.new_keys is not None:
-            for key in self.new_keys:
-                self.table.insertRow(self.table.rowCount())
-                self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
-
         self.cmdAdd = QtWidgets.QPushButton()
         self.cmdAdd.setText('Add')
         self.cmdAdd.setToolTip('Add a new key/value pair')
@@ -118,6 +107,21 @@ class MetadataWidget(QtWidgets.QWidget):
 
         self.horiz.addLayout(self.vert)
         self.horiz.addWidget(self.table)
+
+    def load_table(self):
+
+        if self.metadata is not None:
+            if 'metadata' in self.metadata:
+                for key, value in self.metadata['metadata'].items():
+                    self.table.insertRow(self.table.rowCount())
+                    self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+                    label_widget = MetadataValueLabel(str(value))
+                    self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
+
+        if self.new_keys is not None:
+            for key in self.new_keys:
+                self.table.insertRow(self.table.rowCount())
+                self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
 
     def add_row(self):
 
