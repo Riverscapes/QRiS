@@ -1,6 +1,19 @@
 # QRiS Plugin
 
-## [1.0.0]
+## [1.0.2] 2024 OCT 08
+
+### Added
+- Mirror properties/metadata when automatically creating hillshade #470
+- Move metadata along with layer when the layer is promoted to another feature #439
+
+### Fixed
+- Raster slider export polygon not working #511
+- Riverscapes logo on plugin #280
+- Allow importing features from File Geodatabases #502
+- Metadata tab stability improvements
+
+
+## [1.0.0] 2024 SEPT 19
 
 ### Added
 - Additional Tool Tips #200
