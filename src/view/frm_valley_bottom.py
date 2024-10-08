@@ -105,6 +105,9 @@ class FrmValleyBottom(QtWidgets.QDialog):
 
         self.basepath, self.layer_name, self.layer_id = layer_path_parser(self.import_source_path)
 
+        metadata_json = json.dumps(db_item.metadata) if db_item.metadata is not None else None
+        self.metadata_widget.load_json(metadata_json)
+
     def accept(self):
 
         if not validate_name(self, self.txtName):
