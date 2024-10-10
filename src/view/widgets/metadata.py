@@ -1,6 +1,6 @@
 import json
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 
 class MetadataWidget(QtWidgets.QWidget):
@@ -78,8 +78,8 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setColumnCount(2)
         self.table.setRowCount(0)
         self.table.setHorizontalHeaderLabels(['Key', 'Value'])
-        self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        # self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # First column
+        self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)  # Second column
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked | QtWidgets.QAbstractItemView.SelectedClicked | QtWidgets.QAbstractItemView.EditKeyPressed)
@@ -87,17 +87,19 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setSortingEnabled(True)
 
-        self.cmdAdd = QtWidgets.QPushButton()
-        self.cmdAdd.setText('Add')
+        self.cmdAdd = QtWidgets.QPushButton('Add')
         self.cmdAdd.setToolTip('Add a new key/value pair')
-        self.cmdAdd.setToolTipDuration(2000)
         self.cmdAdd.clicked.connect(self.add_row)
 
-        self.cmdDelete = QtWidgets.QPushButton()
-        self.cmdDelete.setText('Delete')
+        self.cmdDelete = QtWidgets.QPushButton('Delete')
         self.cmdDelete.setToolTip('Delete the selected key/value pair')
-        self.cmdDelete.setToolTipDuration(2000)
+        self.cmdDelete.setEnabled(False)
         self.cmdDelete.clicked.connect(self.delete_row)
+
+        self.chkViewSystem = QtWidgets.QCheckBox()
+        self.chkViewSystem.setText('Show Read-Only')
+        self.chkViewSystem.setToolTip('Show or hide read-only QRiS system metadata')
+        self.chkViewSystem.stateChanged.connect(self.toggle_system_metadata)
 
         # add buttons to layout on left side, then table on right side
         self.vert = QtWidgets.QVBoxLayout()
@@ -106,7 +108,12 @@ class MetadataWidget(QtWidgets.QWidget):
         self.vert.addStretch()
 
         self.horiz.addLayout(self.vert)
-        self.horiz.addWidget(self.table)
+        
+        self.vert_table = QtWidgets.QVBoxLayout()  
+        self.vert_table.addWidget(self.table)
+        self.vert_table.addWidget(self.chkViewSystem)
+
+        self.horiz.addLayout(self.vert_table)
 
     def load_table(self):
 
@@ -123,10 +130,43 @@ class MetadataWidget(QtWidgets.QWidget):
                 self.table.insertRow(self.table.rowCount())
                 self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
 
+        # Add read-only system metadata
+        if self.metadata is not None and 'system' in self.metadata:
+            for key, value in self.metadata['system'].items():
+                self.table.insertRow(self.table.rowCount())
+                key_item = QtWidgets.QTableWidgetItem(key)
+                # set the 'color: #666;' of the text of this cell to indicate it's read-only
+                key_item.setForeground(QtGui.QBrush(QtGui.QColor(102, 102, 102)))
+                key_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                self.table.setItem(self.table.rowCount() - 1, 0, key_item)
+
+                # set key as read-only
+                self.table.item(self.table.rowCount() - 1, 0).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                label_widget = MetadataValueLabel(str(value), editable=False, is_system=True)
+                self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
+
+        self.table.cellClicked.connect(self.toggle_delete_button)
+        initial_width = calculate_max_column_width(self.table)
+        self.table.setColumnWidth(0, initial_width)
+        self.toggle_system_metadata()
+
     def add_row(self):
 
+        # Insert a new row at the end of the table
         self.table.insertRow(self.table.rowCount())
+
+        # Create a new QTableWidgetItem for the key column
+        key_item = QtWidgets.QTableWidgetItem('')
+        key_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
+        self.table.setItem(self.table.rowCount() - 1, 0, key_item)
+
+        # Set the cell widget for the value column
         self.table.setCellWidget(self.table.rowCount() - 1, 1, MetadataValueLabel(''))
+
+        # Set the focus to edit the key
+        self.table.setCurrentCell(self.table.rowCount() - 1, 0)
+        self.table.editItem(key_item)
+
 
     def delete_row(self):
 
@@ -142,16 +182,41 @@ class MetadataWidget(QtWidgets.QWidget):
         if metadata_type in self.metadata and key in self.metadata[metadata_type]:
             del self.metadata[metadata_type][key]
 
+    def toggle_system_metadata(self):
+
+        for row in range(self.table.rowCount()):
+            if self.chkViewSystem.isChecked():
+                self.table.showRow(row)
+            else:
+                if self.table.item(row, 0) is not None and self.table.cellWidget(row, 1).is_system:
+                    self.table.hideRow(row)
+                else:
+                    self.table.showRow(row)
+
+    def toggle_delete_button(self):
+
+        # we need to disable the delete button if a system metadata key is selected
+        row = self.table.currentRow()
+        if row > -1:
+            if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
+                self.cmdDelete.setEnabled(False)
+            else:
+                self.cmdDelete.setEnabled(True)
+
     def validate(self) -> bool:
 
         missing_keys = []
 
         for row in range(self.table.rowCount()):
             if self.table.item(row, 0) is None or self.table.item(row, 0).text().strip() == '':
+                if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
+                    continue
                 QtWidgets.QMessageBox.warning(self, 'Missing Metadata Key', 'Please check the metadata table for any empty or missing keys.')
                 return False
 
             if self.table.cellWidget(row, 1) is None or self.table.cellWidget(row, 1).text.strip() == '':
+                if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
+                    continue
                 # if the key is in the new_keys list and the value is empty, remove it
                 if self.new_keys is not None and self.table.item(row, 0).text() in self.new_keys:
                     missing_keys.append(self.table.item(row, 0).text())
@@ -187,26 +252,36 @@ class MetadataWidget(QtWidgets.QWidget):
             if 'metadata' not in self.metadata:
                 self.metadata['metadata'] = dict()
         for row in range(self.table.rowCount()):
+            # if this is system metadata, then ignore it
+            if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
+                continue
             self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.cellWidget(row, 1).text
 
         return self.metadata
 
     def get_json(self) -> str:
 
-        if self.table.rowCount() > 0:
-            if 'metadata' not in self.metadata:
-                self.metadata['metadata'] = dict()
-        for row in range(self.table.rowCount()):
-            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.cellWidget(row, 1).text
+        data = self.get_data()
 
-        return json.dumps(self.metadata)
+        return json.dumps(data)
+
+class CustomLineEdit(QtWidgets.QLineEdit):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+            self.clearFocus()  # Finish editing
+        else:   
+            super().keyPressEvent(event)
 
 class MetadataValueLabel(QtWidgets.QWidget):
-    def __init__(self, text: str, editable: bool=True, parent=None):
+    def __init__(self, text: str, editable: bool=True, parent=None, is_system: bool=False):
         super().__init__(parent)
 
         self.text = text
         self.editable = editable
+        self.is_system = is_system
         self.label_layout = QtWidgets.QHBoxLayout(self)
         if any(text.startswith(v) for v in ['http://','https://', 'www.']):
             self.label = QtWidgets.QLabel(f'<a href="{text}">{text}</a>', self)
@@ -214,7 +289,7 @@ class MetadataValueLabel(QtWidgets.QWidget):
         else:
             self.label = QtWidgets.QLabel(text, self)
 
-        self.line_edit = QtWidgets.QLineEdit(text, self)
+        self.line_edit = CustomLineEdit(text, self)
         self.line_edit.hide()
 
         self.label_layout.addWidget(self.label)
@@ -229,7 +304,7 @@ class MetadataValueLabel(QtWidgets.QWidget):
             # make the text a little darker to indicate it's not editable
             self.label.setStyleSheet('color: #666;')
 
-    def edit(self, event):
+    def edit(self, event=None):
         self.label.hide()
         self.line_edit.show()
         self.line_edit.setFocus()
@@ -245,3 +320,13 @@ class MetadataValueLabel(QtWidgets.QWidget):
         self.label.show()
         self.line_edit.hide()
         self.text = text
+
+def calculate_max_column_width(table: QtWidgets.QTableWidget) -> int:
+    max_width = 0
+    font_metrics = table.fontMetrics()
+    for row in range(table.rowCount()):
+        item = table.item(row, 0)
+        if item is not None:
+            text_width = font_metrics.horizontalAdvance(item.text())
+            max_width = max(max_width, text_width)
+    return max_width
