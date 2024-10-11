@@ -896,9 +896,9 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 # prepare sql string for each metric
                 sql_metric = ", ".join([f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in analysis.analysis_metrics.items()])
-                sql = f"""CREATE VIEW {analysis_view} AS SELECT * FROM mask_features JOIN (SELECT mask_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis.id} GROUP BY mask_feature_id) AS x ON mask_features.fid = x.mask_feature_id"""
+                sql = f"""CREATE VIEW {analysis_view} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis.id} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
                 if sql_metric == '':
-                    sql = f"CREATE VIEW {analysis_view} AS SELECT * FROM mask_features WHERE mask_id == {sample_frame.id}"
+                    sql = f"CREATE VIEW {analysis_view} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {sample_frame.id}"
                 self.create_spatial_view(view_name=analysis_view,
                                         fc_name=None,
                                         field_name=None,
@@ -927,10 +927,10 @@ class FrmExportProject(QtWidgets.QDialog):
                 self.rs_project.realizations.append(realization)
 
         # open the geopackage using ogr
-        ds_gpkg = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses','analysis_metrics', 'aoi_features', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers','mask_features', 'masks', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'valley_bottom_features', 'valley_bottoms']:
+        ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
+        for layer in ['analyses','analysis_metrics', 'aoi_features', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers','mask_features', 'masks', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features','sample_frames','valley_bottom_features', 'valley_bottoms']:
             # get the layer
-            lyr = ds_gpkg.GetLayerByName(layer)
+            lyr: ogr.Layer = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list
             if layer in keep_layers:
                 keep_layer = keep_layers[layer]
@@ -970,6 +970,13 @@ class FrmExportProject(QtWidgets.QDialog):
         sql = sql if sql is not None else f"CREATE VIEW {view_name} AS SELECT * FROM {fc_name} WHERE {field_name} == {id_value}"
         with sqlite3.connect(out_geopackage) as conn:
             curs = conn.cursor()
+            # check if the view already exists, if so, delete it
+            curs.execute(f"SELECT name FROM sqlite_master WHERE type='view' AND name='{view_name}'")
+            if curs.fetchone():
+                curs.execute(f"DROP VIEW {view_name}")
+                curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{view_name}'")
+                curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{view_name}'")
+
             curs.execute(sql)
             # add view to geopackage
             sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
