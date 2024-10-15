@@ -72,12 +72,15 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         self.analysis: Analysis = self.cmbAnalysis.currentData(Qt.UserRole)
 
-        metrics = DBItemModel(self.qris_project.metrics)
+        self.cmbMetric.clear()
+        analysis_metrics = {i: analysis_metric.metric for i, analysis_metric in self.analysis.analysis_metrics.items()}
+        metrics = DBItemModel(analysis_metrics)
         self.cmbMetric.setModel(metrics)
 
         sample_frame_features = get_sample_frame_ids(self.qris_project.project_file, self.analysis.sample_frame.id)
         self.cmbSampleFrameFeature.setModel(DBItemModel(sample_frame_features))
 
+        self.cmbEvent.clear()
         events = DBItemModel(self.qris_project.events)
         self.cmbEvent.setModel(events)
 
@@ -90,7 +93,8 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbSampleFrameFeature.currentIndexChanged.connect(self.on_sample_frame_feature_changed)
         self.cmbMetric.currentIndexChanged.connect(self.on_metric_changed)
 
-        self.plot_metric_over_time(self.cmbMetric.currentData(Qt.UserRole).id)
+        if self.cmbMetric.count() > 0:
+            self.plot_metric_over_time(self.cmbMetric.currentData(Qt.UserRole).id)
 
     def on_sample_frame_feature_changed(self, index):
         
@@ -130,6 +134,12 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
             cursor.execute('SELECT * FROM metric_values WHERE analysis_id = ? AND metric_id = ?', (analysis_id, metric_id))
             return cursor.fetchall()
         
+
+    def reload_metrics(self):
+
+        self.cmbMetric.clear()
+        metrics = DBItemModel(self.qris_project.metrics)
+        self.cmbMetric.setModel(metrics)
 
     def get_event_dates(self):
 
