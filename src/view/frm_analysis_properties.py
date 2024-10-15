@@ -113,6 +113,15 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             else:
                 self.cboDEM.setCurrentIndex(-1)
 
+            for row in range(self.metricsTable.rowCount()):
+                metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
+                cboStatus: QtWidgets.QComboBox = self.metricsTable.cellWidget(row, 1)
+                if metric.id in analysis.analysis_metrics:
+                    cboStatus.setCurrentIndex(analysis.analysis_metrics[metric.id].level_id)
+                else:
+                    # set to None if not found
+                    cboStatus.setCurrentIndex(0)
+
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
             self.cboCenterline.setEnabled(False)
