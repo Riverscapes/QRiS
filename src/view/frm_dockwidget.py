@@ -26,10 +26,10 @@ import os
 from functools import partial
 from osgeo import ogr
 
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog, QgsLayerTreeNode
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.gui import QgsMapToolEmitPoint
+from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView
 from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
@@ -51,6 +51,7 @@ from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..model.valley_bottom import ValleyBottom
 
+from .frm_attribute_table import FrmAttributeTable
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_planning_container import FrmPlanningContainer
@@ -80,6 +81,7 @@ from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
 from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from .frm_valley_bottom import FrmValleyBottom
+from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 
 from ..QRiS.settings import Settings, CONSTANTS
@@ -162,6 +164,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
 
         self.qrave = None
+
+        ltv: QgsLayerTreeView = iface.layerTreeView()
+        ltv.contextMenuAboutToShow.connect(self.add_context_batch_edit_attributes)
 
     def build_tree_view(self, project_file, new_item=None):
         """
@@ -1584,6 +1589,33 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 font.setItalic(False)
                 node.setFont(font)
                 node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+
+    def add_context_batch_edit_attributes(self, menu: QtWidgets.QMenu) -> None:
+        
+        layer: QgsVectorLayer = iface.activeLayer()
+        if not layer:
+            return
+        if layer.type() != QgsMapLayer.VectorLayer:
+            return
+        
+        event_layer_field_index = layer.fields().indexOf('event_layer_id')
+        if event_layer_field_index == -1:
+            return
+        
+        menu.addSeparator()
+        menu.addAction('Batch Edit QRiS Attributes', self.batch_edit_attributes)
+
+    def batch_edit_attributes(self) -> None:
+
+        layer: QgsMapLayer = iface.activeLayer()
+        if not layer:
+            return
+        if layer.type() == QgsMapLayer.VectorLayer:
+            if layer.isEditable():
+                QtWidgets.QMessageBox.warning(self, 'Batch Edit QRiS Attributes', 'Please stop the editing session before proceeding.')
+                return
+            frm = FrmBatchAttributeEditor(layer)
+            frm.exec_()
 
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
