@@ -51,7 +51,6 @@ from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..model.valley_bottom import ValleyBottom
 
-from .frm_attribute_table import FrmAttributeTable
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_planning_container import FrmPlanningContainer
