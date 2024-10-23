@@ -21,7 +21,7 @@ date_ranges = ['1 Year', '3 Years', '5 Years', '10 Years', 'Full Data Range', 'C
 
 class FrmClimateEngineDownload(QtWidgets.QDialog):
 
-    def __init__(self, parent: QtWidgets.QWidget = None, qris_project: Project = None):
+    def __init__(self, parent: QtWidgets.QWidget = None, qris_project: Project = None, sample_frame_id: int = None, sample_frame_feature_fids: list = None):
         super().__init__(parent)
 
         self.iface = iface
@@ -36,6 +36,9 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         # Datasets
         self.datasets = get_datasets()
         self.cboDataset.addItems(self.datasets.keys())
+
+        if sample_frame_id is not None:
+            self.sample_frame_widget.set_selected_sample_frame(sample_frame_id, sample_frame_feature_fids)
 
     def on_date_range_changed(self):
             
@@ -87,6 +90,8 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
 
     def retrieve_timeseries(self):
+
+        self.lblStatus.setText('Starting Metric Download...')
 
         if self.sample_frame_widget.selected_sample_frame() is None:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Select a sample frame')
@@ -174,13 +179,14 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
             self.lblStatus.setText('Timeseries retrieved successfully')
             QtWidgets.QMessageBox.information(self, 'Climate Engine Download', 'Climate Engine Timeseries retrieved successfully')
             self.btn_close.setText('Close')
-            self.btnGetTimeseries.setEnabled(False)
+            if self.chkCloseWindow.isChecked():
+                self.close()
         else:
             self.lblStatus.setText('Error retrieving timeseries')
 
     def setupUi(self):
 
-        self.resize(500, 400)
+        self.resize(500, 750)
         self.setMinimumSize(400, 300)
 
         self.vert = QtWidgets.QVBoxLayout(self)
@@ -193,7 +199,6 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.lblSampleFrames.setAlignment(QtCore.Qt.AlignTop)
         self.grid.addWidget(self.lblSampleFrames, 0, 0)
 
-        self.sample_frame_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.grid.addWidget(self.sample_frame_widget, 0, 1)
 
         self.lblDataset = QtWidgets.QLabel('Dataset')
@@ -220,23 +225,49 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.vert_variables.addStretch() 
 
         self.lboxVariables = QtWidgets.QListWidget()
+        self.lboxVariables.setMinimumHeight(200)
         self.grid.addWidget(self.lboxVariables, 2, 1)
 
         self.lblDateRange = QtWidgets.QLabel('Date Range')
         self.grid.addWidget(self.lblDateRange, 4, 0)
+        # set the alignment of the label in the cell to the top
+        self.grid.setAlignment(self.lblDateRange, QtCore.Qt.AlignTop)
         
+        self.frameDateRange = QtWidgets.QFrame()
+        self.frameDateRange.setLayout(QtWidgets.QVBoxLayout())
+        self.frameDateRange.layout().setContentsMargins(0, 0, 0, 0)  # Remove margins
+        # self.frameDateRange.layout().setSpacing(0)  # Remove spacing
+        self.frameDateRange.setObjectName("frameDateRange")
+        self.frameDateRange.setStyleSheet('QFrame#frameDateRange {border: 1px solid gray; border-radius: 3px; padding: 5px;}')
+        self.grid.addWidget(self.frameDateRange, 4, 1)
+        self.grid.setAlignment(self.frameDateRange, QtCore.Qt.AlignTop)
+
         self.cboDateRange = QtWidgets.QComboBox()
         self.cboDateRange.addItems(date_ranges)
         self.cboDateRange.currentIndexChanged.connect(self.on_date_range_changed)
-        self.grid.addWidget(self.cboDateRange, 4, 1)
+        self.frameDateRange.layout().addWidget(self.cboDateRange)
 
         self.date_range_widget.setEnabled(False)
-        self.grid.addWidget(self.date_range_widget, 5, 1)
+        self.frameDateRange.layout().addWidget(self.date_range_widget)
+        self.frameDateRange.layout().setAlignment(self.date_range_widget, QtCore.Qt.AlignTop)
+
+        # # Adjust row stretch factors
+        self.grid.setRowStretch(0, 0)  # Decrease height of row 0
+        self.grid.setRowStretch(1, 1)  # Default stretch for row 1
+        self.grid.setRowStretch(2, 10)  # Increase height of row 2
+        self.grid.setRowStretch(3, 0)
+
+        self.chkCloseWindow = QtWidgets.QCheckBox('Close Window Open After Download')
+        self.chkCloseWindow.setChecked(True)
+        self.grid.addWidget(self.chkCloseWindow, 5, 1, 1, 2)
+
+        self.lblStatus = QtWidgets.QLabel("Select sample frames, dataset, variables, and the date range. Then Click 'Download Metrics'.")
+        self.vert.addWidget(self.lblStatus)
 
         self.horiz_buttons = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz_buttons)
 
-        self.btn_climate_engine = QtWidgets.QPushButton('Climate Engine')
+        self.btn_climate_engine = QtWidgets.QPushButton('About Climate Engine')
         self.btn_climate_engine.setStyleSheet('QPushButton {text-decoration: underline; color: blue;}')
         self.btn_climate_engine.clicked.connect(open_climate_engine_website)
         self.horiz_buttons.addWidget(self.btn_climate_engine)
@@ -246,7 +277,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
         self.horiz_buttons.addStretch()
 
-        self.btnGetTimeseries = QtWidgets.QPushButton('Get Timeseries')
+        self.btnGetTimeseries = QtWidgets.QPushButton('Download Metrics')
         self.btnGetTimeseries.clicked.connect(self.retrieve_timeseries)
         self.horiz_buttons.addWidget(self.btnGetTimeseries)
         self.btnGetTimeseries.setEnabled(False)
@@ -254,9 +285,6 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.btn_close = QtWidgets.QPushButton('Cancel')
         self.btn_close.clicked.connect(self.close)
         self.horiz_buttons.addWidget(self.btn_close)
-
-        self.lblStatus = QtWidgets.QLabel()
-        self.vert.addWidget(self.lblStatus)
         
         self.cboDataset.currentIndexChanged.connect(self.on_dataset_changed)
 
