@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon, QCursor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 
 from .frm_climate_engine_download import FrmClimateEngineDownload
 from .utilities import add_help_button
@@ -117,7 +117,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.tab_widget_right.setVisible(True)
         self.lbl_initial_text.setVisible(False)
-        
+
         # get the date range
         start_date, end_date = self.date_range_widget.get_date_range()
 
@@ -321,7 +321,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.horiz_main = QtWidgets.QHBoxLayout(self.dockWidgetContents)
 
         self.splitter = QtWidgets.QSplitter(self.dockWidgetContents)
-        self.splitter.setSizes([300])
+        self.splitter.setSizes([241])
         self.horiz_main.addWidget(self.splitter)
 
         self.vert_left = QtWidgets.QVBoxLayout(self)
@@ -331,6 +331,8 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.splitter.addWidget(self.widget_left)
 
         self.tab_widget_left = QtWidgets.QTabWidget(self.widget_left)
+        size = QSize(241, 429)
+        self.tab_widget_left.setMinimumSize(size)
         self.vert_left.addWidget(self.tab_widget_left)
 
         # Sample Frame Tab
@@ -370,50 +372,67 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.widget_right.setLayout(self.vert_right)
         self.splitter.addWidget(self.widget_right)
 
-        self.horiz_right_top = QtWidgets.QHBoxLayout(self)
-        self.vert_right.addLayout(self.horiz_right_top)
+        self.horiz_chart_controls = QtWidgets.QHBoxLayout(self)
 
-        self.lbl_date_range = QtWidgets.QLabel('Date Range')
-        font = self.lbl_date_range.font()
-        font.setBold(True)
-        self.lbl_date_range.setFont(font)
-        self.horiz_right_top.addWidget(self.lbl_date_range)
+        qframe_x_axis = QtWidgets.QFrame(self)
+        qframe_x_axis.setLayout(QtWidgets.QHBoxLayout())
+        qframe_x_axis.layout().setContentsMargins(0, 0, 0, 0)  # Remove margins
+        qframe_x_axis.layout().setSpacing(0)  # Remove spacing
+        qframe_x_axis.setObjectName("qframe_x_axis")
+        qframe_x_axis.setStyleSheet('QFrame#qframe_x_axis {border: 1px solid gray; border-radius: 3px; padding: 5px;}')
+        # qframe_x_axis.setFrameShape(QtWidgets.QFrame.StyledPanel)
 
-        self.horiz_right_top.addWidget(self.date_range_widget)
-
-        self.btn_date_range = QtWidgets.QPushButton('Full Range')
-        self.btn_date_range.clicked.connect(self.date_range_widget.set_dates_to_bounds)
-        self.horiz_right_top.addWidget(self.btn_date_range)
+        self.horiz_chart_controls.addWidget(qframe_x_axis)
 
         self.lbl_chart_type = QtWidgets.QLabel('X-Axis Represents')
         font = self.lbl_chart_type.font()
         font.setBold(True)
         self.lbl_chart_type.setFont(font)
-        self.horiz_right_top.addWidget(self.lbl_chart_type)
+        qframe_x_axis.layout().addWidget(self.lbl_chart_type)
 
         self.rdo_time = QtWidgets.QRadioButton('Time')
         self.rdo_time.setChecked(True)
-        self.horiz_right_top.addWidget(self.rdo_time)
+        qframe_x_axis.layout().addWidget(self.rdo_time)
 
         self.rdo_space = QtWidgets.QRadioButton('Space')
         self.rdo_space.setChecked(False)
         self.rdo_space.setEnabled(False)
         self.rdo_space.setToolTip('Not yet implemented')
-        self.horiz_right_top.addWidget(self.rdo_space)
+        qframe_x_axis.layout().addWidget(self.rdo_space)
+
+        qframe_date_range = QtWidgets.QFrame(self)
+        qframe_date_range.setLayout(QtWidgets.QHBoxLayout())
+        qframe_date_range.layout().setContentsMargins(0, 0, 0, 0)  # Remove margins
+        # qframe_date_range.layout().setSpacing(0)
+        qframe_date_range.setObjectName("qframe_date_range")
+        qframe_date_range.setStyleSheet('QFrame#qframe_date_range {border: 1px solid gray; border-radius: 3px; padding: 5px;}')
+        self.horiz_chart_controls.addWidget(qframe_date_range)
+
+        self.lbl_date_range = QtWidgets.QLabel('Date Range')
+        font = self.lbl_date_range.font()
+        font.setBold(True)
+        self.lbl_date_range.setFont(font)
+        qframe_date_range.layout().addWidget(self.lbl_date_range)
+
+        qframe_date_range.layout().addWidget(self.date_range_widget)
+
+        self.btn_date_range = QtWidgets.QPushButton('Full Range')
+        self.btn_date_range.clicked.connect(self.date_range_widget.set_dates_to_bounds)
+        qframe_date_range.layout().addWidget(self.btn_date_range)
         
-        self.horiz_right_top.addStretch()
+        self.horiz_chart_controls.addStretch()
 
         self.btn_export = QtWidgets.QPushButton('Export')
         self.btn_export.clicked.connect(self.export_data)
-        self.horiz_right_top.addWidget(self.btn_export)
+        self.horiz_chart_controls.addWidget(self.btn_export)
 
         self.btn_help = add_help_button(self, 'context/climate-engine-explorer')
-        self.horiz_right_top.addWidget(self.btn_help)
+        self.horiz_chart_controls.addWidget(self.btn_help)
 
         self.btn_about_climate_engine = QtWidgets.QPushButton('About Climate Engine')
         self.btn_about_climate_engine.setStyleSheet('QPushButton {text-decoration: underline; color: blue;}')
         self.btn_about_climate_engine.clicked.connect(open_climate_engine_website)
-        self.horiz_right_top.addWidget(self.btn_about_climate_engine)
+        self.horiz_chart_controls.addWidget(self.btn_about_climate_engine)
 
         self.lbl_initial_text = QtWidgets.QLabel('Select a Sample Frame and Climate Engine Metric Timeseries to view data')
         self.vert_right.addWidget(self.lbl_initial_text)
@@ -427,6 +446,19 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.tab_widget_right = QtWidgets.QTabWidget(self)
         self.vert_right.addWidget(self.tab_widget_right)
-        self.tab_widget_right.addTab(self.chart_canvas, 'Graphical')
+        
+        chart_widget = QtWidgets.QWidget(self)
+        chart_widget.setLayout(QtWidgets.QVBoxLayout())
+        chart_widget.layout().addLayout(self.horiz_chart_controls)
+        chart_widget.layout().addWidget(self.chart_canvas)
+        self.tab_widget_right.addTab(chart_widget, 'Graphical')
         self.tab_widget_right.addTab(self.table_metadata, 'Metadata')
         self.tab_widget_right.setVisible(False)
+
+        self.vert_right.addLayout(self.horiz_chart_controls)
+
+        self.tab_widget_left.resize(size)
+
+        # # Set the stretch factors to let the second widget fill the rest of the space
+        self.splitter.setStretchFactor(0, 0)  # First widget (left) does not stretch
+        self.splitter.setStretchFactor(1, 1)  # Second widget (right) stretches to fill the rest
