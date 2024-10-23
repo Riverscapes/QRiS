@@ -115,6 +115,9 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             return
         time_series_id = time_series_ids[0].data(Qt.UserRole)
 
+        self.tab_widget_right.setVisible(True)
+        self.lbl_initial_text.setVisible(False)
+        
         # get the date range
         start_date, end_date = self.date_range_widget.get_date_range()
 
@@ -131,7 +134,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             dataset_id, variable_id = time_series_name.split(' ')
             dataset_name = next((key for key, dataset in self.datasets.items() if dataset['id'] == dataset_id), None)
             metadata = json.loads(time_series[5])
-            y_label = metadata['units'] if 'units' in metadata else 'Value'
+            units = metadata['units'] if 'units' in metadata else None
             for sample_frame_feature_id in sample_frame_feature_ids:
                 curs.execute('SELECT time_value, value FROM sample_frame_time_series WHERE time_series_id = ? AND sample_frame_fid = ? AND time_value BETWEEN ? AND ?',
                              (time_series_id, sample_frame_feature_id, start_date, end_date))
@@ -146,8 +149,9 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             markersize = 5
 
         # create the plot
-        self._static_ax.set_xlabel('Date')
+        self._static_ax.set_xlabel('Time')
         description = metadata['description'] if 'description' in metadata else variable_id
+        y_label = f'{description} ({units})' if units is not None else description
         self._static_ax.set_title(f'{dataset_name} ({description})')
         if self.rdo_space.isChecked():
             for sample_frame_feature_id, values in data.items():
@@ -156,7 +160,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         elif self.rdo_time.isChecked():
             for sample_frame_feature_id, values in data.items():
                 self._static_ax.plot([value[0] for value in values], [value[1] for value in values], label=sample_frame_feature_id)
-            self._static_ax.legend(title='Sample Frame Feature')
+            self._static_ax.legend(title='Sample Frame Feature', frameon=False)
         self._static_ax.set_ylabel(y_label)
 
         # apply the marker
@@ -164,15 +168,15 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             line.set_marker(marker)
             line.set_markersize(markersize)
 
-        # Set the major locator to month and the major formatter to 'Month Year'
-        # self._static_ax.xaxis.set_major_locator(mdates.MonthLocator())
-        # self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
+        # Add gridlines
+        self._static_ax.grid(True, which='both', color='lightgrey', linestyle='-', linewidth=0.5)
 
-        # # Set the minor locator to day, but don't set a formatter so the minor ticks won't be labeled
-        # self._static_ax.xaxis.set_minor_locator(mdates.DayLocator())
+        # Add minor ticks to both axes
+        self._static_ax.minorticks_on()
+        self._static_ax.tick_params(which='both', width=1)
+        self._static_ax.tick_params(which='major', length=7)
+        self._static_ax.tick_params(which='minor', length=4, color='gray')
 
-        # self._static_ax.xaxis.set_tick_params(rotation=45)
-        # self._static_ax.grid(True)
         self.chart_canvas.figure.autofmt_xdate()
         # Use a more precise date string for the x axis locations in the toolbar.
         self._static_ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
@@ -208,7 +212,10 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
     def show_climate_engine_download(self):
 
-        frm = FrmClimateEngineDownload(parent=self, qris_project=self.qris_project)
+        sample_frame_id = self.sample_frame_widget.cbo_sample_frame.currentData(Qt.UserRole).id
+        sample_frame_features = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
+
+        frm = FrmClimateEngineDownload(parent=self, qris_project=self.qris_project, sample_frame_id=sample_frame_id, sample_frame_feature_fids=sample_frame_features)
         frm.exec_()
         self.load_climate_engine_metrics()
 
@@ -343,11 +350,6 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.horiz_climate_engine = QtWidgets.QHBoxLayout(self)
         self.vert_climate_engine.addLayout(self.horiz_climate_engine)
 
-        self.btn_climate_engine = QtWidgets.QPushButton('Climate Engine')
-        self.btn_climate_engine.setStyleSheet('QPushButton {text-decoration: underline; color: blue;}')
-        self.btn_climate_engine.clicked.connect(open_climate_engine_website)
-        self.horiz_climate_engine.addWidget(self.btn_climate_engine)
-
         # add a spacer between the buttons
         self.horiz_climate_engine.addStretch()
 
@@ -408,6 +410,15 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.btn_help = add_help_button(self, 'context/climate-engine-explorer')
         self.horiz_right_top.addWidget(self.btn_help)
 
+        self.btn_about_climate_engine = QtWidgets.QPushButton('About Climate Engine')
+        self.btn_about_climate_engine.setStyleSheet('QPushButton {text-decoration: underline; color: blue;}')
+        self.btn_about_climate_engine.clicked.connect(open_climate_engine_website)
+        self.horiz_right_top.addWidget(self.btn_about_climate_engine)
+
+        self.lbl_initial_text = QtWidgets.QLabel('Select a Sample Frame and Climate Engine Metric Timeseries to view data')
+        self.vert_right.addWidget(self.lbl_initial_text)
+        self.lbl_initial_text.setAlignment(Qt.AlignCenter)
+
         self.chart_canvas = FigureCanvas(Figure())
         self._static_ax = self.chart_canvas.figure.subplots()
 
@@ -418,3 +429,4 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.vert_right.addWidget(self.tab_widget_right)
         self.tab_widget_right.addTab(self.chart_canvas, 'Graphical')
         self.tab_widget_right.addTab(self.table_metadata, 'Metadata')
+        self.tab_widget_right.setVisible(False)
