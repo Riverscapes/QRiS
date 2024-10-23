@@ -36,6 +36,9 @@ class SampleFrameWidget(QtWidgets.QWidget):
         self.cbo_sample_frame.currentIndexChanged.connect(self.on_sample_frame_changed)
         self.load_sample_frame_features()
 
+        if len(self.sample_frames) == 1:
+            self.cbo_sample_frame.setCurrentIndex(1)
+
     def on_sample_frame_changed(self):
 
         if self.qris_map_manager is not None:
@@ -101,9 +104,23 @@ class SampleFrameWidget(QtWidgets.QWidget):
             if feature.id() in sample_frame_feature_ids:
                 yield feature
 
+    def set_selected_sample_frame(self, sample_frame_id: int, feature_ids: list = None):
+        for i in range(self.cbo_sample_frame.count()):
+            if self.cbo_sample_frame.itemData(i, Qt.UserRole).id == sample_frame_id:
+                self.cbo_sample_frame.setCurrentIndex(i)
+                break
+
+        if feature_ids is not None:
+            for i in range(self.sample_frame_features_model.rowCount(None)):
+                index = self.sample_frame_features_model.index(i)
+                if self.sample_frame_features_model.data(index, Qt.UserRole).id in feature_ids:
+                    self.sample_frame_features_model.setData(index, Qt.Checked, Qt.CheckStateRole)
+
+
     def setupUi(self):
 
         self.vert = QtWidgets.QVBoxLayout(self)
+        self.vert.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.vert)
 
         self.cbo_sample_frame = QtWidgets.QComboBox(self)
