@@ -69,11 +69,15 @@ class DateRangeWidget(QtWidgets.QWidget):
         if self.horizontal:
             self.widget_layout = QtWidgets.QHBoxLayout(self)
             self.horiz_start = QtWidgets.QHBoxLayout()
+            self.horiz_start.setContentsMargins(0, 0, 0, 0)
             self.widget_layout.addLayout(self.horiz_start)
             self.horiz_end = QtWidgets.QHBoxLayout()
+            self.horiz_end.setContentsMargins(0, 0, 0, 0)
             self.widget_layout.addLayout(self.horiz_end)
         else:
             self.widget_layout = QtWidgets.QGridLayout(self)
+
+        self.widget_layout.setContentsMargins(0, 0, 0, 0)
 
         self.lbl_from = QtWidgets.QLabel('From')
         if self.horizontal:
