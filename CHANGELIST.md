@@ -1,6 +1,21 @@
 # QRiS Plugin
 
-## [1.0.2] 2024 OCT 08
+## [1.0.2] 2024 OCT 23
+
+### Added
+- Show "System" metadata to the user. #498
+- Batch edit feature attributes #480
+
+### Fixed
+- Bug with analysis in project export
+- Limit metric selection to only what metrics are selected for analysis in the Analysis Explorer #510
+- Analysis Properties form not loading metric/indicator status
+
+### Changed
+- Climate Engine Explorer Improvements #515
+
+
+## [1.0.1] 2024 OCT 08
 
 ### Added
 - Mirror properties/metadata when automatically creating hillshade #470
