@@ -1,0 +1,26 @@
+---
+title: Batch Attribute Editor
+banner: true
+description: Edit Attributes of Multiple Features at Once
+---
+
+The Batch Attribute Editor allows you to edit the attributes of multiple features in a DCE layer at once. This tool is necessary since QRiS utilizes a custom data model and standard QGIS editing tools are not able to . 
+
+## Opening the Batch Attribute Editor
+
+**Note** It is best practice to make your feature selection prior to opening the Batch Attribute Editor. The batch editor will only edit the attributes of the selected features. The Batch Attribute Editor contains an attribute table with limited selection capabilities. 
+
+To open the Batch Attribute Editor, right click on any DCE layer in the Table of Contents and select **Batch Edit QRiS Attributes**. This will open the Batch Attribute Editor window.
+
+![Batch Attribute Editor](/images/software-help/batch-attribute-editor.png)
+
+## Using the Batch Attribute Editor
+
+At the top of the Batch Attribute Editor window, you will see the name of the layer you are editing. Below that, you will see a drop down menu with the attribute fields of the layer. This drop down menu allows you to select the attribute field you would like to edit.
+
+After selecting the attribute field, the appropriate values will populate in the next drop down menu. Select the value you would like to apply to the selected features. In the case of a text or numeric field, you can also type in a new value.
+
+Below the value drop down menu, you will see an Attribute Table. You may modify the selected features by clicking on the left side of the rows. You can also filter to only show selected features by clicking the **Show Selected** button at the bottom of the window, or view all features by clicking the **Show All** button.
+
+Once you have selected the value and features you would like to change, click the **Apply to selected features** button. This will apply the selected value to all of the selected features in the layer. The changes will then be made once this button is clicked. You may continue to make changes to the attributes of the selected features, or click the **Close** button to exit the Batch Attribute Editor.
+
