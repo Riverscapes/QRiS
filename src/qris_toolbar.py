@@ -555,12 +555,9 @@ class QRiSToolbar:
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         last_parent_folder = os.path.dirname(settings.value(LAST_PROJECT_FOLDER)) if settings.value(LAST_PROJECT_FOLDER) is not None else None
 
-        dialog_return = QtWidgets.QFileDialog.getExistingDirectory(self.dockwidget, 'Select QRiS Project Parent Folder', last_parent_folder)
-        if len(dialog_return) > 0:
-            self.save_folder = dialog_return
-            self.frm_new_project = FrmNewProject(dialog_return, self.iface.mainWindow())
-            self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
-            result = self.frm_new_project.exec_()
+        self.frm_new_project = FrmNewProject(self.iface.mainWindow(), last_parent_folder)
+        self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
+        result = self.frm_new_project.exec_()
 
     def on_new_project_complete(self, project_dir: str, db_path: str):
 
