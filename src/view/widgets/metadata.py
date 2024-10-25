@@ -97,7 +97,8 @@ class MetadataWidget(QtWidgets.QWidget):
         self.cmdDelete.clicked.connect(self.delete_row)
 
         self.chkViewSystem = QtWidgets.QCheckBox()
-        self.chkViewSystem.setText('Show Read-Only')
+        self.chkViewSystem.setText('Show Read-Only QRiS Metadata')
+        self.chkViewSystem.setChecked(True)
         self.chkViewSystem.setToolTip('Show or hide read-only QRiS system metadata')
         self.chkViewSystem.stateChanged.connect(self.toggle_system_metadata)
 
