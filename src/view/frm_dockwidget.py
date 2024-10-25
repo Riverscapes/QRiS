@@ -165,7 +165,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.qrave = None
 
         ltv: QgsLayerTreeView = iface.layerTreeView()
-        ltv.contextMenuAboutToShow.connect(self.add_context_batch_edit_attributes)
+        # workaround for QGIS < 3.32
+        if hasattr(ltv, 'contextMenuAboutToShow'):
+            ltv.contextMenuAboutToShow.connect(self.add_context_batch_edit_attributes)
+        else:
+            version = Qgis.QGIS_VERSION
+            QgsMessageLog().logMessage(f'The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.', 'QRiS', level=Qgis.Warning)
 
     def build_tree_view(self, project_file, new_item=None):
         """
