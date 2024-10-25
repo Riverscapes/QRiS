@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [1.0.3] 2024 OCT 25
+
+### Fixed
+- QRIS plugin fails to load for older versions of QGiS #522
+
+### Changed
+- Switch Create Project Workflow #514
+- QRiS System metadata visible by default
+
+
 ## [1.0.2] 2024 OCT 23
 
 ### Added
