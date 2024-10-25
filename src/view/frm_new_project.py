@@ -20,31 +20,24 @@ class FrmNewProject(QtWidgets.QDialog):
     dataChange = QtCore.pyqtSignal(Project)
     newProjectComplete = QtCore.pyqtSignal(str, str)
 
-    def __init__(self, root_project_folder: str, parent, project: Project = None):
+    def __init__(self, parent, last_parent_project: str=None, project: Project = None):
         super(FrmNewProject, self).__init__(parent)
 
         metadata_json = json.dumps(project.metadata) if project is not None else None
         
         # Pull the tags out of metadata if the exist
-        self.tags = []
-        if metadata_json is not None:
-            metadata = json.loads(metadata_json)
-            if 'tags' in metadata:
-                self.tags = metadata['tags']
-                # Remove the tags from the metadata so that they are not duplicated
-                del metadata['tags']
-                metadata_json = json.dumps(metadata)
+        self.tags = []     
         
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
-        # Save the original folder that the user selected so that it can be reused
-        self.root_path = parse_posix_path(root_project_folder)
-        self.txtPath.setText(root_project_folder)
-        self.project = project
+        self.last_project_folder = last_parent_project
+        if self.last_project_folder is not None:
+            if os.path.isdir(self.last_project_folder):
+                self.root_path = parse_posix_path(self.last_project_folder)
+                self.txtPath.setText(self.root_path)
 
-        if self.tags is not None:
-            self.txtTags.setText(', '.join(self.tags))
+        self.project = project
 
         if project is None:
             self.setWindowTitle('Create New Project')
@@ -53,6 +46,9 @@ class FrmNewProject(QtWidgets.QDialog):
         else:
             self.setWindowTitle('Edit Project Properties')
             self.txtName.setText(project.name)
+            if 'tags' in self.metadata_widget.metadata['system']:
+                self.tags = self.metadata_widget.metadata['system']['tags']
+                self.txtTags.setText(', '.join(self.tags))
             self.txtDescription.setPlainText(project.description)
 
         self.txtName.setFocus()
@@ -79,9 +75,14 @@ class FrmNewProject(QtWidgets.QDialog):
         if not self.metadata_widget.validate():
             return
 
-        metadata_json = self.metadata_widget.get_json()
         if self.tags is not None:
-            metadata_json = json.dumps({'tags': self.get_tags(), **json.loads(metadata_json)})
+            # add to system metadata
+            self.metadata_widget.add_system_metadata('tags', self.get_tags())
+        else:
+            if 'system' in self.metadata_widget.metadata and 'tags' in self.metadata_widget.metadata['system']:
+                del self.metadata_widget.system_metadata['tags']
+
+        metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
         if isinstance(self.project, Project):
@@ -128,6 +129,14 @@ class FrmNewProject(QtWidgets.QDialog):
     def on_creating_schema(self):
         iface.mainWindow().statusBar().showMessage('New QRIS Project: applying project schema (this may take several moments...)')
 
+    def browse_root_folder(self):
+
+        browse_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select an Existing Folder to create a New QRiS Project Folder in', self.last_project_folder)
+        if browse_folder:
+            self.last_project_folder = browse_folder
+            self.root_path = parse_posix_path(browse_folder)
+            self.txtPath.setText(self.root_path)
+
     def setupUi(self):
 
         self.resize(500, 300)
@@ -141,8 +150,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
         self.grid = QtWidgets.QGridLayout()
 
-        self.lblName = QtWidgets.QLabel()
-        self.lblName.setText('Name')
+        self.lblName = QtWidgets.QLabel('Name')
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
@@ -153,9 +161,16 @@ class FrmNewProject(QtWidgets.QDialog):
         self.lblPath.setText('Project Path')
         self.grid.addWidget(self.lblPath, 1, 0, 1, 1)
 
+        horiz_path = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(horiz_path, 1, 1, 1, 1)
+
         self.txtPath = QtWidgets.QLineEdit()
         self.txtPath.setReadOnly(True)
-        self.grid.addWidget(self.txtPath, 1, 1, 1, 1)
+        horiz_path.addWidget(self.txtPath)
+
+        self.btnBrowse = QtWidgets.QPushButton('...')
+        self.btnBrowse.clicked.connect(self.browse_root_folder)
+        horiz_path.addWidget(self.btnBrowse)
 
         self.lblTags = QtWidgets.QLabel("Tags")
         self.grid.addWidget(self.lblTags, 2, 0, 1, 1)
