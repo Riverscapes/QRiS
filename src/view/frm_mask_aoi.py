@@ -116,6 +116,9 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
         metadata_json = json.dumps(db_item.metadata) if db_item.metadata is not None else None
         self.metadata_widget.load_json(metadata_json)
+        # add layer name and id to system metadata
+        self.metadata_widget.add_system_metadata('source_layer', self.layer_name)
+        self.metadata_widget.add_system_metadata('source_layer_id', self.layer_id)
 
     def accept(self):
 
