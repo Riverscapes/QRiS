@@ -113,7 +113,7 @@ GROUP_FOLDER_LABELS = {
     BASEMAP_MACHINE_CODE: 'Basemaps',
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
     ANALYSIS_MACHINE_CODE: 'Analyses',
-    CATCHMENTS_MACHINE_CODE: 'Watershed Catchments',
+    CATCHMENTS_MACHINE_CODE: 'Catchment Deliniations',
     CONTEXT_NODE_TAG: 'Context',
     STREAM_GAGE_MACHINE_CODE: 'Stream Gages',
     CLIMATE_ENGINE_MACHINE_CODE: 'Climate Engine',

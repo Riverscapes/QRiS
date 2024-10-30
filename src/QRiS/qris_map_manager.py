@@ -9,7 +9,7 @@ from ..model.mask import Mask, MASK_MACHINE_CODE, AOI_MACHINE_CODE, AOI_MASK_TYP
 from ..model.sample_frame import SampleFrame, SAMPLE_FRAME_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
-from ..model.pour_point import PourPoint
+from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE, get_raster_symbology
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, AS_BUILT_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, Event
 from ..model.event_layer import EventLayer
@@ -232,7 +232,8 @@ class QRisMapManager(RiverscapesMapManager):
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         context_group_layer = self.get_group_layer(self.project.map_guid, CONTEXT_MACHINE_CODE, 'Context', project_group, True)
-        pour_point_group_layer = self.get_group_layer(self.project.map_guid, pour_point, pour_point.name, context_group_layer, True)  # TODO check here
+        catchment_deliniation_group_layer = self.get_group_layer(self.project.map_guid, CATCHMENTS_MACHINE_CODE, 'Catchment Deliniations', context_group_layer, True)
+        pour_point_group_layer = self.get_group_layer(self.project.map_guid, pour_point, pour_point.name, catchment_deliniation_group_layer, True)
 
         # Create a layer from the pour point
         point_fc_path = self.project.project_file + '|layername=' + 'pour_points'
