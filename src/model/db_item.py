@@ -23,7 +23,8 @@ class DBItem():
         self.id = id
         self.name = name
         self.date = None
-
+        self.metadata = None
+        
         # Nearly all the DBItem database tables are non-spatial and have
         # an ID column called "id". However, any spatial DBItem tables
         # will have a GIS generated ID column called "fid". These spatial
