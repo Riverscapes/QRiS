@@ -35,9 +35,14 @@ class MetadataWidget(QtWidgets.QWidget):
         self.metadata['metadata'][key] = value
 
         # add a row to the table
+        # self.table.insertRow(self.table.rowCount())
+        # self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+        # self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
         self.table.insertRow(self.table.rowCount())
         self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
-        self.table.setItem(self.table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
+        label_widget = MetadataValueLabel(str(value))
+        self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
+    
 
     def add_system_metadata(self, key: str, value: str):
             
@@ -256,7 +261,8 @@ class MetadataWidget(QtWidgets.QWidget):
             # if this is system metadata, then ignore it
             if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
                 continue
-            self.metadata['metadata'][self.table.item(row, 0).text()] = self.table.cellWidget(row, 1).text
+            value = self.table.cellWidget(row, 1).text if self.table.cellWidget(row, 1) is not None else ''
+            self.metadata['metadata'][self.table.item(row, 0).text()] = value
 
         return self.metadata
 
