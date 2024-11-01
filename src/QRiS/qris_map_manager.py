@@ -232,7 +232,7 @@ class QRisMapManager(RiverscapesMapManager):
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         context_group_layer = self.get_group_layer(self.project.map_guid, CONTEXT_MACHINE_CODE, 'Context', project_group, True)
-        catchment_deliniation_group_layer = self.get_group_layer(self.project.map_guid, CATCHMENTS_MACHINE_CODE, 'Catchment Deliniations', context_group_layer, True)
+        catchment_deliniation_group_layer = self.get_group_layer(self.project.map_guid, CATCHMENTS_MACHINE_CODE, 'Catchment Delineations', context_group_layer, True)
         pour_point_group_layer = self.get_group_layer(self.project.map_guid, pour_point, pour_point.name, catchment_deliniation_group_layer, True)
 
         # Create a layer from the pour point
