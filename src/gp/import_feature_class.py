@@ -113,7 +113,7 @@ class ImportFeatureClass(QgsTask):
             transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
             self.out_feats = 0
-            # dst_layer.StartTransaction()
+            dst_layer.StartTransaction()
             for src_feature in src_layer:
                 src_feature: ogr.Feature
                 geom: ogr.Geometry = src_feature.GetGeometryRef()
@@ -229,7 +229,7 @@ class ImportFeatureClass(QgsTask):
         finally:
             if dst_layer is not None:
                 dst_layer.SyncToDisk()
-               # dst_layer.CommitTransaction()
+                dst_layer.CommitTransaction()
                 dst_layer = None
             if src_layer is not None:
                 src_layer = None
