@@ -28,7 +28,7 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None):
+    def __init__(self, source_path: str, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None, explode_geometries=True):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
 
         self.source_path = source_path
@@ -41,6 +41,7 @@ class ImportFeatureClass(QgsTask):
         self.out_feats = 0
         self.skipped_feats = 0
         self.proj_gpkg = proj_gpkg
+        self.explode_geometries = explode_geometries
 
     def run(self):
 
@@ -107,9 +108,9 @@ class ImportFeatureClass(QgsTask):
             transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
             self.out_feats = 0
-            src_feature: ogr.Feature = None
+            # dst_layer.StartTransaction()
             for src_feature in src_layer:
-
+                src_feature: ogr.Feature
                 geom: ogr.Geometry = src_feature.GetGeometryRef()
 
                 if geom is None:
@@ -142,7 +143,7 @@ class ImportFeatureClass(QgsTask):
                 # if the geometry has more than one part, it needs to be split into multiple features
                 count = geom.GetGeometryCount()
                 single = False
-                if count == 0 or count == 1:
+                if self.explode_geometries is False or count == 0 or count == 1:
                     count = 1
                     single = True
 
@@ -213,9 +214,6 @@ class ImportFeatureClass(QgsTask):
                     else:
                         self.out_feats += 1
 
-            src_dataset = None
-            dst_dataset = None
-
             if self.out_feats == 0:
                 raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
 
@@ -224,6 +222,12 @@ class ImportFeatureClass(QgsTask):
             result = False
 
         finally:
+            if dst_layer is not None:
+                dst_layer.SyncToDisk()
+               # dst_layer.CommitTransaction()
+                dst_layer = None
+            if src_layer is not None:
+                src_layer = None
             if src_dataset is not None:
                 src_dataset = None
             if dst_dataset is not None:

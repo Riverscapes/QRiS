@@ -158,7 +158,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 if self.layer_id == 'memory':
                     import_mask_task = ImportTemporaryLayer(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
                 else:
-                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
+                    import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file, explode_geometries=False)
                 # DEBUG
                 # result = import_mask_task.run()
                 # self.on_import_complete(result)
