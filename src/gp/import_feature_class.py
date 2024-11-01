@@ -45,6 +45,9 @@ class ImportFeatureClass(QgsTask):
 
     def run(self):
 
+        # ogr.UseExceptions() # use when debugging only
+        ogr.DontUseExceptions()
+
         self.setProgress(0)
 
         copy_fields = False
@@ -54,7 +57,9 @@ class ImportFeatureClass(QgsTask):
 
         try:
             src_path, _src_layer_name, src_layer_id = layer_path_parser(self.source_path)
-            src_dataset: ogr.DataSource = ogr.Open(src_path)
+            dst_path, dst_layer_name, _dst_layer_id = layer_path_parser(self.output_path)
+            mode = 1 if src_path == dst_path else 0
+            src_dataset: ogr.DataSource = ogr.Open(src_path, mode)
             src_layer: ogr.Layer = src_dataset.GetLayer(src_layer_id)
             src_srs = src_layer.GetSpatialRef()
             if self.attribute_filter is not None:
@@ -62,14 +67,14 @@ class ImportFeatureClass(QgsTask):
             src_fid_field_name = src_layer.GetFIDColumn()
             self.in_feats = src_layer.GetFeatureCount()
 
-            dst_path, dst_layer_name, _dst_layer_id = layer_path_parser(self.output_path)
-
             base_path = os.path.dirname(dst_path)
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
             gpkg_driver: ogr.Driver = ogr.GetDriverByName('GPKG')
-            if not os.path.exists(dst_path):
+            if src_path == dst_path:
+                dst_dataset = src_dataset
+            elif not os.path.exists(dst_path):
                 dst_dataset: ogr.DataSource = gpkg_driver.CreateDataSource(dst_path)
             else:
                 dst_dataset = gpkg_driver.Open(dst_path, 1)
