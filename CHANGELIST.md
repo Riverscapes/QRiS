@@ -1,5 +1,23 @@
 # QRiS Plugin
 
+## [1.0.4] 2024 NOV 01
+
+### Added
+- Added transactions to speed up import feature classes
+
+### Fixed
+- Promote to AOI metadata bug
+- Metadata bug fixes (promote to aoi, import from RS project)
+- Bug with import feature class if source and dest DataSource are the same.
+
+### Changed
+- Change "Watershed Catchments" to "Catchment Delineation(s)" and add layer group when adding to map #527
+- Promote catchment to AOI as single feature instead of exploding geometry.
+
+### Removed
+
+
+
 ## [1.0.3] 2024 OCT 25
 
 ### Fixed
