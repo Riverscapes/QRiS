@@ -122,7 +122,8 @@ GROUP_FOLDER_LABELS = {
 }
 
 USER_ROLES = {'date': QtCore.Qt.UserRole + 1,
-              'raster_type': QtCore.Qt.UserRole + 2}
+              'raster_type': QtCore.Qt.UserRole + 2,
+              'node_type': QtCore.Qt.UserRole + 3,}
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget):
@@ -587,11 +588,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 group_value = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
             elif group_key == 'metadata_tag':
                 if db_item.metadata is not None and 'metadata' in db_item.metadata:
-                    group_value = db_item.metadata['metadata'].get(metadata_tag, 'Unknown')
-                else:
-                    group_value = 'Unknown'
-            else:
-                group_value = 'Unknown'
+                    group_value = db_item.metadata['metadata'].get(metadata_tag, None)
+            else:                
+                group_value = None
+
+            if group_value is None:
+                # just put the child back in the tree
+                tree_node.appendRow(child.clone())
+                continue
 
             # If the group does not exist, create it
             if group_value not in groups:
@@ -604,6 +608,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             # Add the child to the appropriate group
             groups[group_value].appendRow(child.clone())
+
+        # Sort the groups folders to the top please
+        self.sort_children(tree_node, 'node_type')
+
 
     def collect_all_children(self, tree_node: QtGui.QStandardItem):
         """Recursively collect all children of a tree node, including nested children."""
@@ -635,6 +643,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if (tree_node.child(i).data(USER_ROLES['date']) or QtCore.QDate()) > (tree_node.child(i + 1).data(USER_ROLES['date']) or QtCore.QDate()):
                     current_order = False
                     break
+        elif sort_key == 'node_type':
+            tree_node.model().setSortRole(USER_ROLES['node_type'])
+            current_order = True
+            for i in range(0, tree_node.rowCount()):
+                item = tree_node.child(i)
+                db_item = item.data(QtCore.Qt.UserRole)
+                if isinstance(db_item, str):
+                    item.setData(f'_{db_item}', USER_ROLES['node_type'])
+                else:
+                    item.setData(db_item.name, USER_ROLES['node_type'])
+        
         elif sort_key == 'raster_type':
             tree_node.model().setSortRole(USER_ROLES['raster_type'])
             for i in range(0, tree_node.rowCount()):
