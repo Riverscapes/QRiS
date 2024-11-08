@@ -367,11 +367,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.menu.addSeparator()
             if model_data in [EVENT_MACHINE_CODE, SURFACE_MACHINE_CODE]:
                 sort_icon = QtGui.QIcon(':/plugins/qris_toolbar/sort')
+                if model_data == SURFACE_MACHINE_CODE:
+                    group_icon = QtGui.QIcon(':/plugins/qris_toolbar/category')
+                    group_menu = self.menu.addMenu(group_icon, 'Group By ...')
+                    self.add_context_menu_item(group_menu, 'Raster Type', 'raster', lambda: self.group_children(model_item, 'raster_type'))
+                    self.add_context_menu_item(group_menu, 'Metadata Tag', 'metadata', lambda: self.group_children(model_item, 'metadata_tag'))
+                    self.add_context_menu_item(group_menu, 'None', None, lambda: self.group_children(model_item, None))
                 sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
                 self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
                 self.add_context_menu_item(sort_menu, 'Date', 'time', lambda: self.sort_children(model_item, 'date'))
-                if model_data == SURFACE_MACHINE_CODE:
-                    self.add_context_menu_item(sort_menu, 'Raster Type', 'category', lambda: self.sort_children(model_item, 'raster_type'))
                 self.menu.addSeparator()
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
@@ -531,6 +535,85 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if slot is not None:
             action.triggered.connect(slot)
 
+    def group_children(self, tree_node: QtGui.QStandardItem, group_key: str):
+        
+        # Create a dictionary to hold the groups
+        groups = {}
+
+        # Collect the original children into a list
+        original_children = []
+        # Collect all children, including those nested within group nodes
+        original_children = self.collect_all_children(tree_node)
+        
+        if group_key == 'metadata_tag':
+            # iterate through the original children, grab all the metadata keys
+            metadata_tags = set()
+            for child in original_children:
+                db_item = child.data(QtCore.Qt.UserRole)
+                if isinstance(db_item, str):
+                    continue
+                if db_item.metadata is not None:
+                    if 'metadata' in db_item.metadata:
+                        metadata_tags.update(db_item.metadata['metadata'].keys())
+
+            if len(metadata_tags) == 0:
+                return
+            # open a dialog to select the metadata tag to group by
+            metadata_tag, ok = QtWidgets.QInputDialog.getItem(self, "Select Metadata Tag", "Group by:", metadata_tags, 0, False)
+            if not ok:
+                return  
+
+        # Remove all nodes
+        for i in range(tree_node.rowCount()):
+            tree_node.removeRow(0)
+
+        # If group_key is None, remove groups and return to ungrouped state
+        if group_key is None:
+            # Re-add the original children to the root level
+            for child in original_children:
+                if not child.data(QtCore.Qt.UserRole) == 'group_node':
+                    tree_node.appendRow(child)
+            return
+
+        # Iterate through the original children
+        for child in original_children:
+            # if the child is a group folder, skip it
+            if isinstance(child.data(QtCore.Qt.UserRole), str):
+                continue
+
+            # Get the value of the group key for the child
+            db_item = child.data(QtCore.Qt.UserRole)
+            if group_key == 'raster_type':
+                group_value = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
+            elif group_key == 'metadata_tag':
+                if db_item.metadata is not None and 'metadata' in db_item.metadata:
+                    group_value = db_item.metadata['metadata'].get(metadata_tag, 'Unknown')
+                else:
+                    group_value = 'Unknown'
+            else:
+                group_value = 'Unknown'
+
+            # If the group does not exist, create it
+            if group_value not in groups:
+                group_item = QtGui.QStandardItem(group_value)
+                icon = QtGui.QIcon(f':/plugins/qris_toolbar/{FOLDER_ICON}')
+                group_item.setIcon(icon)
+                group_item.setData("group_node", QtCore.Qt.UserRole)
+                groups[group_value] = group_item
+                tree_node.appendRow(group_item)
+
+            # Add the child to the appropriate group
+            groups[group_value].appendRow(child.clone())
+
+    def collect_all_children(self, tree_node: QtGui.QStandardItem):
+        """Recursively collect all children of a tree node, including nested children."""
+        children = []
+        for i in range(tree_node.rowCount()):
+            child = tree_node.child(i)
+            children.append(child.clone())
+            children.extend(self.collect_all_children(child))
+        return children
+
     def sort_children(self, tree_node: QtGui.QStandardItem, sort_key: str):
         if sort_key == 'name':
             tree_node.model().setSortRole(QtCore.Qt.DisplayRole)
@@ -544,6 +627,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
                 db_item = item.data(QtCore.Qt.UserRole)
+                if isinstance(db_item, str):
+                    continue
                 item.setData(db_item.date, USER_ROLES['date'])
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
