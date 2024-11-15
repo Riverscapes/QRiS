@@ -9,7 +9,7 @@ from qgis.core import QgsGeometry
 
 from typing import List
 
-CLIMATE_ENGINE_API = 'https://api.climateengine.org'
+CLIMATE_ENGINE_API = 'https://api.climateengine.org' # DEBUG: 'https://api-dev.climateengine.org'
 CLIMATE_ENGINE_URL = 'https://www.climateengine.org/'
 CLIMATE_ENGINE_MACHINE_CODE = 'Climate Engine'
 
@@ -86,7 +86,7 @@ def get_dataset_timeseries_polygon(dataset: str, variables: List[str], start_dat
               'end_date': end_date,
               'coordinates': f'[{coordinates}]'}
 
-    url = f'{CLIMATE_ENGINE_API}/timeseries/native/polygons'
+    url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
     response = requests.get(url, params=params, headers=headers)
@@ -122,7 +122,7 @@ def get_dataset_zonal_stats_polygon(dataset: str, variables: List[str], start_da
               'end_date': end_date,
               'coordinates': f'[{coordinates}]'}
 
-    url = f'{CLIMATE_ENGINE_API}/timeseries/native/polygons'
+    url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
     response = requests.get(url, params=params, headers=headers)
