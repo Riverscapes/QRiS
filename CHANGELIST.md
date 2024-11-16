@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [1.0.5] 2024 NOV 15
+
+### Added
+- Ability to sort rasters by type or metadata tags #523
+
+### Changed
+- Climate Engine API changes #532
+
+
 ## [1.0.4] 2024 NOV 01
 
 ### Added
@@ -13,9 +22,6 @@
 ### Changed
 - Change "Watershed Catchments" to "Catchment Delineation(s)" and add layer group when adding to map #527
 - Promote catchment to AOI as single feature instead of exploding geometry.
-
-### Removed
-
 
 
 ## [1.0.3] 2024 OCT 25
