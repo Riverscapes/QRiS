@@ -8,6 +8,7 @@ from osgeo import ogr, gdal
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from qgis.core import QgsVectorLayer, QgsMessageLog
+from qgis.utils import iface
 
 from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
 
@@ -279,6 +280,10 @@ class FrmExportProject(QtWidgets.QDialog):
         # copy the geopackage layers to the new project folder
         out_name = 'qris.gpkg' # os.path.split(self.qris_project.project_file)[1]
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), out_name).replace("\\", "/"))
+
+        # Refrfesh the map canvas to ensure all layers are flushed to disk before copying
+        iface.mapCanvas().refreshAllLayers()
+        
         shutil.copy(self.qris_project.project_file, out_geopackage)
 
         # Project Bounds
