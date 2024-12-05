@@ -256,9 +256,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             self.field_status = []
             # set all combo boxes to 'Do Not Import'
             for i in range(self.tblFields.rowCount()):
-                combo: QtWidgets.QComboBox = self.tblFields.cellWidget(i, 2)
-                self.field_status.append(combo.currentIndex())
-                combo.setCurrentIndex(0)
+                chk_retain: QtWidgets.QCheckBox = self.tblFields.cellWidget(i, 2)
+                chk_retain.setChecked(False)
             self.tblFields.setEnabled(False)
 
     def setupUi(self):
