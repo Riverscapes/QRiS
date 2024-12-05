@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushBut
 from ..model.project import Project
 from ..model.metric import METRIC_SCHEMA, insert_metric
 
+from .frm_export_project import DEFAULT_EXPORT_PATH
+
 DOCK_WIDGET_LOCATION = 'dock_widget_location'
 REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
 
@@ -41,6 +43,10 @@ class FrmSettings(QDialog):
         else:
             self.chk_remove_layers_on_close.setChecked(False)
 
+        # Get the default export path
+        default_export_path = settings.value(DEFAULT_EXPORT_PATH, '')
+        self.txt_path_export.setText(default_export_path)
+
         self.load_metrics()
 
     def accept(self):
@@ -54,6 +60,11 @@ class FrmSettings(QDialog):
             self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, True)
         else:
             self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, False)
+
+        if self.txt_path_export.text() != '':
+            self.settings.setValue(DEFAULT_EXPORT_PATH, self.txt_path_export.text())
+        else:
+            self.settings.setValue(DEFAULT_EXPORT_PATH, '')
 
         super().accept()
 
@@ -248,6 +259,11 @@ class FrmSettings(QDialog):
         else:
             QMessageBox.information(self, "Save Metrics", "No new metrics to save.")
 
+    def select_export_path(self):
+        path = QFileDialog.getExistingDirectory(self, "Select default export path")
+        if path:
+            self.txt_path_export.setText(path)
+
     def setup_ui(self):
 
         self.resize(500, 300)
@@ -260,6 +276,24 @@ class FrmSettings(QDialog):
 
         self.vertGeneral = QVBoxLayout()
         
+        horiz_export_path = QHBoxLayout()
+        self.vertGeneral.addLayout(horiz_export_path)
+
+        lbl_path_export = QLabel("Default Export Path")
+        horiz_export_path.addWidget(lbl_path_export)
+
+        self.txt_path_export = QLineEdit()
+        self.txt_path_export.setReadOnly(True)
+        horiz_export_path.addWidget(self.txt_path_export)
+
+        btn_path_export = QPushButton("...")
+        btn_path_export.clicked.connect(self.select_export_path)
+        horiz_export_path.addWidget(btn_path_export)
+
+        btn_clear_path_export = QPushButton("Clear")
+        btn_clear_path_export.clicked.connect(lambda: self.txt_path_export.setText(''))
+        horiz_export_path.addWidget(btn_clear_path_export)
+
         self.chk_remove_layers_on_close = QCheckBox("Remove QRiS Project map layers on project close")
         self.chk_remove_layers_on_close.setToolTip("Check this box to remove all layers from the project when it is closed.")
         self.vertGeneral.addWidget(self.chk_remove_layers_on_close)

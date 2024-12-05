@@ -9,6 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from qgis.core import QgsVectorLayer, QgsMessageLog
 from qgis.utils import iface
+from qgis.PyQt.QtCore import QSettings
 
 from rsxml.project_xml import Project, MetaData, Meta, ProjectBounds, Coords, BoundingBox, Realization, Geopackage, GeopackageLayer, GeoPackageDatasetTypes, Dataset
 
@@ -30,8 +31,12 @@ from ..QRiS.path_utilities import parse_posix_path
 
 from .utilities import add_standard_form_buttons, message_box
 
+# Puting these here for now to avoid circular imports - source: qris_toolbar.py
+ORGANIZATION = 'Riverscapes'
+APPNAME = 'QRiS'
 
 PROJECT_MACHINE_NAME = 'RiverscapesStudio'
+DEFAULT_EXPORT_PATH = 'default_export_path'
 
 class FrmExportProject(QtWidgets.QDialog):
 
@@ -48,7 +53,11 @@ class FrmExportProject(QtWidgets.QDialog):
         self.setupUi()
 
         if outpath is not None:
-            self.set_output_path(outpath)
+            self.base_folder = outpath
+        else:
+            settings = QSettings(ORGANIZATION, APPNAME)
+            self.base_folder = settings.value(DEFAULT_EXPORT_PATH, '').replace("/", "\\")
+        self.set_output_path()
 
         # populate the AOI combo box with aoi names
         for aoi_id, aoi in self.qris_project.masks.items():
@@ -232,12 +241,33 @@ class FrmExportProject(QtWidgets.QDialog):
                 self.export_layers_model.itemChanged.connect(self.handle_item_changed)
             self.update_check_state(item.parent())
 
-    def set_output_path(self, outpath: str):
+    def set_output_path(self):
 
-        # outpath = parse_posix_path(os.path.join(self.basepath, project_name.replace(" ", "_")))
+        if self.base_folder == "":
+            return
+
+        name = ""
+
+        if self.chk_apply_name_to_output.isChecked():
+            name = self.txt_rs_name.text().replace(" ", "_").replace(".", "_").replace(",", "_").replace(";", "_").replace(":", "_").replace("/", "_").replace("\\", "_").replace("?", "_").replace("!", "_").replace("'", "_").replace('"', "_").replace("<", "_").replace(">", "_").replace("|", "_").replace("*", "_").replace("(", "_").replace(")", "_").replace("[", "_").replace("]", "_").replace("{", "_").replace("}", "_")
+
+        outpath = os.path.join(self.base_folder, name) 
         self.txt_outpath.setText(outpath)
 
     def accept(self) -> None:
+
+        if self.txt_rs_name.text() == "":
+            message_box("Project Name", "Please enter a name for the Riverscapes project.")
+            return
+        
+        if self.txt_outpath.text() == "":
+            message_box("Output Path", "Please select an output path for the Riverscapes project.")
+            return
+        
+        # make sure the start of the output path is a valid drive letter
+        if not os.path.exists(self.txt_outpath.text()[0:2]):
+            message_box("Invalid Output Path", "The output path is invalid. Please select a valid output path.")
+            return
 
         # check if output directory is empty. If so, prompt user to overwrite or cancel
         if os.path.exists(self.txt_outpath.text()):
@@ -275,7 +305,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # create a new project folder if it doesn't exist
         if not os.path.exists(self.txt_outpath.text()):
-            os.mkdir(self.txt_outpath.text())
+            os.makedirs(self.txt_outpath.text())
 
         # copy the geopackage layers to the new project folder
         out_name = 'qris.gpkg' # os.path.split(self.qris_project.project_file)[1]
@@ -1011,8 +1041,8 @@ class FrmExportProject(QtWidgets.QDialog):
                     ret = msg.exec_()
                     if ret == QtWidgets.QMessageBox.Cancel:
                         return
-
-        self.set_output_path(path)
+        self.base_folder = path.replace("/", "\\")
+        self.set_output_path()
 
     def change_project_bounds(self):
 
@@ -1067,16 +1097,20 @@ class FrmExportProject(QtWidgets.QDialog):
         self.txt_rs_name.textChanged.connect(self.set_output_path)
         self.grid.addWidget(self.txt_rs_name, 0, 1, 1, 1)
 
+        self.chk_apply_name_to_output = QtWidgets.QCheckBox("Use project name as output folder")
+        self.chk_apply_name_to_output.setChecked(True)
+        self.chk_apply_name_to_output.clicked.connect(self.set_output_path)
+        self.grid.addWidget(self.chk_apply_name_to_output, 1, 1, 1, 1)
+
         # add label and horizontal layout with textbox and small button for output path
         self.lbl_output = QtWidgets.QLabel("Output Path")
         self.lbl_output.setToolTip("Select the folder where the Riverscapes project will be saved")
-        self.grid.addWidget(self.lbl_output, 1, 0, 1, 1)
+        self.grid.addWidget(self.lbl_output, 2, 0, 1, 1)
 
         self.horiz_output = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz_output, 1, 1, 1, 1)
+        self.grid.addLayout(self.horiz_output, 2, 1, 1, 1)
 
         self.txt_outpath = QtWidgets.QLineEdit()
-        self.txt_outpath.setReadOnly(True)
         self.horiz_output.addWidget(self.txt_outpath)
 
         self.btn_output = QtWidgets.QPushButton("...")
@@ -1087,10 +1121,10 @@ class FrmExportProject(QtWidgets.QDialog):
         # Project Bounds
         self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
         self.lbl_project_bounds.setToolTip("Select the extent of the project. This is used for display purposes on the Riverscapes Data Exchange")
-        self.grid.addWidget(self.lbl_project_bounds, 2, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.grid.addWidget(self.lbl_project_bounds, 3, 0, 1, 1, QtCore.Qt.AlignTop)
 
         self.vert_project_bounds = QtWidgets.QVBoxLayout()
-        self.grid.addLayout(self.vert_project_bounds, 2, 1, 1, 1)
+        self.grid.addLayout(self.vert_project_bounds, 3, 1, 1, 1)
 
         self.opt_project_bounds_all = QtWidgets.QRadioButton("Use all QRiS layers")
         self.opt_project_bounds_all.setToolTip("Use the extent of all QRiS layers in the project")
@@ -1114,7 +1148,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # New or Existing Project
         self.lbl_new_or_existing = QtWidgets.QLabel("Export Type")
         self.lbl_new_or_existing.setToolTip("Select whether to create a new Riverscapes Studio project or update an existing project")
-        self.grid.addWidget(self.lbl_new_or_existing, 3, 0, 1, 1)
+        self.grid.addWidget(self.lbl_new_or_existing, 4, 0, 1, 1)
 
         self.group_new_or_existing = QtWidgets.QButtonGroup(self)
 
@@ -1123,16 +1157,16 @@ class FrmExportProject(QtWidgets.QDialog):
         self.group_new_or_existing.addButton(self.rdo_new)
         self.rdo_new.setChecked(True)
         self.rdo_new.clicked.connect(self.change_new_or_existing)
-        self.grid.addWidget(self.rdo_new, 3, 1, 1, 1)
+        self.grid.addWidget(self.rdo_new, 4, 1, 1, 1)
 
         self.rdo_existing = QtWidgets.QRadioButton("Update Existing Riverscapes Studio Project")
         self.rdo_existing.setToolTip("Update a previously uploaded Riverscapes Studio project")
         self.group_new_or_existing.addButton(self.rdo_existing)
         self.rdo_existing.clicked.connect(self.change_new_or_existing)
-        self.grid.addWidget(self.rdo_existing, 4, 1, 1, 1)
+        self.grid.addWidget(self.rdo_existing, 5, 1, 1, 1)
 
         self.horiz_existing = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz_existing, 5, 1, 1, 1)
+        self.grid.addLayout(self.horiz_existing, 6, 1, 1, 1)
 
         self.lbl_existing = QtWidgets.QLabel("Existing Project rs.xml file")
         self.lbl_existing.setEnabled(False)
@@ -1151,12 +1185,12 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # add multiline box for description
         self.lbl_description = QtWidgets.QLabel("Description")
-        self.grid.addWidget(self.lbl_description, 6, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.grid.addWidget(self.lbl_description, 7, 0, 1, 1, QtCore.Qt.AlignTop)
 
         self.txt_description = QtWidgets.QTextEdit()
         self.txt_description.setReadOnly(False)
         self.txt_description.setText(self.qris_project.description)
-        self.grid.addWidget(self.txt_description, 6, 1, 1, 1)
+        self.grid.addWidget(self.txt_description, 7, 1, 1, 1)
 
         # add vertical spacer
         self.vert.addStretch()
