@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [1.0.6] 2024 DEC 06
+
+### Added
+- Specify a default export folder in settings #537
+
+### Fixed
+- Bug with missing DCE Layer Features in project export #539
+- Update Project path on browse to path button on New Project Form #538
+- Bug with Ignore Fields radio button on Import Features Form #542
+
+
 ## [1.0.5] 2024 NOV 15
 
 ### Added
