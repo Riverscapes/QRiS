@@ -15,7 +15,7 @@ class ValleyBottom(DBItem):
         super().__init__('valley_bottoms', id, name)
         self.description = description
         self.metadata = metadata
-        self.icon = 'polygon'
+        self.icon = 'valley_bottom'
         self.fc_name = 'valley_bottom_features'
         self.fc_id_column_name = 'valley_bottom_id'
 

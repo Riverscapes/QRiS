@@ -179,7 +179,7 @@ class QRisMapManager(RiverscapesMapManager):
                 return existing_layer
     
             fc_path = f'{self.project.project_file}|layername=valley_bottom_features'
-            feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'valley_bottom_id', 'valley_bottoms')
+            feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'valley_bottom_id', 'valley_bottom')
     
             # setup fields
             self.set_hidden(feature_layer, 'fid', 'Valley Bottom Feature ID')

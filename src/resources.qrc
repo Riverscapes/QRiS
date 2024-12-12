@@ -49,6 +49,7 @@
         <file alias="waterdrop">../Images/water-drop.svg</file>
         <file alias="waterdrop-blue">../Images/water-drop-blue.svg</file>
         <file alias="stream-gage">../Images/stream_gage.svg</file>
+        <file alias="valley_bottom">../Images/valley_bottom.svg</file>
 
         <!-- Layer Icons -->
         <file alias="vector">../Images/layers/vector.svg</file>
