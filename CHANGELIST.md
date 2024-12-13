@@ -1,5 +1,12 @@
 # QRiS Plugin
 
+## [1.0.7] 2024 DEC 13
+
+### Fixed
+- Added Missing Valley Bottom Symbology #548
+- Fix First Time Creating New Project Bug #545
+- Adding WMS as Surface Throws Error #544
+
 ## [1.0.6] 2024 DEC 06
 
 ### Added
