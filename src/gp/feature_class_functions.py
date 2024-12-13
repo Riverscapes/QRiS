@@ -2,13 +2,10 @@ import os
 
 from osgeo import ogr
 from osgeo import osr
-from shapely.wkb import loads as wkbload, dumps as wkbdumps
-from osgeo.gdal import Warp, WarpOptions
-from qgis.PyQt.QtWidgets import QMessageBox
-from qgis.core import QgsVectorLayer, QgsGeometry
 
+from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.gui import QgsDataSourceSelectDialog
-from qgis.core import QgsMapLayer, QgsWkbTypes
+from qgis.core import QgsMapLayer, QgsWkbTypes, QgsVectorLayer, QgsGeometry 
 from qgis.utils import iface
 
 from ..model.db_item import DBItem
@@ -171,6 +168,11 @@ def browse_raster(parent, description: str) -> str:
     uri = frm_browse.uri()
 
     if uri is not None and uri.isValid():
+        # check if the raster exists on disk
+        if uri.providerKey != 'gdal':
+            QMessageBox.warning(parent, 'Invalid Raster',
+                                f'This raster format is not currently supported by QRiS. Please select a different raster.')
+            return None
         # if uri extension is .vrt then it is a virtual raster and cannot be used
         vrt_ext = os.path.splitext(uri.uri)[1].lower()
         if vrt_ext == '.vrt':
