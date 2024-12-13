@@ -31,6 +31,8 @@ class FrmNewProject(QtWidgets.QDialog):
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
+        # get a default root path
+        self.root_path = parse_posix_path(os.path.expanduser('~'))
         self.last_project_folder = last_parent_project
         if self.last_project_folder is not None:
             if os.path.isdir(self.last_project_folder):
@@ -59,8 +61,11 @@ class FrmNewProject(QtWidgets.QDialog):
         clean_name = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
 
         if len(clean_name) > 0:
-            self.project_folder = parse_posix_path(os.path.join(self.root_path, clean_name, f'{clean_name}.gpkg'))
+            self.project_folder = parse_posix_path(os.path.join(self.root_path, clean_name, 'qris.gpkg'))
             self.txtPath.setText(self.project_folder)
+        else:
+            self.project_folder = None
+            self.txtPath.setText(parse_posix_path(self.root_path))
 
     def get_tags(self):
         """Returns a list of tags from the tags text box"""
@@ -131,7 +136,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
     def browse_root_folder(self):
 
-        browse_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select an Existing Folder to create a New QRiS Project Folder in', self.last_project_folder)
+        browse_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select an Existing Folder to create a New QRiS Project Folder in', self.root_path)
         if browse_folder:
             self.last_project_folder = browse_folder
             self.root_path = parse_posix_path(browse_folder)
