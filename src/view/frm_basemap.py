@@ -63,7 +63,11 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtName.textChanged.connect(self.on_name_changed)
             self.txtSourcePath.textChanged.connect(self.on_name_changed)
             self.txtSourcePath.setText(import_source_path)
-            self.txtName.setText(os.path.splitext(os.path.basename(import_source_path))[0])
+            name, ext = os.path.splitext(os.path.basename(import_source_path))
+            gpkg = ext.split(':')
+            if gpkg[0].lower() in ['.gpkg', '.gdb']:
+                name = gpkg[1]
+            self.txtName.setText(name)
 
             # Attempt to parse the raster type from the source raster name
             if 'dem' in self.txtName.text().lower():
@@ -250,7 +254,8 @@ class FrmRaster(QtWidgets.QDialog):
         clean_name_hillshade = f'{clean_name}_hillshade'
 
         if len(project_name) > 0:
-            _name, ext = os.path.splitext(self.txtSourcePath.text())
+            # _name, ext = os.path.splitext(self.txtSourcePath.text())
+            ext = '.tif' # We are only saving files as tif
             parent_folder = CONTEXT_PARENT_FOLDER if self.is_context else SURFACES_PARENT_FOLDER
             self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext))))
             self.hillshade_project_path = parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name_hillshade, ext)))
