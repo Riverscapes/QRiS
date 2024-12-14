@@ -19,7 +19,9 @@ from ..model.valley_bottom import ValleyBottom
 
 from .path_utilities import parse_posix_path
 
+from qgis.utils import iface
 from qgis.core import (
+    Qgis,
     QgsVectorLayer,
     QgsMapLayer,
     QgsProject,
@@ -30,6 +32,7 @@ from qgis.core import (
     QgsAction,
     QgsAttributeEditorAction
 )
+
 
 
 class QRisMapManager(RiverscapesMapManager):
@@ -281,6 +284,13 @@ class QRisMapManager(RiverscapesMapManager):
 
     def build_raster_layer(self, raster: Raster) -> QgsMapLayer:
 
+        # check if raster file exists on disk
+        path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
+        if not os.path.exists(path):
+            # Warn user that the raster file is missing
+            iface.messageBar().pushMessage('Missing QRiS Raster File', f'The raster file {path} referenced in the QRiS project is missing.', level=Qgis.Warning)
+            return None
+        
         if raster.is_context is False:
             raster_machine_code = SURFACE_MACHINE_CODE
             group_layer_name = 'Surfaces'
