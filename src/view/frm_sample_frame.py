@@ -12,7 +12,6 @@ from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
 from ..model.pour_point import PourPoint
 from ..model.scratch_vector import ScratchVector
-from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.sample_frame import SampleFrame, insert_sample_frame
 
 from .frm_new_attribute import FrmNewAttribute
@@ -173,7 +172,7 @@ class FrmSampleFrame(QDialog):
                     clip_item = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
                     if clip_item is not None:
                         if clip_item.id > 0:        
-                            clip_mask = ('aoi_features', 'mask_id', clip_item.id)
+                            clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
                 
                 attributes = {}
                 attributes['sample_frame_id'] = self.sample_frame.id

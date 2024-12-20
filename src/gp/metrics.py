@@ -8,29 +8,29 @@ from shapely.wkb import load, loads as wkbload, dumps as wkbdumps
 from osgeo import gdal
 from shapely.geometry import mapping
 
-from ..model.mask import Mask
+from ..model.sample_frame import SampleFrame
 from .zonal_statistics import zonal_statistics
 
 
 class Metrics:
 
-    def __init__(self, project_file: str, mask_id: int, layers: list, mask_layer='mask_features'):
+    def __init__(self, project_file: str, mask_id: int, layers: list, aoi_layer='sample_frame_features'):
 
         self.config = {'vector': {}, 'raster': {}}
         self.project_file = project_file
         self.mask_id = mask_id
         self.layers = layers
-        self.mask_layer = mask_layer
+        self.mask_layer = aoi_layer
         self.metrics = {}
         self.polygons, self.utm_epsg = self.load_polygons(project_file, mask_id, self.mask_layer)
         # print(json.dumps(mapping(self.polygons[2]['geometry'])))
 
-    def load_polygons(self, project_file: str, mask: Mask, mask_layer: str = 'mask_features') -> dict:
+    def load_polygons(self, project_file: str, aoi: SampleFrame, aoi_layer: str = 'sample_frame_features') -> dict:
 
         driver = ogr.GetDriverByName("GPKG")
         ds = driver.Open(project_file)
-        layer = ds.GetLayerByName(mask_layer)
-        layer.SetAttributeFilter(f'mask_id = {mask.id}')
+        layer = ds.GetLayerByName(aoi_layer)
+        layer.SetAttributeFilter(f'sample_frame_id = {aoi.id}')
         src_srs = layer.GetSpatialRef()
 
         # Target transform to most appropriate UTM zone
@@ -62,7 +62,7 @@ class Metrics:
             geom.MakeValid()
             polygons[feature.GetFID()] = {
                 'geometry': wkbload(bytes(geom.ExportToWkb())),
-                'display_label': feature.GetField('display_label') if mask_layer == 'mask_features' else f'AOI {mask.name}'
+                'display_label': feature.GetField('display_label') if aoi.sample_frame_type == SampleFrame.SAMPLE_FRAME_TYPE else f'AOI {aoi.name}'
             }
 
         layer = None

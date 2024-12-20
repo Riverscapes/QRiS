@@ -5,7 +5,7 @@ from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsProject, QgsVectorLayer, 
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import Project
-from ..model.mask import Mask, AOI_MASK_TYPE_ID
+from ..model.sample_frame import SampleFrame
 from .metrics import Metrics
 from ..model.raster import SURFACES_PARENT_FOLDER
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -21,9 +21,9 @@ class MetricsTask(QgsTask):
     """
 
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
-    on_complete = pyqtSignal(bool, Mask, dict or None, dict or None)
+    on_complete = pyqtSignal(bool, SampleFrame, dict or None, dict or None)
 
-    def __init__(self, project: Project, mask: Mask):
+    def __init__(self, project: Project, mask: SampleFrame):
         super().__init__(MESSAGE_CATEGORY, QgsTask.CanCancel)
 
         self.polygons = {}
@@ -38,7 +38,7 @@ class MetricsTask(QgsTask):
 
                 # Skip the mask being used to summarize layers
                 prop = layer_node.customProperty('QRiS')
-                if prop is not None and isinstance(mask, Mask) and prop == mask_guid:
+                if prop is not None and isinstance(mask, SampleFrame) and prop == mask_guid:
                     continue
 
                 layer_def = {'name': layer.name(), 'url': layer.dataProvider().dataSourceUri()}
@@ -53,7 +53,7 @@ class MetricsTask(QgsTask):
         self.project = project
         self.mask = mask
         self.config = {}
-        mask_layer = 'aoi_features' if self.mask.mask_type.id == AOI_MASK_TYPE_ID else 'mask_features'
+        mask_layer = 'sample_frame_features'
         self.metrics = Metrics(project.project_file, mask, self.map_layers, mask_layer)
 
     def run(self):

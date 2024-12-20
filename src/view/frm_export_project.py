@@ -19,13 +19,11 @@ from ..model.analysis import Analysis
 from ..model.profile import Profile
 from ..model.pour_point import PourPoint
 from ..model.cross_sections import CrossSections
-from ..model.mask import Mask, AOI_MASK_TYPE_ID
 from ..model.project import Project as QRiSProject
 from ..model.raster import Raster
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.stream_gage import StreamGage
 from ..model.sample_frame import SampleFrame
-from ..model.valley_bottom import ValleyBottom
 
 from ..QRiS.path_utilities import parse_posix_path
 
@@ -60,9 +58,8 @@ class FrmExportProject(QtWidgets.QDialog):
         self.set_output_path()
 
         # populate the AOI combo box with aoi names
-        for aoi_id, aoi in self.qris_project.masks.items():
-            if aoi.mask_type.id == AOI_MASK_TYPE_ID:
-                self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
+        for aoi_id, aoi in self.qris_project.aois.items():
+            self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
 
         # Inputs
         inputs_node = QtGui.QStandardItem("Inputs")
@@ -85,13 +82,12 @@ class FrmExportProject(QtWidgets.QDialog):
         aois_node = QtGui.QStandardItem("AOIs")
         aois_node.setCheckable(True)
         aois_node.setCheckState(QtCore.Qt.Checked)
-        for aoi in self.qris_project.masks.values():
-            if aoi.mask_type.id == AOI_MASK_TYPE_ID:
-                item = QtGui.QStandardItem(aoi.name)
-                item.setCheckable(True)
-                item.setCheckState(QtCore.Qt.Checked)
-                item.setData(aoi, QtCore.Qt.UserRole)
-                aois_node.appendRow(item)
+        for aoi in self.qris_project.aois.values():
+            item = QtGui.QStandardItem(aoi.name)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            item.setData(aoi, QtCore.Qt.UserRole)
+            aois_node.appendRow(item)
         inputs_node.appendRow(aois_node)
 
         # Sample Frames
@@ -375,9 +371,9 @@ class FrmExportProject(QtWidgets.QDialog):
         else:
             # get the extent of the selected AOI
             aoi_id = self.cbo_project_bounds_aoi.currentData()
-            aoi: Mask = self.qris_project.masks[aoi_id]
-            lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername=aoi_features', aoi.name, "ogr")
-            lyr.setSubsetString(f"mask_id = {aoi.id}")
+            aoi: SampleFrame = self.qris_project.aois[aoi_id]
+            lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername=sample_frame_features', aoi.name, "ogr")
+            lyr.setSubsetString(f"sample_frame_id = {aoi.id}")
             envelope = lyr.getFeatures().__next__().geometry()
 
         if envelope is not None and not envelope.isNull() and not envelope.isEmpty():
@@ -479,19 +475,21 @@ class FrmExportProject(QtWidgets.QDialog):
                 valley_bottom_item = valley_bottom_node.child(i)
                 if valley_bottom_item.checkState() == QtCore.Qt.Unchecked:
                     continue
-                valley_bottom: ValleyBottom = valley_bottom_item.data(QtCore.Qt.UserRole)
+                valley_bottom: SampleFrame = valley_bottom_item.data(QtCore.Qt.UserRole)
+                if not valley_bottom.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                    continue
 
-                if 'valley_bottom_features' not in keep_layers:
-                    keep_layers['valley_bottom_features'] = {'id_field': 'valley_bottom_id', 'id_values': []}
-                keep_layers['valley_bottom_features']['id_values'].append(str(valley_bottom.id))
-                if 'valley_bottoms' not in keep_layers:
-                    keep_layers['valley_bottoms'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['valley_bottoms']['id_values'].append(str(valley_bottom.id))
+                if 'sample_frame_features' not in keep_layers:
+                    keep_layers['sample_frame_features'] = {'id_field': 'sample_frame_id', 'id_values': []}
+                keep_layers['sample_frame_features']['id_values'].append(str(valley_bottom.id))
+                if 'sample_frames' not in keep_layers:
+                    keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
+                keep_layers['sample_frames']['id_values'].append(str(valley_bottom.id))
 
                 view_name = f'vw_valley_bottom_{valley_bottom.id}'
                 self.create_spatial_view(view_name=view_name,
-                                        fc_name='valley_bottom_features',
-                                        field_name='valley_bottom_id',
+                                        fc_name='sample_frame_features',
+                                        field_name='sample_frame_id',
                                         id_value=valley_bottom.id,
                                         out_geopackage=out_geopackage,
                                         geom_type='POLYGON')
@@ -509,21 +507,21 @@ class FrmExportProject(QtWidgets.QDialog):
                 if aoi_item.checkState() == QtCore.Qt.Unchecked:
                     continue
 
-                aoi: Mask = aoi_item.data(QtCore.Qt.UserRole)
-                if not aoi.mask_type.id == AOI_MASK_TYPE_ID:
+                aoi: SampleFrame = aoi_item.data(QtCore.Qt.UserRole)
+                if not aoi.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                     continue
 
-                if 'aoi_features' not in keep_layers:
-                    keep_layers['aoi_features'] = {'id_field': 'mask_id', 'id_values': []}
-                keep_layers['aoi_features']['id_values'].append(str(aoi.id))
-                if 'masks' not in keep_layers:
-                    keep_layers['masks'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['masks']['id_values'].append(str(aoi.id))
+                if 'sample_frame_features' not in keep_layers:
+                    keep_layers['sample_frame_features'] = {'id_field': 'sample_frame_id', 'id_values': []}
+                keep_layers['sample_frame_features']['id_values'].append(str(aoi.id))
+                if 'sample_frames' not in keep_layers:
+                    keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
+                keep_layers['sample_frames']['id_values'].append(str(aoi.id))
 
                 view_name = f'vw_aoi_{aoi.id}'
                 self.create_spatial_view(view_name=view_name,
-                                        fc_name='aoi_features',
-                                        field_name='mask_id',
+                                        fc_name='sample_frame_features',
+                                        field_name='sample_frame_id',
                                         id_value=aoi.id,
                                         out_geopackage=out_geopackage,
                                         geom_type='POLYGON')
@@ -912,7 +910,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 geopackage_layers = []
                 # analysis: Analysis = analysis
-                sample_frame: Mask = analysis.sample_frame
+                sample_frame: SampleFrame = analysis.sample_frame
 
                 # flatten the table of analysis metrics
                 analysis_metrics = []
@@ -963,7 +961,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses','analysis_metrics', 'aoi_features', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers','mask_features', 'masks', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features','sample_frames','valley_bottom_features', 'valley_bottoms']:
+        for layer in ['analyses','analysis_metrics', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features','sample_frames']:
             # get the layer
             lyr: ogr.Layer = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list

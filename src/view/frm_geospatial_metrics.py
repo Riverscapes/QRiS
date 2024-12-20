@@ -4,26 +4,26 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .frm_options import FrmOptions
 
 from ..model.project import Project
-from ..model.mask import Mask
+from ..model.sample_frame import SampleFrame
 
 from .utilities import add_standard_form_buttons
 
 
 class FrmGeospatialMetrics(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, mask: Mask, polygons: dict, metrics: dict):
+    def __init__(self, parent, project: Project, mask: SampleFrame, polygons: dict, metrics: dict):
         super().__init__(parent)
 
         self.qris_project = project
-        self.mask = mask
+        self.qris_mask = mask
         self.metrics = metrics
         self.polygons = polygons
 
         self.setupUi()
 
-        self.setWindowTitle(f'Zonal Statistics for {self.mask.name}')
+        self.setWindowTitle(f'Zonal Statistics for {self.qris_mask.name}')
 
-        self.txtMask.setText(self.mask.name)
+        self.txtMask.setText(self.qris_mask.name)
 
         self.load_tree()
 

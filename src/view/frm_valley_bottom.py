@@ -6,9 +6,8 @@ from qgis.utils import iface
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
-from ..model.mask import AOI_MASK_TYPE_ID
 from ..model.pour_point import PourPoint
-from ..model.valley_bottom import ValleyBottom, insert_valley_bottom
+from ..model.sample_frame import SampleFrame, insert_sample_frame
 from ..model.scratch_vector import ScratchVector
 
 from ..gp.feature_class_functions import layer_path_parser
@@ -21,7 +20,7 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmValleyBottom(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str, valley_bottom: ValleyBottom = None):
+    def __init__(self, parent, project: Project, import_source_path: str, valley_bottom: SampleFrame = None):
 
         self.qris_project = project
         self.valley_bottom = valley_bottom
@@ -67,10 +66,10 @@ class FrmValleyBottom(QtWidgets.QDialog):
 
             if show_mask_clip:
                 # Masks (filtered to just AOI)
-                self.masks = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+                self.clipping_masks = {id: aoi for id, aoi in self.qris_project.aois.items()}
                 no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-                self.masks[0] = no_clipping
-                self.masks_model = DBItemModel(self.masks)
+                self.clipping_masks[0] = no_clipping
+                self.masks_model = DBItemModel(self.clipping_masks)
                 self.cboMaskClip.setModel(self.masks_model)
                 # Default to no mask clipping
                 self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
@@ -120,7 +119,7 @@ class FrmValleyBottom(QtWidgets.QDialog):
             if self.valley_bottom is not None:
                 self.valley_bottom.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
             else:
-                self.valley_bottom = insert_valley_bottom(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+                self.valley_bottom = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
                 self.qris_project.valley_bottoms[self.valley_bottom.id] = self.valley_bottom
         except Exception as ex:
             if 'unique' in str(ex).lower():
@@ -132,16 +131,16 @@ class FrmValleyBottom(QtWidgets.QDialog):
 
         if self.import_source_path is not None:
             try:
-                valley_bottom_layer_name = "valley_bottom_features"
+                valley_bottom_layer_name = "sample_frame_features"
                 valley_bottom_path = f'{self.qris_project.project_file}|layername={valley_bottom_layer_name}'
-                layer_attributes = {'valley_bottom_id': self.valley_bottom.id}
+                layer_attributes = {'sample_frame_id': self.valley_bottom.id}
                 #field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, 'display_label', direct_copy=True)] if self.cboAttribute.isVisible() else None
                 field_map = None
                 clip_mask = None
                 clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                 if clip_item is not None:
                     if clip_item.id > 0:        
-                        clip_mask = ('aoi_features', 'mask_id', clip_item.id)
+                        clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
                 
                 if self.layer_id == 'memory':
                     import_task = ImportTemporaryLayer(self.import_source_path, valley_bottom_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)

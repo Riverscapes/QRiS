@@ -100,8 +100,8 @@ class ImportFeatureClass(QgsTask):
                     mask_dataset = ogr.Open(self.proj_gpkg)
                 else:
                     mask_dataset = dst_dataset
-                clip_layer: ogr.Layer = mask_dataset.GetLayer(self.clip_mask[0]) # 'aoi_features'
-                clip_layer.SetAttributeFilter(f'{self.clip_mask[1]} = {self.clip_mask[2]}') # 'mask_id'
+                clip_layer: ogr.Layer = mask_dataset.GetLayer(self.clip_mask[0])
+                clip_layer.SetAttributeFilter(f'{self.clip_mask[1]} = {self.clip_mask[2]}')
                 # Gather all of the geoms and merge into a multipart geometry
                 clip_geom = ogr.Geometry(ogr.wkbMultiPolygon)
                 for clip_feat in clip_layer:

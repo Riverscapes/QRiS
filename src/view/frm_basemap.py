@@ -9,7 +9,6 @@ from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
 from ..model.raster import Raster, insert_raster, SURFACES_PARENT_FOLDER, CONTEXT_PARENT_FOLDER
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
-from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
@@ -83,10 +82,10 @@ class FrmRaster(QtWidgets.QDialog):
             self.set_hillshade()
 
             # Masks (filtered to just AOI)
-            self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+            self.clipping_masks = {id: aoi for id, aoi in self.project.aois.items()}
             no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-            self.masks[0] = no_clipping
-            self.masks_model = DBItemModel(self.masks)
+            self.clipping_masks[0] = no_clipping
+            self.masks_model = DBItemModel(self.clipping_masks)
             self.cboMask.setModel(self.masks_model)
             # Default to no mask clipping
             self.cboMask.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))

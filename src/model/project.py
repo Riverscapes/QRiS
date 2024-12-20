@@ -1,11 +1,12 @@
 import os
 import json
 import sqlite3
+from sqlite3 import Connection
 
 from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
+from qgis.utils import spatialite_connect
 
 from .analysis import Analysis, load_analyses
-from .mask import Mask, load_masks
 from .sample_frame import SampleFrame, load_sample_frames
 from .layer import Layer, load_layers, load_non_method_layers
 from .method import Method, load as load_methods
@@ -20,7 +21,6 @@ from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
 from .profile import Profile, load_profiles
 from .cross_sections import CrossSections, load_cross_sections
-from .valley_bottom import ValleyBottom, load_valley_bottoms
 from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
@@ -32,8 +32,8 @@ PROJECT_MACHINE_CODE = 'Project'
 # all spatial layers
 # feature class, layer name, geometry
 project_layers = [
-    ('aoi_features', 'AOI Features', 'Polygon'),
-    ('mask_features', 'Mask Features', 'Polygon'),
+    ('aoi_features', 'AOI Features', 'Polygon'), # Keep so the migration scripts can run
+    ('mask_features', 'Mask Features', 'Polygon'), # Keep so the migration scripts can run
     ('sample_frame_features', 'Sample Frame Features', 'Polygon'),
     ('pour_points', 'Pour Points', 'Point'),
     ('catchments', 'Catchments', 'Polygon'),
@@ -41,7 +41,7 @@ project_layers = [
     ('profile_centerlines', 'Centerlines', 'Linestring'),
     ('profile_features', 'Profiles', 'Linestring'),
     ('cross_section_features', 'Cross Sections', 'Linestring'),
-    ('valley_bottom_features', 'Valley Bottoms', 'Polygon'),
+    ('valley_bottom_features', 'Valley Bottoms', 'Polygon'), # Keep so the migration scripts can run
     ('dce_points', 'DCE Points', 'Point'),
     ('dce_lines', 'DCE Lines', 'Linestring'),
     ('dce_polygons', 'DCE Polygons', 'Polygon')
@@ -77,8 +77,7 @@ class Project(DBItem):
             lkp_tables.append('lkp_scratch_vector_types')
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in lkp_tables}
 
-            self.masks = load_masks(curs, self.lookup_tables['lkp_mask_types'])
-            self.aois = load_masks(curs, self.lookup_tables['lkp_mask_types'])
+            self.aois = load_sample_frames(curs, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
             self.sample_frames = load_sample_frames(curs)
             self.layers = load_layers(curs)
             self.non_method_layers = load_non_method_layers(curs)
@@ -94,7 +93,7 @@ class Project(DBItem):
             self.stream_gages = load_stream_gages(curs)
             self.profiles = load_profiles(curs)
             self.cross_sections = load_cross_sections(curs)
-            self.valley_bottoms = load_valley_bottoms(curs)
+            self.valley_bottoms = load_sample_frames(curs, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
 
             self.units = load_units(curs)
 
@@ -112,10 +111,13 @@ class Project(DBItem):
 
     def remove(self, db_item: DBItem):
 
-        if isinstance(db_item, Mask):
-            self.masks.pop(db_item.id)
-        elif isinstance(db_item, SampleFrame):
-            self.sample_frames.pop(db_item.id)
+        if isinstance(db_item, SampleFrame):
+            if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                self.aois.pop(db_item.id)
+            elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                self.valley_bottoms.pop(db_item.id)
+            else:
+                self.sample_frames.pop(db_item.id)
         elif isinstance(db_item, Raster):
             self.rasters.pop(db_item.id)
         elif isinstance(db_item, Event):
@@ -130,8 +132,6 @@ class Project(DBItem):
             self.profiles.pop(db_item.id)
         elif isinstance(db_item, CrossSections):
             self.cross_sections.pop(db_item.id)
-        elif isinstance(db_item, ValleyBottom):
-            self.valley_bottoms.pop(db_item.id)
         elif isinstance(db_item, EventLayer):
             event_layer_index = list(event_layer.id for event_layer in self.events[db_item.event_id].event_layers).index(db_item.id)
             self.events[db_item.event_id].event_layers.pop(event_layer_index)
@@ -221,8 +221,9 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
 
 def apply_db_migrations(db_path: str):
 
-    conn = sqlite3.connect(db_path)
+    conn: Connection = spatialite_connect(db_path)
     conn.execute('PRAGMA foreign_keys = ON;')
+    conn.execute('SELECT EnableGpkgMode();')
     curs = conn.cursor()
 
     existing_layers = [layer[0] for layer in curs.execute('SELECT table_name, data_type FROM gpkg_contents WHERE data_type = "features"').fetchall()]
@@ -251,7 +252,6 @@ def apply_db_migrations(db_path: str):
                 except Exception as ex:
                     conn.rollback()
                     raise ex
-                    # raise Exception('Error applying migration from file {}'.format(os.path.basename(migration_path)), inner=ex)
 
         conn.commit()
     except Exception as ex:

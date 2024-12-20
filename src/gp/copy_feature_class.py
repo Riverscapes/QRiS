@@ -35,11 +35,6 @@ class CopyFeatureClass(QgsTask):
         https://subscription.packtpub.com/book/application-development/9781787124837/3/ch03lvl1sec58/exporting-a-layer-to-the-geopackage-format
         """
 
-        # if self.mask_tuple is not None:
-        #     kwargs['cutlineDSName'] = self.mask_tuple[0]
-        #     kwargs['cutlineLayer'] = 'mask_features'
-        #     kwargs['cutlineWhere'] = 'mask_id = {}'.format(self.mask_tuple[1])
-
         self.setProgress(0)
 
         try:
@@ -70,8 +65,8 @@ class CopyFeatureClass(QgsTask):
             if self.mask_tuple is not None:
                 clip_path = self.mask_tuple[0]
                 clip_mask_id = self.mask_tuple[1]
-                clip_layer = QgsVectorLayer(f'{clip_path}|layername=aoi_features')
-                clip_layer.setSubsetString(f'mask_id = {clip_mask_id}')
+                clip_layer = QgsVectorLayer(f'{clip_path}|layername=sample_frame_features')
+                clip_layer.setSubsetString(f'sample_frame_id = {clip_mask_id}')
                 clip_transform = QgsCoordinateTransform(clip_layer.sourceCrs(), source_layer.sourceCrs(), QgsProject.instance().transformContext())
                 clip_feat = clip_layer.getFeatures()
                 clip_feat = next(clip_feat)
