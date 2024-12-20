@@ -44,8 +44,8 @@ class CopyRaster(QgsTask):
 
         if self.mask_tuple is not None:
             kwargs['cutlineDSName'] = self.mask_tuple[0]
-            kwargs['cutlineLayer'] = 'aoi_features'
-            kwargs['cutlineWhere'] = 'mask_id = {}'.format(self.mask_tuple[1])
+            kwargs['cutlineLayer'] = 'sample_frame_features'
+            kwargs['cutlineWhere'] = 'sample_frame_id = {}'.format(self.mask_tuple[1])
             kwargs['cropToCutline'] = True
 
         QgsMessageLog.logMessage(f'Started copy raster request', MESSAGE_CATEGORY, Qgis.Info)

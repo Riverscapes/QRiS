@@ -5,8 +5,7 @@ from textwrap import dedent
 from .riverscapes_map_manager import RiverscapesMapManager
 
 from ..model.project import Project, PROJECT_MACHINE_CODE
-from ..model.mask import Mask, MASK_MACHINE_CODE, AOI_MACHINE_CODE, AOI_MASK_TYPE_ID
-from ..model.sample_frame import SampleFrame, SAMPLE_FRAME_MACHINE_CODE
+from ..model.sample_frame import SampleFrame, SAMPLE_FRAME_MACHINE_CODE, AOI_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
@@ -15,7 +14,6 @@ from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHI
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
-from ..model.valley_bottom import ValleyBottom
 
 from .path_utilities import parse_posix_path
 
@@ -47,9 +45,8 @@ class QRisMapManager(RiverscapesMapManager):
             CrossSections.CROSS_SECTIONS_MACHINE_CODE,
             Profile.PROFILE_MACHINE_CODE,
             AOI_MACHINE_CODE,
-            ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE,
-            MASK_MACHINE_CODE,
             SAMPLE_FRAME_MACHINE_CODE,
+            VALLEY_BOTTOM_MACHINE_CODE,
             f'{EVENT_MACHINE_CODE}_ROOT',
             f'{DESIGN_MACHINE_CODE}_ROOT',
             STREAM_GAGE_MACHINE_CODE,
@@ -59,41 +56,31 @@ class QRisMapManager(RiverscapesMapManager):
             'QRiS Base Maps',
             BASEMAP_MACHINE_CODE]
 
-    def build_mask_layer(self, mask: Mask) -> QgsMapLayer:
+    def build_aoi_layer(self, aoi: SampleFrame) -> QgsMapLayer:
 
-        if mask.mask_type.id == AOI_MASK_TYPE_ID:
-            group_layer_name = 'AOIs'
-            mask_machine_code = AOI_MACHINE_CODE
-            symbology = 'mask'  # TODO do aois need a different mask type? make the reference here...
-            layer_name = 'aoi_features'
-        else:
-            group_layer_name = 'Sample Frames'
-            mask_machine_code = MASK_MACHINE_CODE
-            symbology = 'sampling_frames'
-            layer_name = 'mask_features'
+        group_layer_name = 'AOIs'
+        mask_machine_code = AOI_MACHINE_CODE
+        symbology = 'mask'  # TODO do aois need a different mask type? make the reference here...
+        layer_name = 'sample_frame_features'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         group_layer = self.get_group_layer(self.project.map_guid, mask_machine_code, group_layer_name, project_group, True)
 
-        existing_layer = self.get_db_item_layer(self.project.map_guid, mask, group_layer)
+        existing_layer = self.get_db_item_layer(self.project.map_guid, aoi, group_layer)
         if existing_layer is not None:
             return existing_layer
 
         fc_path = f'{self.project.project_file}|layername={layer_name}'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, mask, 'mask_id', symbology)
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, aoi, 'sample_frame_id', symbology)
 
         # setup fields
-        self.set_hidden(feature_layer, 'fid', 'Mask Feature ID')
-        self.set_hidden(feature_layer, 'mask_id', 'Mask ID')
+        self.set_hidden(feature_layer, 'fid', 'AOI Feature ID')
+        self.set_hidden(feature_layer, 'sample_frame_id', 'AOI ID')
         self.set_alias(feature_layer, 'position', 'Position')
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'area')
         self.set_metadata_virtual_fields(feature_layer)
-
-        if not mask.mask_type.id == AOI_MASK_TYPE_ID:
-            feature_layer.setLabelsEnabled(True)
-            feature_layer.setCustomProperty("labeling/fieldName", 'display_label')
 
         return feature_layer
     
@@ -172,21 +159,21 @@ class QRisMapManager(RiverscapesMapManager):
 
         return feature_layer
     
-    def build_valley_bottom_layer(self, valley_bottom: ValleyBottom) -> QgsMapLayer:
+    def build_valley_bottom_layer(self, valley_bottom: SampleFrame) -> QgsMapLayer:
             
             project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-            group_layer = self.get_group_layer(self.project.map_guid, ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE, 'Valley Bottoms', project_group, True)
+            group_layer = self.get_group_layer(self.project.map_guid, VALLEY_BOTTOM_MACHINE_CODE, 'Valley Bottoms', project_group, True)
     
             existing_layer = self.get_db_item_layer(self.project.map_guid, valley_bottom, group_layer)
             if existing_layer is not None:
                 return existing_layer
     
-            fc_path = f'{self.project.project_file}|layername=valley_bottom_features'
-            feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'valley_bottom_id', 'valley_bottom')
+            fc_path = f'{self.project.project_file}|layername=sample_frame_features'
+            feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'sample_frame_id', 'valley_bottom')
     
             # setup fields
             self.set_hidden(feature_layer, 'fid', 'Valley Bottom Feature ID')
-            self.set_hidden(feature_layer, 'valley_bottom_id', 'Valley Bottom ID')
+            self.set_hidden(feature_layer, 'sample_frame_id', 'Valley Bottom ID')
             self.set_multiline(feature_layer, 'description', 'Description')
             self.set_hidden(feature_layer, 'metadata', 'Metadata')
             self.set_virtual_dimension(feature_layer, 'area')

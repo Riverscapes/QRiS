@@ -6,7 +6,7 @@ from qgis.utils import iface
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
-from ..model.mask import Mask, insert_mask, REGULAR_MASK_TYPE_ID, AOI_MASK_TYPE_ID
+from ..model.sample_frame import SampleFrame, insert_sample_frame
 from ..model.pour_point import PourPoint
 from ..model.scratch_vector import ScratchVector
 
@@ -18,35 +18,34 @@ from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 
-class FrmMaskAOI(QtWidgets.QDialog):
+class FrmAOI(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str, mask_type: DBItem, mask: Mask = None):
+    def __init__(self, parent, project: Project, import_source_path: str, aoi: SampleFrame = None):
 
         self.qris_project = project
-        self.qris_mask = mask
+        self.aoi = aoi
         self.import_source_path = import_source_path
         self.attribute_filter = None
-        self.mask_type = mask_type
-        self.str_mask_type = "AOI" if self.mask_type.id == AOI_MASK_TYPE_ID else "Sample Frame"
+        self.str_mask_type = "AOI"
 
-        super(FrmMaskAOI, self).__init__(parent)
-        metadata_json = json.dumps(mask.metadata) if mask is not None else None
+        super(FrmAOI, self).__init__(parent)
+        metadata_json = json.dumps(aoi.metadata) if aoi is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
-        if self.qris_mask is not None:
-            self.setWindowTitle(f'Edit {mask_type.name} Properties')
+        if self.aoi is not None:
+            self.setWindowTitle(f'Edit AOI Properties')
         elif import_source_path is not None:
-            self.setWindowTitle(f'Import {mask_type.name} Features')
+            self.setWindowTitle(f'Import AOI Features')
         else:
-            self.setWindowTitle(f'Create New {mask_type.name}')
+            self.setWindowTitle(f'Create New AOI')
 
         # The attribute picker is only visible when creating a new regular mask
-        show_attribute_filter = mask_type.id == REGULAR_MASK_TYPE_ID
+        show_attribute_filter = True
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
 
-        show_mask_clip = import_source_path is not None and mask_type.id == REGULAR_MASK_TYPE_ID
+        show_mask_clip = False
         self.lblMaskClip.setVisible(show_mask_clip)
         self.cboMaskClip.setVisible(show_mask_clip)
 
@@ -76,17 +75,17 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
             if show_mask_clip:
                 # Masks (filtered to just AOI)
-                self.masks = {id: mask for id, mask in self.qris_project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+                self.clipping_masks = {id: aoi for id, aoi in self.qris_project.aois.items()}
                 no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-                self.masks[0] = no_clipping
-                self.masks_model = DBItemModel(self.masks)
+                self.clipping_masks[0] = no_clipping
+                self.masks_model = DBItemModel(self.clipping_masks)
                 self.cboMaskClip.setModel(self.masks_model)
                 # Default to no mask clipping
                 self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
 
-        if self.qris_mask is not None:
-            self.txtName.setText(mask.name)
-            self.txtDescription.setPlainText(mask.description)
+        if self.aoi is not None:
+            self.txtName.setText(aoi.name)
+            self.txtDescription.setPlainText(aoi.description)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
 
@@ -129,12 +128,11 @@ class FrmMaskAOI(QtWidgets.QDialog):
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
         try:
-            if self.qris_mask is not None:
-                self.qris_mask.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+            if self.aoi is not None:
+                self.aoi.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
             else:
-                self.qris_mask = insert_mask(self.qris_project.project_file, self.txtName.text(), self.mask_type, self.txtDescription.toPlainText(), metadata)
-                self.qris_project.masks[self.qris_mask.id] = self.qris_mask
-                self.qris_project.aois[self.qris_mask.id] = self.qris_mask
+                self.aoi =  insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
+                self.qris_project.aois[self.aoi.id] = self.aoi
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -145,15 +143,15 @@ class FrmMaskAOI(QtWidgets.QDialog):
 
         if self.import_source_path is not None:
             try:
-                mask_layer_name = "aoi_features" if self.mask_type.id == AOI_MASK_TYPE_ID else "mask_features"
+                mask_layer_name = "sample_frame_features"
                 mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
-                layer_attributes = {'mask_id': self.qris_mask.id}
+                layer_attributes = {'sample_frame_id': self.aoi.id}
                 field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, 'display_label', direct_copy=True)] if self.cboAttribute.isVisible() else None
                 clip_mask = None
                 clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                 if clip_item is not None:
                     if clip_item.id > 0:        
-                        clip_mask = ('aoi_features', 'mask_id', clip_item.id)
+                        clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
                 
                 if self.layer_id == 'memory':
                     import_mask_task = ImportTemporaryLayer(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
@@ -167,7 +165,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
                 QgsApplication.taskManager().addTask(import_mask_task)
             except Exception as ex:
                 try:
-                    self.qris_mask.delete(self.qris_project.project_file)
+                    self.aoi.delete(self.qris_project.project_file)
                     QgsApplication.messageLog().logMessage(f'Error Importing {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
                     iface.messageBar().pushMessage(f'Error Importing {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
                 except Exception as ex_delete:
@@ -175,7 +173,7 @@ class FrmMaskAOI(QtWidgets.QDialog):
                     iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
         else:
-            super(FrmMaskAOI, self).accept()
+            super(FrmAOI, self).accept()
 
     def on_import_complete(self, result: bool):
 
@@ -184,12 +182,12 @@ class FrmMaskAOI(QtWidgets.QDialog):
         else:
             QgsApplication.messageLog().logMessage(f'Error Importing {self.str_mask_type} Features', 'QRIS', level=Qgis.Critical)
             try:
-                self.qris_mask.delete(self.qris_project.project_file)
+                self.aoi.delete(self.qris_project.project_file)
             except Exception as ex:
                 QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
                 iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
             return
-        super(FrmMaskAOI, self).accept()
+        super(FrmAOI, self).accept()
 
     def setupUi(self):
 
@@ -244,5 +242,5 @@ class FrmMaskAOI(QtWidgets.QDialog):
         self.chkAddToMap.setText('Add to Map')
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        help = 'aoi' if self.mask_type.id == AOI_MASK_TYPE_ID else 'sample-frames'
+        help = 'aoi'
         self.vert.addLayout(add_standard_form_buttons(self, help))

@@ -40,8 +40,7 @@ from ..model.planning_container import PlanningContainer
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
-from ..model.mask import AOI_MACHINE_CODE, AOI_MASK_TYPE_ID, Mask
-from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, SampleFrame
+from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, AOI_MACHINE_CODE, SampleFrame
 from ..model.protocol import Protocol
 from ..model.method import Method
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
@@ -49,14 +48,13 @@ from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAG
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
-from ..model.valley_bottom import ValleyBottom
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_planning_container import FrmPlanningContainer
 from .frm_asbuilt import FrmAsBuilt
 from .frm_basemap import FrmRaster
-from .frm_mask_aoi import FrmMaskAOI
+from .frm_mask_aoi import FrmAOI
 from .frm_sample_frame import FrmSampleFrame
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_analysis_explorer import FrmAnalysisExplorer
@@ -105,7 +103,7 @@ FOLDER_ICON = 'folder'
 # These are the labels used for displaying the group nodes in the QRiS project tree
 GROUP_FOLDER_LABELS = {
     INPUTS_NODE_TAG: 'Inputs',
-    ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE: 'Riverscapes',
+    VALLEY_BOTTOM_MACHINE_CODE: 'Riverscapes',
     SURFACE_MACHINE_CODE: 'Surfaces',
     AOI_MACHINE_CODE: 'AOIs',
     SAMPLE_FRAME_MACHINE_CODE: 'Sample Frames',
@@ -190,14 +188,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         project_node = self.add_child_to_project_tree(rootNode, self.project)
         inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
 
-        riverscapes_node = self.add_child_to_project_tree(inputs_node, ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE)
+        riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
         [self.add_child_to_project_tree(riverscapes_node, item) for item in self.project.valley_bottoms.values()]
 
         surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
         [self.add_child_to_project_tree(surfaces_node, item) for item in self.project.rasters.values() if item.is_context is False]
 
         aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
-        [self.add_child_to_project_tree(aoi_node, item) for item in self.project.aois.values() if item.mask_type.id == AOI_MASK_TYPE_ID]
+        [self.add_child_to_project_tree(aoi_node, item) for item in self.project.aois.values()]
 
         sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
         [self.add_child_to_project_tree(sample_frames_node, item) for item in self.project.sample_frames.values()]
@@ -391,7 +389,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
-                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE, ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE]):
+                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE]):
                     self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
@@ -401,7 +399,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(ltpbr_menu, 'Add New Design', 'design', lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
                     self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'as-built', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
                     self.menu.addMenu(ltpbr_menu)
-                elif model_data == ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE:
+                elif model_data == VALLEY_BOTTOM_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import Valley Bottom From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT_TEMPORARY))
@@ -410,9 +408,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
                 elif model_data == AOI_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import AOI From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_IMPORT_TEMPORARY))
-                    self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) AOI', 'new', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_CREATE))
+                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) AOI', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_CREATE))
                 elif model_data == SAMPLE_FRAME_MACHINE_CODE:
                     import_sample_frame_menu = self.menu.addMenu('Import Sample Frame From ...  ')
                     self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
@@ -462,17 +460,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 else:
                     raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, Mask, SampleFrame, Profile, CrossSections, ValleyBottom, PourPoint, ScratchVector, Analysis, PlanningContainer]):
+                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, SampleFrame, Profile, CrossSections, PourPoint, ScratchVector, Analysis, PlanningContainer]):
                     self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
 
-                if isinstance(model_data, ValleyBottom):
-                    self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-
-                if isinstance(model_data, Mask):
-                    self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
-                    # if model_data.mask_type.id == AOI_MASK_TYPE_ID:
-                        # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                        # self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
+                if isinstance(model_data, SampleFrame):
+                    if model_data.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                        self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                    if model_data.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                        self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -481,7 +476,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
                         # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                         promote_menu = self.menu.addMenu('Promote to ...')
-                        self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE))
                         self.add_context_menu_item(promote_menu, 'Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
                         self.add_context_menu_item(promote_menu, 'Riverscape Valley Bottom', 'polygon', lambda: self.add_valley_bottom(model_item, DB_MODE_PROMOTE))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.LineGeometry:
@@ -520,7 +515,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         if 'export_brat' in model_data.menu_items:
                             self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
                 if isinstance(model_data, PourPoint):
-                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, AOI_MASK_TYPE_ID, DB_MODE_PROMOTE), True)
+                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
                 if not isinstance(model_data, Project):
                     # if an event is under a planning container node, then do not show the delete option
@@ -673,10 +668,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_db_item_to_map(self, tree_node: QtGui.QStandardItem, db_item: DBItem):
 
-        if isinstance(db_item, Mask):
-            self.map_manager.build_mask_layer(db_item)
-        elif isinstance(db_item, SampleFrame):
-            self.map_manager.build_sample_frame_layer(db_item)
+        if isinstance(db_item, SampleFrame):
+            if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                self.map_manager.build_aoi_layer(db_item)
+            elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                self.map_manager.build_valley_bottom_layer(db_item)
+            else:
+                self.map_manager.build_sample_frame_layer(db_item)
         elif isinstance(db_item, Raster):
             self.map_manager.build_raster_layer(db_item)
             # find 'hillshade_raster_id' in metadata or system metadata and add to map if it exists
@@ -708,7 +706,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             [self.map_manager.build_raster_layer(raster) for raster in event.rasters]
         elif isinstance(db_item, Project):
             [self.map_manager.build_sample_frame_layer(sample_frame) for sample_frame in self.project.sample_frames.values()]
-            [self.map_manager.build_mask_layer(mask) for mask in self.project.aois.values()]
+            [self.map_manager.build_aoi_layer(mask) for mask in self.project.aois.values()]
             [self.map_manager.build_raster_layer(raster) for raster in self.project.surface_rasters().values()]
             [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
@@ -719,8 +717,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_profile_layer(db_item)
         elif isinstance(db_item, CrossSections):
             self.map_manager.build_cross_section_layer(db_item)
-        elif isinstance(db_item, ValleyBottom):
-            self.map_manager.build_valley_bottom_layer(db_item)
+        else:
+            iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
 
     def add_basemap_to_map(self, model_item, trigger_repaint=False):
 
@@ -1032,8 +1030,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if frm.layer is None:
                 return
             # now copy the valley bottom
-            valley_bottom_layer = QgsVectorLayer(f'{self.project.project_file}|layername=valley_bottom_features')
-            valley_bottom_layer.setSubsetString(f'valley_bottom_id = {frm.layer.id} ')
+            valley_bottom_layer = QgsVectorLayer(f'{self.project.project_file}|layername=sample_frame_features')
+            valley_bottom_layer.setSubsetString(f'sample_frame_id = {frm.layer.id} ')
             feats = []
             out_layer = QgsVectorLayer(f'{self.project.project_file}|layername={Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]}')
             new_fid = 1 if out_layer.featureCount() == 0 else max([f.id() for f in out_layer.getFeatures()]) + 1
@@ -1297,8 +1295,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        if mask_type_id == AOI_MASK_TYPE_ID:
-            frm = FrmMaskAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
+        frm = FrmAOI(self, self.project, import_source_path, self.project.lookup_tables['lkp_mask_types'][mask_type_id])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -1313,7 +1310,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         result = frm.exec_()
         if result != 0:
-            self.add_child_to_project_tree(parent_node, frm.qris_mask, frm.chkAddToMap.isChecked())
+            self.add_child_to_project_tree(parent_node, frm.aoi, frm.chkAddToMap.isChecked())
 
     def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int):
         """Initiates adding a new sample frame"""
@@ -1340,7 +1337,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm.promote_to_sample_frame(db_item)
         if mode == DB_MODE_CREATE:
             cross_sections = parent_node if isinstance(parent_node, CrossSections) else None
-            polygon = parent_node if any(isinstance(parent_node, item) for item in [Mask, ScratchVector]) else None
+            polygon = None
+            if isinstance(parent_node, ScratchVector):
+                polygon = parent_node
+            if isinstance(parent_node, SampleFrame):
+                if any(parent_node.sample_frame_type == item for item in [SampleFrame.AOI_SAMPLE_FRAME_TYPE, SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE]):
+                    polygon = parent_node
             frm.set_inputs(cross_sections, polygon)
         if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
             # find the Sample Frames Node in the model
@@ -1384,7 +1386,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 rootNode = self.model.invisibleRootItem()
                 project_node = self.add_child_to_project_tree(rootNode, self.project)
                 inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
-                riverscapes_node = self.add_child_to_project_tree(inputs_node, ValleyBottom.VALLEY_BOTTOM_MACHINE_CODE)
+                riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
                 parent_node = riverscapes_node
             self.add_child_to_project_tree(parent_node, frm.valley_bottom, frm.chkAddToMap.isChecked())
 
@@ -1554,16 +1556,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm = FrmAsBuilt(self, self.project, db_item.event_type.id, event=db_item)
             else:
                 frm = FrmEvent(self, self.project, event=db_item, event_type_id=db_item.event_type.id)
-        elif isinstance(db_item, Mask):
-            frm = FrmMaskAOI(self, self.project, None, db_item.mask_type, db_item)
         elif isinstance(db_item, SampleFrame):
-            frm = FrmSampleFrame(self, self.project, None, db_item)
+            if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                frm = FrmAOI(self, self.project, None, db_item.sample_frame_type, db_item)
+            elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                frm = FrmValleyBottom(self, self.project, None, db_item)
+            else:
+                frm = FrmSampleFrame(self, self.project, None, db_item)
         elif isinstance(db_item, Profile):
             frm = FrmProfile(self, self.project, None, db_item)
         elif isinstance(db_item, CrossSections):
             frm = FrmCrossSections(self, self.project, None, db_item)
-        elif isinstance(db_item, ValleyBottom):
-            frm = FrmValleyBottom(self, self.project, None, db_item)
         elif isinstance(db_item, Raster):
             frm = FrmRaster(self, self.iface, self.project, None, db_item.raster_type_id, db_item)
         elif isinstance(db_item, ScratchVector):
@@ -1595,7 +1598,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 else:
                     self.add_child_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
 
-    def geospatial_summary(self, model_item, model_data: Mask):
+    def geospatial_summary(self, model_item, model_data: SampleFrame):
 
         # Check the feature count of the aoi, make sure there is one and only one polygon feature
         aoi_layer = QgsVectorLayer(f'{self.project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
@@ -1767,7 +1770,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.remove_empty_child_nodes(child_node)
 
 
-    @ pyqtSlot(bool, Mask, dict or None, dict or None)
+    @ pyqtSlot(bool, SampleFrame, dict or None, dict or None)
     def geospatial_summary_complete(self, result, model_data, polygons, data):
 
         if result is True:

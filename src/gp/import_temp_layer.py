@@ -80,8 +80,8 @@ class ImportTemporaryLayer(QgsTask):
                 self.source_layer.updateFields()
 
             if self.clip_mask is not None:
-                clip_layer = QgsVectorLayer(f'{self.proj_gpkg}|layername={self.clip_mask[0]}') # aoi_features
-                clip_layer.setSubsetString(f'{self.clip_mask[1]} = {self.clip_mask[2]}') # mask_id
+                clip_layer = QgsVectorLayer(f'{self.proj_gpkg}|layername={self.clip_mask[0]}')
+                clip_layer.setSubsetString(f'{self.clip_mask[1]} = {self.clip_mask[2]}') 
                 clip_transform = QgsCoordinateTransform(clip_layer.sourceCrs(), self.source_layer.sourceCrs(), QgsProject.instance().transformContext())
                 clip_feat = clip_layer.getFeatures()
                 clip_feat = next(clip_feat)

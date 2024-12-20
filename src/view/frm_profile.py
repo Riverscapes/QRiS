@@ -131,7 +131,7 @@ class FrmProfile(QtWidgets.QDialog):
                     clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                     if clip_item is not None:
                         if clip_item.id > 0:        
-                            clip_mask = ('aoi_features', 'mask_id', clip_item.id)
+                            clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
                     if self.layer_id == 'memory':
                         task = ImportTemporaryLayer(self.import_source_path, fc_path, {'profile_id': self.profile.id}, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
                         # DEBUG task.run()

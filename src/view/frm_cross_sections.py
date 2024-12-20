@@ -7,7 +7,6 @@ from qgis.utils import Qgis, iface
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.cross_sections import CrossSections, insert_cross_sections
-from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportTemporaryLayer

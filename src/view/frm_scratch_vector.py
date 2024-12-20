@@ -12,7 +12,6 @@ from .widgets.metadata import MetadataWidget
 from ..model.scratch_vector import ScratchVector, insert_scratch_vector, scratch_gpkg_path, get_unique_scratch_fc_name
 from ..model.db_item import DBItemModel, DBItem
 from ..model.project import Project
-from ..model.mask import AOI_MASK_TYPE_ID
 
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
@@ -55,10 +54,10 @@ class FrmScratchVector(QtWidgets.QDialog):
             self.txtName.setText(self.layer_name)
 
             # Masks (filtered to just AOI)
-            self.masks = {id: mask for id, mask in self.project.masks.items() if mask.mask_type.id == AOI_MASK_TYPE_ID}
+            self.clipping_masks = {id: aoi for id, aoi in self.project.aois.items()}
             no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-            self.masks[0] = no_clipping
-            self.masks_model = DBItemModel(self.masks)
+            self.clipping_masks[0] = no_clipping
+            self.masks_model = DBItemModel(self.clipping_masks)
             self.cboMask.setModel(self.masks_model)
             # Default to no mask clipping
             self.cboMask.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
@@ -115,7 +114,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                 clip_item = self.cboMask.currentData(QtCore.Qt.UserRole)
                 if clip_item is not None:
                     if clip_item.id > 0:        
-                        clip_mask = ('aoi_features', 'mask_id', clip_item.id)
+                        clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
 
                 if isinstance(self.import_source_path, QgsVectorLayer):
                     task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)

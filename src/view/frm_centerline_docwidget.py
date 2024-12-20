@@ -14,7 +14,6 @@ from ..model.project import Project
 from ..model.db_item import DBItem
 from ..model.profile import Profile
 from ..model.layer import Layer
-from ..model.mask import AOI_MASK_TYPE_ID
 
 from .frm_layer_picker import FrmLayerPicker
 from .capture_line_segment import LineSegmentMapTool
@@ -115,8 +114,9 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def cmdSelectLayer_click(self):
 
         sv_layers = list(sv for sv in self.project.scratch_vectors.values() if QgsVectorLayer(f'{sv.gpkg_path}|layername={sv.fc_name}').geometryType() == Layer.GEOMETRY_TYPES['Polygon'])
-        aoi_layers = list(layer for layer in self.project.masks.values() if layer.mask_type.id == AOI_MASK_TYPE_ID)
-        layers = sv_layers + aoi_layers
+        aoi_layers = list(layer for layer in self.project.aois.values())
+        valley_bottom_layers = list(layer for layer in self.project.valley_bottoms.values())
+        layers = sv_layers + aoi_layers + valley_bottom_layers
         frm_layer_picker = FrmLayerPicker(self, "Select Polygon Layer", layers)
         result = frm_layer_picker.exec_()
 

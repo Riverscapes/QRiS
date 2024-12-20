@@ -6,23 +6,36 @@ from qgis.core import QgsVectorLayer
 
 from .db_item import DBItem
 
-SAMPLE_FRAME_MACHINE_CODE = 'SampleFrame'
+SAMPLE_FRAME_MACHINE_CODE = 'Sample Frame'
+AOI_MACHINE_CODE = 'AOI'
+VALLEY_BOTTOM_MACHINE_CODE = 'Valley Bottom'
 
 class SampleFrame(DBItem):
 
-    def __init__(self, id: int, name: str, description: str, metadata: dict = None):
+    SAMPLE_FRAME_TYPE = 1
+    AOI_SAMPLE_FRAME_TYPE = 2
+    VALLEY_BOTTOM_SAMPLE_FRAME_TYPE = 3
+
+    def __init__(self, id: int, name: str, description: str, metadata: dict = None, sample_frame_type=SAMPLE_FRAME_TYPE):
         super().__init__('sample_frames', id, name)
         self.description = description
         self.metadata = metadata
         self.user_metadata = None
         self.fields = None
         self.default_flow_path_name = None
+        self.sample_frame_type = sample_frame_type
         if metadata is not None:
             self.fields = metadata.get('fields', None)
             self.default_flow_path_name = metadata.get('default_flow_path_name', None)
             self.user_metadata = metadata.get('metadata', None)
 
-        self.icon = 'mask_regular'
+        if self.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+            self.icon = 'mask'
+        elif self.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+            self.icon = 'valley_bottom'
+        else:
+            self.icon = 'mask_regular'
+
         self.fc_name = 'sample_frame_features'
         self.fc_id_column_name = 'sample_frame_id'
     
@@ -54,29 +67,31 @@ class SampleFrame(DBItem):
                 raise ex
 
 
-def load_sample_frames(curs: sqlite3.Cursor) -> dict:
+def load_sample_frames(curs: sqlite3.Cursor, sample_frame_type=SampleFrame.SAMPLE_FRAME_TYPE) -> dict:
 
-    curs.execute("""SELECT * FROM sample_frames""")
+    curs.execute("""SELECT * FROM sample_frames WHERE sample_frame_type_id = ?""", [sample_frame_type])
     return {row['id']: SampleFrame(
         row['id'],
         row['name'],
         row['description'],
-        json.loads(row['metadata']) if row['metadata'] is not None else None
+        json.loads(row['metadata']) if row['metadata'] is not None else None,
+        row['sample_frame_type_id']
     ) for row in curs.fetchall()}
 
 
-def insert_sample_frame(db_path: str, name: str, description: str, metadata: dict=None) -> SampleFrame:
+def insert_sample_frame(db_path: str, name: str, description: str, metadata: dict=None, sample_frame_type=SampleFrame.SAMPLE_FRAME_TYPE) -> SampleFrame:
 
     sample_frame = None
+    sample_frame_type = sample_frame_type
     description = description if len(description) > 0 else None
     metadata_str = json.dumps(metadata) if metadata is not None else None
 
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO sample_frames (name, description, metadata) VALUES (?, ?, ?)', [name, description, metadata_str])
+            curs.execute('INSERT INTO sample_frames (name, description, metadata, sample_frame_type_id) VALUES (?, ?, ?, ?)', [name, description, metadata_str, sample_frame_type])
             id = curs.lastrowid
-            sample_frame = SampleFrame(id, name, description, metadata)
+            sample_frame = SampleFrame(id, name, description, metadata, sample_frame_type)
             conn.commit()
 
         except Exception as ex:
