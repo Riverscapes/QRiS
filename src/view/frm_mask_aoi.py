@@ -146,7 +146,7 @@ class FrmAOI(QtWidgets.QDialog):
                 mask_layer_name = "sample_frame_features"
                 mask_path = f'{self.qris_project.project_file}|layername={mask_layer_name}'
                 layer_attributes = {'sample_frame_id': self.aoi.id}
-                field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, 'display_label', direct_copy=True)] if self.cboAttribute.isVisible() else None
+                field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, 'display_label', direct_copy=True)] if self.cboAttribute.currentData(QtCore.Qt.UserRole)  is not None else None
                 clip_mask = None
                 clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                 if clip_item is not None:
