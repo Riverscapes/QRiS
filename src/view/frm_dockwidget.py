@@ -818,11 +818,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.analysis_doc_widget is None:
             self.analysis_doc_widget = FrmAnalysisDocWidget(self)
+            self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
             self.analysis_doc_widget.visibilityChanged.connect(self.destroy_analysis_doc_widget)
-
-        self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
-        self.analysis_doc_widget.show()
+        else:
+            self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
+            self.analysis_doc_widget.show()
 
     def open_analysis_summary(self):
 
