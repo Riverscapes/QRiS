@@ -804,7 +804,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmAnalysisProperties(self, self.project)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_child_to_project_tree(parent_node, frm.analysis, True)
+            self.add_child_to_project_tree(parent_node, frm.analysis, False)
             self.open_analysis(frm.analysis)
 
     def open_analysis(self, analysis: Analysis):
