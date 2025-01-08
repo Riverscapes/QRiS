@@ -7,7 +7,7 @@ from osgeo import ogr, gdal
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
-from qgis.core import QgsVectorLayer, QgsMessageLog
+from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
 from qgis.utils import iface
 from qgis.PyQt.QtCore import QSettings
 
@@ -322,7 +322,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 for f in lyr.getFeatures():
                     feature_geom = f.geometry()
                     if feature_geom.isNull() or feature_geom.isEmpty():
-                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', QgsMessageLog.WARNING)
+                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', Qgis.Warning)
                         continue
                     if geom is None:
                         geom = f.geometry()
@@ -354,7 +354,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 for f in lyr.getFeatures():
                     feature_geom = f.geometry()
                     if feature_geom.isNull() or feature_geom.isEmpty():
-                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', QgsMessageLog.WARNING)
+                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', Qgis.Warning)
                         continue
                     if geom is None:
                         geom = feature_geom
