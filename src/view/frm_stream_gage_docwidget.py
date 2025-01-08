@@ -159,6 +159,8 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         disch = [item[1] for item in data]
         # remove empty string values
         disch = [item if item != '' else None for item in disch]
+        # Remove non float values
+        disch = [item if item is None or isinstance(item, (int, float)) else None for item in disch]
         self._static_ax.plot(dates, disch, ".")
         self._static_ax.set_ylabel('Discharge (CFS)')
         self._static_ax.set_xlabel('Date')
