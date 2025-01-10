@@ -1,4 +1,5 @@
 -- sqlite 
+PRAGMA foreign_keys=OFF;
 
 -- Create new sample frame types table
 CREATE TABLE sample_frame_types (
@@ -14,11 +15,40 @@ INSERT INTO sample_frame_types (id, name, description, metadata) VALUES (1, 'sam
 INSERT INTO sample_frame_types (id, name, description, metadata) VALUES (2, 'aoi', 'Area of Interest', '{}');
 INSERT INTO sample_frame_types (id, name, description, metadata) VALUES (3, 'valley_bottom', 'Valley Bottom', '{}');
 
--- Add sample_frame_type_id to sample frames that references the sample_frame_types table
-ALTER TABLE sample_frames ADD COLUMN sample_frame_type_id INTEGER REFERENCES sample_frame_types(id);
+-- Recreate the sample frames table without unique constraint on name
+CREATE TABLE sample_frames_temp AS SELECT * FROM sample_frames;
+CREATE TABLE anaysis_temp AS SELECT * FROM analyses;
 
--- the current sample frames are all sample_frame type
-UPDATE sample_frames SET sample_frame_type_id = 1;
+DROP TABLE sample_frames;
+DROP TABLE analyses;
+
+CREATE TABLE sample_frames (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    sample_frame_type_id INTEGER NOT NULL REFERENCES sample_frame_types(id),
+    description TEXT,
+    metadata TEXT,
+    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX idx_sample_frames_name ON sample_frames (name, sample_frame_type_id);
+
+INSERT INTO sample_frames (id, name, sample_frame_type_id, description, metadata, created_on)
+    SELECT id, name, 1, description, metadata, created_on FROM sample_frames_temp;
+DROP TABLE sample_frames_temp;
+
+CREATE TABLE analyses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    sample_frame_id INTEGER NOT NULL REFERENCES "sample_frames"(id),
+    description TEXT,
+    metadata TEXT,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO analyses (id, name, sample_frame_id, description, metadata, created_on)
+    SELECT id, name, mask_id, description, metadata, created_on FROM anaysis_temp;
+DROP TABLE anaysis_temp;
 
 -- copy the aois from the masks table to the sample_frames table
 INSERT INTO sample_frames (name, description, metadata, sample_frame_type_id)
@@ -56,3 +86,5 @@ DROP TABLE masks;
 -- remove the entires for gpkg_contents and gpkg_geometry_columns
 DELETE FROM gpkg_geometry_columns WHERE table_name IN ('aoi_features', 'mask_features', 'valley_bottom_features');
 DELETE FROM gpkg_contents WHERE table_name IN ('aoi_features', 'masks', 'valley_bottom_features', 'valley_bottoms', 'mask_features');
+
+PRAGMA foreign_keys=ON;

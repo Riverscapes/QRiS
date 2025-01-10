@@ -54,7 +54,7 @@ def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> d
         row['id'],
         row['name'],
         row['description'],
-        sample_frames[row['mask_id']],
+        sample_frames[row['sample_frame_id']],
         json.loads(row['metadata']) if row['metadata'] is not None else None
     ) for row in curs.fetchall()}
 
@@ -76,7 +76,7 @@ def insert_analysis(db_path: str, name: str, description: str, sample_frame: Sam
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO analyses (name, description, mask_id, metadata) VALUES (?, ?, ?, ?)', [
+            curs.execute('INSERT INTO analyses (name, description, sample_frame_id, metadata) VALUES (?, ?, ?, ?)', [
                 name, description if description is not None and len(description) > 0 else None, sample_frame.id, metadata_str])
             analysis_id = curs.lastrowid
             analysis = Analysis(analysis_id, name, description, sample_frame, metadata=metadata)
