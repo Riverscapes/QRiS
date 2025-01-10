@@ -1,5 +1,6 @@
 import os
 import json
+import sqlite3
 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, QSize, QVariant, pyqtSignal
@@ -120,8 +121,11 @@ class FrmSampleFrame(QDialog):
             return  
         
         # validate name is unique
-        if self.sample_frame is None:
-            if not validate_name_unique(self.qris_project.project_file, 'sample_frames', 'name', self.txtName.text()):
+        with sqlite3.connect(self.qris_project.project_file) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT name FROM sample_frames WHERE name = ? and sample_frame_type_id = 1 and not id = ?', [self.txtName.text(), self.sample_frame.id if self.sample_frame is not None else 0])
+            row = curs.fetchone()
+            if row is not None:
                 QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 return
 
