@@ -47,10 +47,7 @@ class FrmValleyBottom(QtWidgets.QDialog):
             if isinstance(import_source_path, QgsVectorLayer):
                 self.layer_name = import_source_path.name()
                 self.layer_id = 'memory'
-                show_mask_clip = False
-                self.cboMaskClip.setVisible(False)
-                self.lblMaskClip.setVisible(False)
-            else:
+                show_mask_clip = True
                 # find if import_source_path is shapefile, geopackage, or other
                 self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
 
