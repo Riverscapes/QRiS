@@ -47,6 +47,12 @@ project_layers = [
     ('dce_polygons', 'DCE Polygons', 'Polygon')
 ]
 
+# migrated layers not to be recreated
+migrated_layers = [
+    'aoi_features',
+    'mask_features',
+    'valley_bottom_features'
+]
 
 class Project(DBItem):
 
@@ -227,6 +233,7 @@ def apply_db_migrations(db_path: str):
     curs = conn.cursor()
 
     existing_layers = [layer[0] for layer in curs.execute('SELECT table_name, data_type FROM gpkg_contents WHERE data_type = "features"').fetchall()]
+    existing_layers = existing_layers + migrated_layers
 
     for fc_name, layer_name, geometry_type in project_layers:
         if fc_name not in existing_layers:
@@ -244,16 +251,16 @@ def apply_db_migrations(db_path: str):
             if migration_row is None:
                 try:
                     migration_path = os.path.join(migrations_dir, migration_file)
+                    QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: {migration_file}', 'QRiS', Qgis.Info)
                     with open(migration_path, 'r') as f:
                         sql_commands = f.read()
-                        curs.executescript(sql_commands)
+                    conn.execute('BEGIN')
+                    curs.executescript(sql_commands)
                     curs.execute('INSERT INTO migrations (file_name) VALUES (?)', [migration_file])
-                    QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: {migration_file}', 'QRiS', Qgis.Info)
+                    conn.commit()
                 except Exception as ex:
                     conn.rollback()
                     raise ex
-
-        conn.commit()
     except Exception as ex:
         conn.rollback()
         raise ex
