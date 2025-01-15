@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [1.0.8] 2025 JAN 14
+
+### Added
+- Add Clip Option when importing valley bottom features from temporary layer #555
+
+### Fixed
+- Resizing Analysis Window Causes Crash #535
+- Promote watershed delineation to AOI bug #554
+- Bug with message log when exporting project #558
+- Bug with plotting non-numeric values in stream gage data #553
+
+### Changed
+- AOIs and VBs now stored in db as Sample Frames to support future metric capability #550
+- Clean up migration code so it rolls back properly if an error occurs
+- Do not recreate legacy layers when opening an existing project
+
+
 ## [1.0.7] 2024 DEC 13
 
 ### Fixed
