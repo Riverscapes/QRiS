@@ -26,9 +26,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.setupUi()
 
         # Sample Frames
-        self.sampling_frames = {id: sample_frame for id, sample_frame in project.sample_frames.items()}
+        self.sampling_frames = {id: sample_frame for id, sample_frame in project.analysis_masks().items()}
         self.sampling_frames_model = DBItemModel(self.sampling_frames)
         self.cboSampleFrame.setModel(self.sampling_frames_model)
+        self.cboSampleFrame.currentIndexChanged.connect(self.on_cboSampleFrame_currentIndexChanged)
 
         # Valley Bottoms
         self.valley_bottoms = {id: valley_bottom for id, valley_bottom in project.valley_bottoms.items()}
@@ -142,6 +143,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 idx = cboStatus.findText(level_id)
                 cboStatus.setCurrentIndex(idx)
 
+    def on_cboSampleFrame_currentIndexChanged(self, index):
+
+        # if the sample frame type is Valley Bottom, then set the Valley Bottom combo box to the selected valley bottom as well, then lock that combo box. if not, then unlock the combo box
+        sample_frame: SampleFrame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        if sample_frame is not None:
+            if sample_frame.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                index = self.cboValleyBottom.findData(sample_frame)
+                self.cboValleyBottom.setCurrentIndex(index)
+                self.cboValleyBottom.setEnabled(False)
+            else:
+                self.cboValleyBottom.setEnabled(True)
+
     def setupUi(self):
 
         self.setMinimumSize(500, 500)
@@ -159,14 +172,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.txtName = QtWidgets.QLineEdit()
         self.grdLayout1.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblSampleFrame = QtWidgets.QLabel('Sample Frame')
+        self.lblSampleFrame = QtWidgets.QLabel('Analysis Masks (Sample Frame)')
         self.grdLayout1.addWidget(self.lblSampleFrame, 1, 0, 1, 1)
 
         self.cboSampleFrame = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboSampleFrame, 1, 1, 1, 1)
-
-        # self.groupboxInputs = QtWidgets.QGroupBox('Inputs')
-        # self.vert.addWidget(self.groupboxInputs)
 
         self.lblValleyBottom = QtWidgets.QLabel('Valley Bottom')
         self.grdLayout1.addWidget(self.lblValleyBottom, 2, 0, 1, 1)

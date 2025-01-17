@@ -375,7 +375,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdCalculate.setToolTipDuration(2000)
         self.horizEvent.addWidget(self.cmdCalculate, 0)
 
-        self.lblSegment = QtWidgets.QLabel('Sample Frame Label')
+        self.lblSegment = QtWidgets.QLabel('Mask Polygon')
         self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
 
         self.cboSampleFrame = QtWidgets.QComboBox()

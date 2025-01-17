@@ -94,14 +94,20 @@ class Project(DBItem):
             self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.rasters)
             self.planning_containers = load_planning_containers(curs, self.events)
             self.metrics = load_metrics(curs)
-            self.analyses = load_analyses(curs, self.sample_frames, self.metrics)
             self.pour_points = load_pour_points(curs)
             self.stream_gages = load_stream_gages(curs)
             self.profiles = load_profiles(curs)
             self.cross_sections = load_cross_sections(curs)
             self.valley_bottoms = load_sample_frames(curs, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
+            self.analyses = load_analyses(curs, self.analysis_masks(), self.metrics)
 
             self.units = load_units(curs)
+
+    def analysis_masks(self) -> dict:
+        masks = self.sample_frames.copy()
+        masks.update(self.aois)
+        masks.update(self.valley_bottoms)
+        return masks
 
     def get_relative_path(self, absolute_path: str) -> str:
         return parse_posix_path(os.path.relpath(absolute_path, os.path.dirname(self.project_file)))
