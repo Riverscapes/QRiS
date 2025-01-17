@@ -4,7 +4,7 @@ from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.utils import iface
 
 from ..model.project import Project
-from ..model.db_item import DBItem
+from ..model.db_item import DBItem, DBItemModel
 from ..gp.feature_class_functions import get_field_names, get_field_values
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
@@ -57,6 +57,15 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.txtInputFC.setText(self.import_path)
         self.txtTargetFC.setText(self.db_item.layer.fc_name)
         self.txtEvent.setText(self.qris_event.name)
+
+        # Masks (filtered to just AOI)
+        self.clipping_masks = {id: aoi for id, aoi in self.qris_project.aois.items()}
+        no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+        self.clipping_masks[0] = no_clipping
+        self.masks_model = DBItemModel(self.clipping_masks)
+        self.cboMaskClip.setModel(self.masks_model)
+        # Default to no mask clipping
+        self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
 
         self.load_fields()
 
@@ -212,10 +221,17 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         try:
             layer_attributes = {'event_id': self.db_item.event_id, 'event_layer_id': self.db_item.layer.id}
             
+            clip_mask = None
+            clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+            if clip_item is not None:
+                if clip_item.id > 0:        
+                    clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
+
+
             if self.temp_layer is not None:
-                import_task = ImportTemporaryLayer(self.temp_layer, self.target_path, layer_attributes, field_maps)
+                import_task = ImportTemporaryLayer(self.temp_layer, self.target_path, layer_attributes, field_maps, clip_mask)
             else:
-                import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, field_maps)
+                import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, field_maps, clip_mask)
             self.buttonBox.setEnabled(False)
             # DEBUG
             # result = import_task.run()
@@ -283,17 +299,23 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.txtEvent.setReadOnly(True)
         self.grid.addWidget(self.txtEvent, 1, 1)
 
+        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI')
+        self.grid.addWidget(self.lblMaskClip, 2, 0)
+
+        self.cboMaskClip = QtWidgets.QComboBox()
+        self.grid.addWidget(self.cboMaskClip, 2, 1)
+
         self.lblTargetFC = QtWidgets.QLabel('Target Layer')
-        self.grid.addWidget(self.lblTargetFC, 2, 0)
+        self.grid.addWidget(self.lblTargetFC, 3, 0)
         self.txtTargetFC = QtWidgets.QLineEdit()
         self.txtTargetFC.setReadOnly(True)
-        self.grid.addWidget(self.txtTargetFC, 2, 1)
+        self.grid.addWidget(self.txtTargetFC, 3, 1)
 
         self.lblFields = QtWidgets.QLabel('Fields')
-        self.grid.addWidget(self.lblFields, 3, 0)
+        self.grid.addWidget(self.lblFields, 4, 0)
 
         self.horiz = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz, 3, 1)
+        self.grid.addLayout(self.horiz, 4, 1)
 
         self.rdoImport = QtWidgets.QRadioButton('Import Fields')
         self.rdoImport.setChecked(True)
