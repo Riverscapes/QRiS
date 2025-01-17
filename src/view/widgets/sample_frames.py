@@ -15,16 +15,22 @@ class SampleFrameWidget(QtWidgets.QWidget):
 
     sample_frame_changed = pyqtSignal()
 
-    def __init__(self, parent: QtWidgets.QWidget, qris_project: Project, qris_map_manager: QRisMapManager = None, first_index_empty: bool = False):
+    def __init__(self, parent: QtWidgets.QWidget, qris_project: Project, qris_map_manager: QRisMapManager = None, first_index_empty: bool = False, sample_frame_types: list = [SampleFrame.SAMPLE_FRAME_TYPE]):
         super().__init__(parent)
 
         self.qris_project = qris_project
         self.qris_map_manager = qris_map_manager
+        self.sample_frame_types = sample_frame_types
 
         self.setupUi()
 
         # Sample Frames
         self.sample_frames = {id: sample_frame for id, sample_frame in self.qris_project.sample_frames.items()}
+        if SampleFrame.AOI_SAMPLE_FRAME_TYPE in self.sample_frame_types:
+            self.sample_frames.update({id: sample_frame for id, sample_frame in self.qris_project.aois.items()})
+        if SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE in self.sample_frame_types:
+            self.sample_frames.update({id: sample_frame for id, sample_frame in self.qris_project.valley_bottoms.items()})
+
         if first_index_empty:
             choose_sample_frame = DBItem('None', 0, 'Choose Sample Frame...')
         else:
