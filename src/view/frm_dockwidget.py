@@ -477,8 +477,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                         promote_menu = self.menu.addMenu('Promote to ...')
                         self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(promote_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.add_valley_bottom(model_item, DB_MODE_PROMOTE))
                         self.add_context_menu_item(promote_menu, 'Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
-                        self.add_context_menu_item(promote_menu, 'Riverscape Valley Bottom', 'polygon', lambda: self.add_valley_bottom(model_item, DB_MODE_PROMOTE))
                     if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.LineGeometry:
                         promote_menu = self.menu.addMenu('Promote to ...')
                         self.add_context_menu_item(promote_menu, 'Profile', 'gis', lambda: self.add_profile(model_item, DB_MODE_PROMOTE))
