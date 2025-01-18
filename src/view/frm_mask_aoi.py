@@ -26,7 +26,6 @@ class FrmAOI(QtWidgets.QDialog):
         self.aoi = aoi
         self.import_source_path = import_source_path
         self.attribute_filter = None
-        self.str_mask_type = "AOI"
 
         super(FrmAOI, self).__init__(parent)
         metadata_json = json.dumps(aoi.metadata) if aoi is not None else None
@@ -41,7 +40,7 @@ class FrmAOI(QtWidgets.QDialog):
             self.setWindowTitle(f'Create New AOI')
 
         # The attribute picker is only visible when creating a new regular mask
-        show_attribute_filter = True
+        show_attribute_filter = False
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
 
@@ -62,6 +61,7 @@ class FrmAOI(QtWidgets.QDialog):
             else:
                 # find if import_source_path is shapefile, geopackage, or other
                 self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
+                show_attribute_filter = True
 
             self.txtName.setText(self.layer_name)
             self.txtName.selectAll()
@@ -123,6 +123,15 @@ class FrmAOI(QtWidgets.QDialog):
 
         if not validate_name(self, self.txtName):
             return
+        
+        # Check if the name is unique
+        if self.qris_project.aois is not None:
+            current_id = self.aoi.id if self.aoi is not None else None
+            for aoi_id, aoi in self.qris_project.aois.items():
+                if aoi.name == self.txtName.text() and aoi.id != current_id:
+                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An AOI with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+                    self.txtName.setFocus()
+                    return
 
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
@@ -135,10 +144,10 @@ class FrmAOI(QtWidgets.QDialog):
                 self.qris_project.aois[self.aoi.id] = self.aoi
         except Exception as ex:
             if 'unique' in str(ex).lower():
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A {self.str_mask_type} with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An AOI with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 self.txtName.setFocus()
             else:
-                QtWidgets.QMessageBox.warning(self, f'Error Saving {self.str_mask_type}', str(ex))
+                QtWidgets.QMessageBox.warning(self, f'Error Saving AOI', str(ex))
             return
 
         if self.import_source_path is not None:
@@ -166,11 +175,11 @@ class FrmAOI(QtWidgets.QDialog):
             except Exception as ex:
                 try:
                     self.aoi.delete(self.qris_project.project_file)
-                    QgsApplication.messageLog().logMessage(f'Error Importing {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                    iface.messageBar().pushMessage(f'Error Importing {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
+                    QgsApplication.messageLog().logMessage(f'Error Importing AOI: {str(ex)}', 'QRIS', level=Qgis.Critical)
+                    iface.messageBar().pushMessage(f'Error Importing AOI', str(ex), level=Qgis.Critical, duration=5)
                 except Exception as ex_delete:
-                    QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
-                    iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex_delete), level=Qgis.Critical, duration=5)
+                    QgsApplication.messageLog().logMessage(f'Error Deleting AOI: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
+                    iface.messageBar().pushMessage(f'Error Deleting AOI', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
         else:
             super(FrmAOI, self).accept()
@@ -178,14 +187,14 @@ class FrmAOI(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if result is True:
-            iface.messageBar().pushMessage(f'{self.str_mask_type} Imported', f'{self.str_mask_type} "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
+            iface.messageBar().pushMessage(f'AOI Imported', f'AOI "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
         else:
-            QgsApplication.messageLog().logMessage(f'Error Importing {self.str_mask_type} Features', 'QRIS', level=Qgis.Critical)
+            QgsApplication.messageLog().logMessage(f'Error Importing AOI Features', 'QRIS', level=Qgis.Critical)
             try:
                 self.aoi.delete(self.qris_project.project_file)
             except Exception as ex:
-                QgsApplication.messageLog().logMessage(f'Error Deleting {self.str_mask_type}: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                iface.messageBar().pushMessage(f'Error Deleting {self.str_mask_type}', str(ex), level=Qgis.Critical, duration=5)
+                QgsApplication.messageLog().logMessage(f'Error Deleting AOI: {str(ex)}', 'QRIS', level=Qgis.Critical)
+                iface.messageBar().pushMessage(f'Error Deleting AOI', str(ex), level=Qgis.Critical, duration=5)
             return
         super(FrmAOI, self).accept()
 
