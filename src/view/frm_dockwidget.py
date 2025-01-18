@@ -1559,7 +1559,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm = FrmEvent(self, self.project, event=db_item, event_type_id=db_item.event_type.id)
         elif isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
-                frm = FrmAOI(self, self.project, None, db_item.sample_frame_type, db_item)
+                frm = FrmAOI(self, self.project, None, db_item)
             elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                 frm = FrmValleyBottom(self, self.project, None, db_item)
             else:
