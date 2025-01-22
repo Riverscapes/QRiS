@@ -14,6 +14,7 @@ from .widgets.date_range import DateRangeWidget
 from .utilities import add_help_button
 
 from ..model.project import Project
+from ..model.sample_frame import SampleFrame
 from ..lib.climate_engine import get_datasets, get_dataset_variables, get_dataset_date_range, get_dataset_timeseries_polygon, open_climate_engine_website
 
 
@@ -27,7 +28,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.iface = iface
         self.layer_geometry = None
         self.qris_project = qris_project
-        self.sample_frame_widget = SampleFrameWidget(self, qris_project)
+        self.sample_frame_widget = SampleFrameWidget(self, qris_project, sample_frame_types=[SampleFrame.AOI_SAMPLE_FRAME_TYPE, SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE, SampleFrame.SAMPLE_FRAME_TYPE])
         self.date_range_widget = DateRangeWidget(self, horizontal=False)
 
         self.setWindowTitle('Download Climate Engine Metrics')
