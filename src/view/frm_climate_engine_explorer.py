@@ -20,7 +20,9 @@ from .widgets.date_range import DateRangeWidget
 
 from ..model.project import Project
 from ..model.db_item import dict_factory
+from ..model.sample_frame import SampleFrame
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
+
 from ..lib.climate_engine import get_datasets, open_climate_engine_website
 from ..QRiS.qris_map_manager import QRisMapManager
 
@@ -34,7 +36,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.qris_map_manager = qris_map_manager
         self.datasets = get_datasets()
 
-        self.sample_frame_widget = SampleFrameWidget(self, self.qris_project, self.qris_map_manager, first_index_empty=True)
+        self.sample_frame_widget = SampleFrameWidget(self, self.qris_project, self.qris_map_manager, first_index_empty=True, sample_frame_types=[SampleFrame.AOI_SAMPLE_FRAME_TYPE, SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE, SampleFrame.SAMPLE_FRAME_TYPE])
         self.sample_frame_widget.cbo_sample_frame.currentIndexChanged.connect(self.load_climate_engine_metrics)
         self.sample_frame_widget.sample_frame_changed.connect(self.load_climate_engine_metrics)
         self.sample_frame_widget.sample_frame_changed.connect(self.create_plot)
