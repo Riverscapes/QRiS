@@ -76,9 +76,12 @@ class QRisMapManager(RiverscapesMapManager):
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'AOI Feature ID')
         self.set_hidden(feature_layer, 'sample_frame_id', 'AOI ID')
+        self.set_alias(feature_layer, 'display_label', 'Display Label')
         self.set_alias(feature_layer, 'position', 'Position')
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_hidden(feature_layer, 'metadata', 'Metadata')
+        self.set_hidden(feature_layer, 'flow_path', 'Flow Path', hide_in_attribute_table=True)
+        self.set_hidden(feature_layer, 'flows_into', 'Flows Into', hide_in_attribute_table=True)
         self.set_virtual_dimension(feature_layer, 'area')
         self.set_metadata_virtual_fields(feature_layer)
 
@@ -172,8 +175,11 @@ class QRisMapManager(RiverscapesMapManager):
             feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'sample_frame_id', 'valley_bottom')
     
             # setup fields
-            self.set_hidden(feature_layer, 'fid', 'Valley Bottom Feature ID')
+            self.set_hidden(feature_layer, 'fid', 'VB Feature ID')
             self.set_hidden(feature_layer, 'sample_frame_id', 'Valley Bottom ID')
+            self.set_alias(feature_layer, 'display_label', 'Display Label')
+            self.set_hidden(feature_layer, 'flow_path', 'Flow Path', hide_in_attribute_table=True)
+            self.set_hidden(feature_layer, 'flows_into', 'Flows Into', hide_in_attribute_table=True)
             self.set_multiline(feature_layer, 'description', 'Description')
             self.set_hidden(feature_layer, 'metadata', 'Metadata')
             self.set_virtual_dimension(feature_layer, 'area')
