@@ -518,71 +518,6 @@ class RiverscapesMapManager(QObject):
                     widget = QgsEditorWidgetSetup('Hidden', {})
                 feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), widget)
 
-            # if field_type == QVariant.Url:
-            # set the widget to open the url
-
-            # add an action edit the value
-            # edit_action_text = dedent("""
-            #                         from qgis.PyQt.QtWidgets import QLineEdit, QDialog, QDialogButtonBox, QVBoxLayout
-            #                         from qgis.PyQt.QtCore import Qt
-            #                         from qgis.PyQt.QtGui import QIntValidator, QDoubleValidator
-            #                         from qgis.core import QgsExpressionContextUtils
-
-            #                         class EditMetadata(QDialog):
-            #                             def __init__(self, parent=None):
-
-            #                                 QDialog.__init__(self, parent)
-            #                                 self.setWindowTitle('Edit Metadata')
-            #                                 self.setWindowFlags(Qt.WindowStaysOnTopHint)
-            #                                 self.setLayout(QVBoxLayout())
-            #                                 self.layout().setContentsMargins(0, 0, 0, 0)
-            #                                 self.layout().setSpacing(0)
-            #                                 self.layout().setAlignment(Qt.AlignTop)
-            #                                 self.layout().setAlignment(Qt.AlignLeft)
-
-            #                                 self.metadata = QgsExpressionContextUtils.layerScope(iface.activeLayer()).variable('metadata')
-            #                                 self.
-
-            #                                 self.metadata_edit = QLineEdit()
-            #                                 self.metadata_edit.setText(self.metadata)
-            #                                 self.layout().addWidget(self.metadata_edit)
-
-            #                                 self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-            #                                 self.button_box.accepted.connect(self.accept)
-            #                                 self.button_box.rejected.connect(self.reject)
-            #                                 self.layout().addWidget(self.button_box)
-
-            #                             def accept(self):
-            #                                 self.metadata = self.metadata_edit.text()
-            #                                 QgsExpressionContextUtils.setLayerVariable(iface.activeLayer(), 'metadata', self.metadata)
-            #                                 self.super().accept()
-
-            #                             def reject(self):
-            #                                 self.super().reject()
-
-            #                         dialog = EditMetadata()
-            #                         dialog.exec_()
-            #                         """).strip("\n")
-
-            # editAction = QgsAction(1, 'Edit Metadata', edit_action_text, None, capture=False, shortTitle='Edit Metadata', actionScopes={'Feature'})
-            # feature_layer.actions().addAction(editAction)
-            # editorAction = QgsAttributeEditorAction(editAction)
-
-            # feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False, 'Action': editorAction}))
-
-            # if field_type == QVariant.Url:
-            #     # add an action to open the url
-            #     url_action_text = dedent("""
-            #                             import webbrowser
-            #                             url = "[% @url %]"
-            #                             webbrowser.open(url, new=2)
-            #                             """).strip("\n")
-
-            #     urlAction = QgsAction(1, 'Open URL', url_action_text, None, capture=False, shortTitle='Open URL', actionScopes={'Feature'})
-            #     feature_layer.actions().addAction(urlAction)
-            #     editorAction = QgsAttributeEditorAction(urlAction)
-            #     feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(key), QgsEditorWidgetSetup('OpenUrl', {'Action': editorAction}))
-
             # set the default value for the metadata field
         feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue('\'{}\''))
 
@@ -596,7 +531,7 @@ class RiverscapesMapManager(QObject):
         form_config.setLabelOnTop(field_index, True)
         feature_layer.setEditFormConfig(form_config)
 
-    def set_hidden(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
+    def set_hidden(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str, hide_in_attribute_table=False) -> None:
         """Sets a field to hidden, read only, and also sets an alias just in case. Often used on fid, project_id, and event_id"""
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
@@ -606,6 +541,16 @@ class RiverscapesMapManager(QObject):
         feature_layer.setFieldAlias(field_index, field_alias)
         widget_setup = QgsEditorWidgetSetup('Hidden', {})
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
+
+        if hide_in_attribute_table:
+            config = feature_layer.attributeTableConfig()
+            columns = config.columns()
+            for column in columns:
+                if column.name == field_name:
+                    column.hidden = True
+                    break
+            config.setColumns(columns)
+            feature_layer.setAttributeTableConfig(config)
 
     def set_alias(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str, parent_container=None, display_index=None) -> None:
         """Just provides an alias to the field for display"""
@@ -689,15 +634,31 @@ class RiverscapesMapManager(QObject):
         sets the widget type to text
         sets default value to the dimension expression"""
 
-        field_name = 'vrt_' + dimension
-        field_alias = dimension.capitalize() + ' (m)'
-        field_expression = 'round(${}, 0)'.format(dimension)
-        virtual_field = QgsField(field_name, QVariant.Int)
+        if dimension == 'area':
+            field_name = 'vrt_area'
+            field_alias = 'Area (m²)'
+            if feature_layer.crs().isGeographic():
+                # Use transform function to reproject geometry to EPSG:5070 for area calculation
+                field_expression = 'round(area(transform($geometry, \'EPSG:4326\', \'EPSG:5070\')), 0)'
+            else:
+                field_expression = 'round($area, 0)'
+        elif dimension == 'length':
+            field_name = 'vrt_length'
+            field_alias = 'Length (m)'
+            if feature_layer.crs().isGeographic():
+                # Use transform function to reproject geometry to EPSG:5070 for length calculation
+                field_expression = 'round(length(transform($geometry, \'EPSG:4326\', \'EPSG:5070\')), 0)'
+            else:
+                field_expression = 'round($length, 0)'
+        else:
+            raise ValueError("Dimension must be 'area' or 'length'")
+
+        virtual_field = QgsField(field_name, QVariant.Double)
         feature_layer.addExpressionField(field_expression, virtual_field)
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
         feature_layer.setFieldAlias(field_index, field_alias)
-        feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression))
+        feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression, True))
         widget_setup = QgsEditorWidgetSetup('TextEdit', {})
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
 
