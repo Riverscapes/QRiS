@@ -147,11 +147,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
                 fields[target_field_name] = self.qris_project.lookup_values[target_field['lookup']]
 
         # open the value map dialog
-        frm = FrmFieldValueMap(self, input_field, values, fields)
+        frm = FrmFieldValueMap(input_field, values, fields)
         if input_field in [field.src_field for field in self.field_maps]:
             in_field = next((field for field in self.field_maps if field.src_field == input_field), None)
             frm.load_field_value_map(in_field.map)
-        frm.field_value_map.connect(self.on_field_value_map)
+        frm.field_value_map_signal.connect(self.on_field_value_map)
         frm.exec_()
 
     def on_field_value_map(self, field_name: str, field_value_map: dict):
