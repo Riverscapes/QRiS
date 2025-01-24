@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [1.0.9] 2025 JAN 24
+
+### Added
+- Allow clip to AOI when importing existing feature class into DCE layer #562
+
+### Fixed
+- Bugs with AOI properties form (unique name constraints)
+- Promote to Valley Bottom Icon
+- Fix Virtual Area Fields and VB,AOI field fixes #564
+- Mapping multiple fields in an existing feature class to DCE Layer causes error #552
+
+### Changed
+- Analysis allow for metrics to be calculated for AOI's and Valley Bottoms #561
+- Add AOI's and Valley Bottoms to Climate Engine #561
+- Import Field Mapping Form improvements #552
+
+
 ## [1.0.8] 2025 JAN 14
 
 ### Added
