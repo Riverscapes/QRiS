@@ -4,12 +4,32 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 
+FIELD_TYPES = {
+    'ListField': 'list',
+    'TextField': 'text',
+    'IntegerField': 'integer',
+    'FloatField': 'float',
+    'AttachmentField': 'attachment',
+}
+
+@dataclass
+class MetadataItem:
+    key: str
+    value: str
+    type: str
+
 @dataclass
 class FieldDefinition:
     id: str
     type: str
     label: str
+    required: bool = False
+    custom_values_allowed: bool = False
     description: Optional[str] = None
+    values: Optional[List[str]] = None
+    default_value: Optional[str] = None
+    visibility_field: Optional[str] = None
+    visibility_values: Optional[List[str]] = None
 
 @dataclass
 class LayerDefinition:
@@ -21,6 +41,7 @@ class LayerDefinition:
     description: Optional[str] = None
     hierarchy: Optional[str] = None
     fields: List[FieldDefinition] = field(default_factory=list)
+    menu_items: Optional[List[str]] = None
 
 @dataclass
 class MetricDefinition:
@@ -47,8 +68,12 @@ class ProtocolDefinition:
     author: str
     creation_date: str
     updated_date: str
+    metadata: List[MetadataItem] = field(default_factory=list)
     layers: List[LayerDefinition] = field(default_factory=list)
     metrics: List[MetricDefinition] = field(default_factory=list)
+
+    def unique_key(self):
+        return f'{self.machine_code}::{self.version}'
 
 def load_protocols(protocol_directory):
     """Load protocol from xml"""
@@ -63,7 +88,7 @@ def load_protocols(protocol_directory):
 
             if root.tag != 'Protocol':
                 continue
-
+            
             protocol = ProtocolDefinition(
                 machine_code=root.attrib.get('machine_code'),
                 version=root.attrib.get('version'),
@@ -81,15 +106,22 @@ def load_protocols(protocol_directory):
                 
                 fields = []
                 for field_elem in layer_elem.findall('Fields/'):
-                    
-                    fieldtype = field_elem.tag
                     field = FieldDefinition(
                             id=field_elem.attrib.get('id'),
-                            type=fieldtype,
+                            type=FIELD_TYPES[field_elem.tag],
                             label=field_elem.find('Label').text,
-                            description=field_elem.find('Description').text if field_elem.find('Description') is not None else None
+                            required=field_elem.attrib.get('required') == 'true',
+                            custom_values_allowed=field_elem.find('Values').attrib.get('custom_values_allowed') == 'true' if field_elem.find('Values') is not None else False,
+                            description=field_elem.find('Description').text if field_elem.find('Description') is not None else None,
+                            values=[v.text for v in field_elem.find('Values').findall('Value')] if field_elem.find('Values') is not None else None,
+                            default_value=str(field_elem.find('DefaultValue').text) if field_elem.find('DefaultValue') is not None else None,
+                            visibility_field=field_elem.find('Visibility').attrib.get('field_ref_id') if field_elem.find('Visibility') is not None else None,
+                            visibility_values=[v.text for v in field_elem.find('Visibility').findall('Value')] if field_elem.find('Visibility') is not None else None
                         )
                     fields.append(field)
+
+                # hierarchy is a list of the text of HeirarchyItem elements
+                hierarchy = [h.text for h in layer_elem.findall('Hierarchy/HierarchyItem')]
 
                 layer = LayerDefinition(
                     id=layer_elem.attrib.get('id'),
@@ -98,8 +130,9 @@ def load_protocols(protocol_directory):
                     label=layer_elem.find('Label').text,
                     symbology=layer_elem.find('Symbology').text,
                     description=layer_elem.find('Description').text if layer_elem.find('Description') is not None else None,
-                    hierarchy=layer_elem.find('Hierarchy').text if layer_elem.find('Hierarchy') is not None else None,
-                    fields=fields
+                    hierarchy=hierarchy,
+                    fields=fields,
+                    menu_items=[m.text for m in layer_elem.find('MenuItems').findall('MenuItem')] if layer_elem.find('MenuItems') is not None else None
                 )
                 protocol.layers.append(layer)
 
@@ -117,6 +150,14 @@ def load_protocols(protocol_directory):
                     precision=int(metric_elem.find('Precision').text) if metric_elem.find('Precision') is not None else None
                 )
                 protocol.metrics.append(metric)
+
+            for metadata_elem in root.findall('Metadata/MetadataItem'):
+                metadata = MetadataItem(
+                    key=metadata_elem.attrib.get('key'),
+                    value=metadata_elem.text,
+                    type=metadata_elem.attrib.get('type')
+                )
+                protocol.metadata.append(metadata)
 
             protocols.append(protocol)
 

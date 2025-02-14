@@ -8,8 +8,7 @@ from qgis.utils import spatialite_connect
 
 from .analysis import Analysis, load_analyses
 from .sample_frame import SampleFrame, load_sample_frames
-from .layer import Layer, load_layers, load_non_method_layers
-from .method import Method, load as load_methods
+from .layer import Layer, load_layers
 from .protocol import Protocol, load as load_protocols
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
@@ -71,27 +70,18 @@ class Project(DBItem):
             self.description = project_row['description']
             self.map_guid = project_row['map_guid']
             self.metadata = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
-            self.lookup_values = self.get_lookups()
 
-            # get list of lookup tables from layers where is_lookup = 1
-            lkp_tables = [row['fc_name'] for row in curs.execute('SELECT DISTINCT fc_name FROM layers WHERE is_lookup = 1').fetchall()]
-            # TODO clean up the schema to avoid this hack
-            # for table in ['lkp_brat_combined_cis', 'lkp_brat_vegetation_cis', 'lkp_units']:
-            #     lkp_tables.remove(table)
-            lkp_tables.append('lkp_event_types')
-            lkp_tables.append('lkp_raster_types')
-            lkp_tables.append('lkp_scratch_vector_types')
+            # get list of lookup tables
+            lkp_tables = [row['name'] for row in curs.execute('SELECT DISTINCT name FROM lookups').fetchall()]
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in lkp_tables}
 
             self.aois = load_sample_frames(curs, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
             self.sample_frames = load_sample_frames(curs)
             self.layers = load_layers(curs)
-            self.non_method_layers = load_non_method_layers(curs)
-            self.methods = load_methods(curs, self.layers)
-            self.protocols = load_protocols(curs, self.methods)
+            self.protocols = load_protocols(curs, self.layers)
             self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
-            self.events = load_events(curs, self.protocols, self.methods, self.layers, self.lookup_tables, self.rasters)
+            self.events = load_events(curs, self.protocols, None, self.layers, self.lookup_tables, self.rasters)
             self.planning_containers = load_planning_containers(curs, self.events)
             self.metrics = load_metrics(curs)
             self.pour_points = load_pour_points(curs)
@@ -169,19 +159,6 @@ class Project(DBItem):
         """ Returns a dictionary of all project surface rasters"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.is_context is False}
-
-    def get_lookups(self) -> dict:
-        # load and parse all of the lookups from the lookup_list_values table if it exists
-        lookups = {}
-        with sqlite3.connect(self.project_file) as conn:
-            conn.row_factory = sqlite3.Row
-            curs = conn.cursor()
-            curs.execute('SELECT * FROM lookup_list_values')
-            for row in curs.fetchall():
-                if row['list_name'] not in lookups:
-                    lookups[row['list_name']] = []
-                lookups[row['list_name']].append(row['list_value'])
-        return lookups
 
     def get_vector_dbitems(self) -> Generator[DBItem, None, None]:
 
