@@ -855,7 +855,7 @@ class FrmExportProject(QtWidgets.QDialog):
                         keep_layers[fc_name] = {'id_field': 'event_layer_id', 'id_values': []}
                     keep_layers[fc_name]['id_values'].append(str(layer.layer.id))
 
-                    view_name = f'vw_{layer.layer.fc_name}_{event.id}'
+                    view_name = f'vw_{layer.layer.layer_id}_{event.id}'
 
                     layer_fields: list = layer.layer.metadata.get('fields', None)
                     out_fields = '*'
@@ -874,7 +874,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     gp_lyr = GeopackageLayer(lyr_name=view_name,
                                             name=layer.name,
                                             ds_type=GeoPackageDatasetTypes.VECTOR,
-                                            lyr_type=layer.layer.fc_name)
+                                            lyr_type=layer.layer.layer_id)
                     geopackage_layers.append(gp_lyr)
 
                 events_gpkg = Geopackage(xml_id=f'dce_{event.id}_gpkg',

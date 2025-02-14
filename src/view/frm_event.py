@@ -7,9 +7,10 @@ from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
-from ..model.layer import Layer
+from ..model.layer import Layer, insert_layer
+from ..model.protocol import Protocol, insert_protocol
 
-
+from ..QRiS.protocol_parser import LayerDefinition
 from .frm_date_picker import FrmDatePicker
 from .widgets.metadata import MetadataWidget
 from .widgets.surface_library import SurfaceLibraryWidget
@@ -121,16 +122,17 @@ class FrmEvent(QtWidgets.QDialog):
 
     def accept(self):
 
-        selected_layers = []
-        if self.layer_widget is not None:
-            for index in range(self.layer_widget.layers_model.rowCount()):
-                item = self.layer_widget.layers_model.item(index)
-                selected_layers.append(item.data(QtCore.Qt.UserRole).fc_name)
+        # selected_layers = []
+        # if self.layer_widget is not None:
+        #     for index in range(self.layer_widget.layers_model.rowCount()):
+        #         item = self.layer_widget.layers_model.item(index)
+        #         layer_definition = item.data(QtCore.Qt.UserRole)
+        #         selected_layers.append(layer_definition)
             # make sure all mandatory layers are present
-            if self.mandatory_layers is not None:
-                if any(layer not in selected_layers for layer in self.mandatory_layers):
-                    QtWidgets.QMessageBox.warning(self, 'Error', f'All mandatory layers ({",".join(self.mandatory_layers)}) must be selected.')
-                    return
+            # if self.mandatory_layers is not None:
+            #     if any(layer not in selected_layers for layer in self.mandatory_layers):
+            #         QtWidgets.QMessageBox.warning(self, 'Error', f'All mandatory layers ({",".join(self.mandatory_layers)}) must be selected.')
+            #         return
 
         if not self.check_surface_types():
             QtWidgets.QMessageBox.warning(self, 'Invalid Surface Types', 'Only one DEM can be selected')
@@ -160,14 +162,44 @@ class FrmEvent(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        layers_in_use = []
+        selected_layer_definitions = []
+        event_layers = []
         # If this is not a planning container then there must be at least one layer!
         if self.layer_widget is not None:
-            layers_in_use = [self.layer_widget.layers_model.item(i).data(QtCore.Qt.UserRole) for i in range(self.layer_widget.layers_model.rowCount())]
-            if len(layers_in_use) < 1:
+            selected_layer_definitions = [self.layer_widget.layers_model.item(i).data(QtCore.Qt.UserRole) for i in range(self.layer_widget.layers_model.rowCount())]
+            if len(selected_layer_definitions) < 1:
                 QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
                 return
+        
+        # Insert the layer and parent protocol to the project if they are not already in the project 
+        for protocol_definition, layer_definition in selected_layer_definitions: 
+            protocol_id = None
+            protocol = None
+            for key, value in self.qris_project.protocols.items():
+                if value.unique_key() == protocol_definition.unique_key():
+                    protocol_id = key
+                    break
+            if protocol_id is None:
+                protocol = insert_protocol(self.qris_project.project_file, protocol_definition)
+                self.qris_project.protocols[protocol.id] = protocol
+                protocol_id = protocol.id
+            protocol = self.qris_project.protocols[protocol_id] if protocol is None else protocol
 
+            layer_id = None
+            layer = None
+            for key, value in protocol.protocol_layers.items():
+                if value.layer_id == layer_definition.id:
+                    layer_id = key
+                    break
+            if layer_id is None:
+                layer, protocol = insert_layer(self.qris_project.project_file, layer_definition, protocol)
+                layer_id = layer.id
+                self.qris_project.protocols[protocol.id] = protocol
+                self.qris_project.layers[layer_id] = layer
+            else:
+                layer = self.qris_project.layers[layer_id]
+            event_layers.append(layer)
+    
         surface_rasters = self.surface_library.get_selected_surfaces()
         
         if self.cboValleyBottom.currentText() != 'None':
@@ -192,7 +224,7 @@ class FrmEvent(QtWidgets.QDialog):
             if self.dce_event is not None:
                 # Check if any GIS data might be lost
                 for event_layer in self.dce_event.event_layers:
-                    if event_layer.layer not in layers_in_use:
+                    if event_layer.layer not in selected_layer_definitions:
                         response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
                                                                   """One or more layers that were part of this data capture event are no longer associated with the event.
                             Continuing might lead to the loss of geospatial data. Do you want to continue?
@@ -201,7 +233,7 @@ class FrmEvent(QtWidgets.QDialog):
                         if response == QtWidgets.QMessageBox.No:
                             return
 
-                self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), layers_in_use, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), None, self.metadata_widget.get_data())
+                self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), None, self.metadata_widget.get_data())
                 super().accept()
             else:
                 self.dce_event = insert_event(
@@ -214,13 +246,15 @@ class FrmEvent(QtWidgets.QDialog):
                     self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
                     self.cboPlatform.currentData(QtCore.Qt.UserRole),
                     None, # self.cboRepresentation.currentData(QtCore.Qt.UserRole),
-                    layers_in_use,
+                    event_layers,
                     surface_rasters,
                     self.metadata_widget.get_data()
                 )
 
                 self.qris_project.events[self.dce_event.id] = self.dce_event
                 super().accept()
+            
+            #TODO Check for any unused layers and remove them from the project This is based on if they are part of any event, not by the number of features referencing the layer
 
         except Exception as ex:
             if 'unique' in str(ex).lower():
