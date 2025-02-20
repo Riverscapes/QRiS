@@ -46,6 +46,9 @@ def layer_path_parser(path: str) -> Tuple[str, str, object]:
     Parse a layer path into a path, layer name, and identifier (for ogr GetLayer).
     """
 
+    if isinstance(path, QgsVectorLayer):
+        return path, path.name(), "memory"
+    
     if os.path.splitext(path)[1].lower() == ".shp":
         return path, os.path.splitext(os.path.basename(path))[0], 0
     elif ".gpkg|layername=" in path:
