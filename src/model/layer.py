@@ -33,7 +33,7 @@ class Layer(DBItem):
         self.icon = 'layer'
         self.metadata = metadata
         self.fields = metadata.get('fields', None) if metadata else None
-        self.hierarchy = metadata['hierarchy'] if metadata else None
+        self.hierarchy = metadata.get('hierarchy', None) if metadata else None
 
     def unique_key(self):
         return f'{self.layer_id}'
@@ -57,14 +57,15 @@ def load_layers(curs: sqlite3.Cursor) -> dict:
 def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol: Protocol) -> tuple:
     """Insert a new layer into the database from a LayerDefinition object.
 
-    :param curs: The database cursor
+    :param project_file: The path to the project file
     :param layer_definition: The LayerDefinition object to insert
-    :return: The id of the new layer
+    :param protocol: The Protocol object to associate with the layer
+    :return: The new Layer object and the updated Protocol object
     """
 
     fields = []
     for field in layer_definition.fields:
-        fields.append({
+        out_field = {
             'id': field.id,
             'type': field.type,
             'label': field.label,
@@ -75,16 +76,25 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
             'default_value': field.default_value,
             'visibility_field': field.visibility_field,
             'visibility_values': field.visibility_values
-        })
+        }
+        out_field = {k: v for k, v in out_field.items() if v is not None}
+        fields.append(out_field)
         
     metadata = {'menu_items': layer_definition.menu_items, 'hierarchy': layer_definition.hierarchy, 'fields': fields}
-    
+    metadata = {k: v for k, v in metadata.items() if v is not None}
+
     with sqlite3.connect(project_file) as conn:
         curs = conn.cursor()
-        curs.execute('INSERT INTO layers (fc_name, display_name, qml, is_lookup, geom_type, description, version, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                     (layer_definition.id, layer_definition.label, layer_definition.symbology, False, layer_definition.geom_type, layer_definition.description, layer_definition.version, json.dumps(metadata)))
+        
+        # Get the maximum existing ID and increment it by one
+        curs.execute('SELECT MAX(id) FROM layers')
+        max_id = curs.fetchone()[0]
+        new_id = (max_id + 1) if max_id is not None else 1
+
+        curs.execute('INSERT INTO layers (id, fc_name, display_name, qml, is_lookup, geom_type, description, version, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                     (new_id, layer_definition.id, layer_definition.label, layer_definition.symbology, False, layer_definition.geom_type, layer_definition.description, layer_definition.version, json.dumps(metadata)))
     
-        layer_id = curs.lastrowid
+        layer_id = new_id
         curs.execute('INSERT INTO protocol_layers (protocol_id, layer_id) VALUES (?, ?)', (protocol.id, layer_id))
 
     layer = Layer(

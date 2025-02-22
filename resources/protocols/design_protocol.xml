@@ -1,9 +1,9 @@
 <Protocol machine_code="DESIGN" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../protocol.xsd">
-    <Label>Beaver Census Protocol</Label>
-    <Description>Beaver Census Layers</Description>
+    <Label>Design Protocol</Label>
+    <Description>Design Layers</Description>
     <URL>https://lowtechpbr.restoration.usu.edu/</URL>
     <Citation> Wheaton J.M., Bennett S.N., Bouwes, N., Maestas J.D. and Shahverdian S.M. (Editors). 2019. Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Version 1.0. Utah State University Restoration Consortium. Logan, UT. 286 pp. DOI: 10.13140/RG.2.2.19590.63049/2.</Citation>
-    <Author>Jordan Gilbert</Author>
+    <Author>Nick Weber</Author>
     <CreationDate>2024-09-01</CreationDate>
     <UpdatedDate>2024-09-01</UpdatedDate>
     <Layers>

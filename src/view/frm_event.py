@@ -1,4 +1,3 @@
-
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -8,9 +7,10 @@ from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
 from ..model.layer import Layer, insert_layer
+from ..model.metric import Metric, insert_metric
 from ..model.protocol import Protocol, insert_protocol
 
-from ..QRiS.protocol_parser import LayerDefinition
+from ..QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, MetricDefinition 
 from .frm_date_picker import FrmDatePicker
 from .widgets.metadata import MetadataWidget
 from .widgets.surface_library import SurfaceLibraryWidget
@@ -122,18 +122,6 @@ class FrmEvent(QtWidgets.QDialog):
 
     def accept(self):
 
-        # selected_layers = []
-        # if self.layer_widget is not None:
-        #     for index in range(self.layer_widget.layers_model.rowCount()):
-        #         item = self.layer_widget.layers_model.item(index)
-        #         layer_definition = item.data(QtCore.Qt.UserRole)
-        #         selected_layers.append(layer_definition)
-            # make sure all mandatory layers are present
-            # if self.mandatory_layers is not None:
-            #     if any(layer not in selected_layers for layer in self.mandatory_layers):
-            #         QtWidgets.QMessageBox.warning(self, 'Error', f'All mandatory layers ({",".join(self.mandatory_layers)}) must be selected.')
-            #         return
-
         if not self.check_surface_types():
             QtWidgets.QMessageBox.warning(self, 'Invalid Surface Types', 'Only one DEM can be selected')
             return
@@ -166,13 +154,21 @@ class FrmEvent(QtWidgets.QDialog):
         event_layers = []
         # If this is not a planning container then there must be at least one layer!
         if self.layer_widget is not None:
-            selected_layer_definitions = [self.layer_widget.layers_model.item(i).data(QtCore.Qt.UserRole) for i in range(self.layer_widget.layers_model.rowCount())]
-            if len(selected_layer_definitions) < 1:
+            for i in range(self.layer_widget.layers_model.rowCount()):
+                item = self.layer_widget.layers_model.item(i)
+                data = item.data(QtCore.Qt.UserRole)
+                if isinstance(data, Layer):
+                    event_layers.append(data)
+                else:
+                    selected_layer_definitions.append(data)
+            if len(selected_layer_definitions) < 1 and len(event_layers) < 1:
                 QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
                 return
         
         # Insert the layer and parent protocol to the project if they are not already in the project 
         for protocol_definition, layer_definition in selected_layer_definitions: 
+            protocol_definition: ProtocolDefinition
+            layer_definition: LayerDefinition
             protocol_id = None
             protocol = None
             for key, value in self.qris_project.protocols.items():
@@ -183,6 +179,25 @@ class FrmEvent(QtWidgets.QDialog):
                 protocol = insert_protocol(self.qris_project.project_file, protocol_definition)
                 self.qris_project.protocols[protocol.id] = protocol
                 protocol_id = protocol.id
+                # Now iterate through and insert the metrics for the new protocol
+                for metric_definition in protocol_definition.metrics:
+                    metric_definition: MetricDefinition
+                    metadata = {'minimum_value': metric_definition.minimum_value, 'maximum_value': metric_definition.maximum_value, 'precision': metric_definition.precision}
+                    metric_id, metric = insert_metric(
+                        self.qris_project.project_file,
+                        metric_definition.label,
+                        metric_definition.id,
+                        protocol.machine_code,
+                        metric_definition.description,
+                        metric_definition.default_level,
+                        metric_definition.calculation_machine_code,
+                        metric_definition.parameters,
+                        None,
+                        metric_definition.definition_url,
+                        metadata,
+                        metric_definition.version)
+                    self.qris_project.metrics[metric_id] = metric
+
             protocol = self.qris_project.protocols[protocol_id] if protocol is None else protocol
 
             layer_id = None
@@ -224,7 +239,7 @@ class FrmEvent(QtWidgets.QDialog):
             if self.dce_event is not None:
                 # Check if any GIS data might be lost
                 for event_layer in self.dce_event.event_layers:
-                    if event_layer.layer not in selected_layer_definitions:
+                    if event_layer.layer not in selected_layer_definitions and event_layer.layer not in event_layers:
                         response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
                                                                   """One or more layers that were part of this data capture event are no longer associated with the event.
                             Continuing might lead to the loss of geospatial data. Do you want to continue?

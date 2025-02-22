@@ -409,8 +409,8 @@ class QRisMapManager(RiverscapesMapManager):
                 else:
                     config['fields'][ix]['values'] = []
         # add a notes field if it doesn't exist
-        if 'notes' not in [field['machine_code'] for field in fields]:
-            config['fields'].append({'machine_code': 'notes', 'type': 'long_text', 'label': 'Notes'})
+        if 'notes' not in [field['id'] for field in fields]:
+            config['fields'].append({'id': 'notes', 'type': 'long_text', 'label': 'Notes'})
 
         # build virtual metadata fields for attribute table
         default_photo_path = os.path.join(os.path.dirname(self.project.project_file), 'photos', f'dce_{str(event_layer.event_id).zfill(3)}').replace('\\', '/')

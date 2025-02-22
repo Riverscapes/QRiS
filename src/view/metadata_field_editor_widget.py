@@ -72,7 +72,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             self.grid.addWidget(label, row, 0, 1, 1)
             widget = None
             if 'derived_value' in field.keys():
-                widget = DependantComboBox(editor, field['derived_value'], field.get('default', ''))
+                widget = DependantComboBox(editor, field['derived_value'], field.get('default_value', ''))
             elif field['type'] == 'list':
                 widget = QComboBox(editor)
                 widget.addItems(field['values'])
@@ -98,20 +98,20 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget = QTextEdit(editor)
                 widget.textChanged.connect(self.onTextChanged)
             self.grid.addWidget(widget, row, 1, 1, 1)
-            widget.setObjectName(field['machine_code'])
+            widget.setObjectName(field['id'])
 
-            if 'default' in field.keys():
+            if 'default_value' in field.keys():
                 if isinstance(widget, QComboBox):
-                    index = widget.findText(field['default'])
+                    index = widget.findText(field['default_value'])
                     widget.setCurrentIndex(index)
                 else:
-                    widget.setValue(field['default'])
+                    widget.setValue(field['default_value'])
             
             if 'visibility' in field.keys():
                 # we are going to check the value of the field that is being used to determine the visibility of this field later on.
                 widget.setEnabled(False)
 
-            self.widgets[field['machine_code']] = widget
+            self.widgets[field['id']] = widget
             row += 1
 
     def valid(self) -> bool:
@@ -168,14 +168,14 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget.set_dependent_value(widget_values)
         
         for name, widget in self.widgets.items():
-            field = next((f for f in self.fields if f['machine_code'] == widget.objectName()), None)
+            field = next((f for f in self.fields if f['id'] == widget.objectName()), None)
             if field is None:
                 continue
             if 'visibility' in field.keys():
                 if field['visibility'] == 'None':
                     widget.setEnabled(False)
                 # field_to_check = field['visibility']['field_name']
-                # field_name_to_check = next((f for f in self.fields if f['machine_code'] == field_to_check), {}).get('label', '')
+                # field_name_to_check = next((f for f in self.fields if f['id'] == field_to_check), {}).get('label', '')
                 values_to_check = field['visibility']['values']
                 if widget_values.get(field['visibility']['field_name'], '') in values_to_check:
                     widget.setEnabled(True)
@@ -188,8 +188,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
         fields: list = self.config('fields')
         for field in fields:
-            if field['machine_code'] == widget.objectName():
-                default_value = field.get('default', '')
+            if field['id'] == widget.objectName():
+                default_value = field.get('default_value', '')
                 if isinstance(widget, QComboBox):
                     index = widget.findText(default_value)
                     widget.setCurrentIndex(index)
@@ -213,27 +213,27 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         json_lookup = """[ "dam_capacity",
                 "derived_value": [
                     {"value_lookup": [
-                        {"machine_code":"streamside_vegtation", 
+                        {"id":"streamside_vegtation", 
                          "value": "Unsuitable"},
-                        {"machine_code": "riparian_vegetation",
+                        {"id": "riparian_vegetation",
                          "value": "Unsuitable"}
                         ]
                      "output": "None"
                     },
                     {
                     "value_lookup": [
-                    {"machine_code":"streamside_vegtation",
+                    {"id":"streamside_vegtation",
                         "value": "Suitable"},
-                    {"machine_code": "riparian_vegetation",
+                    {"id": "riparian_vegetation",
                         "value": "Unsuitable"}
                         ]
                     "output": "Rare"
                     },
                     {
                     "value_lookup": [
-                    {"machine_code":"streamside_vegtation",
+                    {"id":"streamside_vegtation",
                         "value": "Suitable"},
-                    {"machine_code": "riparian_vegetation",
+                    {"id": "riparian_vegetation",
                         "value": "Suitable"}
                         ]
                     "output": "Pervaisive"
@@ -242,7 +242,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             }
         ]"""
 
-        # Create a mapping of machine_code to widgets for efficient lookup
+        # Create a mapping of id to widgets for efficient lookup
         widget_map = {widget.objectName(): widget for widget in self.widgets}
 
         for field, value_lookups in self.derived_values:
@@ -251,7 +251,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 continue  # or handle error
 
             for value_lookup in value_lookups:
-                if all(widget_map.get(lookup['machine_code'], {}).text() == lookup['value'] for lookup in value_lookup['value_lookup']):
+                if all(widget_map.get(lookup['id'], {}).text() == lookup['value'] for lookup in value_lookup['value_lookup']):
                     # Assuming widget is a ComboBox, adjust accordingly
                     index = widget.findText(value_lookup['output'])
                     if index != -1:
