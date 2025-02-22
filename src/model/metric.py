@@ -11,10 +11,11 @@ default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio'
 
 class Metric(DBItem):
 
-    def __init__(self, id: int, name: str, machine_name:str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None, version: int = 1):
+    def __init__(self, id: int, name: str, machine_name:str, protocol_machine_code:str, description: str, default_level_id: int, metric_function: str, metric_params: str, default_unit_id: int = None, definition_url: str = None, metadata: dict = None, version: int = 1):
         super().__init__('metrics', id, name)
         self.machine_name = machine_name
         self.description = description
+        self.protocol_machine_code = protocol_machine_code
         self.default_level_id = default_level_id
         self.default_unit_id = default_unit_id
         self.metric_function = metric_function
@@ -42,11 +43,15 @@ def load_metrics(curs: sqlite3.Cursor) -> dict:
     curs.execute('SELECT * FROM calculations')
     metric_functions = {row['id']: row['metric_function'] for row in curs.fetchall()}
 
+    curs.execute('SELECT * FROM protocols')
+    protocols = {row['id']: row['machine_code'] for row in curs.fetchall()}
+
     curs.execute('SELECT * FROM metrics')
     return {row['id']: Metric(
         row['id'],
         row['name'],
         row['machine_name'],
+        protocols[int(row['protocol_id'])],
         row['description'],
         row['default_level_id'],
         metric_functions.get(row['calculation_id'], None),
@@ -57,7 +62,7 @@ def load_metrics(curs: sqlite3.Cursor) -> dict:
         row['version']
     ) for row in curs.fetchall()}
 
-def insert_metric(db_path: str, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
+def insert_metric(db_path: str, name: str, machine_name: str, protocol_machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
 
     metric = None
     description = description if len(description) > 0 else None
@@ -67,8 +72,11 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
+            # Get the protocol id
+            curs.execute('SELECT id FROM protocols WHERE machine_code = ?', [protocol_machine_name])
+            protocol_id = curs.fetchone()[0]
             # make sure the metric_name and version are unique
-            curs.execute('SELECT id FROM metrics WHERE name = ? AND version = ?', [name, version])
+            curs.execute('SELECT id FROM metrics WHERE name = ? AND version = ? AND protocol_id = ?', [name, version, protocol_id])
             metric_ids = curs.fetchone()
             if metric_ids is not None:
                 raise ValueError(f"Metric '{name}' version '{version}' already exists in database.")
@@ -94,9 +102,9 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
             else:
                 unit_id = None
 
-            curs.execute('INSERT INTO metrics (name, machine_name, description, default_level_id, calculation_id, metric_params, unit_id, definition_url, metadata, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [name, machine_name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, version])
+            curs.execute('INSERT INTO metrics (name, machine_name, protocol_id, description, default_level_id, calculation_id, metric_params, unit_id, definition_url, metadata, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [name, machine_name, protocol_id, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, version])
             id = curs.lastrowid
-            metric = Metric(id, name, machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
+            metric = Metric(id, name, machine_name, protocol_machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
             conn.commit()
 
         except Exception as ex:
@@ -106,7 +114,7 @@ def insert_metric(db_path: str, name: str, machine_name: str, description: str, 
 
     return id, metric
 
-def update_metric(db_path: str, id: int, name: str, machine_name: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
+def update_metric(db_path: str, id: int, name: str, machine_name: str, protocol_machine_code: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
     
         metric = None
         description = description if len(description) > 0 else None

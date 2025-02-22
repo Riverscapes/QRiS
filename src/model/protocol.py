@@ -33,9 +33,10 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
         'creation_date': protocol_definition.creation_date,
         'updated_date': protocol_definition.updated_date
     }
-    metadata = {meta.key: meta.value for meta in protocol_definition.metadata}
-    out_metadata = {'system': system_metadata,
-                    'metadata': metadata}
+    system_metadata = {k: v for k, v in system_metadata.items() if v is not None}
+    out_metadata = {'system': system_metadata}
+    if len(protocol_definition.metadata) > 0:
+        out_metadata['metadata'] = [{'key': meta.key, 'value': meta.value, 'type': meta.type} for meta in protocol_definition.metadata]
 
     with sqlite3.connect(project_file) as conn:
         curs = conn.cursor()

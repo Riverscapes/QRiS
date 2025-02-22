@@ -459,8 +459,8 @@ class RiverscapesMapManager(QObject):
             for field in field_config.get('fields', []):
                 field_type = field_types.get(field['type'], QVariant.String)
                 field_name = field['label']
-                field_labels.update({field['machine_code']: field_name})
-                metadata_fields['attributes'].update({field['machine_code']: field_type})
+                field_labels.update({field['id']: field_name})
+                metadata_fields['attributes'].update({field['id']: field_type})
 
         # get all the keys from the metadata dictionary by reading all of the features
         for feature in feature_layer.getFeatures():
