@@ -80,6 +80,8 @@ def load_protocols(protocol_directory: str) -> List[ProtocolDefinition]:
     """Load protocol from xml"""
 
     protocols = list()
+    if protocol_directory is None or not os.path.isdir(protocol_directory):
+        return protocols
 
     for filename in os.listdir(protocol_directory):
         if filename.endswith('.xml'):
