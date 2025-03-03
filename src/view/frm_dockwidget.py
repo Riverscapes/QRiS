@@ -42,7 +42,6 @@ from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
 from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, AOI_MACHINE_CODE, SampleFrame
 from ..model.protocol import Protocol
-from ..model.method import Method
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
 from ..model.event_layer import EventLayer
