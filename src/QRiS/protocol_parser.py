@@ -24,7 +24,7 @@ class FieldDefinition:
     type: str
     label: str
     required: bool = False
-    custom_values_allowed: bool = False
+    allow_custom_values: bool = False
     description: Optional[str] = None
     values: Optional[List[str]] = None
     default_value: Optional[str] = None
@@ -121,7 +121,7 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     type=FIELD_TYPES[field_elem.tag],
                     label=field_elem.find('Label').text,
                     required=field_elem.attrib.get('required') == 'true',
-                    custom_values_allowed=field_elem.find('Values').attrib.get('custom_values_allowed') == 'true' if field_elem.find('Values') is not None else False,
+                    allow_custom_values=field_elem.find('Values').attrib.get('allow_custom_values') == 'true' if field_elem.find('Values') is not None else False,
                     description=field_elem.find('Description').text if field_elem.find('Description') is not None else None,
                     values=[v.text for v in field_elem.find('Values').findall('Value')] if field_elem.find('Values') is not None else None,
                     default_value=str(field_elem.find('DefaultValue').text) if field_elem.find('DefaultValue') is not None else None,
