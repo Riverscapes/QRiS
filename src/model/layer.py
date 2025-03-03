@@ -70,7 +70,7 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
             'type': field.type,
             'label': field.label,
             'required': field.required,
-            'custom_values_allowed': field.custom_values_allowed,
+            'allow_custom_values': field.allow_custom_values,
             'description': field.description,
             'values': field.values,
             'default_value': field.default_value,
@@ -105,7 +105,7 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
         False,
         layer_definition.geom_type,
         layer_definition.description,
-        layer_definition.__dict__
+        metadata
     )
 
     protocol.protocol_layers[layer_id] = layer

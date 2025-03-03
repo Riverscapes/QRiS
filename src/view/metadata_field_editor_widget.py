@@ -104,6 +104,12 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 if isinstance(widget, QComboBox):
                     index = widget.findText(field['default_value'])
                     widget.setCurrentIndex(index)
+                # if integer field set the value as an integer type
+                elif field['type'] == 'integer':
+                    widget.setValue(int(field['default_value']))
+                # if float field set the value as a float type
+                elif field['type'] in ['double', 'float']:
+                    widget.setValue(float(field['default_value']))
                 else:
                     widget.setValue(field['default_value'])
             
