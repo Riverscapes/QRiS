@@ -248,6 +248,30 @@ def apply_db_migrations(db_path: str):
             QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: create feature class {layer_name}', 'QRiS', Qgis.Info)
 
     try:
+        # find any aoi or valley bottom views and update them to use the sample frame feature class
+        curs.execute('SELECT name FROM sqlite_master WHERE type="view"')
+        views = curs.fetchall()
+        for view in views:
+            view_name = view[0]
+            if view_name.startswith('vw_aoi') or view_name.startswith('vw_valley_bottom'):
+                # if the view has a mask_id column, update it to use the sample_frame_features feature class
+                curs.execute(f'PRAGMA table_info({view_name})')
+                columns = curs.fetchall()
+                mask_column_name = 'mask_id' if view_name.startswith('vw_aoi') else 'valley_bottom_id'
+                mask_id_column = next((column for column in columns if column[1] == mask_column_name), None)
+                if mask_id_column is not None:
+                    mask_id = curs.execute(f'SELECT {mask_column_name} FROM {view_name} LIMIT 1').fetchone()
+                    if mask_id is not None:
+                        conn.execute('BEGIN')
+                        curs.execute(f'DROP VIEW IF EXISTS {view_name}')
+                        curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}') 
+                        QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: updated view {view_name}', 'QRiS', Qgis.Info)
+                        conn.commit()
+    except Exception as ex:
+        conn.rollback()
+        raise ex
+
+    try:
         migrations_dir = os.path.join(os.path.dirname(__file__), '..', 'db', 'migrations')
         migration_files = os.listdir(migrations_dir)
         sorted_migration_files = sorted(migration_files)
