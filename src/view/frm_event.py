@@ -6,7 +6,7 @@ from ..model.event import Event, PLANNING_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
-from ..model.layer import Layer, insert_layer
+from ..model.layer import Layer, insert_layer, check_and_remove_unused_layers
 from ..model.metric import Metric, insert_metric
 from ..model.protocol import Protocol, insert_protocol
 
@@ -249,6 +249,7 @@ class FrmEvent(QtWidgets.QDialog):
                             return
 
                 self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), None, self.metadata_widget.get_data())
+                check_and_remove_unused_layers(self.qris_project)
                 super().accept()
             else:
                 self.dce_event = insert_event(
