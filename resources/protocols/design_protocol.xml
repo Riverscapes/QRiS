@@ -163,7 +163,7 @@
                 </ListField>
             </Fields>
         </Layer>
-        <Layer id="complexes" version="1.0" geom_type="Point">
+        <Layer id="complexes" version="1.0" geom_type="Polygon">
             <Label>Structure Complex Extents</Label>
             <Symbology>complexes.qml</Symbology>
             <Description>Structure Complex Extents Layer</Description>
