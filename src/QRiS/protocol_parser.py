@@ -30,6 +30,7 @@ class FieldDefinition:
     default_value: Optional[str] = None
     visibility_field: Optional[str] = None
     visibility_values: Optional[List[str]] = None
+    allow_multiple_values: Optional[bool] = None
 
 @dataclass
 class LayerDefinition:
@@ -125,8 +126,9 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     description=field_elem.find('Description').text if field_elem.find('Description') is not None else None,
                     values=[v.text for v in field_elem.find('Values').findall('Value')] if field_elem.find('Values') is not None else None,
                     default_value=str(field_elem.find('DefaultValue').text) if field_elem.find('DefaultValue') is not None else None,
-                    visibility_field=field_elem.find('Visibility').attrib.get('field_ref_id') if field_elem.find('Visibility') is not None else None,
-                    visibility_values=[v.text for v in field_elem.find('Visibility').find('Values').findall('Value')] if field_elem.find('Visibility') is not None else None
+                    visibility_field=field_elem.find('Visibility').attrib.get('field_id_ref') if field_elem.find('Visibility') is not None else None,
+                    visibility_values=[v.text for v in field_elem.find('Visibility').find('Values').findall('Value')] if field_elem.find('Visibility') is not None else None,
+                    allow_multiple_values=field_elem.find('Values').attrib.get('allow_multiple_values') == 'true' if field_elem.find('Values') is not None else None
                 )
             fields.append(field)
 
