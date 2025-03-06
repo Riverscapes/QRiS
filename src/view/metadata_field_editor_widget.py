@@ -4,13 +4,13 @@ import typing
 
 from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory
 from qgis.core import QgsVectorLayer, NULL
+
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox
 from PyQt5.QtCore import Qt, QVariant, QSettings
 
 
 class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
-    # def __init__(self, layer: QgsVectorLayer, fieldIdx: int, editor: QWidget, parent: QWidget):
-    #     super().__init__(layer, fieldIdx, editor, parent)
 
     def __init__(self, vl: QgsVectorLayer, fieldIdx: int, editor: QWidget, parent: QWidget) -> None:
         super().__init__(vl, fieldIdx, editor, parent)
@@ -38,9 +38,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 data[name] = widget.currentText()
             elif isinstance(widget, CheckboxWidget):
                 data[name] = [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
+            elif isinstance(widget, DependantComboBox):
+                data[name] = widget.cboValues.currentText()
         self.dict_values['attributes'] = data
-        # formatted_data = {}
-        # formatted_data['attributes'] = data
         self.current_value = json.dumps(self.dict_values)
 
         return self.current_value
@@ -73,8 +73,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             label = QLabel(field['label'])
             self.grid.addWidget(label, row, 0, 1, 1)
             widget = None
-            if 'derived_value' in field.keys():
-                widget = DependantComboBox(editor, field['derived_value'], field.get('default_value', ''))
+            if 'derived_values' in field.keys():
+                widget = DependantComboBox(editor, field['values'], field['derived_values'], field.get('default_value', ''))
+                widget.cboValues.currentIndexChanged.connect(self.onValueChanged)
+                widget.chkManual.stateChanged.connect(self.onValueChanged)
             elif field['type'] == 'list':
                 if 'allow_multiple_values' in field.keys() and str(field['allow_multiple_values']).lower() == 'true':
                     # prepare a widget with checkboxes for each value
@@ -163,6 +165,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                         widget.reset_checkboxes()
                         for checkbox in widget.findChildren(QCheckBox):
                             checkbox.setChecked(checkbox.text() in val)
+                    elif isinstance(widget, DependantComboBox):
+                        widget.setValueExternal(val, values['attributes'])
                 else:
                     # Reset the widget to its default value if the value is not in values['attributes']
                     self.resetWidgetToDefault(widget)
@@ -184,6 +188,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget_values[name] = widget.currentText()
             elif isinstance(widget, CheckboxWidget):
                 widget_values[name] = [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
+            elif isinstance(widget, DependantComboBox):
+                widget_values[name] = widget.cboValues.currentText()
 
         for widget in self.widgets.values():
             if isinstance(widget, DependantComboBox):
@@ -237,56 +243,6 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.updateDependantWidgets()
         self.emitValueChanged()
 
-    def derived_value(self):
-
-        json_lookup = """[ "dam_capacity",
-                "derived_value": [
-                    {"value_lookup": [
-                        {"id":"streamside_vegtation", 
-                         "value": "Unsuitable"},
-                        {"id": "riparian_vegetation",
-                         "value": "Unsuitable"}
-                        ]
-                     "output": "None"
-                    },
-                    {
-                    "value_lookup": [
-                    {"id":"streamside_vegtation",
-                        "value": "Suitable"},
-                    {"id": "riparian_vegetation",
-                        "value": "Unsuitable"}
-                        ]
-                    "output": "Rare"
-                    },
-                    {
-                    "value_lookup": [
-                    {"id":"streamside_vegtation",
-                        "value": "Suitable"},
-                    {"id": "riparian_vegetation",
-                        "value": "Suitable"}
-                        ]
-                    "output": "Pervaisive"
-                    }
-                    ]
-            }
-        ]"""
-
-        # Create a mapping of id to widgets for efficient lookup
-        widget_map = {widget.objectName(): widget for widget in self.widgets}
-
-        for field, value_lookups in self.derived_values:
-            widget = widget_map.get(field, None)
-            if widget is None:
-                continue  # or handle error
-
-            for value_lookup in value_lookups:
-                if all(widget_map.get(lookup['id'], {}).text() == lookup['value'] for lookup in value_lookup['value_lookup']):
-                    # Assuming widget is a ComboBox, adjust accordingly
-                    index = widget.findText(value_lookup['output'])
-                    if index != -1:
-                        widget.setCurrentIndex(index)
-                    break
-
 class CheckboxWidget(QWidget):
 
     def __init__(self, parent=None):
@@ -305,7 +261,6 @@ class CheckboxWidget(QWidget):
     def reset_checkboxes(self):
         for checkbox in self.findChildren(QCheckBox):
             checkbox.setChecked(False)
-
 
 
 class MetadataFieldEditConfigWidget(QgsEditorConfigWidget):
@@ -352,7 +307,7 @@ def initialize_metadata_widget():
 
 class DependantComboBox(QWidget):
 
-    def __init__(self, parent:MetadataFieldEditWidget=None, dependency_map: typing.Dict[str, typing.List[str]] = {}, default_value=None):
+    def __init__(self, parent:MetadataFieldEditWidget=None, values=[], dependency_map: typing.Dict[str, typing.List[str]] = {}, default_value=None):
         
         super(DependantComboBox, self).__init__(parent)
         self.dependency_map = dependency_map
@@ -361,26 +316,53 @@ class DependantComboBox(QWidget):
 
         self.initUI()
 
+        self.model = QStandardItemModel()
+        for value in values:
+            item = QStandardItem(value)
+            self.model.appendRow(item)
+        self.cboValues.setModel(self.model)
+
+    def setValue(self, value):
+        index = self.cboValues.findText(value)
+        self.cboValues.setCurrentIndex(index)
+
+    def setValueExternal(self, value, widget_values: typing.Dict[str, str]):
+
+        # we want to set the value of the combobox but we also want to check if the value is derived and set the checkbox accordingly
+        self.manual_value = value
+        self.chkManual.setChecked(True)
+        self.cboValues.setEnabled(True)
+
+        # Reverse lookup the value to see if it is derived
+        for value_lookup in self.dependency_map:
+            inputs: list = [(key, value) for input_map in value_lookup['inputs'] for key, value in input_map.items()]
+            if all(widget_values.get(field, '') == value for field, value in inputs) and value_lookup['output'] == value:
+                self.chkManual.setChecked(False)
+                self.cboValues.setEnabled(False)
+                break
+        self.setValue(value)
+        return
 
     def onManual(self, state):
         if state == Qt.Checked:
             self.cboValues.setEnabled(True)
             if self.manual_value is not None:
-                self.cboValues.setCurrentText(self.manual_value)
+                self.setValue(self.manual_value)
         else:
             self.cboValues.setEnabled(False)
             self.manual_value = self.cboValues.currentText()
-            self.parent().updateDependantWidgets()
 
     def set_dependent_value(self, widget_values: typing.Dict[str, str]):
         if self.chkManual.isChecked():
             return
-        for value_lookup in self.dependency_map.items():
-            for field, value in value_lookup.items():
-                if field in widget_values and widget_values[field] == value:
-                    self.cboValues.setCurrentText(value_lookup['output'])
-                    return
-        self.cboValues.setCurrentText(self.default_value)
+        for value_lookup in self.dependency_map:
+            inputs: list = [(key, value) for input_map in value_lookup['inputs'] for key, value in input_map.items()]
+            if all(widget_values.get(field, '') == value for field, value in inputs):
+                self.setValue(value_lookup['output'])
+                return
+        # If no match found, set to default value
+        self.setValue(self.default_value)
+        return
 
     def initUI(self):
 
@@ -388,9 +370,10 @@ class DependantComboBox(QWidget):
         self.setLayout(self.hlayout)
 
         self.cboValues = QComboBox()
+        self.cboValues.setEnabled(False)
         self.hlayout.addWidget(self.cboValues)
 
-        self.chkManual = QCheckBox("Manual")
+        self.chkManual = QCheckBox("Override (Set Value Manually)")
         self.chkManual.setChecked(False)
         self.chkManual.stateChanged.connect(self.onManual)
         self.hlayout.addWidget(self.chkManual)
