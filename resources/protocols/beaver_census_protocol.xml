@@ -18,6 +18,7 @@
             <Fields>
                 <ListField id="dam_cer" version="1.0">
                     <Label>Dam CER</Label>
+                    <DefaultValue>high</DefaultValue>
                     <Values>
                         <Value>high</Value>
                         <Value>medium</Value>
@@ -26,6 +27,7 @@
                 </ListField>
                 <ListField id="dam_type" version="1.0">
                     <Label>Dam Type</Label>
+                    <DefaultValue>'active_dam'</DefaultValue>
                     <Values>
                         <Value>active_dam</Value>
                         <Value>inactive_dam</Value>
@@ -34,6 +36,7 @@
                 </ListField>
                 <ListField id="type_cer" version="1.0">
                     <Label>Type CER</Label>
+                    <DefaultValue>high</DefaultValue>
                     <Values>
                         <Value>high</Value>
                         <Value>medium</Value>
