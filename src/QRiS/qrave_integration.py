@@ -84,7 +84,7 @@ class QRaveIntegration(QObject):
         project_meta['SourceUrl'] = (project_source_url, 'string')
 
         layer_meta = data.data.meta
-        out_meta = {'project_metadata': project_meta, 'layer_metadata': layer_meta}
+        out_meta = {'layer_label': layer.label, 'project_metadata': project_meta, 'layer_metadata': layer_meta}
         proj_type = data.project.project_type
         symbology = layer.bl_attr.get('symbology', None)
         if symbology is not None:
