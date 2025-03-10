@@ -1227,6 +1227,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context, add_new_keys=False)
         if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
             if 'project_metadata' in meta:
                 for key, value in meta['project_metadata'].items():
                     key = f'Project {key}'
@@ -1256,6 +1259,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmScratchVector(self, self.iface, self.project, import_source_path, None, None)
         if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
             if 'project_metadata' in meta:
                 for key, value in meta['project_metadata'].items():
                     key = f'Project {key}'
