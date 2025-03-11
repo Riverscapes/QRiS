@@ -8,6 +8,11 @@ CREATE TABLE valley_bottoms
     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS valley_bottom_features(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    geom GEOMETRY
+    );
+
 ALTER TABLE valley_bottom_features ADD COLUMN valley_bottom_id INTEGER REFERENCES valley_bottoms(id) ON DELETE CASCADE;
 ALTER TABLE valley_bottom_features ADD COLUMN description TEXT;
 ALTER TABLE valley_bottom_features ADD COLUMN metadata TEXT;
