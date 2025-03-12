@@ -119,17 +119,16 @@ class FrmScratchVector(QtWidgets.QDialog):
                 if isinstance(self.import_source_path, QgsVectorLayer):
                     task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
                 else:
-                    task = ImportFeatureClass(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
+                    task = ImportFeatureClass(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file, explode_geometries=False)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
-                result = task.run()
-                self.on_copy_complete(result)
-                # return
-
+                # result = task.run()
+                # self.on_copy_complete(result)
+                
                 # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
                 self.buttonBox.setEnabled(False)
-                # task.import_complete.connect(self.on_copy_complete)
-                # QgsApplication.taskManager().addTask(task)
+                task.import_complete.connect(self.on_copy_complete)
+                QgsApplication.taskManager().addTask(task)
 
             except Exception as ex:
                 self.buttonBox.setEnabled(True)
@@ -226,6 +225,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.cboMask, 4, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel('Description')
+        self.lblDescription.setAlignment(QtCore.Qt.AlignTop)
         self.grid.addWidget(self.lblDescription, 5, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
