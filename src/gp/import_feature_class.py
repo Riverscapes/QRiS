@@ -28,7 +28,7 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None, explode_geometries=True):
+    def __init__(self, source_path: str, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None, explode_geometries=False):
         super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
 
         self.source_path = source_path
@@ -42,6 +42,8 @@ class ImportFeatureClass(QgsTask):
         self.skipped_feats = 0
         self.proj_gpkg = proj_gpkg
         self.explode_geometries = explode_geometries
+        self.message = None
+        self.exception = None
 
     def run(self):
 
@@ -105,10 +107,17 @@ class ImportFeatureClass(QgsTask):
                 # Gather all of the geoms and merge into a multipart geometry
                 clip_geom = ogr.Geometry(ogr.wkbMultiPolygon)
                 for clip_feat in clip_layer:
-                    clip_geom.AddGeometry(clip_feat.GetGeometryRef())
+                    geom_part = clip_feat.GetGeometryRef()
+                    if geom_part.GetGeometryType() == ogr.wkbMultiPolygon:
+                        for geom in geom_part:
+                            clip_geom.AddGeometry(geom)
+                    else:
+                        clip_geom.AddGeometry(geom_part)
                 # clip_geom = clip_geom.UnionCascaded()
                 clip_transform = osr.CoordinateTransformation(clip_layer.GetSpatialRef(), src_srs)
                 clip_geom.Transform(clip_transform)
+                if not clip_geom.IsValid():
+                    clip_geom = clip_geom.MakeValid()
 
             transform = osr.CoordinateTransformation(src_srs, dst_srs)
 
@@ -156,10 +165,8 @@ class ImportFeatureClass(QgsTask):
                     if single:
                         g = geom
                     else:
-                        g = geom.GetGeometryRef(i)
+                        g: ogr.Geometry = geom.GetGeometryRef(i)
                         g.MakeValid()
-                        if not g.IsValid():
-                            continue
                     dst_feature = ogr.Feature(dst_layer_def)
                     dst_feature.SetGeometry(g)
                     if self.attributes is not None:
@@ -220,8 +227,8 @@ class ImportFeatureClass(QgsTask):
                         self.out_feats += 1
 
             if self.out_feats == 0:
-                raise Exception("No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect.")
-
+                self.message = "No features were imported. Check that the source and destination coordinate systems are the same and that the source and aoi mask geometries intersect."
+                result = False
         except Exception as ex:
             self.exception = ex
             result = False
@@ -254,7 +261,10 @@ class ImportFeatureClass(QgsTask):
             QgsMessageLog.logMessage('Import Feature Class completed', MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
+                if self.message is not None:
+                    QgsMessageLog.logMessage(self.message, MESSAGE_CATEGORY, Qgis.Warning)
+                else:
+                    QgsMessageLog.logMessage(
                     'Feature Class Import not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
             else:
                 QgsMessageLog.logMessage(f'Feature Class Import exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
