@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [1.0.10] 2025 MAR 12
+
+### Fixed
+- Import features error when clip geom is of type multipolygon #589 #531
+- Error opening DCE properties with migrated valley bottoms #573
+- Import Valley Bottom from Temporary Layer or Shapefile Bug #568, #580
+- Cleaned up aoi and valley bottom views for exported projects
+- Fixed error with valley bottom migration if vb_features does not exist
+
+### Changed
+- Use RS Layer name instead of fc name for Import to QRiS #590
+
+### Removed
+- Removed old unused dce layer configuration functions
+
+
 ## [1.0.9] 2025 JAN 24
 
 ### Added
