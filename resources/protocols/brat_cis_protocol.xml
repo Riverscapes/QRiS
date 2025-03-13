@@ -1,4 +1,4 @@
-<Protocol machine_code="BRAT_CIS" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../protocol.xsd">
+<Protocol machine_code="BRAT_CIS" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
     <Label>Brat CIS Protocol</Label>
     <Description>Brat CIS Layers</Description>
     <URL>https://lowtechpbr.restoration.usu.edu/</URL>
@@ -12,7 +12,8 @@
             <Symbology>brat_cis.qml</Symbology>
             <Description>Brat CIS Layer</Description>
             <Hierarchy>
-                <HierarchyItem>Brat CIS</HierarchyItem>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Beaver Dam Building</HierarchyItem>
             </Hierarchy>
             <Fields>
                 <ListField id="streamside_vegetation" version="1.0">
@@ -759,7 +760,8 @@
             <Symbology>brat_cis_reaches.qml</Symbology>
             <Description>Brat CIS Layer</Description>
             <Hierarchy>
-                <HierarchyItem>Brat CIS</HierarchyItem>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Beaver Dam Building</HierarchyItem>
             </Hierarchy>
             <Fields>
                 <ListField id="streamside_vegetation" version="1.0">

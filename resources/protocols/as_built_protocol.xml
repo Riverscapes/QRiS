@@ -1,4 +1,4 @@
-<Protocol machine_code="ASBUILT" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../protocol.xsd">
+<Protocol machine_code="ASBUILT" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
     <Label>As-Built Protocol</Label>
     <Description>As-Built Layers</Description>
     <URL>https://lowtechpbr.restoration.usu.edu/</URL>
