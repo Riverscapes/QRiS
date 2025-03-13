@@ -56,6 +56,20 @@
                 </TextField>
             </Fields>
         </Layer>
+        <Layer id="layer4" version="1.0" geom_type="Point">
+            <Label>Layer 4 (Slider)</Label>
+            <Symbology>Symbology 4</Symbology>
+            <Description>Layer 4 Description</Description>
+            <Fields>
+                <IntegerField id="count_field" version="1.0">
+                    <Label>Count Field</Label>
+                    <Slider min="0" max="100" step="1"/>
+                </IntegerField>
+                <TextField id="type_field" version="1.0">
+                    <Label>Type Field</Label>
+                </TextField>
+            </Fields>
+        </Layer>
     </Layers>
     <Metrics>
         <Metric id="metric1" version="1.0" calculation_machine_code="count">

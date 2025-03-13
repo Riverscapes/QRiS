@@ -204,6 +204,7 @@
                 <xs:sequence>
                     <xs:element name="MinimumValue" type="xs:integer" minOccurs="0" maxOccurs="1"/>
                     <xs:element name="MaximumValue" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="Slider" type="IntegerSliderType" minOccurs="0" maxOccurs="1"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -216,9 +217,22 @@
                     <xs:element name="MinimumValue" type="xs:float" minOccurs="0" maxOccurs="1"/>
                     <xs:element name="MaximumValue" type="xs:float" minOccurs="0" maxOccurs="1"/>
                     <xs:element name="Precision" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="Slider" type="FloatSliderType" minOccurs="0" maxOccurs="1"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="IntegerSliderType">
+        <xs:attribute name="min" type="xs:integer" use="required"/>
+        <xs:attribute name="max" type="xs:integer" use="required"/>
+        <xs:attribute name="step" type="xs:integer" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="FloatSliderType">
+        <xs:attribute name="min" type="xs:float" use="required"/>
+        <xs:attribute name="max" type="xs:float" use="required"/>
+        <xs:attribute name="step" type="xs:float" use="required"/>    
     </xs:complexType>
 
     <!-- Derived Text Field Type -->
