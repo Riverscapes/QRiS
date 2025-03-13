@@ -75,7 +75,7 @@
                 </DCELayer>
             </Parameters>
         </Metric>
-        <Metric id="metric2" version="1.0" calculation_machine_code="sum">
+        <Metric id="metric2" version="1.0" calculation_machine_code="count">
             <Label>Metric 2</Label>
             <DefaultLevel>Metric</DefaultLevel>
             <Description>Metric 2 Description</Description>
