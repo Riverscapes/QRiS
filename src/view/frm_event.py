@@ -164,41 +164,26 @@ class FrmEvent(QtWidgets.QDialog):
             if len(selected_layer_definitions) < 1 and len(event_layers) < 1:
                 QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
                 return
-        
+
         # Insert the layer and parent protocol to the project if they are not already in the project 
         for protocol_definition, layer_definition in selected_layer_definitions: 
             protocol_definition: ProtocolDefinition
             layer_definition: LayerDefinition
             protocol_id = None
-            protocol = None
-            for key, value in self.qris_project.protocols.items():
-                if value.unique_key() == protocol_definition.unique_key():
-                    protocol_id = key
-                    break
-            if protocol_id is None:
-                protocol = insert_protocol(self.qris_project.project_file, protocol_definition)
-                self.qris_project.protocols[protocol.id] = protocol
-                protocol_id = protocol.id
-                # Now iterate through and insert the metrics for the new protocol
-                for metric_definition in protocol_definition.metrics:
-                    metric_definition: MetricDefinition
-                    metadata = {'minimum_value': metric_definition.minimum_value, 'maximum_value': metric_definition.maximum_value, 'precision': metric_definition.precision}
-                    metric_id, metric = insert_metric(
-                        self.qris_project.project_file,
-                        metric_definition.label,
-                        metric_definition.id,
-                        protocol.machine_code,
-                        metric_definition.description,
-                        metric_definition.default_level,
-                        metric_definition.calculation_machine_code,
-                        metric_definition.parameters,
-                        None,
-                        metric_definition.definition_url,
-                        metadata,
-                        metric_definition.version)
-                    self.qris_project.metrics[metric_id] = metric
+            protocol: Protocol = None
 
-            protocol = self.qris_project.protocols[protocol_id] if protocol is None else protocol
+            for existing_id, existing_protocol in self.qris_project.protocols.items():
+                if existing_protocol.unique_key() == protocol_definition.unique_key():
+                    protocol_id = existing_id
+                    break
+            
+            if protocol_id is None:
+                new_protocol, metrics = insert_protocol(self.qris_project.project_file, protocol_definition)
+                self.qris_project.protocols[new_protocol.id] = new_protocol
+                protocol_id = new_protocol.id
+                self.qris_project.metrics.update(metrics)
+
+            protocol = self.qris_project.protocols[protocol_id]
 
             layer_id = None
             layer = None
