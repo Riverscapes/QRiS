@@ -27,7 +27,7 @@
                 </ListField>
                 <ListField id="dam_type" version="1.0">
                     <Label>Dam Type</Label>
-                    <DefaultValue>'active_dam'</DefaultValue>
+                    <DefaultValue>active_dam</DefaultValue>
                     <Values>
                         <Value>active_dam</Value>
                         <Value>inactive_dam</Value>
