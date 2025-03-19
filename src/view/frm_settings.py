@@ -12,6 +12,7 @@ from .frm_export_project import DEFAULT_EXPORT_PATH
 
 DOCK_WIDGET_LOCATION = 'dock_widget_location'
 REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
+SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
 
 default_dock_widget_location = 'left'
 
@@ -47,6 +48,9 @@ class FrmSettings(QDialog):
         default_export_path = settings.value(DEFAULT_EXPORT_PATH, '')
         self.txt_path_export.setText(default_export_path)
 
+        show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, type=bool)
+        self.chkShowExperimentalProtocols.setChecked(show_experimental_protocols)
+
         self.load_metrics()
 
     def accept(self):
@@ -65,6 +69,8 @@ class FrmSettings(QDialog):
             self.settings.setValue(DEFAULT_EXPORT_PATH, self.txt_path_export.text())
         else:
             self.settings.setValue(DEFAULT_EXPORT_PATH, '')
+
+        self.settings.setValue(SHOW_EXPERIMENTAL_PROTOCOLS, self.chkShowExperimentalProtocols.isChecked())
 
         super().accept()
 
@@ -308,6 +314,9 @@ class FrmSettings(QDialog):
         self.grid.addWidget(self.left_radio, 1, 0)
         self.grid.addWidget(self.right_radio, 1, 1)
 
+        self.chkShowExperimentalProtocols = QCheckBox("Show experimental protocols")
+        self.grid.addWidget(self.chkShowExperimentalProtocols, 2, 0, 1, 2)
+
         # # add a label to the layout to explain settings will take effect after restarting qgis
         # self.grid.addWidget(QLabel("Settings will take effect after restarting QGIS"))
 
@@ -349,3 +358,4 @@ class FrmSettings(QDialog):
         self.tabMetrics = QWidget()
         self.tabs.addTab(self.tabMetrics, "Metrics")
         self.tabMetrics.setLayout(self.metrics_layout)
+        self.tabMetrics.setEnabled(False)
