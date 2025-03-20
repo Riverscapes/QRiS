@@ -1,4 +1,3 @@
-
 import json
 import typing
 
@@ -184,6 +183,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     else:
                         self.toggle_widget_visibility(widget, False)
                 else:
+                    widget_value = [widget_value] if not isinstance(widget_value, list) else widget_value
                     if any(value in values_to_check for value in widget_value):
                         self.toggle_widget_visibility(widget, True)
                     else:
@@ -204,6 +204,15 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     widget.reset_checkboxes()
                 elif isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
                     widget.setText(default_value)
+                elif isinstance(widget, QDoubleSpinBox) or isinstance(widget, SliderWidget):
+                    if isinstance(default_value, str):
+                        if default_value == '' or default_value is None:
+                            default_value = 0
+                        elif '.' in default_value:
+                            default_value = float(default_value)
+                        else:
+                            default_value = int(default_value)
+                        widget.setValue(default_value)
                 else:
                     if default_value == '':
                         continue
@@ -238,10 +247,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
     def set_widget_value(self, widget: QWidget, val):
         # Set the widget's value based on the type of the widget
         if isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
-            if val is None:
-                val = ''
+            val = '' if val is None else val
             widget.setText(val)
         elif isinstance(widget, QDoubleSpinBox) or isinstance(widget, SliderWidget):
+            val = 0 if val is None else val
             widget.setValue(val)
         elif isinstance(widget, QComboBox):
             if widget.isEditable():
