@@ -32,10 +32,10 @@ class Metric(DBItem):
             self.base_unit = 'meters'
             if self.unit_type == 'distance':
                 self.unit_type = 'ratio'
-        self.tolerance = self.metadata['tolerance'] if self.metadata and 'tolerance' in self.metadata else None  # no tolerance = no testing for tolerance
-        self.min_value = self.metadata['min_value'] if self.metadata and 'min_value' in self.metadata else None
-        self.max_value = self.metadata['max_value'] if self.metadata and 'max_value' in self.metadata else None
-        self.precision = self.metadata['precision'] if self.metadata and 'precision' in self.metadata else None  # No precision = full float value
+        self.tolerance = self.metadata.get('tolerance', None) if self.metadata else None  # no tolerance = no testing for tolerance
+        self.min_value = self.metadata.get('minimum_value', None) if self.metadata else None
+        self.max_value = self.metadata.get('maximum_value', None) if self.metadata else None
+        self.precision = self.metadata.get('precision', None) if self.metadata else None  # No precision = full float value
 
 
 def load_metrics(curs: sqlite3.Cursor) -> dict:
