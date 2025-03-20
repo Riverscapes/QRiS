@@ -1,0 +1,1291 @@
+<Protocol machine_code="LTPBR_BASE" version="1.0" status="production" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
+    <Label>LTPBR Protocol</Label>
+    <Description>Base LTPBR Layers</Description>
+    <URL>https://lowtechpbr.restoration.usu.edu/</URL>
+    <Citation> Wheaton J.M., Bennett S.N., Bouwes, N., Maestas J.D. and Shahverdian S.M. (Editors). 2019. Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Version 1.0. Utah State University Restoration Consortium. Logan, UT. 286 pp. DOI: 10.13140/RG.2.2.19590.63049/2.</Citation>
+    <Author>Nick Weber</Author>
+    <CreationDate>2024-09-01</CreationDate>
+    <UpdatedDate>2024-09-01</UpdatedDate>
+    <Layers>
+        <Layer id="dam_crests" version="1.0" geom_type="Linestring">
+            <Label>Dam Crests</Label>
+            <Symbology>beaver_dams.qml</Symbology>
+            <Description>Dam Crests Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Beaver Dam Building</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="structure_source_id" version="1.0">
+                    <Label>Structure Source</Label>
+                    <Values>
+                        <Value>Artificial</Value>
+                        <Value>Natural</Value>
+                        <Value>Unknown</Value>
+                    </Values>
+                </ListField>
+                <ListField id="dam_state" version="1.0">
+                    <Label>Dam State</Label>
+                    <Values>
+                        <Value>Blown Out</Value>
+                        <Value>Breached</Value>
+                        <Value>Intact</Value>
+                    </Values>              
+                </ListField>
+                <ListField id="crest_type" version="1.0">
+                    <Label>Crest Type</Label>
+                    <Values>
+                        <Value>Active</Value>
+                        <Value>Inactive</Value>
+                    </Values>
+                </ListField>
+                <ListField id="confidence" version="1.0">
+                    <Label>Confidence</Label>
+                    <Values>
+                        <Value>High</Value>
+                        <Value>Medium</Value>
+                        <Value>Low</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="active_channel" version="1.0" geom_type="Polygon">
+            <Label>Active Channel</Label>
+            <Symbology>active_channels.qml</Symbology>
+            <Description>Active Channel Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Geomorphic Mapping</HierarchyItem>
+                <HierarchyItem>Channel</HierarchyItem>
+            </Hierarchy>
+        </Layer>
+        <Layer id="active_extents" version="1.0" geom_type="Polygon">
+            <Label>Active Extents</Label>
+            <Symbology>active_extents.qml</Symbology>
+            <Description>Active Extents Layer</Description>
+            <MenuItems>
+                <MenuItem>copy_from_valley_bottom</MenuItem>
+            </MenuItems>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Geomorphic Mapping</HierarchyItem>
+                <HierarchyItem>Floodplain</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="type_id" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Active</Value>
+                        <Value>Inactive</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="centerlines" version="1.0" geom_type="Linestring">
+            <Label>Active Channel Lines</Label>
+            <Symbology>centerlines.qml</Symbology>
+            <Description>Centerlines of the Active Channel</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Geomorphic Mapping</HierarchyItem>
+                <HierarchyItem>Channel</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="type_id" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Primary</Value>
+                        <Value>Non-Primary</Value>
+                    </Values>
+                </ListField>
+                <ListField id="description" version="1.0">
+                    <Label>Description</Label>
+                    <DefaultValue>Centerline</DefaultValue>
+                    <Values>
+                        <Value>Centerline</Value>
+                        <Value>Thalweg</Value>
+                    </Values>
+                </ListField>    
+            </Fields>
+        </Layer>
+        <Layer id="inundation_extents" version="1.0" geom_type="Polygon">
+            <Label>Inundation Extents</Label>
+            <Symbology>inundation_extents.qml</Symbology>
+            <Description>Inundation Extents Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Hydraulic Mapping</HierarchyItem>
+            </Hierarchy>    
+            <Fields>
+                <ListField id="type_id" version="1.0">
+                    <Label>Extent Type</Label>
+                    <Values>
+                        <Value>Free Flowing</Value>
+                        <Value>Overflow</Value>
+                        <Value>Ponded</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="channel_junctions" version="1.0" geom_type="Point">
+            <Label>Channel Junctions</Label>
+            <Symbology>channel_junctions.qml</Symbology>
+            <Description>Channel Junctions Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Geomorphic Mapping</HierarchyItem>
+                <HierarchyItem>Channel</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="junction_type" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Channel Head</Value>
+                        <Value>Confluence (Anabranch)</Value>
+                        <Value>Confluence (Tributary)</Value>
+                        <Value>Diffluence</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="geomorphic_unit_extents" version="1.0" geom_type="Polygon">
+            <Label>Geomorphic Units Extents</Label>
+            <Symbology>geomorphic_unit_extents.qml</Symbology>
+            <Description>Geomporhpic Units Extents Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Geomorphic Mapping</HierarchyItem>
+                <HierarchyItem>Channel</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="geomorphic_unit_type" version="1.0"  value_required="true">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Bank Attached Bar</Value>
+                        <Value>Chute</Value>
+                        <Value>Glide/Run</Value>
+                        <Value>Mid Channel Bar</Value>
+                        <Value>Pond</Value>
+                        <Value>Pool</Value>
+                        <Value>Rapid</Value>
+                        <Value>Riffle</Value>
+                    </Values>
+                </ListField>
+                <ListField id="geomorphic_unit_type_2_tier" version="1.0">
+                    <Label>Type 2 Tier</Label>
+                    <Values>
+                        <Value>Bowl</Value>
+                        <Value>Mound</Value>
+                        <Value>Plane</Value>
+                        <Value>Saddle</Value>
+                        <Value>Trough</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="geomorphic_units" version="1.0" geom_type="Point">
+            <Label>Geomorphic Unit Points</Label>
+            <Symbology>geomorphic_units.qml</Symbology>
+            <Description>Geomorphic Unit Points Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Geomorphic Mapping</HierarchyItem>
+                <HierarchyItem>Channel</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="geomorphic_unit_type" version="1.0"  value_required="true">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Bank Attached Bar</Value>
+                        <Value>Chute</Value>
+                        <Value>Glide/Run</Value>
+                        <Value>Mid Channel Bar</Value>
+                        <Value>Pond</Value>
+                        <Value>Pool</Value>
+                        <Value>Rapid</Value>
+                        <Value>Riffle</Value>
+                    </Values>
+                </ListField>
+                <ListField id="geomorphic_unit_type_2_tier" version="1.0">
+                    <Label>Type 2 Tier</Label>
+                    <Values>
+                        <Value>Bowl</Value>
+                        <Value>Mound</Value>
+                        <Value>Plane</Value>
+                        <Value>Saddle</Value>
+                        <Value>Trough</Value>
+                    </Values>
+                </ListField>
+                <FloatField id="length" version="1.0">
+                    <Label>Length</Label>               
+                </FloatField>
+                <FloatField id="width" version="1.0">
+                    <Label>Width</Label>
+                </FloatField>
+                <FloatField id="depth" version="1.0">
+                    <Label>Depth</Label>
+                </FloatField>
+            </Fields>
+        </Layer>
+        <Layer id="cem_phases" version="1.0" geom_type="Polygon">
+            <Label>SEM Cluer &amp; Thorne</Label>
+            <Symbology>cem_phases.qml</Symbology>
+            <Description>SEM Cluer &amp; Thorne Layer</Description>
+            <MenuItems>
+                <MenuItem>copy_from_valley_bottom</MenuItem>
+            </MenuItems>
+            <Hierarchy>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Geomorphic Condition</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="sem_stage" version="1.0">
+                    <Label>SEM Stage</Label>
+                    <Values>
+                        <Value>0 Anastomosing</Value>
+                        <Value>1 Sinuous Single Thread</Value>
+                        <Value>2 Channelized</Value>
+                        <Value>3 Degradation</Value>
+                        <Value>4 Degradation and Widening</Value>
+                        <Value>5 Aggradation and Widening</Value>
+                        <Value>6 Quasi Equilibrium</Value>
+                        <Value>7 Laterally Active</Value>
+                        <Value>8 Anastomosing</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="vegetation_extents" version="1.0" geom_type="Polygon">
+            <Label>Vegetation Extents</Label>
+            <Symbology>vegetation_extents.qml</Symbology>
+            <Description>Vegetation Extents Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Vegetation Mapping</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="vegetation_type" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Riparian</Value>
+                        <Value>Non-Riparian</Value>
+                    </Values>
+                </ListField>
+                <ListField id="vegetation_tier_2_type" version="1.0">
+                    <Label>Type 2 Tier</Label>
+                    <Values allow_custom_values="true">
+                        <Value>Emergent Riparian</Value>
+                        <Value>Woody Riparian</Value>
+                    </Values>
+                </ListField>
+                <ListField id="suitability" version="1.0">
+                    <Label>Brat Suitability</Label>
+                    <Values>
+                        <Value>Preferred</Value>
+                        <Value>Suitable</Value>
+                        <Value>Moderately Suitable</Value>
+                        <Value>Barely Suitable</Value>
+                        <Value>Unsuitable</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="observation_points_dce" version="1.0" geom_type="Point">
+            <Label>Observations</Label>
+            <Symbology>observation_points_dce.qml</Symbology>
+            <Description>Observations Points Layer</Description>
+            <MenuItems>
+                <MenuItem>import_photos</MenuItem>
+            </MenuItems>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Other</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <AttachmentField id="photo_path" version="1.0">
+                    <Label>Photo Path</Label>
+                </AttachmentField>
+            </Fields>
+        </Layer>
+        <Layer id="observation_lines_dce" version="1.0" geom_type="Linestring">
+            <Label>Observations</Label>
+            <Symbology>observation_lines_dce.qml</Symbology>
+            <Description>Observations Lines Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Other</HierarchyItem>
+            </Hierarchy>
+        </Layer>
+        <Layer id="observation_polygons_dce" version="1.0" geom_type="Polygon">
+            <Label>Observations</Label>
+            <Symbology>observation_polygons_dce.qml</Symbology>
+            <Description>Observations Polygons Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Other</HierarchyItem>
+            </Hierarchy>
+        </Layer>
+        <Layer id="structural_elements_points" version="1.0" geom_type="Point">
+            <Label>Structural Elements</Label>
+            <Symbology>structural_elements_points.qml</Symbology>
+            <Description>Structural Elements Points Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Structural Elements</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="structural_element_type" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Dam</Value>
+                        <Value>Dam Complex</Value>
+                        <Value>Jam</Value>
+                        <Value>Jam Complex</Value>
+                        <Value>Other</Value>
+                        <Value>Root Mass</Value>
+                    </Values>
+                </ListField>
+                <IntegerField id="structure_count" version="1.0">
+                    <Label>Structure Count</Label>
+                    <DefaultValue>1</DefaultValue>
+                    <Visibility field_id_ref="structural_element_type">
+                        <Values>
+                            <Value>Dam Complex</Value>
+                            <Value>Jam Complex</Value>
+                        </Values>
+                    </Visibility>
+                </IntegerField>
+                <FloatField id="length" version="1.0">
+                    <Label>Length</Label>
+                    <Visibility field_id_ref="structural_element_type">
+                        <Values>
+                            <Value>Dam</Value>
+                            <Value>Jam</Value>
+                            <Value>Other</Value>
+                            <Value>Root Mass</Value>
+                        </Values>
+                    </Visibility>
+                </FloatField>
+                <FloatField id="width" version="1.0">
+                    <Label>Width</Label>
+                    <Visibility field_id_ref="structural_element_type">
+                        <Values>
+                            <Value>Dam</Value>
+                            <Value>Jam</Value>
+                            <Value>Other</Value>
+                            <Value>Root Mass</Value>
+                        </Values>
+                    </Visibility>
+                </FloatField>
+                <FloatField id="height" version="1.0">
+                    <Label>Height</Label>
+                    <Visibility field_id_ref="structural_element_type">
+                        <Values>
+                            <Value>Dam</Value>
+                            <Value>Jam</Value>
+                            <Value>Root Mass</Value>
+                            <Value>Other</Value>
+                        </Values>
+                    </Visibility>
+                </FloatField>
+                <IntegerField id="large_wood_count" version="1.0">
+                    <Label>Large Wood Count</Label>
+                </IntegerField>
+            </Fields>
+        </Layer>
+        <Layer id="structural_elements_lines" version="1.0" geom_type="Linestring">
+            <Label>Structural Elements</Label>
+            <Symbology>structural_elements_lines.qml</Symbology>
+            <Description>Structural Elements Lines Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Structural Elements</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="structural_element_type" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Dam</Value>
+                    </Values>
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="structural_elements_areas" version="1.0" geom_type="Polygon">
+            <Label>Structural Elements</Label>
+            <Symbology>structural_elements_areas.qml</Symbology>
+            <Description>Structural Elements Areas Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Observations</HierarchyItem>
+                <HierarchyItem>Structural Elements</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="structural_element_type" version="1.0">
+                    <Label>Type</Label>
+                    <Values>
+                        <Value>Jam</Value>
+                    </Values>
+                </ListField>
+                <IntegerField id="large_wood_count" version="1.0">
+                    <Label>Large Wood Count</Label>
+                </IntegerField>
+            </Fields>            
+        </Layer>
+        <Layer id="recovery_potential" version="1.0" geom_type="Polygon">
+            <Label>Recovery Potential</Label>
+            <Symbology>recovery_potential.qml</Symbology>
+            <Description>Recovery Potential Layer</Description>
+            <MenuItems>
+                <MenuItem>copy_from_valley_bottom</MenuItem>
+            </MenuItems>
+            <Hierarchy>
+                <HierarchyItem>Assessments</HierarchyItem>
+            </Hierarchy>
+        </Layer>
+        <Layer id="risk_potential_points" version="1.0" geom_type="Point">
+            <Label>Risk Potential</Label>
+            <Symbology>risk_potential_points.qml</Symbology>
+            <Description>Risk Potential Point Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Risk Potential</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="risk_type" version="1.0">
+                    <Label>Risk</Label>
+                    <Values>
+                        <Value>High</Value>
+                        <Value>Medium</Value>
+                        <Value>Low</Value>
+                    </Values>
+                </ListField>
+                <ListField id="risk_type_source" version="1.0">
+                    <Label>Type</Label>
+                    <Values allow_custom_values="true">
+                        <Value>Bridge</Value>
+                        <Value>Culvert</Value>
+                        <Value>Diversion</Value>
+                    </Values>    
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="risk_potential_lines" version="1.0" geom_type="Linestring">
+            <Label>Risk Potential</Label>
+            <Symbology>risk_potential_lines.qml</Symbology>
+            <Description>Risk Potential Line Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Risk Potential</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="risk_type" version="1.0">
+                    <Label>Risk</Label>
+                    <Values>
+                        <Value>High</Value>
+                        <Value>Medium</Value>
+                        <Value>Low</Value>
+                    </Values>
+                </ListField>
+                <ListField id="risk_type_source" version="1.0">
+                    <Label>Type</Label>
+                    <Values allow_custom_values="true">
+                        <Value>Pathway/Trail</Value>
+                        <Value>Railroad</Value>
+                        <Value>Road</Value>
+                    </Values>    
+                </ListField>
+            </Fields>
+        </Layer>
+        <Layer id="risk_potential_polygons" version="1.0" geom_type="Polygon">
+            <Label>Risk Potential</Label>
+            <Symbology>risk_potential_polygons.qml</Symbology>
+            <Description>Risk Potential Polygon Layer</Description>
+            <Hierarchy>
+                <HierarchyItem>Assessments</HierarchyItem>
+                <HierarchyItem>Risk Potential</HierarchyItem>
+            </Hierarchy>
+            <Fields>
+                <ListField id="risk_type" version="1.0">
+                    <Label>Risk</Label>
+                    <Values>
+                        <Value>High</Value>
+                        <Value>Medium</Value>
+                        <Value>Low</Value>
+                    </Values>
+                </ListField>
+                <ListField id="risk_type_source" version="1.0">
+                    <Label>Type</Label>
+                    <Values allow_custom_values="true">
+                        <Value>Crop/Pasture</Value>
+                        <Value>Infrastructure</Value>
+                    </Values>    
+                </ListField>
+            </Fields>
+        </Layer>
+    </Layers>
+    <Metrics>
+        <Metric id="dam_density" version="1.0" calculation_machine_code="count">
+            <Label>Dam Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of beaver dams per length of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="structural_elements_points">
+                    <Usage>Numerator</Usage>
+                    <CountField field_id_ref="structure_count"/>
+                    <AttributeFilter field_id_ref="structural_element_type"> 
+                        <Value>Dam</Value>
+                        <Value>Dam Complex</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="active_channel_count" version="1.0" calculation_machine_code="count">
+            <Label>Number of Active Channels</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The total number of active channels (primary and non-primary) within the riverscape sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="centerlines"/>
+            </Parameters>
+        </Metric>
+        <Metric id="channel_head_count" version="1.0" calculation_machine_code="count">
+            <Label>Floodplain Channel Head Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of channel heads in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="channel_junctions">
+                    <AttributeFilter field_id_ref="junction_type">
+                        <Value>Channel Head</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="channel_head_density" version="1.0" calculation_machine_code="count">
+            <Label>Floodplain Channel Head Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of channel heads per km of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="channel_junctions">
+                    <AttributeFilter field_id_ref="junction_type">
+                        <Value>Channel Head</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="channel_sinuosity" version="1.0" calculation_machine_code="sinuosity">
+            <Label>Channel Sinuosity</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The sinuosity of the primary channel in the riverscape sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="centerlines">
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Primary</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="confluence_count" version="1.0" calculation_machine_code="count">
+            <Label>Confluence Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of channel confluences in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="channel_junctions">
+                    <AttributeFilter field_id_ref="junction_type">
+                        <Value>Confluence (Anabranch)</Value>
+                        <Value>Confluence (Tributary)</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="confluence_density" version="1.0" calculation_machine_code="count">
+            <Label>Confluence Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of channel confluences per km of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="channel_junctions">
+                    <AttributeFilter field_id_ref="junction_type">
+                        <Value>Confluence (Anabranch)</Value>
+                        <Value>Confluence (Tributary)</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="dam_count" version="1.0" calculation_machine_code="count">
+            <Label>Dam Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of dams in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="structural_elements_points">
+                    <CountField field_id_ref="structure_count"/>
+                    <AttributeFilter field_id_ref="structure_type">
+                        <Value>Dam</Value>
+                        <Value>Dam Complex</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="diffluence_count" version="1.0" calculation_machine_code="count">
+            <Label>Diffluence Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of channel diffluences in the containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                    <DCELayer layer_id_ref="channel_junctions">
+                        <AttributeFilter field_id_ref="junction_type">
+                            <Value>Diffluence</Value>
+                        </AttributeFilter>
+                    </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="diffluence_density" version="1.0" calculation_machine_code="count">
+            <Label>Diffluence Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of channel diffluences per length of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="channel_junctions">
+                    <AttributeFilter field_id_ref="junction_type">
+                        <Value>Diffluence</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="flow_length" version="1.0" calculation_machine_code="length">
+            <Label>Channel Length</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The sum of all channel lengths in a sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="centerlines"/>
+            </Parameters>
+        </Metric>
+        <Metric id="free_flowing_area" version="1.0" calculation_machine_code="area">
+            <Label>Free Flowing Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of free flowing inundation in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Free Flowing</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="inundated_area" version="1.0" calculation_machine_code="area">
+            <Label>Total Inundated Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of total inundation in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents"/>
+            </Parameters>
+        </Metric>
+        <Metric id="proportion_active" version="1.0" calculation_machine_code="area_proportion">
+            <Label>Proportion of Active Valley Bottom</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The proportion of the riverscape that is active</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="active_extents">
+                    <Usage>Numerator</Usage>
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Active</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="jam_area" version="1.0" calculation_machine_code="area">
+            <Label>Jam Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of jams in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="structural_elements_areas">
+                    <AttributeFilter field_id_ref="structural_element_type">
+                        <Value>Jam</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="jam_count" version="1.0" calculation_machine_code="count">
+            <Label>Jam Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of jams in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="structural_elements_points">
+                    <CountField field_id_ref="structure_count"/>
+                    <AttributeFilter field_id_ref="structural_element_type">
+                        <Value>Jam</Value>
+                        <Value>Jam Complex</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="structural_elements_areas">
+                    <AttributeFilter field_id_ref="structural_element_type">
+                        <Value>Jam</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="jam_density" version="1.0" calculation_machine_code="count">
+            <Label>Jam Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of jams per length of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="structural_elements_points">
+                    <CountField field_id_ref="structure_count"/>
+                    <AttributeFilter field_id_ref="Type">
+                        <Value>Jam</Value>
+                        <Value>Jam Complex</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="structural_elements_areas">
+                    <AttributeFilter field_id_ref="Type">
+                        <Value>Jam</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="mid_channel_bar_area" version="1.0" calculation_machine_code="area">
+            <Label>Mid Channel Bar Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of of mid channel bars in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Mid Channel Bar</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="mid_channel_bar_count" version="1.0" calculation_machine_code="count">
+            <Label>Mid Channel Bar Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of mid channel bars in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="geomorphic_units">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Mid Channel Bar</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Mid Channel Bar</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="mid_channel_bar_density" version="1.0" calculation_machine_code="count">
+            <Label>Mid Channel Bar Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of mid channel bars per km of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="geomorphic_units">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Mid Channel Bar</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Mid Channel Bar</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="overflow_area" version="1.0" calculation_machine_code="area">
+            <Label>Overflow Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of overflowing inundation in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Overflow</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="percent_free_flowing" version="1.0" calculation_machine_code="area_proportion">
+            <Label>Percent Free Flowing</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The percent of the inundation extents that is free flowing</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>                
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Numerator</Usage>
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Free Flowing</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Denominator</Usage>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="percent_inundated" version="1.0" calculation_machine_code="area_proportion">
+            <Label>Percent Inundated</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The percent of the riverscape that is inundated at baseflow</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Numerator</Usage>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="percent_overflow" version="1.0" calculation_machine_code="area_proportion">
+            <Label>Percent Overflow</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The percent of the inundation extents that is overflow</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Numerator</Usage>
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Overflow</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Denominator</Usage>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="percent_ponded" version="1.0" calculation_machine_code="area_proportion">
+            <Label>Percent Ponded</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The percent of the inundation extents that is backwater/ponded</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Numerator</Usage>
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Ponded</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <Usage>Denominator</Usage>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="percent_riparian_vegetation" version="1.0" calculation_machine_code="area_proportion">
+            <Label>Percent Riparian Vegetation</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The percent of the riverscape that is riparian vegetation</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>                
+                <DCELayer layer_id_ref="vegetation_extents">
+                    <Usage>Numerator</Usage>
+                    <AttributeFilter field_id_ref="vegetation_type">
+                        <Value>Riparian</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="pool_area" version="1.0" calculation_machine_code="area">
+            <Label>Pool Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of pools in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Pool</Value>
+                        <Value>Pond</Value>
+                        <Value>Chute</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="pool_count" version="1.0" calculation_machine_code="count">
+            <Label>Pool Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of pools in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="geomorphic_units">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Pool</Value>
+                        <Value>Pond</Value>
+                        <Value>Chute</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Pool</Value>
+                        <Value>Pond</Value>
+                        <Value>Chute</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="pool_density" version="1.0" calculation_machine_code="count">
+            <Label>Pool Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of pools per length of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="geomorphic_units">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Pool</Value>
+                        <Value>Pond</Value>
+                        <Value>Chute</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Pool</Value>
+                        <Value>Pond</Value>
+                        <Value>Chute</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="ponded_area" version="1.0" calculation_machine_code="area">
+            <Label>Ponded Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of ponded inundation in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="inundation_extents">
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Ponded</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="primary_channel_length" version="1.0" calculation_machine_code="length">
+            <Label>Primary Channel Length</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The length of the primary channel within the riverscape sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <MaximumValue>1000000</MaximumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="centerlines">
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Primary</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="relative_flow_length" version="1.0" calculation_machine_code="length">
+            <Label>Relative Flow Length</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The sum of all channel lengths per length of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>          
+                <DCELayer layer_id_ref="centerlines"/>
+            </Parameters>
+        </Metric>
+        <Metric id="riffle_area" version="1.0" calculation_machine_code="area">
+            <Label>Riffle Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of riffles in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>                
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Riffle</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="riffle_count" version="1.0" calculation_machine_code="count">
+            <Label>Riffle Count</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of riffles in containing sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>1</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="geomorphic_units">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Riffle</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Riffle</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="riffle_density" version="1.0" calculation_machine_code="count">
+            <Label>Riffle Density</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The number of riffles per length of riverscape</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="normalization"/>
+                <DCELayer layer_id_ref="geomorphic_units">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Riffle</Value>
+                    </AttributeFilter>
+                </DCELayer>
+                <DCELayer layer_id_ref="geomorphic_unit_extents">
+                    <AttributeFilter field_id_ref="geomorphic_unit_type">
+                        <Value>Riffle</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="riverscape_area" version="1.0" calculation_machine_code="area">
+            <Label>Riverscape Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of the riverscape valley bottom within the sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="valley_bottom" usage="metric_layer"/>
+            </Parameters>
+        </Metric>
+        <Metric id="riverscape_length" version="1.0" calculation_machine_code="length">
+            <Label>Riverscape Length</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The length of the riverscape centerline within the sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>3</Precision>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="metric_layer"/>
+            </Parameters>
+        </Metric>
+        <Metric id="secondary_channel_length" version="1.0" calculation_machine_code="length">
+            <Label>Secondary Channel Length</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Length of the secondary channels within the riverscape sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="centerlines">
+                    <AttributeFilter field_id_ref="type_id">
+                        <Value>Secondary</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_0_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 0 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 0 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>0 Anastomosing</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_1_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 1 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 1 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>1 Sinuous Single Thread</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_2_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 2 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 2 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>2 Channelized</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_3_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 3 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 3 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>3 Degradation</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_4_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 4 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 4 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>4 Degradation and Widening</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_5_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 5 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 5 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>5 Aggradation and Widening</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_6_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 6 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 6 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>6 Quasi Equilibrium</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_7_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 7 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 7 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>7 Laterally Active</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+        <Metric id="stage_8_area" version="1.0" calculation_machine_code="area">
+            <Label>SEM Stage 8 Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>The area of Stage 8 riverscape in each sample frame</Description>
+            <DefinitionURL/>
+            <MinimumValue>0</MinimumValue>
+            <Precision>2</Precision>
+            <Parameters>
+                <DCELayer layer_id_ref="cem_phases">
+                    <AttributeFilter field_id_ref="sem_stage">
+                        <Value>8 Anastomosing</Value>
+                    </AttributeFilter>
+                </DCELayer>
+            </Parameters>
+        </Metric>
+    </Metrics>
+</Protocol>

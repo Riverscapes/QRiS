@@ -1,5 +1,27 @@
 # QRiS Plugin
 
+## [1.1.0] 2025 MAR 20
+
+### Added
+- Protocol Library for adding DCE layers and metrics to a project
+- Add Logical Attribute Fields to Metadata Widget #285
+- Slider Widget for DCE Layer Attributes #571
+- Allow mulitple values for list fields (as checkbox) and support for field visibility #572
+- Re-added Brat CIS Protocol #569 
+- Beaver Census Protocol #551
+
+### Fixed
+- Unable to import existing valley bottom shapefile #568
+- Error When Trying to Import Temporary Layers as a Valley Bottom #580
+- Misspelling of 'Geomorphic Unit Extents' under DCE #577
+- Fixed valley bottom id for analyses on migration
+
+### Changed
+- Migrations for protocols, layers, metrics to support protocol library
+- Making Input Values and Channel Type match for 'Active Channel Lines' when Importing into QRiS #578
+- Issues with manual metric entry #557
+
+
 ## [1.0.10] 2025 MAR 12
 
 ### Fixed

@@ -42,9 +42,9 @@ from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
 from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, AOI_MACHINE_CODE, SampleFrame
 from ..model.protocol import Protocol
-from ..model.method import Method
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
+from ..model.layer import check_and_remove_unused_layers
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
@@ -509,7 +509,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
                     if model_data.menu_items is not None:
                         if 'copy_from_valley_bottom' in model_data.menu_items:
-                            self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'polygon', lambda: self.copy_valley_bottom(model_data))
+                            self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
                         if 'import_brat_results' in model_data.menu_items:
                             self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                         if 'export_brat' in model_data.menu_items:
@@ -783,7 +783,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         result = self.frm_event.exec_()
         if result is not None and result != 0:
-            self.add_event_to_project_tree(parent_node, self.frm_event.the_event, self.frm_event.chkAddToMap.isChecked())
+            self.add_event_to_project_tree(parent_node, self.frm_event.dce_event, self.frm_event.chkAddToMap.isChecked())
 
     def add_planning_container(self, parent_node):
         """Initiates adding a new planning container"""
@@ -896,7 +896,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # TODO delete file if already exists, or handle with vector file writer options...
 
         if out_csv != "":  # TODO better file name validation here
-            cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.fc_name}')
+            cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.layer_id}')
             self.map_manager.add_brat_cis(cis_layer)  # This sets up the required aliases, and lookup values
             cis_layer.setSubsetString('event_id = ' + str(event_layer.event_id))  # filter to the capture event
             options = QgsVectorFileWriter.SaveVectorOptions()
@@ -957,7 +957,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_layer = import_source_path
 
         if mode == DB_MODE_COPY:
-            layer_name = db_item.layer.fc_name
+            layer_name = db_item.layer.layer_id
             event_type = self.project.events[db_item.event_id].event_type.id
             event_name = "Data Capture Event" if event_type == DATA_CAPTURE_EVENT_TYPE_ID else "Design"
             # filter events to only those with an event layer of the same type as the layer to be copied
@@ -965,7 +965,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # remove the current event
             dce_events = [event for event in dce_events if event.id != db_item.event_id]
             # filter events if layer name is within the event layers
-            dce_events = [event for event in dce_events if layer_name in [layer.layer.fc_name for layer in event.event_layers]]
+            dce_events = [event for event in dce_events if layer_name in [layer.layer.layer_id for layer in event.event_layers]]
             if len(dce_events) == 0:
                 # warn user with message box and reject the dialog
                 filter_message = f" with layer name '{layer_name}'" if layer_name is not None else ""
@@ -1562,7 +1562,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             elif db_item.event_type.id == AS_BUILT_EVENT_TYPE_ID:
                 frm = FrmAsBuilt(self, self.project, db_item.event_type.id, event=db_item)
             else:
-                frm = FrmEvent(self, self.project, event=db_item, event_type_id=db_item.event_type.id)
+                frm = FrmEvent(self, self.project, dce_event=db_item, event_type_id=db_item.event_type.id)
         elif isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                 frm = FrmAOI(self, self.project, None, db_item)
@@ -1845,6 +1845,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Delete the item from the database
         db_item.delete(self.project.project_file)
+        check_and_remove_unused_layers(self.project)
 
     def browse_item(self, db_item: DBItem, folder_path):
 

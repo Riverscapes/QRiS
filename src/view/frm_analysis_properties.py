@@ -19,7 +19,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
     def __init__(self, parent, project: Project, analysis: Analysis = None):
 
-        self.project = project
+        self.qris_project = project
         self.analysis = analysis
 
         super(FrmAnalysisProperties, self).__init__(parent)
@@ -46,42 +46,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.dems_model = DBItemModel(self.dems)
         self.cboDEM.setModel(self.dems_model)
 
-        metrics = list(project.metrics.values())
-        self.metricsTable.setRowCount(len(metrics))
-
-        for row in range(len(metrics)):
-
-            level_id = metrics[row].default_level_id
-            if analysis is not None:
-                if metrics[row].id in analysis.analysis_metrics:
-                    level_id = analysis.analysis_metrics[metrics[row].id].level_id
-
-            label_item = QtWidgets.QTableWidgetItem()
-            label_item.setText(metrics[row].name)
-            self.metricsTable.setItem(row, 0, label_item)
-            label_item.setData(QtCore.Qt.UserRole, metrics[row])
-            label_item.setFlags(QtCore.Qt.ItemIsEnabled)
-
-            cboStatus = QtWidgets.QComboBox()
-            cboStatus.addItem('None', 0)
-            cboStatus.addItem('Metric', 1)
-            cboStatus.addItem('Indicator', 2)
-            cboStatus.setCurrentIndex(level_id)
-            self.metricsTable.setCellWidget(row, 1, cboStatus)
-
-            cmdHelp = QtWidgets.QPushButton()
-            cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
-            cmdHelp.setToolTip('Metric Definition')
-            name = metrics[row].name
-            cmdHelp.clicked.connect(self.help(name))
-            self.metricsTable.setCellWidget(row, 2, cmdHelp)
-
-        # https://wiki.qt.io/How_to_Use_QTableWidget
-        # m_pTableWidget -> setEditTriggers(QAbstractItemView: : NoEditTriggers);
-        # m_pTableWidget -> setSelectionMode(QAbstractItemView: : SingleSelection);
-        # m_pTableWidget -> setShowGrid(false);
-        # m_pTableWidget -> setStyleSheet("QTableView {selection-background-color: red;}");
-        # m_pTableWidget -> setGeometry(QApplication: : desktop() -> screenGeometry());
+        self.load_metrics_table()
 
         if analysis is not None:
             self.setWindowTitle('Edit Analysis Properties')
@@ -154,6 +119,41 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 self.cboValleyBottom.setEnabled(False)
             else:
                 self.cboValleyBottom.setEnabled(True)
+
+    def load_metrics_table(self):
+    
+        metrics = list(self.qris_project.metrics.values())
+        # we need to filter the metrics by only those that are in a layer
+
+        self.metricsTable.setRowCount(len(metrics))
+
+        for row in range(len(metrics)):
+
+            level_id = metrics[row].default_level_id
+            if self.analysis is not None:
+                if metrics[row].id in self.analysis.analysis_metrics:
+                    level_id = self.analysis.analysis_metrics[metrics[row].id].level_id
+
+            label_item = QtWidgets.QTableWidgetItem()
+            label_item.setText(metrics[row].name)
+            self.metricsTable.setItem(row, 0, label_item)
+            label_item.setData(QtCore.Qt.UserRole, metrics[row])
+            label_item.setFlags(QtCore.Qt.ItemIsEnabled)
+
+            cboStatus = QtWidgets.QComboBox()
+            cboStatus.addItem('None', 0)
+            cboStatus.addItem('Metric', 1)
+            cboStatus.addItem('Indicator', 2)
+            cboStatus.setCurrentIndex(level_id)
+            self.metricsTable.setCellWidget(row, 1, cboStatus)
+
+            cmdHelp = QtWidgets.QPushButton()
+            cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
+            cmdHelp.setToolTip('Metric Definition')
+            name = metrics[row].name
+            cmdHelp.clicked.connect(self.help(name))
+            self.metricsTable.setCellWidget(row, 2, cmdHelp)
+
 
     def setupUi(self):
 
@@ -271,7 +271,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             metadata['valley_bottom'] = valley_bottom.id
 
         # determine if there are any features in the mask
-        fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
+        fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
         temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
         if temp_layer.featureCount() < 1:
             QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The selected sample frame does not contain any features. Please select a different sample frame.')
@@ -294,7 +294,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         if self.analysis is not None:
             try:
-                self.analysis.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics, metadata)
+                self.analysis.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics, metadata)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -304,8 +304,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
         else:
             try:
-                self.analysis = insert_analysis(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics, metadata)
-                self.project.analyses[self.analysis.id] = self.analysis
+                self.analysis = insert_analysis(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics, metadata)
+                self.qris_project.analyses[self.analysis.id] = self.analysis
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))

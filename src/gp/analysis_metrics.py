@@ -4,6 +4,7 @@ import os
 import math
 import json
 import sqlite3
+from typing import Generator
 
 import osgeo
 from osgeo import ogr, gdal, osr
@@ -124,6 +125,60 @@ def get_dce_layer_source(project_file: str, machine_code: str) -> tuple[str, int
     return layer_id, layer_source
 
 
+def get_metric_layer_features(
+    project_file: str,
+    metric_layer: dict,
+    event_id: int,
+    sample_frame_geom: ogr.Geometry,
+    analysis_params: dict
+) -> Generator[ogr.Feature, None, None]:
+    """Get the features of the metric layer that intersect the sample frame geometry.
+
+    Args:
+        project_file (str): Source QRIS GPKG path.
+        metric_layer (dict): Metric layer configuration.
+        event_id (int): Event ID.
+        sample_frame_geom (ogr.Geometry): Sample frame geometry.
+        analysis_params (dict): Analysis parameters.
+
+    Yields:
+        ogr.Feature: Features of the metric layer.
+    """
+    if metric_layer.get('layer_ref', None) is not None:
+        if not metric_layer['usage'] == 'metric_layer':
+            return None
+        db_item = analysis_params[metric_layer['layer_ref']]
+        ds: ogr.DataSource = ogr.Open(project_file)
+        layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
+        layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
+    else:
+        layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
+        ds: ogr.DataSource = ogr.Open(project_file)
+        layer: ogr.Layer = ds.GetLayerByName(layer_name)
+        layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
+        layer.SetSpatialFilter(sample_frame_geom)
+    
+    attribute_filter = metric_layer.get('attribute_filter', None)
+    for feature in layer:
+        if attribute_filter is not None:
+            metadata_value = feature.GetField('metadata')
+            if metadata_value is None:
+                continue
+            metadata: dict = json.loads(metadata_value)
+            attributes: dict = metadata.get('attributes', None)
+            if attributes is None:
+                continue
+            if attribute_filter['field_id_ref'] in attributes:
+                if attributes[attribute_filter['field_id_ref']] not in attribute_filter['values']:
+                    continue
+
+        yield feature
+        feature = None
+    
+    layer = None
+    ds = None
+
+
 def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict) -> int:
     """Count the number of features in the specified layers that intersect the mask feature.
     
@@ -133,56 +188,46 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
 
     total_feature_count = 0
-    for metric_layer in metric_params['layers']:
-        layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
-        ds: ogr.DataSource = ogr.Open(project_file)
-        layer: ogr.Layer = ds.GetLayerByName(layer_name)
-        layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-        layer.SetSpatialFilter(sample_frame_geom)
-        attribute_filter = metric_layer.get('attribute_filter', None)
-        for feature in layer:
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    for metric_layer in metric_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
             feature_count = 0
-            if attribute_filter is not None:
-                metadata_value = feature.GetField('metadata')
-                if metadata_value is None:
-                    continue
+            # Handle the optional count_field
+            metadata_value = feature.GetField('metadata', None)
+            if metadata_value is not None:
                 metadata: dict = json.loads(metadata_value)
-                attributes = metadata.get('attributes', None)
-                if attributes is None:
-                    continue
-                if attribute_filter['field_name'] in attributes:
-                    if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
-                        continue
-            count_field = metric_layer.get('count_field', None)
-            if count_field is not None:
-                feature_count += attributes.get(count_field, 1)
+                attributes: dict = metadata.get('attributes', None)
+                if attributes is not None:
+                    feature_count += attributes.get(metric_layer.get('count_field', None), 1)
+            
+            geom: ogr.Geometry = feature.GetGeometryRef()
+            if geom is None:
+                continue
+            if geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbPolygon, ogr.wkbMultiPolygon, ogr.wkbMultiLineString]:
+                clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                epsg = get_utm_zone_epsg(geom.Centroid().GetX())
+                utm_srs = osr.SpatialReference()
+                utm_srs.ImportFromEPSG(epsg)
+                clipped_geom.TransformTo(utm_srs)
+                geom.TransformTo(utm_srs)
+                if geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+                    proportion = clipped_geom.Length() / geom.Length()
+                else:
+                    proportion = clipped_geom.Area() / geom.Area()
+                feature_count *= proportion
+                clipped_geom = None
             else:
                 feature_count += 1
-            if layer_name in ['dce_lines', 'dce_polygons']:
-                geom: ogr.Geometry = feature.GetGeometryRef().Clone()
-                if geom.Intersects(sample_frame_geom):
-                    clipped_geom = geom.Intersection(sample_frame_geom)
-                    epsg = get_utm_zone_epsg(geom.Centroid().GetX())
-                    utm_srs = osr.SpatialReference()
-                    utm_srs.ImportFromEPSG(epsg)
-                    clipped_geom.TransformTo(utm_srs)
-                    geom.TransformTo(utm_srs)
-                    if layer_name == 'dce_lines':
-                        proportion = clipped_geom.Length() / geom.Length()
-                    else:
-                        proportion = clipped_geom.Area() / geom.Area()
-                    feature_count *= proportion
-            total_feature_count += round(feature_count)    # round to nearest integer
-            geom = None
-            clipped_geom = None
-            feature = None
+            total_feature_count += round(feature_count)
 
-        layer = None
-        ds = None
-
-    if 'normalization' in metric_params:
-        normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[metric_params['normalization']])
-        total_feature_count /= normalization
+    for metric_layer in metric_layers:
+        if metric_layer.get('usage', None) == 'normalization':
+            layer_ref = metric_layer.get('layer_ref', None)
+            if layer_ref is not None:
+                normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[layer_ref])
+                total_feature_count /= normalization
 
     return total_feature_count
 
@@ -194,37 +239,15 @@ def length(project_file: str, sample_frame_feature_id: int, event_id: int, metri
     """
 
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
-
     total_length = 0
-    for metric_layer in metric_params['layers']:
-        
-        if 'layer_source' in metric_layer and metric_layer['layer_source'] == 'inputs':
-            db_item = analysis_params[metric_layer['layer_name']]
-            ds: ogr.DataSource = ogr.Open(project_file)
-            layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
-            layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
-        else:
-            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
-            ds: ogr.DataSource = ogr.Open(project_file)
-            layer: ogr.Layer = ds.GetLayerByName(layer_name)
-            layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-            layer.SetSpatialFilter(sample_frame_geom)
-        attribute_filter = metric_layer.get('attribute_filter', None)
-        for feature in layer:
-            if attribute_filter is not None:
-                metadata_value = feature.GetField('metadata')
-                if metadata_value is None:
-                    continue
-                metadata: dict = json.loads(metadata_value)
-                attributes = metadata.get('attributes', None)
-                if attributes is None:
-                    continue
-                if attribute_filter['field_name'] in attributes:
-                    if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
-                        continue
-            geom = feature.GetGeometryRef().Clone()
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    for metric_layer in metric_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
+            geom: ogr.Geometry = feature.GetGeometryRef().Clone()
             if geom.Intersects(sample_frame_geom):
-                clipped_geom = geom.Intersection(sample_frame_geom)
+                clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
                 epsg = get_utm_zone_epsg(geom.Centroid().GetX())
                 utm_srs = osr.SpatialReference()
                 utm_srs.ImportFromEPSG(epsg)
@@ -232,14 +255,13 @@ def length(project_file: str, sample_frame_feature_id: int, event_id: int, metri
                 total_length += clipped_geom.Length()
             geom = None
             clipped_geom = None
-            feature = None
 
-        layer = None
-        ds = None
-
-    if 'normalization' in metric_params:
-        normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[metric_params['normalization']])
-        total_length /= normalization
+    for metric_layer in metric_layers:
+        if metric_layer.get('usage', None) == 'normalization':
+            layer_ref = metric_layer.get('layer_ref', None)
+            if layer_ref is not None:
+                normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[layer_ref])
+                total_length /= normalization
 
     return total_length
 
@@ -253,34 +275,14 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
 
     total_area = 0
-    for metric_layer in metric_params['layers']:
-        if 'layer_source' in metric_layer and metric_layer['layer_source'] == 'inputs':
-            db_item = analysis_params[metric_layer['layer_name']]
-            ds: ogr.DataSource = ogr.Open(project_file)
-            layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
-            layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
-        else:
-            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
-            ds: ogr.DataSource = ogr.Open(project_file)
-            layer: ogr.Layer = ds.GetLayerByName(layer_name)
-            layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-            layer.SetSpatialFilter(sample_frame_geom)
-        attribute_filter = metric_layer.get('attribute_filter', None)
-        for feature in layer:
-            if attribute_filter is not None:
-                metadata_value = feature.GetField('metadata')
-                if metadata_value is None:
-                    continue
-                metadata: dict = json.loads(metadata_value)
-                attributes = metadata.get('attributes', None)
-                if attributes is None:
-                    continue
-                if attribute_filter['field_name'] in attributes:
-                    if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
-                        continue
-            geom = feature.GetGeometryRef().Clone()
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    for metric_layer in metric_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
+            geom: ogr.Geometry = feature.GetGeometryRef().Clone()
             if geom.Intersects(sample_frame_geom):
-                clipped_geom = geom.Intersection(sample_frame_geom)
+                clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
                 epsg = get_utm_zone_epsg(geom.Centroid().GetX())
                 utm_srs = osr.SpatialReference()
                 utm_srs.ImportFromEPSG(epsg)
@@ -288,14 +290,13 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
                 total_area += clipped_geom.GetArea()
             geom = None
             clipped_geom = None
-            feature = None
 
-        layer = None
-        ds = None
-
-    if 'normalization' in metric_params:
-        normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[metric_params['normalization']])
-        total_area /= normalization
+    for metric_layer in metric_layers:
+        if metric_layer.get('usage', None) == 'normalization':
+            layer_ref = metric_layer.get('layer_ref', None)
+            if layer_ref is not None:
+                normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[layer_ref])
+                total_area /= normalization
 
     return total_area
 
@@ -309,9 +310,9 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
     # Note that centerlines are not associated with an event_id, so the event_id is not used in this calculation.
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
 
-    metric_layer = metric_params['layers'][0]
+    metric_layer = metric_params['dce_layers'][0]
     ds: ogr.DataSource = ogr.Open(project_file)
-    layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
+    layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
     ds: ogr.DataSource = ogr.Open(project_file)
     layer: ogr.Layer = ds.GetLayerByName(layer_name)
     layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
@@ -342,6 +343,8 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
 
        CalculationID: 5
     """
+
+    # TODO this is not currentl used, but will need to be updated
 
     surface:Raster = analysis_params[metric_params['surfaces']['surface_name']]
     raster_layer = os.path.join(os.path.dirname(project_file), surface.path)
@@ -389,77 +392,43 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
 
 
 def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
-        sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
+    sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
 
-        numerator_layers = [layer for layer in metric_params['layers'] if layer['usage'] == 'numerator' or 'usage' not in layer]
-        numerator_area = 0.0
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+
+    numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator') == 'numerator']
+    numerator_area = 0.0
         
-        for metric_layer in numerator_layers:
-            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
-            ds: ogr.DataSource = ogr.Open(project_file)
-            layer: ogr.Layer = ds.GetLayerByName(layer_name)
-            layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-            layer.SetSpatialFilter(sample_frame_geom)
-            attribute_filter = metric_layer.get('attribute_filter', None)
-            for feature in layer:
-                metadata: dict = json.loads(feature.GetField('metadata'))
-                if attribute_filter is not None:
-                    if metadata is None:
-                        continue
-                    attributes = metadata.get('attributes', None)
-                    if attributes is not None:
-                        if attribute_filter['field_name'] in attributes:
-                            if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
-                                continue
-                    else:
-                        continue
-                geom = feature.GetGeometryRef().Clone()
+    for metric_layer in numerator_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
+            geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+            if geom.Intersects(sample_frame_geom):
+                clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                numerator_area += clipped_geom.GetArea()
+            geom = None
+            clipped_geom = None
+
+    denominator_layers = [layer for layer in metric_layers if layer.get('usage', None) == 'denominator']
+    denominator_area = 0.0
+
+    if len(denominator_layers) == 0:
+        # use the sample frame area as the denominator
+        denominator_area = sample_frame_geom.GetArea()
+    else:
+        for metric_layer in denominator_layers:
+            for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+                if feature is None:
+                    continue
+                geom: ogr.Geometry = feature.GetGeometryRef().Clone()
                 if geom.Intersects(sample_frame_geom):
-                    clipped_geom = geom.Intersection(sample_frame_geom)
-                    numerator_area += clipped_geom.GetArea()
+                    clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                    denominator_area += clipped_geom.GetArea()
                 geom = None
                 clipped_geom = None
-                feature = None
-            layer = None
-            ds = None
 
-        denominator_layers = [layer for layer in metric_params['layers'] if layer['usage'] == 'denominator']
-        denominator_area = 0.0
-
-        if len(denominator_layers) == 0:
-            # use the sample frame area as the denominator
-            denominator_area = sample_frame_geom.GetArea()
-        else:
-            for metric_layer in denominator_layers:
-                layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
-                ds: ogr.DataSource = ogr.Open(project_file)
-                layer: ogr.Layer = ds.GetLayerByName(layer_name)
-                layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-                layer.SetSpatialFilter(sample_frame_geom)
-                attribute_filter = metric_layer.get('attribute_filter', None)
-                for feature in layer:
-                    metadata: dict = json.loads(feature.GetField('metadata'))
-                    if attribute_filter is not None:
-                        if metadata is None:
-                            continue
-                        attributes = metadata.get('attributes', None)
-                        if attributes is not None:
-                            if attribute_filter['field_name'] in attributes:
-                                if attributes[attribute_filter['field_name']] not in attribute_filter['values']:
-                                    continue
-                        else:
-                            continue
-                    geom: ogr.Geometry = feature.GetGeometryRef().Clone()
-                    if geom.Intersects(sample_frame_geom):
-                        clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
-                        denominator_area += clipped_geom.GetArea()
-                    geom = None
-                    clipped_geom = None
-                    feature = None
-                layer = None
-                ds = None
-
-        if denominator_area == 0.0:
-            return 0.0
-        else:
-            return numerator_area / denominator_area
+    if denominator_area == 0.0:
+        return 0.0
+    else:
+        return numerator_area / denominator_area

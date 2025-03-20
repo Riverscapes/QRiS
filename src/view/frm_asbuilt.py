@@ -157,7 +157,7 @@ class FrmAsBuilt(FrmEvent):
                 protocol_item = self.layer_widget.tree_model.item(index)
                 for layer_index in range(protocol_item.rowCount()):
                     layer_item = protocol_item.child(layer_index)
-                    if 'structure_points' in layer_item.data(QtCore.Qt.UserRole).fc_name:
+                    if 'structure_points' in layer_item.data(QtCore.Qt.UserRole).id:
                         self.layer_widget.add_selected_layers(layer_item)
                 
 
@@ -204,7 +204,7 @@ class FrmAsBuilt(FrmEvent):
         selected_layers = []
         for index in range(self.layer_widget.layers_model.rowCount()):
             item = self.layer_widget.layers_model.item(index)
-            selected_layers.append(item.data(QtCore.Qt.UserRole).fc_name)
+            selected_layers.append(item.data(QtCore.Qt.UserRole)[1].id)
         if any('structure_points' in layer or 'structure_lines' in layer for layer in selected_layers) is False:
             QtWidgets.QMessageBox.critical(self, 'Error', 'At least one structure layer must be selected.')
             return

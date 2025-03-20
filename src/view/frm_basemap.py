@@ -39,8 +39,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.setupUi()
 
         raster_types = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_types'].items()}
-        
-        raster_sources = project.lookup_values['raster_sources']
+        raster_sources = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_sources'].items()}
         self.raster_sources_model = QStandardItemModel()
         for raster_source in raster_sources:
             item = QStandardItem(raster_source)
