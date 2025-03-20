@@ -155,7 +155,7 @@ UPDATE metrics SET
 WHERE machine_name = 'ponded_area';
 
 UPDATE metrics SET
-    metadata = '{"minimum_value": 0.0, "precision": 2}',
+    metadata = '{"minimum_value": 0.0, "precision": 2}, "maximum_value": 1000000',
     metric_params = '{"dce_layers": [{"layer_id_ref": "centerlines", "attribute_filter": {"field_id_ref": "type_id", "values": ["Primary"]}}]}'
 WHERE machine_name = 'primary_channel_length';
 
