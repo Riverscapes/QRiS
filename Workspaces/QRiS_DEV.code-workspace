@@ -9,6 +9,13 @@
       "editor.tabSize": 4,
       "editor.formatOnSave": true,
     },
+    "autopep8.args": [
+      "--max-line-length=240",
+    ],
+    "pylint.args": [
+      "--disable=C0301,C0114,C0103,W0719,W0718",
+      "--max-line-length=240"
+    ],
     "files.exclude": {
       "**/*.egg-info": true,
       "**/__pycache__": true
@@ -32,15 +39,6 @@
       "PYTHONPATH": "${env:QGIS_PATH}/Contents/Resources/python:${env:QGIS_PATH}/Contents/Resources/python/site-packages:${env:QGIS_PATH}/Contents/Resources/python/site-packages/PyQt5:${workspaceFolder}/wheels",
       "PATH": "${env:PATH}:${env:QGIS_PATH}/Contents/MacOS/bin"
     },
-    // NOTE: For this to work you need an env file with "QGIS_PATH=/Applications/QGIS-LTR.app/Contents" or whatever your path is
-    "python.pythonPath": "${env:QGIS_PATH}/Contents/MacOS/bin/python3",
-    "qtForPython.uic.args": [
-      "-o \"${workspaceFolder}${pathSeparator}src${pathSeparator}view${pathSeparator}ui${pathSeparator}${fileBasenameNoExtension}.py\""
-    ],
-    "qtForPython.rcc.args": [
-      "-o \"${workspaceFolder}${pathSeparator}src${pathSeparator}${fileBasenameNoExtension}.py\""
-    ],
-    "qtForPython.rcc.liveExecution": false,
     "terminal.integrated.defaultProfile.linux": "zsh"
   },
   "launch": {
