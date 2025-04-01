@@ -310,7 +310,7 @@ class FrmExportProject(QtWidgets.QDialog):
             if self.txt_existing_path.text() == "":
                 message_box("Select Existing Project", "Please select an existing QRiS Riverscapes project file (.rs.xml).")
                 return
-            rs_project_existing = rsxml.Project.load_project(self.txt_existing_path.text())
+            rs_project_existing = rsxml.project_xml.Project.load_project(self.txt_existing_path.text())
             if rs_project_existing is None:
                 message_box("Invalid Existing Project", "The existing project file does not exist or is not a valid Riverscapes project file.")
                 return
@@ -409,8 +409,8 @@ class FrmExportProject(QtWidgets.QDialog):
             with open(geojson_path, 'w') as f:
                 f.write(geojson)
 
-            project_bounds = rsxml.ProjectBounds(centroid=rsxml.Coords(centroid.x(), centroid.y()),
-                                                 bounding_box=rsxml.BoundingBox(minLat=extent.yMinimum(),
+            project_bounds = rsxml.project_xml.ProjectBounds(centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
+                                                 bounding_box=rsxml.project_xml.BoundingBox(minLat=extent.yMinimum(),
                                                                                 minLng=extent.xMinimum(),
                                                                                 maxLat=extent.yMaximum(),
                                                                                 maxLng=extent.xMaximum()),
@@ -421,9 +421,9 @@ class FrmExportProject(QtWidgets.QDialog):
 
         xml_path = os.path.abspath(os.path.join(self.txt_outpath.text(), "project.rs.xml").replace("\\", "/"))
 
-        metadata_values = [rsxml.Meta('QRiS Project Name', self.qris_project.name),
-                           rsxml.Meta('QRiS Project Description', self.qris_project.description),
-                           rsxml.Meta('ModelVersion', '1')]
+        metadata_values = [rsxml.project_xml.Meta('QRiS Project Name', self.qris_project.name),
+                           rsxml.project_xml.Meta('QRiS Project Description', self.qris_project.description),
+                           rsxml.project_xml.Meta('ModelVersion', '1')]
 
         for key, value in self.qris_project.metadata.items():
             # if tags are empty, skip
@@ -434,19 +434,19 @@ class FrmExportProject(QtWidgets.QDialog):
             if key == "metadata":
                 dict_metadata = value
                 for k, v in dict_metadata.items():
-                    metadata_values.append(rsxml.Meta(k, v))
+                    metadata_values.append(rsxml.project_xml.Meta(k, v))
             else:
-                metadata_values.append(rsxml.Meta(key, value))
+                metadata_values.append(rsxml.project_xml.Meta(key, value))
 
         warehouse = None
         if self.rdo_existing.isChecked():
-            rs_project_existing = rsxml.Project.load_project(self.txt_existing_path.text())
+            rs_project_existing = rsxml.project_xml.Project.load_project(self.txt_existing_path.text())
             warehouse = rs_project_existing.warehouse
 
-        self.rs_project = rsxml.Project(name=self.txt_rs_name.text(),
+        self.rs_project = rsxml.project_xml.Project(name=self.txt_rs_name.text(),
                                         proj_path=xml_path,
                                         project_type=PROJECT_MACHINE_NAME,
-                                        meta_data=rsxml.MetaData(values=metadata_values),
+                                        meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                                         warehouse=warehouse,
                                         description=self.txt_description.toPlainText(),
                                         bounds=project_bounds)
@@ -485,7 +485,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     os.makedirs(os.path.dirname(out_raster_path))
                 shutil.copy(src_raster_path, out_raster_path)
 
-                raster_datasets.append(rsxml.Dataset(xml_id=raster_xml_id,
+                raster_datasets.append(rsxml.project_xml.Dataset(xml_id=raster_xml_id,
                                                      name=raster.name,
                                                      path=raster.path,
                                                      ds_type='Raster'))
@@ -516,9 +516,9 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='POLYGON')
 
-                input_layers.append(rsxml.GeopackageLayer(lyr_name=view_name,
+                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                           name=valley_bottom.name,
-                                                          ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                           lyr_type='valley_bottom'))
 
         # AOIs
@@ -548,9 +548,9 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='POLYGON')
 
-                input_layers.append(rsxml.GeopackageLayer(lyr_name=view_name,
+                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                           name=aoi.name,
-                                                          ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                           lyr_type='aoi'))
 
         # Sample Frames
@@ -578,9 +578,9 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='POLYGON')
 
-                input_layers.append(rsxml.GeopackageLayer(lyr_name=view_name,
+                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                           name=sample_frame.name,
-                                                          ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                           lyr_type='sample_frame'))
 
         # Profiles
@@ -608,9 +608,9 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='LINESTRING')
 
-                input_layers.append(rsxml.GeopackageLayer(lyr_name=view_name,
+                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                           name=profile.name,
-                                                          ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                           lyr_type='profile'))
 
         # Cross Sections
@@ -637,9 +637,9 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='LINESTRING')
 
-                input_layers.append(rsxml.GeopackageLayer(lyr_name=view_name,
+                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                           name=xsection.name,
-                                                          ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                           lyr_type='cross_section'))
 
         context_node = self.find_child_node(inputs_node, "Context")
@@ -667,9 +667,9 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='POINT')
 
-                pour_point_layers.append(rsxml.GeopackageLayer(lyr_name=view_name,
+                pour_point_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                                name=pour_point.name,
-                                                               ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                               ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                                lyr_type='pour_points'))
 
                 if 'catchments' not in keep_layers:
@@ -684,12 +684,12 @@ class FrmExportProject(QtWidgets.QDialog):
                                          out_geopackage=out_geopackage,
                                          geom_type='POLYGON')
 
-                pour_point_layers.append(rsxml.GeopackageLayer(lyr_name=catchment_view,
+                pour_point_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=catchment_view,
                                                                name=pour_point.name,
-                                                               ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                               ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                                lyr_type='catchments'))
 
-                pour_point_gpkgs.append(rsxml.Geopackage(xml_id=f'pour_points_{pour_point.id}_gpkg',
+                pour_point_gpkgs.append(rsxml.project_xml.Geopackage(xml_id=f'pour_points_{pour_point.id}_gpkg',
                                                          name=pour_point.name,
                                                          path=out_name,
                                                          layers=pour_point_layers))
@@ -723,7 +723,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     os.makedirs(os.path.dirname(out_raster_path))
                 shutil.copy(raster_path, out_raster_path)
 
-                raster_datasets.append(rsxml.Dataset(xml_id=raster_xml_id,
+                raster_datasets.append(rsxml.project_xml.Dataset(xml_id=raster_xml_id,
                                                      name=raster.name,
                                                      path=raster.path,
                                                      ds_type='Raster'))
@@ -741,13 +741,13 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['scratch_vectors'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['scratch_vectors']['id_values'].append(str(context_vector.id))
 
-                context_layers.append(rsxml.GeopackageLayer(summary=f'context_{geom_type.lower()}',
+                context_layers.append(rsxml.project_xml.GeopackageLayer(summary=f'context_{geom_type.lower()}',
                                                             lyr_name=context_vector.fc_name,
                                                             name=context_vector.name,
-                                                            ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                            ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                             lyr_type='context'))
 
-        inputs_gpkg = rsxml.Geopackage(xml_id=f'inputs_gpkg',
+        inputs_gpkg = rsxml.project_xml.Geopackage(xml_id=f'inputs_gpkg',
                                        name=f'Inputs',
                                        path=out_name,
                                        layers=input_layers)
@@ -788,12 +788,12 @@ class FrmExportProject(QtWidgets.QDialog):
             src_ds = None
             dst_ds = None
 
-            out_gpkgs.append(rsxml.Geopackage(xml_id=f'context_gpkg',
+            out_gpkgs.append(rsxml.project_xml.Geopackage(xml_id=f'context_gpkg',
                                               name=f'Context',
                                               path='context/feature_classes.gpkg',
                                               layers=context_layers))
 
-        self.rs_project.realizations.append(rsxml.Realization(xml_id=f'inputs',
+        self.rs_project.realizations.append(rsxml.project_xml.Realization(xml_id=f'inputs',
                                                               name='Inputs',
                                                               date_created=date_created.toPyDateTime(),
                                                               product_version=qris_version,
@@ -856,7 +856,7 @@ class FrmExportProject(QtWidgets.QDialog):
                                                             meta_data=photo_meta,
                                                             ds_type='Image'))
 
-                meta = rsxml.MetaData(values=[rsxml.Meta(event_type, "")])
+                meta = rsxml.project_xml.MetaData(values=[rsxml.project_xml.Meta(event_type, "")])
                 # prepare the datasets
                 geopackage_layers = []
                 for layer in event.event_layers:
@@ -892,13 +892,13 @@ class FrmExportProject(QtWidgets.QDialog):
                                              geom_type=geom_type.upper(),
                                              sql=sql)
 
-                    gp_lyr = rsxml.GeopackageLayer(lyr_name=view_name,
+                    gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                    name=layer.name,
-                                                   ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                                   ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                    lyr_type=layer.layer.layer_id)
                     geopackage_layers.append(gp_lyr)
 
-                events_gpkg = rsxml.Geopackage(xml_id=f'dce_{event.id}_gpkg',
+                events_gpkg = rsxml.project_xml.Geopackage(xml_id=f'dce_{event.id}_gpkg',
                                                name=f'{event.name}',
                                                path=out_name,
                                                layers=geopackage_layers)
@@ -906,7 +906,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 # # self.rs_project.common_datasets.append(gpkg)
                 # ds = [RefDataset(lyr.lyr_name, lyr) for lyr in geopackage_layers]
 
-                realization = rsxml.Realization(xml_id=f'realization_qris_{event.id}',
+                realization = rsxml.project_xml.Realization(xml_id=f'realization_qris_{event.id}',
                                                 name=event.name,
                                                 date_created=date_created.toPyDateTime(),
                                                 product_version=qris_version,
@@ -962,18 +962,18 @@ class FrmExportProject(QtWidgets.QDialog):
                                          geom_type="POLYGON",
                                          sql=sql)
 
-                gp_lyr = rsxml.GeopackageLayer(lyr_name=analysis_view,
+                gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=analysis_view,
                                                name=analysis.name,
-                                               ds_type=rsxml.GeoPackageDatasetTypes.VECTOR,
+                                               ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
                                                lyr_type='analysis')
                 geopackage_layers.append(gp_lyr)
 
-                analysis_gpkg = rsxml.Geopackage(xml_id=f'{analysis.id}_gpkg',
+                analysis_gpkg = rsxml.project_xml.Geopackage(xml_id=f'{analysis.id}_gpkg',
                                                  name=f'{analysis.name}',
                                                  path=out_name,
                                                  layers=geopackage_layers)
 
-                realization = rsxml.Realization(xml_id=f'analysis_{analysis.id}',
+                realization = rsxml.project_xml.Realization(xml_id=f'analysis_{analysis.id}',
                                                 name=analysis.name,
                                                 date_created=date_created.toPyDateTime(),
                                                 product_version=qris_version,
