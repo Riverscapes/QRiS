@@ -1,5 +1,17 @@
 # QRiS Plugin
 
+## [1.0.11] 2025 APR 10
+
+### Added
+- hand symbology for detrended surfaces
+
+### Fixed
+- Unstable RSXML module import causes QGIS to crash
+
+### Changed
+- Riverscapes Viewer dependency updated to >= 1.0.3
+
+
 ## [1.0.10] 2025 MAR 12
 
 ### Fixed
