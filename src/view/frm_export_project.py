@@ -400,6 +400,10 @@ class FrmExportProject(QtWidgets.QDialog):
 
         if envelope is not None and not envelope.isNull() and not envelope.isEmpty():
             envelope_hull = envelope.convexHull()
+            # check if the envelope is empty or null, or not a polygon type
+            if envelope_hull.isEmpty() or envelope_hull.isNull() or envelope_hull.wkbType() not in [ogr.wkbPolygon, ogr.wkbMultiPolygon]:
+                QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Please select a different AOI or there are enough layer geometries in the project to produce a polygon project bounds.")
+                return
             extent = envelope_hull.boundingBox()
             centroid = envelope_hull.centroid().asPoint()
             geojson = envelope_hull.asJson()
