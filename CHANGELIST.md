@@ -7,6 +7,7 @@
 
 ### Fixed
 - Unstable RSXML module import causes QGIS to crash
+- Prevent project bounds consisting of a single point or line during export #610
 
 ### Changed
 - Riverscapes Viewer dependency updated to >= 1.0.3
