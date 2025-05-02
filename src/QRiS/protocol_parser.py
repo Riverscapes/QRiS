@@ -32,6 +32,7 @@ class FieldDefinition:
     visibility_values: Optional[List[str]] = None
     allow_multiple_values: Optional[bool] = None
     derived_values: Optional[List[str]] = None
+    slider: Optional[dict] = None
 
 @dataclass
 class LayerDefinition:
@@ -127,6 +128,20 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     }
                     for dv in field_elem.find('DerivedValues').findall('DerivedValue')
                 ]
+            slider = None
+            if field_elem.find('Slider') is not None:
+                if FIELD_TYPES[field_elem.tag] == 'integer':
+                    slider = {
+                        'min': int(field_elem.find('Slider').attrib.get('min')),
+                        'max': int(field_elem.find('Slider').attrib.get('max')),
+                        'step': int(field_elem.find('Slider').attrib.get('step')),
+                    }
+                else:
+                    slider = {
+                        'min': float(field_elem.find('Slider').attrib.get('min')),
+                        'max': float(field_elem.find('Slider').attrib.get('max')),
+                        'step': float(field_elem.find('Slider').attrib.get('step')),
+                    }
 
             field = FieldDefinition(
                     id=field_elem.attrib.get('id'),
@@ -140,7 +155,8 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     visibility_field=field_elem.find('Visibility').attrib.get('field_id_ref') if field_elem.find('Visibility') is not None else None,
                     visibility_values=[v.text for v in field_elem.find('Visibility').find('Values').findall('Value')] if field_elem.find('Visibility') is not None else None,
                     allow_multiple_values=field_elem.find('Values').attrib.get('allow_multiple_values') == 'true' if field_elem.find('Values') is not None else None,
-                    derived_values=derived_values
+                    derived_values=derived_values,
+                    slider=slider
                 )
             fields.append(field)
 
