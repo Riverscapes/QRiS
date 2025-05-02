@@ -44,6 +44,7 @@ from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHIN
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
+from ..model.layer import check_and_remove_unused_layers
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
@@ -1844,6 +1845,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Delete the item from the database
         db_item.delete(self.project.project_file)
+        check_and_remove_unused_layers(self.project)
 
     def browse_item(self, db_item: DBItem, folder_path):
 
