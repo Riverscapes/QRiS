@@ -1,3 +1,4 @@
+DELETE FROM analysis_metrics WHERE metric_id NOT IN (SELECT metric_id FROM metric_values);
 DELETE FROM metrics WHERE id NOT IN (SELECT metric_id FROM metric_values);
 
 ALTER TABLE metrics ADD COLUMN protocol_id TEXT;

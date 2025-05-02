@@ -67,6 +67,9 @@ INSERT INTO layers (id, fc_name, display_name, qml, is_lookup, geom_type, descri
 UPDATE event_layers SET layer_id = 46 WHERE layer_id = 21 AND event_id = (SELECT id from events WHERE event_type_id = 3);
 UPDATE event_layers SET layer_id = 47 WHERE layer_id = 22 AND event_id = (SELECT id from events WHERE event_type_id = 3);
 
+UPDATE dce_points SET event_layer_id = 46 WHERE event_layer_id = 21 AND event_id = (SELECT id from events WHERE event_type_id = 3);
+UPDATE dce_lines SET event_layer_id = 47 WHERE event_layer_id = 22 AND event_id = (SELECT id from events WHERE event_type_id = 3);
+
 -- Create a new protocol layers table
 CREATE TABLE protocol_layers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
