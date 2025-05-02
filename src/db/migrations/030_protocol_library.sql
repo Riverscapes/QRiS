@@ -1,7 +1,3 @@
--- Add Version field to all Layers, set to 1.0
-ALTER TABLE layers ADD COLUMN version TEXT;
-UPDATE layers SET version = '1.0';
-
 -- Remove unused lookup tables
 DROP TABLE IF EXISTS 'lkp_mask_types';
 DELETE FROM gpkg_contents WHERE table_name = 'lkp_mask_types';
@@ -43,6 +39,7 @@ CREATE TABLE lookups (
 INSERT INTO lookups (name) VALUES ('lkp_platform');
 INSERT INTO lookups (name) VALUES ('lkp_representation');
 INSERT INTO lookups (name) VALUES ('lkp_design_sources');
+INSERT INTO lookups (name) VALUES ('lkp_raster_sources');
 INSERT INTO lookups (name) VALUES ('lkp_event_types');
 INSERT INTO lookups (name) VALUES ('lkp_raster_types');
 INSERT INTO lookups (name) VALUES ('lkp_scratch_vector_types');
@@ -54,18 +51,31 @@ INSERT INTO gpkg_contents (table_name, data_type, identifier) VALUES ('lkp_raste
 INSERT INTO gpkg_contents (table_name, data_type, identifier) VALUES ('lkp_scratch_vector_types', 'attributes', 'lkp_scratch_vector_types');
 INSERT INTO gpkg_contents (table_name, data_type, identifier) VALUES ('lkp_units', 'attributes', 'lkp_units');
 
--- Find all unused layers and delete them
-DELETE FROM layers WHERE id NOT IN (SELECT layer_id FROM event_layers);
+-- Modify Protocol Library Table
+ALTER TABLE protocols ADD COLUMN 'version' TEXT;
+UPDATE protocols SET version = '1.0';
 
--- Here we will modify the layers table to use the new schema
-CREATE TABLE protocol_layers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    protocol_id INTEGER NOT NULL,
-    layer_id INTEGER NOT NULL,
-    FOREIGN KEY(protocol_id) REFERENCES protocols(id),
-    FOREIGN KEY(layer_id) REFERENCES layers(id));
+-- Update existing protocols in library
+UPDATE protocols 
+SET description = 'Base LTPBR Layers', 
+    metadata = '{"system": {"status": "experimental", "url": "https://lowtechpbr.restoration.usu.edu/", "citation": "Wheaton J.M., Bennett S.N., Bouwes, N., Maestas J.D. and Shahverdian S.M. (Editors). 2019. Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Version 1.0. Utah State University Restoration Consortium. Logan, UT. 286 pp. DOI: 10.13140/RG.2.2.19590.63049/2.", "author": "Nick Weber", "creation_date": "2024-09-01", "updated_date": "2024-09-01"}}' 
+WHERE machine_code = 'LTPBR_BASE';
 
-INSERT INTO gpkg_contents (table_name, data_type, identifier) VALUES ('protocol_layers', 'attributes', 'protocol_layers');
+UPDATE protocols 
+SET description = 'Design Layers', 
+    metadata = '{"system": {"status": "experimental", "url": "https://lowtechpbr.restoration.usu.edu/", "citation": "Wheaton J.M., Bennett S.N., Bouwes, N., Maestas J.D. and Shahverdian S.M. (Editors). 2019. Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Version 1.0. Utah State University Restoration Consortium. Logan, UT. 286 pp. DOI: 10.13140/RG.2.2.19590.63049/2.", "author": "Nick Weber", "creation_date": "2024-09-01", "updated_date": "2024-09-01"}}' 
+WHERE machine_code = 'DESIGN';
+
+UPDATE protocols 
+SET description = 'AS-Built Layers', 
+    metadata = '{"system": {"status": "experimental", "url": "https://lowtechpbr.restoration.usu.edu/", "citation": "Wheaton J.M., Bennett S.N., Bouwes, N., Maestas J.D. and Shahverdian S.M. (Editors). 2019. Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Version 1.0. Utah State University Restoration Consortium. Logan, UT. 286 pp. DOI: 10.13140/RG.2.2.19590.63049/2.", "author": "Nick Weber", "creation_date": "2024-09-01", "updated_date": "2024-09-01"}}' 
+WHERE machine_code = 'ASBUILT';
+
+-- Delete protocols if there are no associated layers
+DELETE FROM protocols WHERE machine_code = 'LTPBR_BASE' AND NOT EXISTS (SELECT 1 FROM event_layers WHERE layer_id IN (SELECT layer_id FROM method_layers WHERE method_id = 1));
+DELETE FROM protocols WHERE machine_code = 'DESIGN' AND NOT EXISTS (SELECT 1 FROM event_layers WHERE layer_id IN (SELECT layer_id FROM method_layers WHERE method_id = 5));
+DELETE FROM protocols WHERE machine_code = 'ASBUILT' AND NOT EXISTS (SELECT 1 FROM event_layers WHERE layer_id IN (SELECT layer_id FROM method_layers WHERE method_id = 6));
+DELETE FROM protocols WHERE machine_code = 'PLANNING';
 
 -- Clear up old tables
 DROP TABLE IF EXISTS 'method_layers';
@@ -75,6 +85,3 @@ DROP TABLE IF EXISTS 'protocol_methods';
 DELETE FROM gpkg_contents WHERE table_name = 'method_layers';
 DELETE FROM gpkg_contents WHERE table_name = 'methods';
 DELETE FROM gpkg_contents WHERE table_name = 'protocol_methods';
-
-ALTER TABLE protocols ADD COLUMN 'version' TEXT;
-UPDATE protocols SET version = '1.0';
