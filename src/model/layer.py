@@ -111,3 +111,38 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
     protocol.protocol_layers[layer_id] = layer
 
     return layer, protocol
+    
+def check_and_remove_unused_layers(qris_project):
+    
+    with sqlite3.connect(qris_project.project_file) as conn:
+        curs = conn.cursor()
+    
+        # Remove any layers from the project and the db that are no longer used in any of the project events
+        layers = {key: layer for key, layer in qris_project.layers.items()}
+        for key, layer in layers.items():
+            used = False
+            for event in qris_project.events.values():
+                if layer.id in [event_layer.layer.id for event_layer in event.event_layers]:
+                    used = True
+                    break
+            if not used:
+                del qris_project.layers[key]
+                curs.execute('DELETE FROM layers WHERE id = ?', (layer.id,))
+                curs.execute('DELETE FROM protocol_layers WHERE layer_id = ?', (layer.id,))
+                curs.execute('DELETE FROM event_layers WHERE layer_id = ?', (layer.id,))
+                conn.commit()
+
+        # now clear any protocols that are no longer used
+        protocols = {key: protocol for key, protocol in qris_project.protocols.items()}
+        for key, protocol in protocols.items():
+            protocol_layers = [layer_id for layer_id in protocol.protocol_layers.keys()]
+            for layer_id in protocol_layers:
+                if layer_id not in qris_project.layers.keys():
+                    del protocol.protocol_layers[layer_id]
+            if len(protocol.protocol_layers) == 0:  # no layers left in the protocol
+                del qris_project.protocols[key]
+                curs.execute('DELETE FROM metrics WHERE protocol_id = ?', (protocol.id,))
+                curs.execute('DELETE FROM protocols WHERE id = ?', (protocol.id,))
+                conn.commit()
+                
+    return qris_project
