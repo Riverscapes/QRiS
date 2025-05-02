@@ -34,6 +34,28 @@
                 </TextField>
             </Fields>
         </Layer>
+        <Layer id="layer3" version="1.0" geom_type="Linestring">
+            <Label>Layer 3</Label>
+            <Symbology>Symbology 3</Symbology>
+            <Description>Layer 3 Description</Description>
+            <Fields>
+                <ListField id="list_field" version="1.0">
+                    <Label>List Field</Label>
+                    <Values allow_multiple_values="true">
+                        <Value>Value 1</Value>
+                        <Value>Value 2</Value>
+                    </Values>
+                </ListField>
+                <TextField id="text_field" version="1.0">
+                    <Label>Text Field</Label>
+                    <Visibility field_id_ref="list_field">
+                        <Values>
+                            <Value>Value 1</Value>
+                        </Values>
+                    </Visibility>
+                </TextField>
+            </Fields>
+        </Layer>
     </Layers>
     <Metrics>
         <Metric id="metric1" version="1.0" calculation_machine_code="count">

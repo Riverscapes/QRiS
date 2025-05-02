@@ -65,22 +65,38 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
 
     fields = []
     for field in layer_definition.fields:
+        
         out_field = {
             'id': field.id,
             'type': field.type,
             'label': field.label,
-            'required': field.required,
-            'allow_custom_values': field.allow_custom_values,
             'description': field.description,
             'values': field.values,
             'default_value': field.default_value,
-            'visibility_field': field.visibility_field,
-            'visibility_values': field.visibility_values
         }
+        if field.required is True:
+            out_field['required'] = field.required
+
+        if field.allow_custom_values is True:
+            out_field['allow_custom_values'] =  field.allow_custom_values
+
+        if field.allow_multiple_values is True:
+            out_field['allow_multiple_values'] = field.allow_multiple_values
+
+        if field.visibility_field is not None:
+            visibility = {'field_id': field.visibility_field, 'values': field.visibility_values}
+            out_field['visibility'] = visibility
+
         out_field = {k: v for k, v in out_field.items() if v is not None}
         fields.append(out_field)
         
-    metadata = {'menu_items': layer_definition.menu_items, 'hierarchy': layer_definition.hierarchy, 'fields': fields}
+    metadata = {}
+    if layer_definition.menu_items is not None:
+        metadata['menu_items'] = layer_definition.menu_items
+    if layer_definition.hierarchy is not None:
+        metadata['hierarchy'] = layer_definition.hierarchy
+    if len(fields) > 0:
+        metadata['fields'] = fields
     metadata = {k: v for k, v in metadata.items() if v is not None}
 
     with sqlite3.connect(project_file) as conn:
