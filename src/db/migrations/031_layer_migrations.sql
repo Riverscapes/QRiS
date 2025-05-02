@@ -118,8 +118,9 @@ INSERT INTO protocol_layers (protocol_id, layer_id)
 SELECT 1, id FROM layers WHERE fc_name = 'risk_potential_lines' AND EXISTS (SELECT 1 FROM layers WHERE fc_name = 'risk_potential_lines');
 INSERT INTO protocol_layers (protocol_id, layer_id)
 SELECT 1, id FROM layers WHERE fc_name = 'risk_potential_polygons' AND EXISTS (SELECT 1 FROM layers WHERE fc_name = 'risk_potential_polygons');
-INSERT INTO protocol_layers (protocol_id, layer_id)
+
 -- brat cis
+INSERT INTO protocol_layers (protocol_id, layer_id)
 SELECT 1, id FROM layers WHERE fc_name = 'brat_cis' AND EXISTS (SELECT 1 FROM layers WHERE fc_name = 'brat_cis');
 INSERT INTO protocol_layers (protocol_id, layer_id)
 SELECT 1, id FROM layers WHERE fc_name = 'brat_cis_reaches' AND EXISTS (SELECT 1 FROM layers WHERE fc_name = 'brat_cis_reaches');
@@ -147,5 +148,6 @@ SELECT 5, 47 FROM layers WHERE fc_name = 'structure_lines' AND EXISTS (SELECT 1 
 
 -- Find all unused layers and delete them
 DELETE FROM layers WHERE id NOT IN (SELECT layer_id FROM event_layers);
+DELETE from protocol_layers WHERE layer_id NOT IN (SELECT id FROM layers);
 
 PRAGMA foreign_keys=ON;
