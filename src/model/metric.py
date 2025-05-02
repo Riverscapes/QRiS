@@ -27,7 +27,7 @@ class Metric(DBItem):
         # This is the base unit as defined in the metric calculation function
         self.unit_type = analysis_metric_unit_type.get(self.metric_function, None)
         self.base_unit = default_units.get(self.unit_type, None)
-        self.normalized = True if metric_params is not None and 'normalization' in metric_params else False
+        self.normalized = True if any(metric_layer.get('usage', None) == 'normalization' for metric_layer in metric_params.get('dce_layers', []) + metric_params.get('inputs', [])) else False
         if self.normalized:
             self.base_unit = 'meters'
             if self.unit_type == 'distance':
