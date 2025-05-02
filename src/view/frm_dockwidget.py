@@ -896,7 +896,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # TODO delete file if already exists, or handle with vector file writer options...
 
         if out_csv != "":  # TODO better file name validation here
-            cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.fc_name}')
+            cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.layer_id}')
             self.map_manager.add_brat_cis(cis_layer)  # This sets up the required aliases, and lookup values
             cis_layer.setSubsetString('event_id = ' + str(event_layer.event_id))  # filter to the capture event
             options = QgsVectorFileWriter.SaveVectorOptions()
@@ -965,7 +965,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # remove the current event
             dce_events = [event for event in dce_events if event.id != db_item.event_id]
             # filter events if layer name is within the event layers
-            dce_events = [event for event in dce_events if layer_name in [layer.layer.fc_name for layer in event.event_layers]]
+            dce_events = [event for event in dce_events if layer_name in [layer.layer.layer_id for layer in event.event_layers]]
             if len(dce_events) == 0:
                 # warn user with message box and reject the dialog
                 filter_message = f" with layer name '{layer_name}'" if layer_name is not None else ""
