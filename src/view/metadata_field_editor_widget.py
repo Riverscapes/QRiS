@@ -36,6 +36,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 data[name] = widget.value()
             elif isinstance(widget, QComboBox):
                 data[name] = widget.currentText()
+            elif isinstance(widget, CheckboxWidget):
+                data[name] = [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
         self.dict_values['attributes'] = data
         # formatted_data = {}
         # formatted_data['attributes'] = data
@@ -74,12 +76,19 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             if 'derived_value' in field.keys():
                 widget = DependantComboBox(editor, field['derived_value'], field.get('default_value', ''))
             elif field['type'] == 'list':
-                widget = QComboBox(editor)
-                widget.addItems(field['values'])
-                widget.currentIndexChanged.connect(self.onValueChanged)
-                if 'allow_custom_values' in field.keys() and str(field['allow_custom_values']).lower() == 'true':
-                    widget.setEditable(True)
-                    widget.lineEdit().editingFinished.connect(self.onTextChanged)            
+                if 'allow_multiple_values' in field.keys() and str(field['allow_multiple_values']).lower() == 'true':
+                    # prepare a widget with checkboxes for each value
+                    widget = CheckboxWidget(editor)
+                    for value in field['values']:
+                        checkbox = widget.add_checkbox(value)
+                        checkbox.stateChanged.connect(self.onValueChanged)
+                else:
+                    widget = QComboBox(editor)
+                    widget.addItems(field['values'])
+                    widget.currentIndexChanged.connect(self.onValueChanged)
+                    if 'allow_custom_values' in field.keys() and str(field['allow_custom_values']).lower() == 'true':
+                        widget.setEditable(True)
+                        widget.lineEdit().editingFinished.connect(self.onTextChanged)            
             elif field['type'] in ['integer', 'double', 'float']:
                 widget = QDoubleSpinBox(editor)
                 min = field['min'] if 'min' in field else 0
@@ -149,6 +158,11 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                         else:
                             index = widget.findText(val)
                             widget.setCurrentIndex(index)
+                    elif isinstance(widget, CheckboxWidget):
+                        # Better clear all checkboxes first
+                        widget.reset_checkboxes()
+                        for checkbox in widget.findChildren(QCheckBox):
+                            checkbox.setChecked(checkbox.text() in val)
                 else:
                     # Reset the widget to its default value if the value is not in values['attributes']
                     self.resetWidgetToDefault(widget)
@@ -168,6 +182,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 widget_values[name] = widget.value()
             elif isinstance(widget, QComboBox):
                 widget_values[name] = widget.currentText()
+            elif isinstance(widget, CheckboxWidget):
+                widget_values[name] = [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
 
         for widget in self.widgets.values():
             if isinstance(widget, DependantComboBox):
@@ -180,13 +196,18 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             if 'visibility' in field.keys():
                 if field['visibility'] == 'None':
                     widget.setEnabled(False)
-                # field_to_check = field['visibility']['field_name']
-                # field_name_to_check = next((f for f in self.fields if f['id'] == field_to_check), {}).get('label', '')
                 values_to_check = field['visibility']['values']
-                if widget_values.get(field['visibility']['field_name'], '') in values_to_check:
-                    widget.setEnabled(True)
+                widget_value = widget_values.get(field['visibility']['field_id'], '') 
+                if isinstance(widget, QComboBox):
+                    if widget_value in values_to_check:
+                        widget.setEnabled(True)
+                    else:
+                        widget.setEnabled(False)
                 else:
-                    widget.setEnabled(False)
+                    if any(value in values_to_check for value in widget_value):
+                        widget.setEnabled(True)
+                    else:
+                        widget.setEnabled(False)
             else:
                 widget.setEnabled(True)
 
@@ -199,6 +220,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 if isinstance(widget, QComboBox):
                     index = widget.findText(default_value)
                     widget.setCurrentIndex(index)
+                elif isinstance(widget, CheckboxWidget):
+                    widget.reset_checkboxes()
                 elif isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
                     widget.setText(default_value)
                 else:
@@ -263,6 +286,26 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     if index != -1:
                         widget.setCurrentIndex(index)
                     break
+
+class CheckboxWidget(QWidget):
+
+    def __init__(self, parent=None):
+        super(CheckboxWidget, self).__init__(parent)
+        self.initUI()
+    
+    def initUI(self):
+        self.vlayout = QVBoxLayout(self)
+        self.setLayout(self.vlayout)
+
+    def add_checkbox(self, label):
+        checkbox = QCheckBox(label, self)
+        self.vlayout.addWidget(checkbox)
+        return checkbox
+    
+    def reset_checkboxes(self):
+        for checkbox in self.findChildren(QCheckBox):
+            checkbox.setChecked(False)
+
 
 
 class MetadataFieldEditConfigWidget(QgsEditorConfigWidget):

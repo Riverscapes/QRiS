@@ -248,17 +248,18 @@
         <xs:complexContent>
             <xs:extension base="BaseFieldType">
                 <xs:sequence>
-                    <xs:element name="Values" type="CustomValuesType" minOccurs="1" maxOccurs="1"/>
+                    <xs:element name="Values" type="ListValuesType" minOccurs="1" maxOccurs="1"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
 
     <!-- extend values type to include custom values attribute-->
-    <xs:complexType name="CustomValuesType">
+    <xs:complexType name="ListValuesType">
         <xs:complexContent>
             <xs:extension base="ValuesType">
                 <xs:attribute name="allow_custom_values" type="xs:boolean" default="false" use="optional"/>
+                <xs:attribute name="allow_multiple_values" type="xs:boolean" default="false" use="optional"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
