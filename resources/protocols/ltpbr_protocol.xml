@@ -1037,6 +1037,7 @@
             <Description>The length of the primary channel within the riverscape sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
+            <MaximumValue>1000000</MaximumValue>
             <Precision>2</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="centerlines">
