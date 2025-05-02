@@ -6,8 +6,8 @@ from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsE
 from qgis.core import QgsVectorLayer, NULL
 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox
-from PyQt5.QtCore import Qt, QVariant, QSettings
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox, QSlider
+from PyQt5.QtCore import Qt, QVariant, QSettings, pyqtSignal
 
 
 class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
@@ -86,15 +86,20 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                         widget.setEditable(True)
                         widget.lineEdit().editingFinished.connect(self.onTextChanged)            
             elif field['type'] in ['integer', 'double', 'float']:
-                widget = QDoubleSpinBox(editor)
-                min = field['min'] if 'min' in field else 0
-                max = field['max'] if 'max' in field else 100
-                widget.setRange(min, max)
-                if field['type'] == 'integer':
-                    widget.setDecimals(0)
-                elif 'precision' in field.keys():
-                    widget.setDecimals(field['precision'])
-                widget.setSingleStep(1)
+                if 'slider' in field.keys():
+                    widget = SliderWidget(editor)
+                    widget.setRange(field['slider']['min'], field['slider']['max'])
+                    widget.setSingleStep(field['slider']['step'])
+                else:
+                    widget = QDoubleSpinBox(editor)
+                    widget.setSingleStep(1)
+                    min = field['min'] if 'min' in field else 0
+                    max = field['max'] if 'max' in field else 100
+                    widget.setRange(min, max)
+                    if field['type'] == 'integer':
+                        widget.setDecimals(0)
+                    elif 'precision' in field.keys():
+                        widget.setDecimals(field['precision'])
                 widget.valueChanged.connect(self.onValueChanged)
             elif field['type'] == 'text':
                 widget = QLineEdit(editor)
@@ -236,7 +241,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             if val is None:
                 val = ''
             widget.setText(val)
-        elif isinstance(widget, QDoubleSpinBox):
+        elif isinstance(widget, QDoubleSpinBox) or isinstance(widget, SliderWidget):
             widget.setValue(val)
         elif isinstance(widget, QComboBox):
             if widget.isEditable():
@@ -255,7 +260,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             return widget.text()
         elif isinstance(widget, QTextEdit):
             return widget.toPlainText()
-        elif isinstance(widget, QDoubleSpinBox):
+        elif isinstance(widget, QDoubleSpinBox) or isinstance(widget, SliderWidget):
             return widget.value()
         elif isinstance(widget, QComboBox):
             return widget.currentText()
@@ -284,6 +289,47 @@ class CheckboxWidget(QWidget):
     def reset_checkboxes(self):
         for checkbox in self.findChildren(QCheckBox):
             checkbox.setChecked(False)
+
+class SliderWidget(QWidget):
+
+    valueChanged = pyqtSignal(int or float)
+
+    def __init__(self, parent=None):
+        super(SliderWidget, self).__init__(parent)
+        self.initUI()
+
+    def initUI(self):
+        self.hlayout = QHBoxLayout(self)
+        self.setLayout(self.hlayout)
+
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setOrientation(Qt.Horizontal)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.hlayout.addWidget(self.slider)
+
+        self.label = QLabel(self)
+        self.hlayout.addWidget(self.label)
+
+        self.slider.valueChanged.connect(self.onValueChanged)
+
+    def onValueChanged(self, value):
+        self.label.setText(str(value))
+        self.valueChanged.emit(value)
+
+    def setValue(self, value):
+        self.slider.setValue(value)
+
+    def value(self):
+        return self.slider.value()
+    
+    def setRange(self, min, max):
+        self.slider.setRange(min, max)
+
+    def setSingleStep(self, step):
+        self.slider.setSingleStep(step)
+
+
+
 
 
 class MetadataFieldEditConfigWidget(QgsEditorConfigWidget):
