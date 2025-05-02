@@ -31,6 +31,7 @@ class FieldDefinition:
     visibility_field: Optional[str] = None
     visibility_values: Optional[List[str]] = None
     allow_multiple_values: Optional[bool] = None
+    derived_values: Optional[List[str]] = None
 
 @dataclass
 class LayerDefinition:
@@ -117,6 +118,16 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
         
         fields = []
         for field_elem in layer_elem.findall('Fields/'):
+            derived_values = None
+            if field_elem.find('DerivedValues') is not None:
+                derived_values = [
+                    {
+                        'output': dv.attrib.get('output'),
+                        'inputs': [{input_elem.attrib.get('field_id_ref'): input_elem.text} for input_elem in dv.findall('InputValue')]
+                    }
+                    for dv in field_elem.find('DerivedValues').findall('DerivedValue')
+                ]
+
             field = FieldDefinition(
                     id=field_elem.attrib.get('id'),
                     type=FIELD_TYPES[field_elem.tag],
@@ -128,7 +139,8 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     default_value=str(field_elem.find('DefaultValue').text) if field_elem.find('DefaultValue') is not None else None,
                     visibility_field=field_elem.find('Visibility').attrib.get('field_id_ref') if field_elem.find('Visibility') is not None else None,
                     visibility_values=[v.text for v in field_elem.find('Visibility').find('Values').findall('Value')] if field_elem.find('Visibility') is not None else None,
-                    allow_multiple_values=field_elem.find('Values').attrib.get('allow_multiple_values') == 'true' if field_elem.find('Values') is not None else None
+                    allow_multiple_values=field_elem.find('Values').attrib.get('allow_multiple_values') == 'true' if field_elem.find('Values') is not None else None,
+                    derived_values=derived_values
                 )
             fields.append(field)
 

@@ -249,6 +249,7 @@
             <xs:extension base="BaseFieldType">
                 <xs:sequence>
                     <xs:element name="Values" type="ListValuesType" minOccurs="1" maxOccurs="1"/>
+                    <xs:element name="DerivedValues" type="DerivedValuesType" minOccurs="0" maxOccurs="1"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -262,6 +263,27 @@
                 <xs:attribute name="allow_multiple_values" type="xs:boolean" default="false" use="optional"/>
             </xs:extension>
         </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="DerivedValuesType">
+        <xs:sequence>
+            <xs:element name="DerivedValue" type="DerivedValueType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DerivedValueType">
+        <xs:sequence>
+            <xs:element name="InputValue" type="InputValueType" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="output" type="xs:string" use="required"/>
+    </xs:complexType>
+            
+    <xs:complexType name="InputValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="field_id_ref" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
     </xs:complexType>
 
     <xs:complexType name="VisibilityType">

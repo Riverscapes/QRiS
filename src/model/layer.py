@@ -86,7 +86,8 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
         if field.visibility_field is not None:
             visibility = {'field_id': field.visibility_field, 'values': field.visibility_values}
             out_field['visibility'] = visibility
-
+        if field.derived_values is not None:
+            out_field['derived_values'] = field.derived_values
         out_field = {k: v for k, v in out_field.items() if v is not None}
         fields.append(out_field)
         
