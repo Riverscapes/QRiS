@@ -64,7 +64,7 @@
             <Symbology>active_extents.qml</Symbology>
             <Description>Active Extents Layer</Description>
             <MenuItems>
-                <MenuItem>Copy_From_Valley_Bottom</MenuItem>
+                <MenuItem>copy_from_valley_bottom</MenuItem>
             </MenuItems>
             <Hierarchy>
                 <HierarchyItem>Observations</HierarchyItem>
@@ -149,7 +149,7 @@
             </Fields>
         </Layer>
         <Layer id="geomorphic_unit_extents" version="1.0" geom_type="Polygon">
-            <Label>Geomporhpic Units Extents</Label>
+            <Label>Geomorphic Units Extents</Label>
             <Symbology>geomorphic_unit_extents.qml</Symbology>
             <Description>Geomporhpic Units Extents Layer</Description>
             <Hierarchy>
@@ -232,7 +232,7 @@
             <Symbology>cem_phases.qml</Symbology>
             <Description>SEM Cluer &amp; Thorne Layer</Description>
             <MenuItems>
-                <MenuItem>Copy_From_Valley_Bottom</MenuItem>
+                <MenuItem>copy_from_valley_bottom</MenuItem>
             </MenuItems>
             <Hierarchy>
                 <HierarchyItem>Assessments</HierarchyItem>
