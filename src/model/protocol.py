@@ -1,19 +1,59 @@
+import json
 import sqlite3
-from .db_item import DBItem
 
+from .db_item import DBItem
+from ..QRiS.protocol_parser import ProtocolDefinition
 
 class Protocol(DBItem):
 
-    def __init__(self, id: int, name: str, machine_code: str, has_custom_ui: bool, description: str):
+    def __init__(self, id: int, name: str, machine_code: str, has_custom_ui: bool, description: str, version: str, metadata: dict = None, protocol_layers: dict = None):
         super().__init__('protocols', id, name)
+
         self.description = description
         self.machine_code = machine_code
+        self.version = version
         self.has_custom_ui = has_custom_ui
-        self.methods = []
         self.icon = 'protocol'
+        self.protocol_layers = protocol_layers if protocol_layers else {}
+        self.metadata = metadata.get('metadata', None) if metadata else None
+        self.system_metadata = metadata.get('system', None) if metadata else None
 
+    def unique_key(self):
+        return f'{self.machine_code}::{self.version}'
 
-def load(curs: sqlite3.Cursor, methods: dict) -> dict:
+def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) -> Protocol:
+
+    has_custom_ui = True if protocol_definition.machine_code in ['ASBUILT', 'DESIGN'] else False
+
+    system_metadata = {
+        'status': protocol_definition.status,
+        'url': protocol_definition.url,
+        'citation': protocol_definition.citation,
+        'author': protocol_definition.author,
+        'creation_date': protocol_definition.creation_date,
+        'updated_date': protocol_definition.updated_date
+    }
+    metadata = {meta.key: meta.value for meta in protocol_definition.metadata}
+    out_metadata = {'system': system_metadata,
+                    'metadata': metadata}
+
+    with sqlite3.connect(project_file) as conn:
+        curs = conn.cursor()
+        curs.execute('INSERT INTO protocols (name, machine_code, has_custom_ui, description, version, metadata) VALUES (?, ?, ?, ?, ?, ?)',
+                     (protocol_definition.label, protocol_definition.machine_code, has_custom_ui, protocol_definition.description, protocol_definition.version, json.dumps(out_metadata)))
+        protocol_id = curs.lastrowid
+
+    return Protocol(
+        protocol_id,
+        protocol_definition.label,
+        protocol_definition.machine_code,
+        has_custom_ui,
+        protocol_definition.description,
+        protocol_definition.version,
+        out_metadata
+    )
+
+def load(curs: sqlite3.Cursor, layers: list) -> dict:
 
     curs.execute('SELECT * FROM protocols')
     protocols = {row['id']: Protocol(
@@ -21,27 +61,15 @@ def load(curs: sqlite3.Cursor, methods: dict) -> dict:
         row['name'],
         row['machine_code'],
         row['has_custom_ui'],
-        row['description']
+        row['description'],
+        row['version'],
+        json.loads(row['metadata']) if row['metadata'] else None
     ) for row in curs.fetchall()}
 
-    # Load methods that are part of each protocol
-    for protocol in protocols.values():
-        curs.execute('SELECT * FROM protocol_methods WHERE protocol_id = ?', [protocol.id])
-        [protocol.methods.append(methods[row['method_id']]) for row in curs.fetchall()]
-
-    # Load methods that are not part of any protocol
-    curs.execute('SELECT m.id FROM methods m LEFT JOIN protocol_methods pm ON m.id = pm.method_id WHERE pm.method_id IS NULL')
-    orphan_method_ids = [row['id'] for row in curs.fetchall()]
-    if len(orphan_method_ids) > 0:
-        # Create a dummy protocol for these methods
-        protocols[-1] = Protocol(
-            -1,
-            'Methods without a protocol',
-            'ORPHAN_METHODS',
-            False,
-            None
-        )
-
-        [protocols[-1].methods.append(methods[method_id]) for method_id in orphan_method_ids]
+    for protocol_id, protocol in protocols.items():
+        curs.execute('SELECT layer_id FROM protocol_layers WHERE protocol_id = ?', (protocol_id,))
+        protocol_layers = {row['layer_id']: layers[row['layer_id']] for row in curs.fetchall()}
+        protocol.protocol_layers = protocol_layers
+        protocols[protocol_id] = protocol
 
     return protocols

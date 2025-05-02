@@ -880,7 +880,7 @@ class FrmExportProject(QtWidgets.QDialog):
                         keep_layers[fc_name] = {'id_field': 'event_layer_id', 'id_values': []}
                     keep_layers[fc_name]['id_values'].append(str(layer.layer.id))
 
-                    view_name = f'vw_{layer.layer.fc_name}_{event.id}'
+                    view_name = f'vw_{layer.layer.layer_id}_{event.id}'
 
                     layer_fields: list = layer.layer.metadata.get('fields', None)
                     out_fields = '*'
