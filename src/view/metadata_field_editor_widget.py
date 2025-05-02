@@ -28,18 +28,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             return json.dumps(self.dict_values)
         data = self.dict_values.get('attributes', {})
         for name, widget in self.widgets.items():
-            if isinstance(widget, QTextEdit):
-                data[name] = widget.toPlainText()
-            elif isinstance(widget, QLineEdit):
-                data[name] = widget.text()
-            elif isinstance(widget, QDoubleSpinBox):
-                data[name] = widget.value()
-            elif isinstance(widget, QComboBox):
-                data[name] = widget.currentText()
-            elif isinstance(widget, CheckboxWidget):
-                data[name] = [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
-            elif isinstance(widget, DependantComboBox):
-                data[name] = widget.cboValues.currentText()
+            data[name] = self.get_widget_value(widget)
         self.dict_values['attributes'] = data
         self.current_value = json.dumps(self.dict_values)
 
@@ -61,7 +50,9 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         self.grid = QGridLayout()
         self.vert.addLayout(self.grid)
         self.widgets = {}
+        self.labels = {}
         self.derived_values = {}
+        self.saved_values = {}
 
         self.fields: list = self.config('fields')
         row = 0
@@ -69,9 +60,12 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
         for field in self.fields:
             if field['label'] == 'Photo Path':
                 continue
+
             # generate a label and a widget for each field
             label = QLabel(field['label'])
             self.grid.addWidget(label, row, 0, 1, 1)
+            self.labels[field['id']] = label
+            
             widget = None
             if 'derived_values' in field.keys():
                 widget = DependantComboBox(editor, field['values'], field['derived_values'], field.get('default_value', ''))
@@ -126,8 +120,8 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             
             if 'visibility' in field.keys():
                 # we are going to check the value of the field that is being used to determine the visibility of this field later on.
-                widget.setEnabled(False)
-
+                self.toggle_widget_visibility(widget, False)
+            
             self.widgets[field['id']] = widget
             row += 1
 
@@ -149,24 +143,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             for name, widget in self.widgets.items():
                 if 'attributes' in values and name in values['attributes']:
                     val = values['attributes'][name]
-                    # Set the widget's value based on the type of the widget
-                    if isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
-                        widget.setText(val)
-                    elif isinstance(widget, QDoubleSpinBox):
-                        widget.setValue(val)
-                    elif isinstance(widget, QComboBox):
-                        if widget.isEditable():
-                            widget.lineEdit().setText(val)
-                        else:
-                            index = widget.findText(val)
-                            widget.setCurrentIndex(index)
-                    elif isinstance(widget, CheckboxWidget):
-                        # Better clear all checkboxes first
-                        widget.reset_checkboxes()
-                        for checkbox in widget.findChildren(QCheckBox):
-                            checkbox.setChecked(checkbox.text() in val)
-                    elif isinstance(widget, DependantComboBox):
+                    if isinstance(widget, DependantComboBox):
                         widget.setValueExternal(val, values['attributes'])
+                    else:
+                        self.set_widget_value(widget, val)
                 else:
                     # Reset the widget to its default value if the value is not in values['attributes']
                     self.resetWidgetToDefault(widget)
@@ -178,18 +158,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
         widget_values = {}
         for name, widget in self.widgets.items():
-            if isinstance(widget, QLineEdit):
-                widget_values[name] = widget.text()
-            elif isinstance(widget, QTextEdit):
-                widget_values[name] = widget.toPlainText()
-            elif isinstance(widget, QDoubleSpinBox):
-                widget_values[name] = widget.value()
-            elif isinstance(widget, QComboBox):
-                widget_values[name] = widget.currentText()
-            elif isinstance(widget, CheckboxWidget):
-                widget_values[name] = [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
-            elif isinstance(widget, DependantComboBox):
-                widget_values[name] = widget.cboValues.currentText()
+            widget_values[name] = self.get_widget_value(widget)
 
         for widget in self.widgets.values():
             if isinstance(widget, DependantComboBox):
@@ -201,21 +170,21 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 continue
             if 'visibility' in field.keys():
                 if field['visibility'] == 'None':
-                    widget.setEnabled(False)
+                    self.toggle_widget_visibility(widget, False)
                 values_to_check = field['visibility']['values']
                 widget_value = widget_values.get(field['visibility']['field_id'], '') 
                 if isinstance(widget, QComboBox):
                     if widget_value in values_to_check:
-                        widget.setEnabled(True)
+                        self.toggle_widget_visibility(widget, True)
                     else:
-                        widget.setEnabled(False)
+                        self.toggle_widget_visibility(widget, False)
                 else:
                     if any(value in values_to_check for value in widget_value):
-                        widget.setEnabled(True)
+                        self.toggle_widget_visibility(widget, True)
                     else:
-                        widget.setEnabled(False)
+                        self.toggle_widget_visibility(widget, False)
             else:
-                widget.setEnabled(True)
+                self.toggle_widget_visibility(widget, True)
 
     def resetWidgetToDefault(self, widget: QWidget):
 
@@ -242,6 +211,60 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
     def onTextChanged(self):
         self.updateDependantWidgets()
         self.emitValueChanged()
+
+    def toggle_widget_visibility(self, widget: QWidget, value: bool):
+        
+        # Get current status to determine if it is changed
+        status_changed = True if widget.isEnabled() != value else False
+
+        widget.setEnabled(value)
+        widget.setVisible(value)
+        label: QLabel = self.labels[widget.objectName()]
+        label.setVisible(value)
+
+        if status_changed:
+            if value is True:
+                if widget.objectName() in self.saved_values:
+                    self.set_widget_value(widget, self.saved_values[widget.objectName()])
+            else:
+                self.saved_values[widget.objectName()] = self.get_widget_value(widget)
+                self.set_widget_value(widget, None)
+
+    def set_widget_value(self, widget: QWidget, val):
+        # Set the widget's value based on the type of the widget
+        if isinstance(widget, QTextEdit) or isinstance(widget, QLineEdit):
+            if val is None:
+                val = ''
+            widget.setText(val)
+        elif isinstance(widget, QDoubleSpinBox):
+            widget.setValue(val)
+        elif isinstance(widget, QComboBox):
+            if widget.isEditable():
+                widget.lineEdit().setText(val)
+            else:
+                index = widget.findText(val)
+                widget.setCurrentIndex(index)
+        elif isinstance(widget, CheckboxWidget):
+            # Better clear all checkboxes first
+            widget.reset_checkboxes()
+            for checkbox in widget.findChildren(QCheckBox):
+                checkbox.setChecked(checkbox.text() in val)
+    
+    def get_widget_value(self, widget: QWidget):
+        if isinstance(widget, QLineEdit):
+            return widget.text()
+        elif isinstance(widget, QTextEdit):
+            return widget.toPlainText()
+        elif isinstance(widget, QDoubleSpinBox):
+            return widget.value()
+        elif isinstance(widget, QComboBox):
+            return widget.currentText()
+        elif isinstance(widget, CheckboxWidget):
+            return [checkbox.text() for checkbox in widget.findChildren(QCheckBox) if checkbox.isChecked()]
+        elif isinstance(widget, DependantComboBox):
+            return widget.cboValues.currentText()
+        return None
+    
 
 class CheckboxWidget(QWidget):
 
