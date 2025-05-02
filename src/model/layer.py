@@ -4,7 +4,7 @@ import json
 from qgis.core import QgsWkbTypes
 
 from .db_item import DBItem
-from .protocol import Protocol
+# from .protocol import Protocol
 from ..QRiS.protocol_parser import LayerDefinition
 
 
@@ -39,7 +39,7 @@ class Layer(DBItem):
     def unique_key(self):
         return f'{self.layer_id}::{self.layer_version}'
     
-    def get_layer_protocol(self, protocols: dict) -> Protocol:
+    def get_layer_protocol(self, protocols: dict):
         for protocol in protocols.values():
             if self.id in protocol.protocol_layers:
                 return protocol
@@ -62,7 +62,7 @@ def load_layers(curs: sqlite3.Cursor) -> dict:
 
 
 # method to load new layers from layer definition object
-def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol: Protocol) -> tuple:
+def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol) -> tuple:
     """Insert a new layer into the database from a LayerDefinition object.
 
     :param project_file: The path to the project file
@@ -169,8 +169,15 @@ def check_and_remove_unused_layers(qris_project):
                     del protocol.protocol_layers[layer_id]
             if len(protocol.protocol_layers) == 0:  # no layers left in the protocol
                 del qris_project.protocols[key]
+                # Collect metric_ids to delete
+                metric_ids_to_delete = [metric_id for metric_id, metric in qris_project.metrics.items() if metric.protocol_machine_code == protocol.machine_code]
+                for metric_id in metric_ids_to_delete:
+                    del qris_project.metrics[metric_id]
+
                 curs.execute('DELETE FROM metrics WHERE protocol_id = ?', (protocol.id,))
                 curs.execute('DELETE FROM protocols WHERE id = ?', (protocol.id,))
                 conn.commit()
+                # remove any metrics associated with the protocol
                 
+
     return qris_project

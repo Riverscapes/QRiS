@@ -2,7 +2,9 @@ import json
 import sqlite3
 
 from .db_item import DBItem
-from ..QRiS.protocol_parser import ProtocolDefinition
+from .metric import Metric, insert_metric
+
+from ..QRiS.protocol_parser import ProtocolDefinition, MetricDefinition
 
 class Protocol(DBItem):
 
@@ -44,7 +46,7 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
                      (protocol_definition.label, protocol_definition.machine_code, has_custom_ui, protocol_definition.description, protocol_definition.version, json.dumps(out_metadata)))
         protocol_id = curs.lastrowid
 
-    return Protocol(
+    protocol = Protocol(
         protocol_id,
         protocol_definition.label,
         protocol_definition.machine_code,
@@ -53,6 +55,35 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
         protocol_definition.version,
         out_metadata
     )
+
+    metrics = {}
+    for metric_definition in protocol_definition.metrics:
+        metric_definition: MetricDefinition
+        
+        metric_metadata = {}
+        if metric_definition.minimum_value is not None:
+            metric_metadata['minimum_value'] = metric_definition.minimum_value
+        if metric_definition.maximum_value is not None:
+            metric_metadata['maximum_value'] = metric_definition.maximum_value
+        if metric_definition.precision is not None:
+            metric_metadata['precision'] = metric_definition.precision
+        
+        metric_id, metric = insert_metric(
+            project_file,
+            metric_definition.label,
+            metric_definition.id,
+            protocol_definition.machine_code,
+            metric_definition.description,
+            metric_definition.default_level,
+            metric_definition.calculation_machine_code,
+            metric_definition.parameters,
+            None,
+            metric_definition.definition_url,
+            metric_metadata,
+            metric_definition.version)
+        metrics[metric_id] = metric
+
+    return protocol, metrics
 
 def load(curs: sqlite3.Cursor, layers: list) -> dict:
 
