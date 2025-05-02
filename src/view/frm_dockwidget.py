@@ -957,7 +957,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_layer = import_source_path
 
         if mode == DB_MODE_COPY:
-            layer_name = db_item.layer.fc_name
+            layer_name = db_item.layer.layer_id
             event_type = self.project.events[db_item.event_id].event_type.id
             event_name = "Data Capture Event" if event_type == DATA_CAPTURE_EVENT_TYPE_ID else "Design"
             # filter events to only those with an event layer of the same type as the layer to be copied
