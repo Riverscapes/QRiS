@@ -140,9 +140,19 @@ class LayerTreeWidget(QtWidgets.QWidget):
         frm.exec_()
         if frm.result() == QtWidgets.QDialog.Accepted:
             for layer in frm.layers:
-                layer_item = QtGui.QStandardItem(layer.name)
-                layer_item.setData(layer, QtCore.Qt.UserRole)
-                self.add_selected_layers(layer_item)
+                layer: Layer
+                # Traverse the tree and find the layer that matches the protocol and layer
+                for i in range(self.tree_model.rowCount()):
+                    protocol_item = self.tree_model.item(i)
+                    protocol_definition: ProtocolDefinition = protocol_item.data(QtCore.Qt.UserRole)
+                    for j in range(protocol_item.rowCount()):
+                        layer_item = protocol_item.child(j)
+                        layer_definition: LayerDefinition = layer_item.data(QtCore.Qt.UserRole)
+                        layer_protocol = layer.get_layer_protocol(self.qris_project.protocols)
+                        if f'{layer_definition.id}::{layer_definition.version}' == layer.unique_key():
+                            if f'{protocol_definition.machine_code}::{protocol_definition.version}' == layer_protocol.unique_key():
+                                self.add_selected_layers(layer_item)
+                                break
 
     def on_remove_layer(self):
         for index in self.layer_list.selectedIndexes():
