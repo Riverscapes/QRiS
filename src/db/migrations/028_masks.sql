@@ -73,6 +73,14 @@ INSERT INTO sample_frame_features (geom, sample_frame_id, metadata)
     FROM valley_bottom_features VBF
     INNER JOIN sample_frames SF ON VBF.valley_bottom_id = json_extract(SF.metadata, '$.old_primary_key');
 
+-- update analyses metadata to point to the new valley_bottom_id
+UPDATE analyses
+    SET metadata = json_set(metadata, '$.valley_bottom', (
+        SELECT SF.id
+        FROM sample_frames SF
+    WHERE json_extract(analyses.metadata, '$.valley_bottom') = json_extract(SF.metadata, '$.old_primary_key')
+));
+
 -- drop the old primary key from the metadata
 UPDATE sample_frames SET metadata = json_remove(metadata, '$.old_primary_key');
 
