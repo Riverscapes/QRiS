@@ -864,7 +864,7 @@
                 </DCELayer>
             </Parameters>
         </Metric>
-        <Metric id="precent_free_flowing" version="1.0" calculation_machine_code="area_proportion">
+        <Metric id="percent_free_flowing" version="1.0" calculation_machine_code="area_proportion">
             <Label>Percent Free Flowing</Label>
             <DefaultLevel>Metric</DefaultLevel>
             <Description>The percent of the inundation extents that is free flowing</Description>
