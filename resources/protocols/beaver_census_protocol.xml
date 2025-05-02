@@ -1,4 +1,4 @@
-<Protocol machine_code="BEAVER_CENSUS" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
+<Protocol machine_code="BEAVER_CENSUS" version="1.0" status="production" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
     <Label>Beaver Census Protocol</Label>
     <Description>Beaver Census Layers</Description>
     <URL>https://lowtechpbr.restoration.usu.edu/</URL>

@@ -1,5 +1,5 @@
-<Protocol machine_code="TEST_PROTOCOL" version="1.0" status="production" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
-    <Label>Example Protocol</Label>
+<Protocol machine_code="TEST_ACTIVE_PROTOCOL" version="1.0" status="production" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
+    <Label>Example active Protocol</Label>
     <Description>Example Description</Description>
     <URL>http://example.com</URL>
     <Citation>Example Citation</Citation>
