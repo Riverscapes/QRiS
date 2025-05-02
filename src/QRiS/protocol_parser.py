@@ -3,6 +3,11 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from typing import List, Optional, Any
 
+from PyQt5.QtCore import QSettings
+
+ORGANIZATION = 'Riverscapes'
+APPNAME = 'QRiS'
+SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
 
 FIELD_TYPES = {
     'ListField': 'list',
@@ -82,6 +87,9 @@ class ProtocolDefinition:
 def load_protocols(protocol_directory: str) -> List[ProtocolDefinition]:
     """Load protocol from xml"""
 
+    settings = QSettings(ORGANIZATION, APPNAME)
+    show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, True, type=bool)
+
     protocols = list()
     if protocol_directory is None or not os.path.isdir(protocol_directory):
         return protocols
@@ -90,6 +98,10 @@ def load_protocols(protocol_directory: str) -> List[ProtocolDefinition]:
         if filename.endswith('.xml'):
             protocol = load_protocool_from_xml(os.path.join(protocol_directory, filename))
             if protocol is not None:
+                if protocol.status == 'experimental' and not show_experimental_protocols:
+                    continue
+                if protocol.status == 'deprecated':
+                    continue
                 protocols.append(protocol)
 
     return protocols
