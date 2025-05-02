@@ -1,4 +1,4 @@
-<Protocol machine_code="LTPBR_BASE" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../protocol.xsd">
+<Protocol machine_code="LTPBR_BASE" version="1.0" status="experimental" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://xml.riverscapes.net/QRiS/protocol.xsd">
     <Label>LTPBR Protocol</Label>
     <Description>Base LTPBR Layers</Description>
     <URL>https://lowtechpbr.restoration.usu.edu/</URL>
@@ -290,42 +290,6 @@
                 </ListField>
             </Fields>
         </Layer>
-        <!-- <Layer id="brat_cis" version="1.0" geom_type="Point">
-            <Label>BRAT CIS</Label>
-            <Symbology>brat_cis.qml</Symbology>
-            <Description>BRAT CIS Layer</Description>
-            <MenuItems>
-                <MenuItem>export_brat</MenuItem>
-            </MenuItems>
-            <Hierarchy>
-                <HierarchyItem>Assessments</HierarchyItem>
-                <HierarchyItem>Beaver Dam Building</HierarchyItem>
-            </Hierarchy>
-            <Fields>
-                <TextField id="streamside_vegetation" version="1.0">
-                    <Label>Streamside Vegetation Suitability</Label>
-                </TextField>
-                <TextField id="riparian_vegetation" version="1.0">
-                    <Label>Riparian/Upland Vegetation Suitability</Label>
-                </TextField>
-                <TextField id="dam_capacity" version="1.0">
-                    <Label>Dam Capacity</Label>
-                </TextField>
-            </Fields>
-        </Layer>
-        <Layer id="brat_cis_reaches" version="1.0" geom_type="Linestring">
-            <Label>BRAT CIS Reaches</Label>
-            <Symbology>brat_cis_reaches.qml</Symbology>
-            <Description>BRAT CIS Reaches Layer</Description>
-            <MenuItems>
-                <MenuItem>export_brat</MenuItem>
-                <MenuItem>import_brat_reaches</MenuItem>
-            </MenuItems>
-            <Hierarchy>
-                <HierarchyItem>Assessments</HierarchyItem>
-                <HierarchyItem>Beaver Dam Building</HierarchyItem>
-            </Hierarchy>
-        </Layer> -->
         <Layer id="observation_points_dce" version="1.0" geom_type="Point">
             <Label>Observations</Label>
             <Symbology>observation_points_dce.qml</Symbology>
