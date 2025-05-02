@@ -22,10 +22,11 @@ class Layer(DBItem):
                       'Linestring': 'dce_lines',
                       'Polygon': 'dce_polygons'}
 
-    def __init__(self, id: int, layer_id: str, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str, metadata: dict = None):
+    def __init__(self, id: int, layer_id: str, layer_version, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str, metadata: dict = None):
         # Must use the display name as the official db_item name so that it is the string displayed in UI
         super().__init__('layers', id, display_name)
         self.layer_id = layer_id
+        self.layer_version = layer_version
         self.qml = qml
         self.is_lookup = is_lookup
         self.geom_type = geom_type
@@ -36,7 +37,13 @@ class Layer(DBItem):
         self.hierarchy = metadata.get('hierarchy', None) if metadata else None
 
     def unique_key(self):
-        return f'{self.layer_id}'
+        return f'{self.layer_id}::{self.layer_version}'
+    
+    def get_layer_protocol(self, protocols: dict) -> Protocol:
+        for protocol in protocols.values():
+            if self.id in protocol.protocol_layers:
+                return protocol
+        return None
 
 def load_layers(curs: sqlite3.Cursor) -> dict:
 
@@ -44,6 +51,7 @@ def load_layers(curs: sqlite3.Cursor) -> dict:
     return {row['id']: Layer(
         row['id'],
         row['fc_name'],
+        row['version'],
         row['display_name'],
         row['qml'],
         row['is_lookup'] != 0,
@@ -117,6 +125,7 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol:
     layer = Layer(
         layer_id,
         layer_definition.id,
+        layer_definition.version,
         layer_definition.label,
         layer_definition.symbology,
         False,

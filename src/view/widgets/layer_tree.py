@@ -7,7 +7,7 @@ from ...model.event import PLANNING_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIG
 from ...model.layer import Layer
 
 from ...QRiS.settings import Settings
-from ...QRiS.protocol_parser import load_protocols
+from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocols
 
 from ..frm_event_picker import FrmEventPicker
 
@@ -47,17 +47,27 @@ class LayerTreeWidget(QtWidgets.QWidget):
             for i in range(item.rowCount()):
                 self.add_selected_layers(item.child(i))
         else:
-            tree_layer = item.data(QtCore.Qt.UserRole)
+            tree_layer: LayerDefinition = item.data(QtCore.Qt.UserRole)
             tree_name = item.text()
+            tree_protocol: ProtocolDefinition = item.parent().data(QtCore.Qt.UserRole)
             # check if in list already
             for i in range(self.layers_model.rowCount()):
-                list_layer = self.layers_model.item(i).data(QtCore.Qt.UserRole)
-
-                if tree_layer == list_layer:
-                    return
+                data = self.layers_model.item(i).data(QtCore.Qt.UserRole)
+                if isinstance(data, Layer):
+                    # Get the protocol of the layer
+                    list_protocol = data.get_layer_protocol(self.qris_project.protocols)
+                    if list_protocol is None:
+                        continue
+                    if list_protocol.unique_key() == f'{tree_protocol.machine_code}::{tree_protocol.version}':
+                        if data.unique_key() == f'{tree_layer.id}::{tree_layer.version}':
+                            return
+                else:
+                    list_protocol, list_layer = data
+                    if tree_layer == list_layer:
+                        return
+                
             # If got to here then the layer selected in the tree is not in use
             # need the protocol name as well. should be the parent
-            tree_protocol = item.parent().data(QtCore.Qt.UserRole)
             layer_item = QtGui.QStandardItem(tree_name)
             data_item = (tree_protocol, tree_layer)
             layer_item.setData(data_item, QtCore.Qt.UserRole)
