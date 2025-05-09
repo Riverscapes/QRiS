@@ -10,6 +10,7 @@ from ...QRiS.settings import Settings
 from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocols
 
 from ..frm_event_picker import FrmEventPicker
+from ..frm_layer_details import FrmLayerDetails
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
@@ -35,7 +36,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.load_protocol_layer_tree()
 
         self.layers_model = QtGui.QStandardItemModel()
-        self.layer_list.setModel(self.layers_model)
+        self.layers_in_use_list.setModel(self.layers_model)
 
 
     def add_selected_layers(self, item: QtGui.QStandardItem) -> None:
@@ -102,10 +103,6 @@ class LayerTreeWidget(QtWidgets.QWidget):
             protocol_si.setEditable(False)
 
             for layer in protocol.layers:
-                # TODO temporarlily Turn off Brat layers
-                if layer.label in ["BRAT CIS", "BRAT CIS Reaches"]:
-                    continue
-
                 layer_name = layer.label if layer.label not in duplicate_layers else f'{layer.label} ({layer.geom_type})'
                 layer_si = QtGui.QStandardItem(layer_name)
                 layer_si.setEditable(False)
@@ -116,21 +113,62 @@ class LayerTreeWidget(QtWidgets.QWidget):
             if protocol_si.hasChildren():
                 self.tree_model.appendRow(protocol_si)
 
-        self.layer_tree.setModel(self.tree_model)
-        self.layer_tree.expandAll()
+        self.available_layers_tree.setModel(self.tree_model)
+        self.available_layers_tree.expandAll()
 
-        self.layer_tree.doubleClicked.connect(self.on_double_click_tree)
+        self.available_layers_tree.doubleClicked.connect(self.on_double_click_tree)
+        self.available_layers_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.available_layers_tree.customContextMenuRequested.connect(self.on_right_click_tree)
 
     def on_double_click_tree(self, index):
 
-        item = self.layer_tree.model().itemFromIndex(index)
+        item = self.available_layers_tree.model().itemFromIndex(index)
         layer = item.data(QtCore.Qt.UserRole)
         if isinstance(layer, Layer):
             self.add_selected_layers(item)
 
+    def on_right_click_tree(self, position):
+        index = self.available_layers_tree.indexAt(position)
+        if not index.isValid():
+            return
+
+        item = self.available_layers_tree.model().itemFromIndex(index)
+        layer = item.data(QtCore.Qt.UserRole)
+        if isinstance(layer, Layer) or isinstance(layer, LayerDefinition):
+            if isinstance(layer, LayerDefinition):
+                protocol_definition: ProtocolDefinition = item.parent().data(QtCore.Qt.UserRole)
+                layer.protocol_definition = protocol_definition
+            menu = QtWidgets.QMenu(self)
+            action = menu.addAction("Layer Details")
+            action.triggered.connect(lambda: self.show_layer_properties(layer))
+            menu.exec_(self.available_layers_tree.viewport().mapToGlobal(position))
+            menu.close()  # Ensure the menu is closed after execution
+            return
+        else:
+            return
+
+    def on_right_click_list(self, position):
+        index = self.layers_in_use_list.indexAt(position)
+        if not index.isValid():
+            return
+
+        item = self.layers_in_use_list.model().itemFromIndex(index)
+        layer = item.data(QtCore.Qt.UserRole)
+        if isinstance(layer, tuple):
+            layer_query: LayerDefinition = layer[1]
+            protocol_definition: ProtocolDefinition = layer[0]
+            layer_query.protocol_definition = protocol_definition
+        elif isinstance(layer, Layer):
+            layer_query = layer
+        menu = QtWidgets.QMenu(self)
+        action = menu.addAction("Layer Details")
+        action.triggered.connect(lambda: self.show_layer_properties(layer_query))
+        menu.exec_(self.layers_in_use_list.viewport().mapToGlobal(position))
+        menu.close()
+
     def on_add_layer_clicked(self):
 
-        for index in self.layer_tree.selectedIndexes():
+        for index in self.available_layers_tree.selectedIndexes():
             modelItem = self.tree_model.itemFromIndex(index)
             self.add_selected_layers(modelItem)
 
@@ -155,12 +193,21 @@ class LayerTreeWidget(QtWidgets.QWidget):
                                 break
 
     def on_remove_layer(self):
-        for index in self.layer_list.selectedIndexes():
+        for index in self.layers_in_use_list.selectedIndexes():
             if self.mandatory_layers is not None:
                 layer = self.layers_model.itemFromIndex(index).data(QtCore.Qt.UserRole)
                 if layer.fc_name in self.mandatory_layers:
                     continue
             self.layers_model.removeRow(index.row())
+
+    def show_layer_properties(self, layer: Layer):
+
+        frm = FrmLayerDetails(self, self.qris_project, layer)
+        frm.exec_()
+        if frm.result() == QtWidgets.QDialog.Accepted:
+            return
+        else:
+            return
 
     def setupUi(self):
         
@@ -173,10 +220,11 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.lblAllLayers = QtWidgets.QLabel('Available Layers')
         self.vert_layer_tree.addWidget(self.lblAllLayers)
 
-        self.layer_tree = QtWidgets.QTreeView(self)
-        self.layer_tree.setHeaderHidden(True)
-        # self.layer_tree.clicked.connect(self.on_check_children)
-        self.vert_layer_tree.addWidget(self.layer_tree)
+        self.available_layers_tree = QtWidgets.QTreeView(self)
+        self.available_layers_tree.setHeaderHidden(True)
+        self.available_layers_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.available_layers_tree.customContextMenuRequested.connect(self.on_right_click_tree)
+        self.vert_layer_tree.addWidget(self.available_layers_tree)
 
         # Add Remove Buttons
         self.vert_buttons = QtWidgets.QVBoxLayout(self)
@@ -205,8 +253,11 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.lblLayersInUse = QtWidgets.QLabel('Layers In Use')
         self.vert_layers.addWidget(self.lblLayersInUse)
 
-        self.layer_list = QtWidgets.QListView(self)
-        self.vert_layers.addWidget(self.layer_list)
+        self.layers_in_use_list = QtWidgets.QListView(self)
+        # set right click menu
+        self.layers_in_use_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.layers_in_use_list.customContextMenuRequested.connect(self.on_right_click_list)
+        self.vert_layers.addWidget(self.layers_in_use_list)
 
 
 

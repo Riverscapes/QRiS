@@ -50,6 +50,7 @@ class LayerDefinition:
     hierarchy: Optional[str] = None
     fields: List[FieldDefinition] = field(default_factory=list)
     menu_items: Optional[List[str]] = None
+    protocol_definition = None
 
 @dataclass
 class MetricDefinition:

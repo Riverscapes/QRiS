@@ -12,6 +12,7 @@
         <file alias="collapse">../Images/collapse.svg</file>
         <file alias="close">../Images/close.svg</file>
         <file alias="delete">../Images/delete.svg</file>
+        <file alias="details">../Images/details.svg</file>
         <file alias="detrend">../Images/detrend.png</file>
         <file alias="download">../Images/download.svg</file>
         <file alias="expand">../Images/expand.svg</file>
