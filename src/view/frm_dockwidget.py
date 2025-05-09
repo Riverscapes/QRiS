@@ -71,6 +71,7 @@ from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
 from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_layer_picker import FrmLayerPicker
+from .frm_layer_details import FrmLayerDetails
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
@@ -514,6 +515,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                         if 'export_brat' in model_data.menu_items:
                             self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
+                    self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
@@ -1584,6 +1586,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmAnalysisProperties(self, self.project, db_item)
         elif isinstance(db_item, PlanningContainer):
             frm = FrmPlanningContainer(self, self.project, db_item)
+        elif isinstance(db_item, EventLayer):
+            layer = db_item.layer
+            frm = FrmLayerDetails(self, self.project, layer) 
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
