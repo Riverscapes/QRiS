@@ -17,6 +17,7 @@ from .frm_climate_engine_download import FrmClimateEngineDownload
 from .utilities import add_help_button
 from .widgets.sample_frames import SampleFrameWidget
 from .widgets.date_range import DateRangeWidget
+from .widgets.event_library import EventLibraryWidget
 
 from ..model.project import Project
 from ..model.db_item import dict_factory
@@ -43,6 +44,9 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.date_range_widget = DateRangeWidget(self)
         self.date_range_widget.date_range_changed.connect(self.create_plot)
+
+        self.event_library = EventLibraryWidget(self, self.qris_project)
+        self.event_library.event_checked.connect(self.create_plot)
 
         self.setWindowTitle('Climate Engine Explorer')
         self.setupUi()
@@ -109,6 +113,9 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
     def create_plot(self):
 
+        if self.lst_climate_engine.model() is None:
+            return
+
         self._static_ax.clear()
 
         # get the selected time series ids
@@ -120,6 +127,19 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.tab_widget_right.setVisible(True)
         self.lbl_initial_text.setVisible(False)
 
+        event_dates = [event.date for event in self.event_library.get_selected_events()]
+        # add vertical lines for the events
+        for event_date in event_dates:
+            year, month, day = event_date.split('-')
+            if year == 'None':
+                continue
+            if month == 'None':
+                event_date = f'{year}-01-01'
+            elif day == 'None':
+                event_date = f'{year}-{month}-01'
+            date = datetime.strptime(event_date, '%Y-%m-%d')
+            self._static_ax.axvline(date, color='black', linestyle='--', linewidth=1)
+
         # get the date range
         start_date, end_date = self.date_range_widget.get_date_range()
 
@@ -127,20 +147,26 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         data = {}
         # need to grab the data for each checked sample frame feature
         sample_frame_feature_ids = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
+        frame = self.sample_frame_widget.selected_sample_frame()
         
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
             curs.execute('SELECT * FROM time_series WHERE time_series_id = ?', (time_series_id,))
             time_series = curs.fetchone()
             time_series_name = time_series[1]
-            dataset_id, variable_id = time_series_name.split(' ')
-            dataset_name = next((key for key, dataset in self.datasets.items() if dataset['id'] == dataset_id), None)
-            metadata = json.loads(time_series[5])
-            units = metadata['units'] if 'units' in metadata else None
+            time_series_metadata = json.loads(time_series[5])
+            dataset_name = time_series_metadata.get('dataset', None)
+            variable_id = time_series_metadata.get('variable', None)
+            units = time_series_metadata.get('units', None)
             for sample_frame_feature_id in sample_frame_feature_ids:
                 curs.execute('SELECT time_value, value FROM sample_frame_time_series WHERE time_series_id = ? AND sample_frame_fid = ? AND time_value BETWEEN ? AND ?',
                              (time_series_id, sample_frame_feature_id, start_date, end_date))
-                data[sample_frame_feature_id] = [(datetime.strptime(row[0], '%Y-%m-%d'), row[1]) for row in curs.fetchall()]
+                values = [(datetime.strptime(row[0], '%Y-%m-%d'), row[1]) for row in curs.fetchall()]
+                curs.execute('SELECT display_label FROM sample_frame_features WHERE fid = ?', (sample_frame_feature_id,))
+                display_label = curs.fetchone()[0]
+                if display_label is None or display_label == '':
+                    display_label = f'Feature {sample_frame_feature_id}'
+                data[display_label] = values
 
         # check the data if there is only one plot point per sample frame
         if all(len(values) <= 1 for values in data.values()):
@@ -152,7 +178,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         # create the plot
         self._static_ax.set_xlabel('Time')
-        description = metadata['description'] if 'description' in metadata else variable_id
+        description = time_series_metadata.get('description', variable_id)
         y_label = f'{description} ({units})' if units is not None else description
         self._static_ax.set_title(f'{dataset_name} ({description})')
         if self.rdo_space.isChecked():
@@ -349,7 +375,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.tab_climate_engine = QtWidgets.QWidget(self.widget_left)
         self.vert_climate_engine = QtWidgets.QVBoxLayout(self.tab_climate_engine)
         self.tab_climate_engine.setLayout(self.vert_climate_engine)
-        self.tab_widget_left.addTab(self.tab_climate_engine, 'Climate Engine Metrics')
+        self.tab_widget_left.addTab(self.tab_climate_engine, 'Timeseries Data')
 
         self.horiz_climate_engine = QtWidgets.QHBoxLayout(self)
         self.vert_climate_engine.addLayout(self.horiz_climate_engine)
@@ -357,7 +383,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         # add a spacer between the buttons
         self.horiz_climate_engine.addStretch()
 
-        self.btn_climate_engine_download = QtWidgets.QPushButton('Download Metrics')
+        self.btn_climate_engine_download = QtWidgets.QPushButton('Download Timeseries')
         self.btn_climate_engine_download.clicked.connect(self.show_climate_engine_download)
         self.horiz_climate_engine.addWidget(self.btn_climate_engine_download)
 
@@ -367,6 +393,13 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine.setContextMenuPolicy(Qt.CustomContextMenu)
         self.lst_climate_engine.customContextMenuRequested.connect(self.on_context)
         self.vert_climate_engine.addWidget(self.lst_climate_engine)
+
+       # Events Tab
+        self.tab_events = QtWidgets.QWidget(self.widget_left)
+        self.vert_events = QtWidgets.QVBoxLayout(self.tab_events)
+        self.tab_events.setLayout(self.vert_events)
+        self.tab_widget_left.addTab(self.tab_events, 'Events')
+        self.vert_events.addWidget(self.event_library)
 
         # ok lets add the right side
         self.vert_right = QtWidgets.QVBoxLayout(self)

@@ -7,6 +7,9 @@ from ...model.project import Project
 class EventLibraryWidget(QtWidgets.QWidget):
 # Implement a Event Library grid picker, which loads events in event library, exposes their date, and type (columns) allows sorting), and has a checkbox 
 
+    # signal emitted when the user checks or unchecks an event
+    event_checked = QtCore.pyqtSignal(list)
+
     def __init__(self, parent: QtWidgets.QWidget, qris_project: Project, event_types: list=None):
         super().__init__(parent)
         self.qris_project = qris_project
@@ -25,6 +28,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
             # Create a checkbox and add it to the cell widget
             checkBox = QtWidgets.QCheckBox()
             self.table.setCellWidget(i, 0, checkBox)
+            checkBox.stateChanged.connect(self.on_event_checked)
             
             # Store the entire Event object in the first column using a custom role
             item = QtWidgets.QTableWidgetItem(event.name)
@@ -75,9 +79,15 @@ class EventLibraryWidget(QtWidgets.QWidget):
         for i in range(self.table.rowCount()):
             self.table.cellWidget(i, 0).setChecked(False)
 
+    # emit the selected event ids when the user checks or unchecks an event
+    def on_event_checked(self, state):
+        selected_events = self.get_selected_event_ids()
+        self.event_checked.emit(selected_events)
+
     def setupUi(self):
 
         self.vert_layout = QtWidgets.QVBoxLayout(self)
+        self.vert_layout.setContentsMargins(0, 0, 0, 0)
 
         self.table = QtWidgets.QTableWidget(self)
         self.table.setColumnCount(4)

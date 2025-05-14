@@ -22,26 +22,10 @@ def get_api_key():
 
 
 def get_datasets() -> dict:
-    datasets_file = os.path.join(os.path.dirname(__file__), 'climate_engine_datasets.json')
+    datasets_file = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', 'climate_engine_datasets.json')
     with open(datasets_file, 'r') as f:
         datasets = json.load(f)
-    return datasets
-
-
-def get_dataset_variables(dataset: str) -> dict:
-    api_key = get_api_key()
-    if  api_key is None:
-        return None
-    url = f'{CLIMATE_ENGINE_API}/metadata/dataset_variables'
-    headers = {'accept': 'application/json',    
-               'Authorization': api_key}
-    params = {'dataset': dataset}
-    response = requests.get(url, params=params, headers=headers)
-    if response.status_code == 200:
-        content = response.json()
-        return {name: description for name, description in zip(content['variables'], content['variable names'])}
-    else:
-        return None
+    return {dataset['datasetId']: dataset for dataset in datasets}
     
 
 def get_dataset_date_range(dataset: str) -> dict:
@@ -57,7 +41,7 @@ def get_dataset_date_range(dataset: str) -> dict:
 
     if response.status_code == 200:
         content = response.json()
-        return content
+        return content.get('Data', None)
     else:
         return None
     

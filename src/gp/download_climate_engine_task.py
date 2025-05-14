@@ -15,6 +15,12 @@ from typing import List
 
 MESSAGE_CATEGORY = 'DownloadClimateEngineTask'
 
+AREA_REDUCER= {
+    'Mean': 'mean',
+    'Median': 'median',
+    'Max': 'max',
+    'Min': 'min'
+}
 
 class DownloadClimateEngineTimeseriesTask(QgsTask):
     """
@@ -24,19 +30,17 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
     # Signal to notify when done
     download_complete = pyqtSignal(bool)
 
-    def __init__(self, qris_project: Project, name: str, dataset: str, variables: List[str], start_date: str, end_date: str, features: ogr.Feature, area_reducer: str='mean', temporal_statistic: str='mean'):
+    def __init__(self, qris_project: Project, name: str, dataset: str, variables: List[str], start_date: str, end_date: str, features: ogr.Feature, area_reducer: str='mean'):
         super().__init__('Download Climate Engine Task', QgsTask.CanCancel)
 
         self.qris_project = qris_project
         self.name = name
         self.dataset = dataset
         self.variables = [variables] if isinstance(variables, str) else variables
-        self.variables = variables
         self.start_date = start_date
         self.end_date = end_date
         self.features = features
         self.area_reducer = area_reducer
-        self.temporal_statistic = temporal_statistic
 
     def run(self):
         """
@@ -88,7 +92,6 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
 
                 params = {'dataset': self.dataset,
                         'variable': self.variables,
-                        # 'temporal_statistic': self.temporal_statistic,
                         'area_reducer': self.area_reducer,
                         'start_date': self.start_date,
                         'end_date': self.end_date,
@@ -99,16 +102,13 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
                         'Authorization': api_key}
                 response = requests.get(url, params=params, headers=headers)
                 response.raise_for_status()
-                response_data = response.json()
+                response_content = response.json()
 
-                # if response_data is None:
-                #     return False
-
-                [timeseries] = response_data
-                data = timeseries.get('Data', None)
+                [response_data] = response_content.get('Data', None)
+                data = response_data.get('Data', None)
 
                 if data is None:
-                    QgsMessageLog.logMessage(f'No Timeseries data for feature {feature_id} for one or more {self.variables} in {self.dataset}', MESSAGE_CATEGORY, Qgis.Warning)
+                    QgsMessageLog.logMessage(f'No data for feature {feature_id} for one or more {self.variables} in {self.dataset}', MESSAGE_CATEGORY, Qgis.Warning)
                     continue
 
                 df = pd.DataFrame(data)
@@ -137,11 +137,10 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
                                 'units': units,
                                 'start_date': self.start_date.strftime('%Y-%m-%d'), 
                                 'end_date': self.end_date.strftime('%Y-%m-%d'), 
-                                'description': self.variables[variable],
+                                'description': variable,
                                 'dataset': self.dataset,
                                 'variable': variable,
                                 'area_reducer': self.area_reducer,
-                                # 'temporal_statistic': self.temporal_statistic
                                 }
                             cursor.execute('INSERT INTO time_series (name, source, url, metadata) VALUES (?, ?, ?, ?)', (self.name, 'Climate Engine', 'https://www.climateengine.org/', json.dumps(metadata)))
                             time_series_id = cursor.lastrowid
