@@ -89,7 +89,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
             index = self.sample_frame_features_model.index(i)
             self.sample_frame_features_model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
 
-    def selected_sample_frame(self):
+    def selected_sample_frame(self) -> SampleFrame:
         return self.cbo_sample_frame.currentData(Qt.UserRole)
     
     def selected_features_count(self):

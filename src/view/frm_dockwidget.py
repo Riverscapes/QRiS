@@ -384,7 +384,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
                 # self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
-                self.add_context_menu_item(self.menu, 'Explore Climate Engine', 'refresh', lambda: self.climate_engine_explorer())
+                self.add_context_menu_item(self.menu, 'Explore Climate Engine Timeseries', 'refresh', lambda: self.climate_engine_explorer())
             elif model_data == STREAM_GAGE_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Add Stream Gages To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
@@ -839,8 +839,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def climate_engine_explorer(self):
 
-        if len(self.project.sample_frames) == 0:
-            QtWidgets.QMessageBox.warning(self, 'No Sample Frames', 'No sample frames exist in the current QRiS project. Please create or import sample frames before using the Climate Engine Explorer.')
+        if len(self.project.sample_frames) + len(self.project.aois) + len(self.project.valley_bottoms) == 0:
+            QtWidgets.QMessageBox.warning(self, 'No Climate Engine layers in QRiS Project', 'No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.')
             return
 
         if self.climate_engine_doc_widget is None:

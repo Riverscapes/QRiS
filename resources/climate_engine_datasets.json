@@ -1,0 +1,924 @@
+[
+    {
+        "datasetId": "ACIS_NRCC_NN",
+        "name": "ACIS NRCC NN Daily Precipitation",
+        "apiPath": "projects/climate-engine-pro/assets/public/acis-nrcc-nn/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ANUSPLIN_DAILY",
+        "name": "ANUSPLIN Gridded Climate for Canada - Daily",
+        "apiPath": "projects/climate-engine-pro/assets/ce-anusplin-daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ANUSPLIN_MONTHLY",
+        "name": "ANUSPLIN Gridded Climate for Canada - Monthly",
+        "apiPath": "projects/climate-engine-pro/assets/cfe-anusplin-monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CDOUTLOOK",
+        "name": "Canadian Drought Outlook",
+        "apiPath": "projects/climate-engine-pro/assets/ce-aafc-cdo-monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CEMS",
+        "name": "Copernicus Emergency Management Service Fire Danger Indices",
+        "apiPath": "projects/climate-engine-pro/assets/ce-cems-fire-daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CHIRPS_DAILY",
+        "name": "CHIRPS Daily",
+        "apiPath": "UCSB-CHG/CHIRPS/DAILY",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CHIRPS_PENTAD",
+        "name": "CHIRPS Pentad",
+        "apiPath": "UCSB-CHG/CHIRPS/PENTAD",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CHIRPS_PRELIM_PENTAD",
+        "name": "CHIRPS Preliminary Pentad",
+        "apiPath": "projects/climate-engine-pro/assets/ce-chirps-prelim-pentad",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CFS_GRIDMET",
+        "name": "CFS gridMET 28-Day Forecasts",
+        "apiPath": "projects/climate-engine/cfsv2/forecast",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CFSV2",
+        "name": "CFSV2 Reanalysis",
+        "apiPath": "NOAA/CFSV2/FOR6H",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "CONUS404",
+        "name": "CONUS404",
+        "apiPath": "projects/openet/assets/meteorology/conus404/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "DAYMET",
+        "name": "DAYMET - 1km - Daily",
+        "apiPath": "NASA/ORNL/DAYMET_V4",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "EH",
+        "name": "USGS 1/10-deg static earthquake damage risk dataset",
+        "apiPath": "projects/climate-engine-pro/assets/earthquake_hazard/ProbMMI_VI_100Yrs_VariableVs30",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ERA5",
+        "name": "ERA5 Daily",
+        "apiPath": "ECMWF/ERA5/DAILY",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ERA5_LAND_DAILY",
+        "name": "ERA5 Land Daily",
+        "apiPath": "ECMWF/ERA5_LAND/DAILY_RAW",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ERA5_AG",
+        "name": "ERA5 Ag Daily",
+        "apiPath": "projects/ce-datasets/assets/ce-ag-era5/daily-legacy",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ERA5_HEAT",
+        "name": "ERA5 HEAT",
+        "apiPath": "projects/climate-engine-pro/assets/ce-era5-heat",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ESI_4wk",
+        "name": "ESI 4 Week",
+        "apiPath": "projects/climate-engine/esi/4wk",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "ESI_12wk",
+        "name": "ESI 12 Week",
+        "apiPath": "projects/climate-engine/esi/12wk",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "FLDAS",
+        "name": "FLDAS",
+        "apiPath": "NASA/FLDAS/NOAH01/C/GL/M/V001",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "Tair_f_tavg",
+                "displayInQRiS": false
+            },
+            {
+                "name": "Evap_tavg",
+                "displayInQRiS": false
+            },
+            {
+                "name": "SoilMoi00_10cm_tavg",
+                "displayInQRiS": false
+            },
+            {
+                "name": "Qs_tavg",
+                "displayInQRiS": false
+            },
+            {
+                "name": "TotalRunoff",
+                "displayInQRiS": false
+            },
+            {
+                "name": "RootZoneSoilMoisture",
+                "displayInQRiS": false
+            },
+            {
+                "name": "SWE_inst",
+                "displayInQRiS": false
+            },
+            {
+                "name": "SnowDepth_inst",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "FRET",
+        "name": "FRET 7-Day Forecasts",
+        "apiPath": "projects/climate-engine/fret/forecast",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "GEPS_2WK",
+        "name": "Global Ensemble Prediction System 2 week",
+        "apiPath": "projects/climate-engine-pro/assets/ce-geps2w-forecast",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "GEPS_4WK",
+        "name": "Global Ensemble Prediction System 4 week",
+        "apiPath": "projects/climate-engine-pro/assets/ce-geps4w-forecast",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "GLDAS",
+        "name": "GLDAS",
+        "apiPath": "NASA/GLDAS/V021/NOAH/G025/T3H",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "Evap_tavg",
+                "displayInQRiS": false
+            },
+            {
+                "name": "SoilMoi0_10cm_inst",
+                "displayInQRiS": false
+            },
+            {
+                "name": "TotalRunoff",
+                "displayInQRiS": false
+            },
+            {
+                "name": "RootMoist_inst",
+                "displayInQRiS": false
+            },
+            {
+                "name": "SWE_inst",
+                "displayInQRiS": false
+            },
+            {
+                "name": "SnowDepth_inst",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "GPM_DAILY",
+        "name": "GPM 11km - Daily",
+        "apiPath": "projects/climate-engine-pro/assets/ce-gpm-imerg-daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "GRIDMET",
+        "name": "GRIDMET",
+        "apiPath": "IDAHO_EPSCOR/GRIDMET",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "pr",
+                "displayInQRiS": true
+            },
+            {
+                "name": "bi",
+                "displayInQRiS": false
+            },
+            {
+                "name": "fm100",
+                "displayInQRiS": false
+            },
+            {
+                "name": "fm1000",
+                "displayInQRiS": false
+            },
+            {
+                "name": "tmmx",
+                "displayInQRiS": true
+            },
+            {
+                "name": "tmmn",
+                "displayInQRiS": true
+            },
+            {
+                "name": "rmin",
+                "displayInQRiS": false
+            },
+            {
+                "name": "rmax",
+                "displayInQRiS": false
+            },
+            {
+                "name": "srad",
+                "displayInQRiS": false
+            },
+            {
+                "name": "vpd",
+                "displayInQRiS": false
+            },
+            {
+                "name": "vs",
+                "displayInQRiS": false
+            },
+            {
+                "name": "sph",
+                "displayInQRiS": false
+            },
+            {
+                "name": "erc",
+                "displayInQRiS": false
+            },
+            {
+                "name": "eto",
+                "displayInQRiS": true
+            },
+            {
+                "name": "etr",
+                "displayInQRiS": false
+            },
+            {
+                "name": "tmean",
+                "displayInQRiS": true
+            },
+            {
+                "name": "wb",
+                "displayInQRiS": true
+            },
+            {
+                "name": "dps",
+                "displayInQRiS": false
+            },
+            {
+                "name": "eddi",
+                "displayInQRiS": true
+            },
+            {
+                "name": "spi",
+                "displayInQRiS": true
+            },
+            {
+                "name": "spei",
+                "displayInQRiS": true
+            },
+            {
+                "name": "pdsi",
+                "displayInQRiS": true
+            },
+            {
+                "name": "custom",
+                "displayInQRiS": false
+            },
+            {
+                "name": "peth",
+                "displayInQRiS": true
+            },
+            {
+                "name": "wbh",
+                "displayInQRiS": true
+            },
+            {
+                "name": "speih",
+                "displayInQRiS": true
+            },
+            {
+                "name": "eddih",
+                "displayInQRiS": true
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "GRIDMET_DROUGHT",
+        "name": "GRIDMET DROUGHT",
+        "apiPath": "GRIDMET/DROUGHT",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "HRDPA",
+        "name": "HRDPA",
+        "apiPath": "projects/climate-engine-pro/assets/ce-hrdpa-daily",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "precip",
+                "displayInQRiS": false
+            },
+            {
+                "name": "spi",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "HRDPS",
+        "name": "HRDPS",
+        "apiPath": "projects/climate-engine-pro/assets/ce-hrdps-daily",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "Tavg",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT5_TOA",
+        "name": "Landsat 5 Top of Atmosphere",
+        "apiPath": "LANDSAT/LT05/C02/T1_TOA",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT7_TOA",
+        "name": "Landsat 7 Top of Atmosphere",
+        "apiPath": "LANDSAT/LE07/C02/T1_TOA",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT8_TOA",
+        "name": "Landsat 8 Top of Atmosphere",
+        "apiPath": "LANDSAT/LC08/C02/T1_RT_TOA",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT9_TOA",
+        "name": "Landsat 9 Top of Atmosphere",
+        "apiPath": "LANDSAT/LC09/C02/T1_TOA",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT_TOA",
+        "name": "Landsat 4,5,7,8 (Merged) Top of Atmosphere",
+        "apiPath": "LANDSAT/LT05/C02/T1_TOA\nLANDSAT/LE07/C02/T1_TOA\nLANDSAT/LC08/C02/T1_RT_TOA\nLANDSAT/LC09/C02/T1_RT_TOA",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT5_SR",
+        "name": "Landsat 5 Surface Reflectance",
+        "apiPath": "LANDSAT/LT05/C02/T1_L2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT7_SR",
+        "name": "Landsat 7 Surface Reflectance",
+        "apiPath": "LANDSAT/LE07/C02/T1_L2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT8_SR",
+        "name": "Landsat 8 Surface Reflectance",
+        "apiPath": "LANDSAT/LC08/C02/T1_L2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT9_SR",
+        "name": "Landsat 9 Surface Reflectance",
+        "apiPath": "LANDSAT/LC09/C02/T1_L2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "LANDSAT_SR",
+        "name": "Landsat 4,5,7,8 (Merged) Surface Reflectance",
+        "apiPath": "LANDSAT/LT05/C02/T1_L2\nLANDSAT/LE07/C02/T1_L2\nLANDSAT/LC08/C02/T1_L2\nLANDSAT/LC09/C02/T1_L2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MERRA2",
+        "name": "MERRA2 Reanalysis",
+        "apiPath": "projects/climate-engine/merra2/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MERRA2_FWI",
+        "name": "MERRA2 Fire Weather Index (NASA)",
+        "apiPath": "projects/climate-engine-pro/assets/ce-merra2_fwi-daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MOD16_TERRANET_ET",
+        "name": "MODIS TERRA NET ET 16-day",
+        "apiPath": "MODIS/006/MOD16A2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_BURNAREA",
+        "name": "MODIS Burned Area - Monthly",
+        "apiPath": "MODIS/006/MCD64A1",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_16DAY",
+        "name": "MODIS Aqua, Terra (Merged) 16-day composite",
+        "apiPath": "MODIS/006/MCD43A4",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_AQUA_16DAY",
+        "name": "MODIS Aqua 16-day composite",
+        "apiPath": "MODIS/006/MOD13Q1 or MODIS/006/MOD13A1",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_TERRA_16DAY",
+        "name": "MODIS Terra 16-day composite",
+        "apiPath": "MODIS/006/MYD13Q1 or MODIS/006/MYD13A1",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_AQUA_8DAY",
+        "name": "MODIS Aqua 8-day composite",
+        "apiPath": "MODIS/006/MYD11A2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_TERRA_8DAY",
+        "name": "MODIS Terra 8-day composite",
+        "apiPath": "MODIS/006/MOD11A2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_AQUA_DAILY",
+        "name": "MODIS Aqua daily data",
+        "apiPath": "MODIS/006/MYD09GA or MODIS/006/MYD11A1 or MODIS/006/MYD10A1",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "MODIS_TERRA_DAILY",
+        "name": "MODIS Terra daily data",
+        "apiPath": "MODIS/006/MOD09GA or MODIS/006/MOD11A1 or MODIS/006/MOD10A1",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NADM",
+        "name": "North American Drought Monitor",
+        "apiPath": "projects/climate-engine/nadm/monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NCEP",
+        "name": "NCEP",
+        "apiPath": "NCEP_RE/sea_level_pressure",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "slp",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NCLIMGRID_DAILY",
+        "name": "NClimGrid-Daily 5-km",
+        "apiPath": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NCLIMGRID_MONTHLY",
+        "name": "NClimGrid-Monthly 5-km",
+        "apiPath": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NLDAS2_DAILY",
+        "name": "NLDAS2 DAILY reanalysis",
+        "apiPath": "projects/eddi-noaa/nldas/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "PFV52",
+        "name": "NOAA AVHRR Pathfinder V 5.2 4-km sea surface",
+        "apiPath": "NOAA/AVHRR_Pathfinder_V52_L3",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NOAA_CDR_PERSIANN",
+        "name": "NOAA CDR PERSIANN",
+        "apiPath": "NOAA/PERSIANN-CDR",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NOAA_CPC_DAILY_GLOBAL",
+        "name": "NOAA CPC Global Unified Gauge-Based Analysis",
+        "apiPath": "projects/climate-engine-pro/assets/noaa-cpc-daily-global/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NOAA_CPC_DAILY_CONUS",
+        "name": "NOAA CPC Conus Unified Gauge-Based Analysis",
+        "apiPath": "projects/climate-engine-pro/assets/noaa-cpc-daily-conus/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "NOAA_CPC_CMORPH",
+        "name": "NOAA Satellite Precipitation - CMORPH",
+        "apiPath": "pprojects/climate-engine-pro/assets/noaa-cpc-cmorph/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "OISST",
+        "name": "OISST",
+        "apiPath": "NOAA/CDR/OISST/V2_1",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "sst",
+                "displayInQRiS": false
+            },
+            {
+                "name": "ice",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "OPENET_CONUS",
+        "name": "OpenET Conus",
+        "apiPath": "OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "PML_ET",
+        "name": "PML_V2 Evapotranspiration dataset",
+        "apiPath": "CAS/IGSNRR/PML/V2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "PRISM",
+        "name": "PRISM Daily",
+        "apiPath": "OREGONSTATE/PRISM/AN81d",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "PRISM_MONTHLY",
+        "name": "PRISM Monthly",
+        "apiPath": "OREGONSTATE/PRISM/AN81m",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RAP_COVER",
+        "name": "RAP Vegetation Cover",
+        "apiPath": "projects/rangeland-analysis-platform/vegetation-cover-v3",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RAP_PRODUCTION",
+        "name": "RAP Herbaceous Production",
+        "apiPath": "projects/rangeland-analysis-platform/npp-partitioned-v3",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RAP_PRODUCTION_16DAY",
+        "name": "RAP Herbaceous Production 16 Day",
+        "apiPath": "projects/rap-data-365417/assets/npp-partitioned-16day-v3",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RCMAP",
+        "name": "RCMAP Rangeland Component Timeseries v5 (1985-2023)",
+        "apiPath": "USGS/NLCD_RELEASES/2023_REL/RCMAP/V6/COVER",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RDPA",
+        "name": "RDPA",
+        "apiPath": "projects/climate-engine-pro/assets/ce-rdpa-daily",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "precip",
+                "displayInQRiS": false
+            },
+            {
+                "name": "spi",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RDPS",
+        "name": "RDPS",
+        "apiPath": "projects/climate-engine-pro/assets/ce-rdps-daily",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "Tavg",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "RTMA",
+        "name": "Real-Time Mesoscale Analysis (RTMA)",
+        "apiPath": "projects/climate-engine/rtma/daily",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "SENTINEL2_TOA",
+        "name": "Sentinel 2, top-of-atmosphere",
+        "apiPath": "COPERNICUS/S2",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "SENTINEL2_SR",
+        "name": "Sentinel 2, surface reflectance",
+        "apiPath": "COPERNICUS/S2_SR",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "SENTINEL5P_ATMOSPHERE",
+        "name": "Sentinel 5P ATMOSPHERE",
+        "apiPath": "COPERNICUS/S5P/OFFL/L3_CH4",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "SNODAS",
+        "name": "SNODAS",
+        "apiPath": "projects/climate-engine/snodas/daily",
+        "allowMapLayers": false,
+        "variables": [
+            {
+                "name": "SWE",
+                "displayInQRiS": false
+            },
+            {
+                "name": "Snow_Depth",
+                "displayInQRiS": false
+            }
+        ],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "TERRACLIMATE",
+        "name": "TerraClimate",
+        "apiPath": "IDAHO_EPSCOR/TERRACLIMATE",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "TMM_DAILY",
+        "name": "TRMM 28-km (1/4-deg) precipitation dataset (NASA)",
+        "apiPath": "TRMM/3B42",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USDOUTLOOK",
+        "name": "US Drought Outlook",
+        "apiPath": "projects/climate-engine-pro/assets/ce-cpc-usdo-monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USDM_DROUGHT_MONITOR",
+        "name": "USDM Drought monitor rasters",
+        "apiPath": "projects/climate-engine/usdm/weekly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USFS_TCC",
+        "name": "USFS Tree Canopy Cover v2021-4",
+        "apiPath": "USGS/NLCD_RELEASES/2021_REL/TCC/v2021-4",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USGS_ET_MODIS_DEKADAL",
+        "name": "USGS MODIS ETa dekadal",
+        "apiPath": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_dekadal",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USGS_ET_MODIS_MONTHLY",
+        "name": "USGS MODIS ETa monthly",
+        "apiPath": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USGS_ET_MODIS_ANNUAL",
+        "name": "USGS MODIS ETa annual",
+        "apiPath": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_annual",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USGS_ET_VIIRS_DEKADAL",
+        "name": "USGS VIIRS ETa dekadal",
+        "apiPath": "projects/usgs-ssebop/viirs_et_v6_dekadal",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USGS_ET_VIIRS_MONTHLY",
+        "name": "USGS VIIRS ETa monthly",
+        "apiPath": "projects/usgs-ssebop/viirs_et_v6_monthly",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "USGS_ET_MODIS_ANNUAL",
+        "name": "USGS VIIRS ETa annual",
+        "apiPath": "projects/usgs-ssebop/viirs_et_v6_annual",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    },
+    {
+        "datasetId": "WRC",
+        "name": "USDA 30-m static wildfire risk dataset (WRC)",
+        "apiPath": "projects/climate-engine-pro/assets/ce-wrc-static",
+        "allowMapLayers": false,
+        "variables": [],
+        "qrisWarning": false
+    }
+]
