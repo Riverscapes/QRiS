@@ -78,6 +78,7 @@ from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
 from .frm_climate_engine_explorer import FrmClimateEngineExplorer
+from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_valley_bottom import FrmValleyBottom
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
@@ -383,8 +384,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
-                # self.add_context_menu_item(self.menu, 'Download Climate Engine Metrics', 'download', lambda: self.climate_engine_downloader())
                 self.add_context_menu_item(self.menu, 'Explore Climate Engine Timeseries', 'refresh', lambda: self.climate_engine_explorer())
+                self.add_context_menu_item(self.menu, 'Add Climate Engine Map Layer', 'add_to_map', lambda: self.add_climate_engine_to_map())
             elif model_data == STREAM_GAGE_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Add Stream Gages To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
@@ -848,6 +849,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.climate_engine_doc_widget)
             
         self.climate_engine_doc_widget.show()
+
+    def add_climate_engine_to_map(self):
+        
+        frm = FrmClimateEngineMapLayer(self, self.project)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            self.map_manager.create_tile_layer(self.project.map_guid, frm.map_tile_url, frm.map_tile_layer_name, CLIMATE_ENGINE_MACHINE_CODE, 'wms')
 
     def stream_gage_explorer(self):
 

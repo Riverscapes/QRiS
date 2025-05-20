@@ -15,6 +15,8 @@ from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 
+from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
+
 from .path_utilities import parse_posix_path
 
 from qgis.utils import iface
@@ -53,6 +55,7 @@ class QRisMapManager(RiverscapesMapManager):
             f'{RASTER_SLIDER_MACHINE_CODE}_ROOT',
             CONTEXT_MACHINE_CODE,
             SURFACE_MACHINE_CODE,
+            CLIMATE_ENGINE_MACHINE_CODE,
             'QRiS Base Maps',
             BASEMAP_MACHINE_CODE]
 
