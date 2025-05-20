@@ -726,7 +726,7 @@
         "datasetId": "RAP_PRODUCTION",
         "name": "RAP Herbaceous Production",
         "apiPath": "projects/rangeland-analysis-platform/npp-partitioned-v3",
-        "allowMapLayers": false,
+        "allowMapLayers": true,
         "variables": [],
         "qrisWarning": false
     },
@@ -734,8 +734,13 @@
         "datasetId": "RAP_PRODUCTION_16DAY",
         "name": "RAP Herbaceous Production 16 Day",
         "apiPath": "projects/rap-data-365417/assets/npp-partitioned-16day-v3",
-        "allowMapLayers": false,
-        "variables": [],
+        "allowMapLayers": true,
+        "variables": [      
+            {"name": "afgAGB"},
+            {"name": "pfgAGB"},
+            {"name": "shrAGB"},
+            {"name": "herbaceousAGB"}
+        ],
         "qrisWarning": false
     },
     {

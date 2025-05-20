@@ -116,6 +116,38 @@ def get_dataset_zonal_stats_polygon(dataset: str, variables: List[str], start_da
     else:
         return None
     
+def get_raster_mapid(dataset: str, variable: str, temporal_statistic: str, start_date: str, end_date: str, color_map_opacity: float=1.0) -> str:
+    api_key = get_api_key()
+    if api_key is None:
+        return None
+    headers = {'accept': 'application/json',
+            'Authorization': api_key}
+    
+    #Set up parameters dictionary for API call
+    params_1 = {
+        'dataset': dataset,
+        'variable': variable,
+        'temporal_statistic': temporal_statistic,
+        'start_date': start_date,
+        'end_date': end_date,
+        'colormap_opacity': color_map_opacity
+    }
+
+    # Send API request
+    url = f'{CLIMATE_ENGINE_API}/raster/mapid/values'
+    r = requests.get(url, params=params_1, headers=headers, verify=False)
+    r.raise_for_status()
+    if r.status_code != 200:
+        return None
+    response_content = r.json()
+    data = response_content.get('Data', None)
+    if data is None:
+        return None
+    map_tile_url = data.get('tile_fetcher', None)
+
+    return map_tile_url
+
+
 def open_climate_engine_website():
 
     webbrowser.open(CLIMATE_ENGINE_URL)

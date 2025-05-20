@@ -419,6 +419,24 @@ class RiverscapesMapManager(QObject):
 
         return raster_layer
 
+    def create_tile_layer(self, project_key: str, tile_url: str, layer_name: str, machine_code: str=BASEMAP_MACHINE_CODE, provider_service: str='xyz') -> QgsRasterLayer:
+        """Creates a new tile layer for the specified machine code and adds it to the map."""
+
+        parent_group: QgsLayerTreeGroup = self.get_group_layer(project_key, machine_code, machine_code, add_missing=True, add_to_bottom=True)
+        # layer = self.get_machine_code_layer(project_key, machine_code, parent_group)
+        # if layer is not None:
+        #     return layer
+
+        # Create a layer from the table
+        layer = QgsRasterLayer(f'http-header:referer=&type=xyz&url={tile_url}', layer_name, provider_service)
+        QgsProject.instance().addMapLayer(layer, False)
+
+        # Finally add the new layer here
+        tree_layer_node = parent_group.addLayer(layer)
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property(project_key, machine_code))
+
+        return layer
+
     def apply_raster_single_value(self, raster_layer: QgsRasterLayer, raster_value: float, max, inverse=False) -> None:
 
         fcn = QgsColorRampShader()
