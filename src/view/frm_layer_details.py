@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
+from PyQt5.QtGui import QDesktopServices
 from typing import Union
 
 from ..model.layer import Layer
@@ -17,7 +18,7 @@ class FrmLayerDetails(QDialog):
         layer_name = None
         layer_version = None
 
-        html_content = f"""
+        self.html_content = f"""
         <html>
         <head>
             <style type="text/css">
@@ -35,6 +36,8 @@ class FrmLayerDetails(QDialog):
             protocol_version = self.layer.protocol_definition.version
             protocol_description = self.layer.protocol_definition.description if self.layer.protocol_definition.description else "No description available."
             protocol_url = self.layer.protocol_definition.url if self.layer.protocol_definition.url else "No URL available."
+            # make the protocol_url clickable
+            protocol_url = f'<a href="{protocol_url}">{protocol_url}</a>' if protocol_url else "No URL available."
             protocol_citation = self.layer.protocol_definition.citation if self.layer.protocol_definition.citation else "No citation available."
             protocol_author = self.layer.protocol_definition.author if self.layer.protocol_definition.author else "No author available."
             protocol_creation_date = self.layer.protocol_definition.creation_date if self.layer.protocol_definition.creation_date else "No creation date available."
@@ -68,6 +71,8 @@ class FrmLayerDetails(QDialog):
             protocol_description = protocol.description if protocol else "No protocol description available."
         
             protocol_url = protocol.system_metadata.get('url', 'Unknown') if protocol.system_metadata else "Unknown"
+            # make the protocol_url clickable
+            protocol_url = f'<a href="{protocol_url}">{protocol_url}</a>' if protocol_url else "Unknown"
             protocol_citation = protocol.system_metadata.get('citation', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
@@ -78,23 +83,21 @@ class FrmLayerDetails(QDialog):
                 for key, value in protocol.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
         else:
-            html_content += """
+            self.html_content += """
             No layer or protocol information available.
             """
-            self.set_html(html_content)
+            self.text_edit.setHtml(self.html_content)
             return
 
-        html_content += f"""
+        self.html_content += f"""
             <h1>Layer Information</h1>
             <p><strong>Name:</strong> {layer_name}</p>
             <p><strong>ID:</strong> {layer_id}</p>
             <p><strong>Version:</strong> {layer_version}</p>
             <p><strong>Description:</strong> {layer_description}</p>
             """
-        # if layer_metadata:
-        #     html_content += "".join(layer_metadata)
         
-        html_content += f"""
+        self.html_content += f"""
             <h1>Protocol Information</h1>
             <p><strong>Name:</strong> {protocol_name}</p>
             <p><strong>Machine Code:</strong> {protocol_machine_code}</p>
@@ -105,26 +108,26 @@ class FrmLayerDetails(QDialog):
             <p><strong>Citation:</strong> {protocol_citation}</p>
             """
         if protocol_metadata:
-            html_content += "".join(protocol_metadata)
+            self.html_content += "".join(protocol_metadata)
         
-        html_content += """
+        self.html_content += """
         </body>
         </html>
         """
 
-        self.set_html(html_content)
+        self.text_edit.setHtml(self.html_content)
 
-    def set_html(self, html_content):
-        self.text_edit.setHtml(html_content)
-        self.text_edit.setAcceptRichText(True)
-        self.text_edit.setReadOnly(True) 
+    def open_link_in_browser(self, url):
+        QDesktopServices.openUrl(url)
+        self.text_edit.setHtml(self.html_content)
 
     def setUI(self):
-        
         self.setMinimumSize(400, 300)
-
         layout = QVBoxLayout(self)
-        
-        self.text_edit = QTextEdit(self)
+        self.text_edit = QTextBrowser(self)  # Use QTextBrowser instead of QTextEdit
+        self.text_edit.setAcceptRichText(True)
+        self.text_edit.setReadOnly(True) 
+        self.text_edit.setOpenExternalLinks(False)  # Disable internal opening
+        self.text_edit.anchorClicked.connect(self.open_link_in_browser)
         layout.addWidget(self.text_edit)
         self.setLayout(layout)
