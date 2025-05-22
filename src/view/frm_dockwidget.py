@@ -720,6 +720,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_profile_layer(db_item)
         elif isinstance(db_item, CrossSections):
             self.map_manager.build_cross_section_layer(db_item)
+        elif isinstance(db_item, Analysis):
+            pass
+        elif isinstance(db_item, PlanningContainer):
+            # add all children to the map
+            for row in range(0, tree_node.rowCount()):
+                child_item = tree_node.child(row)
+                self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
         else:
             iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
 
