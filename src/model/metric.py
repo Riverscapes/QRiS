@@ -19,7 +19,7 @@ class Metric(DBItem):
         self.default_level_id = default_level_id
         self.default_unit_id = default_unit_id
         self.metric_function = metric_function
-        self.metric_params = metric_params
+        self.metric_params: dict = metric_params
         self.icon = 'calculate'
         self.definition_url = definition_url
         self.metadata = metadata
@@ -36,6 +36,33 @@ class Metric(DBItem):
         self.min_value = self.metadata.get('minimum_value', None) if self.metadata else None
         self.max_value = self.metadata.get('maximum_value', None) if self.metadata else None
         self.precision = self.metadata.get('precision', None) if self.metadata else None  # No precision = full float value
+
+    def can_calculate_automated(self, qris_project, event_id, analysis_id) -> bool: 
+
+        # check if the metric can be calulated automatically
+        dce = qris_project.events.get(event_id, None)
+        if dce is None:
+            return False 
+        # check if the metric is in the dce layers
+        dce_layers = self.metric_params.get('dce_layers', [])
+        for layer in dce_layers:
+            layer_id = layer.get('layer_ref_id', None)
+            not all(event_layer.layer.layer_id == layer_id for event_layer in dce.event_layers)
+            return False
+        analysis = qris_project.analyses.get(analysis_id, None)
+        inputs = self.metric_params.get('inputs', None)
+        if inputs is not None:
+            for analysis_input in inputs:
+                input_id = analysis_input.get('input_ref_id', None)
+                if input_id is not None:
+                    if analysis.metadata.get(input_id, None) is None:
+                        return False
+        return True
+
+
+
+
+            
 
 
 def load_metrics(curs: sqlite3.Cursor) -> dict:

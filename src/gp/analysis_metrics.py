@@ -118,6 +118,8 @@ def get_dce_layer_source(project_file: str, machine_code: str) -> tuple[str, int
         c = conn.cursor()
         c.execute(f"SELECT id, geom_type FROM layers WHERE fc_name = '{machine_code}'")
         layer_data = c.fetchone()
+        if layer_data is None:
+            raise MetricInputMissingError(f'Required Layer {machine_code} not found in project.')
         layer_id = layer_data[0]
         geom_type = layer_data[1]
         layer_source = Layer.DCE_LAYER_NAMES[geom_type]
@@ -144,10 +146,13 @@ def get_metric_layer_features(
     Yields:
         ogr.Feature: Features of the metric layer.
     """
-    if metric_layer.get('layer_ref', None) is not None:
+    if metric_layer.get('input_ref', None) is not None:
         if not metric_layer['usage'] == 'metric_layer':
             return None
-        db_item = analysis_params[metric_layer['layer_ref']]
+        analysis_param = analysis_params.get(metric_layer['input_ref'], None)
+        if analysis_param is None:
+            raise MetricInputMissingError(f'Missing input reference {metric_layer["input_ref"]} in analysis parameters. Has this been specified in the analysis paramenters?')
+        db_item = analysis_params[metric_layer['input_ref']]
         ds: ogr.DataSource = ogr.Open(project_file)
         layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
         layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
@@ -194,13 +199,17 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
             if feature is None:
                 continue
             feature_count = 0
+
             # Handle the optional count_field
-            metadata_value = feature.GetField('metadata', None)
-            if metadata_value is not None:
-                metadata: dict = json.loads(metadata_value)
-                attributes: dict = metadata.get('attributes', None)
-                if attributes is not None:
-                    feature_count += attributes.get(metric_layer.get('count_field', None), 1)
+            count_field = metric_layer.get('count_field', None)
+            if count_field is not None:
+                count_field_name = count_field.get('field_id_ref', None)
+                metadata_value = feature.GetField('metadata')
+                metadata = json.loads(metadata_value) if metadata_value is not None else {}
+                attributes: dict = metadata.get('attributes', {})
+                feature_count += attributes.get(count_field_name, 1)
+            else:
+                feature_count += 1
             
             geom: ogr.Geometry = feature.GetGeometryRef()
             if geom is None:
@@ -218,8 +227,6 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
                     proportion = clipped_geom.Area() / geom.Area()
                 feature_count *= proportion
                 clipped_geom = None
-            else:
-                feature_count += 1
             total_feature_count += round(feature_count)
 
     for metric_layer in metric_layers:
