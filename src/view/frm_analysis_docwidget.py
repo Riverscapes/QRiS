@@ -255,6 +255,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                         if metric.metric_function is None:
                             # Metric is not defined in database. continue
                             continue
+                        if metric.can_calculate_automated(self.qris_project, data_capture_event.id, self.analysis.id) is False:
+                            QgsMessageLog.logMessage(f'Unable to calculate metric {metric.name} for {data_capture_event.name} due to missing required layer in the data capture event.', 'QRiS_Metrics', Qgis.Warning)
+                            continue
                         try:
                             metric_calculation = getattr(analysis_metrics, metric.metric_function)
                             result = metric_calculation(self.qris_project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params, analysis_params)

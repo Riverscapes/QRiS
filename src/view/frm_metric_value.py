@@ -40,7 +40,6 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.analysis = analysis
         self.data_capture_event = event
         self.sample_frame_id = sample_frame_id
-        # self.metrics = metrics
 
         metric_name_text = f'{metric_value.metric.name} ({self.qris_project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
         self.txtMetric.setText(metric_name_text)
@@ -76,6 +75,18 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.valManual.setFocus()
         else:
             self.txtAutomated.setFocus()
+
+        # disable the automated value if unable to calculate
+        if not self.metric_value.metric.can_calculate_automated(self.qris_project, self.data_capture_event.id, self.analysis.id):
+            self.rdoAutomated.setEnabled(False)
+            self.cmdCalculate.setEnabled(False)
+            self.txtAutomated.setPlaceholderText('Unable to calculate automated value due to missing required layer(s)')
+            self.rdoManual.setChecked(True)
+            self.rdoManual.setEnabled(True)
+            self.valManual.setFocus()
+        else:
+            self.rdoAutomated.setEnabled(True)
+            self.cmdCalculate.setEnabled(True)
 
     def rdoManual_checkchanged(self):
         self.valManual.setEnabled(self.rdoManual.isChecked())
