@@ -191,7 +191,7 @@ WHERE machine_name = 'riverscape_length';
 
 UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 2}',
-    metric_params = '{"dce_layers": [{"layer_id_ref": "centerlines", "attribute_filter": {"field_id_ref": "type_id", "values": ["Secondary"]}}]}'
+    metric_params = '{"dce_layers": [{"layer_id_ref": "centerlines", "attribute_filter": {"field_id_ref": "type_id", "values": ["Non-Primary"]}}]}'
 WHERE machine_name = 'secondary_channel_length';
 
 UPDATE metrics SET

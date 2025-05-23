@@ -44,16 +44,28 @@ class Metric(DBItem):
         if dce is None:
             return False 
         # check if the metric is in the dce layers
-        dce_layers = self.metric_params.get('dce_layers', [])
-        for layer in dce_layers:
-            layer_id = layer.get('layer_ref_id', None)
-            not all(event_layer.layer.layer_id == layer_id for event_layer in dce.event_layers)
-            return False
+        metric_layers = self.metric_params.get('dce_layers', [])
+        # we need to be a bit more detailed here. 
+        # 1) Sort the layers by the 'usage', including None.
+        # 2) iterate through the various usages. If more than one layer per usage, we only need to make sure one exists in the dce
+
+        usage_layers = {}
+        for metric_layer in metric_layers:
+            usage = metric_layer.get('usage', None)
+            if usage not in usage_layers:
+                usage_layers[usage] = []
+            usage_layers[usage].append(metric_layer)
+        
+        for usage, layers in usage_layers.items():
+            layer_ids = [layer.get('layer_id_ref', None) for layer in layers]
+            if not any(event_layer.layer.layer_id in layer_ids for event_layer in dce.event_layers):
+                return False
+            
         analysis = qris_project.analyses.get(analysis_id, None)
         inputs = self.metric_params.get('inputs', None)
         if inputs is not None:
             for analysis_input in inputs:
-                input_id = analysis_input.get('input_ref_id', None)
+                input_id = analysis_input.get('input_ref', None)
                 if input_id is not None:
                     if analysis.metadata.get(input_id, None) is None:
                         return False
