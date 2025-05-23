@@ -16,12 +16,12 @@ from ..model.sample_frame import get_sample_frame_ids
 
 class FrmAnalysisExplorer(QtWidgets.QDialog):
 
-    def __init__(self, parent=None, qris_project: Project = None):
+    def __init__(self, parent=None, qris_project: Project = None, analysis_id=None):
         super(FrmAnalysisExplorer, self).__init__(parent)
 
         self.qris_project = qris_project
 
-        self.widgetAnalysisExplorer = QWidgetAnalysisExplorer(self, self.qris_project)
+        self.widgetAnalysisExplorer = QWidgetAnalysisExplorer(self, self.qris_project, analysis_id)
 
         self.setupUi(self)
 
@@ -42,7 +42,7 @@ class FrmAnalysisExplorer(QtWidgets.QDialog):
 
 class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
-    def __init__(self, parent=None, qris_project: Project = None):
+    def __init__(self, parent=None, qris_project: Project = None, analysis_id=None):
         super(QWidgetAnalysisExplorer, self).__init__(parent)
 
         self.qris_project = qris_project
@@ -58,7 +58,16 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbAnalysis.currentIndexChanged.connect(self.on_analysis_changed)
         self.cmbAnalysis.setEnabled(True)
 
-        self.on_analysis_changed(0)
+        index = 0
+        if analysis_id is not None:
+            # Find the index of the analysis with the given ID
+            for i in range(self.cmbAnalysis.count()):
+                if self.cmbAnalysis.itemData(i, Qt.UserRole).id == analysis_id:
+                    self.cmbAnalysis.setCurrentIndex(i)
+                    index = i
+                    break
+        
+        self.on_analysis_changed(index)
         self.metric_over_time()
 
     def on_analysis_type_changed(self, index):

@@ -49,6 +49,7 @@ from .frm_calculate_all_metrics import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_analysis_units import FrmAnalysisUnits
+from .frm_analysis_explorer import FrmAnalysisExplorer
 
 column = {
     'edit': 0,
@@ -360,6 +361,14 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdProperties.setToolTip('Edit analysis properties, indcluding metrics and indicators')
         self.cmdProperties.setToolTipDuration(2000)
         self.horizName.addWidget(self.cmdProperties)
+
+        self.cmdOpenSummary = QtWidgets.QPushButton()
+        icon = QtGui.QIcon(':/plugins/qris_toolbar/analysis_summary')
+        self.cmdOpenSummary.setIcon(icon)
+        self.cmdOpenSummary.setToolTip('Open Analysis Summary')
+        self.cmdOpenSummary.setToolTipDuration(2000)
+        self.connections[self.cmdOpenSummary.clicked] = self.cmdOpenSummary.clicked.connect(lambda: FrmAnalysisExplorer(self, self.qris_project, self.analysis.id).exec_())
+        self.horizName.addWidget(self.cmdOpenSummary)
 
         self.lblEvent = QtWidgets.QLabel('Data Capture Event')
         self.grid.addWidget(self.lblEvent, 1, 0, 1, 1)
