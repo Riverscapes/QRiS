@@ -1,6 +1,7 @@
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QSettings
 
 from ...model.project import Project
 from ...model.event import PLANNING_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, AS_BUILT_MACHINE_CODE, DESIGN_MACHINE_CODE
@@ -14,6 +15,10 @@ from ..frm_layer_details import FrmLayerDetails
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
+ORGANIZATION = 'Riverscapes'
+APPNAME = 'QRiS'
+LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
+
 class LayerTreeWidget(QtWidgets.QWidget):
     def __init__(self, parent, qris_project:Project, event_type_id: int, mandatory_layers=None):
         super(LayerTreeWidget, self).__init__(parent)
@@ -22,13 +27,14 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.event_type_id = event_type_id
         self.mandatory_layers = mandatory_layers
         
+        # Load the protocols from the local project directory, user defined directory, and the resources protocol directory
+        self.protocols = load_protocols(os.path.dirname(self.qris_project.project_file))
+        q_settings = QSettings(ORGANIZATION, APPNAME)
+        user_defined_directory = q_settings.value(LOCAL_PROTOCOL_FOLDER, '', type=str)
+        self.protocols.extend(load_protocols(user_defined_directory))
         settings = Settings()
         protocol_directory = settings.getValue('protocolsDir')
-        qris_protoccols = load_protocols(protocol_directory)
-        project_directory = os.path.dirname(self.qris_project.project_file)
-        local_protocols = load_protocols(project_directory)
-
-        self.protocols = local_protocols + qris_protoccols
+        self.protocols.extend(load_protocols(protocol_directory))
 
         self.setupUi()
 
