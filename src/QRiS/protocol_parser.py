@@ -8,6 +8,7 @@ from PyQt5.QtCore import QSettings
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
+LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
 
 FIELD_TYPES = {
     'ListField': 'list',
