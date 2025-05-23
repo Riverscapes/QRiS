@@ -448,6 +448,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, DBItem):
                     if isinstance(model_data, Analysis):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
+                        self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     else:
                         if any(isinstance(model_data, model_type) for model_type in [Project, Event, PlanningContainer]):
@@ -727,6 +728,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             for row in range(0, tree_node.rowCount()):
                 child_item = tree_node.child(row)
                 self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
+        elif isinstance(db_item, str):
+            # this is a group node, do nothing
+            pass
         else:
             iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
 
@@ -835,9 +839,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
             self.analysis_doc_widget.show()
 
-    def open_analysis_summary(self):
+    def open_analysis_summary(self, analysis: Analysis=None):
 
-        frm = FrmAnalysisExplorer(self, self.project)
+        analysis_id = None
+        if analysis is not None:
+            analysis_id = analysis.id
+
+        frm = FrmAnalysisExplorer(self, self.project, analysis_id)
         frm.exec_()
 
     def export_analysis_table(self, analysis: Analysis = None):
