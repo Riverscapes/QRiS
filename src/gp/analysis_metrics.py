@@ -119,7 +119,8 @@ def get_dce_layer_source(project_file: str, machine_code: str) -> tuple[str, int
         c.execute(f"SELECT id, geom_type FROM layers WHERE fc_name = '{machine_code}'")
         layer_data = c.fetchone()
         if layer_data is None:
-            raise MetricInputMissingError(f'Required Layer {machine_code} not found in project.')
+            return None, None
+            # raise MetricInputMissingError(f'Required Layer {machine_code} not found in project.')
         layer_id = layer_data[0]
         geom_type = layer_data[1]
         layer_source = Layer.DCE_LAYER_NAMES[geom_type]
@@ -158,6 +159,8 @@ def get_metric_layer_features(
         layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
     else:
         layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
+        if layer_id is None:
+            return None
         ds: ogr.DataSource = ogr.Open(project_file)
         layer: ogr.Layer = ds.GetLayerByName(layer_name)
         layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
@@ -231,7 +234,7 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
 
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
-            layer_ref = metric_layer.get('layer_ref', None)
+            layer_ref = metric_layer.get('input_ref', None)
             if layer_ref is not None:
                 normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[layer_ref])
                 total_feature_count /= normalization
@@ -265,7 +268,7 @@ def length(project_file: str, sample_frame_feature_id: int, event_id: int, metri
 
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
-            layer_ref = metric_layer.get('layer_ref', None)
+            layer_ref = metric_layer.get('input_ref', None)
             if layer_ref is not None:
                 normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[layer_ref])
                 total_length /= normalization
@@ -300,7 +303,7 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
 
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
-            layer_ref = metric_layer.get('layer_ref', None)
+            layer_ref = metric_layer.get('input_ref', None)
             if layer_ref is not None:
                 normalization = normalization_factor(project_file, sample_frame_feature_id, analysis_params[layer_ref])
                 total_area /= normalization
@@ -403,7 +406,7 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
 
     metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
 
-    numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator') == 'numerator']
+    numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator').lower() == 'numerator']
     numerator_area = 0.0
         
     for metric_layer in numerator_layers:
