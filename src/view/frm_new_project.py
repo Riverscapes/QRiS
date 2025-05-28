@@ -140,7 +140,8 @@ class FrmNewProject(QtWidgets.QDialog):
         if browse_folder:
             self.last_project_folder = browse_folder
             self.root_path = parse_posix_path(browse_folder)
-            self.txtPath.setText(self.root_path)
+            self.update_project_folder()
+            # self.txtPath.setText(self.root_path)
 
     def setupUi(self):
 
