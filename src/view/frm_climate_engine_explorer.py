@@ -127,9 +127,9 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.tab_widget_right.setVisible(True)
         self.lbl_initial_text.setVisible(False)
 
-        event_dates = [event.date for event in self.event_library.get_selected_events()]
+        event_dates = [(event.date, event.name) for event in self.event_library.get_selected_events()]
         # add vertical lines for the events
-        for event_date in event_dates:
+        for event_date, event_name in event_dates:
             year, month, day = event_date.split('-')
             if year == 'None':
                 continue
@@ -139,6 +139,22 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 event_date = f'{year}-{month}-01'
             date = datetime.strptime(event_date, '%Y-%m-%d')
             self._static_ax.axvline(date, color='black', linestyle='--', linewidth=1)
+            # Annotate the event label above the line if labels are enabled
+            if self.chk_event_labels.isChecked():
+                ylim = self._static_ax.get_ylim()
+                y_pos = ylim[1]  # Top of the plot
+                self._static_ax.annotate(
+                    event_name,
+                    xy=(date, y_pos),
+                    xytext=(0, 5),
+                    textcoords='offset points',
+                    ha='right',
+                    va='bottom',
+                    fontsize=9,
+                    rotation=90,
+                    color='black',
+                    fontweight='bold'
+        )
 
         # get the date range
         start_date, end_date = self.date_range_widget.get_date_range()
@@ -400,6 +416,12 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.tab_events.setLayout(self.vert_events)
         self.tab_widget_left.addTab(self.tab_events, 'Events')
         self.vert_events.addWidget(self.event_library)
+
+        self.chk_event_labels = QtWidgets.QCheckBox('Show Event Labels')
+        self.chk_event_labels.setChecked(True) 
+        self.chk_event_labels.setToolTip('Show event labels on the plot')
+        self.chk_event_labels.toggled.connect(self.create_plot)
+        self.vert_events.addWidget(self.chk_event_labels)
 
         # ok lets add the right side
         self.vert_right = QtWidgets.QVBoxLayout(self)
