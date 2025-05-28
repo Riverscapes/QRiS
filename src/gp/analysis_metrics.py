@@ -29,8 +29,15 @@ analysis_metric_unit_type = {
 
 class MetricInputMissingError(Exception):
     """Raised when a metric input is missing."""
-    pass
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
 
+class MetricCalculationError(Exception):
+    """Raised when a metric calculation fails."""
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
 
 def normalization_factor(project_file: str, sample_frame_feature_id: int, profile: Profile) -> float:
 
@@ -321,7 +328,6 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
 
     metric_layer = metric_params['dce_layers'][0]
-    ds: ogr.DataSource = ogr.Open(project_file)
     layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
     ds: ogr.DataSource = ogr.Open(project_file)
     layer: ogr.Layer = ds.GetLayerByName(layer_name)
@@ -333,6 +339,14 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
     geom: ogr.Geometry = feature.GetGeometryRef().Clone()
 
     clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+    if clipped_geom is None or clipped_geom.IsEmpty():
+        raise MetricInputMissingError(f'No features found in {layer_name} that intersect the mask feature.')
+    # raise error if the geometry is multi-part
+    if clipped_geom.GetGeometryType() is ogr.wkbMultiLineString:
+        clipped_geom = None
+        layer = None
+        ds = None
+        raise MetricCalculationError(f'Geometry in {layer_name} is multi-part after clipping to the sample frame. Please make sure the line feature in {layer_name} does not meadnder outside of the sample frame.')
     epsg = get_utm_zone_epsg(geom.Centroid().GetX())
     utm_srs = osr.SpatialReference()
     utm_srs.ImportFromEPSG(epsg)
@@ -344,6 +358,9 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
     segment_geom.AddPoint(start_pt[0], start_pt[1])
     segment_geom.AddPoint(end_pt[0], end_pt[1])
     distance = segment_geom.Length()
+    if distance == 0:
+        # If the distance is zero, return zero to avoid division by zero
+        return 0.0
 
     return length / distance
 
