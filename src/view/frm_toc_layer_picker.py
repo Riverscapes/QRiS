@@ -6,7 +6,7 @@ from qgis.utils import iface
 
 class FrmTOCLayerPicker(QtWidgets.QDialog):
 
-    def __init__(self, parent, label_message: str, layer_types: list = None):
+    def __init__(self, parent, label_message: str, layer_types: list = None, temporary_layers_only: bool = True):
         super().__init__(parent)
         self.setWindowTitle("Select layer")
         self.setupUi()
@@ -20,17 +20,20 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
             if layer_types is not None:
                 if isinstance(layer, QgsVectorLayer):
                     if layer.geometryType() in layer_types:
-                        if layer.isTemporary():
-                            item = QtGui.QStandardItem(layer.name())
-                            item.setData(layer, QtCore.Qt.UserRole)
-                            self.model.appendRow(item)
+                        if temporary_layers_only and not layer.isTemporary():
+                            continue
+                        item = QtGui.QStandardItem(layer.name())
+                        item.setData(layer, QtCore.Qt.UserRole)
+                        self.model.appendRow(item)
 
         self.layer_count = self.model.rowCount()
         if self.layer_count > 0:
             self.cboLayers.setModel(self.model)
         else:
             # No layers of the specified type found show messagebox and close this form
-            QtWidgets.QMessageBox.warning(self, "No Temporary Layers found", "No temporary layers of the specified geometry type found in the map Table of Contents. \n\nMake sure you have at least one temporary in the Table of Contents and that it is turned on (checked).")
+            temporary_text = "temporary " if temporary_layers_only else ""
+            
+            QtWidgets.QMessageBox.warning(self, f"No {temporary_text} Layers found", f"No {temporary_text}layers of the specified geometry type found in the map Table of Contents. \n\nMake sure you have at least one {temporary_text}layer in the Table of Contents and that it is turned on (checked).")
 
     def setupUi(self):
 
