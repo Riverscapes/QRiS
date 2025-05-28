@@ -976,7 +976,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if mode == DB_MODE_IMPORT_TEMPORARY:
             if mode == DB_MODE_IMPORT_TEMPORARY:
-                import_source_path = self.get_temporary_layer([layer_type])
+                import_source_path = self.get_toc_layer([layer_type])
             if import_source_path is None:
                 return
             import_source_layer = import_source_path
@@ -1278,7 +1278,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
         if import_source_path == DB_MODE_IMPORT_TEMPORARY:
-            import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry, QgsWkbTypes.LineGeometry, QgsWkbTypes.PointGeometry])
+            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry, QgsWkbTypes.LineGeometry, QgsWkbTypes.PointGeometry])
             if import_source_path is None:
                 return
 
@@ -1301,9 +1301,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
 
-    def get_temporary_layer(self, layer_types: list) -> QgsVectorLayer:
+    def get_toc_layer(self, layer_types: list) -> QgsVectorLayer:
 
-        frm_toc = FrmTOCLayerPicker(self, "Select Temporary layer to import", layer_types)
+        frm_toc = FrmTOCLayerPicker(self, "Select layer to import", layer_types)
         if not frm_toc.layer_count > 0:
             return
         result = frm_toc.exec_()
@@ -1323,7 +1323,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         if mode == DB_MODE_IMPORT_TEMPORARY:
-            import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry])
+            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
 
@@ -1354,7 +1354,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         if mode == DB_MODE_IMPORT_TEMPORARY:
-            import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry])
+            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
 
@@ -1401,7 +1401,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         if mode == DB_MODE_IMPORT_TEMPORARY:
-            import_source_path = self.get_temporary_layer([QgsWkbTypes.PolygonGeometry])
+            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
 
@@ -1431,7 +1431,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
         if mode == DB_MODE_IMPORT_TEMPORARY:
-            import_source_path = self.get_temporary_layer([QgsWkbTypes.LineGeometry])
+            import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
             if import_source_path is None:
                 return
 
@@ -1460,7 +1460,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         if mode == DB_MODE_IMPORT_TEMPORARY:
-            import_source_path = self.get_temporary_layer([QgsWkbTypes.LineGeometry])
+            import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
             if import_source_path is None:
                 return
 
