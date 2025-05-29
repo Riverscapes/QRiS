@@ -5,6 +5,8 @@ from typing import List, Optional, Any
 
 from PyQt5.QtCore import QSettings
 
+from .settings import Settings
+
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
 SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
@@ -66,6 +68,7 @@ class MetricDefinition:
     maximum_value: Optional[float] = None
     precision: Optional[int] = None
     parameters: List[Any] = None
+    protocol_defintion = None
 
 @dataclass
 class ProtocolDefinition:
@@ -86,25 +89,31 @@ class ProtocolDefinition:
     def unique_key(self):
         return f'{self.machine_code}::{self.version}'
 
-def load_protocols(protocol_directory: str) -> List[ProtocolDefinition]:
+def load_protocol_definitions(project_directory: str) -> List[ProtocolDefinition]:
     """Load protocol from xml"""
 
     settings = QSettings(ORGANIZATION, APPNAME)
     show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, True, type=bool)
 
-    protocols = list()
-    if protocol_directory is None or not os.path.isdir(protocol_directory):
-        return protocols
+    directories = [project_directory]
+    q_settings = QSettings(ORGANIZATION, APPNAME)
+    directories.append(q_settings.value(LOCAL_PROTOCOL_FOLDER, '', type=str))
+    settings = Settings()
+    directories.append(settings.getValue('protocolsDir'))
 
-    for filename in os.listdir(protocol_directory):
-        if filename.endswith('.xml'):
-            protocol = load_protocool_from_xml(os.path.join(protocol_directory, filename))
-            if protocol is not None:
-                if protocol.status == 'experimental' and not show_experimental_protocols:
-                    continue
-                if protocol.status == 'deprecated':
-                    continue
-                protocols.append(protocol)
+    protocols = list()
+    for protocol_directory in directories:
+        if protocol_directory is None or not os.path.isdir(protocol_directory):
+            continue
+        for filename in os.listdir(protocol_directory):
+            if filename.endswith('.xml'):
+                protocol = load_protocool_from_xml(os.path.join(protocol_directory, filename))
+                if protocol is not None:
+                    if protocol.status == 'experimental' and not show_experimental_protocols:
+                        continue
+                    if protocol.status == 'deprecated':
+                        continue
+                    protocols.append(protocol)
 
     return protocols
 

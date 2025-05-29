@@ -1,5 +1,36 @@
-ALTER TABLE metrics ADD COLUMN protocol_id TEXT;
+-- Unlock the Database
+PRAGMA foreign_keys=OFF;
+
+-- Rebuild the metrics table without the unique constraint on the name column
+CREATE TEMP TABLE metrics_temp AS SELECT * FROM metrics;
+DROP TABLE metrics;
+
+CREATE TABLE "metrics" (
+	"id"	INTEGER,
+	"calculation_id"	INTEGER,
+	"default_level_id"	INTEGER,
+	"unit_id"	INTEGER,
+	"name"	TEXT NOT NULL,
+	"description"	TEXT,
+	"definition_url"	TEXT,
+	"metadata"	TEXT,
+	"created_on"	DATETIME DEFAULT CURRENT_TIMESTAMP,
+	"metric_params"	TEXT,
+	"machine_name"	TEXT NOT NULL DEFAULT '',
+	"version"	TEXT NOT NULL DEFAULT 1.0,
+	"protocol_id"	TEXT,
+	PRIMARY KEY("id" AUTOINCREMENT),
+	FOREIGN KEY("calculation_id") REFERENCES "calculations"("id"),
+	FOREIGN KEY("default_level_id") REFERENCES "metric_levels"("id"),
+	FOREIGN KEY("unit_id") REFERENCES "lkp_units"("id")
+);
+
+INSERT INTO metrics (id, calculation_id, default_level_id, unit_id, name, description, definition_url, metadata, metric_params, machine_name, version)
+    SELECT id, calculation_id, default_level_id, unit_id, name, description, definition_url, metadata, metric_params, machine_name, version
+    FROM metrics_temp;
+
 UPDATE metrics SET protocol_id = (SELECT id FROM protocols WHERE machine_code = 'LTPBR_BASE');
+UPDATE metrics SET version = '1.0';
 
 DELETE FROM metrics WHERE protocol_id is NULL;
 
@@ -97,6 +128,9 @@ UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 1}',
     metric_params = '{"dce_layers": [{"layer_id_ref": "geomorphic_units", "attribute_filter": {"field_id_ref": "geomorphic_unit_type", "values": ["Mid Channel Bar"]}}, {"layer_id_ref": "geomorphic_unit_extents", "attribute_filter": {"field_id_ref": "geomorphic_unit_type", "values": ["Mid Channel Bar"]}}]}'
 WHERE machine_name = 'mid_channel_bar_count';
+
+UPDATE metrics SET machine_name = 'mid_channel_bar_density'
+WHERE machine_name = 'bar_density';
 
 UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 3}',
@@ -237,3 +271,5 @@ UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 3}',
     metric_params = '{"dce_layers": [{"layer_id_ref": "cem_phases", "attribute_filter": {"field_id_ref": "sem_stage", "values": ["8 Anastomosing"]}}]}'
 WHERE machine_name = 'stage_8_area';
+
+PRAGMA foreign_keys=ON;

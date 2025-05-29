@@ -82,6 +82,8 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.rdoAutomated.setEnabled(False)
             self.cmdCalculate.setEnabled(False)
             self.txtAutomated.setPlaceholderText('Unable to calculate automated value due to missing required layer(s)')
+            self.txtAutomated.setToolTip('Unable to calculate automated value due to missing required layer(s)')
+            self.rdoAutomated.setToolTip('Unable to calculate automated value due to missing required layer(s)')
             self.rdoManual.setChecked(True)
             self.rdoManual.setEnabled(True)
             self.valManual.setFocus()
