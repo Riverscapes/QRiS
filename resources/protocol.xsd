@@ -381,7 +381,13 @@
      <xs:complexType name="DCELayerType">
         <xs:sequence>
             <xs:element name="Usage" type="DCELayerUsageType" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="CountField" type="CountFieldType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="CountFields" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="CountField" type="CountFieldType" minOccurs="1" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
             <xs:element name="AttributeFilter" type="AttributeFilterType" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute name="layer_id_ref" type="IdType" use="required"/>
