@@ -211,13 +211,17 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
             feature_count = 0
 
             # Handle the optional count_field
-            count_field = metric_layer.get('count_field', None)
-            if count_field is not None:
-                count_field_name = count_field.get('field_id_ref', None)
-                metadata_value = feature.GetField('metadata')
-                metadata = json.loads(metadata_value) if metadata_value is not None else {}
-                attributes: dict = metadata.get('attributes', {})
-                feature_count += attributes.get(count_field_name, 1)
+            count_fields = metric_layer.get('count_fields', None)
+            if count_fields is not None:
+                for count_field in count_fields:
+                    count_field_name = count_field.get('field_id_ref', None)
+                    metadata_value = feature.GetField('metadata')
+                    metadata = json.loads(metadata_value) if metadata_value is not None else {}
+                    attributes: dict = metadata.get('attributes', {})
+                    feature_count += attributes.get(count_field_name, 0)
+                if feature_count == 0:
+                    # If no count fields are specified, default to 1
+                    feature_count = 1
             else:
                 feature_count += 1
             

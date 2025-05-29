@@ -36,7 +36,7 @@ DELETE FROM metrics WHERE protocol_id is NULL;
 
 UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 3}',
-    metric_params = '{"inputs": [{"input_ref": "centerline", "usage": "normalization"}], "dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "structural_element_type", "values": ["Dam", "Dam Complex"]}, "count_field": {"field_id_ref": "structure_count"}, "usage": "Numerator"}]}'
+    metric_params = '{"inputs": [{"input_ref": "centerline", "usage": "normalization"}], "dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "structural_element_type", "values": ["Dam", "Dam Complex"]}, "count_fields": [{"field_id_ref": "structure_count"}], "usage": "Numerator"}]}'
 WHERE machine_name = 'dam_density';
 
 UPDATE metrics SET
@@ -71,7 +71,7 @@ WHERE machine_name = 'confluence_density';
 
 UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 1}',
-    metric_params = '{"dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "structure_type", "values": ["Dam", "Dam Complex"]}, "count_field": {"field_id_ref": "structure_count"}}]}'
+    metric_params = '{"dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "structure_type", "values": ["Dam", "Dam Complex"]}, "count_fields": [{"field_id_ref": "structure_count"}]}]}'
 WHERE machine_name = 'dam_count';
 
 UPDATE metrics SET
@@ -111,12 +111,12 @@ WHERE machine_name = 'jam_area';
 
 UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 1}',
-    metric_params = '{"dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "structural_element_type", "values": ["Jam", "Jam Complex"]}, "count_field": {"field_id_ref": "structure_count"}}, {"layer_id_ref": "structural_elements_areas", "attribute_filter": {"field_id_ref": "structural_element_type", "values": ["Jam"]}}]}'
+    metric_params = '{"dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "structural_element_type", "values": ["Jam", "Jam Complex"]}, "count_fields": [{"field_id_ref": "structure_count"}]}, {"layer_id_ref": "structural_elements_areas", "attribute_filter": {"field_id_ref": "structural_element_type", "values": ["Jam"]}}]}'
 WHERE machine_name = 'jam_count';
 
 UPDATE metrics SET
     metadata = '{"minimum_value": 0.0, "precision": 3}',
-    metric_params = '{"inputs": [{"input_ref": "centerline", "usage": "normalization"}], "dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "Type", "values": ["Jam", "Jam Complex"]}, "count_field": {"field_id_ref": "structure_count"}}, {"layer_id_ref": "structural_elements_areas", "attribute_filter": {"field_id_ref": "Type", "values": ["Jam"]}}]}'
+    metric_params = '{"inputs": [{"input_ref": "centerline", "usage": "normalization"}], "dce_layers": [{"layer_id_ref": "structural_elements_points", "attribute_filter": {"field_id_ref": "Type", "values": ["Jam", "Jam Complex"]}, "count_fields": [{"field_id_ref": "structure_count"}]}, {"layer_id_ref": "structural_elements_areas", "attribute_filter": {"field_id_ref": "Type", "values": ["Jam"]}}]}'
 WHERE machine_name = 'jam_density';
 
 UPDATE metrics SET

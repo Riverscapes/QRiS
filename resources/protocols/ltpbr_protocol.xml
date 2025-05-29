@@ -534,7 +534,9 @@
                 <InputLayer input_ref="centerline" usage="normalization"/>
                 <DCELayer layer_id_ref="structural_elements_points">
                     <Usage>Numerator</Usage>
-                    <CountField field_id_ref="structure_count"/>
+                    <CountFields>
+                        <CountField field_id_ref="structure_count"/>
+                    </CountFields>
                     <AttributeFilter field_id_ref="structural_element_type"> 
                         <Value>Dam</Value>
                         <Value>Dam Complex</Value>
@@ -641,7 +643,9 @@
             <Precision>1</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="structural_elements_points">
-                    <CountField field_id_ref="structure_count"/>
+                    <CountFields>
+                        <CountField field_id_ref="structure_count"/>
+                    </CountFields>
                     <AttributeFilter field_id_ref="structure_type">
                         <Value>Dam</Value>
                         <Value>Dam Complex</Value>
@@ -686,7 +690,7 @@
             <Description>The sum of all channel lengths in a sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="centerlines"/>
             </Parameters>
@@ -697,7 +701,7 @@
             <Description>The area of free flowing inundation in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents">
                     <AttributeFilter field_id_ref="type_id">
@@ -712,7 +716,7 @@
             <Description>The area of total inundation in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents"/>
             </Parameters>
@@ -723,7 +727,7 @@
             <Description>The proportion of the riverscape that is active</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="active_extents">
                     <Usage>Numerator</Usage>
@@ -739,7 +743,7 @@
             <Description>The area of jams in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="structural_elements_areas">
                     <AttributeFilter field_id_ref="structural_element_type">
@@ -757,7 +761,9 @@
             <Precision>1</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="structural_elements_points">
-                    <CountField field_id_ref="structure_count"/>
+                    <CountFields>
+                        <CountField field_id_ref="structure_count"/>
+                    </CountFields>
                     <AttributeFilter field_id_ref="structural_element_type">
                         <Value>Jam</Value>
                         <Value>Jam Complex</Value>
@@ -780,7 +786,9 @@
             <Parameters>
                 <InputLayer input_ref="centerline" usage="normalization"/>
                 <DCELayer layer_id_ref="structural_elements_points">
-                    <CountField field_id_ref="structure_count"/>
+                    <CountFields>
+                        <CountField field_id_ref="structure_count"/>
+                    </CountFields>
                     <AttributeFilter field_id_ref="Type">
                         <Value>Jam</Value>
                         <Value>Jam Complex</Value>
@@ -799,7 +807,7 @@
             <Description>The area of of mid channel bars in containing sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="geomorphic_unit_extents">
                     <AttributeFilter field_id_ref="geomorphic_unit_type">
@@ -855,7 +863,7 @@
             <Description>The area of overflowing inundation in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents">
                     <AttributeFilter field_id_ref="type_id">
@@ -870,7 +878,7 @@
             <Description>The percent of the inundation extents that is free flowing</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>                
                 <DCELayer layer_id_ref="inundation_extents">
                     <Usage>Numerator</Usage>
@@ -889,7 +897,7 @@
             <Description>The percent of the riverscape that is inundated at baseflow</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents">
                     <Usage>Numerator</Usage>
@@ -902,7 +910,7 @@
             <Description>The percent of the inundation extents that is overflow</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents">
                     <Usage>Numerator</Usage>
@@ -921,7 +929,7 @@
             <Description>The percent of the inundation extents that is backwater/ponded</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents">
                     <Usage>Numerator</Usage>
@@ -940,7 +948,7 @@
             <Description>The percent of the riverscape that is riparian vegetation</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>                
                 <DCELayer layer_id_ref="vegetation_extents">
                     <Usage>Numerator</Usage>
@@ -956,7 +964,7 @@
             <Description>The area of pools in containing sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="geomorphic_unit_extents">
                     <AttributeFilter field_id_ref="geomorphic_unit_type">
@@ -1022,7 +1030,7 @@
             <Description>The area of ponded inundation in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="inundation_extents">
                     <AttributeFilter field_id_ref="type_id">
@@ -1038,7 +1046,7 @@
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
             <MaximumValue>1000000</MaximumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="centerlines">
                     <AttributeFilter field_id_ref="type_id">
@@ -1053,7 +1061,7 @@
             <Description>The sum of all channel lengths per length of riverscape</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <InputLayer input_ref="centerline" usage="normalization"/>          
                 <DCELayer layer_id_ref="centerlines"/>
@@ -1065,7 +1073,7 @@
             <Description>The area of riffles in containing sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>                
                 <DCELayer layer_id_ref="geomorphic_unit_extents">
                     <AttributeFilter field_id_ref="geomorphic_unit_type">
@@ -1143,11 +1151,11 @@
             <Description>Length of the secondary channels within the riverscape sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="centerlines">
                     <AttributeFilter field_id_ref="type_id">
-                        <Value>Secondary</Value>
+                        <Value>Non-Primary</Value>
                     </AttributeFilter>
                 </DCELayer>
             </Parameters>
@@ -1158,7 +1166,7 @@
             <Description>The area of Stage 0 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1173,7 +1181,7 @@
             <Description>The area of Stage 1 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1188,7 +1196,7 @@
             <Description>The area of Stage 2 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1203,7 +1211,7 @@
             <Description>The area of Stage 3 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1218,7 +1226,7 @@
             <Description>The area of Stage 4 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1233,7 +1241,7 @@
             <Description>The area of Stage 5 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1248,7 +1256,7 @@
             <Description>The area of Stage 6 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1263,7 +1271,7 @@
             <Description>The area of Stage 7 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
@@ -1278,7 +1286,7 @@
             <Description>The area of Stage 8 riverscape in each sample frame</Description>
             <DefinitionURL/>
             <MinimumValue>0</MinimumValue>
-            <Precision>2</Precision>
+            <Precision>3</Precision>
             <Parameters>
                 <DCELayer layer_id_ref="cem_phases">
                     <AttributeFilter field_id_ref="sem_stage">
