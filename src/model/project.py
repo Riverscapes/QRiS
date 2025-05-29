@@ -14,7 +14,7 @@ from .raster import Raster, load_rasters
 from .event import Event, load as load_events
 from .planning_container import PlanningContainer, load as load_planning_containers
 from .event_layer import EventLayer
-from .metric import Metric, load_metrics
+from .metric import Metric, load_metrics, insert_metric
 from .pour_point import PourPoint, load_pour_points
 from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
@@ -24,6 +24,7 @@ from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
 from ..QRiS.path_utilities import parse_posix_path
+from ..QRiS.protocol_parser import load_protocol_definitions
 from typing import Generator
 
 PROJECT_MACHINE_CODE = 'Project'
@@ -92,6 +93,27 @@ class Project(DBItem):
             self.analyses = load_analyses(curs, self.analysis_masks(), self.metrics)
 
             self.units = load_units(curs)
+        
+        # attempt to update protocols 
+        try:
+            current_protocols = load_protocol_definitions(os.path.dirname(self.project_file))
+            if current_protocols:
+                for current_protocol in current_protocols:
+                    if current_protocol.machine_code in [protocol.machine_code for protocol in self.protocols.values()]:
+                        protocol_id = [protocol.id for protocol in self.protocols.values() if protocol.machine_code == current_protocol.machine_code][0]
+                        # update existing protocol
+                        # TODO layer mutable properties
+                        # metrics
+                        for metric in current_protocol.metrics:
+                            if (metric.id, metric.version, current_protocol.machine_code) not in [(m.machine_name, m.version, m.protocol_machine_code) for m in self.metrics.values()]:
+                                metric_id, metric = insert_metric(self.project_file, metric.label, metric.id, current_protocol.machine_code, metric.description, metric.default_level, metric.calculation_machine_code, metric.parameters, None, metric.definition_url, None, metric.version) 
+                                self.metrics[metric_id] = metric
+                            else:
+                                # TODO update mutable properties for existing metrics?
+                                pass
+        except Exception as e:
+            QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
+        
 
     def analysis_masks(self) -> dict:
         masks = self.sample_frames.copy()
