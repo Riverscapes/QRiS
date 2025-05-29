@@ -11,6 +11,7 @@ from ..model.metric import Metric
 from ..model.analysis import Analysis
 from ..model.event import Event
 
+from .frm_layer_metric_details import FrmLayerMetricDetails
 from .utilities import add_standard_form_buttons
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import normalization_factor
@@ -216,7 +217,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.cmdHelp = QtWidgets.QPushButton()
         self.cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
         self.cmdHelp.setToolTip('Help')
-        self.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics.html#{self.metric_value.metric.name.replace(' ', '-')}")))
+        self.cmdHelp.clicked.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=self.metric_value.metric).exec_())
         self.grid.addWidget(self.cmdHelp, 0, 2, 1, 1)
 
         self.horizMetric = QtWidgets.QHBoxLayout()

@@ -9,8 +9,10 @@ from ..model.project import Project
 from ..model.profile import Profile
 from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
+from ..model.metric import Metric
 from ..model.analysis_metric import AnalysisMetric
 
+from .frm_layer_metric_details import FrmLayerMetricDetails
 from .utilities import validate_name, add_standard_form_buttons
 from ..QRiS.settings import CONSTANTS
 
@@ -96,9 +98,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         else:
             self.setWindowTitle('Create New Analysis')
 
-    def help(self, metric_name):
+    def help(self, metric: Metric):
 
-        return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
+        return 
+        # return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
 
     def toggle_all_metrics(self, level_id: str):
             
@@ -121,23 +124,22 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 self.cboValleyBottom.setEnabled(True)
 
     def load_metrics_table(self):
-    
         metrics = list(self.qris_project.metrics.values())
         # we need to filter the metrics by only those that are in a layer
 
         self.metricsTable.setRowCount(len(metrics))
 
         for row in range(len(metrics)):
-
-            level_id = metrics[row].default_level_id
+            metric: Metric = metrics[row]
+            level_id = metric.default_level_id
             if self.analysis is not None:
-                if metrics[row].id in self.analysis.analysis_metrics:
-                    level_id = self.analysis.analysis_metrics[metrics[row].id].level_id
+                if metric.id in self.analysis.analysis_metrics:
+                    level_id = self.analysis.analysis_metrics[metric.id].level_id
 
             label_item = QtWidgets.QTableWidgetItem()
-            label_item.setText(metrics[row].name)
+            label_item.setText(metric.name)
             self.metricsTable.setItem(row, 0, label_item)
-            label_item.setData(QtCore.Qt.UserRole, metrics[row])
+            label_item.setData(QtCore.Qt.UserRole, metric)
             label_item.setFlags(QtCore.Qt.ItemIsEnabled)
 
             cboStatus = QtWidgets.QComboBox()
@@ -150,10 +152,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             cmdHelp = QtWidgets.QPushButton()
             cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
             cmdHelp.setToolTip('Metric Definition')
-            name = metrics[row].name
-            cmdHelp.clicked.connect(self.help(name))
+            cmdHelp.clicked.connect(lambda _, m=metric: FrmLayerMetricDetails(self, self.qris_project, metric=m).exec_())
             self.metricsTable.setCellWidget(row, 2, cmdHelp)
-
 
     def setupUi(self):
 
