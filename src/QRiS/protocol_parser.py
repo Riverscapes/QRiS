@@ -224,12 +224,15 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     'values': [v.text for v in attribute_filter_elem.findall('Value')]
                 }
                 dce_layer['attribute_filter'] = attribute_filter
-            count_field_elem = dce_elem.find('CountField')
-            if count_field_elem is not None:
-                count_field = {
-                    'field_id_ref': count_field_elem.attrib.get('field_id_ref')
-                }
-                dce_layer['count_field'] = count_field
+            count_fields_elem = dce_elem.find('CountFields')
+            if count_fields_elem is not None:
+                count_fields = []
+                for count_field_elem in count_fields_elem.findall('CountField'):
+                    count_field = {
+                        'field_id_ref': count_field_elem.attrib.get('field_id_ref')
+                    }
+                    count_fields.append(count_field)
+                dce_layer['count_fields'] = count_fields
             usage_elem = dce_elem.find('Usage')
             if usage_elem is not None:
                 dce_layer['usage'] = usage_elem.text
