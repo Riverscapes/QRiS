@@ -71,11 +71,11 @@ class Metric(DBItem):
                         return False
         return True
 
-
-
-
-            
-
+    def get_metric_protocol(self, protocols: dict):
+        for protocol in protocols.values():
+            if protocol.machine_code == self.protocol_machine_code:
+                return protocol
+        return None
 
 def load_metrics(curs: sqlite3.Cursor) -> dict:
 

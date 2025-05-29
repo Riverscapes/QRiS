@@ -71,7 +71,7 @@ from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
 from .frm_import_dce_layer import FrmImportDceLayer
 from .frm_layer_picker import FrmLayerPicker
-from .frm_layer_details import FrmLayerDetails
+from .frm_layer_metric_details import FrmLayerMetricDetails
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
 from .frm_event_picker import FrmEventPicker
@@ -1611,7 +1611,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmPlanningContainer(self, self.project, db_item)
         elif isinstance(db_item, EventLayer):
             layer = db_item.layer
-            frm = FrmLayerDetails(self, self.project, layer) 
+            frm = FrmLayerMetricDetails(self, self.project, layer) 
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
