@@ -60,26 +60,29 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             index = self.cboSampleFrame.findData(analysis.sample_frame)
             self.cboSampleFrame.setCurrentIndex(index)
 
-            if analysis.metadata and 'valley_bottom' in analysis.metadata:
-                valley_bottom: DBItem = self.valley_bottoms[analysis.metadata['valley_bottom']]
-                index = self.cboValleyBottom.findData(valley_bottom)
-                self.cboValleyBottom.setCurrentIndex(index)
+            self.cboValleyBottom.setCurrentIndex(-1)
+            self.cboCenterline.setCurrentIndex(-1)
+            self.cboDEM.setCurrentIndex(-1)
 
-            # Set the centerline
-            if analysis.metadata is not None and 'centerline' in analysis.metadata:
-                centerline: DBItem = self.centerlines[analysis.metadata['centerline']]
-                index = self.cboCenterline.findData(centerline)
-                self.cboCenterline.setCurrentIndex(index)
-            else:
-                self.cboCenterline.setCurrentIndex(-1)
-            
-            # set the dem
-            if analysis.metadata is not None and 'dem' in analysis.metadata:
-                dem: Raster = self.dems[analysis.metadata['dem']]
-                index = self.cboDEM.findData(dem)
-                self.cboDEM.setCurrentIndex(index)
-            else:
-                self.cboDEM.setCurrentIndex(-1)
+            if analysis.metadata is not None:
+                # Set the valley bottom
+                analysis_valley_bottom = analysis.metadata.get('valley_bottom', None)
+                if analysis_valley_bottom is not None:
+                    valley_bottom: DBItem = self.valley_bottoms[analysis_valley_bottom]
+                    index = self.cboValleyBottom.findData(valley_bottom)
+                    self.cboValleyBottom.setCurrentIndex(index)
+                # Set the centerline
+                anaysis_centerline = analysis.metadata.get('centerline', None)
+                if anaysis_centerline is not None:
+                    centerline: Profile = self.centerlines[anaysis_centerline]
+                    index = self.cboCenterline.findData(centerline)
+                    self.cboCenterline.setCurrentIndex(index)
+                # set the dem
+                analysis_dem = analysis.metadata.get('dem', None)
+                if analysis_dem is not None:
+                    dem: Raster = self.dems[analysis_dem]
+                    index = self.cboDEM.findData(dem)
+                    self.cboDEM.setCurrentIndex(index)
 
             for row in range(self.metricsTable.rowCount()):
                 metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
