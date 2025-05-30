@@ -20,12 +20,30 @@ class FrmLayerMetricDetails(QDialog):
         self.analysis_metric = metric
 
         protocol_name = None
+        protocol_machine_code = None
+        protocol_description = None
+        protocol_url = None
+        protocol_citation = None
+        protocol_author = None
+        protocol_creation_date = None
+        protocol_updated_date = None
         protocol_version = None
+        protocol_metadata = []
+
         layer_name = None
+        layer_id = None
         layer_version = None
+        layer_description = None
+        layer_metadata = []
 
         metric_name = None
+        metric_label = None
+        metric_description = None
+        metric_function = None
+        # metric_params = None
+        metric_url = None
         metric_version = None
+        metric_metadata = []
 
         self.html_content = f"""
         <html>
@@ -50,7 +68,7 @@ class FrmLayerMetricDetails(QDialog):
             protocol_author = self.layer.protocol_definition.author if self.layer.protocol_definition.author else "No author available."
             protocol_creation_date = self.layer.protocol_definition.creation_date if self.layer.protocol_definition.creation_date else "No creation date available."
             protocol_updated_date = self.layer.protocol_definition.updated_date if self.layer.protocol_definition.updated_date else "No updated date available."
-            protocol_metadata = []
+
             if self.layer.protocol_definition.metadata:
                 for key, value in self.layer.protocol_definition.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
@@ -66,7 +84,6 @@ class FrmLayerMetricDetails(QDialog):
             layer_id = self.layer.layer_id
             layer_version = self.layer.layer_version
             layer_description = self.layer.description if self.layer.description else "No description available."
-            layer_metadata = []
             if self.layer.metadata:
                 for key, value in self.layer.metadata.items():
                     layer_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
@@ -83,8 +100,6 @@ class FrmLayerMetricDetails(QDialog):
             protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_updated_date = protocol.system_metadata.get('updated_date', 'Unknown') if protocol.system_metadata else "Unknown"
-
-            protocol_metadata = []
             if protocol.metadata:
                 for key, value in protocol.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
@@ -101,9 +116,9 @@ class FrmLayerMetricDetails(QDialog):
             metric_version = self.analysis_metric.version
             metric_description = self.analysis_metric.description if self.analysis_metric.description else "No description available."
             metric_function = self.analysis_metric.metric_function
-            metric_params = self.analysis_metric.metric_params
+            # metric_params = self.analysis_metric.metric_params
             metric_url = self.analysis_metric.definition_url if self.analysis_metric.definition_url else "No URL available."
-            metric_metadata = []
+
             if self.analysis_metric.metadata:
                 for key, value in self.analysis_metric.metadata.items():
                     metric_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
@@ -121,8 +136,6 @@ class FrmLayerMetricDetails(QDialog):
             protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_updated_date = protocol.system_metadata.get('updated_date', 'Unknown') if protocol.system_metadata else "Unknown"
-
-            protocol_metadata = []
             if protocol.metadata:
                 for key, value in protocol.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
