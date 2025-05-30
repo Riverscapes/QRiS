@@ -174,12 +174,15 @@ class FrmMetricValue(QtWidgets.QDialog):
         # modify metric params as needed.
         metric_params: dict = self.metric_value.metric.metric_params
         analysis_params = {}
-        if 'centerline' in self.analysis.metadata:
-            analysis_params['centerline'] = self.qris_project.profiles[self.analysis.metadata['centerline']]
-        if 'dem' in self.analysis.metadata:
-            analysis_params['dem'] = self.qris_project.rasters[self.analysis.metadata['dem']]
-        if 'valley_bottom' in self.analysis.metadata:
-            analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[self.analysis.metadata['valley_bottom']]
+        centerline = self.analysis.metadata.get('centerline', None)
+        if centerline is not None and centerline in self.qris_project.profiles:
+            analysis_params['centerline'] = self.qris_project.profiles[centerline]
+        dem = self.analysis.metadata.get('dem', None)
+        if dem is not None and dem in self.qris_project.rasters:
+            analysis_params['dem'] = self.qris_project.rasters[dem]
+        valley_bottom = self.analysis.metadata.get('valley_bottom', None)
+        if valley_bottom is not None and valley_bottom in self.qris_project.valley_bottoms: 
+            analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[valley_bottom]
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
