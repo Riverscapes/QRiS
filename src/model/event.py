@@ -132,10 +132,18 @@ def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, loo
     # event_protocols = [(row['event_id'], protocols[row['protocol_id']]) for row in curs.fetchall()]
 
     curs.execute('SELECT * FROM event_rasters')
-    event_basemaps = [(row['event_id'], rasters[row['raster_id']]) for row in curs.fetchall()]
+    event_basemaps = [
+        (row['event_id'], rasters[row['raster_id']])
+        for row in curs.fetchall()
+        if row['raster_id'] in rasters
+    ]
 
     curs.execute('SELECT * FROM event_layers')
-    event_layers = [EventLayer(row['id'], row['event_id'], layers[row['layer_id']]) for row in curs.fetchall()]
+    event_layers = [
+        EventLayer(row['id'], row['event_id'], layers[row['layer_id']])
+        for row in curs.fetchall()
+        if row['layer_id'] in layers
+    ]
 
     curs.execute('SELECT * FROM events')
     return {row['id']: Event(
