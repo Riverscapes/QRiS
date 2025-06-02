@@ -36,11 +36,11 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
         self.datasets = {}
         datasets = get_datasets()
         for dataset_id, dataset in datasets.items():
-            if dataset.get('allowMapLayers', False) is True:
+            if dataset.get('mapping', False) is True:
                 self.datasets[dataset_id] = dataset
 
         for dataset_id, dataset in self.datasets.items():
-            dataset_name = dataset.get('name', None)
+            dataset_name = dataset.get('datasetName', None)
             if len(dataset.get('variables', [])) == 0:
                 continue
             self.cboDataset.addItem(dataset_name, dataset_id)
@@ -83,7 +83,7 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
         dataset_variables = dataset.get('variables', None)
         if dataset_variables is not None and len(dataset_variables) > 0:
             for variable in dataset_variables:
-                item = QtWidgets.QListWidgetItem(variable['name'])
+                item = QtWidgets.QListWidgetItem(variable['variableName'])
                 item.setData(QtCore.Qt.UserRole, variable)
                 self.cboVariable.addItem(item.text(), item.data(QtCore.Qt.UserRole))
                 # if variable.get('displayInQRiS', False) is False and self.chkFilterQris.isChecked():
@@ -141,8 +141,8 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, 'Error', 'Opacity must be between 0.0 and 1.0')
             return
 
-        self.map_tile_url = get_raster_mapid(dataset_id, variable['name'], statistic, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), color_map_opacity=opacity)
-        self.map_tile_layer_name = f'{dataset["name"]} - {variable["name"]}'
+        self.map_tile_url = get_raster_mapid(dataset_id, variable['variableName'], statistic, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), color_map_opacity=opacity)
+        self.map_tile_layer_name = f'{dataset["datasetName"]} - {variable["variableName"]}'
 
         if self.map_tile_url is None:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Error downloading data from Climate Engine')
