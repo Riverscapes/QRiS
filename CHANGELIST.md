@@ -1,6 +1,6 @@
 # QRiS Plugin
 
-## [1.1.0] 2025 MAR 20
+## [1.1.0] 2025 JUN 02
 
 ### Added
 - Protocol Library for adding DCE layers and metrics to a project
@@ -9,17 +9,31 @@
 - Allow mulitple values for list fields (as checkbox) and support for field visibility #572
 - Re-added Brat CIS Protocol #569 
 - Beaver Census Protocol #551
+- Added Climate Engine XYZ Map Tiles
+- DCE Layer Details
+- Local Folder for Protocols
+- Added additonal pathways to get to analysis summary #624
+- Label DCE Points in Time on Climate Engine Graphs #626
+- Add Warning when Calculating Sinuosity if lines run outside of sample frame #516
+- Add metric details form to metrics #637
+- Allow multiple count fields in metrics #637
 
 ### Fixed
 - Unable to import existing valley bottom shapefile #568
 - Error When Trying to Import Temporary Layers as a Valley Bottom #580
 - Misspelling of 'Geomorphic Unit Extents' under DCE #577
 - Fixed valley bottom id for analyses on migration
+- Add To Map error for Analysis and Planning Containers
+- Fix new project path when browsing to different folder.
+- Analysis properties form not displaying and metric calculation errors if valley bottom is None
+- Bug when event rasters not in project (i.e. from export)
 
 ### Changed
 - Migrations for protocols, layers, metrics to support protocol library
 - Making Input Values and Channel Type match for 'Active Channel Lines' when Importing into QRiS #578
 - Issues with manual metric entry #557
+- Climate Engine API Update #612
+- Prevent metric calculations when required layers are missing from DCE
 
 
 ## [1.0.11] 2025 APR 10
