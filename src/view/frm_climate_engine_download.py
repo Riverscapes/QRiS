@@ -35,7 +35,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         # Datasets
         self.datasets = get_datasets()
         for dataset_id, dataset in self.datasets.items():
-            dataset_name = dataset.get('name', None)
+            dataset_name = dataset.get('datasetName', None)
             if len(dataset.get('variables', [])) == 0:
                 continue
             self.cboDataset.addItem(dataset_name, dataset_id)
@@ -81,12 +81,12 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         dataset_variables = dataset.get('variables', None)
         if dataset_variables is not None and len(dataset_variables) > 0:
             for variable in dataset_variables:
-                item = QtWidgets.QListWidgetItem(variable['name'])
+                item = QtWidgets.QListWidgetItem(variable['variableName'])
                 item.setData(QtCore.Qt.UserRole, variable)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
                 item.setCheckState(QtCore.Qt.Unchecked)
                 self.lboxVariables.addItem(item)
-                if variable.get('displayInQRiS', False) is False and self.chkFilterQris.isChecked():
+                if variable.get('defaultVisible', False) is False and self.chkFilterQris.isChecked():
                     item.setHidden(True)
             self.lboxVariables.setEnabled(True)
         
@@ -110,7 +110,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                 item = self.lboxVariables.item(i)
                 variable = item.data(QtCore.Qt.UserRole)
                 if variable is not None:
-                    if variable.get('displayInQRiS', False) is False:
+                    if variable.get('defaultVisible', False) is False:
                         item.setHidden(True)
                     else:
                         item.setHidden(False)
@@ -154,7 +154,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
             if item.checkState() == QtCore.Qt.Checked:
                 variable = item.data(QtCore.Qt.UserRole)
                 if variable is not None:
-                    variables.append(variable['name'])
+                    variables.append(variable['variableName'])
         
         if len(variables) == 0:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Select at least one variable')

@@ -1,929 +1,3858 @@
 [
     {
+        "datasetName": "ACIS NRCC NN Daily Precipitation",
         "datasetId": "ACIS_NRCC_NN",
-        "name": "ACIS NRCC NN Daily Precipitation",
-        "apiPath": "projects/climate-engine-pro/assets/public/acis-nrcc-nn/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/public/acis-nrcc-nn/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precip",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ANUSPLIN Gridded Climate for Canada - Daily",
         "datasetId": "ANUSPLIN_DAILY",
-        "name": "ANUSPLIN Gridded Climate for Canada - Daily",
-        "apiPath": "projects/climate-engine-pro/assets/ce-anusplin-daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-anusplin-daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "pcp",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "maxt",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mint",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ANUSPLIN Gridded Climate for Canada - Monthly",
         "datasetId": "ANUSPLIN_MONTHLY",
-        "name": "ANUSPLIN Gridded Climate for Canada - Monthly",
-        "apiPath": "projects/climate-engine-pro/assets/cfe-anusplin-monthly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/cfe-anusplin-monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "pcp",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "maxt",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mint",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pett",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speit",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "Canadian Drought Outlook",
         "datasetId": "CDOUTLOOK",
-        "name": "Canadian Drought Outlook",
-        "apiPath": "projects/climate-engine-pro/assets/ce-aafc-cdo-monthly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-aafc-cdo-monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "drought_outlook_class",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "Copernicus Emergency Management Service Fire Danger Indices",
         "datasetId": "CEMS",
-        "name": "Copernicus Emergency Management Service Fire Danger Indices",
-        "apiPath": "projects/climate-engine-pro/assets/ce-cems-fire-daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-cems-fire-daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "fire_weather_index",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "danger_risk",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "fire_daily_severity_rating",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "burning_index",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "energy_release_component",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ignition_component",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spread_component",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "CHIRPS Daily",
         "datasetId": "CHIRPS_DAILY",
-        "name": "CHIRPS Daily",
-        "apiPath": "UCSB-CHG/CHIRPS/DAILY",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "UCSB-CHG/CHIRPS/DAILY",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "CHIRPS Pentad",
         "datasetId": "CHIRPS_PENTAD",
-        "name": "CHIRPS Pentad",
-        "apiPath": "UCSB-CHG/CHIRPS/PENTAD",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "UCSB-CHG/CHIRPS/PENTAD",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "CHIRPS Preliminary Pentad",
         "datasetId": "CHIRPS_PRELIM_PENTAD",
-        "name": "CHIRPS Preliminary Pentad",
-        "apiPath": "projects/climate-engine-pro/assets/ce-chirps-prelim-pentad",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-chirps-prelim-pentad",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "CFS gridMET 28-Day Forecasts",
         "datasetId": "CFS_GRIDMET",
-        "name": "CFS gridMET 28-Day Forecasts",
-        "apiPath": "projects/climate-engine/cfsv2/forecast",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine/cfsv2/forecast",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "pr",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmean",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmmx",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmmn",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eto",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "srad",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vs",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "sph",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "erc",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "bi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "fm100",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "fm1000",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vpd",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "CFSV2 Reanalysis",
         "datasetId": "CFSV2",
-        "name": "CFSV2 Reanalysis",
-        "apiPath": "NOAA/CFSV2/FOR6H",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "NOAA/CFSV2/FOR6H",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "Maximum_temperature_height_above_ground_6_Hour_Interval",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Minimum_temperature_height_above_ground_6_Hour_Interval",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Temperature_height_above_ground",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Latent_heat_net_flux_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Sensible_heat_net_flux_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Precipitation_rate_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "u-component_of_wind_height_above_ground",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "v-component_of_wind_height_above_ground",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Pressure_surface",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Maximum_specific_humidity_at_2m_height_above_ground_6_Hour_Interval",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Minimum_specific_humidity_at_2m_height_above_ground_6_Hour_Interval",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Specific_humidity_height_above_ground",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Downward_Short-Wave_Radiation_Flux_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Upward_Short-Wave_Radiation_Flux_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Downward_Long-Wave_Radp_Flux_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Upward_Long-Wave_Radp_Flux_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Volumetric_Soil_Moisture_Content_depth_below_surface_layer_5_cm",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Volumetric_Soil_Moisture_Content_depth_below_surface_layer_25_cm",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Volumetric_Soil_Moisture_Content_depth_below_surface_layer_70_cm",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Volumetric_Soil_Moisture_Content_depth_below_surface_layer_150_cm",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Potential_Evaporation_Rate_surface_6_Hour_Average",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Geopotential_height_surface",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vs",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "netRAD",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "CONUS404",
         "datasetId": "CONUS404",
-        "name": "CONUS404",
-        "apiPath": "projects/openet/assets/meteorology/conus404/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/openet/assets/meteorology/conus404/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "DAYMET - 1km - Daily",
         "datasetId": "DAYMET",
-        "name": "DAYMET - 1km - Daily",
-        "apiPath": "NASA/ORNL/DAYMET_V4",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "NASA/ORNL/DAYMET_V4",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "ppt",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmean",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "srad",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "swe",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "vp",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "USGS 1/10-deg static earthquake damage risk dataset",
         "datasetId": "EH",
-        "name": "USGS 1/10-deg static earthquake damage risk dataset",
-        "apiPath": "projects/climate-engine-pro/assets/earthquake_hazard/ProbMMI_VI_100Yrs_VariableVs30",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/earthquake_hazard/ProbMMI_VI_100Yrs_VariableVs30",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "ERisk",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ERA5 Daily",
         "datasetId": "ERA5",
-        "name": "ERA5 Daily",
-        "apiPath": "ECMWF/ERA5/DAILY",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "ECMWF/ERA5/DAILY",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "mean_2m_air_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "minimum_2m_air_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "maximum_2m_air_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "dewpoint_2m_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "total_precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "surface_pressure",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mean_sea_level_pressure",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wind_speed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "u_component_of_wind_10m",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "v_component_of_wind_10m",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ERA5 Land Daily",
         "datasetId": "ERA5_LAND_DAILY",
-        "name": "ERA5 Land Daily",
-        "apiPath": "ECMWF/ERA5_LAND/DAILY_RAW",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "ECMWF/ERA5_LAND/DAILY_RAW",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "total_precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temperature_2m",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temperature_2m_max",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temperature_2m_min",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "dewpoint_temperature_2m",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wind_speed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "srad",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Snow_Depth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "surface_net_solar_radiation_sum",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ERA5 Ag Daily",
         "datasetId": "ERA5_AG",
-        "name": "ERA5 Ag Daily",
-        "apiPath": "projects/ce-datasets/assets/ce-ag-era5/daily-legacy",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/ce-datasets/assets/ce-ag-era5/daily-legacy",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "wind_speed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "dewpoint_2m_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "maximum_2m_air_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mean_2m_air_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "minimum_2m_air_temperature",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "total_precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Snow_Depth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "srad",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vap",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ERA5 HEAT",
         "datasetId": "ERA5_HEAT",
-        "name": "ERA5 HEAT",
-        "apiPath": "projects/climate-engine-pro/assets/ce-era5-heat",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-era5-heat",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "mrt_mean",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mrt_max",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mrt_min",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "mrt_median",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "utci_mean",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "utci_max",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "utci_min",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "utci_median",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "ESI 4 Week",
         "datasetId": "ESI_4wk",
-        "name": "ESI 4 Week",
-        "apiPath": "projects/climate-engine/esi/4wk",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine/esi/4wk",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "ESI 12 Week",
         "datasetId": "ESI_12wk",
-        "name": "ESI 12 Week",
-        "apiPath": "projects/climate-engine/esi/12wk",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine/esi/12wk",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "FLDAS",
         "datasetId": "FLDAS",
-        "name": "FLDAS",
-        "apiPath": "NASA/FLDAS/NOAH01/C/GL/M/V001",
-        "allowMapLayers": false,
+        "path": "NASA/FLDAS/NOAH01/C/GL/M/V001",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "Tair_f_tavg",
-                "displayInQRiS": false
+                "variableName": "Tair_f_tavg",
+                "defaultVisible": false
             },
             {
-                "name": "Evap_tavg",
-                "displayInQRiS": false
+                "variableName": "Evap_tavg",
+                "defaultVisible": false
             },
             {
-                "name": "SoilMoi00_10cm_tavg",
-                "displayInQRiS": false
+                "variableName": "SoilMoi00_10cm_tavg",
+                "defaultVisible": false
             },
             {
-                "name": "Qs_tavg",
-                "displayInQRiS": false
+                "variableName": "Qs_tavg",
+                "defaultVisible": false
             },
             {
-                "name": "TotalRunoff",
-                "displayInQRiS": false
+                "variableName": "TotalRunoff",
+                "defaultVisible": false
             },
             {
-                "name": "RootZoneSoilMoisture",
-                "displayInQRiS": false
+                "variableName": "RootZoneSoilMoisture",
+                "defaultVisible": false
             },
             {
-                "name": "SWE_inst",
-                "displayInQRiS": false
+                "variableName": "SWE_inst",
+                "defaultVisible": false
             },
             {
-                "name": "SnowDepth_inst",
-                "displayInQRiS": false
+                "variableName": "SnowDepth_inst",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "FRET 7-Day Forecasts",
         "datasetId": "FRET",
-        "name": "FRET 7-Day Forecasts",
-        "apiPath": "projects/climate-engine/fret/forecast",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine/fret/forecast",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "eto",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "Global Ensemble Prediction System 2 week",
         "datasetId": "GEPS_2WK",
-        "name": "Global Ensemble Prediction System 2 week",
-        "apiPath": "projects/climate-engine-pro/assets/ce-geps2w-forecast",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-geps2w-forecast",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "prcp",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temp_max",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temp_min",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temp_mean",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "Global Ensemble Prediction System 4 week",
         "datasetId": "GEPS_4WK",
-        "name": "Global Ensemble Prediction System 4 week",
-        "apiPath": "projects/climate-engine-pro/assets/ce-geps4w-forecast",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-geps4w-forecast",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "prcp",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temp_max",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temp_min",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "temp_mean",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "GLDAS",
         "datasetId": "GLDAS",
-        "name": "GLDAS",
-        "apiPath": "NASA/GLDAS/V021/NOAH/G025/T3H",
-        "allowMapLayers": false,
+        "path": "NASA/GLDAS/V021/NOAH/G025/T3H",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "Evap_tavg",
-                "displayInQRiS": false
+                "variableName": "Evap_tavg",
+                "defaultVisible": false
             },
             {
-                "name": "SoilMoi0_10cm_inst",
-                "displayInQRiS": false
+                "variableName": "SoilMoi0_10cm_inst",
+                "defaultVisible": false
             },
             {
-                "name": "TotalRunoff",
-                "displayInQRiS": false
+                "variableName": "TotalRunoff",
+                "defaultVisible": false
             },
             {
-                "name": "RootMoist_inst",
-                "displayInQRiS": false
+                "variableName": "RootMoist_inst",
+                "defaultVisible": false
             },
             {
-                "name": "SWE_inst",
-                "displayInQRiS": false
+                "variableName": "SWE_inst",
+                "defaultVisible": false
             },
             {
-                "name": "SnowDepth_inst",
-                "displayInQRiS": false
+                "variableName": "SnowDepth_inst",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "GPM 11km - Daily",
         "datasetId": "GPM_DAILY",
-        "name": "GPM 11km - Daily",
-        "apiPath": "projects/climate-engine-pro/assets/ce-gpm-imerg-daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-gpm-imerg-daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precipitationCal",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "GRIDMET",
         "datasetId": "GRIDMET",
-        "name": "GRIDMET",
-        "apiPath": "IDAHO_EPSCOR/GRIDMET",
-        "allowMapLayers": false,
+        "path": "IDAHO_EPSCOR/GRIDMET",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "pr",
-                "displayInQRiS": true
+                "variableName": "pr",
+                "defaultVisible": true
             },
             {
-                "name": "bi",
-                "displayInQRiS": false
+                "variableName": "bi",
+                "defaultVisible": false
             },
             {
-                "name": "fm100",
-                "displayInQRiS": false
+                "variableName": "fm100",
+                "defaultVisible": false
             },
             {
-                "name": "fm1000",
-                "displayInQRiS": false
+                "variableName": "fm1000",
+                "defaultVisible": false
             },
             {
-                "name": "tmmx",
-                "displayInQRiS": true
+                "variableName": "tmmx",
+                "defaultVisible": true
             },
             {
-                "name": "tmmn",
-                "displayInQRiS": true
+                "variableName": "tmmn",
+                "defaultVisible": true
             },
             {
-                "name": "rmin",
-                "displayInQRiS": false
+                "variableName": "rmin",
+                "defaultVisible": false
             },
             {
-                "name": "rmax",
-                "displayInQRiS": false
+                "variableName": "rmax",
+                "defaultVisible": false
             },
             {
-                "name": "srad",
-                "displayInQRiS": false
+                "variableName": "srad",
+                "defaultVisible": false
             },
             {
-                "name": "vpd",
-                "displayInQRiS": false
+                "variableName": "vpd",
+                "defaultVisible": false
             },
             {
-                "name": "vs",
-                "displayInQRiS": false
+                "variableName": "vs",
+                "defaultVisible": false
             },
             {
-                "name": "sph",
-                "displayInQRiS": false
+                "variableName": "sph",
+                "defaultVisible": false
             },
             {
-                "name": "erc",
-                "displayInQRiS": false
+                "variableName": "erc",
+                "defaultVisible": false
             },
             {
-                "name": "eto",
-                "displayInQRiS": true
+                "variableName": "eto",
+                "defaultVisible": true
             },
             {
-                "name": "etr",
-                "displayInQRiS": false
+                "variableName": "etr",
+                "defaultVisible": false
             },
             {
-                "name": "tmean",
-                "displayInQRiS": true
+                "variableName": "tmean",
+                "defaultVisible": true
             },
             {
-                "name": "wb",
-                "displayInQRiS": true
+                "variableName": "wb",
+                "defaultVisible": true
             },
             {
-                "name": "dps",
-                "displayInQRiS": false
+                "variableName": "dps",
+                "defaultVisible": false
             },
             {
-                "name": "eddi",
-                "displayInQRiS": true
+                "variableName": "eddi",
+                "defaultVisible": true
             },
             {
-                "name": "spi",
-                "displayInQRiS": true
+                "variableName": "spi",
+                "defaultVisible": true
             },
             {
-                "name": "spei",
-                "displayInQRiS": true
+                "variableName": "spei",
+                "defaultVisible": true
             },
             {
-                "name": "pdsi",
-                "displayInQRiS": true
+                "variableName": "pdsi",
+                "defaultVisible": true
             },
             {
-                "name": "custom",
-                "displayInQRiS": false
+                "variableName": "custom",
+                "defaultVisible": false
             },
             {
-                "name": "peth",
-                "displayInQRiS": true
+                "variableName": "peth",
+                "defaultVisible": true
             },
             {
-                "name": "wbh",
-                "displayInQRiS": true
+                "variableName": "wbh",
+                "defaultVisible": true
             },
             {
-                "name": "speih",
-                "displayInQRiS": true
+                "variableName": "speih",
+                "defaultVisible": true
             },
             {
-                "name": "eddih",
-                "displayInQRiS": true
+                "variableName": "eddih",
+                "defaultVisible": true
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "GRIDMET DROUGHT",
         "datasetId": "GRIDMET_DROUGHT",
-        "name": "GRIDMET DROUGHT",
-        "apiPath": "GRIDMET/DROUGHT",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "GRIDMET/DROUGHT",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "z",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "pdsi",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi14d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi30d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi90d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi180d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi270d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi1y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi2y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spi5y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei14d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei30d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei90d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei180d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei270d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei1y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei2y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "spei5y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi14d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi30d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi90d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi180d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi270d",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi1y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi2y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddi5y",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "short_term_blend",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "long_term_blend",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "HRDPA",
         "datasetId": "HRDPA",
-        "name": "HRDPA",
-        "apiPath": "projects/climate-engine-pro/assets/ce-hrdpa-daily",
-        "allowMapLayers": false,
+        "path": "projects/climate-engine-pro/assets/ce-hrdpa-daily",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "precip",
-                "displayInQRiS": false
+                "variableName": "precip",
+                "defaultVisible": false
             },
             {
-                "name": "spi",
-                "displayInQRiS": false
+                "variableName": "spi",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "HRDPS",
         "datasetId": "HRDPS",
-        "name": "HRDPS",
-        "apiPath": "projects/climate-engine-pro/assets/ce-hrdps-daily",
-        "allowMapLayers": false,
+        "path": "projects/climate-engine-pro/assets/ce-hrdps-daily",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "Tavg",
-                "displayInQRiS": false
+                "variableName": "Tavg",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "Landsat 5 Top of Atmosphere",
         "datasetId": "LANDSAT5_TOA",
-        "name": "Landsat 5 Top of Atmosphere",
-        "apiPath": "LANDSAT/LT05/C02/T1_TOA",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LT05/C02/T1_TOA",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 7 Top of Atmosphere",
         "datasetId": "LANDSAT7_TOA",
-        "name": "Landsat 7 Top of Atmosphere",
-        "apiPath": "LANDSAT/LE07/C02/T1_TOA",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LE07/C02/T1_TOA",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 8 Top of Atmosphere",
         "datasetId": "LANDSAT8_TOA",
-        "name": "Landsat 8 Top of Atmosphere",
-        "apiPath": "LANDSAT/LC08/C02/T1_RT_TOA",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LC08/C02/T1_RT_TOA",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 9 Top of Atmosphere",
         "datasetId": "LANDSAT9_TOA",
-        "name": "Landsat 9 Top of Atmosphere",
-        "apiPath": "LANDSAT/LC09/C02/T1_TOA",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LC09/C02/T1_TOA",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 4,5,7,8 (Merged) Top of Atmosphere",
         "datasetId": "LANDSAT_TOA",
-        "name": "Landsat 4,5,7,8 (Merged) Top of Atmosphere",
-        "apiPath": "LANDSAT/LT05/C02/T1_TOA\nLANDSAT/LE07/C02/T1_TOA\nLANDSAT/LC08/C02/T1_RT_TOA\nLANDSAT/LC09/C02/T1_RT_TOA",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LT05/C02/T1_TOA\nLANDSAT/LE07/C02/T1_TOA\nLANDSAT/LC08/C02/T1_RT_TOA\nLANDSAT/LC09/C02/T1_RT_TOA",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "NDVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "EVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NBR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SAVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "MSAVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "AVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "DVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FCVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDSI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_NIR_SWIR_Gao",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_NIR_McFeeters",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Xu",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Hall",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_SWIR_Green_Allen",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TrueColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FalseColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Blue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Green",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Red",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR1",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenRed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rBlueNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "LST",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "OC2",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "Landsat 5 Surface Reflectance",
         "datasetId": "LANDSAT5_SR",
-        "name": "Landsat 5 Surface Reflectance",
-        "apiPath": "LANDSAT/LT05/C02/T1_L2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LT05/C02/T1_L2",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 7 Surface Reflectance",
         "datasetId": "LANDSAT7_SR",
-        "name": "Landsat 7 Surface Reflectance",
-        "apiPath": "LANDSAT/LE07/C02/T1_L2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LE07/C02/T1_L2",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 8 Surface Reflectance",
         "datasetId": "LANDSAT8_SR",
-        "name": "Landsat 8 Surface Reflectance",
-        "apiPath": "LANDSAT/LC08/C02/T1_L2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LC08/C02/T1_L2",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 9 Surface Reflectance",
         "datasetId": "LANDSAT9_SR",
-        "name": "Landsat 9 Surface Reflectance",
-        "apiPath": "LANDSAT/LC09/C02/T1_L2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LC09/C02/T1_L2",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "Landsat 4,5,7,8 (Merged) Surface Reflectance",
         "datasetId": "LANDSAT_SR",
-        "name": "Landsat 4,5,7,8 (Merged) Surface Reflectance",
-        "apiPath": "LANDSAT/LT05/C02/T1_L2\nLANDSAT/LE07/C02/T1_L2\nLANDSAT/LC08/C02/T1_L2\nLANDSAT/LC09/C02/T1_L2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "LANDSAT/LT05/C02/T1_L2\nLANDSAT/LE07/C02/T1_L2\nLANDSAT/LC08/C02/T1_L2\nLANDSAT/LC09/C02/T1_L2",
+        "warn": false,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "NDVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "EVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NBR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SAVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "MSAVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "AVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "DVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FCVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDSI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_NIR_SWIR_Gao",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_NIR_McFeeters",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Xu",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Hall",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_SWIR_Green_Allen",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TrueColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FalseColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Blue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Green",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Red",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR1",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenRed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rBlueNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "LST",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "OC2",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "MERRA2 Reanalysis",
         "datasetId": "MERRA2",
-        "name": "MERRA2 Reanalysis",
-        "apiPath": "projects/climate-engine/merra2/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine/merra2/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "FWI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "T2MMAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "T2MMIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PRECTOTCORR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "WIND2M",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWGDN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWGDNCLR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "QV2M",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PS",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ETo_ASCE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ETr_ASCE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wb",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spei",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "MERRA2 Fire Weather Index (NASA)",
         "datasetId": "MERRA2_FWI",
-        "name": "MERRA2 Fire Weather Index (NASA)",
-        "apiPath": "projects/climate-engine-pro/assets/ce-merra2_fwi-daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/ce-merra2_fwi-daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "FWI",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "MODIS TERRA NET ET 16-day",
         "datasetId": "MOD16_TERRANET_ET",
-        "name": "MODIS TERRA NET ET 16-day",
-        "apiPath": "MODIS/006/MOD16A2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MOD16A2",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "ET",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PET",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "MODIS Burned Area - Monthly",
         "datasetId": "MODIS_BURNAREA",
-        "name": "MODIS Burned Area - Monthly",
-        "apiPath": "MODIS/006/MCD64A1",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MCD64A1",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "BurnDate",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FirstDay",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "LastDay",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "MODIS Aqua, Terra (Merged) 16-day composite",
         "datasetId": "MODIS_16DAY",
-        "name": "MODIS Aqua, Terra (Merged) 16-day composite",
-        "apiPath": "MODIS/006/MCD43A4",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MCD43A4",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "MODIS Aqua 16-day composite",
         "datasetId": "MODIS_AQUA_16DAY",
-        "name": "MODIS Aqua 16-day composite",
-        "apiPath": "MODIS/006/MOD13Q1 or MODIS/006/MOD13A1",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MOD13Q1 or MODIS/006/MOD13A1",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "MODIS Terra 16-day composite",
         "datasetId": "MODIS_TERRA_16DAY",
-        "name": "MODIS Terra 16-day composite",
-        "apiPath": "MODIS/006/MYD13Q1 or MODIS/006/MYD13A1",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MYD13Q1 or MODIS/006/MYD13A1",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "MODIS Aqua 8-day composite",
         "datasetId": "MODIS_AQUA_8DAY",
-        "name": "MODIS Aqua 8-day composite",
-        "apiPath": "MODIS/006/MYD11A2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MYD11A2",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "MODIS Terra 8-day composite",
         "datasetId": "MODIS_TERRA_8DAY",
-        "name": "MODIS Terra 8-day composite",
-        "apiPath": "MODIS/006/MOD11A2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MOD11A2",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "MODIS Aqua daily data",
         "datasetId": "MODIS_AQUA_DAILY",
-        "name": "MODIS Aqua daily data",
-        "apiPath": "MODIS/006/MYD09GA or MODIS/006/MYD11A1 or MODIS/006/MYD10A1",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MYD09GA or MODIS/006/MYD11A1 or MODIS/006/MYD10A1",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "MODIS Terra daily data",
         "datasetId": "MODIS_TERRA_DAILY",
-        "name": "MODIS Terra daily data",
-        "apiPath": "MODIS/006/MOD09GA or MODIS/006/MOD11A1 or MODIS/006/MOD10A1",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "MODIS/006/MOD09GA or MODIS/006/MOD11A1 or MODIS/006/MOD10A1",
+        "warn": false,
+        "mapping": false,
+        "variables": []
     },
     {
+        "datasetName": "North American Drought Monitor",
         "datasetId": "NADM",
-        "name": "North American Drought Monitor",
-        "apiPath": "projects/climate-engine/nadm/monthly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine/nadm/monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "nadm",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NCEP",
         "datasetId": "NCEP",
-        "name": "NCEP",
-        "apiPath": "NCEP_RE/sea_level_pressure",
-        "allowMapLayers": false,
+        "path": "NCEP_RE/sea_level_pressure",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "slp",
-                "displayInQRiS": false
+                "variableName": "slp",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "NClimGrid-Daily 5-km",
         "datasetId": "NCLIMGRID_DAILY",
-        "name": "NClimGrid-Daily 5-km",
-        "apiPath": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precip",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NClimGrid-Monthly 5-km",
         "datasetId": "NCLIMGRID_MONTHLY",
-        "name": "NClimGrid-Monthly 5-km",
-        "apiPath": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/monthly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/noaa-ncei-nclimgrid/monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precip",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pett",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speit",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NLDAS2 DAILY reanalysis",
         "datasetId": "NLDAS2_DAILY",
-        "name": "NLDAS2 DAILY reanalysis",
-        "apiPath": "projects/eddi-noaa/nldas/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/eddi-noaa/nldas/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "tasmean",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tasmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tasmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "sph",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pressure",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vs",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "longwave_radiation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "shortwave_radiation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eto",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "etr",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wb",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spei",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NOAA AVHRR Pathfinder V 5.2 4-km sea surface",
         "datasetId": "PFV52",
-        "name": "NOAA AVHRR Pathfinder V 5.2 4-km sea surface",
-        "apiPath": "NOAA/AVHRR_Pathfinder_V52_L3",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "NOAA/AVHRR_Pathfinder_V52_L3",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "sea_surface_temperature",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NOAA CDR PERSIANN",
         "datasetId": "NOAA_CDR_PERSIANN",
-        "name": "NOAA CDR PERSIANN",
-        "apiPath": "NOAA/PERSIANN-CDR",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "NOAA/PERSIANN-CDR",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precipitation",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NOAA CPC Global Unified Gauge-Based Analysis",
         "datasetId": "NOAA_CPC_DAILY_GLOBAL",
-        "name": "NOAA CPC Global Unified Gauge-Based Analysis",
-        "apiPath": "projects/climate-engine-pro/assets/noaa-cpc-daily-global/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/noaa-cpc-daily-global/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precip",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NOAA CPC Conus Unified Gauge-Based Analysis",
         "datasetId": "NOAA_CPC_DAILY_CONUS",
-        "name": "NOAA CPC Conus Unified Gauge-Based Analysis",
-        "apiPath": "projects/climate-engine-pro/assets/noaa-cpc-daily-conus/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/climate-engine-pro/assets/noaa-cpc-daily-conus/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precip",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "NOAA Satellite Precipitation - CMORPH",
         "datasetId": "NOAA_CPC_CMORPH",
-        "name": "NOAA Satellite Precipitation - CMORPH",
-        "apiPath": "pprojects/climate-engine-pro/assets/noaa-cpc-cmorph/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "pprojects/climate-engine-pro/assets/noaa-cpc-cmorph/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "precip",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "OISST",
         "datasetId": "OISST",
-        "name": "OISST",
-        "apiPath": "NOAA/CDR/OISST/V2_1",
-        "allowMapLayers": false,
+        "path": "NOAA/CDR/OISST/V2_1",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "sst",
-                "displayInQRiS": false
+                "variableName": "sst",
+                "defaultVisible": false
             },
             {
-                "name": "ice",
-                "displayInQRiS": false
+                "variableName": "ice",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "OpenET Conus",
         "datasetId": "OPENET_CONUS",
-        "name": "OpenET Conus",
-        "apiPath": "OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0",
+        "warn": false,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "et_ensemble_mad",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_ensemble_mad_min",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_ensemble_mad_max",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_geesebal",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_sims",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_ptjpl",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_disalexi",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_ssebop",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "et_eemetric",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "PML_V2 Evapotranspiration dataset",
         "datasetId": "PML_ET",
-        "name": "PML_V2 Evapotranspiration dataset",
-        "apiPath": "CAS/IGSNRR/PML/V2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "CAS/IGSNRR/PML/V2",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ET_water",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Ec",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Es",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Ei",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "GPP",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "PRISM Daily",
         "datasetId": "PRISM",
-        "name": "PRISM Daily",
-        "apiPath": "OREGONSTATE/PRISM/AN81d",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "OREGONSTATE/PRISM/AN81d",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "ppt",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmean",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tdmean",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "vpdmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vpdmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "PRISM Monthly",
         "datasetId": "PRISM_MONTHLY",
-        "name": "PRISM Monthly",
-        "apiPath": "OREGONSTATE/PRISM/AN81m",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "OREGONSTATE/PRISM/AN81m",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "ppt",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmax",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmin",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmean",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tdmean",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "vpdmax",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vpdmin",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "pett",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "speit",
+                "defaultVisible": false
+            }
+        ]
     },
     {
+        "datasetName": "RAP Vegetation Cover",
         "datasetId": "RAP_COVER",
-        "name": "RAP Vegetation Cover",
-        "apiPath": "projects/rangeland-analysis-platform/vegetation-cover-v3",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/rangeland-analysis-platform/vegetation-cover-v3",
+        "warn": true,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "AFG",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "PFG",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "SHR",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "TRE",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "BGR",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "LTR",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "RAP Herbaceous Production",
         "datasetId": "RAP_PRODUCTION",
-        "name": "RAP Herbaceous Production",
-        "apiPath": "projects/rangeland-analysis-platform/npp-partitioned-v3",
-        "allowMapLayers": true,
-        "variables": [],
-        "qrisWarning": false
+        "path": "projects/rangeland-analysis-platform/npp-partitioned-v3",
+        "warn": true,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "afgAGB",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "pfgAGB",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "shrAGB",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "herbaceousAGB",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "RAP Herbaceous Production 16 Day",
         "datasetId": "RAP_PRODUCTION_16DAY",
-        "name": "RAP Herbaceous Production 16 Day",
-        "apiPath": "projects/rap-data-365417/assets/npp-partitioned-16day-v3",
-        "allowMapLayers": true,
-        "variables": [      
-            {"name": "afgAGB"},
-            {"name": "pfgAGB"},
-            {"name": "shrAGB"},
-            {"name": "herbaceousAGB"}
-        ],
-        "qrisWarning": false
+        "path": "projects/rap-data-365417/assets/npp-partitioned-16day-v3",
+        "warn": true,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "afgAGB",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "pfgAGB",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "shrAGB",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "herbaceousAGB",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "RCMAP Rangeland Component Timeseries v5 (1985-2023)",
         "datasetId": "RCMAP",
-        "name": "RCMAP Rangeland Component Timeseries v5 (1985-2023)",
-        "apiPath": "USGS/NLCD_RELEASES/2023_REL/RCMAP/V6/COVER",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "path": "USGS/NLCD_RELEASES/2023_REL/RCMAP/V6/COVER",
+        "warn": false,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "rangeland_annual_herbaceous",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_bare_ground",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_non_sagebrush_shrub",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_herbaceous",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_litter",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_sagebrush",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_shrub",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_shrub_height",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_perennial_herbacous",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "rangeland_tree",
+                "defaultVisible": true
+            }
+        ]
     },
     {
+        "datasetName": "RDPA",
         "datasetId": "RDPA",
-        "name": "RDPA",
-        "apiPath": "projects/climate-engine-pro/assets/ce-rdpa-daily",
-        "allowMapLayers": false,
+        "path": "projects/climate-engine-pro/assets/ce-rdpa-daily",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "precip",
-                "displayInQRiS": false
+                "variableName": "precip",
+                "defaultVisible": false
             },
             {
-                "name": "spi",
-                "displayInQRiS": false
+                "variableName": "spi",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "RDPS",
         "datasetId": "RDPS",
-        "name": "RDPS",
-        "apiPath": "projects/climate-engine-pro/assets/ce-rdps-daily",
-        "allowMapLayers": false,
+        "path": "projects/climate-engine-pro/assets/ce-rdps-daily",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "Tavg",
-                "displayInQRiS": false
+                "variableName": "Tavg",
+                "defaultVisible": false
             }
-        ],
-        "qrisWarning": false
+        ]
     },
     {
+        "datasetName": "Real-Time Mesoscale Analysis (RTMA)",
         "datasetId": "RTMA",
-        "name": "Real-Time Mesoscale Analysis (RTMA)",
-        "apiPath": "projects/climate-engine/rtma/daily",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
-    },
-    {
-        "datasetId": "SENTINEL2_TOA",
-        "name": "Sentinel 2, top-of-atmosphere",
-        "apiPath": "COPERNICUS/S2",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
-    },
-    {
-        "datasetId": "SENTINEL2_SR",
-        "name": "Sentinel 2, surface reflectance",
-        "apiPath": "COPERNICUS/S2_SR",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
-    },
-    {
-        "datasetId": "SENTINEL5P_ATMOSPHERE",
-        "name": "Sentinel 5P ATMOSPHERE",
-        "apiPath": "COPERNICUS/S5P/OFFL/L3_CH4",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
-    },
-    {
-        "datasetId": "SNODAS",
-        "name": "SNODAS",
-        "apiPath": "projects/climate-engine/snodas/daily",
-        "allowMapLayers": false,
+        "path": "projects/climate-engine/rtma/daily",
+        "warn": false,
+        "mapping": false,
         "variables": [
             {
-                "name": "SWE",
-                "displayInQRiS": false
+                "variableName": "PRCP",
+                "defaultVisible": false
             },
             {
-                "name": "Snow_Depth",
-                "displayInQRiS": false
+                "variableName": "ETo",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ETr",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TMAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TMIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SRAD",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SPH",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "WIND",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "WDIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TCDC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PRES",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "DPT",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wb",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spei",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "Sentinel 2, top-of-atmosphere",
+        "datasetId": "SENTINEL2_TOA",
+        "path": "COPERNICUS/S2",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "NDVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "EVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NBR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SAVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "MSAVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDSI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_NIR_SWIR_Gao",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_NIR_McFeeters",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Xu",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Hall",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_SWIR_Green_Allen",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "MCARI2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "VSDI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "AVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "DVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FCVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TrueColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FalseColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Blue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Green",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Red",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR1",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR3",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenRed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rBlueNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedNIR",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "Sentinel 2, surface reflectance",
+        "datasetId": "SENTINEL2_SR",
+        "path": "COPERNICUS/S2_SR",
+        "warn": false,
+        "mapping": true,
+        "variables": [
+            {
+                "variableName": "NDVI",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "EVI",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NBR",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "SAVI",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "MSAVI",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NDSI",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NDWI_NIR_SWIR_Gao",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NDWI_Green_NIR_McFeeters",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Xu",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Hall",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NDWI_SWIR_Green_Allen",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NDCI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "MCARI2",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "VSDI",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "AVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "DVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FCVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TrueColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FalseColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Blue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Green",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Red",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR1",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWIR3",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedBlue",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenRed",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rBlueNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rGreenNIR",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "rRedNIR",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "Sentinel 5P ATMOSPHERE",
+        "datasetId": "SENTINEL5P_ATMOSPHERE",
+        "path": "COPERNICUS/S5P/OFFL/L3_CH4",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "Methane",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "SNODAS",
+        "datasetId": "SNODAS",
+        "path": "projects/climate-engine/snodas/daily",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "SWE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Snow_Depth",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "TerraClimate",
+        "datasetId": "TERRACLIMATE",
+        "path": "IDAHO_EPSCOR/TERRACLIMATE",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "aet",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "def",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pdsi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pet",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pr",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ro",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "soil",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "srad",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "swe",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmmx",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmmn",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmean",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vap",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vpd",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vs",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wb",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spei",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speit",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pett",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "TRMM 28-km (1/4-deg) precipitation dataset (NASA)",
+        "datasetId": "TMM_DAILY",
+        "path": "TRMM/3B42",
+        "warn": false,
+        "mapping": false,
+        "variables": []
+    },
+    {
+        "datasetName": "US Drought Outlook",
+        "datasetId": "USDOUTLOOK",
+        "path": "projects/climate-engine-pro/assets/ce-cpc-usdo-monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "drought_outlook_class",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "USDM Drought monitor rasters",
+        "datasetId": "USDM_DROUGHT_MONITOR",
+        "path": "projects/climate-engine/usdm/weekly",
+        "warn": false,
+        "mapping": false,
+        "variables": []
+    },
+    {
+        "datasetName": "USFS Tree Canopy Cover v2021-4",
+        "datasetId": "USFS_TCC",
+        "path": "USGS/NLCD_RELEASES/2021_REL/TCC/v2021-4",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "Science_Percent_Tree_Canopy_Cover",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "NLCD_Percent_Tree_Canopy_Cover",
+                "defaultVisible": true
+            }
+        ]
+    },
+    {
+        "datasetName": "USGS MODIS ETa dekadal",
+        "datasetId": "USGS_ET_MODIS_DEKADAL",
+        "path": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_dekadal",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "USGS MODIS ETa monthly",
+        "datasetId": "USGS_ET_MODIS_MONTHLY",
+        "path": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "USGS VIIRS ETa annual",
+        "datasetId": "USGS_ET_MODIS_ANNUAL",
+        "path": "projects/usgs-ssebop/viirs_et_v6_annual",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "USGS VIIRS ETa dekadal",
+        "datasetId": "USGS_ET_VIIRS_DEKADAL",
+        "path": "projects/usgs-ssebop/viirs_et_v6_dekadal",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "USGS VIIRS ETa monthly",
+        "datasetId": "USGS_ET_VIIRS_MONTHLY",
+        "path": "projects/usgs-ssebop/viirs_et_v6_monthly",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetName": "USDA 30-m static wildfire risk dataset (WRC)",
+        "datasetId": "WRC",
+        "path": "projects/climate-engine-pro/assets/ce-wrc-static",
+        "warn": false,
+        "mapping": false,
+        "variables": [
+            {
+                "variableName": "BP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "CFL",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "CRPS",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Exposure",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FLEP4",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FLEP8",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "RPS",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "WHP",
+                "defaultVisible": false
+            }
+        ]
+    },
+    {
+        "datasetId": "FORDRI",
+        "path": null,
+        "datasetName": "FORDRI",
+        "variables": [
+            {
+                "variableName": "fordri",
+                "defaultVisible": true
             }
         ],
-        "qrisWarning": false
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "TERRACLIMATE",
-        "name": "TerraClimate",
-        "apiPath": "IDAHO_EPSCOR/TERRACLIMATE",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "MTBS",
+        "path": null,
+        "datasetName": "MTBS",
+        "variables": [
+            {
+                "variableName": "Severity",
+                "defaultVisible": true
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "TMM_DAILY",
-        "name": "TRMM 28-km (1/4-deg) precipitation dataset (NASA)",
-        "apiPath": "TRMM/3B42",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "USDM",
+        "path": null,
+        "datasetName": "USDM",
+        "variables": [
+            {
+                "variableName": "usdm",
+                "defaultVisible": true
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USDOUTLOOK",
-        "name": "US Drought Outlook",
-        "apiPath": "projects/climate-engine-pro/assets/ce-cpc-usdo-monthly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "RAP_NDVI",
+        "path": null,
+        "datasetName": "RAP_NDVI",
+        "variables": [
+            {
+                "variableName": "NDVI",
+                "defaultVisible": true
+            }
+        ],
+        "mapping": true,
+        "warn": false
     },
     {
-        "datasetId": "USDM_DROUGHT_MONITOR",
-        "name": "USDM Drought monitor rasters",
-        "apiPath": "projects/climate-engine/usdm/weekly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "ABOVE_COVER",
+        "path": null,
+        "datasetName": "ABOVE_COVER",
+        "variables": [
+            {
+                "variableName": "allDecShrub",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "allEvShrub",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "allForb",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "bTree",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "cTree",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "graminoid",
+                "defaultVisible": true
+            },
+            {
+                "variableName": "tmlichenLight2",
+                "defaultVisible": true
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USFS_TCC",
-        "name": "USFS Tree Canopy Cover v2021-4",
-        "apiPath": "USGS/NLCD_RELEASES/2021_REL/TCC/v2021-4",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "VEGDRI",
+        "path": null,
+        "datasetName": "VEGDRI",
+        "variables": [
+            {
+                "variableName": "vegdri",
+                "defaultVisible": true
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USGS_ET_MODIS_DEKADAL",
-        "name": "USGS MODIS ETa dekadal",
-        "apiPath": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_dekadal",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "ESI",
+        "path": null,
+        "datasetName": "ESI",
+        "variables": [
+            {
+                "variableName": "ESI_4wk",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ESI_12wk",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USGS_ET_MODIS_MONTHLY",
-        "name": "USGS MODIS ETa monthly",
-        "apiPath": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_monthly",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "BVHP",
+        "path": null,
+        "datasetName": "BVHP",
+        "variables": [
+            {
+                "variableName": "ndvi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tmean",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vci",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "tci",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vhi",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USGS_ET_MODIS_ANNUAL",
-        "name": "USGS MODIS ETa annual",
-        "apiPath": "projects/earthengine-legacy/assets/projects/usgs-ssebop/modis_et_v5_annual",
-        "allowMapLayers": false,
+        "datasetId": "MODIS_DAILY",
+        "path": null,
+        "datasetName": "MODIS_DAILY",
         "variables": [],
-        "qrisWarning": false
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USGS_ET_VIIRS_DEKADAL",
-        "name": "USGS VIIRS ETa dekadal",
-        "apiPath": "projects/usgs-ssebop/viirs_et_v6_dekadal",
-        "allowMapLayers": false,
+        "datasetId": "MODIS_TERRA_DAILY_MAXFRP",
+        "path": null,
+        "datasetName": "MODIS_TERRA_DAILY_MAXFRP",
         "variables": [],
-        "qrisWarning": false
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USGS_ET_VIIRS_MONTHLY",
-        "name": "USGS VIIRS ETa monthly",
-        "apiPath": "projects/usgs-ssebop/viirs_et_v6_monthly",
-        "allowMapLayers": false,
+        "datasetId": "MODIS_AQUA_DAILY_MAXFRP",
+        "path": null,
+        "datasetName": "MODIS_AQUA_DAILY_MAXFRP",
         "variables": [],
-        "qrisWarning": false
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "USGS_ET_MODIS_ANNUAL",
-        "name": "USGS VIIRS ETa annual",
-        "apiPath": "projects/usgs-ssebop/viirs_et_v6_annual",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "USGS_ET_VIIRS_ANNUAL",
+        "path": null,
+        "datasetName": "USGS_ET_VIIRS_ANNUAL",
+        "variables": [
+            {
+                "variableName": "et",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
     },
     {
-        "datasetId": "WRC",
-        "name": "USDA 30-m static wildfire risk dataset (WRC)",
-        "apiPath": "projects/climate-engine-pro/assets/ce-wrc-static",
-        "allowMapLayers": false,
-        "variables": [],
-        "qrisWarning": false
+        "datasetId": "NOAA_CRN_GRIDDED",
+        "path": null,
+        "datasetName": "NOAA_CRN_GRIDDED",
+        "variables": [
+            {
+                "variableName": "AWC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FRACT_AWC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "AIR_TEMP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SUR_TEMP_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SUR_TEMP_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TEMP_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TEMP_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PRECIP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_05CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_10CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_20CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_50CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_100CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_05CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_10CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_20CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_50CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_100CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOLAR_RADIATION",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "RELATIVE_HUMIDITY",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "NOAA_CRN_GRIDDED_SWAMP",
+        "path": null,
+        "datasetName": "NOAA_CRN_GRIDDED_SWAMP",
+        "variables": [
+            {
+                "variableName": "SWAMP_DEPTH",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SWAMP_CAP",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "NOAA_CRN_GRIDDED_SWAMP_DIAG",
+        "path": null,
+        "datasetName": "NOAA_CRN_GRIDDED_SWAMP_DIAG",
+        "variables": [
+            {
+                "variableName": "SWAMP_DIAG",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "NOAA_CRN_GRIDDED_SWAMP_INDEX",
+        "path": null,
+        "datasetName": "NOAA_CRN_GRIDDED_SWAMP_INDEX",
+        "variables": [
+            {
+                "variableName": "SWAMP_INDEX",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "NOAA_CRN_STATION_AK",
+        "path": null,
+        "datasetName": "NOAA_CRN_STATION_AK",
+        "variables": [
+            {
+                "variableName": "AWC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FRACT_AWC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "AIR_TEMP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SUR_TEMP_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SUR_TEMP_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TEMP_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TEMP_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PRECIP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_05CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_10CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_20CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_50CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_100CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_05CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_10CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_20CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_50CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_100CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOLAR_RADIATION",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "RELATIVE_HUMIDITY",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "NOAA_CRN_STATION",
+        "path": null,
+        "datasetName": "NOAA_CRN_STATION",
+        "variables": [
+            {
+                "variableName": "AWC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FRACT_AWC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "AIR_TEMP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SUR_TEMP_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SUR_TEMP_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TEMP_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TEMP_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PRECIP",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_05CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_10CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_20CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_50CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SMOIS_100CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_05CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_10CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_20CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_50CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOILTEMP_100CM",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SOLAR_RADIATION",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "RELATIVE_HUMIDITY",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "NAVAJO_NATION_STATION",
+        "path": null,
+        "datasetName": "NAVAJO_NATION_STATION",
+        "variables": [
+            {
+                "variableName": "PRECIP",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "CONUS404_DAILY",
+        "path": null,
+        "datasetName": "CONUS404_DAILY",
+        "variables": [
+            {
+                "variableName": "T2_MIN",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "T2_MAX",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TD2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PREC_ACC_NC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ETO_ASCE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ETR_ASCE",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "WIND10",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "PSFC",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "ACSWDNB",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "peth",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wbh",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "speih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddih",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wb",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spei",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "VIIRS_16DAY",
+        "path": null,
+        "datasetName": "VIIRS_16DAY",
+        "variables": [
+            {
+                "variableName": "NDVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "EVI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "EVI2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDSI",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TrueColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "FalseColor",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_NIR_SWIR_Gao",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_NIR_McFeeters",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Xu",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_Green_SWIR_Hall",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "NDWI_SWIR_Green_Allen",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "VIIRS_DAILY",
+        "path": null,
+        "datasetName": "VIIRS_DAILY",
+        "variables": [
+            {
+                "variableName": "LST_Day_1km",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "TRMM_DAILY",
+        "path": null,
+        "datasetName": "TRMM_DAILY",
+        "variables": [
+            {
+                "variableName": "precipitation",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
+    },
+    {
+        "datasetId": "WLDAS",
+        "path": null,
+        "datasetName": "WLDAS",
+        "variables": [
+            {
+                "variableName": "tmean",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "pr",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eto",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "etr",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "aet",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "vs",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "sph",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilMoist_tavg_0",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilMoist_tavg_1",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilMoist_tavg_2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilMoist_tavg_3",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilTemp_tavg_0",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilTemp_tavg_1",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilTemp_tavg_2",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SoilTemp_tavg_3",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Qsm_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "swe",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "sd",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SubSnow_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "SnowCover_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Qs_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Qsb_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Lwnet_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Swnet_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Qle_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Qh_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Qg_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "srad",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "Snowf_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "WaterTableD_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "TWS_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "GWS_tavg",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "surface_pressure",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "eddi",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "wb",
+                "defaultVisible": false
+            },
+            {
+                "variableName": "spei",
+                "defaultVisible": false
+            }
+        ],
+        "mapping": false,
+        "warn": false
     }
 ]
