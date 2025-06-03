@@ -1,9 +1,10 @@
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QVariant
 
 from .utilities import add_standard_form_buttons
 
 
-class FrmFieldValueMap(QtWidgets.QDialog):
+class FrmAssignFieldValues(QtWidgets.QDialog):
 
     # signal to send field value map to parent
     field_value_map_signal = QtCore.pyqtSignal(str, dict)
@@ -16,7 +17,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
 
         self.setupUi()
 
-        self.setWindowTitle('Field Value Map')
+        self.setWindowTitle('Assign Field Values')
         self.txtInputField.setText(input_field)
 
         # Populate the combo box with field names
@@ -72,6 +73,7 @@ class FrmFieldValueMap(QtWidgets.QDialog):
     def get_field_value_map(self) -> dict:
         field_value_map = {}
         for i, value in enumerate(self.values):
+            value = None if isinstance(value, QVariant) and value.isNull() else value
             field_value_map[value] = {}
             for j in range(1, self.tblFields.columnCount()):
                 field = self.tblFields.horizontalHeaderItem(j).text()
