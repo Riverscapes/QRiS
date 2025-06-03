@@ -9,7 +9,7 @@ from ..gp.feature_class_functions import get_field_names, get_field_values
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportTemporaryLayer
 
-from .frm_field_value_map import FrmFieldValueMap
+from .frm_import_dce_field_values import FrmAssignFieldValues
 from .utilities import add_standard_form_buttons
 
 from typing import List
@@ -49,6 +49,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             if 'fields' in self.db_item.layer.metadata.keys():
                 for field in self.db_item.layer.metadata['fields']:
                     self.target_fields[field['id']] = field
+        self.target_fields['notes'] = {'id': 'notes', 'label': 'Notes', 'type': 'string', 'required': False}
 
         super(FrmImportDceLayer, self).__init__(parent)
         self.setupUi()
@@ -75,53 +76,67 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         # create a row for each target field and load the field name
         self.tblFields.setRowCount(len(self.input_fields))
-        for i, field in enumerate(self.input_fields):
-            self.tblFields.setItem(i, 0, QtWidgets.QTableWidgetItem(field))
-            self.tblFields.setItem(i, 1, QtWidgets.QTableWidgetItem(self.input_field_types[i]))
-
-            for target_field_name in self.target_fields.keys():
-                if target_field_name in ['event_id', 'metadata']:
-                    continue
+        for i, input_field in enumerate(self.input_fields):
+            input_field_type = self.input_field_types[i]
+            input_field_type = input_field_type.lower() if isinstance(input_field_type, str) else input_field_type
+            self.tblFields.setItem(i, 0, QtWidgets.QTableWidgetItem(input_field))
+            self.tblFields.setItem(i, 1, QtWidgets.QTableWidgetItem(input_field_type))
 
             # add button to open value map dialog
-            chk_retain = QtWidgets.QCheckBox()
+            chk_retain = QtWidgets.QCheckBox(f'{input_field} (metadata)')
             chk_retain.setToolTip(retain_text)
             chk_retain.setChecked(True)
             self.tblFields.setCellWidget(i, 2, chk_retain)
 
+            transfer_widget = QtWidgets.QWidget()
+            layout = QtWidgets.QHBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+            layout.setSpacing(0)                   # Remove spacing
+            transfer_widget.setLayout(layout)
+            transfer_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)  # Expand vertically
+
             chk_map = QtWidgets.QCheckBox()
             chk_map.setChecked(False)
             chk_map.setToolTip(map_text)
-            # if the checkbox is clicked for the first time then load the value map dialog
-            chk_map.clicked.connect(self.on_chk_map_clicked)
-            self.tblFields.setCellWidget(i, 3, chk_map)
+            chk_map.clicked.connect(lambda checked, row=i: self.open_value_map_dialog(row) if checked else None)
+            layout.addWidget(chk_map)
             
-            btn = QtWidgets.QPushButton('Map Values...')
+            btn = QtWidgets.QPushButton('Assign...')
             btn.setToolTip(map_text)
-            btn.clicked.connect(self.on_btn_clicked)
-            self.tblFields.setCellWidget(i, 4, btn)
+            btn.clicked.connect(lambda _, row=i: self.open_value_map_dialog(row))
+            layout.addWidget(btn)
 
-            # combo.currentIndexChanged.connect(self.combo_changed)
+            self.tblFields.setCellWidget(i, 3, transfer_widget)
+            
+            copy_widget = QtWidgets.QWidget()
+            copy_layout = QtWidgets.QHBoxLayout()
+            copy_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+            copy_layout.setSpacing(0)                   # Remove spacing
+            copy_widget.setLayout(copy_layout)
+            copy_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)  # Expand vertically
+            # checkbox to copy the value to the target field. add a combobox to select the target field
+            chk_copy = QtWidgets.QCheckBox()
+            chk_copy.setToolTip('Copy value to target field')
+            chk_copy.setChecked(False)
+            copy_layout.addWidget(chk_copy)
+
+            combo = QtWidgets.QComboBox()
+            input_fields = [field['label'] for field in self.target_fields.values() if field.get('type', None) == input_field_type and field['id'] != 'event_id']
+            if len(input_fields) == 0:
+                combo.setToolTip('No target fields available for this input data type')
+                combo.addItem('- No Target Fields for Input Data Type -', None)
+                chk_copy.setEnabled(False)  # Disable checkbox if no target fields available
+            else:
+                combo.setToolTip('Select target field to copy value to')
+                for field in self.target_fields.values():
+                    if field.get('type', None) == input_field_type and field['id'] != 'event_id':
+                        combo.addItem(field['label'], field['id'])
+                chk_copy.toggled.connect(lambda checked, c=combo: c.setEnabled(checked))  # Enable/disable combo based on checkbox state
+            combo.setEnabled(False)  # Initially disabled
+            copy_layout.addWidget(combo)
+            self.tblFields.setCellWidget(i, 4, copy_widget)
 
         self.tblFields.resizeColumnsToContents()
-        # self.combo_changed()
-
-    def on_btn_clicked(self):
-
-        # get the row and column of the button that was clicked
-        btn = self.sender()
-        row = self.tblFields.indexAt(btn.pos()).row()
-        self.open_value_map_dialog(row)
-
-    def on_chk_map_clicked(self):
-            
-        # get the row and column of the button that was clicked
-        chk = self.sender()
-        # if unchecking the box, then ignore
-        if not chk.isChecked():
-            return
-        row = self.tblFields.indexAt(chk.pos()).row()
-        self.open_value_map_dialog(row)
 
     def open_value_map_dialog(self, row: int):
         # get the field name
@@ -143,11 +158,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             if target_field_name in ['event_id', 'metadata']:
                 continue
             # find the lookup table in the project that matches the field name
-            if 'lookup' in target_field.keys():
-                fields[target_field_name] = self.qris_project.lookup_values[target_field['lookup']]
+            if target_field.get('type', None) == 'list':
+                fields[target_field_name] = target_field.get('values', [])
 
         # open the value map dialog
-        frm = FrmFieldValueMap(input_field, values, fields)
+        frm = FrmAssignFieldValues(input_field, values, fields)
         if input_field in [field.src_field for field in self.field_maps]:
             in_field = next((field for field in self.field_maps if field.src_field == input_field), None)
             frm.load_field_value_map(in_field.map)
@@ -165,7 +180,8 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         # check the map checkbox
         for i in range(self.tblFields.rowCount()):
             if self.tblFields.item(i, 0).text() == field_name:
-                chk_map: QtWidgets.QCheckBox = self.tblFields.cellWidget(i, 3)
+                transfer_widget: QtWidgets.QWidget = self.tblFields.cellWidget(i, 3)
+                chk_map: QtWidgets.QCheckBox = transfer_widget.layout().itemAt(0).widget()
                 chk_map.setChecked(True)
                 break
 
@@ -200,12 +216,24 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         field_maps = self.field_maps.copy()
         # remove the field maps where the map checkbox is not checked
         for i in range(self.tblFields.rowCount()):
-            chk_map: QtWidgets.QCheckBox = self.tblFields.cellWidget(i, 3)
+            transfer_widget: QtWidgets.QWidget = self.tblFields.cellWidget(i, 3)
+            chk_map: QtWidgets.QCheckBox = transfer_widget.layout().itemAt(0).widget()
             if not chk_map.isChecked():
                 field_name = self.tblFields.item(i, 0).text()
                 # remove the field map from the list if it exists
                 if field_name in [field.src_field for field in field_maps]:
                     field_maps.remove(next((field for field in field_maps if field.src_field == field_name), None))
+
+        # Add the copy values to the field maps
+        for i in range(self.tblFields.rowCount()):
+            copy_widget: QtWidgets.QWidget = self.tblFields.cellWidget(i, 4)
+            chk_copy: QtWidgets.QCheckBox = copy_widget.layout().itemAt(0).widget()
+            if chk_copy.isChecked():
+                field_name = self.tblFields.item(i, 0).text()
+                target_field = copy_widget.layout().itemAt(1).widget().currentData(QtCore.Qt.UserRole)
+                if target_field != '- No Target Fields for Input Data Type -':
+                    field_map = ImportFieldMap(field_name, target_field, parent='attributes', direct_copy=False)
+                    field_maps.append(field_map)
 
         if not self.validate_fields(field_maps):
             return
@@ -232,7 +260,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
                 import_task = ImportTemporaryLayer(self.temp_layer, self.target_path, layer_attributes, field_maps, clip_mask)
             else:
                 import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, field_maps, clip_mask)
-            self.buttonBox.setEnabled(False)
+            # self.buttonBox.setEnabled(False)
             # DEBUG
             # result = import_task.run()
             # source_feats = import_task.in_feats
@@ -259,7 +287,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             self.import_complete.emit(result)
             super(FrmImportDceLayer, self).accept()
         else:
-            iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            iface.messageBar().pushMessage('Feature Class Import Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
             self.buttonBox.setEnabled(True)
 
     def on_rdoImport_clicked(self):
@@ -278,7 +306,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
     def setupUi(self):
 
-        self.resize(500, 500)
+        self.resize(600, 500)
         self.setMinimumSize(300, 200)
 
         self.vert = QtWidgets.QVBoxLayout(self)
@@ -330,10 +358,11 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
         self.tblFields = QtWidgets.QTableWidget()
         self.tblFields.setColumnCount(5)
-        self.tblFields.setHorizontalHeaderLabels(['Input Fields', 'Data Type', 'Retain', 'Map Output', ""])
+        self.tblFields.setHorizontalHeaderLabels(['Input Field', 'Data Type', 'Retain Values', 'Transfer Values', 'Copy Values'])
         self.tblFields.verticalHeader().setVisible(False)
         self.tblFields.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.tblFields.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tblFields.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.vert.addWidget(self.tblFields)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'import_dce_layer'))

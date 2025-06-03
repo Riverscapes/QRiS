@@ -123,6 +123,8 @@ class ImportTemporaryLayer(QgsTask):
                         # change empty stringd to None
                         if value == '':
                             value = None
+                        if isinstance(value, QVariant):
+                            value = value.value() if not value.isNull() else None
                         if field_map.direct_copy is True:
                             # we need to copy the value directly to the output field
                             feat[field_map.dest_field] = value
@@ -185,18 +187,18 @@ class ImportTemporaryLayer(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Copy Feature Class completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage('Import Feature Class (from temporary layer) completed', MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
-                    'Feature Class copy not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                    'Feature Class import (from temporary layer) not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Feature Class copy exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f'Feature Class import (from temporary layer) exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
                 # raise self.exception
 
         self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
         QgsMessageLog.logMessage(
-            'Feature Class copy was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+            'Feature Class import (from temporary layer) was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

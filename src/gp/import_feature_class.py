@@ -5,7 +5,7 @@ from typing import List
 from osgeo import ogr, osr
 
 from qgis.core import QgsTask, QgsMessageLog, Qgis
-from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal, QVariant
 
 from ..gp.feature_class_functions import layer_path_parser
 
@@ -182,6 +182,8 @@ class ImportFeatureClass(QgsTask):
                             # change empty stringd to None
                             if value == '':
                                 value = None
+                            if isinstance(value, QVariant):
+                                value = value.value() if not value.isNull() else None
                             if field_map.dest_field == 'display_label':
                                 value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else value
                             if field_map.direct_copy is True:
