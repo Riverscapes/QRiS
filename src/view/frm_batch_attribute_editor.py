@@ -6,7 +6,7 @@ from qgis.gui import QgsAttributeTableView, QgsAttributeTableModel, QgsAttribute
 from qgis.utils import iface
 
 from PyQt5.QtWidgets import QWidget, QDialog, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
 from .utilities import add_help_button
@@ -133,10 +133,14 @@ class FrmBatchAttributeEditor(QDialog):
         self.layer.startEditing()
 
         for feature in self.layer.selectedFeatures():
-            metadata_value = json.loads(feature['metadata'])
+            # sanitize feature metadata to remove QVariant
+            data = feature['metadata']
+            if isinstance(data, QVariant) and data.isNull():
+                data = '{}'
+            metadata_value = json.loads(data)
             if 'attributes' not in metadata_value:
                 metadata_value['attributes'] = {}
-            metadata_value['attributes'][field['label']] = value
+            metadata_value['attributes'][field['id']] = value
             feature['metadata'] = json.dumps(metadata_value)
             self.layer.updateFeature(feature)
 
