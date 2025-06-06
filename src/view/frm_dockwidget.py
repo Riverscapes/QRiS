@@ -1796,7 +1796,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         for row in range(0, node.rowCount()):
             child_node = node.child(row)
-            if isinstance(child_node.data(QtCore.Qt.UserRole), DBItem):
+            if child_node is None:
+                continue
+            data = child_node.data(QtCore.Qt.UserRole)
+            if data is None or isinstance(data, DBItem):
                 continue
             if child_node.rowCount() == 0:
                 node.removeRow(row)
