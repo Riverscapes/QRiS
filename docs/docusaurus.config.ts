@@ -13,12 +13,12 @@ const config: Config = {
     v4: true, // Enables compatibility with upcoming Docusaurus v4 features
   },
 
-  url: 'https://your-docusaurus-site.example.com', // The base URL of your site (no trailing slash)
-  baseUrl: '/riverscapes-docs', // The sub-path where your site is served (used in GitHub Pages)
+  url: 'https://qris.riverscapes.net', // The base URL of your site (no trailing slash)
+  baseUrl: '/', // The sub-path where your site is served (used in GitHub Pages)
 
   // GitHub pages deployment config
   organizationName: 'Riverscapes', // GitHub org/user name
-  projectName: 'riverscapes-docs', // GitHub repo name
+  projectName: 'qris-docs', // GitHub repo name
 
   onBrokenLinks: 'throw', // Throw an error on broken links
   onBrokenMarkdownLinks: 'warn', // Warn instead of throwing for broken markdown links
@@ -87,6 +87,7 @@ const config: Config = {
             { to: '/software-help/metrics', label: 'Metrics' },
             { to: '/software-help/zonal-statistics', label: 'Zonal Statistics' },
             { to: '/software-help/basemaps', label: 'Basemaps' },
+            { to: '/software-help/context', label: 'Context'},
         //     {
         //       label: 'Context',
         //       items: [

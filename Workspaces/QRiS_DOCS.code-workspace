@@ -10,7 +10,7 @@
       }
     ],
     "settings": {
-      "window.title": "QRiS Docs GATSBY -${separator}${activeEditorShort}${separator}${rootName}",
+      "window.title": "QRiS Docs DOCUSAURUS -${separator}${activeEditorShort}${separator}${rootName}",
       "[mdx]": {
         "editor.wordWrap": "bounded",
         "editor.wordWrapColumn": 80
