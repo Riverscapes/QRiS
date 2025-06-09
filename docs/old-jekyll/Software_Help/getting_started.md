@@ -1,5 +1,6 @@
 ---
 title: Getting Started
+sidebar_position: 1
 ---
 
 QRiS is based around the concepts of projects. A project is a container for all your GIS layers and tabular data. Each project pertains to a unique place. For example, you might create a project for a reach of river, or a watershed.

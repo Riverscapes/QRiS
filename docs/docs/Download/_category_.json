@@ -1,0 +1,8 @@
+{
+  "label": "Download",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Download the latest version of our software."
+  }
+}
