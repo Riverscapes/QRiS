@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [1.1.1] 2025 JUN 09
+
+### Fixed
+- Import DCE Attribute Mangement improvements and bug fix #579, #566
+- Error if metadata field for a feature is null in 'Batch Edit QRiS Attributes' #630
+- Error when deleting empty layer from DCE #616
+- Raster Source Appears as Numeric Values When Exporting from Riverscapes Viewer to QRiS #645
+- Default event representation should be None, not 0
+
+
 ## [1.1.0] 2025 JUN 02
 
 ### Added
