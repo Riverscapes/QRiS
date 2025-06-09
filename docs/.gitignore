@@ -1,18 +1,20 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Dependencies
+/node_modules
 
+# Production
+/build
+
+# Generated files
+.docusaurus
+.cache-loader
 node_modules
 
-# gatsby files
-.cache/
-public
-
-# Mac files
+# Misc
 .DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Yarn
 .pnp.*
@@ -28,3 +30,4 @@ yarn-error.log
 .pnp.js
 # Yarn Integrity file
 .yarn-integrity
+

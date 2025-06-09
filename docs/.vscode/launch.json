@@ -5,22 +5,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "👷 Rebuild Gatsby Site",
-      "command": "yarn exec gatsby build",
+      "type": "chrome",
+      "name": "Debug Using Chrome",
       "request": "launch",
-      "type": "node-terminal"
-    },
-    {
-      "name": "🗑️ Clean Gatsby Build",
-      "command": "yarn exec gatsby clean",
-      "request": "launch",
-      "type": "node-terminal"
-    },
-    {
-      "name": "📦 Upgrade Gatsby Theme",
-      "command": "yarn up @riverscapes/gatsby-theme",
-      "request": "launch",
-      "type": "node-terminal"
+      "url": "http://localhost:3000/riverscapes-docs",
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/sites/*/.docusaurus/**/*.js",
+        "${workspaceFolder}/sites/*/build/**/*.js",
+        "${workspaceFolder}/theme/dist/**/*.js"
+      ]
     }
   ]
 }

@@ -17,10 +17,10 @@
       },
       "css.lint.validProperties": ["composes"],
       "workbench.colorCustomizations": {
-              "titleBar.activeBackground": "#001768",
+        "titleBar.activeBackground": "#001768",
         "sideBar.background": "#242132",
-              "editor.background": "#1e1c2c"
-          },
+        "editor.background": "#1e1c2c"
+      },
       "editor.tabSize": 2,
       "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"
@@ -36,7 +36,7 @@
         "**/dist/**": true,
       },
       "files.exclude": {
-        "**/node_modules/**": true
+        // "**/node_modules/**": true
       },
       "terminal.integrated.defaultProfile.linux": "zsh"
     },
