@@ -62,31 +62,31 @@ const config: Config = {
             { to: '/About/license', label: 'License and Source Code' },
           ],
         },
-        // {
-        //   label: 'Download',
-        //   position: 'left',
-        //   items: [
-        //     { to: '/Download/install', label: 'Install' },
-        //     { to: '/Download/known-bugs', label: 'Questions, Feature Requests and Bugs' },
-        //   ],
-        // },
-        // {
-        //   label: 'Software Help',
-        //   position: 'left',
-        //   items: [
-        //     { to: '/software-help', label: 'Toolbar' },
-        //     { to: '/software-help/project-tree', label: 'Project Tree' },
-        //     { to: '/software-help/projects', label: 'Projects' },
-        //     { to: '/software-help/dce', label: 'Data Capture Events' },
-        //     { to: '/software-help/profiles', label: 'Profiles' },
-        //     { to: '/software-help/aoi', label: 'Areas of Interest' },
-        //     { to: '/software-help/surfaces', label: 'Surfaces' },
-        //     { to: '/software-help/cross-sections', label: 'Cross Sections' },
-        //     { to: '/software-help/sample-frames', label: 'Sample Frames' },
-        //     { to: '/software-help/analyses', label: 'Analyses' },
-        //     { to: '/software-help/metrics', label: 'Metrics' },
-        //     { to: '/software-help/zonal-statistics', label: 'Zonal Statistics' },
-        //     { to: '/software-help/basemaps', label: 'Basemaps' },
+        {
+          label: 'Download',
+          position: 'left',
+          items: [
+            { to: '/Download/install', label: 'Install' },
+            { to: '/Download/known-bugs', label: 'Questions, Feature Requests and Bugs' },
+          ],
+        },
+        {
+          label: 'Software Help',
+          position: 'left',
+          items: [
+            { to: '/software-help', label: 'Toolbar' },
+            { to: '/software-help/project-tree', label: 'Project Tree' },
+            { to: '/software-help/projects', label: 'Projects' },
+            { to: '/software-help/dce', label: 'Data Capture Events' },
+            { to: '/software-help/profiles', label: 'Profiles' },
+            { to: '/software-help/aoi', label: 'Areas of Interest' },
+            { to: '/software-help/surfaces', label: 'Surfaces' },
+            { to: '/software-help/cross-sections', label: 'Cross Sections' },
+            { to: '/software-help/sample-frames', label: 'Sample Frames' },
+            { to: '/software-help/analyses', label: 'Analyses' },
+            { to: '/software-help/metrics', label: 'Metrics' },
+            { to: '/software-help/zonal-statistics', label: 'Zonal Statistics' },
+            { to: '/software-help/basemaps', label: 'Basemaps' },
         //     {
         //       label: 'Context',
         //       items: [
@@ -95,17 +95,17 @@ const config: Config = {
         //         { to: '/software-help/watershed-catchments', label: 'Watershed Catchments' },
         //       ],
         //     },
-        //   ],
-        // },
-        // {
-        //   label: 'Technical Reference',
-        //   position: 'left',
-        //   items: [
-        //     { to: '/technical-reference/database', label: 'Database' },
-        //     { to: '/technical-reference/managing_metrics', label: 'Managing Metrics' },
-        //     { to: '/technical-reference/metric_calculations', label: 'Metric Calculations' },
-        //   ],
-        // },
+          ],
+        },
+        {
+          label: 'Technical Reference',
+          position: 'left',
+          items: [
+            { to: '/technical-reference/database', label: 'Database' },
+            { to: '/technical-reference/managing_metrics', label: 'Managing Metrics' },
+            { to: '/technical-reference/metric_calculations', label: 'Metric Calculations' },
+          ],
+        },
       ],
     },
 

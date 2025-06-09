@@ -1,11 +1,11 @@
 {
   "dockerFile": "Dockerfile",
-  "name": "Gatsby Docs Dev Container",
+  "name": "Docusaurus Docs Dev Container",
   "waitFor": "postCreateCommand",
   // On container creation, install dependencies.
   "postCreateCommand": "cd docs; yarn install",
   // Build and run the dev site on container start.
-  "postAttachCommand": "cd docs; gatsby build; gatsby serve -H 0.0.0.0 -p 8000",
+  "postAttachCommand": "cd docs; yarn start",
   "customizations": {
     "vscode": {
       "settings": {
