@@ -51,7 +51,7 @@ class Event(DBItem):
         self.date_text = date_text
         self.event_type = event_type
         self.platform = platform
-        self.representation = 0
+        self.representation = None if representation is None else representation
         self.event_layers = event_layers
         self.rasters = rasters.copy() if rasters else []
         self.metadata = metadata
@@ -204,7 +204,7 @@ def insert(db_path: str,
                 description,
                 event_type.id,
                 platform.id,
-                0,
+                None,
                 json.dumps(metadata) if metadata else None,
                 date_text if date_text else None,
                 start.year,
