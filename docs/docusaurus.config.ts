@@ -78,7 +78,7 @@ const config: Config = {
             { to: '/software-help/aoi', label: 'Areas of Interest' },
             { to: '/software-help/basemaps', label: 'Basemaps' },
             { to: '/software-help/batch-attribute-editor', label: 'Batch Attribute Editor' },
-            { to: '/software-help/context', label: 'Context'},
+            { to: '/software-help/context/', label: 'Context'},
             { to: '/software-help/cross-sections', label: 'Cross Sections' },
             { to: '/software-help/dce', label: 'Data Capture Events' },
             { to: '/software-help/metrics', label: 'Metrics' },
