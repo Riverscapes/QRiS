@@ -5,9 +5,9 @@ import type * as Preset from '@docusaurus/preset-classic'
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Riverscapes Studio', // Site title displayed in the browser tab
-  tagline: 'Riverscapes Developer Resources', // Short description shown in meta tags
-  favicon: 'img/favicon.ico', // Path to site favicon
+  title: 'QRiS', // Site title displayed in the browser tab
+  tagline: 'Riverscapes Studio for QGIS', // Short description shown in meta tags
+  favicon: 'images/qris-icon.png', // Path to site favicon
 
   future: {
     v4: true, // Enables compatibility with upcoming Docusaurus v4 features

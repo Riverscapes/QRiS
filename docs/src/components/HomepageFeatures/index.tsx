@@ -6,42 +6,33 @@ export default function HomepageFeatures() {
   return (
     <div className={styles.container}>
       <section title="Home" className={styles.intro}>
-        <p>
-QGIS Riverscapes Studio or QRiS is a plugin that helps you digitize your riverscape data. 
-It provides a flexible, extensible structure for your data, together with consistent symbology 
-to streamline your data capture, monitoring and analysis.
-        </p>
 
-        <p>
-QRiS is a plugin to the free, open-source <a href="https://qgis.org/en/site/">QGIS</a> desktop GIS software. 
-QRiS is targeted at anyone interested in understanding and analyzing their riverscape - including:  
+<p>QGIS Riverscapes Studio, or QRiS, is a plugin that helps you digitize your riverscape data. 
+It provides a flexible, extensible structure for your spatial layers, together with consistent symbology 
+to streamline your data capture, monitoring and analysis.</p>
+
+<p>QRiS is a plugin to the free, open-source <a href="https://qgis.org/en/site/">QGIS</a> desktop GIS software. 
+QRiS is targeted at anyone interested in understanding and analyzing their riverscape, including:  
 practitioners, managers, analysts, researchers and students with some familiarity with GIS. 
 It helps users with analysis, monitoring, assessment of riverscapes as well as preparation of the 
-design and as-builts of low-tech process-based restoration designs.
-        </p>
-        <p>
-QRiS is currently in beta and available as an experimental plugin in the QGIS plugin repository. 
-We are actively developing the tool and welcome feedback and contributions. 
-Please get in touch if you would like to get involved.
-        </p>
+design and as-builts of low-tech process-based restoration designs.</p>
       </section>
-
-      <Section title="Sub-pages of this site:">
+      <Section title="">
         <CardGrid>
           <ResourceCard
-            title="Standards & Compliance"
-            description="Learn about riverscapes standards and how to make your tools and data compliant."
-            link="standards"
+            title="Download QRiS"
+            description="Learn how to find, install the QRiS plugin for QGIS, as well as check for updates."
+            link="Download/install"
           />
           <ResourceCard
-            title="Riverscapes API"
-            description="Learn how to use the Riverscapes API to access data."
-            link="dev-tools/api"
+            title="Getting Started"
+            description="Discover the basic workflow of using QRiS. Create a QRiS project, add data, and start digitizing."
+            link="getting-started"
           />
           <ResourceCard
-            title="Documentation"
-            description="Resources to build Riverscapes documentation and websites."
-            link="documentation/documentation-websites"
+            title="Software Help"
+            description="Comprehensive how-to guides for using every QRiS feature."
+            link="software-help"
           />
         </CardGrid>
       </Section>
@@ -50,18 +41,18 @@ Please get in touch if you would like to get involved.
         <CardGrid>
           <ResourceCard
             title="Riverscapes Consortium"
-            description="The Riverscapes Consortium main site."
+            description="The main site for the Riverscapes Consortium."
             link="https://riverscapes.net"
           />
           <ResourceCard
-            title="Our Tools"
-            description="Learn about each of our Riverscapes compliant tools."
-            link="https://tools.riverscapes.net/"
+            title="Riverscapes Data Exchange"
+            description="A public platform for discovering, sharing, and downloading Riverscapes compliant data."
+            link="https://data.riverscapes.net/"
           />
           <ResourceCard
-            title="Data Exchange"
-            description="Discover and download Riverscapes compliant data."
-            link="https://data.riverscapes.net/"
+            title="QRiS User Community"
+            description="A public forum where you can ask questions, share experiences, and connect with other QRiS users."
+            link="https://www.riverscapes.net/topics/33160/feed"
           />
         </CardGrid>
       </Section>
