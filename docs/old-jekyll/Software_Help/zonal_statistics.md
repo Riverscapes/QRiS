@@ -1,3 +1,0 @@
----
-title: Zonal Statistics Tool
----
