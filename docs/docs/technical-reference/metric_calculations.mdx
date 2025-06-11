@@ -4,7 +4,7 @@ banner: true
 description: Descriptions of the calculation functions used to create Metrics in QRiS
 ---
 
-The following calcuations functions are availble to create Metrics in QRiS. Each calculation function has a set of parameters that can be used to customize the calculation.
+The following calculation functions are available to create Metrics in QRiS from Data Capture Event (DCE) layers. Each calculation function has a set of parameters that can be used to customize the calculation.
 
 ## Count
 This calculation counts the number of features from any number of DCE layers (with the addition of an optional count field) that fall within the sample frame. DCE layers may have an optional attribute filter applied. For lines and polygons, the count is prorated by length and area respectively. This function can also apply a valley centerline normalization. 
@@ -16,11 +16,11 @@ This calculation counts the number of features from any number of DCE layers (wi
 calculation_name: `count`
 
 metric params:
-- `layers`: A list of DCE [layers](../managing_metrics#layers) to count features from.
+- `layers`: A list of DCE [layers](managing_metrics#layers) to count features from.
 
 Each layer can have the following parameters:
 - `count_field`: An optional field which represents feature count values. These values will be used instead of counting up the number of individual features.
-- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+- `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
 
 To apply a valley centerline normalization, the following parameter can be used:
 - `normalization: centerline`
@@ -35,10 +35,10 @@ The length calculation sums the length of all features from any number of DCE la
 calculation_name: `length`
 
 metric params:
-- `layers`: A list of DCE [layers](../managing_metrics#layers) to sum lengths from.
+- `layers`: A list of DCE [layers](managing_metrics#layers) to sum lengths from.
 
 Each layer can have the following parameters:
-- `attribute_filter`: An optional [attribute filter](/technical-reference/managing_metrics#attribute-filters) to apply to the DCE layers.
+- `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
 
 To apply a valley centerline normalization, the following parameter can be used:
 - `normalization: centerline'
@@ -53,16 +53,17 @@ The area calculation sums the area of all features from any number of DCE layers
 calculation_name: `area`
 
 metric params:
-- `layers`: A list of DCE [layers](../managing_metrics#layers) to sum areas from.
+- `layers`: A list of DCE [layers](managing_metrics#layers) to sum areas from.
 
 Each layer can have the following parameters:
-- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+- `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
 
 To apply a valley centerline normalization, the following parameter can be used:
 - `normalization: centerline`
 
-## Sinusoity
-The sinuosity calculation first clips a line feature to the sample frameElement, thene divides the length of the clipped line feature by the straight-line distance between the start and end points of the line.
+## Sinuosity
+
+The sinuosity calculation first clips a line feature to the sample frameElement, then divides the length of the clipped line feature by the straight-line distance between the start and end points of the line.
 
 ![Sinuosity Calculation](/images/technical-reference/metrics/metric-sinuosity.png)
 
@@ -71,20 +72,20 @@ The sinuosity calculation first clips a line feature to the sample frameElement,
 calculation_name: `sinuosity`
 
 metric params:
-- `layers`: A list of one DCE [layer](../managing_metrics#layers) to calculate sinuosity from.
+- `layers`: A list of one DCE [layer](managing_metrics#layers) to calculate sinuosity from.
 
 ## Gradient
 The gradient calculation calculates the average gradient of a line feature. The gradient is calculated as the difference in elevation between the start and end points of the line divided by the length of the line. Elevation is determined by the DEM layer.
 
 ![Gradient Calculation](/images/technical-reference/metrics/metric-length.png)
 
-*Gradient calculation example. Sample Frames are shown in orange dashed outline and labeled 1 and 2. The Active Channel Centerline feature is shown in blue. Elevation from the dem (not displayed) is sampled at the start and end points of the Active Channel Centerline clipped to the Sample Frame. The gradient is calculated as the difference in elevation between the start and end points of the Active Channel Centerline within the Sample Frame divided by the length of the Active Channel Centerline within the Sample Frame.*
+*Gradient calculation example. Sample Frames are shown in orange dashed outline and labeled 1 and 2. The Active Channel Centerline feature is shown in blue. Elevation from the DEM (not displayed) is sampled at the start and end points of the Active Channel Centerline clipped to the Sample Frame. The gradient is calculated as the difference in elevation between the start and end points of the Active Channel Centerline within the Sample Frame divided by the length of the Active Channel Centerline within the Sample Frame.*
 
 calculation_name: `gradient`
 
 metric params:
-- `layers`: A list of one DCE [layer](../managing_metrics#layers) to calculate gradient from.
-- `surfaces`: a list of one `dem` [surface](../managing_metrics#surfaces) to use for elevation data.
+- `layers`: A list of one DCE [layer](managing_metrics#layers) to calculate gradient from.
+- `surfaces`: a list of one `dem` [surface](managing_metrics#surfaces) to use for elevation data.
 
 ## Area Proportion
 The area proportion calculation calculates the proportion of the area of a polygon feature that falls within the sample frame or other specified layers.
@@ -96,13 +97,17 @@ calculation_name: `area_proportion`
 *Area Proportion calculation example. Sample Frames are shown in orange dashed outline and labeled 1 and 2. Geomorphic Unit Polygons for "Free Flowing" (magenta) and "Ponded" (blue) are shown. Several types of area proportion metrics could be calculated from these layers, such as the proportion of the area of "Free Flowing" Geomorphic Units within the total area of the Sample Frame or the proportion of area of "Free Flowing" to total area of the Geomorphic Units (i.e. "Free Flowing" / ("Free Flowing" + "Ponded")).*
 
 metric params:
-- `layers`: A list of DCE [layers](../managing_metrics#layers) to calculate area proportions from.
+- `layers`: A list of DCE [layers](managing_metrics#layers) to calculate area proportions from.
 
 Each layer can have the following parameters:
 - `usage`: An optional field which represents that the layer should be used as a `numerator` or `denominator` in the calculation. 
   - If not provided for a layer, then the layer will be used as a `numerator`.
   - If no `denominator` is provided, the sample frame area will be used as the denominator.
-- `attribute_filter`: An optional [attribute filter](../managing_metrics#attribute-filters) to apply to the DCE layers.
+- `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
 
 
-*additional calculations will be added as needed*
+:::info
+
+*Additional calculations will be added as needed.*
+
+:::

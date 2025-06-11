@@ -11,7 +11,7 @@ export default function HomepageFeatures() {
 It provides a flexible, extensible structure for your spatial layers, together with consistent symbology 
 to streamline your data capture, monitoring and analysis.</p>
 
-<p>QRiS is a plugin to the free, open-source <a href="https://qgis.org/en/site/">QGIS</a> desktop GIS software. 
+<p>QRiS is a plugin to the free, open-source <a href="https://qgis.org/en/site/"><img src="/images/qgis-icon32.png" alt="Q"></img>&nbsp;QGIS</a> desktop GIS software. 
 QRiS is targeted at anyone interested in understanding and analyzing their riverscape, including:  
 practitioners, managers, analysts, researchers and students with some familiarity with GIS. 
 It helps users with analysis, monitoring, assessment of riverscapes as well as preparation of the 

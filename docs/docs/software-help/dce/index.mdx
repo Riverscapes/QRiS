@@ -4,13 +4,13 @@ description: Digitize your riverscapes over time
 banner: true
 ---
 
-Efficiient and streamlined collection of geospatial data is critical to the success of any river restoration project. QRiS was designed to make this process as easy as possible. 
+Efficient and streamlined collection of geospatial data is critical to the success of any river restoration project. QRiS was designed to make this process as easy as possible. 
 
-There are several phases to a river restoration project, such as planning, implementation and monitoring. QRiS helps you collect data in each of these phases by organzing data into a series of **data capture events**. An event might be an afternoon spent mapping a reach of river, or a day spent surveying a restoration site. It might be a planning event or capturing an as-built design. Post implementation you might have one or more monitoring events and over time you might repeat this cycle with subsequent phases that repeat some or all of these.
+There are several phases to a river restoration project, such as planning, implementation and monitoring. QRiS helps you collect data in each of these phases by organzing data into a series of **data capture events** (DCE). An event might be an afternoon spent mapping a reach of river, or a day spent surveying a restoration site. It might be a planning event or capturing an as-built design. Post implementation you might have one or more monitoring events and over time you might repeat this cycle with subsequent phases that repeat some or all of these.
 
 The central goal of QRiS is to help you capture the geospatial data that is appropriate for the phase of your project. There are suggested feature classes and attributes for each event type, but you can customize these to suit your needs.
 
-Once you have digitized the features for several data capture events over time, you can generate an [analysis](/software-help/analyses) to compare the changes in your riverscape over time.
+Once you have digitized the features for several data capture events over time, you can generate an [analysis](../analyses) to compare the changes in your riverscape over time.
 
 ## Create a Data Capture Event
 
@@ -40,5 +40,5 @@ You can always go back and edit layers and features. You can also take advantage
 
 When digitizing it's important to think about the  layer being digitized and if there are specific considerations that need to be taken into account. In particular, you should consider the following:
 
-- During [analyses](software-help/analyses] Data Capture Event features are processed within [sample frame](../sample-frames) polygons. For example, structure points are counted within each sample frame polygon and vegetation types are summarized by area within each polygon. Therefore, it can be useful to have the sample frame polygons added to the map while digitizing event features.
-- Related to the previous point, it's important for some feature types to maintain mutual exclusivity to avoid "double counting" during [analyses](../analyses). For example, if you are digitizing active and inactive floodplains, you should avoid gaps and overlaps between the two feature types. This can be accomplished by using the [topology checker](https://docs.qgis.org/3.16/en/docs/user_manual/working_with_vector/editing_geometry_attributes.html#topology-checker) during editing.
+- During [analyses](../analyses) Data Capture Event features are processed within [sample frame](../sample-frames) polygons. For example, structure points are counted within each sample frame polygon and vegetation types are summarized by area within each polygon. Therefore, it can be useful to have the sample frame polygons added to the map while digitizing event features.
+- Related to the previous point, it's important for some feature types to maintain mutual exclusivity to avoid "double counting" during [analyses](../analyses). For example, if you are digitizing active and inactive floodplains, you should avoid gaps and overlaps between the two feature types. This can be accomplished by using the [topology checker](https://docs.qgis.org/3.40/en/docs/user_manual/plugins/core_plugins/plugins_topology_checker.html) during editing.
