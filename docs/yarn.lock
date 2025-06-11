@@ -2851,14 +2851,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@riverscapes/docusaurus-theme@npm:1.0.3":
-  version: 1.0.3
-  resolution: "@riverscapes/docusaurus-theme@npm:1.0.3"
+"@riverscapes/docusaurus-theme@npm:1.0.4":
+  version: 1.0.4
+  resolution: "@riverscapes/docusaurus-theme@npm:1.0.4"
   peerDependencies:
     "@docusaurus/core": ^3.8.1
+    "@docusaurus/theme-classic": ^3.8.1
     react: ^19.0.0
     react-dom: ^19.0.0
-  checksum: 10/f6d7adfd460e256b9a1912a63257034c89679af0a379b5f95990259ca0851b1e7210dc08b63c848fb2196a3dc175be1fa809ed4ce4f1c543f70045957d25d22f
+  checksum: 10/c0e868e9dbcbb215e60d678e5bd09636c27240923919980db976ccbfbe8f0054f4e0fee47d74cc9d5749881f3e66e4185ebd08fabb03eb1779a56448dd2dfcb1
   languageName: node
   linkType: hard
 
@@ -2872,7 +2873,7 @@ __metadata:
     "@docusaurus/tsconfig": "npm:3.8.1"
     "@docusaurus/types": "npm:3.8.1"
     "@mdx-js/react": "npm:^3.1.0"
-    "@riverscapes/docusaurus-theme": "npm:1.0.3"
+    "@riverscapes/docusaurus-theme": "npm:1.0.4"
     clsx: "npm:^2.1.1"
     prism-react-renderer: "npm:^2.4.1"
     react: "npm:^19.1.0"
