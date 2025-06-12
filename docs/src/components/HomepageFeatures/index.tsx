@@ -43,11 +43,13 @@ design and as-builts of low-tech process-based restoration designs.</p>
             title="Riverscapes Consortium"
             description="The main site for the Riverscapes Consortium."
             link="https://riverscapes.net"
-          />
+              image="logos/rc_logo_wide.png"
+        />
           <ResourceCard
             title="Riverscapes Data Exchange"
             description="A public platform for discovering, sharing, and downloading Riverscapes compliant data."
             link="https://data.riverscapes.net/"
+            image="logos/data_exchange_wide.png"
           />
           <ResourceCard
             title="QRiS User Community"
@@ -75,10 +77,17 @@ function CardGrid({ children }) {
   return <div className={styles.grid}>{children}</div>
 }
 
-function ResourceCard({ title, description, link }) {
+
+function ResourceCard({ title, description, link, image, imageFit = "cover" }: { title: string, description: string, link: string, image?: string, imageFit?: string }) {
   return (
     <a href={link} className={styles.card}>
-      {/* <img src={useBaseUrl('/img/card-image.jpg')} alt={title} className={styles.cardImage} /> */}
+      {image && (
+        <img
+          src={`/images/${image}`}
+          alt={title}
+          className={styles.cardImage}
+        />
+      )}
       <div className={styles.cardContent}>
         <h3>{title}</h3>
         <p>{description}</p>
