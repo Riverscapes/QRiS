@@ -37,7 +37,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts', // Path to sidebar config
           routeBasePath: '/', // Serve docs at site root
-          editUrl: 'https://github.com/Riverscapes/QRiS/tree/docs/', // "Edit this page" link
+          editUrl: 'https://github.com/Riverscapes/QRiS/tree/docs/docs/', // "Edit this page" link
         },
       } satisfies Preset.Options,
     ],
