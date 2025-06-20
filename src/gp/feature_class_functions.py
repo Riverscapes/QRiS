@@ -49,7 +49,7 @@ def layer_path_parser(path: str) -> Tuple[str, str, object]:
     if isinstance(path, QgsVectorLayer):
         return path, path.name(), "memory"
     
-    if os.path.splitext(path)[1].lower() == ".shp":
+    if os.path.splitext(path)[1].lower() in [".shp", ".geojson"]:
         return path, os.path.splitext(os.path.basename(path))[0], 0
     elif ".gpkg|layername=" in path:
         path, layer_name = path.split('|layername=')
