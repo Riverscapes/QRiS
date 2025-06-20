@@ -365,4 +365,4 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.tblFields.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.vert.addWidget(self.tblFields)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'import_dce_layer'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'import-dce-layer'))

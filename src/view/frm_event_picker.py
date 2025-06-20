@@ -58,5 +58,5 @@ class FrmEventPicker(QtWidgets.QDialog):
         self.verticalLayout.addStretch(1)
 
         # add standard buttons
-        help = "events"
+        help = "dce"
         self.verticalLayout.addLayout(add_standard_form_buttons(self, help))

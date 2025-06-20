@@ -373,7 +373,7 @@ class FrmEvent(QtWidgets.QDialog):
         # Metadata
         self.tab.addTab(self.metadata_widget, 'Metadata')
 
-        help_text = 'events' if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'designs'
+        help_text = 'dce' if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'designs'
         self.vert.addLayout(add_standard_form_buttons(self, help_text))
 
 

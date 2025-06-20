@@ -189,4 +189,4 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.grid.addWidget(self.chkAddToMap, 7, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'raster_slider'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'raster-slider'))

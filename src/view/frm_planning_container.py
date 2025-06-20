@@ -115,5 +115,5 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         # Metadata
         self.tab.addTab(self.metadata_widget, 'Metadata')
 
-        help_text = 'events'
+        help_text = 'dce'
         self.vert.addLayout(add_standard_form_buttons(self, help_text))
