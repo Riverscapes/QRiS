@@ -132,7 +132,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'pour_points'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'context/watershed-catchments'))
 
 
 if __name__ == "__main__":

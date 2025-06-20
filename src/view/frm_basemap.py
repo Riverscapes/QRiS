@@ -380,7 +380,7 @@ class FrmRaster(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
-        help_page = 'context-layers' if self.is_context else 'surfaces'
+        help_page = 'context/raster-layers' if self.is_context else 'surfaces'
         self.vert.addLayout(add_standard_form_buttons(self, help_page))
 
 class ClickableDateEdit(QtWidgets.QDateEdit):

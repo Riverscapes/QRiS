@@ -132,4 +132,4 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         # self.chkAddToMap.setChecked(True)
         # self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'centerlines'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'profiles#centerline-tool'))

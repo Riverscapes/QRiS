@@ -1252,4 +1252,4 @@ class FrmExportProject(QtWidgets.QDialog):
         self.horiz_export.addWidget(self.btn_select_none)
 
         # add standard form buttons
-        self.vert.addLayout(add_standard_form_buttons(self, "export_metrics"))
+        self.vert.addLayout(add_standard_form_buttons(self, "metrics"))
