@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [1.1.2] 2025 JUN 20
+
+### Added
+- Support for importing features from geojson files #644
+
+### Fixed
+- Features not deleting when Layer is Deleted from DCE #646
+- Broken documentation links
+
+### Changed
+- Better centerline error message #609
+- Allow raster slider to produced non-smoothed polygons as output #628
+
 ## [1.1.1] 2025 JUN 09
 
 ### Fixed
