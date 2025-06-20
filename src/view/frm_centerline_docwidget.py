@@ -441,7 +441,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
-        self.gridButtons.addWidget(add_help_button(self, 'centerlines'), 0, 0, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, 'profiles#centerline-tool'), 0, 0, 1, 1)
 
         # include a spacer to push the buttons to the right
         self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
