@@ -156,7 +156,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Make sure both start and stop lines intersect the polygon.')
             return
         if not self.geom_polygon.isGeosValid():
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'The polygon is not GEOS valid. Please fix it before generating centerline.')
+            QtWidgets.QMessageBox.information(self, 'Centerline Tool', 'The polygon geometry is not valid. Please fix and validate the polygon before generating centerline.')
             return
 
         self.layer_centerline.dataProvider().truncate()
