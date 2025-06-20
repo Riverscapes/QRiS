@@ -34,3 +34,14 @@ class EventLayer(DBItem):
         fc_name = Layer.DCE_LAYER_NAMES[self.layer.geom_type]
         temp_layer = QgsVectorLayer(f'{db_path}|layername={fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
         return temp_layer.featureCount()
+    
+    def delete_event_layer_features(self, db_path: str) -> None:
+        """
+        Deletes all features in the event layer.
+        """
+        fc_name = Layer.DCE_LAYER_NAMES[self.layer.geom_type]
+        temp_layer = QgsVectorLayer(f'{db_path}|layername={fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
+        temp_layer.startEditing()
+        for feat in temp_layer.getFeatures():
+            temp_layer.deleteFeature(feat.id())
+        temp_layer.commitChanges()

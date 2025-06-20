@@ -157,6 +157,7 @@ class Project(DBItem):
         elif isinstance(db_item, CrossSections):
             self.cross_sections.pop(db_item.id)
         elif isinstance(db_item, EventLayer):
+            db_item.delete_event_layer_features(self.project_file)
             event_layer_index = list(event_layer.id for event_layer in self.events[db_item.event_id].event_layers).index(db_item.id)
             self.events[db_item.event_id].event_layers.pop(event_layer_index)
         elif isinstance(db_item, PlanningContainer):
