@@ -33,11 +33,11 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         self.txtName.textChanged.connect(self.on_name_changed)
 
         self.dbsSimplifyTolerance.setDecimals(5)
-        self.dbsSimplifyTolerance.setRange(0.00008, 0.0001)
+        self.dbsSimplifyTolerance.setRange(0.00000, 0.0001)
         self.dbsSimplifyTolerance.setSingleStep(0.00001)
         self.dbsSimplifyTolerance.setValue(0.0001)
 
-        self.dbsSmoothingOffset.setRange(0.25, 0.75)
+        self.dbsSmoothingOffset.setRange(0.0, 0.75)
         self.dbsSmoothingOffset.setSingleStep(0.05)
         self.dbsSmoothingOffset.setValue(0.5)
 
