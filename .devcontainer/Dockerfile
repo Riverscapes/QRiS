@@ -1,5 +1,5 @@
 # Dockerfile
-FROM mcr.microsoft.com/devcontainers/typescript-node:0-18
+FROM mcr.microsoft.com/devcontainers/typescript-node:1-22
 
 # Install wget if not already installed
 RUN apt-get update && apt-get install -y wget
