@@ -5,8 +5,8 @@ import sqlite3
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ..model.db_item import DBItem, DBItemModel, dict_factory
-from ..model.event_layer import EventLayer
 from ..model.project import Project
+from ..model.layer import Layer
 from ..model.event import Event, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID
 from ..model.datespec import DateSpec
 
@@ -204,9 +204,13 @@ class FrmAsBuilt(FrmEvent):
         selected_layers = []
         for index in range(self.layer_widget.layers_model.rowCount()):
             item = self.layer_widget.layers_model.item(index)
-            selected_layers.append(item.data(QtCore.Qt.UserRole)[1].id)
+            item_data = item.data(QtCore.Qt.UserRole)
+            if isinstance(item_data, Layer):
+                selected_layers.append(item_data.layer_id)
+            elif isinstance(item_data, tuple):
+                selected_layers.append(item_data[1].id)
         if any('structure_points' in layer or 'structure_lines' in layer for layer in selected_layers) is False:
-            QtWidgets.QMessageBox.critical(self, 'Error', 'At least one structure layer must be selected.')
+            QtWidgets.QMessageBox.critical(self, 'As-Built Layers', 'At least one structure layer (points or lines) must be selected for As-Builts.')
             return
 
         self.metadata_widget.add_system_metadata('observers', self.txtDesigners.toPlainText())
