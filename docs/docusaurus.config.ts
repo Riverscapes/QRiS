@@ -48,12 +48,12 @@ const config: Config = {
 
     algolia: {
       // The application ID provided by Algolia
-      appId: "0EZCTIHX7Q",
+      appId: "4TGS8ZPIMY",
 
       // Public API key: it is safe to commit it
-      apiKey: "9d9c0b568019df1e40c43f7d6e86bb96",
+      apiKey: "d084a7919fe7b5940d7125f14221eaca",
 
-      indexName: "qris-riverscapes",
+      indexName: "qris",
 
       // Optional: see doc section below
       contextualSearch: true,
