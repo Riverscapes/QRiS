@@ -1,5 +1,12 @@
 # QRiS Plugin
 
+## [1.1.3] 2025 JUL 03
+
+### Fixed
+- Error When Trying to Update Properties for As-Builts #656, #657
+- Climate Engine Not Working due to missing manifest file #657
+
+
 ## [1.1.2] 2025 JUN 20
 
 ### Added
