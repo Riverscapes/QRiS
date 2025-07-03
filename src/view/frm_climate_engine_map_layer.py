@@ -39,13 +39,14 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
             if dataset.get('mapping', False) is True:
                 self.datasets[dataset_id] = dataset
 
-        for dataset_id, dataset in self.datasets.items():
+        for dataset in self.datasets.values():
             dataset_name = dataset.get('datasetName', None)
             if len(dataset.get('variables', [])) == 0:
                 continue
-            self.cboDataset.addItem(dataset_name, dataset_id)
+            self.cboDataset.addItem(dataset_name, dataset)
 
         self.cboDataset.setCurrentIndex(-1)
+        self.cboDataset.currentIndexChanged.connect(self.on_dataset_changed)
 
         for area_reducer_name, area_reducer in AREA_REDUCER.items():
             self.cboStatistic.addItem(area_reducer_name, area_reducer)
@@ -76,8 +77,7 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
         self.cboVariable.setEnabled(False)
 
         # grab the selected dataset_info
-        dataset_id = self.cboDataset.itemData(index)
-        dataset = self.datasets.get(dataset_id, None)
+        dataset: dict = self.cboDataset.itemData(index)
         if dataset is None:
             return
         dataset_variables = dataset.get('variables', None)
@@ -90,7 +90,7 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
                 #     item.setHidden(True)
             self.cboVariable.setEnabled(True)
         
-        date_range = get_dataset_date_range(dataset_id)
+        date_range = get_dataset_date_range(dataset.get('datasetId', None))
 
         if date_range is not None:
             self.min_date = QDate().fromString(date_range.get('min', ""), 'yyyy-MM-dd')
@@ -100,15 +100,10 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
 
     def add_to_map(self):
 
-        # name = self.txtName.text()
-        # if name == '':
-        #     QtWidgets.QMessageBox.warning(self, 'Error', 'Enter a name for the timeseries')
-        #     return
-
         if self.cboDataset.currentIndex() == -1:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Select a dataset')
             return
-        dataset = self.datasets.get(self.cboDataset.itemData(self.cboDataset.currentIndex()), None)
+        dataset = self.cboDataset.itemData(self.cboDataset.currentIndex())
         dataset_id = dataset.get('datasetId', None)
 
         if self.cboVariable.currentIndex() == -1:
@@ -260,5 +255,5 @@ class FrmClimateEngineMapLayer(QtWidgets.QDialog):
         self.btn_close.clicked.connect(self.close)
         self.horiz_buttons.addWidget(self.btn_close)
         
-        self.cboDataset.currentIndexChanged.connect(self.on_dataset_changed)
+
 

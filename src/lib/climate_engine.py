@@ -25,7 +25,7 @@ def get_datasets() -> dict:
     datasets_file = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', 'climate_engine_datasets.json')
     with open(datasets_file, 'r') as f:
         datasets = json.load(f)
-    return {dataset['datasetName']: dataset for dataset in datasets}
+    return {dataset['datasetId']: dataset for dataset in datasets}
     
 
 def get_dataset_date_range(dataset: str) -> dict:

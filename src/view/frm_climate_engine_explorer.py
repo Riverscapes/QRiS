@@ -291,7 +291,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             time_series = curs.fetchone()
             time_series_name = time_series[1]
             dataset_id, variable_id = time_series_name.split(' ')
-            dataset_name = next((key for key, dataset in self.datasets.items() if dataset['id'] == dataset_id), None)
+            dataset_name = next((key for key, dataset in self.datasets.items() if dataset['datasetId'] == dataset_id), None)
             metadata = json.loads(time_series[5])
             y_label = metadata['units'] if 'units' in metadata else 'Value'
             for sample_frame_feature_id in sample_frame_feature_ids:
