@@ -33,12 +33,12 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.setupUi()
 
         # Datasets
-        self.datasets = get_datasets()
-        for dataset_id, dataset in self.datasets.items():
-            dataset_name = dataset.get('datasetName', None)
-            if len(dataset.get('variables', [])) == 0:
+        datasets = get_datasets()
+        for dataset in datasets.values():
+            variables = dataset.get('variables', [])
+            if len(variables) == 0:
                 continue
-            self.cboDataset.addItem(dataset_name, dataset_id)
+            self.cboDataset.addItem(dataset.get('datasetName', '-Unknown Dataset Name-'), dataset)
 
         self.cboDataset.setCurrentIndex(-1)
 
@@ -74,8 +74,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.lboxVariables.setEnabled(False)
 
         # grab the selected dataset_info
-        dataset_id = self.cboDataset.itemData(index)
-        dataset = self.datasets.get(dataset_id, None)
+        dataset: dict = self.cboDataset.itemData(index)
         if dataset is None:
             return
         dataset_variables = dataset.get('variables', None)
@@ -90,7 +89,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                     item.setHidden(True)
             self.lboxVariables.setEnabled(True)
         
-        date_range = get_dataset_date_range(dataset_id)
+        date_range = get_dataset_date_range(dataset.get('dataseItd', None))
 
         if date_range is not None:
             self.min_date = QDate().fromString(date_range.get('min', ""), 'yyyy-MM-dd')
@@ -114,11 +113,24 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
                         item.setHidden(True)
                     else:
                         item.setHidden(False)
+            # if no variables are defaultVisible for a particular dataset, make it hidden in the combo box. Is this possible? Only for Qt 5.10+
+            # for i in range(self.cboDataset.count()):
+            #     item = self.cboDataset.itemData(i)
+            #     if item is not None:
+            #         variables = item.get('variables', [])
+            #         if not any(var.get('defaultVisible', False) for var in variables):
+            #             self.cboDataset.setItemHidden(i, True)
+            #         else:
+            #             self.cboDataset.setItemHidden(i, False)
         else:
             # show all variables
             for i in range(self.lboxVariables.count()):
                 item = self.lboxVariables.item(i)
                 item.setHidden(False)
+            # for i in range(self.cboDataset.count()):
+            #     item = self.cboDataset.itemData(i)
+            #     if item is not None:
+            #         self.cboDataset.setItemHidden(i, False)
 
     def retrieve_timeseries(self):
 
@@ -161,7 +173,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
             return
 
         name = self.txtName.text()
-        dataset = self.datasets.get(self.cboDataset.itemData(self.cboDataset.currentIndex()), None)
+        dataset = self.cboDataset.itemData(self.cboDataset.currentIndex())
         if dataset is None:
             QtWidgets.QMessageBox.warning(self, 'Error', 'Select a dataset')
             return
