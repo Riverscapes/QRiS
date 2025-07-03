@@ -7,14 +7,14 @@
         {
             // You need to enable QGIS VSCode debugger plugin 
             // Before this will work
-            "name": "🐞 QGIS Debug",
+            "name": "🐞 Debug",
             "type": "python",
             "request": "attach",
             "port": 5678,
             "host": "localhost",
         },
         {
-            "name": "📦 QRiS Deploy",
+            "name": "📦 Deploy",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/scripts/deploy.py",
