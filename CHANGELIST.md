@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [1.1.4] 2025 JUL 03
+
+### Fixed
+- Date Widget Bug on Climate Engine Map Tile Form #661
+
+
+### Fixed
+- Climate Engine Not Working due to missing manifest file #657
+
 ## [1.1.3] 2025 JUL 03
 
 ### Fixed
