@@ -34,6 +34,10 @@ const config: Config = {
     [
       "classic", // Docusaurus classic preset for docs/blog
       {
+        gtag: {
+          trackingID: 'G-WSJ6478P6E',
+          anonymizeIP: true,
+        },
         docs: {
           sidebarPath: "./sidebars.ts", // Path to sidebar config
           routeBasePath: "/", // Serve docs at site root
