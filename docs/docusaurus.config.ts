@@ -90,7 +90,6 @@ const config: Config = {
         src: "images/logo.png",
       },
       items: [
-        { to: "/getting-started", label: "Getting Started", position: "left" },
         {
           label: "About",
           position: "left",
@@ -142,6 +141,18 @@ const config: Config = {
             //         { to: '/software-help/watershed-catchments', label: 'Watershed Catchments' },
             //       ],
             //     },
+          ],
+        },
+        {
+          label: "Tutorials",
+          position: "left",
+          items: [
+            { to: "/tutorials/conceptual-overview", label: "Conceptual Overview" },
+            { to: "/tutorials/starting-a-project", label: "Starting a Project" },
+            { to: "/tutorials/create-a-design", label: "Create a Design" },
+            { to: "/tutorials/create-as-build", label: "Create an As-Built" },
+            { to: "/tutorials/digitizing", label: "Digitizing in QGIS" },
+            { to: "/tutorials/sharing-projects", label: "Sharing Projects" },
           ],
         },
         {
