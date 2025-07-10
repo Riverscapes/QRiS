@@ -10,6 +10,7 @@ from PyQt5.QtCore import Qt
 
 from ..model.project import Project
 from ..model.db_item import DBItemModel
+from ..model.event import DCE_EVENT_TYPE_ID
 from ..model.analysis import Analysis
 from ..model.metric import Metric
 from ..model.sample_frame import get_sample_frame_ids
@@ -90,7 +91,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbSampleFrameFeature.setModel(DBItemModel(sample_frame_features))
 
         self.cmbEvent.clear()
-        events = DBItemModel(self.qris_project.events)
+        events = DBItemModel({event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID})
         self.cmbEvent.setModel(events)
 
     def metric_over_time(self):

@@ -218,7 +218,9 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
                     metadata_value = feature.GetField('metadata')
                     metadata = json.loads(metadata_value) if metadata_value is not None else {}
                     attributes: dict = metadata.get('attributes', {})
-                    feature_count += attributes.get(count_field_name, 0)
+                    attribute_value = attributes.get(count_field_name, 0)
+                    attribute_value = 1 if attribute_value is None else attribute_value
+                    feature_count += int(attribute_value)
                 if feature_count == 0:
                     # If no count fields are specified, default to 1
                     feature_count = 1
@@ -302,6 +304,8 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
             if feature is None:
                 continue
             geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+            if not geom.IsValid():
+                geom = geom.MakeValid()
             if geom.Intersects(sample_frame_geom):
                 clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
                 epsg = get_utm_zone_epsg(geom.Centroid().GetX())
@@ -435,8 +439,14 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
             if feature is None:
                 continue
             geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+            if not geom.IsValid():
+                geom = geom.MakeValid()
             if geom.Intersects(sample_frame_geom):
                 clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                if clipped_geom is None or clipped_geom.IsEmpty():
+                    geom = None
+                    clipped_geom = None
+                    continue
                 numerator_area += clipped_geom.GetArea()
             geom = None
             clipped_geom = None
