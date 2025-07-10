@@ -6,16 +6,16 @@ from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
-from .metrics import Metrics
+from .zonal_metrics import ZonalMetrics
 from ..model.raster import SURFACES_PARENT_FOLDER
 from ..QRiS.qris_map_manager import QRisMapManager
 
 import webbrowser
 
-MESSAGE_CATEGORY = 'QRiS Metrics Task'
+MESSAGE_CATEGORY = 'QRiS Zonal Statistics Task'
 
 
-class MetricsTask(QgsTask):
+class ZonalMetricsTask(QgsTask):
     """
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
     """
@@ -54,7 +54,7 @@ class MetricsTask(QgsTask):
         self.mask = mask
         self.config = {}
         mask_layer = 'sample_frame_features'
-        self.metrics = Metrics(project.project_file, mask, self.map_layers, mask_layer)
+        self.metrics = ZonalMetrics(project.project_file, mask, self.map_layers, mask_layer)
 
     def run(self):
         """
