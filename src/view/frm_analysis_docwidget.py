@@ -32,7 +32,7 @@ from ..model.project import Project
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.analysis_metric import AnalysisMetric
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
-from ..model.event import EVENT_MACHINE_CODE, Event
+from ..model.event import DCE_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.sample_frame import get_sample_frame_ids
 from ..model.metric import Metric
@@ -84,8 +84,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.segments_model = DBItemModel(frame_ids)
         self.cboSampleFrame.setModel(self.segments_model)
 
-        # Events
-        self.events_model = DBItemModel(project.events)
+        # Events 
+        self.events_model = DBItemModel({event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID})
         self.cboEvent.setModel(self.events_model)
 
         # Build the metric table (this will also load the metric values)
