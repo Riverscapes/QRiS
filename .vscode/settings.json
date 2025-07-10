@@ -24,6 +24,7 @@
         "--disable=E0402"
     ],
     "python.analysis.extraPaths": [
-        "${workspaceRoot}"
+        "${workspaceRoot}",
+        "C:/Program Files/QGIS 3.40.8/apps/qgis-ltr/python"
     ],
 }
