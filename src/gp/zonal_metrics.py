@@ -12,7 +12,7 @@ from ..model.sample_frame import SampleFrame
 from .zonal_statistics import zonal_statistics
 
 
-class Metrics:
+class ZonalMetrics:
 
     def __init__(self, project_file: str, mask_id: int, layers: list, aoi_layer='sample_frame_features'):
 
@@ -151,6 +151,23 @@ class Metrics:
 
     def process_raster(self, layer_def):
 
+        url = layer_def['url'].lower()
+
+        # Gracefully skip known web service types and remote URLs
+        if (
+            url.startswith('http://') or url.startswith('https://')
+            or 'type=xyz' in url
+            or 'type=wmts' in url
+            or 'type=wms' in url
+            or 'service=wms' in url
+            or 'service=wmts' in url
+            or 'arcgis/services' in url
+            or url.endswith('.php')  # sometimes used for dynamic map scripts
+            or 'format=image/' in url  # common in WMS requests
+            or 'url=' in url  # often a sign of a web service
+        ):
+            return None
+        
         raster = gdal.Open(layer_def['url'])
         if raster is None:
             return None

@@ -90,7 +90,7 @@ from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
 from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
-from ..gp.metrics_task import MetricsTask
+from ..gp.zonal_statistics_task import ZonalMetricsTask
 
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
@@ -1641,12 +1641,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.warning(self, 'Geospatial Summary', 'The selected AOI must contain exactly one polygon feature.')
             return
 
-        metrics_task = MetricsTask(self.project, model_data)
+        zonal_metrics_task = ZonalMetricsTask(self.project, model_data)
         # -- DEBUG --
-        # metrics_task.run()
+        # zonal_statistics_task.run()
         # -- PRODUCTION --
-        metrics_task.on_complete.connect(self.geospatial_summary_complete)
-        QgsApplication.taskManager().addTask(metrics_task)
+        zonal_metrics_task.on_complete.connect(self.geospatial_summary_complete)
+        QgsApplication.taskManager().addTask(zonal_metrics_task)
  
 
     def on_edit_session_change(self):
