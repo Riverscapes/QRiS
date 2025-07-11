@@ -1,5 +1,13 @@
 # QRiS Plugin
 
+## [1.1.5] 2025 JUL 11
+
+### Fixed
+- Fix structure and active valley metrics #666
+- Zonal Statistics error with xyz/web services; Add export function #665
+- Export to Riverscapes Project bug #655
+- Remove Beta phase language in About from #654
+
 ## [1.1.4] 2025 JUL 03
 
 ### Fixed
