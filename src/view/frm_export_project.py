@@ -899,7 +899,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
                                                    name=layer.name,
                                                    ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                   lyr_type=layer.layer.fc_name)
+                                                   lyr_type=layer.layer.layer_id)
                     geopackage_layers.append(gp_lyr)
 
                 events_gpkg = rsxml.project_xml.Geopackage(xml_id=f'dce_{event.id}_gpkg',
