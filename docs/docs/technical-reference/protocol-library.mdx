@@ -1,0 +1,160 @@
+---
+title: Protocol Library
+banner: true
+---
+
+## What is a QRiS protocol?
+A QRiS protocol contains a set of data-capture-event (DCE) layer and metric definitions. An unlimited number of protocols can be defined and shared through Riverscapes. QRiS synchronizes these protocols down onto QRiS users’ computers, just like it does with other resources (symbology and business logic). 
+
+When users are creating data capture events they will see a tree of all the protocols that have been synchronized to their computer, together with the layer definitions that they contain (see below). 
+
+Users can add any layer to their data capture events, mixing and matching from multiple protocols if they so wish.  For example the user might choose “dam crests” from the LTPBR protocol and also choose “dam crests” from the LCT protocol. There is no requirement that users select and use all layers in a specific protocol within a project.
+
+Protocols also store a set of metric definitions. These describe how layers are combined to calculate metrics within analyses. Each metric definition refers to a calculation that is the block of Python code within QRiS that actually reads the layer data and performs the metric calculation. Protocol authors can add metrics to protocols without the need for developers to be involved. However, a developer will still need to release a new version of QRiS if calculations change. For example a metric might be “dam density” that refers to the “dam crest” layer as well as the “density” calculation method. When users add the dam density metric to their analysis, QRiS will know to read the dam crest layer and send it to the “area density” calculation Python code that will report the count of point features in each valley bottom polygon.
+
+# Protocol XML
+Each Protocol is be defined by a separate XML file that resides in the RiverscapesXML repository. An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
+
+A single protocol XML file contains both the layer and metric definitions. This is required for referential integrity, because the metrics refer to the layers within the protocol. Indeed metrics will only be able to refer to metrics within the protocol in which the metric is defined. In other words, an LTPBR metric cannot refer to an LCT layer.  
+
+## Authoring and Editing Protocols
+
+
+:::tip
+QRiS will look for protocol XML files adjacent to the current QRiS project. This will allow protocol authors to experiment with draft protocols, similar to how local business logic files work for QViewer.
+:::
+
+There is no user interface for writing protocols. Users are advised to use Visual Studio Code with linting based on the latest version of the protocol XSD rule file. This is similar to how users already develop new riverscapes project and business logic XML files.
+
+## Protocol Versioning
+QRiS protocols can be changed at any time. Any change to a protocol must increment its version number. Protocol owners have the option of either changing an existing protocol or splitting it into a new XML file:
+
+Changing an existing protocol XML file will overwrite the previous version. This is useful for fixing any inadvertent errors in a protocol definition. Any QRiS users will receive the upgraded version and will no longer be able to create DCE layers based on the previous version. 
+
+:::warning
+Any existing layers and data will always be locked at the version of the protocol with which it was created.
+:::
+
+Creating a new file for the same protocol makes available the possibility of maintaining two active versions of the same protocol. We do not currently foresee a practical use for this, but suspect that it might be useful in the future.
+
+## Decoupling Specification From Implementation
+One of the most important concepts is the decoupling of the protocol specification (XML file) and the DCE layers that are created using the specification. Once a DCE layer is created, the definition is loaded into the QRiS project and its overall design should be considered immutable, with the exception of a few display/labeling attributes (see specification). After the DCE layer has been created, the protocol can change or get deprecated, the design of layers can evolve, but the DCE layer instance remains in the project as it was originally created. QRiS will never attempt to update the fundamental design of DCE layers (fields, field types etc) to reflect the latest version of a protocol. DCE layers reflect a snapshot of the protocol at the point in time when they were created.
+
+**Example Scenario**
+
+User adds Layer DAM CRESTS from Protocol A to a DCE. User digitizes features based on this specification.
+Protocol A is updated (new version number) to include a new field in Layer DAM CRESTS. QRiS will not update the DAM CRESTS layer in that user’s project. User will be unable to add new DAM CRESTS layer (with new field) to their project unless the existing DAM CRESTS layer is removed. User could export to temporary layer, delete existing DAM CRESTS layer, Add the updated DAM CRESTS layer to the project and use Import Tool to add exported features into new DAM CRESTS layer. The user can, however, add the new DAM CRESTS layer to a different DCE and it will have the latest layer specification.
+Protocol A is modified (version remains the same?) by changing the label for layer DAM CRESTS to BEAVER DAM CRESTS. Once this Protocol XML is synced to the user’s resources, this layer label will get updated the next time the user opens the project.
+Protocol B has just been released, and includes its own version of a BEAVER DAM CRESTS layer. The user may also add this BEAVER DAM CRESTS layer to their DCE (i.e. this new protocol contains a layer with the same name as the original protocol. The two layers are distinct and can live alongside each other in the same DCE).
+At any time, a protocol author can delete a protocol, or make it “deprecated”. The protocol and it’s layers will not show up in the DCE layer picker, but any existing DCE layers that used the protocol will persist and never be altered.
+
+# Publishing and Sharing Protocols
+Anyone can author a protocol by creating or editing a protocol XML file and submitting it for review as a pull request to the Riverscapes XML repository. The Riverscapes Consortium development team will get pull request notifications and action them in a timely manner.
+
+QViewer (a prerequisite to running QRiS) synchronizes resources (symbology, business logic and protocols) daily or upon request by the user. QRiS will always read the latest protocol XML files currently residing on the local computer whenever the user wants to add a layer to a data capture event.
+
+:::note
+All protocols published to Riverscapes XML are public. Organizations will not be able to keep a protocol private.
+:::
+
+QRiS also has the option of reading protocol XML files from a local directory specified in the QRiS settings. This allows users to experiment with protocols that are not yet published to Riverscapes XML or share protocols within their organization.
+
+# Protocol XML Schema
+
+
+## Protocol
+- `Protocol` (required) The root element of the protocol XML file.
+  - Attributes
+    - `machine_code` (required) A unique machine code identifier for the protocol. This is used to identify the protocol in the QRiS project database.
+    - `version` (required) A version number for the protocol. This must be incremented whenever the protocol is changed. 
+    - `status` (required) The status of the protocol, which can be one of the following:
+      - _production_ - representing active protocols whose layers are available in QRiS
+      - _experimental_ - hidden by default in QRiS. Developers can check a box to see experimental protocols (and use them for development or testing, similar to experimental plugins in QGIS)
+      - _deprecated_ - never shown in QRiS. This will allow the protocol XML file to persist in GitHub, but its contents (layers and metrics) will not be visible to users when they are creating DCE layers.
+  - `Label` (required) the display name for the protocol
+  - `Description` (optional) a brief description of the protocol
+  - `URL` (optional) a link to more information about the protocol
+  - `Citation` (optional) a citation for the protocol
+  - `CreationDate` (required) the date the protocol was created
+  - `UpdatedDate` (required) the date the protocol was last updated
+  - `Author` (required) the author of the protocol
+  - `MetaData` (optional)
+    - `Meta` (one or more) name=”key”, value
+  - `Layers` (optional) contains the layers defined in the protocol as specified below
+  - `Metrics` (optional) contains the metrics defined in the protocol as specified below
+    
+## Layers
+Protocols can contain one or more layers. Each layer is defined by a `Layer` element defined as:
+- `Layer` (one or more) the definition of a layer in the protocol.
+  - Attributes
+    - `machine_code` (required) A unique machine code identifier for the layer. This is used to identify the layer in the QRiS project database.
+    - `version` (required) A version number for the layer. This must be incremented whenever the layer definition is changed.
+    - `geom_type` (required) The geometry type of the layer, which can be one of the following: _Point_, _Linestring_, _Polygon_.
+  - `Label` Display Name for the user
+  - `Description` (optional) Description of the layer
+  - `Symbology` name of QML file, optional
+  - `MenuItems` (optional)
+    - `MenuItem` (one or more) reference to the machine code of right-click menu item
+  - `Hierarchy` (optional)
+    - `HierarchyItem` (one or more) ordered list of hierarchical headings for grouping and displaying the layers in the project tree.
+  - `MetaData` (optional)
+    - `Meta` (one or more) name=”key”, value
+  - `Fields` (optional) contains the fields defined for the layer as specified below
+
+## Fields
+Layers can contain fields of the following types:
+- `IntegerField`, `TextField`, `ListField`, `AttachmentField`, or `FloatField`
+  - Attributes
+    - `id` A unique machine code identifier for the field.
+    - `version`
+    - `value_required` (optional, boolean, default: false)
+  - `Label` user display label
+  - `MinimumValue` (optional, numeric types only) minimum value allowed for this field
+  - `MaximumValue` (optional, numeric types only) maximum value allowed for this field
+  - `Precision` (optional, float type only) number of decimal places to display
+  - `DefaultValue` (optional) initial value used when attribute form opens
+  - `Visibility` (optional) specifies a set of rules that determine when this field is visible in the attribute form based on the value of another field.
+    - Attributes
+      - `field_id_ref`: machine code name of dependent field
+    - `Values` (required) 
+      - `Value` (one or more) value that sets the visibility of this field based on the value of the dependent field.
+  - `Values` (optional for ListField type only)
+    - Attributes
+      - `allow_custom_values`: boolean, default=False
+    - `Value` (one or more) value to be added to the list of values for the field.
+
+## Metrics
+A protocol can contain one or more metrics. Each metric is defined by a `Metric` element defined as:
+- `Metric` (one or more) the definition of a metric in the protocol.
+  - Attributes
+    - `id` (required) A unique machine code identifier for the metric. This is used to identify the metric in the QRiS project database.
+    - `version` (required) A version number for the metric. This must be incremented whenever the metric definition is changed.
+    - `calculation_machine_code` (required) A reference to an existing calculation method that will be used to calculate the metric.
+  - `Label` (required) The display name for the metric.
+  - `DefaultLevel` (required) The default level of the metric, which can be either _metric_ or _indicator_.
+  - `Description` (optional)
+  - `DefinitionURL` (optional)
+  - `MinimumValue` (optional) used to limit user entered values
+  - `MaximumValue` (optional) used to limit user entered values
+  - `Precision` (optional) used for value display
+  - `Parameters` (optional) contains the parameters used in the metric calculation as specified below
+    - `InputLayer` (optional) reference to the user specified inputs for the analysis, such as _centerline_, _dem_, _valley_bottom_
+    - Attributes
+      - `input_ref`: of type centerline, valley_bottom, dem,
+      - `usage`: (optional) keyword for how the input will be used in the metric calculation: 
+        - _normalization_ the features of this layer will be used to normalize the metric (e.g. valley centerline, valley bottom polygon)
+        -  _metric_layer_ the features of this layer will be used in direct calcuation of the metric (e.g. count, length, area)
+    - `DCELayer`: (required) references a layer from the DCE that will be used in the metric calculation.
+      - Attributes:
+        - `layer_id_ref`: References the machine code layer
+      - `Usage`: (optional, but required for certain calculations)
+        - _numerator_
+        - _denominator_
+      - `CountFields`: (optional, used for count metrics only) specify which fields in the layer should be used for counting features.
+        - `CountField`: (one or more) references the machine code of a field that will be used to count features in the layer.
+          - Attributes:
+            - `field_id_ref`: references the id of the field
+      - `AttributeFilter`: (optional) used to filter values of layer
+        - Attributes:
+          - `field_id_ref`: references the id of the field
+        - `Value`: (one or more) value to filter by
