@@ -25,8 +25,10 @@ function HomepageHeader() {
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext()
   return (
-    <Layout title={`${siteConfig.title} | Riverscapes Studio for QGIS`} 
-        description="A plugin for QGIS that enables riverscapes practioners to create, understand, and analyze riverscape data. This site includes   documentation on downloading, installing, and using the plugin.">
+    <Layout
+      title={`${siteConfig.title} | Riverscapes Studio for QGIS`}
+      description="A plugin for QGIS that enables riverscapes practioners to create, understand, and analyze riverscape data. This site includes   documentation on downloading, installing, and using the plugin."
+    >
       <HomepageHeader />
       <main>
         <HomepageFeatures />

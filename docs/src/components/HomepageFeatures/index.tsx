@@ -6,16 +6,22 @@ export default function HomepageFeatures() {
   return (
     <div className={styles.container}>
       <section title="Home" className={styles.intro}>
+        <p>
+          QGIS Riverscapes Studio, or QRiS, is a plugin that helps you digitize your riverscape data. It provides a
+          flexible, extensible structure for your spatial layers, together with consistent symbology to streamline your
+          data capture, monitoring and analysis.
+        </p>
 
-<p>QGIS Riverscapes Studio, or QRiS, is a plugin that helps you digitize your riverscape data. 
-It provides a flexible, extensible structure for your spatial layers, together with consistent symbology 
-to streamline your data capture, monitoring and analysis.</p>
-
-<p>QRiS is a plugin to the free, open-source <a href="https://qgis.org/en/site/"><img src="/images/qgis-icon32.png" alt="Q"></img>&nbsp;QGIS</a> desktop GIS software. 
-QRiS is targeted at anyone interested in understanding and analyzing their riverscape, including:  
-practitioners, managers, analysts, researchers and students with some familiarity with GIS. 
-It helps users with analysis, monitoring, assessment of riverscapes as well as preparation of the 
-design and as-builts of low-tech process-based restoration designs.</p>
+        <p>
+          QRiS is a plugin to the free, open-source{' '}
+          <a href="https://qgis.org/en/site/">
+            <img src="/images/qgis-icon32.png" alt="Q"></img>&nbsp;QGIS
+          </a>{' '}
+          desktop GIS software. QRiS is targeted at anyone interested in understanding and analyzing their riverscape,
+          including: practitioners, managers, analysts, researchers and students with some familiarity with GIS. It
+          helps users with analysis, monitoring, assessment of riverscapes as well as preparation of the design and
+          as-builts of low-tech process-based restoration designs.
+        </p>
       </section>
       <Section title="">
         <CardGrid>
@@ -43,8 +49,8 @@ design and as-builts of low-tech process-based restoration designs.</p>
             title="Riverscapes Consortium"
             description="The main site for the Riverscapes Consortium."
             link="https://riverscapes.net"
-              image="logos/rc_logo_wide.png"
-        />
+            image="logos/rc_logo_wide.png"
+          />
           <ResourceCard
             title="Riverscapes Data Exchange"
             description="A public platform for discovering, sharing, and downloading Riverscapes compliant data."
@@ -58,8 +64,6 @@ design and as-builts of low-tech process-based restoration designs.</p>
           />
         </CardGrid>
       </Section>
-
-
     </div>
   )
 }
@@ -77,17 +81,22 @@ function CardGrid({ children }) {
   return <div className={styles.grid}>{children}</div>
 }
 
-
-function ResourceCard({ title, description, link, image, imageFit = "cover" }: { title: string, description: string, link: string, image?: string, imageFit?: string }) {
+function ResourceCard({
+  title,
+  description,
+  link,
+  image,
+  imageFit = 'cover',
+}: {
+  title: string
+  description: string
+  link: string
+  image?: string
+  imageFit?: string
+}) {
   return (
     <a href={link} className={styles.card}>
-      {image && (
-        <img
-          src={`/images/${image}`}
-          alt={title}
-          className={styles.cardImage}
-        />
-      )}
+      {image && <img src={`/images/${image}`} alt={title} className={styles.cardImage} />}
       <div className={styles.cardContent}>
         <h3>{title}</h3>
         <p>{description}</p>
