@@ -20,6 +20,7 @@
         <file alias="help">../Images/help.svg</file>
         <file alias="influence">../Images/influence.png</file>
         <file alias="json">../Images/json.png</file>
+        <file alias="map_search">../Images/map_search.svg</file>
         <file alias="metadata">../Images/metadata.png</file>
         <file alias="new_folder">../Images/new_folder.png</file>
         <file alias="new">../Images/add.svg</file>
@@ -27,6 +28,7 @@
         <file alias="plan">../Images/plan.svg</file>
         <file alias="protocol">../Images/protocol.png</file>
         <file alias="refresh">../Images/refresh.svg</file>
+        <file alias="search">../Images/search.svg</file>
         <file alias="sort">../Images/sort.svg</file>
         <file alias="table">../Images/table.svg</file>
         <file alias="qris_icon">../Images/qris_icon.svg</file>
