@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="24px"
+   viewBox="0 -960 960 960"
+   width="24px"
+   fill="#1f1f1f"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="map_search_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="34.625"
+     inkscape:cx="11.98556"
+     inkscape:cy="12"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     d="M640-560v-126 126ZM174-132q-20 8-37-4.5T120-170v-560q0-13 7.5-23t20.5-15l212-72 240 84 186-72q20-8 37 4.5t17 33.5v337q-15-23-35.5-42T760-528v-204l-120 46v126q-21 0-41 3.5T560-546v-140l-160-56v523l-226 87Zm26-96 120-46v-468l-120 40v474Zm440-12q34 0 56.5-20t23.5-60q1-34-22.5-57T640-400q-34 0-57 23t-23 57q0 34 23 57t57 23Zm0 80q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 23-5.5 43.5T778-238l102 102-56 56-102-102q-18 11-38.5 16.5T640-160ZM320-742v468-468Z"
+     id="path1" />
+  <path
+     style="fill:#4dcbdc;stroke-width:0.0288809"
+     d="M 5.0108303,12.363417 V 6.4596852 L 6.4620939,5.9764913 C 7.2602888,5.7107346 7.9296344,5.4873108 7.9495287,5.4799939 c 0.028914,-0.010634 0.034709,1.1582977 0.028881,5.8263091 l -0.00729,5.839613 -1.4584837,0.560088 C 5.7104693,18.014053 5.0444043,18.26633 5.032491,18.26662 5.020578,18.26691 5.01083,15.610469 5.0108303,12.363417 Z"
+     id="path2"
+     transform="matrix(40,0,0,40,0,-960)" />
+  <path
+     style="fill:#4dcbdc;stroke-width:0.0288809"
+     d="M 15.471929,17.920039 C 15.127817,17.829882 14.876936,17.681236 14.59785,17.40215 14.19257,16.99687 14.021661,16.580964 14.021661,16 c 0,-0.5803 0.170594,-0.99579 0.576189,-1.403339 0.426638,-0.428693 0.861768,-0.5938 1.498572,-0.568621 0.267044,0.01056 0.384581,0.02966 0.567561,0.09224 0.572904,0.195928 1.029021,0.637041 1.221682,1.181494 0.08828,0.249474 0.118472,0.748356 0.06583,1.087665 -0.07392,0.476454 -0.297715,0.899673 -0.607314,1.148514 -0.213127,0.1713 -0.571106,0.338565 -0.844765,0.394714 -0.304883,0.06255 -0.761972,0.05694 -1.027484,-0.01263 z"
+     id="path3"
+     transform="matrix(40,0,0,40,0,-960)" />
+</svg>

@@ -81,7 +81,9 @@ from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_valley_bottom import FrmValleyBottom
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
+
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
+from ..lib.map import get_zoom_level, get_map_center
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -496,6 +498,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
+                    self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
                     self.add_context_menu_item(self.menu, 'Export Project to Riverscapes Project', 'qris_icon', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
@@ -1882,6 +1885,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
+
+    def browse_data_exchange(self, db_item: DBItem):
+
+        # Get the center and zoom level to build the search url
+        canvas = self.iface.mapCanvas()
+        center = get_map_center(canvas)
+        zoom = get_zoom_level(canvas)
+        search_url = f"{CONSTANTS['warehouseUrl']}/s?type=Project&bounded=1&view=map&geo={center.x()}%2C{center.y()}%2C{zoom}"
+        # Open the URL in the default web browser
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(search_url))
 
     def setupUi(self):
 
