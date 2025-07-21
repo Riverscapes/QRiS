@@ -706,6 +706,7 @@ class RiverscapesMapManager(QObject):
 
     def set_field_constraint_not_null(self, feature_layer: QgsVectorLayer, field_name: str, constraint_strength: int) -> None:
         """Sets a not null constraint and strength"""
+        strength = None
         if constraint_strength == 1:
             strength = QgsFieldConstraints.ConstraintStrengthSoft
         elif constraint_strength == 2:
