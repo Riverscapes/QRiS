@@ -27,6 +27,16 @@ You can add an AOI to the map by right clicking on any individual AOI in the QRi
 
 You can edit an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Edit**. This will open the AOI in QGIS and allow you to edit the AOI name and description. You can also add the AOI to the map and use the standard QGIS editing tools to edit the AOI polygon. Remember to stop editing and save your changes before the AOI is available for use when importing other data. Layers that have already been imported using the AOI will not be updated when you edit the AOI. You will need to re-import the layers to see the changes.
 
+## Export an AOI
+
+You can easily export an AOI to any one of several popular GIS data formats using built-in functionality of QGIS.
+
+First, add the AOI to the map by right clicking on it in the QRiS project tree and selecting **Add to Map**. Then Right click on the AOI layer in the map table of contents and choose **Export** > **Save Features As...**. You can then choose the format you want to export to, such as Shapefile, GeoJSON, or KML. Provide a name and location for the exported file and click **OK** to save it.
+
+If your AOI has multiple features and you only want to export a single feature, you can select the feature in the map, using the select tool, and then right click on the AOI layer in the map table of contents and choose **Export** > **Save Selected Features As...**. This will only export the selected feature.
+
+![exporting AOI](/images/software-help/exporting_aoi.gif)
+
 ## Delete an AOI
 
 You can delete an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Delete**. This will remove the AOI from the QRiS project. It will not change any other data layers that used the AOI to clip the data.
