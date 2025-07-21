@@ -38,8 +38,11 @@ class QRaveIntegration(QObject):
             self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
             self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
                                       parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
+
+            self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..'))
             self.metric_definitions_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'metrics'))
             self.protocol_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'protocols'))
+            self.climate_engine_json = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'climate_engine_datasets.json'))
 
             self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
             self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
