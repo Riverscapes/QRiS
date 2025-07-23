@@ -1,0 +1,8 @@
+{
+  "label": "Technical Reference",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Advanced QRiS features and technical details for developers and advanced users."
+  }
+}
