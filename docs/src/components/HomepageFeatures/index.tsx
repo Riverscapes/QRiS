@@ -38,7 +38,7 @@ export default function HomepageFeatures() {
           <ResourceCard
             title="Software Help"
             description="Comprehensive how-to guides for using every QRiS feature."
-            link="software-help"
+            link="category/software-help"
           />
         </CardGrid>
       </Section>

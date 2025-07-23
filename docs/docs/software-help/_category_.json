@@ -1,0 +1,8 @@
+{
+  "label": "Software Help",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "These pages describe all the features of QRiS and how to use the software."
+  }
+}
