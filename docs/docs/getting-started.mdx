@@ -4,56 +4,65 @@ description: A guide to getting started with QRiS
 sidebar_position: 200
 ---
 
-QRiS is intended to be extremely flexible. There are many ways that it can help you capture and organize data describing your riverscape. The workflow described here is just one example of how you might use QRiS. You can use this workflow as a starting point, and then adapt it to suit your needs.
+QRiS is a **free, open source** data management software that standardizes the collection and analysis of riverscape GIS (Geographic Information Systems) spatial data. It provides a robust suite of built-in tools to streamline data collection, organize cumbersome datasets, and simplify complex metric analysis. This allows users to support their restoration projects from **initial design** to the **finalized as-built** and even **ongoing monitoring** efforts. Furthermore, QRiS integrates with the Riverscapes Consortium, allowing users to share and promote their restoration efforts with the broader community. 
+
+This tool is intended for individuals with a **working knowledge of riverscapes and process-based restoration** including practitioners, managers, analysts, and researchers. A **fundamental understanding of GIS** and its application to riverscapes is required for effective use of this tool. 
 
 ![Getting Started](https://docs.google.com/drawings/d/e/2PACX-1vS0YPnRFyMd7TX4avOlUkAWx2jWmza4PW3WRQLTBRQSyLqoK2UYzdjtc1cwXdrNG7stdqr5kkzYqv_y/pub?w=960&h=720)
 
-## QRiS Projects
+## How to Download QRiS
 
-Projects are the top organizational concept in QRiS. Everything you do in QRiS will be associated with a project. You can think of a project as "your riverscape". Typically, a project will be a single river or watershed, but it could also be a group of rivers or watersheds, or even just a single reach of a river. 
+QRiS is a plugin for **QGIS**, the widely used free and open source GIS software. For optimal performance and stability, it is recommended to use the latest **Long Term Release** (LTR) version, available for download from the QGIS Website. 
+To install QRiS in QGIS, follow these steps:
 
-You can have as many projects as you want. Under the hood, each project is stored as a GeoPackage file. You can think of a GeoPackage as a single file that contains all of the data for a project. This makes it easy to share projects with others, or to archive them for later use.
+    1. **First, install the Riverscapes Viewer Plugin**:
+        +In QGIS, go to Plugins > Manage and Install Plugins 
+        +Search for 'Riverscapes Viewer' and install the latest version. This is a required dependency for QRiS.
+        +Click the ‘Install’ button. 
+    2. **Then, install QRiS**:
+        +In the same Manage and Install Plugins window under Plugins, search for 'QRiS'.
+        +Click the ‘Install’ button.
 
-## Install QGIS
+For more detailed information, please refer to our [Download](https://qris.riverscapes.net/download/) page.
 
-If you don't have it already, you will need QGIS to use QRiS. QGIS is a free and open source GIS software package. You can download it from the [QGIS website](https://qgis.org/en/site/forusers/download.html). It is highly recommended to use the current Long Term Release (LTR) version of QGIS.
+## What can you do in QRiS
 
-## Install QRiS
+### Creating a Project 
 
-QRiS is a QGIS plugin. You can install it from the QGIS plugin manager. To do this, open QGIS and go to Plugins > Manage and Install Plugins. Search for QRiS and click the Install button. NOTE: THE RIVERSCAPES VIEWER PLUGIN IS A DEPENDENCY FOR QRIS AND MUST BE INSTALLED FIRST. To do so, search for 'Riverscapes Viewer' under Manage and Install Plugins and install the latest version.
+QRiS projects are the primary organizational unit, **storing all spatial data, imagery, analysis, and supporting information related to a riverscape**. While typically focused at the reach scale, QRiS offers the flexibility to integrate data at network or watershed scales, especially when utilizing coarser datasets (e.g., watershed networks or Digital Elevation Models) for broader riverscape context. 
 
-## Create a Project
+QRiS supports the use of infinite projects to contextualize a riverscape. Each project is stored as a **GeoPackage**, a single file container for all associated data, enhancing both project organization and sharing. 
 
-To create a new project, go to the QRiS menu and click New Project. You will be prompted to enter a name for your project. This name will be used to create a new folder on your computer, so it should be a valid folder name.
+To create a new project, navigate to the QRiS menu bar and select New Project. You will be prompted to enter a **Name** and **Project Path**. The **Project Path** specifies the location (typically a folder) **where your QRiS project is saved**. The project **Name** creates a new subfolder within the pathway to **store all QRiS data**.    
 
-You can also enter a description for your project. This is optional, but it is a good idea to enter a description so that you can remember what the project is about later.
+You can also include a **Description** or **Tags**. Although not required, these fields are helpful for **long-term tracking and recall** of QRiS projects, especially as your project library grows over time.  
 
-## Start digitizing
+For more detailed information, please refer to our [Software](https://qris.riverscapes.net/software-help/) Help page.
 
-The goal of QRiS is to help you digitize your riverscape. It does this by providing convenient geospatial layers and attributes for common riverscape features.
+### Digitizing & Importing Data 
 
-A distinction is made between two types of features: **static** and **dynamic**. Static features are those that are relatively permanent, such as the valley bottom extent. Dynamic features are those that change over time, such as the location of a river channel.
+QRiS utilizes a diverse collection of data layers to promote the **visualization of riverscapes over time**. Users can **digitize** both **static** (e.g., valley bottom) and **dynamic** (e.g., active channel) features to foster a deeper **understanding of the processes that shape the riverscape**. Furthermore, users can organize digitized data into designs, as-builts, pre-project surveys, or post-project monitoring to **inform and aid in key management decisions**.  
 
-### Data Capture Events
+Users can also **import data from pre-existing datasets** into QRiS as an alternative to manual digitization. This feature allows for quick incorporation of historical or external vector and raster data, resulting in more robust, comprehensive, and dynamic projects.
 
-Dynamic features are digitized within a Data Capture Event. Each data capture event is associated with a point in time. This can be the past (historic conditions), present (design, monitoring event or assessment), or future (restoration design).
+For more detailed information, please refer to our [Software](https://qris.riverscapes.net/software-help/) Help page.
 
-To create a new data capture event, go to the QRiS menu and click New Data Capture Event. You will be prompted to enter a name for the data capture event. This name will be used to create a new folder on your computer, so it should be a valid folder name. You can then specify the layers that you want to digitize.
+### Analyses 
 
-There are two custom Data Capture Event types for LTPBR design and LTPBR as-builts. Using the sub-menu to create one of these two custom types will pre-select the appropriate layers for you as well as incorporate several specific data capture event attributes.
+One of the most powerful features of QRiS is its ability to **generate metrics** from digitized or imported data, providing a **quantitative assessment of riverscape health**. The results are presented in both **tables and graphs**, illustrating metric evolution **over time** and facilitating **direct comparisons between different riverscapes**. This functionality supports the analysis of **discrete events** (e.g., single riverscape assessment) or **chronological data** (e.g., series of restoration treatments or or continuous monitoring). A wide range of metric types, including counts, lengths, densities, areas, gradients, and ratios, are supported and customizable with user input. All metric data is exportable to **CSV, Excel, or JSON formats**. 
 
-### Valley Bottom Sample Frame
+For more detailed information, please refer to our [Analyses](https://qris.riverscapes.net/software-help/analyses) and [Technical Reference](https://qris.riverscapes.net/technical-reference/) pages.
 
-A critical layer that you should include is the polygon layer representing your valley bottom. This layer is used to define the extent of your riverscape. It is also used to define the sample frame for valley bottom.
+### Sharing Projects 
 
-## Analyses
+Once your QRiS project is finalized, you can **share it with other organizations, clients, and community members** through the [Riverscapes Data Exchange](https://data.riverscapes.net/). When uploaded to the Data Exchange, QRiS projects function as **‘living documents’**. This means others can **download, modify, and even overwrite** your existing version on the Exchange with new data, analyses, or contextual information. 
 
-With one or more Data Capture Events and a valley bottom sample frame digitized, you can start to perform analyses. Analyses store metrics of river health for each valley bottom sample frame polygon. You can populate these manually (e.g. I know there was x number of structural elements at point in time y), or QRiS can automate metric calculation by analysing your dynamic features against the valley bottom sample frames.
+Given this collaborative setting, it is highly recommended to **keep backup copies of your project** and prevent accidental data loss or unintended changes to your original work.  
 
-## Sharing Projects
+For more detailed information, please refer to our [Riverscapes Viewer Integration](https://qris.riverscapes.net/software-help/riverscapes-viewer-integration) page.
 
-Once you have finished digitizing and analysing your riverscape, you can share your project with others. To do this, go to the QRiS menu and click Export Project. This will create a GeoPackage file that contains all of the data for your project. You can then share this file with others by uploading it to the [Riverscapes Data Exchange](https://data.riverscapes.net). From there it can be discovered, viewed and downloaded by others.
+### Protocol Library 
 
-## Living Project
+The Protocol Library allows users to **customize both layers and metric calculations** within QRiS. While QRiS comes with pre-built layers and metrics outlined by the [LTPBR V2 Protocol](https://zenodo.org/records/13769899), not all restoration and monitoring efforts will follow these exact  guidelines. You can **develop uniquely defined layers and metrics** tailored to specific **agency requirements**, the diverse **constraints of your riverscape**, or capture discrete details needed for **comprehensive assessments**. 
 
-QRiS projects are intended to be living documents. You can continue to add new data capture events to your project as your riverscape changes over time. You can also continue to add new analyses to your project as you learn more about your riverscape.
+For more detailed information, please refer to our [Protocol Library](https://qris.riverscapes.net/technical-reference/protocol-library) page.
