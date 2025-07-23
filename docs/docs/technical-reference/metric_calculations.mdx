@@ -6,6 +6,10 @@ description: Descriptions of the calculation functions used to create Metrics in
 
 The following calculation functions are available to create Metrics in QRiS from Data Capture Event (DCE) layers. Each calculation function has a set of parameters that can be used to customize the calculation.
 
+:::info
+Additional calculations will be added as needed.
+:::
+
 ## Count
 This calculation counts the number of features from any number of DCE layers (with the addition of an optional count field) that fall within the sample frame. DCE layers may have an optional attribute filter applied. For lines and polygons, the count is prorated by length and area respectively. This function can also apply a valley centerline normalization. 
 
@@ -104,10 +108,3 @@ Each layer can have the following parameters:
   - If not provided for a layer, then the layer will be used as a `numerator`.
   - If no `denominator` is provided, the sample frame area will be used as the denominator.
 - `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
-
-
-:::info
-
-*Additional calculations will be added as needed.*
-
-:::
