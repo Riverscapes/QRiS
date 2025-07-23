@@ -28,7 +28,7 @@ export default function HomepageFeatures() {
           <ResourceCard
             title="Download QRiS"
             description="Learn how to find, install the QRiS plugin for QGIS, as well as check for updates."
-            link="Download/install"
+            link="download"
           />
           <ResourceCard
             title="Getting Started"
