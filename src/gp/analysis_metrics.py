@@ -473,3 +473,54 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
         return 0.0
     else:
         return numerator_area / denominator_area
+    
+
+def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
+    
+    # Initialize the sample frame geometry
+    sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    
+    # Numerator Layers
+    numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator').lower() == 'numerator']
+    numerator_value = 0.0    
+    for metric_layer in numerator_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
+            geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+            if not geom.IsValid():
+                geom = geom.MakeValid()
+            if geom.Intersects(sample_frame_geom):
+                clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                if clipped_geom is None or clipped_geom.IsEmpty():
+                    geom = None
+                    clipped_geom = None
+                    continue
+                numerator_value += clipped_geom.GetArea() if clipped_geom.GetGeometryType() in [ogr.wkbPolygon, ogr.wkbMultiPolygon] else clipped_geom.Length()
+            geom = None
+            clipped_geom = None
+
+    # Denominator Layers
+    denominator_layers = [layer for layer in metric_layers if layer.get('usage', None) == 'denominator']
+    denominator_value = 0.0
+    if len(denominator_layers) == 0:
+        # use the sample frame area as the denominator
+        denominator_value = sample_frame_geom.GetArea()
+    else:
+        for metric_layer in denominator_layers:
+            for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+                if feature is None:
+                    continue
+                geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+                if geom.Intersects(sample_frame_geom):
+                    clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                    denominator_value += clipped_geom.GetArea() if clipped_geom.GetGeometryType() in [ogr.wkbPolygon, ogr.wkbMultiPolygon] else clipped_geom.Length()
+                geom = None
+                clipped_geom = None
+    
+    # Calculate the proportion
+    if denominator_value == 0.0:
+        return 0.0
+    else:
+        return numerator_value / denominator_value
