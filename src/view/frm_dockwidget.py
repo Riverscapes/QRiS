@@ -48,6 +48,7 @@ from ..model.layer import check_and_remove_unused_layers
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
+from ..model.attachment import Attachment, ATTACHMENT_MACHINE_CODE, attachments_path
 
 from .frm_design2 import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
@@ -55,6 +56,7 @@ from .frm_planning_container import FrmPlanningContainer
 from .frm_asbuilt import FrmAsBuilt
 from .frm_basemap import FrmRaster
 from .frm_mask_aoi import FrmAOI
+from .frm_attachment import FrmAttachment
 from .frm_sample_frame import FrmSampleFrame
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_analysis_explorer import FrmAnalysisExplorer
@@ -115,6 +117,7 @@ GROUP_FOLDER_LABELS = {
     BASEMAP_MACHINE_CODE: 'Basemaps',
     PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
     ANALYSIS_MACHINE_CODE: 'Analyses',
+    ATTACHMENT_MACHINE_CODE: 'Attachments',
     CATCHMENTS_MACHINE_CODE: 'Catchment Delineations',
     CONTEXT_NODE_TAG: 'Context',
     STREAM_GAGE_MACHINE_CODE: 'Stream Gages',
@@ -228,6 +231,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
+
+        attachments_node = self.add_child_to_project_tree(project_node, ATTACHMENT_MACHINE_CODE)
+        [self.add_child_to_project_tree(attachments_node, item) for item in self.project.attachments.values()]
 
         for node in [project_node, inputs_node, riverscapes_node, surfaces_node, aoi_node, sample_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
@@ -391,6 +397,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             elif model_data == STREAM_GAGE_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Add Stream Gages To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
+            elif model_data == ATTACHMENT_MACHINE_CODE:
+                self.add_context_menu_item(self.menu, 'Browse Attachments', 'folder', lambda: self.browse_item(model_data, attachments_path(self.project.project_file)))
+                self.menu.addSeparator()
+                self.add_context_menu_item(self.menu, 'Add New File Attachment', 'add_file', lambda: self.add_attachment(model_item, Attachment.TYPE_FILE))
+                self.add_context_menu_item(self.menu, 'Add New Web Link Attachment', 'add_link', lambda: self.add_attachment(model_item, Attachment.TYPE_WEB_LINK))
             else:
                 self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE]):
@@ -452,6 +463,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
                         self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
+                    if isinstance(model_data, Attachment):
+                        if model_data.attachment_type == Attachment.TYPE_FILE:
+                            self.add_context_menu_item(self.menu, 'Open Attachment', 'open_external', lambda: self.browse_item(model_data, model_data.project_path(self.project.project_file)))
+                        else:
+                            self.add_context_menu_item(self.menu, 'Open Web Link', 'open_external', lambda: self.browse_item(model_data, model_data.path))
                     else:
                         if any(isinstance(model_data, model_type) for model_type in [Project, Event, PlanningContainer]):
                             self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
@@ -465,7 +481,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 else:
                     raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, SampleFrame, Profile, CrossSections, PourPoint, ScratchVector, Analysis, PlanningContainer]):
+                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, SampleFrame, Profile, CrossSections, PourPoint, ScratchVector, Analysis, PlanningContainer, Attachment]):
                     self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
 
                 if isinstance(model_data, SampleFrame):
@@ -855,6 +871,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmExportMetrics(self, self.project, analysis)
         frm.exec_()
+
+    def add_attachment(self, model_item, attachment_type):
+
+        frm = FrmAttachment(self, self.iface, self.project, None, attachment_type)
+        if attachment_type == Attachment.TYPE_FILE:
+            browse_result = frm.source.browse()
+            if browse_result is None or browse_result == '':
+                return
+        result = frm.exec_()
+
+        if result is not None and result != 0:
+            self.add_child_to_project_tree(model_item, frm.attachment, False)
 
     def climate_engine_explorer(self):
 
@@ -1615,6 +1643,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, EventLayer):
             layer = db_item.layer
             frm = FrmLayerMetricDetails(self, self.project, layer) 
+        elif isinstance(db_item, Attachment):
+            frm = FrmAttachment(self, self.iface, self.project, db_item)
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
@@ -1627,7 +1657,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 # map table of contents item is renamed.
                 if isinstance(db_item, Project):
                     self.add_child_to_project_tree(self.model.invisibleRootItem(), db_item, False)
-                elif isinstance(db_item, Analysis):
+                elif any(isinstance(db_item, data_class) for data_class in [Analysis, Attachment]):
                     self.add_child_to_project_tree(model_item.parent(), db_item, False)
                 elif isinstance(db_item, Event):
                     self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
@@ -1716,7 +1746,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         
         if isinstance(data_item, DBItem):
-            if any(isinstance(data_item, data_class) for data_class in [Project, Event, PlanningContainer, Analysis, PourPoint, Raster, StreamGage, ScratchVector]):
+            if any(isinstance(data_item, data_class) for data_class in [Project, Event, PlanningContainer, Analysis, PourPoint, Raster, StreamGage, ScratchVector, Attachment]):
                 node.setText(data_item.name)
                 return
             

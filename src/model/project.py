@@ -20,6 +20,7 @@ from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
 from .profile import Profile, load_profiles
 from .cross_sections import CrossSections, load_cross_sections
+from .attachment import Attachment, load_attachments
 from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
 
@@ -91,6 +92,7 @@ class Project(DBItem):
             self.cross_sections = load_cross_sections(curs)
             self.valley_bottoms = load_sample_frames(curs, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
             self.analyses = load_analyses(curs, self.analysis_masks(), self.metrics)
+            self.attachments = load_attachments(curs)
 
             self.units = load_units(curs)
         
@@ -162,6 +164,8 @@ class Project(DBItem):
             self.events[db_item.event_id].event_layers.pop(event_layer_index)
         elif isinstance(db_item, PlanningContainer):
             self.planning_containers.pop(db_item.id)
+        elif isinstance(db_item, Attachment):
+            self.attachments.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
 
