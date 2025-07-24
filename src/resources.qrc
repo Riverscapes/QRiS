@@ -2,6 +2,8 @@
     <qresource prefix="/plugins/qris_toolbar">
 
         <!-- General Icons -->
+        <file alias="add_link">../Images/add_link.svg</file>
+        <file alias="add_file">../Images/add_file.svg</file>
         <file alias="add_to_map">../Images/add_to_map.svg</file>
         <file alias="analysis_summary">../Images/analysis_summary.svg</file>
         <file alias="arrow_down">../Images/arrow_down.png</file>
@@ -16,10 +18,13 @@
         <file alias="detrend">../Images/detrend.png</file>
         <file alias="download">../Images/download.svg</file>
         <file alias="expand">../Images/expand.svg</file>
+        <file alias="file">../Images/file.svg</file>
         <file alias="folder">../Images/folder.svg</file>
         <file alias="help">../Images/help.svg</file>
         <file alias="influence">../Images/influence.png</file>
         <file alias="json">../Images/json.png</file>
+        <file alias="link">../Images/link.svg</file>
+        <file alias="open_external">../Images/open_external.svg</file>
         <file alias="map_search">../Images/map_search.svg</file>
         <file alias="metadata">../Images/metadata.png</file>
         <file alias="new_folder">../Images/new_folder.png</file>

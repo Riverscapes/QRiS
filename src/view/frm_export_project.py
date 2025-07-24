@@ -29,6 +29,7 @@ from ..model.raster import Raster
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.stream_gage import StreamGage
 from ..model.sample_frame import SampleFrame
+from ..model.attachment import Attachment, attachments_path, parse_posix_path
 
 from .utilities import add_standard_form_buttons, message_box
 
@@ -211,6 +212,22 @@ class FrmExportProject(QtWidgets.QDialog):
             item.setData(analysis, QtCore.Qt.UserRole)
             analyses_node.appendRow(item)
         self.export_layers_model.appendRow(analyses_node)
+
+        # Attachments Node
+        attachments_node = QtGui.QStandardItem("Attachments")
+        attachments_node.setCheckable(True)
+        attachments_node.setCheckState(QtCore.Qt.Checked)
+
+        for attachment in self.qris_project.attachments.values():
+            label = f"{attachment.name} ({'File' if attachment.attachment_type == Attachment.TYPE_FILE else 'Web Link'})"
+            item = QtGui.QStandardItem(label)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            # Store the attachment object for later reference
+            item.setData(attachment, QtCore.Qt.UserRole)
+            attachments_node.appendRow(item)
+
+        self.export_layers_model.appendRow(attachments_node)
 
         # Layer Tree
         self.export_tree.setModel(self.export_layers_model)
@@ -985,9 +1002,40 @@ class FrmExportProject(QtWidgets.QDialog):
                 # meta_data=meta)
                 self.rs_project.realizations.append(realization)
 
+        # Attachments
+        attachments = []
+        attachments_nodes = self.export_layers_model.findItems("Attachments")
+        if attachments_nodes:
+            attachments_node = attachments_nodes[0]
+            dest_attachments_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "attachments").replace("\\", "/"))
+            if not os.path.exists(dest_attachments_folder):
+                os.makedirs(dest_attachments_folder)
+            for i in range(attachments_node.rowCount()):
+                child = attachments_node.child(i)
+                if child.checkState() == QtCore.Qt.Unchecked:
+                    continue
+                attachment: Attachment = child.data(QtCore.Qt.UserRole)
+                # Process the attachment (e.g., copy files, collect web links)
+                if attachment.attachment_type == Attachment.TYPE_FILE:
+                    src_path = attachment.project_path(self.qris_project.project_file)
+                    dst_path = attachment.project_path(dest_attachments_folder)
+                    if os.path.exists(src_path):
+                        shutil.copy(src_path, dst_path)
+
+                    attachments.append(rsxml.project_xml.Dataset(xml_id=f'attachment_{attachment.id}',
+                                name=attachment.name,
+                                path=f'attachments/{attachment.path}',
+                                ds_type='File'))
+                # elif attachment.attachment_type == Attachment.TYPE_WEB_LINK:
+                #     pass
+                
+                if 'attachments' not in keep_layers:
+                    keep_layers['attachments'] = {'id_field': 'id', 'id_values': []}
+                keep_layers['attachments']['id_values'].append(str(attachment.id))
+
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses', 'analysis_metrics', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames']:
+        for layer in ['analyses', 'analysis_metrics', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments']:
             # get the layer
             lyr: ogr.Layer = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="24px"
+   viewBox="0 -960 960 960"
+   width="24px"
+   fill="#1f1f1f"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="add_file.svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25" />
+  <path
+     d="M440-240h80v-120h120v-80H520v-120h-80v120H320v80h120v120ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"
+     id="path1" />
+  <path
+     style="fill:#4dcbdc;stroke-width:0.0288809"
+     d="M 6.0216606,12 V 4 h 3.4801445 3.4801439 v 2.5126354 2.5126354 h 2.498195 2.498195 V 14.512635 20 H 12 6.0216606 Z M 13.01083,16.505415 V 15.00361 h 1.501805 1.501805 V 13.99278 12.981949 H 14.512635 13.01083 V 11.480144 9.9783394 H 12 10.98917 v 1.5018046 1.501805 H 9.4873646 7.9855596 v 1.010831 1.01083 h 1.501805 1.5018054 v 1.501805 1.501805 H 12 13.01083 Z"
+     id="path2"
+     transform="matrix(40,0,0,40,0,-960)" />
+</svg>
