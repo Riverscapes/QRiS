@@ -108,3 +108,21 @@ Each layer can have the following parameters:
   - If not provided for a layer, then the layer will be used as a `numerator`.
   - If no `denominator` is provided, the sample frame area will be used as the denominator.
 - `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
+
+## Proportion
+The proportion calculation calculates the generic proportion of the area or length of a polygon or linestring feature that falls within the sample frame or other specified layers.
+
+calculation_name: `proportion`
+
+![Proportion Calculation](/images/technical-reference/metrics/metric-area_proportion.png)
+
+*Proportion calculation example. Sample Frames are shown in orange dashed outline and labeled 1 and 2. Geomorphic Unit Polygons for "Free Flowing" (magenta) and "Ponded" (blue) are shown. Several types of proportion metrics could be calculated from these layers, such as the proportion of the area of "Free Flowing" Geomorphic Units within the total area of the Sample Frame or the proportion of area of "Free Flowing" to total area of the Geomorphic Units (i.e. "Free Flowing" / ("Free Flowing" + "Ponded")).*
+
+metric params:
+- `layers`: A list of DCE [layers](managing_metrics#layers) to calculate area proportions from.
+
+Each layer can have the following parameters:
+- `usage`: An optional field which represents that the layer should be used as a `numerator` or `denominator` in the calculation. 
+  - If not provided for a layer, then the layer will be used as a `numerator`.
+  - If no `denominator` is provided, the sample frame area will be used as the denominator.
+- `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
