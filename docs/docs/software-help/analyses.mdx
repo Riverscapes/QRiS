@@ -9,7 +9,9 @@ QRiS analyses help track river health over time. Before you can perform an analy
 - One or more [data capture events](/software-help/dce) that represent the points in time for which you want to measure riverscape health. These events represent past, present or future representations of your riverscape captured as assessments, designs, plans or monitoring events. Each event must have geospatial features digitized (for automatic metric calculations). Manual entry of metric values do not require features to be digitized. 
 - A [sample frame](/software-help/sample-frames) that subdivides your riverscape into the spatial units for which you want to report river health. Typically these are polygons that span valley wall to valley wall and represent the river reaches or sub-reaches. 
 
-Note: If multiple, spatially separate, reaches exist in a project multiple analyses will need to be done. Each reach will have its own distinct centerline which is used for calculating metrics, so it is necessary that they be analyzed separately.
+:::note
+ If multiple, spatially separate, reaches exist in a project multiple analyses will need to be done. Each reach will have its own distinct centerline which is used for calculating metrics, so it is necessary that they be analyzed separately.
+:::
 
 ![sample frame example](/images/software-help/analyses/separate-reaches.png)
 
@@ -17,7 +19,9 @@ Note: If multiple, spatially separate, reaches exist in a project multiple analy
 
 Right click on the **Analyses** folder in the QRiS project tree and select **New Analysis**. This will open the analysis properties form. Provide a name and description for the analysis. Select the Analysis Masks (sample frame), valley bottom, centerline, and DEM (optional) you want to use for the analysis. You cannot change this once the analysis has been created. If you make a mistake you will need to delete the analysis and start again.
 
-Note: It is possible to choose an AOI or Riverscapes polygon as your Analysis Mask (sample frame).
+:::note
+It is possible to choose an AOI or Riverscapes polygon as your Analysis Mask (sample frame).
+:::
 
 Pick from the list of available [metrics](/software-help/metrics) that you want to include in your analysis. You can always add or remove metrics later. Each of the available metrics can have one of three states:
 
@@ -29,7 +33,9 @@ Click **OK** to create the analysis.
 
 ![analysis properties form](/images/software-help/analyses/create-analysis.png)
 
-Note: the question mark next to each metirc will pull up metadata associated with that metric. This is important if you are using multiple protocols in a given project. The matadata will tell you which protocol that metric belongs to.
+:::tip
+The question mark button next to each metric will pull up metadata associated with that metric. This is important if you are using multiple protocols in a given project, as this will indicate which protocol that metric belongs to.
+:::
 
 ![metric details](/images/software-help/analyses/metric-info.png)
 
@@ -90,7 +96,9 @@ Click the calculate button to open a new window with the following options:
 - **Just the currently active SF** - only calculate values for the sample frame selected in the analysis window
 - **All Sample Frames** - Calculate values for all sample frames, not just the one selected in the analysis window
 
-Note: Selecting all in both cases is an easy way to calculate all metrics across all sample frames and DCEs. Calculating just the currently active is a good way to run calculations to test output values and troubleshoot possible failed calculations.
+:::tip
+Selecting all in both cases is an easy way to calculate all metrics across all sample frames and DCEs. Calculating just the currently active is a good way to run calculations to test output values and troubleshoot possible failed calculations.
+:::
 
 #### Metric Values
 
