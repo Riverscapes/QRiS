@@ -49,8 +49,7 @@ def rsxml_check():
     """
     if rsxml is None:
         message_box("Error", "rsxml module is not available. Please install rsxml to export to Riverscapes Studio.")
-        return
-    False
+        return False
     return True
 
 
