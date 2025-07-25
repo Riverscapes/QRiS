@@ -1,0 +1,64 @@
+---
+title: Attachments
+sidebar_position: 12
+description: Add file or web links to your QRiS project
+---
+
+QRiS allows you to attach files or web links to your QRiS project. This is useful for keeping track of important documents, reports, permits or other resources that are relevant to your project. Files are copied to the project directory, while web links are stored as references in the project.
+
+![Attachments Project Tree](/images/software-help/attachments-project-tree.png)
+
+## Adding Attachments
+
+### File Attachment
+To add a File Attachment to the QRiS project, right click on the **Attachments** folder in the QRiS project tree and select **Add New File Attachment**. This will open a file dialog where you can select the file you want to attach.
+
+![Attachments Add File](/images/software-help/attachments-add-file.png)
+
+1. A file dialog will first be asked to select the file from your local file system.
+
+A different file can be selected by clicking the `...` button next to the "Source Path" field. This will open the file dialog again, allowing you to select a different source file.
+
+2. After selecting the source file, specify the name for the attachment. This name will be used to identify the attachment in your project tree, and will be used to establish a "clean" file name for the Project Path file that is copied to the project directory.
+
+:::note
+ The file will be copied to the project directory and must have a unique name within the project. If a file with the same name already exists, you will be prompted to choose a different name.
+:::
+
+3. You can also include an optional description for the attachment or specify key/value pairs of metadata that help describe the origin of the data.
+
+4. Click **OK** to add the file attachment to your project.
+
+### Web Link Attachment
+To add a web link attachment, right click on the **Attachments** folder in the QRiS project tree and select **Add New Web Link Attachment**.
+
+![Attachments Add URL](/images/software-help/attachments-add-url.png)
+
+1. This will open a dialog where you can enter the URL of the web link you want to attach. Clicking on the `Paste` button will automatically paste the URL from your clipboard.
+
+:::note
+The web link should be a valid URL, however QRiS does not validate the URL format. It is up to the user to ensure that the URL is correct and accessible.
+:::
+
+2. You can provide a name for the web link attachment, which will be used to identify it in your project tree.
+
+3. You can also include an optional description for the web link attachment or specify key/value pairs of metadata that help describe the origin of the data.
+
+4. Click **OK** to add the web link attachment to your project.
+
+## Editing Attachments
+To edit an existing attachment, right click on the attachment in the QRiS project tree and select **Properties**. This will open the attachment properties dialog where you can change the name, description, or metadata of the attachment. You can also change the URL for web link attachments.
+
+## Viewing Attachments
+Once you have added attachments to your QRiS project, you can view them in the **Attachments** folder in the QRiS project tree. Each attachment will be listed with its name, type (file or web link).
+
+To open the file or web link, right click on the attachment and select **Open Attachment** or **Open Web Link**. For file attachments, this will open the file in its associated application. For web link attachments, this will open the URL in your default web browser.
+
+You may also browse the attachments folder for your QRiS project by right clicking on the **Attachments** folder in the QRiS project tree.
+
+:::warning
+Attachments are referenced in the QRiS project by the file name. If you change the file name or move the file outside of QRiS, the attachment will no longer be accessible. It is recommended to manage attachments within QRiS to ensure they remain linked to your project.
+:::
+
+## Deleting Attachments
+To delete an attachment, right click on the attachment in the QRiS project tree and select **Delete**. This will remove the attachment from your project. If it is a file attachment, the file will be deleted from the project directory as well. For web link attachments, only the reference will be removed from the project.
