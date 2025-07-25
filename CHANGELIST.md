@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+## [1.1.6] 2025 JUL 25
+
+### Added
+- Add Link to Search Data Exchange for nearby RS Projects #664
+- Add Attachments to QRiS Projects #663
+- Add generic "proportion" calculation to metrics #687
+
+### Changed
+- Improve logging message when trying to load rsxml module
+
 ## [1.1.5] 2025 JUL 11
 
 ### Fixed
