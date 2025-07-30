@@ -3,23 +3,44 @@ title: Download
 sidebar_position: 3
 description: QRiS installation process
 ---
+## QGIS Installation
 
-QRiS is a freely available [plugin](https://plugins.qgis.org) and functions within [QGIS](https://www.qgis.org/) (freely available for Windows, MacOS and Linux). You will need to have QGIS installed before you can install QRiS.
+To install QRiS, you'll first need to set up [QGIS](https://qgis.org/), a free and open-source Geographic Information Systems (GIS) software. QRiS functions as a [QGIS Plugin](https://plugins.qgis.org/), meaning it relies on QGIS to run.
 
-In addition, QRiS depends on the Riverscapes Viewer which is also a free plugic for QGIS. If it is not already installed, follow the same instructions as below but searching for 'Riverscapes Viewer'. 
+QGIS is compatible with a variety of operating systems, including **Windows, macOS, Linux, and Android**. When choosing a QGIS version, you'll see two main types: **Experimental (latest) Releases and Long Term Releases (LTR)**. LTR versions are generally more stable, while Experimental Releases offer the latest features.
 
-To install QRiS for the first time to QGIS: 
+**QRiS is designed to work with the latest QGIS LTR**, so be sure to install that version (found [here](https://qgis.org/download/)). If a specific QGIS version is required for a particular QRiS release, this information will be provided in the [release notes](https://github.com/Riverscapes/QRiS/releases) or as a pop-up within the QGIS Plugin Manager.
 
-1. From the main QGIS menu choose `Plugins → Manage and Install Plugins`.
-2. Search Plugins for `QRiS`.
-3. Select `QRiS` and click install. (Installation should take less than 30 seconds.)
+## How to Download QRiS
 
-## Minimum Requirements
+QRiS can be installed from the QGIS Plugin Manager. However, you must have the latest version of [Riverscapes Viewer](https://viewer.riverscapes.net/) before installing QRiS. To install QRiS, follow these steps: 
 
-QRiS requires [QGIS](https://qgis.org/) from the latest LTR (Long Term Release).
+  1. **First, install the Riverscapes Viewer Plugin**:
+
+      - In the QGIS menubar (top of page), go to `Plugins > Manage and Install Plugins`. 
+
+      - Search for *Riverscapes Viewer* and click the *Install* button (should take less than 30 seconds). This is a required dependency for QRiS.
+
+  2. **Then, install QRiS**:
+
+      - Go to the same `Plugins > Manage and Install Plugins` and search for *QRiS*.
+
+      - Click the *Install* button (should take less than 30 seconds).
 
 ## Updating QRiS
 
-At any time after it is installed, you can update QRiS by simply choosing `Upgrade Plug-In` from the `QRiS` plugins window. Watch the video below for a walkthrough of the installation and update process. 
+You can update QRiS at any time after installation through the **QGIS Plugin Manager**. Here's how:
+
+  1. Go to `Plugins > Manage and Install Plugins`.
+
+  2. Select **QRiS** from the list of installed plugins.
+
+  3. Click the ***Update* button**.
+
+For automatic updates, you can configure the Plugin Manager settings to `Check for Updates on Startup`. When enabled:
+
+- QGIS will notify you periodically (every 3 days) upon startup if any installed plugin, including QRiS, has an available update.
+
+- To apply the update, simply click the ***Update* button** that appears on the blue taskbar in the map panel.
 
 <YouTubeEmbed videoId="nWtqC4pHk24" />
