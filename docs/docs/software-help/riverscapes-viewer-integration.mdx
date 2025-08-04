@@ -1,6 +1,40 @@
 ---
 title: Riverscapes Viewer Integration
 description: Integrate Data from Any Riverscapes Project into QRiS
-sidebar_position: 98
+sidebar_position: 5
 ---
 
+Data from Riverscapes projects can be directly imported to QRIS through the Riverscapes Viewer. This allows users to store a portion of a Riverscapes Project within their QRIS project. This is an easy way to get started on a project with relavant contextual data. 
+
+## Downloading a Riverscapes Project
+
+Projects can be downloaded from the [Riverscapes Data Exchange](https://data.riverscapes.net/). A brief overview can be found [here](https://viewer.riverscapes.net/about/)
+
+## Opening a Riverscapes Project
+
+Information on Riverscapes Projects for QGIS can be found [here](https://viewer.riverscapes.net/software-help/help-qgis/).
+
+## Importing Data from Riverscapes Viewer to QRIS Project
+
+After opening a Rivercspapes Project you will a see the default layers of that project brought into your map as well as a new indow to navigate the riverscapes project. 
+
+![riverscapes project](/images/software-help/viewer-project.png)
+
+Simultaneously open your QRIS Project so that you have a Riverscapes Viewer window as well as the QRIS plugin window open/visible. 
+
+![riverscapes project and qris](/images/software-help/viewer-qris.png)
+
+Now you can browse the folders in the Riverscapes Viewer to find the layer you would like to add to your QRIS project. Right-clicking on any layer will open a pop up with the ability to click **Add to QRIS**. A new window will pop up with the following import options:
+
+- **Name** - The name you would like the imported layer to have (default comes from layer name in Riverscapes Viewer).
+- **Source Path** - the actual file path the data is coming from.
+- **Context Layer Type** - Only current option is Other.
+- **Project Path** - the new path the file will be stored in the QRIS project.
+- **Clip to AOI** - a dropdown showing all AOIs in project. If you select one the imported data will be clipped to those extents. 
+- **Description** - optional description of the layer.
+
+A metadata tab also exists. Metadata from the project is copied over but additonal key/value pairs can be added if desired. 
+
+Clicking **OK** will add the layer to your QRIS project. All layers imported this way are added to the Context folder. 
+
+![import from viewer](/images/software-help/import-fom-viewer.gif)
