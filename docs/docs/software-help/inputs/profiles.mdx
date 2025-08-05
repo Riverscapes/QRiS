@@ -4,25 +4,23 @@ sidebar_position: 6
 description: Centrelines & long profiles
 ---
 
-QRiS profiles represent longitudinal lines down your riverscape. The most common use is to represent the valley centerline. Profiles are used to create [cross sections](/software-help/cross-sections), and from there, generate [sample frames](/software-help/sample-frames).
+QRiS profiles represent longitudinal lines down your riverscape. The most common use is to represent the valley centerline. Profiles are used to create [cross sections](/software-help/cross-sections), and from there, generate [sample frames](/software-help/sample-frames). A valley centerline is also necessary for calcualting certain [Metrics](/software-help/metrics/) in [Analyses](/software-help/analyses/)
 
 ![profile overview](/images/software-help/profile-overview.png)
 
 ## Import an Existing Profile
 
-You can import an existing polyline feature class and use it as a profile. To do this, right click on the Profiles folder in the QRiS [project](/software-help/projects) tree and choose **Import Existing Profile**. Browse to the location of the polyline feature class and click **Open**. Provide a name and optional description. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class within your QRiS project.
-
-![create profile](/images/software-help/create-profile.png)
+You can import an existing polyline feature class and use it as a profile. Importing existing data is covered in **[Importing Features](/software-help/importing-features/)**.
 
 ## Create a New Profile
 
-You can create a new profile by drawing a polyline on the map. To do this, choose the **Create New Profile** option from the **Profiles** folder within your QRiS [project](/software-help/projects). Provide a name and optional description and then click **OK**. Add the new profile to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the polyline on the map. Remember to stop editing and save your changes before the profile is available for use with other features.
+You can create a new profile by drawing a polyline on the map. To do this, choose the **Create New (Manually Digitized) Profile** option from the **Profiles** folder within your QRiS [project](/software-help/projects). Provide a name and optional description and then click **OK**. Add the new profile to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the polyline on the map. Remember to stop editing and save your changes before the profile is available for use with other features.
 
 ## Centerline tool
 
-The centerline tool creates polylines down the middle of polygons. It can be used with several QRiS polygon layers. It is typically used to derive the centerline down a valley. To use the centerline tool:
+The centerline tool creates polylines down the middle of polygons. It is used specifically with valley bottom polygons to derive a valley centerline. To use the centerline tool:
 
-Right click on a polygon layer within your QRiS project and choose **Generate Centerline**. The centerline dockable window will appear and the polygon layer on which you clicked will be added to the map.
+Right click on a valley bottom layer within your Riverscapes node and choose **Generate Centerline**. The centerline dockable window will appear and the polygon layer on which you clicked will be added to the map.
 
 On the centerline dockable window, ensure that the polygon layer you clicked is chosen as the **Polygon Layer**.
 
