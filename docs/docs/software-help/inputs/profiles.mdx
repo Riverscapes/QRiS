@@ -4,7 +4,7 @@ sidebar_position: 6
 description: Centrelines & long profiles
 ---
 
-QRiS profiles represent longitudinal lines down your riverscape. The most common use is to represent the valley centerline. Profiles are used to create [cross sections](/software-help/cross-sections), and from there, generate [sample frames](/software-help/sample-frames). A valley centerline is also necessary for calcualting certain [Metrics](/software-help/metrics/) in [Analyses](/software-help/analyses/)
+QRiS profiles represent longitudinal lines down your riverscape. The most common use is to represent the valley centerline. Profiles are used to create [cross sections](/software-help/inputs/cross-sections), and from there, generate [sample frames](/software-help/inputs/sample-frames). A valley centerline is also necessary for calcualting certain [Metrics](/software-help/metrics/) in [Analyses](/software-help/analyses/)
 
 ![profile overview](/images/software-help/profile-overview.png)
 
@@ -15,30 +15,6 @@ You can import an existing polyline feature class and use it as a profile. Impor
 ## Create a New Profile
 
 You can create a new profile by drawing a polyline on the map. To do this, choose the **Create New (Manually Digitized) Profile** option from the **Profiles** folder within your QRiS [project](/software-help/projects). Provide a name and optional description and then click **OK**. Add the new profile to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the polyline on the map. Remember to stop editing and save your changes before the profile is available for use with other features.
-
-## Centerline tool
-
-The centerline tool creates polylines down the middle of polygons. It is used specifically with valley bottom polygons to derive a valley centerline. To use the centerline tool:
-
-Right click on a valley bottom layer within your Riverscapes node and choose **Generate Centerline**. The centerline dockable window will appear and the polygon layer on which you clicked will be added to the map.
-
-On the centerline dockable window, ensure that the polygon layer you clicked is chosen as the **Polygon Layer**.
-
-Pan the map so that the polygon layer is visible and conveniently centered. If your river is long, you might not be able to fit the entire polygon on the map display. 
-
-Click the **Select** button beside the **Polygon Feature** field. Now click on the polygon feature that you want to use to generate the centerline. The polygon will be highlighted in yellow and this is now the polygon that will be used to generate the centerline.
-
-Click the **Select** button beside the **Start of Centerline** field. Carefully click and hold down the left mouse button to one side of the polygon and then click again on the other side. The goal is to create a transect **across** the polygon near the top of the reach.
-
-Repeat this process for the **End of Centerline** field. The goal is to create a second transect **across** the polygon near the bottom of the reach.
-
-![centerline transect](/images/software-help/centerline-transect.gif)
-
-If you make a mistake, you can click the **Reset** button to clear the transect and start again.
-
-Once you have defined an upstream and downstream transect you can click the **Generate Centerline** button. This will run the centerline tool and place a **temporary** centerline in the map for you to review. If you are happy with the centerline, you can click the **Save Centerline** button to save the centerline as a new profile in your QRiS project. You can also click the **Reset** button to remove the temporary centerline from the map and start again.
-
-Remember that the centerline tool is only a starting point. You will likely need to edit the centerline to make it more accurate. You can do this using the standard QGIS editing tools. Remember to stop editing and save your changes before the profile is available for use with other features.
 
 ## Add a Profile to the Map
 
@@ -52,11 +28,24 @@ You can edit a profile by right clicking on any individual profile in the QRiS p
 
 ## Generate Cross Sections
 
-. 
+The cross sections tool creates cross sections along your selected profile (generally the valley bottom centerline) to use as transects and to subdivide your valley bottom into sample frames. To use the cross sections tool:
 
+Right click on the profile layer within your Profiles node and choose **Generate Cross Sections** and the cross sections dockable window will appear.
+
+On the cross section dockable window select the **Profile** that you want to use to generate cross sections from.
+
+Changing **Spacing** will determine the spacing (in meters) between cross sections along your profile.
+
+Changing **Length** will change the overall cross section length. You may need to iterate on this until all your cross sections extend beyond your valley bottom polygon. 
+
+You can then click **Generate Cross Sections** to see a preview of those cross sections under the given parameters. This allows you to iterate on Spacing and Length until you have the desired outcome.
+
+Once you are happy with the preview click **Save Cross Sections**. This will open a new window where you can give the cross sections a **Name** and specify whether you want them clipped by an AOI or Valley Bottom. As always there is optional description and metadata. 
+
+The cross sections will be saved under the Cross Sections node. 
+
+![centerline transect](/images/software-help/cross-sections.gif)
+ 
 ## Delete a Profile
 
 You can delete a profile by right clicking on any individual profile in the QRiS project tree and selecting **Delete**. This will remove the profile from the QRiS project.
-## Video demonstration
-
-<YouTubeEmbed videoId="VW1Y0P2MsCs" caption="How profiles work in QRiS"/> 
