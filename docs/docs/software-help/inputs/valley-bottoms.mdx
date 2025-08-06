@@ -28,10 +28,34 @@ You can add an Valley Bottom to the map by right-clicking on any individual Vall
 
 You can edit a Valley Bottom's properties by right-clicking on any individual Valley Bottom under the **Riverscapes** node in the QRiS project tree and selecting **Properties**. This will open the Valley Bottom properties and allow you to edit the Valley Bottom name, description and/or metadata.
 
-## Generate Centerline
+## Centerline tool
 
-This tool allows you to generate a centerline from your valley bottom polygon. This is covered in [Profiles](/software-help/inputs/profiles/).
+The centerline tool creates polylines down the middle of polygons. It is used specifically with valley bottom polygons to derive a valley centerline. To use the centerline tool:
+
+Right click on a valley bottom layer within your Riverscapes node and choose **Generate Centerline**. The centerline dockable window will appear and the polygon layer on which you clicked will be added to the map.
+
+On the centerline dockable window, ensure that the polygon layer you clicked is chosen as the **Polygon Layer**.
+
+Pan the map so that the polygon layer is visible and conveniently centered. If your river is long, you might not be able to fit the entire polygon on the map display. 
+
+Click the **Select** button beside the **Polygon Feature** field. Now click on the polygon feature that you want to use to generate the centerline. The polygon will be highlighted in yellow and this is now the polygon that will be used to generate the centerline.
+
+Click the **Select** button beside the **Start of Centerline** field. Carefully click and hold down the left mouse button to one side of the polygon and then click again on the other side. The goal is to create a transect **across** the polygon near the top of the reach.
+
+Repeat this process for the **End of Centerline** field. The goal is to create a second transect **across** the polygon near the bottom of the reach.
+
+![centerline transect](/images/software-help/centerline-transect.gif)
+
+If you make a mistake, you can click the **Reset** button to clear the transect and start again.
+
+Once you have defined an upstream and downstream transect you can click the **Generate Centerline** button. This will run the centerline tool and place a **temporary** centerline in the map for you to review. If you are happy with the centerline, you can click the **Save Centerline** button to save the centerline as a new profile in your QRiS project. You can also click the **Reset** button to remove the temporary centerline from the map and start again.
+
+Remember that the centerline tool is only a starting point. You will likely need to edit the centerline to make it more accurate. You can do this using the standard QGIS editing tools. Remember to stop editing and save your changes before the profile is available for use with other features.
 
 ## Delete a Valley Bottom
 
 You can delete a Valley Bottom by right clicking on any individual Valley Bottom under the **Riverscapes** node in the QRiS project tree and selecting **Delete**. This will remove the Valley Bottom from the QRiS project. 
+
+## Video demonstration
+
+<YouTubeEmbed videoId="VW1Y0P2MsCs" caption="How profiles work in QRiS"/> 
