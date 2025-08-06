@@ -10,7 +10,7 @@ Each QRiS project has its own surface library. You can have as manay surfaces as
 
 ## Import Existing Surface
 
-To import a surface right click on the Surfaces folder in the Project Explorer and select **Import Existing Surface**. You will be prompted to select a file to upload. QRiS supports any [raster format compatible with QGiS](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_vector/supported_data.html). Click OK and then provide a name and optional description for the surface.
+To import a surface right click on the Surfaces folder in the Project Explorer and select **Import Existing Raster Surface Dataset**. You will be prompted to select a file to upload. QRiS supports any [raster format compatible with QGiS](https://docs.qgis.org/2.18/en/docs/user_manual/working_with_vector/supported_data.html). Click OK and then provide a name and optional description for the surface.
 
 Note that the underlying raster dataset is copied to the current QRiS project. This means that if you delete the original raster file from your computer, the surface will still be available in QRiS. However, if you move the raster file within the QRiS project, QRiS will not be able to find it and the surface will be broken.
 
@@ -29,15 +29,15 @@ Note that the underlying raster dataset is copied to the current QRiS project. T
 
 ## Edit Surface Properties
 
-To edit a surface right click on the surface in the Project Explorer and select **Edit Surface**. You can change the name and description of the surface. You cannot change the underlying raster dataset. Should you wish to do this, you will need to delete the surface and re-import it.
+To edit a surface right click on the surface in the Project Explorer and select **Properties**. You can change the name and description of the surface. You cannot change the underlying raster dataset. Should you wish to do this, you will need to delete the surface and re-import it.
 
 ## Delete a Surface
 
-To delete a surface right click on the surface in the Project Explorer and select **Delete Surface**. You will be prompted to confirm the deletion. Note that this will delete the surface from the QRiS project, together with the underlying QRiS copy of the raster dataset. It will also be removed as the context for any Data Capture Events that are using it.
+To delete a surface right click on the surface in the Project Explorer and select **Delete**. You will be prompted to confirm the deletion. Note that this will delete the surface from the QRiS project, together with the underlying QRiS copy of the raster dataset. It will also be removed as the context for any Data Capture Events that are using it.
 
 ## Add a Surface to the Map 
 
-To add a surface to the map, right click on the surface in the Project Explorer and select **Add Surface to Map**. The surface will be added to the map as a raster layer.
+To add a surface to the map, right click on the surface in the Project Explorer and select **Add to Map**. The surface will be added to the map as a raster layer.
 
 ## Raster Slider Tool
 
@@ -59,3 +59,5 @@ Once you have selected the threshold value, click the **Export Polygon** button 
 - **Add to Map** - if you select this option, QRiS will add the scratch vector to the map as a raster layer. This is useful if you want to check that the polygon layer has been generated correctly.
 
 ![raster slider export](/images/software-help/raster-slider-export.png)
+
+The saved polygon will appear in the [Context](/software-help/context/) node of your project. 
