@@ -22,11 +22,13 @@ You can create a new sample frame by drawing a polygon on the map. To do this, r
 
 ### Create a New Sample Frame from Existing QRiS Layers
 
-If you have a QRiS project with existing layers (aoi or scractch polygon, centerline and cross sections) you can create a new sample frame from these layers. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Create New Sample Frame** menu option, then **From Existing QRiS Features**. Provide a name and optional Default Flow Path Name and/or description. You may also specify Categorical Fields and attributes on the Categories Tab and Metadata on the Metadata Tab. When you have prepared the Sample Frame properties click **OK**. Add the Sample Frame to the map by clicking the **Add to Map** button. QRiS will generate the sample frame polygons and add it to your project.  
+If you have a QRiS project with existing layers (aoi or scratch polygon, centerline and cross sections) you can create a new sample frame from these layers. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Create New Sample Frame** menu option, then **From Existing QRiS Features**. Provide a name and optional Default Flow Path Name and/or description. You may also specify Categorical Fields and attributes on the Categories Tab and Metadata on the Metadata Tab. When you have prepared the Sample Frame properties click **OK**. Add the Sample Frame to the map by clicking the **Add to Map** button. QRiS will generate the sample frame polygons and add it to your project.  
+
+![generate sample frame](/images/software-help/generate-sample-frame.gif)
 
 ## Import Sample Frame
 
-You can import an existing polygon feature class and use it as a sample frame. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Import Sample Frame From** menu option and select **Feature Class**. Browse to the location of the polygon feature class and click **Open**. Provide a name and optional description. If you have topology information associated with the features, you can specify display_label, flow_path, and flows_into topolgy fields. If you would like to include other attributes as catagory fields, you may check or uncheck the fields in the catagories tab. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project.
+You can import an existing polygon feature class and use it as a sample frame. Importing existing data is covered in **[Importing Features](/software-help/importing-features/)**.
 
 ## Sample Frame Polygon Considerations
 
@@ -37,7 +39,12 @@ Because sample frames are used to define the spatial extent of your [analysis](/
 - Polygons should, in most cases, be single part features.
 - Separate polygons should be used to represent different geomorphic units, uniform sections of river or planning areas.
 
-## Add an Sample Frame to the Map
+Achieving mutual exclusivity can be streamlined with advanced digitizing techniques. Help on the topic can be found [here](https://riverscapes.freshdesk.com/support/solutions/articles/153000236810-advanced-digitizing).
+
+<YouTubeEmbed videoId="qpI9fgZX01U?si=_Wh61kViylfNMuc6&amp;start=420" caption="Advanced Digitizing"/>
+Follow the snapping settings outlined in the video to achieve mutual exclusivity.
+
+## Add a Sample Frame to the Map
 
 You can add a sample frame to the map by right clicking on any individual sample frame in the QRiS project tree and selecting **Add to Map**. This will add the sample frame to the map as a new layer. 
 
