@@ -15,22 +15,44 @@ The QRiS project tree will be displayed, and you will be able to see the new pro
 
 ## Adding an Entire Project To the Map
 
-You can add an entire project to the map by right clicking on the top level of the project tree and selecting `Add Project to Map`. This will add all layers in the project to the map. You can also add individual layers to the map by right clicking on the layer and selecting `Add Layer to Map`.
+You can add an entire project to the map by right clicking on the top level of the project tree and selecting `Add All Layers to Map`. This will add all layers in the project to the map. You can also add individual layers to the map by right clicking on the layer and selecting `Add to Map`.
 
 ## Editing Project Properties
 
-You can change the name of a project and its description at any time by right clicking on the top level of the project tree and selecting `Edit Project Properties`. You can also change the project's coordinate reference system (CRS) here. This is the coordinate system that will be used to display the project on the map. 
+You can change the name of a project and its description at any time by right clicking on the top level of the project tree and selecting `Properties`.  
 
 Note that you can change the name of the project after it is created, but you can't change the name of the actual project file on disk. To change the file name, first close QGIS altogether, then rename the project GeoPackage file name on disk. When you next open QGIS, you will be prompted to locate the project file. Browse to the new location of the project file, and it will be loaded into QRiS.
 
 ## Browsing a Project folder
 
-You can browse the contents of a project folder by right clicking on the top level of the project tree and selecting `Browse Project Folder`. This will open a file browser window showing the contents of the project folder. You can use this to view the project GeoPackage file, or to add new files to the project folder.
+You can browse the contents of a project folder by right clicking on the top level of the project tree and selecting `Browse Containing Folder`. This will open a file browser window showing the contents of the project folder. You can use this to view the project GeoPackage file, or to add new files to the project folder.
+
+## Browse Data Exchange Projects
+
+You can browse projects on the Data Exchange by right clicking on the top level of the project tree and selecting `Browse Data Exchange Projects`. This will direct you to the data exchange in the same location that your QGIS map view is in. This is an easy way to dowload projects relevant to your QRIS project without having to manuallly search.
+
+More detailed info on this can be found by exploring [Riverscapes Viewer Integration](/software-help/riverscapes-viewer-integration/)
 
 ## Export To Riverscapes Project
 
 You can export a QRiS project to a Riverscapes Project by right clicking on the top level of the project tree and selecting `Export To Riverscapes Project`. This will create a new Riverscapes Project folder, and copy the QRiS project GeoPackage file into it.
 
+When you export a window will pop up with the following options:
+
+### Export Properties
+- **Riverscapes Project Name**- This is what will appear as the name of the project in the rs.xml (which controls the name on the Data Exchange and in the Riverscapes Viewer). It does not change the name of the project/.gpkg that you open in the QRIS project. 
+- **Ouput Path**- the location that the new project folder will save to (note: make sure it is in a separate location from the QRIS project so that folders dont overwrite).
+- **Project Bounds**- here you can select whether to use all QRIS layers or just an AOI to bound your project.
+- **Export Type**- here you can designate whether you are creating a new Riverscape Studio Project or updating an existing one. (Updating an existing one will require you to browse to the existng rs.xml file). 
+- **Description**- any relevant descriptive info that may be useful to the project. 
+
+### Export Layers
+
+This tab allows you to select which layers you want to export. Note that the default is to leave out surfaces since they can be very large file sizes that can bloat the project. You must select them if you want them included.
+
+Once exported this project can be opened in the [Riverscapes Viewer](https://viewer.riverscapes.net/) and uploaded to the [Data Exchange](https://data.riverscapes.net/). 
+
+![export-window](/images/software-help/export-project.png)
 
 ## Close a Project
 
