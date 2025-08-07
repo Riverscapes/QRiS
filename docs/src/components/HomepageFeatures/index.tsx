@@ -33,7 +33,7 @@ export default function HomepageFeatures() {
           <ResourceCard
             title="Getting Started"
             description="Discover the basic workflow of using QRiS. Create a QRiS project, add data, and start digitizing."
-            link="getting-started"
+            link="tutorials/conceptual-overview"
           />
           <ResourceCard
             title="Software Help"
