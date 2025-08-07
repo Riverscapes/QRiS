@@ -1,0 +1,44 @@
+---
+title: Starting a QRiS Project
+description: A guide to starting a project in QRiS
+sidebar_position: 2
+---
+
+This tutorial will walk you through creating a new QRiS project as well as the typical first few steps to set up a project ready for design, monitoring or analysis work.
+
+## Prerequisities
+
+For this tutorial you will need:
+
+1. QGIS with the latest version of the [QRiS plugin installed](/Download/install).
+2. A project area in mind. This should be a river or reach somewhere between half to ten miles in length.
+
+## Create a New Project
+
+1. Open QGIS.
+2. On the QRiS Toolbar drop the "Project" menu down and click the [New Project](http://localhost:3000/software-help/projects#creating-a-new-project) button. ![new project menu](/images/software-help/new-project-menu.png)
+3. In the dialog that appears, enter a name for your project. This will be used to create a new folder on your computer. It'se helpful to name the project something descriptive, typically a name that refers to the river or reach you are working on. ![project name dialog](/images/software-help/create-project.png)
+
+At this point you have created a QRiS new project. It is represented by a folder on your computer that contains a [GeoPackage](https://www.geopackage.org/) file. This file will contain all of the data for your project.
+
+## Locate Your Project Area
+
+QRiS comes with links to several popular basemaps that can be used to help locate your project area. These basemaps include satellite imagery, topographic maps, and more. You can access these basemaps from the bottom of the QRiS Project Explorer.
+
+Add the Google basemap to your current map and then zoom in to your chosen project area. The tutorial dataset is based on Birch Creek, Idaho at 42.19501° N, -111.67932° W (<a href="https://www.google.com/maps/place/42%C2%B011'42.0%22N+111%C2%B040'45.6%22W/@42.1950002,-111.6839323,2217m/data=!3m1!1e3!4m4!3m3!8m2!3d42.19501!4d-111.67932?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D" target="_blank">Google Maps</a>).
+
+![birch creek basemap](/images/tutorials/birch-creek.png)
+
+## Define Your Project area
+
+It's a good idea to define the area of your project at this point. This "Area of Interest" (AOI) will define the extent of your project and can be used to clip data as you import it into your project. There are two ways to define your AOI:
+
+1. **Digitize a Polygon**: You can digitize a polygon that represents the extent of your project. This is done by creating a new polygon layer in your project and digitizing the polygon that represents your AOI.
+2. **Import a Polygon**: If you have a polygon layer that represents the extent of your project, you can import it into your project.
+
+For the purposes of this tutorial, we will digitize a polygon that represents the extent of our project.
+
+1. right click on AOIs in the QRiS Project Inputs and choose **Create New (Manually Digitized) AOI". ![aoi](/images/software-help/digitize-aoi.png)
+1. Provide a name for your AOI. It can be as simple as "Project Extent" or something more descriptive. (You can have multiple AOIs in your project, so you can name them whatever you like.)
+
+
