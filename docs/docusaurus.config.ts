@@ -89,88 +89,88 @@ const config: Config = {
         alt: 'QRiS Logo',
         src: 'images/logo.png',
       },
-      items: [
-        {
-          label: "About",
-          position: "left",
-          items: [
-            { to: "/About/acknowledgements", label: "Acknowledgements" },
-            { to: "/About/license", label: "License and Source Code" },
-          ],
-        },
-        {
-          label: "Download",
-          position: "left",
-          items: [
-            { to: "/Download/install", label: "Install" },
-            {
-              to: "/Download/known-bugs",
-              label: "Questions, Feature Requests and Bugs",
-            },
-          ],
-        },
-        {
-          label: "Software Help",
-          position: "left",
-          items: [
-            { to: "/software-help/analyses", label: "Analyses" },
-            { to: "/software-help/aoi", label: "Areas of Interest" },
-            { to: "/software-help/basemaps", label: "Basemaps" },
-            {
-              to: "/software-help/batch-attribute-editor",
-              label: "Batch Attribute Editor",
-            },
-            { to: "/software-help/context/", label: "Context" },
-            { to: "/software-help/cross-sections", label: "Cross Sections" },
-            { to: "/software-help/dce", label: "Data Capture Events" },
-            { to: "/software-help/metrics", label: "Metrics" },
-            { to: "/software-help/profiles", label: "Profiles" },
-            { to: "/software-help/project-tree", label: "Project Tree" },
-            { to: "/software-help/projects", label: "Projects" },
-            { to: "/software-help/sample-frames", label: "Sample Frames" },
-            { to: "/software-help/surfaces", label: "Surfaces" },
-            {
-              to: "/software-help/zonal-statistics",
-              label: "Zonal Statistics",
-            },
-            //     {
-            //       label: 'Context',
-            //       items: [
-            //         { to: '/software-help/context', label: 'Context' },
-            //         { to: '/software-help/stream-gage-tool', label: 'Stream Gage Tool' },
-            //         { to: '/software-help/watershed-catchments', label: 'Watershed Catchments' },
-            //       ],
-            //     },
-          ],
-        },
-        {
-          label: "Tutorials",
-          position: "left",
-          items: [
-            { to: "/tutorials/conceptual-overview", label: "Conceptual Overview" },
-            { to: "/tutorials/starting-a-project", label: "Starting a Project" },
-            { to: "/tutorials/create-a-design", label: "Create a Design" },
-            { to: "/tutorials/create-as-build", label: "Create an As-Built" },
-            { to: "/tutorials/digitizing", label: "Digitizing in QGIS" },
-            { to: "/tutorials/sharing-projects", label: "Sharing Projects" },
-          ],
-        },
-        {
-          label: "Technical Reference",
-          position: "left",
-          items: [
-            { to: "/technical-reference/database", label: "Database" },
-            {
-              to: "/technical-reference/managing_metrics",
-              label: "Managing Metrics",
-            },
-            {
-              to: "/technical-reference/metric_calculations",
-              label: "Metric Calculations",
-            },
-          ],
-        },
-      ],
+      // items: [
+      //   {
+      //     label: "About",
+      //     position: "left",
+      //     items: [
+      //       { to: "/About/acknowledgements", label: "Acknowledgements" },
+      //       { to: "/About/license", label: "License and Source Code" },
+      //     ],
+      //   },
+      //   {
+      //     label: "Download",
+      //     position: "left",
+      //     items: [
+      //       { to: "/Download/install", label: "Install" },
+      //       {
+      //         to: "/Download/known-bugs",
+      //         label: "Questions, Feature Requests and Bugs",
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     label: "Software Help",
+      //     position: "left",
+      //     items: [
+      //       { to: "/software-help/analyses", label: "Analyses" },
+      //       { to: "/software-help/aoi", label: "Areas of Interest" },
+      //       { to: "/software-help/basemaps", label: "Basemaps" },
+      //       {
+      //         to: "/software-help/batch-attribute-editor",
+      //         label: "Batch Attribute Editor",
+      //       },
+      //       { to: "/software-help/context/", label: "Context" },
+      //       { to: "/software-help/cross-sections", label: "Cross Sections" },
+      //       { to: "/software-help/dce", label: "Data Capture Events" },
+      //       { to: "/software-help/metrics", label: "Metrics" },
+      //       { to: "/software-help/profiles", label: "Profiles" },
+      //       { to: "/software-help/project-tree", label: "Project Tree" },
+      //       { to: "/software-help/projects", label: "Projects" },
+      //       { to: "/software-help/sample-frames", label: "Sample Frames" },
+      //       { to: "/software-help/surfaces", label: "Surfaces" },
+      //       {
+      //         to: "/software-help/zonal-statistics",
+      //         label: "Zonal Statistics",
+      //       },
+      //       //     {
+      //       //       label: 'Context',
+      //       //       items: [
+      //       //         { to: '/software-help/context', label: 'Context' },
+      //       //         { to: '/software-help/stream-gage-tool', label: 'Stream Gage Tool' },
+      //       //         { to: '/software-help/watershed-catchments', label: 'Watershed Catchments' },
+      //       //       ],
+      //       //     },
+      //     ],
+      //   },
+      //   {
+      //     label: "Tutorials",
+      //     position: "left",
+      //     items: [
+      //       { to: "/tutorials/conceptual-overview", label: "Conceptual Overview" },
+      //       { to: "/tutorials/starting-a-project", label: "Starting a Project" },
+      //       { to: "/tutorials/create-a-design", label: "Create a Design" },
+      //       { to: "/tutorials/create-as-build", label: "Create an As-Built" },
+      //       { to: "/tutorials/digitizing", label: "Digitizing in QGIS" },
+      //       { to: "/tutorials/sharing-projects", label: "Sharing Projects" },
+      //     ],
+      //   },
+      //   {
+      //     label: "Technical Reference",
+      //     position: "left",
+      //     items: [
+      //       { to: "/technical-reference/database", label: "Database" },
+      //       {
+      //         to: "/technical-reference/managing_metrics",
+      //         label: "Managing Metrics",
+      //       },
+      //       {
+      //         to: "/technical-reference/metric_calculations",
+      //         label: "Metric Calculations",
+      //       },
+      //     ],
+      //   },
+      // ],
     },
 
     prism: {
