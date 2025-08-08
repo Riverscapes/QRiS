@@ -3,6 +3,8 @@ title: Protocol Library
 banner: true
 ---
 
+The QRiS Protocol Library is a collection of protocols that define the layers and metrics used in QRiS projects. Protocols are used to standardize data capture events (DCEs) and analyses, ensuring consistency and interoperability across projects.
+
 ## What is a QRiS protocol?
 A QRiS protocol contains a set of data-capture-event (DCE) layer and metric definitions. An unlimited number of protocols can be defined and shared through Riverscapes. QRiS synchronizes these protocols down onto QRiS users’ computers, just like it does with other resources (symbology and business logic). 
 
@@ -12,13 +14,12 @@ Users can add any layer to their data capture events, mixing and matching from m
 
 Protocols also store a set of metric definitions. These describe how layers are combined to calculate metrics within analyses. Each metric definition refers to a calculation that is the block of Python code within QRiS that actually reads the layer data and performs the metric calculation. Protocol authors can add metrics to protocols without the need for developers to be involved. However, a developer will still need to release a new version of QRiS if calculations change. For example a metric might be “dam density” that refers to the “dam crest” layer as well as the “density” calculation method. When users add the dam density metric to their analysis, QRiS will know to read the dam crest layer and send it to the “area density” calculation Python code that will report the count of point features in each valley bottom polygon.
 
-# Protocol XML
+## Protocol XML
 Each Protocol is be defined by a separate XML file that resides in the RiverscapesXML repository. An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
 
 A single protocol XML file contains both the layer and metric definitions. This is required for referential integrity, because the metrics refer to the layers within the protocol. Indeed metrics will only be able to refer to metrics within the protocol in which the metric is defined. In other words, an LTPBR metric cannot refer to an LCT layer.  
 
-## Authoring and Editing Protocols
-
+### Authoring and Editing Protocols
 
 :::tip
 QRiS will look for protocol XML files adjacent to the current QRiS project. This will allow protocol authors to experiment with draft protocols, similar to how local business logic files work for QViewer.
@@ -26,7 +27,7 @@ QRiS will look for protocol XML files adjacent to the current QRiS project. This
 
 There is no user interface for writing protocols. Users are advised to use Visual Studio Code with linting based on the latest version of the protocol XSD rule file. This is similar to how users already develop new riverscapes project and business logic XML files.
 
-## Protocol Versioning
+### Protocol Versioning
 QRiS protocols can be changed at any time. Any change to a protocol must increment its version number. Protocol owners have the option of either changing an existing protocol or splitting it into a new XML file:
 
 Changing an existing protocol XML file will overwrite the previous version. This is useful for fixing any inadvertent errors in a protocol definition. Any QRiS users will receive the upgraded version and will no longer be able to create DCE layers based on the previous version. 
@@ -37,7 +38,7 @@ Any existing layers and data will always be locked at the version of the protoco
 
 Creating a new file for the same protocol makes available the possibility of maintaining two active versions of the same protocol. We do not currently foresee a practical use for this, but suspect that it might be useful in the future.
 
-## Decoupling Specification From Implementation
+### Decoupling Specification From Implementation
 One of the most important concepts is the decoupling of the protocol specification (XML file) and the DCE layers that are created using the specification. Once a DCE layer is created, the definition is loaded into the QRiS project and its overall design should be considered immutable, with the exception of a few display/labeling attributes (see specification). After the DCE layer has been created, the protocol can change or get deprecated, the design of layers can evolve, but the DCE layer instance remains in the project as it was originally created. QRiS will never attempt to update the fundamental design of DCE layers (fields, field types etc) to reflect the latest version of a protocol. DCE layers reflect a snapshot of the protocol at the point in time when they were created.
 
 **Example Scenario**
@@ -48,7 +49,7 @@ Protocol A is modified (version remains the same?) by changing the label for lay
 Protocol B has just been released, and includes its own version of a BEAVER DAM CRESTS layer. The user may also add this BEAVER DAM CRESTS layer to their DCE (i.e. this new protocol contains a layer with the same name as the original protocol. The two layers are distinct and can live alongside each other in the same DCE).
 At any time, a protocol author can delete a protocol, or make it “deprecated”. The protocol and it’s layers will not show up in the DCE layer picker, but any existing DCE layers that used the protocol will persist and never be altered.
 
-# Publishing and Sharing Protocols
+## Publishing and Sharing Protocols
 Anyone can author a protocol by creating or editing a protocol XML file and submitting it for review as a pull request to the Riverscapes XML repository. The Riverscapes Consortium development team will get pull request notifications and action them in a timely manner.
 
 QViewer (a prerequisite to running QRiS) synchronizes resources (symbology, business logic and protocols) daily or upon request by the user. QRiS will always read the latest protocol XML files currently residing on the local computer whenever the user wants to add a layer to a data capture event.
@@ -59,10 +60,9 @@ All protocols published to Riverscapes XML are public. Organizations will not be
 
 QRiS also has the option of reading protocol XML files from a local directory specified in the QRiS settings. This allows users to experiment with protocols that are not yet published to Riverscapes XML or share protocols within their organization.
 
-# Protocol XML Schema
+## Protocol XML Schema
 
-
-## Protocol
+### Protocol
 - `Protocol` (required) The root element of the protocol XML file.
   - Attributes
     - `machine_code` (required) A unique machine code identifier for the protocol. This is used to identify the protocol in the QRiS project database.
@@ -83,7 +83,7 @@ QRiS also has the option of reading protocol XML files from a local directory sp
   - `Layers` (optional) contains the layers defined in the protocol as specified below
   - `Metrics` (optional) contains the metrics defined in the protocol as specified below
     
-## Layers
+### Layers
 Protocols can contain one or more layers. Each layer is defined by a `Layer` element defined as:
 - `Layer` (one or more) the definition of a layer in the protocol.
   - Attributes
@@ -101,7 +101,7 @@ Protocols can contain one or more layers. Each layer is defined by a `Layer` ele
     - `Meta` (one or more) name=”key”, value
   - `Fields` (optional) contains the fields defined for the layer as specified below
 
-## Fields
+### Fields
 Layers can contain fields of the following types:
 - `IntegerField`, `TextField`, `ListField`, `AttachmentField`, or `FloatField`
   - Attributes
@@ -123,7 +123,7 @@ Layers can contain fields of the following types:
       - `allow_custom_values`: boolean, default=False
     - `Value` (one or more) value to be added to the list of values for the field.
 
-## Metrics
+### Metrics
 A protocol can contain one or more metrics. Each metric is defined by a `Metric` element defined as:
 - `Metric` (one or more) the definition of a metric in the protocol.
   - Attributes
