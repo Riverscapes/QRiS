@@ -1,0 +1,9 @@
+{
+  "label": "Completely New to QRiS - Getting Started",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "slug": "getting-started",
+    "description": "Guides for users new to QRiS"
+  }
+}
