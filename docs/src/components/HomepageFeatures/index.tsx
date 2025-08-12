@@ -7,8 +7,8 @@ export default function HomepageFeatures() {
     <div className={styles.container}>
       <section title="Home" className={styles.intro}>
         <p>
-          QGIS Riverscapes Studio, or QRiS, is a plugin that helps you digitize your riverscape data. It provides a
-          flexible, extensible structure for your spatial layers, together with consistent symbology to streamline your
+          QGIS Riverscapes Studio, or QRiS, is a plugin that helps you curate, organize, analyze and share your riverscape data. It provides a
+          flexible, extensible structure for your spatial layers, together with consistent symbology and file management to streamline your
           data capture, monitoring and analysis.
         </p>
 
@@ -23,31 +23,41 @@ export default function HomepageFeatures() {
           as-builts of low-tech process-based restoration designs.
         </p>
       </section>
-      <Section title="">
+      <Section title="Site Sections">
         <CardGrid>
           <ResourceCard
-            title="Download QRiS"
+            title="About QRiS"
+            description="Learn more about QRiS, the development team and support."
+            link="About"
+          />
+          <ResourceCard
+            title="Install QRiS"
             description="Learn how to find, install the QRiS plugin for QGIS, as well as check for updates."
             link="download"
           />
           <ResourceCard
-            title="Getting Started"
-            description="Discover the basic workflow of using QRiS. Create a QRiS project, add data, and start digitizing."
-            link="tutorials/conceptual-overview"
+            title="Software Help"
+            description="Comprehensive command references for using every QRiS feature."
+            link="category/software-help"
           />
           <ResourceCard
-            title="Software Help"
-            description="Comprehensive how-to guides for using every QRiS feature."
-            link="category/software-help"
+            title="Tutorials"
+            description="Discover tutorials ranging from getting started and the basic workflows of using QRiS to advanced topics."
+            link="tutorials/"
+          />
+          <ResourceCard
+            title="Technical Reference"
+            description="Advanced QRiS features, conceptual references, and technical reference for developers and advanced users."
+            link="category/technical-reference"
           />
         </CardGrid>
       </Section>
 
-      <Section title="Other Riverscapes Sites">
+      <Section title="Related Riverscapes Sites">
         <CardGrid>
           <ResourceCard
             title="Riverscapes Consortium"
-            description="The main site for the Riverscapes Consortium."
+            description="The main community platform site for the Riverscapes Consortium."
             link="https://riverscapes.net"
             image="logos/rc_logo_wide.png"
           />
