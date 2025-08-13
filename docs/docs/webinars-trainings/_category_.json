@@ -1,9 +1,0 @@
-{
-  "label": "Webinars and Trainings",
-  "position": 4,
-  "link": {
-    "type": "generated-index",
-    "slug": "webinars-trainings",
-    "description": "Tutorials from webinars, trainings, and workshops."
-  }
-}
