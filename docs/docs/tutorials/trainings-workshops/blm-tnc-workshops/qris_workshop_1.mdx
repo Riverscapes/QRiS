@@ -171,5 +171,22 @@ Click Toggle Editing to finalize your AOI. Click Save on the window that pops up
 
 First, we’ll add the NHD Stream Network to the Layers pane. To do this, in the Riverscapes Viewer Pane > Riverscape Context Project > Hydrology > Hydrography > right click Full NHD HR+ Drainage Network (simple) and select Add to Map.
 
+![nhd](/images/tutorials/nhd.png)
 
+Next, we’ll delineate the Contributing Catchment. In the QRiS pane > Your QRiS Project > Inputs > Context > right click Catchment Delineations and select Run USGS StreamStats.
 
+![run-streamstats](/images/tutorials/run-streamstats.png)
+
+Read the ‘Pour Point Dialogue Box’ and select ‘OK’. 
+
+Zoom to the NHD stream pixels at the downstream end of your AOI polygon. It’s critical to zoom closely and select an NHD flowline pixel. 
+
+Click on a stream pixel to select it as the ‘Pour Point’. This opens the ‘Create New Pour Point with Catchment’ dialogue box. Add a descriptive name, like Valley Creek Point 1. Toggle on ‘Calculate Basin Characteristics’. Add a description to help others understand what this area represents, like Valley Creek Project Outlet. Keep ‘Add to Map’ toggled on. Click OK. It can take several minutes. 
+
+![pour-point](/images/tutorials/pour-point.png)
+
+When complete, navigate to the new catchment polygon. In the QRiS pane > Your QRiS Project > Inputs > Context > Catchment Delineations > right click ‘Name of Your New Catchment’ and Promote to AOI.
+
+Note: The delineation may not return an accurate result. If the outcome is not a correct delineation of the watershed, right click the delineation in the QRiS pane and delete. Repeat the process, clicking a slightly different point on the map, aiming for the NHD flowline, until an accurate result is achieved. 
+
+![promote-aoi](/images/tutorials/promote-aoi.png)
