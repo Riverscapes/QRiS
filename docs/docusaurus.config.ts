@@ -179,6 +179,21 @@ const config: Config = {
       ],
     },
 
+    footer: {
+      links: [
+        {
+          // Note that this NEEDS to match what's in the default template or we get another column
+          title: 'Support & Contact',
+          items: [
+            {
+              label: 'Knowledge Base',
+              href: 'https://riverscapes.freshdesk.com/support/solutions/153000297758',
+            },
+          ],
+        },
+      ],
+    },
+
     prism: {
       theme: prismThemes.github, // Code block theme for light mode
       darkTheme: prismThemes.dracula, // Code block theme for dark mode
@@ -187,132 +202,3 @@ const config: Config = {
 }
 
 export default config
-
-// menuLinks: [
-//   {
-//     title: 'Getting Started',
-//     url: '/getting-started',
-//   },
-//   {
-//     title: 'About',
-//     url: '/About/license',
-//     items: [
-//       {
-//         title: 'Acknowledgements',
-//         url: '/About/acknowledgements',
-//       },
-//       {
-//         title: 'License and Source Code',
-//         url: '/About/license',
-//       },
-//     ],
-//   },
-//   {
-//     title: 'Download',
-//     url: '/Download/install',
-//     items: [
-//       {
-//         title: 'Install',
-//         url: '/Download/install',
-//       },
-//       {
-//         title: 'Questions, Feature Requests and Bugs',
-//         url: '/Download/known-bugs',
-//       },
-//     ],
-//   },
-//   {
-//     title: 'Software Help',
-//     url: '/software-help',
-//     items: [
-//       {
-//         title: 'Toolbar',
-//         url: '/software-help',
-//       },
-//       {
-//         title: 'Project Tree',
-//         url: '/software-help/project-tree',
-//       },
-//       {
-//         title: 'Projects',
-//         url: '/software-help/projects',
-//       },
-//       {
-//         title: 'Data Capture Events',
-//         url: '/software-help/dce',
-//       },
-//       {
-//         title: 'Profiles',
-//         url: '/software-help/profiles',
-//       },
-//       {
-//         title: 'Areas of Interest',
-//         url: '/software-help/aoi',
-//       },
-//       {
-//         title: 'Surfaces',
-//         url: '/software-help/surfaces',
-//       },
-//       {
-//         title: 'Cross Sections',
-//         url: '/software-help/cross-sections',
-//       },
-//       {
-//         title: 'Sample Frames',
-//         url: '/software-help/sample-frames',
-//       },
-//       {
-//         title: 'Analyses',
-//         url: '/software-help/analyses',
-//       },
-//       {
-//         title: 'Metrics',
-//         url: '/software-help/metrics',
-//       },
-//       {
-//         title: 'Analyses',
-//         url: '/software-help/analyses',
-//       },
-//       {
-//         title: 'Zonal Statistics',
-//         url: '/software-help/zonal-statistics',
-//       },
-//       {
-//         title: 'Basemaps',
-//         url: '/software-help/basemaps',
-//       },
-//       {
-//         title: 'Context',
-//         url: '/software-help/context',
-//         items: [
-//           {
-//             title: 'Stream Gage Tool',
-//             url: '/software-help/stream-gage-tool',
-//           },
-//           {
-//             title: 'Watershed Catchments',
-//             url: '/software-help/watershed-catchments',
-//           }
-//         ]
-//       }
-//     ],
-//   },
-//   {
-//     title: 'Technical Reference',
-//     url: '/technical-reference/database',
-//     items: [
-//       {
-//         title: 'Database',
-//         url: '/technical-reference/database',
-//       },
-//       {
-//         title: 'Managing Metrics',
-//         url: '/technical-reference/managing_metrics',
-//       },
-//       {
-//         title: 'Metric Calculations',
-//         url: '/technical-reference/metric_calculations',
-//       }
-//     ],
-//   }
-// ],
