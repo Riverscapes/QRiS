@@ -1,9 +1,9 @@
 {
-  "label": "Webinars and Trainings",
+  "label": "Trainings and Workshops",
   "position": 4,
   "link": {
     "type": "generated-index",
-    "slug": "webinars-trainings",
+    "slug": "trainings-workshops",
     "description": "Tutorials from webinars, trainings, and workshops."
   }
 }

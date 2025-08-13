@@ -1,8 +1,10 @@
 {
   "label": "BLM & TNC - QRiS Introduction Tutorial Series",
-  "position": 9,
+  "position": 1,
   "link": {
     "type": "generated-index",
+    "slug": "bml-tnc-workshops",
     "description": "Tutorials from BLM & TNC Workshops."
   }
 }
+
