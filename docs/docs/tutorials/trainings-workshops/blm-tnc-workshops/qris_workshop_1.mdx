@@ -1,0 +1,175 @@
+---
+title: QRiS Workshop 1
+banner: true
+sidebar_position: 1
+description: Workshop 1
+---
+
+This workshop will cover the essentials for getting a project started in QRIS. We be following a Desk Guide that is intended to be simple, straightforward and clearly outlined. However, more detailed help can be found in Software Help.
+
+A PDF version of the desk guide can be downloaded here.
+
+Example data used in this workshop can be downloaded here.
+
+
+
+## Initial Setup
+
+We will install QGIS, QRiS, and Riverscapes Viewer, and set up your QGIS interface.
+
+
+
+### Install
+
+**QGIS Install**
+
+[Download QGIS](https://qgis.org/download/) and follow the QGIS website’s directions to complete the installation. We recommend the current LTR release.
+
+
+**QRiS and Riverscapes Viewer Install**
+
+QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install them directly in QGIS. 
+
+Open QGIS
+In the QGIS menubar at the top of the page, Plugins > Manage and Install Plugins. 
+
+![riverscapes-viewer](/images/tutorials/riverscapes-viewer.png)
+
+Install the Riverscapes Viewer plugin first. Search for Riverscapes Viewer and click the Install button. This is a required dependency for QRiS. 
+
+Install the QRiS plugin next. Follow the same steps to Plugins > Manage and Install Plugins and search for QRiS. Click the Install button.
+
+**Keeping QRiS and Riverscapes Viewer Updated**
+
+When you launch QGIS, check that your QRiS and Riverscapes Viewer plugins are up to date. From the top of page menubar > Plugins > Manage and Install Plugins > Installed > QRiS or Riverscapes Viewer > check that Installed version matches Available version. If not, that Upgrade All button will be available. 
+
+![plugin-update](/images/tutorials/plugin-update.png)
+
+
+
+### Getting Started in QRIS
+
+**Finding the Riverscapes Viewer and QRiS Toolbars**
+
+When you open QGIS, click the Riverscapes Viewer and QRiS icons on their toolbars to launch the plugins. This will open a pane for the plugin. 
+
+![toolbars](/images/tutorials/toolbars.png)
+
+**Adding Toolbars**
+
+You’ll want to toggle the Advanced Digitizing, Digitizing, and Snapping toolbars on. In the top of page menubar, View > Toolbars
+
+![digitizing-toolbars](/images/tutorials/digitizing-toolbars.png)
+
+**Add the Profile Plugin**
+
+Add the Profile Tool as a plugin. From the top menubar > Plugins > Manage and Install Plugins… > Search for profile tool > Install plugin
+
+![profile-tool](/images/tutorials/profile-tool.png)
+
+
+
+## Getting Started with a New project
+
+In this section, we obtain, derive, and organize the core data inputs that users will need to evaluate, plan, and design a riverscape project efficiently and effectively.  The objective is to produce and organize the foundational elements of a QRiS project that will help practitioners complete the subsequent steps.  Specifically, we show you how to:
+- Obtain, load, and view nationally available datasets to define and contextualize the (a) project area and (b) contributing catchment.
+- Create a new QRiS project with empty containers that you will utilize to organize, display, and analyze data.
+- Delineate common areas of interest (e.g. project extent and contributing catchment) to streamline subsequent mapping, data management, and analysis.
+- Obtain and summarize catchment attributes that influence the character and behavior of the riverscape segments in which you are planning a project.
+- Add high fidelity imagery, build pyramids to improve processing performance, and elevate as a surface in the QRiS project. 
+
+
+
+### Create a New project
+
+When you open QRiS, click the Riverscapes Viewer and QRiS icons on their toolbars to launch the plugins. Make sure they are up to date.
+
+Start a new QRiS project. In the QRiS toolbar, use the dropdown menu next to Project > + New QRiS Project
+
+![new-project](/images/tutorials/new-project.png)
+
+A Google Imagery map will open. Zoom to the area on the map that you want to work. 
+
+Under the QRiS Plugin pane, right click on your project name, and select Browse Data Exchange Projects. This will open a Data Exchange window in your web browser, zoomed to the map area open in QGIS. 
+
+![data exchange](/images/tutorials/data-exchange.png)
+
+In the Data Exchange, you can zoom out as needed to be sure you select the HUC 10 you’re working within. Click your HUC 10 and find a Valley Bottom (VBET) project. Click the project. A banner at the top of the project page will alert you if there is a newer version of the Valley Bottom project run. Download your Valley Bottom project.
+
+![vbet](/images/tutorials/vbet.png)
+
+![vbet-download](/images/tutorials/vbet-download.png)
+
+Follow the same steps to find and download the Riverscapes Context project as well. 
+
+
+
+### Open Your Projects Downloaded from the Data Exchange
+
+Return to QGIS. In the Riverscapes Viewer toolbar, open your projects with “Open Riverscapes Project”. 
+
+![open-project](/images/tutorials/open-project.png)
+
+This opens navigation to the files on your computer. Find your recently downloaded projects. Find and open the project.rs.xml file.
+
+![project-xml](/images/tutorials/project-xml.png)
+
+
+
+## Add Layers to the Map
+
+Within the Riverscapes Viewer pane, add the following layers to the map (double click to add a layer to the map):
+
+Hillshade:
+![hillshade](/images/tutorials/hillshade.png)
+
+Ownership:
+![ownership](/images/tutorials/ownership.png)
+
+
+
+## Delineate an Area of interest
+
+Next, we’ll delineate an Area of Interest (AOI) based on your project’s extent. An AOI will help us clip and summarize contextual data for our project area and its contributing basin. 
+
+In the QRiS pane, under your project, Inputs > AOIs > right click AOIs > Create New (Manually Digitized) AOI. Give it a name (like AOI 1) and click OK.
+
+![aoi](/images/tutorials/aoi.png)
+
+Your AOI should show up in the Layers pane. (If not, double click on it in the QRiS pane to add it to the Layers pane.)
+
+![aoi-empty](/images/tutorials/aoi-empty.png)
+
+Map your project’s extent (your area of interest AOI) as a polygon. To do this, right click on your AOI in the Layers pane > Toggle Editing. 
+
+Hint: We will use the AOI to clip data, because we only want the data for our project’s scale. The AOI could be an entire watershed, or a 100m reach. 
+
+For our purposes, draw the project extent polygon far enough beyond the valley margin to include adjacent landscape features like fans, terraces, and hillslopes that abut the valley, valley bottom, and confining margins. In subsequent steps, you will use this AOI to clip contextual and surface data. 
+
+![editing](/images/tutorials/editing.png)
+
+Click ‘Add Polygon Feature’. 
+
+![add-polygon](/images/tutorials/add-polygon.png)
+
+Click on the map to draw a polygon around your project’s extent. 
+
+When you have captured your area, right click to lock it in. Just click OK on the pop up window
+
+![finish-feature](/images/tutorials/finish-feature.png)
+
+Hint: Draw the project extent polygon far enough beyond the valley margin to include adjacent landscape features like fans, terraces, and hillslopes that abut the valley, valley bottom, and confining margins. In subsequent steps, you will use this AOI to clip contextual and surface data. 
+
+
+Click Toggle Editing to finalize your AOI. Click Save on the window that pops up. 
+
+![save-edits](/images/tutorials/save-edits.png)
+
+
+
+## Create a Contributing Catchment AOI
+
+First, we’ll add the NHD Stream Network to the Layers pane. To do this, in the Riverscapes Viewer Pane > Riverscape Context Project > Hydrology > Hydrography > right click Full NHD HR+ Drainage Network (simple) and select Add to Map.
+
+
+
