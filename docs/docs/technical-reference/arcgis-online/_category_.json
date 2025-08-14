@@ -1,0 +1,9 @@
+{
+  "label": "ArcGIS Online Integration",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "slug": "arcgis-online",
+    "description": "Tutorials on integration between QRiS and ArcGIS Online."
+  }
+}
