@@ -45,6 +45,9 @@ When you launch QGIS, check that your QRiS and Riverscapes Viewer plugins are up
 
 ![plugin-update](/images/tutorials/plugin-update.png)
 
+**Demo Video**
+<YouTubeEmbed videoId="gWdBeWQynaA" />
+
 
 
 ### Getting Started in QRIS
@@ -54,6 +57,14 @@ When you launch QGIS, check that your QRiS and Riverscapes Viewer plugins are up
 When you open QGIS, click the Riverscapes Viewer and QRiS icons on their toolbars to launch the plugins. This will open a pane for the plugin. 
 
 ![toolbars](/images/tutorials/toolbars.png)
+
+**Update Resources**
+
+QRIS relies on symbology stored in the riverscapes viewer. Changes to symbology are made periodically, so it is always good to make sure you are up to date.
+
+In the Riverscapes Viewer toolbar click the arrow next to help, then click "Update Resources".
+
+Note: This should be the first thing you do if layers are loading into your project without symbology.
 
 **Adding Toolbars**
 
@@ -66,6 +77,9 @@ You’ll want to toggle the Advanced Digitizing, Digitizing, and Snapping toolba
 Add the Profile Tool as a plugin. From the top menubar > Plugins > Manage and Install Plugins… > Search for profile tool > Install plugin
 
 ![profile-tool](/images/tutorials/profile-tool.png)
+
+**Demo Video**
+<YouTubeEmbed videoId="LxHBjl_l_LI" />
 
 
 
@@ -113,6 +127,9 @@ Return to QGIS. In the Riverscapes Viewer toolbar, open your projects with “Op
 This opens navigation to the files on your computer. Find your recently downloaded projects. Find and open the project.rs.xml file.
 
 ![project-xml](/images/tutorials/project-xml.png)
+
+**Demo Video**
+<YouTubeEmbed videoId="G24lODKJr7o" />
 
 
 
@@ -165,6 +182,23 @@ Click Toggle Editing to finalize your AOI. Click Save on the window that pops up
 
 ![save-edits](/images/tutorials/save-edits.png)
 
+## Add Layers to the Project using AOI
+
+In the Riverscapes Viewer pane open the Land Management folder in the Riverscapes Context project. Right click on the Land Ownership Layer and click "Add to QRIS".
+
+![add-to-qris](/images/tutorials/add-to-qris.png)
+
+In the dialogue box that opens leave the name as Land Ownership and under "Clip to AOI" change the selection from "None - Retain full datset extent" to your AOI layer. Click OK. 
+
+![clip-to-aoi](/images/tutorials/clip-to-aoi.png)
+
+This will import a clipped copy of the data from the Riverscape Project into your QRIS project. 
+
+Repeat this process other desired layers from the Riverscapes Viewer projects. 
+
+**Demo Video**
+<YouTubeEmbed videoId="rARfNyWln2M" />
+
 
 
 ## Create a Contributing Catchment AOI
@@ -190,3 +224,31 @@ When complete, navigate to the new catchment polygon. In the QRiS pane > Your QR
 Note: The delineation may not return an accurate result. If the outcome is not a correct delineation of the watershed, right click the delineation in the QRiS pane and delete. Repeat the process, clicking a slightly different point on the map, aiming for the NHD flowline, until an accurate result is achieved. 
 
 ![promote-aoi](/images/tutorials/promote-aoi.png)
+
+**Demo Video**
+<YouTubeEmbed videoId="j8Og5_Pmg7I" />
+
+
+
+## Add High Resolution Aerial Imagery
+
+In the QRiS pane > Your project > Inputs > right click on Surfaces > Import Existing Raster Surface Dataset
+
+![import-surface](/images/tutorials/import-surface.png)
+
+Find your imagery file. 
+
+The Import Surface Raster window will open. Choose your Raster Type and Source and enter an Acquisition Date. Entering a date keeps multiple data capture events organized. You can clip imagery that is larger than needed to your AOI. 
+
+![import-surface-window](/images/tutorials/import-surface-window.png)
+
+After importing the Imagery build pyramids for the image to increase rendering speed when panning around your project. 
+
+Add the imagery to the map by either right clicking on the file under surfaces and add to map, or double click on it in the same place. Once it is in the map double click on the layer to bring up its properties. Navigate to the Pyramids tab and select all the different resolutions on the right hand side. Make sure External is selected under overview format, and resample method can be left as Average. Click build pyramids, once it has finished click apply then ok.
+
+![pyramids](/images/tutorials/pyramids.png)
+
+This is not a necessary step but will improve the ease of use when digitizing off of imagery, especially for large file sizes.
+
+**Demo Video**
+<YouTubeEmbed videoId="xSGgFIeUURg" />
