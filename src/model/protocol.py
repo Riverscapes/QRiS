@@ -18,14 +18,29 @@ class Protocol(DBItem):
         self.icon = 'protocol'
         self.protocol_layers = protocol_layers if protocol_layers else {}
         self.metadata = metadata.get('metadata', None) if metadata else None
-        self.system_metadata = metadata.get('system', None) if metadata else None
+        self.system_metadata: dict = metadata.get('system', None) if metadata else None
+        stored_protocol_type: str = self.system_metadata.get('protocol_type', 'dce') if self.system_metadata else 'dce'
+        
+        if self.machine_code == 'ASBUILT':
+            self.protocol_type = 'asbuilt'
+        elif self.machine_code == 'DESIGN':
+            self.protocol_type = 'design'
+        else:
+            self.protocol_type = stored_protocol_type 
 
     def unique_key(self):
         return f'{self.machine_code}::{self.version}'
 
 def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) -> Protocol:
 
-    has_custom_ui = True if protocol_definition.machine_code in ['ASBUILT', 'DESIGN'] else False
+    if protocol_definition.machine_code == 'ASBUILT':
+        protocol_definition.protocol_type = 'asbuilt'
+        has_custom_ui = True
+    elif protocol_definition.machine_code == 'DESIGN':
+        protocol_definition.protocol_type = 'design'
+        has_custom_ui = True
+    else:
+        has_custom_ui = False
 
     system_metadata = {
         'status': protocol_definition.status,
@@ -33,7 +48,8 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
         'citation': protocol_definition.citation,
         'author': protocol_definition.author,
         'creation_date': protocol_definition.creation_date,
-        'updated_date': protocol_definition.updated_date
+        'updated_date': protocol_definition.updated_date,
+        'protocol_type': protocol_definition.protocol_type,
     }
     system_metadata = {k: v for k, v in system_metadata.items() if v is not None}
     out_metadata = {'system': system_metadata}

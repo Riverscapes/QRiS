@@ -82,16 +82,17 @@ class LayerTreeWidget(QtWidgets.QWidget):
         for protocol in self.protocols:
             protocol_si = QtGui.QStandardItem(protocol.label)
             if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-                if protocol.machine_code.lower() in [PLANNING_MACHINE_CODE.lower(), AS_BUILT_MACHINE_CODE.lower(), DESIGN_MACHINE_CODE.lower()]:
+                if protocol.protocol_type.lower() != 'dce':
                     continue
-            if self.event_type_id == PLANNING_EVENT_TYPE_ID:
-                if protocol.machine_code.lower() != PLANNING_MACHINE_CODE.lower():
-                    continue
+            # I don't think we need to add planning layers to the tree, I don't think they have any?
+            # if self.event_type_id == PLANNING_EVENT_TYPE_ID:
+            #     if protocol.machine_code.lower() != PLANNING_MACHINE_CODE.lower():
+            #         continue
             if self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
-                if protocol.machine_code.lower() != AS_BUILT_MACHINE_CODE.lower():
+                if protocol.protocol_type.lower() != 'asbuilt':
                     continue
             if self.event_type_id == DESIGN_EVENT_TYPE_ID:
-                if protocol.machine_code.lower() != DESIGN_MACHINE_CODE.lower():
+                if protocol.protocol_type.lower() != 'design':
                     continue
 
             protocol_si.setData(protocol, QtCore.Qt.UserRole)

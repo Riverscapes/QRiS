@@ -73,6 +73,7 @@ class MetricDefinition:
 @dataclass
 class ProtocolDefinition:
     machine_code: str
+    protocol_type: str
     version: str
     status: str
     label: str
@@ -124,9 +125,19 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
     root = tree.getroot()
     if root.tag != 'Protocol':
         return None
-    
+
+    machine_code = root.attrib.get('machine_code')
+    protocol_type = root.attrib.get('protocol_type', None)
+    if machine_code == 'ASBUILT':
+        protocol_type = 'asbuilt'
+    elif machine_code == 'DESIGN':
+        protocol_type = 'design'
+    elif protocol_type is None:
+        protocol_type = 'dce'
+
     protocol = ProtocolDefinition(
-        machine_code=root.attrib.get('machine_code'),
+        machine_code=machine_code,
+        protocol_type=protocol_type,
         version=root.attrib.get('version'),
         status=root.attrib.get('status'),
         label=root.find('Label').text,
