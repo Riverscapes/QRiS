@@ -11,14 +11,16 @@ from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
 from qgis.utils import iface
 from qgis.PyQt.QtCore import QSettings
 
-try:
-    import rsxml
-    QgsMessageLog.logMessage('rsxml imported from system', 'Riverscapes Viewer', Qgis.Info)
-except ImportError:
-    QgsMessageLog.logMessage('rsxml not found in system, importing from source', 'Riverscapes Viewer', Qgis.Info)
-    rsxml = None
+def rsxml_import():
+    try:
+        import rsxml
+        QgsMessageLog.logMessage('rsxml imported from system', 'Riverscapes Viewer', Qgis.Info)
+    except ImportError:
+        QgsMessageLog.logMessage('rsxml not found in system, importing from source', 'Riverscapes Viewer', Qgis.Info)
+        rsxml = None
+    return rsxml
 
-from ...__version__ import __version__ as qris_version
+from ...__version__ import __version__ as installed_qris_version
 from ..model.event import Event, EVENT_TYPE_LOOKUP
 from ..model.analysis import Analysis
 from ..model.profile import Profile
@@ -47,7 +49,9 @@ def rsxml_check():
     Returns:
         _type_: _description_
     """
+    rsxml = rsxml_import()
     if rsxml is None:
+        # Todo better message
         message_box("Error", "rsxml module is not available. Please install rsxml to export to Riverscapes Studio.")
         return False
     return True
@@ -286,7 +290,10 @@ class FrmExportProject(QtWidgets.QDialog):
 
     def accept(self) -> None:
 
+        # use only the first three components of the version
+        qris_version = ".".join(installed_qris_version.split(".")[:3])
         # check if rsxml is available. If not show a message box and return
+        rsxml = rsxml_import()
         if not rsxml_check():
             return
 
