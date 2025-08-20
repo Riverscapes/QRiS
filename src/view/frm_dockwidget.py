@@ -827,7 +827,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_analysis(self, parent_node):
 
-        if len(self.project.sample_frames.values() + self.project.aois.values() + self.project.valley_bottoms.values()) == 0:
+        if len(self.project.sample_frames.values()) + len(self.project.aois.values()) + len(self.project.valley_bottoms.values()) == 0:
             QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No sample frames, AOIs, or valley bottoms were found in the current QRiS Project.\n\nPlease prepare a sample frame, AOI, or valley bottom before running an analysis.')
             return
         if len(self.project.events) == 0:
