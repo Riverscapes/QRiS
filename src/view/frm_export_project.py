@@ -999,7 +999,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 #     pass
                 
                 if 'attachments' not in keep_layers:
-                    keep_layers['attachments'] = {'id_field': 'id', 'id_values': []}
+                    keep_layers['attachments'] = {'id_field': 'attachment_id', 'id_values': []}
                 keep_layers['attachments']['id_values'].append(str(attachment.id))
 
         # open the geopackage using ogr
