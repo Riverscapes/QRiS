@@ -81,6 +81,8 @@ class FrmExportProject(QtWidgets.QDialog):
         # populate the AOI combo box with aoi names
         for aoi_id, aoi in self.qris_project.aois.items():
             self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
+        for valley_bottom_id, valley_bottom in self.qris_project.valley_bottoms.items():
+            self.cbo_project_bounds_aoi.addItem(valley_bottom.name, valley_bottom_id)
 
         # Inputs
         inputs_node = QtGui.QStandardItem("Inputs")
@@ -92,11 +94,7 @@ class FrmExportProject(QtWidgets.QDialog):
         riverscapes_node.setCheckable(True)
         riverscapes_node.setCheckState(QtCore.Qt.Checked)
         for valley_bottom in self.qris_project.valley_bottoms.values():
-            item = QtGui.QStandardItem(valley_bottom.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(valley_bottom, QtCore.Qt.UserRole)
-            riverscapes_node.appendRow(item)
+            add_to_node(riverscapes_node, valley_bottom, valley_bottom.name)
         inputs_node.appendRow(riverscapes_node)
 
         # AOIs
@@ -104,11 +102,7 @@ class FrmExportProject(QtWidgets.QDialog):
         aois_node.setCheckable(True)
         aois_node.setCheckState(QtCore.Qt.Checked)
         for aoi in self.qris_project.aois.values():
-            item = QtGui.QStandardItem(aoi.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(aoi, QtCore.Qt.UserRole)
-            aois_node.appendRow(item)
+            add_to_node(aois_node, aoi, aoi.name)
         inputs_node.appendRow(aois_node)
 
         # Sample Frames
@@ -116,11 +110,7 @@ class FrmExportProject(QtWidgets.QDialog):
         sample_frames_node.setCheckable(True)
         sample_frames_node.setCheckState(QtCore.Qt.Checked)
         for sample_frame in self.qris_project.sample_frames.values():
-            item = QtGui.QStandardItem(sample_frame.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(sample_frame, QtCore.Qt.UserRole)
-            sample_frames_node.appendRow(item)
+            add_to_node(sample_frames_node, sample_frame, sample_frame.name)
         inputs_node.appendRow(sample_frames_node)
 
         # Profiles
@@ -128,11 +118,7 @@ class FrmExportProject(QtWidgets.QDialog):
         profiles_node.setCheckable(True)
         profiles_node.setCheckState(QtCore.Qt.Checked)
         for profile in self.qris_project.profiles.values():
-            item = QtGui.QStandardItem(profile.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(profile, QtCore.Qt.UserRole)
-            profiles_node.appendRow(item)
+            add_to_node(profiles_node, profile, profile.name)
         inputs_node.appendRow(profiles_node)
 
         # Cross Sections
@@ -140,11 +126,7 @@ class FrmExportProject(QtWidgets.QDialog):
         xsections_node.setCheckable(True)
         xsections_node.setCheckState(QtCore.Qt.Checked)
         for xsection in self.qris_project.cross_sections.values():
-            item = QtGui.QStandardItem(xsection.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(xsection, QtCore.Qt.UserRole)
-            xsections_node.appendRow(item)
+            add_to_node(xsections_node, xsection, xsection.name)
         inputs_node.appendRow(xsections_node)
 
         # Surfaces
@@ -153,10 +135,7 @@ class FrmExportProject(QtWidgets.QDialog):
         for surface in self.qris_project.rasters.values():
             if surface.is_context:
                 continue
-            item = QtGui.QStandardItem(surface.name)
-            item.setCheckable(True)
-            item.setData(surface, QtCore.Qt.UserRole)
-            surfaces_node.appendRow(item)
+            add_to_node(surfaces_node, surface, surface.name, checked=False)
         inputs_node.appendRow(surfaces_node)
         self.export_layers_model.appendRow(inputs_node)
 
@@ -170,26 +149,15 @@ class FrmExportProject(QtWidgets.QDialog):
         pour_points_node.setCheckable(True)
         pour_points_node.setCheckState(QtCore.Qt.Checked)
         for pour_point in self.qris_project.pour_points.values():
-            item = QtGui.QStandardItem(pour_point.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(pour_point, QtCore.Qt.UserRole)
-            pour_points_node.appendRow(item)
+            add_to_node(pour_points_node, pour_point, pour_point.name)
         context_node.appendRow(pour_points_node)
 
         for context_vector in self.qris_project.scratch_vectors.values():
-            item = QtGui.QStandardItem(context_vector.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(context_vector, QtCore.Qt.UserRole)
-            context_node.appendRow(item)
+            add_to_node(context_node, context_vector, context_vector.name)
         for context in self.qris_project.rasters.values():
             if not context.is_context:
                 continue
-            item = QtGui.QStandardItem(context.name)
-            item.setCheckable(True)
-            item.setData(context, QtCore.Qt.UserRole)
-            context_node.appendRow(item)
+            add_to_node(context_node, context, context.name)
         inputs_node.appendRow(context_node)
 
         # DCE and Designs
@@ -197,11 +165,7 @@ class FrmExportProject(QtWidgets.QDialog):
         events_node.setCheckable(True)
         events_node.setCheckState(QtCore.Qt.Checked)
         for event in self.qris_project.events.values():
-            item = QtGui.QStandardItem(event.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(event, QtCore.Qt.UserRole)
-            events_node.appendRow(item)
+            add_to_node(events_node, event, event.name)
         self.export_layers_model.appendRow(events_node)
 
         # Analysis
@@ -209,11 +173,7 @@ class FrmExportProject(QtWidgets.QDialog):
         analyses_node.setCheckable(True)
         analyses_node.setCheckState(QtCore.Qt.Checked)
         for analysis in self.qris_project.analyses.values():
-            item = QtGui.QStandardItem(analysis.name)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            item.setData(analysis, QtCore.Qt.UserRole)
-            analyses_node.appendRow(item)
+            add_to_node(analyses_node, analysis, analysis.name)
         self.export_layers_model.appendRow(analyses_node)
 
         # Attachments Node
@@ -223,12 +183,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         for attachment in self.qris_project.attachments.values():
             label = f"{attachment.name} ({'File' if attachment.attachment_type == Attachment.TYPE_FILE else 'Web Link'})"
-            item = QtGui.QStandardItem(label)
-            item.setCheckable(True)
-            item.setCheckState(QtCore.Qt.Checked)
-            # Store the attachment object for later reference
-            item.setData(attachment, QtCore.Qt.UserRole)
-            attachments_node.appendRow(item)
+            add_to_node(attachments_node, attachment, label)
 
         self.export_layers_model.appendRow(attachments_node)
 
@@ -327,7 +282,7 @@ class FrmExportProject(QtWidgets.QDialog):
         if self.opt_project_bounds_aoi.isChecked():
             # if Select AOI is selected, then warn the user to select an AOI
             if self.cbo_project_bounds_aoi.currentIndex() == 0:
-                message_box("Select an AOI", "Please select an AOI or select 'Use all QRiS layers.'")
+                message_box("Select an AOI", "Please specify an AOI or Valley Bottom, or select the 'Use intersection of all QRiS layers' option.")
                 return
         if self.rdo_existing.isChecked():
             if self.txt_existing_path.text() == "":
@@ -1203,24 +1158,24 @@ class FrmExportProject(QtWidgets.QDialog):
         self.vert_project_bounds = QtWidgets.QVBoxLayout()
         self.grid.addLayout(self.vert_project_bounds, 3, 1, 1, 1)
 
-        self.opt_project_bounds_all = QtWidgets.QRadioButton("Use all QRiS layers")
-        self.opt_project_bounds_all.setToolTip("Use the extent of all QRiS layers in the project")
-        self.opt_project_bounds_all.setChecked(True)
-        self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
-        self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
-
         self.horiz_project_bounds_aoi = QtWidgets.QHBoxLayout()
         self.vert_project_bounds.addLayout(self.horiz_project_bounds_aoi)
 
-        self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI")
-        self.opt_project_bounds_aoi.setToolTip("Use the extent of a selected AOI")
+        self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI or Valley Bottom")
+        self.opt_project_bounds_aoi.setToolTip("Use the extent of a selected AOI or Valley Bottom polygon")
+        self.opt_project_bounds_aoi.setChecked(True)
         self.opt_project_bounds_aoi.clicked.connect(self.change_project_bounds)
         self.horiz_project_bounds_aoi.addWidget(self.opt_project_bounds_aoi)
 
         self.cbo_project_bounds_aoi = QtWidgets.QComboBox()
-        self.cbo_project_bounds_aoi.addItem("Select AOI")
-        self.cbo_project_bounds_aoi.setEnabled(False)
+        self.cbo_project_bounds_aoi.addItem("Select AOI or Valley Bottom")
+        self.cbo_project_bounds_aoi.model().item(0).setEnabled(False)
         self.horiz_project_bounds_aoi.addWidget(self.cbo_project_bounds_aoi)
+
+        self.opt_project_bounds_all = QtWidgets.QRadioButton("Use intersection of all QRiS layers")
+        self.opt_project_bounds_all.setToolTip("Use the extent of all QRiS layers in the project")
+        self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
+        self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
 
         # New or Existing Project
         self.lbl_new_or_existing = QtWidgets.QLabel("Export Type")
@@ -1305,4 +1260,16 @@ class FrmExportProject(QtWidgets.QDialog):
         self.horiz_export.addWidget(self.btn_select_none)
 
         # add standard form buttons
-        self.vert.addLayout(add_standard_form_buttons(self, "metrics"))
+        self.vert.addLayout(add_standard_form_buttons(self, "projects/#export-to-riverscapes-project"))
+
+
+def add_to_node(node: QtGui.QStandardItem, db_item, label: str, checked: bool=True):
+    """
+    Adds a new item to the specified node in the tree view.
+    """
+
+    item = QtGui.QStandardItem(label)
+    item.setCheckable(True)
+    item.setCheckState(QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)
+    item.setData(db_item, QtCore.Qt.UserRole)
+    node.appendRow(item)
