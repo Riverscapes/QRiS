@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import sqlite3
+import re
 
 from osgeo import ogr
 
@@ -76,6 +77,9 @@ class FrmExportProject(QtWidgets.QDialog):
         else:
             settings = QSettings(ORGANIZATION, APPNAME)
             self.base_folder = settings.value(DEFAULT_EXPORT_PATH, '').replace("/", "\\")
+        if self.base_folder == "":
+            # use the parent of the project folder
+            self.base_folder = os.path.dirname(os.path.dirname(self.qris_project.project_file))
         self.set_output_path()
 
         # populate the AOI combo box with aoi names
@@ -236,11 +240,16 @@ class FrmExportProject(QtWidgets.QDialog):
 
         name = ""
 
-        if self.chk_apply_name_to_output.isChecked():
-            name = self.txt_rs_name.text().replace(" ", "_").replace(".", "_").replace(",", "_").replace(";", "_").replace(":", "_").replace("/", "_").replace("\\", "_").replace("?", "_").replace("!", "_").replace("'", "_").replace('"',
-                                                                                                                                                                                                                                        "_").replace("<", "_").replace(">", "_").replace("|", "_").replace("*", "_").replace("(", "_").replace(")", "_").replace("[", "_").replace("]", "_").replace("{", "_").replace("}", "_")
+        if self.chk_qris_export_folder.isChecked():
+            name = re.sub(r'[ .,:/\\?!\'"<>\|\*\(\)\[\]\{\}]', '_', self.txt_rs_name.text())
 
         outpath = os.path.join(self.base_folder, name)
+        
+        if self.chk_qris_export_folder.isChecked():
+            if os.path.exists(outpath):
+                outpath = outpath + "_export"
+        # Fix the path separators for Windows
+        outpath = outpath.replace("/", "\\")
         self.txt_outpath.setText(outpath)
 
     def accept(self) -> None:
@@ -371,7 +380,7 @@ class FrmExportProject(QtWidgets.QDialog):
         else:
             # get the extent of the selected AOI
             aoi_id = self.cbo_project_bounds_aoi.currentData()
-            aoi: SampleFrame = self.qris_project.aois[aoi_id]
+            aoi: SampleFrame = self.qris_project.aois[aoi_id] if aoi_id in self.qris_project.aois else self.qris_project.valley_bottoms[aoi_id] 
             lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername=sample_frame_features', aoi.name, "ogr")
             lyr.setSubsetString(f"sample_frame_id = {aoi.id}")
             envelope = lyr.getFeatures().__next__().geometry()
@@ -1129,10 +1138,10 @@ class FrmExportProject(QtWidgets.QDialog):
         self.txt_rs_name.textChanged.connect(self.set_output_path)
         self.grid.addWidget(self.txt_rs_name, 0, 1, 1, 1)
 
-        self.chk_apply_name_to_output = QtWidgets.QCheckBox("Use project name as output folder")
-        self.chk_apply_name_to_output.setChecked(True)
-        self.chk_apply_name_to_output.clicked.connect(self.set_output_path)
-        self.grid.addWidget(self.chk_apply_name_to_output, 1, 1, 1, 1)
+        self.chk_qris_export_folder = QtWidgets.QCheckBox("Let QRiS manage the export location")
+        self.chk_qris_export_folder.setChecked(True)
+        self.chk_qris_export_folder.clicked.connect(self.set_output_path)
+        self.grid.addWidget(self.chk_qris_export_folder, 1, 1, 1, 1)
 
         # add label and horizontal layout with textbox and small button for output path
         self.lbl_output = QtWidgets.QLabel("Output Path")
@@ -1143,11 +1152,14 @@ class FrmExportProject(QtWidgets.QDialog):
         self.grid.addLayout(self.horiz_output, 2, 1, 1, 1)
 
         self.txt_outpath = QtWidgets.QLineEdit()
+        self.txt_outpath.setReadOnly(True)
         self.horiz_output.addWidget(self.txt_outpath)
 
         self.btn_output = QtWidgets.QPushButton("...")
+        self.btn_output.setEnabled(False)
         self.btn_output.setMaximumWidth(30)
         self.btn_output.clicked.connect(self.browse_path)
+        self.chk_qris_export_folder.clicked.connect(lambda checked: self.btn_output.setEnabled(not checked))
         self.horiz_output.addWidget(self.btn_output)
 
         # Project Bounds
