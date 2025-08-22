@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [1.1.7] 2025 AUG 21
+
+### Added
+- Ability to add new As-Built/Design protocols #679
+
+### Fixed
+- Fix RSViewer plugin dependency version #725
+- Export failing to populate attribute fields in RSViewer #677
+- Bug when trying to create new analysis and no sample frames exist in project
+- QRiS Projects With Attachments Won't Export to Riverscapes Project #741
+
+### Changed
+- Change how rsxml module is imported #655
+- Export improvements: include valley bottom option for bounds, set aoi option as default
+- Rework export path as stopgap prior to implementing project.rs.xml file
+
 ## [1.1.6] 2025 JUL 25
 
 ### Added
