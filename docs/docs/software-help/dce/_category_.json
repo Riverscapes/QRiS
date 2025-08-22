@@ -1,0 +1,9 @@
+{
+  "label": "Data Capture Events",
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "description": "These pages describe all the different types of Data Capture Events in a QRIS Project"
+  }
+}
+
