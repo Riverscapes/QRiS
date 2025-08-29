@@ -5,18 +5,19 @@ sidebar_position: 2
 description: Descriptions of the calculation functions used to create Metrics in QRiS
 ---
 
-The following calculation functions are available to create Metrics in QRiS from Data Capture Event (DCE) layers. Each calculation function has a set of parameters that can be used to customize the calculation.
+The following calculation functions are available to create [metrics](/software-help/metrics) in QRiS from [Data Capture Event](/software-help/dce/) (DCE) layers. Each calculation function has a set of parameters that can be used to customize the calculation.
 
 :::info
-Additional calculations will be added as needed.
+Additional calculations will be added as needed. Contact support@riverscapes.freshdesk.com if you have a specific calculation need.
 :::
 
 ## Count
-This calculation counts the number of features from any number of DCE layers (with the addition of an optional count field) that fall within the sample frame. DCE layers may have an optional attribute filter applied. For lines and polygons, the count is prorated by length and area respectively. This function can also apply a valley centerline normalization. 
+
+This counts the number of features from any number of DCE layers (with the addition of an optional count field) that fall within the sample frame. DCE layers may have an optional attribute filter applied. For lines and polygons, the count is prorated by length and area respectively. This function can also apply a valley centerline normalization. 
 
 ![Count Calculation](/images/technical-reference/metrics/metric-count.png)
 
-*Count calculation example. Sample Frames are shown in orange dashed outline and labeled 1 and 2. Geomorphic Unit Points are mapped as red ("Mound") and orange ("Saddle") points. Depending on how the metric calculation is configured, the count could include all the Geomorphic Unit features that fall within the Sample Frame, or only those that are within the Sample Frame and have a specific attribute value (e.g. type = "Mound").*
+*Count calculation example. Sample frames are shown in orange dashed outline and labeled 1 and 2. Geomorphic unit points are mapped as red ("Mound") and orange ("Saddle") points. Depending on how the metric calculation is configured, the count could include all the geomorphic unit features that fall within the sample frame, or only those that are within each sample frame and have a specific attribute value (e.g. type = "Mound").*
 
 calculation_name: `count`
 
