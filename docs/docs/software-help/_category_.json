@@ -3,6 +3,7 @@
   "position": 4,
   "link": {
     "type": "generated-index",
+    "slug": "software-help",
     "description": "These pages describe all the features of QRiS and how to use the software."
   }
 }

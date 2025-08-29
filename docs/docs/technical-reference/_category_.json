@@ -3,6 +3,7 @@
   "position": 5,
   "link": {
     "type": "generated-index",
+    "slug": "technical-reference",
     "description": "Advanced QRiS features and technical details for developers and advanced users."
   }
 }
