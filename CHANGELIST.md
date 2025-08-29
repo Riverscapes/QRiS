@@ -1,5 +1,10 @@
 # QRiS Plugin
 
+## [1.1.8] 2025 AUG 29
+
+### Fixed
+- QRiS: Critical Error when updating Plugin to 1.1.7 #750
+
 ## [1.1.7] 2025 AUG 21
 
 ### Added
