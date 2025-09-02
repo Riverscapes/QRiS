@@ -1,0 +1,8 @@
+{
+  "label": "DCE Protocols",
+  "link": {
+    "type": "generated-index",
+    "slug": "protocols/protocol-library/dce-protocols",
+    "description": "List of DCE protocols in QRiS"
+  }
+}

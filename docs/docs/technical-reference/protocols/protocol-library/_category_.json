@@ -1,0 +1,8 @@
+{
+  "label": "Protocol Library",
+  "link": {
+    "type": "generated-index",
+    "slug": "protocols/protocol-library",
+    "description": "List of QRiS protocols"
+  }
+}
