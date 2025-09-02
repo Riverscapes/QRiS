@@ -1,19 +1,7 @@
 ---
-title: Protocol Library
-banner: true
-sidebar_position: 3
+title: Protocol Technical Reference
 ---
 
-The QRiS Protocol Library is a collection of protocols that define the layers and metrics used in QRiS projects. Protocols are used to standardize data capture events (DCEs) and analyses, ensuring consistency and interoperability across projects.
-
-## What is a QRiS protocol?
-A QRiS protocol contains a set of data-capture-event (DCE) layer and metric definitions. An unlimited number of protocols can be defined and shared through Riverscapes. QRiS synchronizes these protocols down onto QRiS users’ computers, just like it does with other resources (symbology and business logic). 
-
-When users are creating data capture events they will see a tree of all the protocols that have been synchronized to their computer, together with the layer definitions that they contain (see below). 
-
-Users can add any layer to their data capture events, mixing and matching from multiple protocols if they so wish.  For example the user might choose “dam crests” from the LTPBR protocol and also choose “dam crests” from the LCT protocol. There is no requirement that users select and use all layers in a specific protocol within a project.
-
-Protocols also store a set of metric definitions. These describe how layers are combined to calculate metrics within analyses. Each metric definition refers to a calculation that is the block of Python code within QRiS that actually reads the layer data and performs the metric calculation. Protocol authors can add metrics to protocols without the need for developers to be involved. However, a developer will still need to release a new version of QRiS if calculations change. For example a metric might be “dam density” that refers to the “dam crest” layer as well as the “density” calculation method. When users add the dam density metric to their analysis, QRiS will know to read the dam crest layer and send it to the “area density” calculation Python code that will report the count of point features in each valley bottom polygon.
 
 ## Protocol XML
 Each Protocol is be defined by a separate XML file that resides in the RiverscapesXML repository. An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
