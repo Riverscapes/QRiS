@@ -7,59 +7,72 @@ The LTPBR As-Built Protocol is a survey of built structures. Many LTPBR projects
 
 The purpose of this protocol is track structure counts for reporting as well as types and locations for reference in designing future phases of the project. Tracking features as they were built also allows us to see and understand structure dynamics. You can see where structures fail, where they survive, as well as which ones act as a collection point for failed structures and other wood in the system.
    
-[Protocol URL](https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/as_built_protocol.xml)
+## Protocol Summary
 
-#### Citation
-Weber N., Wheaton J.M., Shalcross A., Al-Chokhachy R, Bailey P., Bartelt K., Bennett S., Bouwes B., Bouwes N., Gilbert J., Dickard M., Heitke J., Jordan C., Glassic H., MacFarlane W.W., Miller S., Saunders C., Whitehead K. 2024. Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health. Version 2.0. Prepared by Anabranch Solutions and Utah State University Riverscapes Assessment and Monitoring Lab. Prepared for the Bureau of Land Management. Logan, UT. 81 pp. DOI: 10.5281/zenodo.13769899
-
-Author: Nick Weber
+Attribute|Value
+---|---
+Name|As-Built Protocol
+Status|Production Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/as_built_protocol.xml
+Citation|Weber N., Wheaton J.M., Shalcross A., Al-Chokhachy R, Bailey P., Bartelt K., Bennett S., Bouwes B., Bouwes N., Gilbert J., Dickard M., Heitke J., Jordan C., Glassic H., MacFarlane W.W., Miller S., Saunders C., Whitehead K. 2024. Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health. Version 2.0. Prepared by Anabranch Solutions and Utah State University Riverscapes Assessment and Monitoring Lab. Prepared for the Bureau of Land Management. Logan, UT. 81 pp. [DOI: 10.5281/zenodo.13769899](https://zenodo.org/records/13769899)
+Author|Nick Weber
 
 ## Layers
+This protocol has three layers. Two different options to collect structures and an observation layer for recording other information pertinent to the survey. Users can collect structure points, structure lines, or a combination of both for their survey. Structure lines may be more useful in the case of representing the actual geometries of structures and finding their lengths. Structure points are simply the location of the structure. 
+
+The example below shows an example of a digitized as-built survey. It is a combination of points and lines. When zoomed in close the labels to the structure type appear. Otherwise their symbology is a grouping of the structure form. The symbology has been simplified to group structure by form rather than have a unique symbol for every structure type. Form and the intended process linked to that form is more important to visually represent than the individual structure type.
+![As-Built-Example](/images/technical-reference/metrics/as-built.png)
+
+### Surveying Protocol Layers Demo
+<YouTubeEmbed videoId="R85bNmA8XgU" />
+
 ### Structure Points
-Description - Locations of built structures as points. If lengths of structures are necessary use Structure Lines. 
+Description- Locations of built structures as points. If lengths of structures are necessary use Structure Lines. 
 
 #### Structure Type:
-
-- ALS - Assisted log structure being a placed woody debris accumulation that does not include posts.
-- ALS - Bank Attached - ALS built extending from the bank towards the channel.
-- ALS - Bank Blaster - An ALS oriented to enhance bank erosion.
-- ALS - Channel Spanning - ALS built across the entire channel from bank to bank.
-- ALS - Rhino - ALS built to the rhino structure design specification.
-- BDA - The general term describing a semi-permeable – channel-spanning structural element designed to mimic the form and function of a natural beaver dam.
-- BDA Postless - A BDA constructed without the use of posts driven into the streambed that would be used to add stability to vegetative fill material.
-- Bag Plugs - Structural treatment that uses bags made up of organic material, usually burlap, that can be filled with sediment and placed. Bag plug structures often mimic vegetative mases that might sluff into the channel.
-- Fell Tree - Strategic felling of a tree within a riverscape.
-- Floodplain BDA - A BDA structure constructed on floodplain surfaces, i.e., not build in an existing active channel anabranch.
-- Floodplain LWD - Placement of any large woody debris on the floodplain.
-- Full Tree - Placement of an entire tree whether fell, grip hoisted or positioned using another means.
-- Grip Hoist Tree - A tree that has fallen or that could be fell and then repositioned as a structural element using a grip-hoist.
-- Headcut Treatment - Any structural treatment intended to arrest headcut progression.
-- Leaky Dam - A channel spanning accumulation of smaller woody material with a high degree of porosity.
-- One Rock Dam - A grade control structure build with a single layer of rock designed to stabilize the bed of channel by increasing roughness.
-- PALS - A post – assisted log structure, general term for a structural treatment constructed of woody debris secured in an accumulation by driving posts into the stream channel or floodplain.
-- PALS - Bank Attached - PALS that are attached to the margin (bank) of the active channel. Generally intended to direct flow away from the attached bank and potentially encouraging bar formation and lateral erosion and/or migration of the active channel.
-- PALS - Bank Blaster - PALS that are oriented to direct flow into a bank to enhance rates and magnitudes of bank erosion.
-- PALS - Channel Spanning - PALS build with sufficient material to span an active channel. Generally intended to enhance channel aggradation rates and/or encourage floodplain connectivity.
-- PALS - Constriction Jet - PALS that are constructed to direct flow into another non-erosive surface (boulder or armored bank) to enhance rates of bank or bed erosion.
-- PALS - Left Bank Attached - A left bank attached PALS.
-- PALS - Mid Channel - PALS built mid-channel, generally intended to enhance topographic complexity and bar formation.
-- PALS - Rhino - A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
-- PALS - Right Bank Attached - Right bank attached PALS.
-- Post and Brush Plug - Densely packing small vegetation around rows of posts driven into the channel to form a channel spanning dam-like structure.
-- Postline Wicker Weave - A variant of a BDA in which woody branches are woven between posts in a fashion similar to wicker furniture construction. Produces a flat dam structure with a thin longitudinal profile.
-- Primary BDA - A large BDA that is generally designed and placed to have the greatest hydrologic and geomorphic impact. ‘Primary’ comes from beaver complexes that commonly contain one or more large pond-forming dams that are surrounded by smaller secondary dams.
-- Rhino - The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
-- Secondary BDA - In a complex of BDA structures, secondary BDAs are often constructed downstream a Primary BDA to dispute gradient or within non-primary or overflow channels.
-- Sedge Plugs - Cutting densely packed bricks of earth that are held together by sedges into the active channel spanning structure.
-- Spreaders - A rock-lined depositional area designed to disperse channelized flow and restore sheet flow.
-- Strategic Felling - Felling of trees into the channel or floodplain.
-- Tight PALS (BDA without sod) - A channel spanning PALS built of small woody material. Similar but more porous than a typical BDA.
-- Tree Dam - A fell tree intended to act as a channel spanning dam, may have additional vegetative material, sediment, or sod additions to further decrease porosity.
-- Tree Plug - Using a single large fell tree to create a channel spanning dam-like structure.
-- Vanes - An in-channel structure usually constructed of posts and designed to induce meandering and point formation.
-- Wicker Weirs - A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
-- Wood Jam - Analogous to ALS being a placed accumulation of woody material that does not include driven posts.
-- Zuni Bowl - An in-channel headcut control structure composed of rock-lined step falls and plunge pools intended to arrest the progression of headcuts.
+Attribute|Structure Class|Description
+---|---|---
+ALS|Wood Accumulation|Assisted log structure being a placed woody debris accumulation that does not include posts.
+ALS - Bank Attached|Wood Accumulation|ALS built extending from the bank towards the channel.
+ALS - Bank Blaster|Wood Accumulation|An ALS oriented to enhance bank erosion.
+ALS - Channel Spanning|Wood Accumulation|ALS built across the entire channel from bank to bank.
+ALS - Rhino|Wood Accumulation|ALS built to the rhino structure design specification.
+BDA|Beaver Dam Analog|The general term describing a semi-permeable – channel-spanning structural element designed to mimic the form and function of a natural beaver dam.
+BDA Postless|Beaver Dam Analog|A BDA constructed without the use of posts driven into the streambed that would be used to add stability to vegetative fill material.
+Bag Plugs|Vegetation Production|Structural treatment that uses bags made up of organic material, usually burlap, that can be filled with sediment and placed. Bag plug structures often mimic vegetative mases that might sluff into the channel.
+Fell Tree|Wood Accumulation|Strategic felling of a tree within a riverscape.
+Floodplain BDA|Beaver Dam Analog|A BDA structure constructed on floodplain surfaces, i.e., not build in an existing active channel anabranch.
+Floodplain LWD|Wood Accumulation|Placement of any large woody debris on the floodplain.
+Full Tree|Wood Accumulation|Placement of an entire tree whether fell, grip hoisted or positioned using another means.
+Grip Hoist Tree|Wood Accumulation|A tree that has fallen or that could be fell and then repositioned as a structural element using a grip-hoist.
+Headcut Treatment|Other|Any structural treatment intended to arrest headcut progression.
+Leaky Dam|Wood Accumulation|A channel spanning accumulation of smaller woody material with a high degree of porosity.
+One Rock Dam|Zeedyk Structure|A grade control structure build with a single layer of rock designed to stabilize the bed of channel by increasing roughness.
+PALS|Wood Accumulation|A post – assisted log structure, general term for a structural treatment constructed of woody debris secured in an accumulation by driving posts into the stream channel or floodplain.
+PALS - Bank Attached|Wood Accumulation|PALS that are attached to the margin (bank) of the active channel. Generally intended to direct flow away from the attached bank and potentially encouraging bar formation and lateral erosion and/or migration of the active channel.
+PALS - Bank Blaster|Wood Accumulation|PALS that are oriented to direct flow into a bank to enhance rates and magnitudes of bank erosion.
+PALS - Channel Spanning|Wood Accumulation|PALS build with sufficient material to span an active channel. Generally intended to enhance channel aggradation rates and/or encourage floodplain connectivity.
+PALS - Constriction Jet|Wood Accumulation|PALS that are constructed to direct flow into another non-erosive surface (boulder or armored bank) to enhance rates of bank or bed erosion.
+PALS - Left Bank Attached|Wood Accumulation|A left bank attached PALS.
+PALS - Mid Channel|Wood Accumulation|PALS built mid-channel, generally intended to enhance topographic complexity and bar formation.
+PALS - Rhino|Wood Accumulation|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+PALS - Right Bank Attached|Wood Accumulation|Right bank attached PALS.
+Post and Brush Plug|Vegetation Production|Densely packing small vegetation around rows of posts driven into the channel to form a channel spanning dam-like structure.
+Postline Wicker Weave|Beaver Dam Analog|A variant of a BDA in which woody branches are woven between posts in a fashion similar to wicker furniture construction. Produces a flat dam structure with a thin longitudinal profile.
+Primary BDA|Beaver Dam Analog|A large BDA that is generally designed and placed to have the greatest hydrologic and geomorphic impact. ‘Primary’ comes from beaver complexes that commonly contain one or more large pond-forming dams that are surrounded by smaller secondary dams.
+Rhino|Wood Accumulation|The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+Secondary BDA|Beaver Dam Analog|In a complex of BDA structures, secondary BDAs are often constructed downstream a Primary BDA to dispute gradient or within non-primary or overflow channels.
+Sedge Plugs|Vegetation Production|Cutting densely packed bricks of earth that are held together by sedges into the active channel spanning structure.
+Spreaders|Zeedyk Structure|A rock-lined depositional area designed to disperse channelized flow and restore sheet flow.
+Strategic Felling|Wood Accumulation|Felling of trees into the channel or floodplain.
+Tight PALS (BDA without sod)|Wood Accumulation|A channel spanning PALS built of small woody material. Similar but more porous than a typical BDA.
+Tree Dam|Wood Accumulation|A fell tree intended to act as a channel spanning dam, may have additional vegetative material, sediment, or sod additions to further decrease porosity.
+Tree Plug|Wood Accumulation|Using a single large fell tree to create a channel spanning dam-like structure.
+Vanes|Zeedyk Structure|An in-channel structure usually constructed of posts and designed to induce meandering and point formation.
+Wicker Weirs|Zeedyk Structure|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+Wood Jam|Wood Accumulation|Analogous to ALS being a placed accumulation of woody material that does not include driven posts.
+Zuni Bowl|Zeedyk Structure|An in-channel headcut control structure composed of rock-lined step falls and plunge pools intended to arrest the progression of headcuts.
                     
 ### Structure Lines
 Description: location of built structures as lines. Suitable for use if delineating long structures such as a Primary BDA or if getting structure lengths is important.
