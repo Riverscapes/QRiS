@@ -22,6 +22,74 @@ Author|Nick Weber
 
 ## Layers 
 
+The protocol uses multiple layers organized into two separate groups. The Observations group contains layers related to riverscape features and structural elements, while the Assessments group contains layers related to risk potential, channel evolution models, and beaver dam building. 
+
+- *Observations*: structural elements, observations, vegetation extents, inundation extents, active extents, active channel, active channel lines, channel junctions, geomorphic unit extents, geomorphic units.
+- *Assessments*: risk potential, SEM Cluer and Thorne, dam crests, recovery potential. 
+
+Attribute|Type|Metrics|Description
+---|---|---|---
+*Structural Elements*|Point, Line, Polygon|`Jam Count`,`Jam Area`, `Jam Density`,`Dam Count`, `Dam Density`|Maps the distribution and characteristics of structural elements (natural and artificial woody debris jams and beaver dams)
+*Observations*|Point, Line, Polygon|NA|A flexible set of layers used to document practical, logistical, and cautionary features that are relevant to LTPBR implementation and monitoring.
+*Vegetation Extents*|Polygon|`% Riparian Vegetation`|Classification and mapping of vegetated portions of the valley bottom where the vegetation assemblage is dominated by riparian and wetland species.
+*Inundation Extents*|Polygon|`% Free Flowing`, `% Overflow`, `% Backwater/Ponded`, `Free Flowing Area`, `Overflow Area`, `Ponded Area`|Mapping the distribution of simple surface-flow types such as ponded, free-flowing, and overflowing. Used to generate metrics of increasing habitat complexity, quantity, and floodplain connectivity (from Bartelt et al. 2021)
+*Active Extents*|Polygon|`Proportion of Active Valley Bottom`|Classification and mapping the riverscape area that is part of the current active channel and floodplain; i.e., the 'active' portion of the valley bottom.
+*Active Channel Extents*|Polygon|`% Inundated`|Mapping of the active channel extent
+*Active Channel Lines*|Line|`Channel Sinuosity`,`Channel Length`, `Primary Channel Length`, `Secondary Channel Length`, `Relative Flow Length`|Mapping of the active channel planform as primary and non-primary channels
+*Channel Junctions*|Point|`Floodplain Channel Head Count`, `Floodplain Channel Head Density`, `Confluence Count`, `Confluence Density`, `Diffluence Count`, `Diffluence Density`|Mapping the abundance and distribution of active channel confluences, diffluences, and channel heads.
+*Geomorphic Units*|Point, Polygon|`Mid Channel Bar Count`, `Mid Channel Bar Density`, `Mid Channel Bar Area`, `Riffle Count`, `Riffle Density`, `Riffle Area`, `Pool Count`, `Pool Density`, `Pool Area`|Representation of the distribution and characteristics of geomorphic features within the active channel. Used to produce estimates of habitat complexity and quantity.
+*Risk Potential*|Point, Line, Polygon|NA|Identification and mapping of anthropogenic features that would limit the area available for riverscape expansion (i.e., limit recovery potential)
+*SEM Cluer and Thorne*|Polygon|`SEM Stage 0 Area`, `SEM Stage 1 Area`, `SEM Stage 2 Area`, `SEM Stage 3 Area`, `SEM Stage 4 Area`, `SEM Stage 5 Area`, `SEM Stage 6 Area`, `SEM Stage 7 Area`, `SEM Stage 8 Area`|Classification of the riverscape according to the stream evolution model stages described by Cleur and Thorn 2014.
+*Dam Crests*|Line|NA|Representation of the crest profile of natural and/or artificial dams, used to produce metrics that include dam abundance and total crest length (from Bartelt et al. 2021).
+*Recovery Potential*|Polygon|NA|Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes.
+*Beaver Sign*|Point|NA|A simple rapid field survey of beaver activity.
+*BRAT Vegetation Suitability*|Polygon|NA|Mapping and classification of vegetated areas of the valley bottom according to their suitability as forage and dam building material by beaver (from McFarland et al. 2017).
+
+For a visual example, refer to the graphic below.
+
 ## Layer Attributes
+
+### Structural Elements
+
+### Vegetation Extents
+
+### Inundation Extents
+
+### Active Elements
+
+### Active Channel Lines
+
+### Channel Junctions
+
+### Geomorphic Units
+
+### Risk Potential
+
+### SEM Cluer and Thorne
+
+### Dam Crests
+
+**Structure Source**|**Description**
+---|---
+*Natural*|Dam was originally constructed by beaver
+*Artificial*|Dam was constructed as a beaver dam analog by restoration construction crew
+*Unknown*|Unclear whether the dam was originally constructed by beavers or is a beaver dam analog
+
+**Dam State**|**Description**
+---|---
+*Intact*|Shows little evidence of breaching or erosion around the structure, flow is primarily spilling over and/or flowing through the structure and water surface gradients are near 0. Dams classified as being intact often show evidence of being actively maintained by beaver
+*Breached*|Some evidence of breaching as vegetative material and/or post loss, and/or erosion of the banks or streambed. Flow is concentrated near the breach, but the structure is still impounding water and reducing the water surface gradient and velocity behind the dam
+*Blown*|A large portion of the structure has been damaged and/or lost during high flows. Water surface gradient is consistent with the streambed, and velocities are also similar or greater than unimpounded channel sections
+
+**Crest Type**|**Description**
+---|---
+*Active*|Structure is actively being maintained by beaver
+*Inactive*|There is evidence of past maintenance by beaver, applicable to natural dams if maintenance is not fresh (active)
+
+### Recovery Potential
+
+### Beaver Sign
+
+### BRAT Vegetation Suitability
 
 ## Metric Attributes
