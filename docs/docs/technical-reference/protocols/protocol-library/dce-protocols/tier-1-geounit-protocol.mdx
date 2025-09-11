@@ -1,9 +1,9 @@
 ---
-title: Tier 1 Geomorphic Unit Protocol
+title: Geomorphic Mapping of Riverscapes Protocol
 sidebar_position: 1
-description: Protocol to map Tier 1 Geomorphic Units in the valley bottom.
+description: Geomorphic Unit Assessment of Valley Bottom. 
 ---
-The Tier 1 Geomorphic Unit Protocol is the preliminary assessment of a valley bottom. This protocol helps identify and categorize Tier 1 geomorphic units, or ‘building blocks’, of a riverscape, as well as define the lateral boundaries (i.e., margins) of the valley bottom.
+The *Geomorphic Mapping of Riverscapes* Protocol is the preliminary assessment of a valley bottom. This protocol helps identify and categorize Tier 1 geomorphic units, or ‘building blocks’, of a riverscape, as well as define the lateral boundaries (i.e., margins) of the valley bottom.
 
 The main purpose of this protocol is to **inventory the resources that define a riverscape’s setting**. This provides crucial insights into the natural and human-caused processes that shape a valley bottom. From this, a deeper understanding of channel form & function, geomorphic condition, and riparian health can be understood (Bennet et al. 2019). Furthermore, this protocol identifies sources of current or past human development or natural disturbances that influence or have altered the riverscape. 
 
@@ -15,27 +15,23 @@ The Tier 1 protocol should be completed before digitization of pre-project monit
 
 Attribute|Value
 ---|---
-Name|Tier 1 Geomorphic Unit Protocol
+Name|Geomorphic Mapping of Riverscapes Protocol
 Status|Experimental Grade
 Version|1.0
 XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/tier_1_geounit_protocol.xml
-Citation|Burgert et al. 2025. Tier 1 Geomorphic Unit Protocol. Prepared by Anabranch Solutions. 
+Citation|Burgert et al. 2025. Geomorphic Mapping of Riverscapes Protocol. Prepared by Anabranch Solutions. 
 Author|Zach Burgert                            
 
 ## How to Use 
 
 The following step-by-step guide will show you how to map your riverscape using this protocol. 
 
-- Start by digitizing the channel lines within the valley bottom to map the location of the river network.  
-- Next, digitize all Tier 1 geomorphic units to identify the landforms that fundamentally shape the valley bottom.  
-- Then digitize the margins of the active channel(s), valley bottom, valley, and anthropogenic features to define their extents.  
-- Finally, determine which mapped margins are ‘confining’. These are the features that constrain a channel's form or function and set the physical limits of the riverscape.
+- Start by digitizing the channel lines, Tier 1 channel extent, and Tier 1 fan extents within the valley bottom to map the river network and most discernable geomorphic features.  
+- Next, digitize the remaining Tier 1 geomorphic units to identify the landforms that fundamentally shape the valley bottom. 
+- Finally, digitize the margins of the active channel(s). This will identify the confining features that constrain a channel's form or function within the valley bottom. 
 
 Once those layers are digitized, you can calculate metrics to assess the valley bottom’s condition and its restoration potential. These include: 
-
-- **Confining Margin Length**: Total length of all confining margins.
-- **Confinement Ratio**: Proportion of channel length confined by the valley bottom, valley, or anthropogenic margins. 
-- **Constriction Ratio**: Proportion of channel length constricted by the valley bottom, valley, or anthropogenic margins. 
+ 
 - **Active Channel Ratio**: The ratio of active channel area to valley bottom area.  
 - **Active Floodplain Ratio**: The ratio of active floodplain area to valley bottom area.
 - **Inactive Floodplain Ratio**: The ratio of inactive floodplain area to valley bottom area.
@@ -44,10 +40,9 @@ Once those layers are digitized, you can calculate metrics to assess the valley 
 
 Attribute|Type|Metrics|Description
 ---|---|---|---
-*Active Channel Lines*|Linestring|`Confinement Ratio`, `Constriction Ratio`|centerline of all natural and anthropogenic channel(s) within the valley bottom
+*Active Channel Lines*|Linestring|NA|centerline of all natural and anthropogenic channel(s) within the valley bottom
 *Tier 1 Gemorphic Units*|Polygon|`Active Channel Ratio`, `Active Floodplain Ratio`, `Inactive Floodplain Ratio`|landforms shaped and distinguished by vertical flood stage height 
-*Margins*|Linestring|NA|bounding extent of the channel, valley bottom, valley, or anthropogenic feature. 
-*Confining Margins*|Linestring|`Confining Margin Length`, `Confinement Ratio`, `Constriction Ratio`|abutment of the channel against the valley bottom, valley, or anthropogenic margin(s). Defined as the confining extent that constrains a channel’s form or function
+*Margins*|Linestring|NA|abutment of channel against valley bottom, valley, or anthropogenic feature. 
 
 ## Layer Attributes
 
@@ -73,19 +68,13 @@ Geomorphic Unit Type|Description
 
 ### Margins 
 
-Tier 1 Type|Description
----|---
-*Channel Margin*|outer extent of a channel, defined by its banks.  
-*Valley Bottom Margin*|outer extent of the valley bottom, defined by terraces or fans. 
-*Valley Margin*|outer extent of the valley, defined by hillslopes. 
+Margin Type|Description
+---|--- 
+*Valley Bottom Margin*|abutment of channel against valley bottom, defined by terraces or fans. 
+*Valley Margin*|abutment of channel against valley, defined by hillslopes.
+*Anthropogenic*|abutment of channel against anthropogenic feature or infrastructure (such as road, railroad, building, etc.)
 
-Marign Origin|Description
----|---
-*Anthropogenic*|created or influenced by human activity 
-*Natural*|formed by riverscape processes 
-*Natural and Anthropogenic*|created, influenced, or formed by both riverscape processes and human activity. For example, a natural embankment with a wall built on top. 
-
-Tier 2 Type|Description
+Anthropogenic Margin Type|Description
 ---|---
 *Embankment*|artificial bank, wall, or mound, typically constructed with earthen materials such as soil, rock, or other aggregates. Its primary purpose is to provide an elevated platform for infrastructure to reduce flooding risk. 
 *Fence*|freestanding structure designed to enclose, delineate, or obstruct an area. It is typically constructed from a series of posts, wire, panels, or other components. 
@@ -95,24 +84,13 @@ Tier 2 Type|Description
 *Road*|leveled pathway typically made of asphalt, concrete, or dirt designed to transport vehicles 
 *Wall*|upright structure typically made of concrete that serves to enclose, divide, or protect an area. 
 
-### Confining Margins 
-
-Confinement Type|Description
----|---
-*Left*|confining margin on river-left (looking downstream) bank
-*Right*|confining margin on river-right (looking downstream) bank
-*Both*|confining margin on both river banks
-
 ## Metric Attributes
 
 Metric|Description|Calculation
 ---|---|---
-*Confining Margin Length*|sum of all confining margins digitized by the user|Sum(Confining Margin Lengths)
-*Confinement Ratio*|ratio of confining margins classified as 'left' or 'right' normalized by the primary channel centerline|Sum (Length of Confining Margins [‘Right’ + ‘Left’]) / Length of Primary Channel  
-*Constriction Ratio*|ratio of confining margins classified as ‘both’ normalized by the primary channel centerline.|Sum (Length of Confining Margins [‘Both’]) / Length of Primary Channel*2
-*Active Channel Ratio*|proportion of the valley bottom that is inundated by bankfull flow. This includes channel polygons digitized in the Tier 1 Geomorphic Unit layer.|Sum (Channel Area) / Total Valley Bottom Area
-*Active Floodplain Ratio*|proportion of the valley bottom that is flooded by the contemporary flood regime. This includes active floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.|Sum (Active Floodplain Area) / Total Valley Bottom Area
-*Inactive Floodplain Ratio*|proportion of the valley bottom that is not flooded by the contemporary flood regime. This includes inactive floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.|Sum (Inactive Floodplain Area) / Total Valley Bottom Area
+*Active Channel Ratio*|proportion of the valley bottom that is inundated by bankfull flow. This includes channel polygons digitized in the Tier 1 Geomorphic Unit layer.|`Sum (Channel Area) / Total Valley Bottom Area`
+*Active Floodplain Ratio*|proportion of the valley bottom that is flooded by the contemporary flood regime. This includes active floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.|`Sum (Active Floodplain Area) / Total Valley Bottom Area`
+*Inactive Floodplain Ratio*|proportion of the valley bottom that is not flooded by the contemporary flood regime. This includes inactive floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.|`Sum (Inactive Floodplain Area) / Total Valley Bottom Area`
 
 ## References
 
