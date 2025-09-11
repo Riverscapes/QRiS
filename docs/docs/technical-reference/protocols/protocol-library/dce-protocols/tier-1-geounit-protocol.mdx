@@ -9,7 +9,9 @@ The main purpose of this protocol is to **inventory the resources that define a 
 
 The Tier 1 protocol should be completed before digitization of pre-project monitoring, design, or as-built implementation. Within QRiS, you can add this protocol to your project by right clicking on the `Data Capture Events` container, selecting the `Low-Tech Process-Based Restoration` option, and clicking on `Add New Planning Container`.  
 
-:::note By understanding these processes, you can tailor more effective restoration designs and actions that target key components of your riverscape and maximize ecological uplift. This includes setting realistic goals, managing expectations, and assessing potential risks in your riverscape (Bennet et al. 2019). Therefore, this protocol should be the first (and most important) step of the LTPBR planning phase.  :::
+:::note 
+By understanding these processes, you can tailor more effective restoration designs and actions that target key components of your riverscape and maximize ecological uplift. This includes setting realistic goals, managing expectations, and assessing potential risks in your riverscape (Bennet et al. 2019). Therefore, this protocol should be the first (and most important) step of the LTPBR planning phase.  
+:::
 
 ## Protocol Summary
 
@@ -26,9 +28,9 @@ Author|Zach Burgert
 
 The following step-by-step guide will show you how to map your riverscape using this protocol. 
 
-- Start by digitizing the channel lines, Tier 1 channel extent, and Tier 1 fan extents within the valley bottom to map the river network and most discernable geomorphic features.  
+- Start by digitizing Tier 1 channel extents and Tier 1 fan extents within the valley bottom to map the river network and most discernable geomorphic features.  
 - Next, digitize the remaining Tier 1 geomorphic units to identify the landforms that fundamentally shape the valley bottom. 
-- Finally, digitize the margins of the active channel(s). This will identify the confining features that constrain a channel's form or function within the valley bottom. 
+- Finally, digitize the margins of the active channel(s). This will identify the confining features that constrain a channel's form or function and identify potential risks for LTPBR.  
 
 Once those layers are digitized, you can calculate metrics to assess the valley bottom’s condition and its restoration potential. These include: 
  
@@ -40,18 +42,10 @@ Once those layers are digitized, you can calculate metrics to assess the valley 
 
 Attribute|Type|Metrics|Description
 ---|---|---|---
-*Active Channel Lines*|Linestring|NA|centerline of all natural and anthropogenic channel(s) within the valley bottom
 *Tier 1 Gemorphic Units*|Polygon|`Active Channel Ratio`, `Active Floodplain Ratio`, `Inactive Floodplain Ratio`|landforms shaped and distinguished by vertical flood stage height 
 *Margins*|Linestring|NA|abutment of channel against valley bottom, valley, or anthropogenic feature. 
 
-## Layer Attributes
-
-### Active Channel Lines
-
-Channel Type|Description
----|---
-*Primary*|longest continuous mainstem channel in the valley bottom.
-*Non-Primary*|all other channel threads in the valley bottom. This includes anabranches, tributaries, braided channels, canals, or beaver canals that are separate from or connected to the primary channel.   
+## Layer Attributes  
 
 ### Tier 1 Geomorphic Units
 
