@@ -130,6 +130,11 @@ For a visual example, refer to the graphic below.
 *Rapid*|Planar|Panar|Steeper gradient than Glide/Run, but also planar unit with higher relative roughness.
 
 ### Risk Potential
+**Unit Type**|**Description**
+---|---
+*High*|Feature, infrastructure, or land use at highest risk from being negatively affected by LTPBR actions. 
+*Medium*|Feature, infrastructure, or land use at modest risk from being negatively affected by LTPBR actions. 
+*Low*|Feature, infrastructure, or land use at lowest risk from being negatively affected by LTPBR actions. 
 
 ### SEM Cluer and Thorne
 
@@ -165,3 +170,57 @@ For a visual example, refer to the graphic below.
 *Inactive*|There is evidence of past maintenance by beaver, applicable to natural dams if maintenance is not fresh (active)
 
 ## Metric Attributes
+
+:::note 
+All metrics in LTPBR V2 DCE are calculated within the sample frames polygon layer. Any digitized features outside of the sample frame polygon will not be calculated within QRiS. Furthermore, all density and ratio metrics are normalized by either the valley bottom area, valley bottom length, or channel area.   
+:::
+
+**Metric**|**Description**|**Calculation**
+---|---|---
+*Jam Count*|Count of all jams|`Count[Jam(Points)] + Count[Jam(Polygons)]`
+*Jam Density*|Number of jams per unit length of riverscape|`Count[Jam(Points)] + Count[Jam(Polygons)] / Valley Bottom Length`
+*Jam Area*|Summed area of jams|`Sum[Jam(Polygons) Area]`
+*Dam Count*|Count of all dams|`Count[Dam(Points)] + Count[Dam(Lines)]`
+*Dam Density*|Number of dams per unit length of riverscape|`Count[Dam(Points)] + Count[Dam(Lines)] / Valley Bottom Length`
+*% Riparian Vegetation*|Percent of valley bottom covered by riparian vegetation|`Riparian Vegetation Area / Valley Bottom Area`
+*% Free Flowing*|Percent of active channel classified as free-flowing|`Riparian Vegetation Area / Valley Bottom Area`
+*Free Flowing Area*|Summed area of active channel classified as free flowing|`Sum[Free Flowing Area]`
+*% Ponded*|Percent of active channel classified as ponded|`Riparian Vegetation Area / Valley Bottom Area`
+*Ponded Area*|Summed area of active channel classified as ponded|`Sum[Ponded Area]`
+*% Overflow*|Percent of active channel classified as overflow|`Riparian Vegetation Area / Valley Bottom Area`
+*Overflow Area*|Summed area of active channel classified as overflow|`Sum[Overflow Area]`
+*Proportion of Active Valley Bottom*|Percent of valley bottom classified as 'active' (e.g., riparian vegetation, active channel, etc)|`Active Valley Bottom Area / Valley Bottom Area`
+*% Inundated*|Percent of valley bottom inundated by active channel(s)|`Active Channel Area / Valley Bottom Area`
+*Channel Sinuosity*|Sinuosity of the primary channel|`Sinuosity(Primary Channel)`
+*Channel Length*|Sum of all primary and non-primary channel lengths|`Sum(Primary Channel Length + Non-Primary Channel Length(s))`
+*Primary Channel Length*|Sum of primary channel length|`Sum(Primary Channel Length)`
+*Secondary Channel Length*|Sum of non-primary channel length(s)|`Sum(Non-Primary Channel Length(s))`
+*Relative Flow Length*|Sum of all channel lengths per unit length of riverscape|`Sum[Primary Channel Length + Non-Primary Channel Length(s)] / Valley Bottom Length`
+*Floodplain Channel Head Count*|Count of all channel heads|`Count(Channel Heads)`
+*Floodplain Channel Head Density*|Number of channel heads per unit length of riverscape|`Count(Channel Heads) / Valley Bottom Length`
+*Confluence Count*|Count of all confluences|`Count(Confluences)`
+*Confluence Density*|Number of confluences per unit length of riverscape|`Count(Confluences) / Valley Bottom Length`
+*Diffluence Count*|Count of all diffluencecs|`Count(Diffluences)`
+*Diffluence Density*|Number of diffluences per unit length of riverscape|`Count(Diffluences) / Valley Bottom Length`
+*Mid Channel Bar Count*|Count of all mid channel bars|`Count(Mid Channel Bars)`
+*Mid Channel Bar Density*|Number of mid channel bars per unit length of riverscape|`Count(Mid Channel Bars) / Valley Bottom Length`
+*Mid Channel Bar Area*|Summed area of all mid channel bars|`Sum[Mid Channel Bar Area]`
+*Riffle Count*|Count of all riffles|`Count(Riffles)`
+*Riffle Density*|Number of riffles per unit length of riverscape|`Count(Riffles) / Valley Bottom Length`
+*Riffle Area*|Summed area of all riffles|`Sum[Riffle Area]`
+*Pool Count*|Count of all pools|`Count(Pools)`
+*Pool Density*|Number of pools per unit length of riverscape|`Count(Pools) / Valley Bottom Length`
+*Pool Area*|Summed area of all pools|`Sum[Pool Area]`
+*SEM Stage 0 Area*|Summed area of all Stage 0 polygons|`Sum[Stage 0 Area]`
+*SEM Stage 1 Area*|Summed area of all Stage 1 polygons|`Sum[Stage 1 Area]`
+*SEM Stage 2 Area*|Summed area of all Stage 2 polygons|`Sum[Stage 2 Area]`
+*SEM Stage 3 Area*|Summed area of all Stage 3 polygons|`Sum[Stage 3 Area]`
+*SEM Stage 4 Area*|Summed area of all Stage 4 polygons|`Sum[Stage 4 Area]`
+*SEM Stage 5 Area*|Summed area of all Stage 5 polygons|`Sum[Stage 5 Area]`
+*SEM Stage 6 Area*|Summed area of all Stage 6 polygons|`Sum[Stage 6 Area]`
+*SEM Stage 7 Area*|Summed area of all Stage 7 polygons|`Sum[Stage 7 Area]`
+*SEM Stage 8 Area*|Summed area of all Stage 8 polygons|`Sum[Stage 8 Area]`
+
+
+
+
