@@ -1,0 +1,60 @@
+---
+title: Perennial Flow Protocol
+sidebar_position: 2
+description: A protocol for documenting beaver habitat and ecology.
+---
+
+The Perennial Protocol is a tool for classifying stream reaches as perennial or non-prennial within a defined area of interest. The collected data can be used to inform the planning stages of a restoration project, or identify suitable locations for Low-Tech Process-Based Restoration (LTPBR).  
+For example, a stream that was historically perennial may now be intermittent due to flow alterations, such as agricultural diversions, or beaver extirpation from the ecosystem. The Perennial Protocol helps identify these streams, providing crucial information for determining where LTPBR is most needed.  
+
+## Protocol Summary 
+Attribute|Value
+---|---
+Name|Perennial Flow Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/perennial_protocol.xml
+Citation|Burgert et al. 2025. Perennial Flow Protocol. Prepared by Anabranch Solutions. 
+Author|Zach Burgert 
+
+## How to Use 
+
+Users can classify stream reaches as perennial or non-perennial by collecting point observations or digitizing line segments.
+- Point observations are used to identify specific features related to flow type classification, such as beaver activity, wood accumulation, or anthropogenic alterations. This serves as evidence for classifying a stream as perennial or non-perennial, or describing potential reasons for flow alterations in the system.  
+- Line segments are used to generate metrics related to the total length & proportion of the user-defined network defined as perennial or non-perennial. 
+
+## Layers 
+
+Attribute|Type|Metrics|Description
+---|---|---|---
+*Observations*|Point|NA|observations of flow type and related features at specific locations along stream of interest
+*Flow Type*|Line|`Perennial Stream Length`, `Proportion Perennial`, `Non-Perennial Stream Length`, `Proportion Non-Perennial`|landforms shaped and distinguished by vertical flood stage height 
+
+## Layer Attributes
+
+### Observations
+
+Flow Type|Description
+---|---
+*Perennial*| year long flow 
+*Non-Perennial*| seasonal or storm driven flow (i.e., intermittent or ephemeral)
+
+### Flow Type
+
+Flow Type|Description
+---|---
+*Perennial*| year long flow 
+*Non-Perennial*| seasonal or storm driven flow (i.e., intermittent or ephemeral)
+
+- Evidence of Beaver Activity - visual evidence of beaver activity (e.g., beaver dams, lodges, active chew, forage catchments, etc.) at or near the stream of interest 
+- Evidence of Wood Accumulation - visual evidence of wood recruitment and/or wood collection processes (e.g., wood jams) at or near the stream of interest
+- Evidence of Anthropogenic Activity - visual evidence of anthropogenic activity (e.g., canals, dams, agricultural diversions, etc.) at or near the stream of interest 
+
+## Metric Attributes 
+
+Value|Calculation|Description
+---|---|---
+*Perennial Stream Length*|Sum (Perennial Stream Length)|Sum of all perennial stream lengths digitized by the user
+*Proportion Perennial*|Perennial Stream Length / Total Stream Length|Proportion of total stream length classified as perennial
+*Non-Perennial Stream Length*|Sum (Non-Perennial Stream Length)|Sum of all non-perennial stream lengths digitized by the user
+*Proportion Non-Perennial*|Non-Perennial Stream Length / Total Stream Length|Proportion of total stream length classified as non-perennial
