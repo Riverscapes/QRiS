@@ -6,7 +6,7 @@ description: Instructions how to write and maintain protocols
 
 
 ## Protocol XML
-Each Protocol is be defined by a separate XML file that resides in the RiverscapesXML repository. An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
+Each Protocol is be defined by a separate XML file that resides in the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
 
 A single protocol XML file contains both the layer and metric definitions. This is required for referential integrity, because the metrics refer to the layers within the protocol. Indeed metrics will only be able to refer to metrics within the protocol in which the metric is defined. In other words, an LTPBR metric cannot refer to an LCT layer.  
 

@@ -4,16 +4,28 @@ banner: true
 sidebar_position: 3
 ---
 
-The QRiS Protocol Library is a collection of protocols that define the layers and metrics used in QRiS projects. Protocols are used to standardize data capture events (DCEs) and analyses, ensuring consistency and interoperability across projects.
+<div>
+  <div style={{ float: "right" }}>
+    <img src="/images/technical-reference/metrics/ProtocolAccessed.png" alt="cover image" width="400px" />
+  </div>
+  <div>
+QRiS uses a Protocol Library to define what [layers](/software-help/dce/#layers) users can add and edit in QRiS projects and the [metrics](/technical-reference/metric_calculations) that can be calculated from those layers in [Analyses](/software-help/analyses). Protocols are used to standardize data capture events (DCEs) and analyses, ensuring consistency and interoperability across projects.
+  </div>
+</div>
+
+
 
 ## What is a QRiS protocol?
-A QRiS protocol contains a set of data-capture-event (DCE) layer and metric definitions. An unlimited number of protocols can be defined and shared through Riverscapes. QRiS synchronizes these protocols down onto QRiS users’ computers, just like it does with other resources (symbology and business logic). 
+A QRiS protocol contains a set of data-capture-event (DCE) layer and metric definitions. An unlimited number of protocols can be defined and shared through our [Riverscapes XML repository](https://github.com/Riverscapes/RiverscapesXML). QRiS synchronizes these protocols down onto QRiS users’ computers, just like it does with other resources (symbology and business logic). 
 
 When users are creating data capture events they will see a tree of all the protocols that have been synchronized to their computer, together with the layer definitions that they contain (see below). 
 
-Users can add any layer to their data capture events, mixing and matching from multiple protocols if they so wish.  For example the user might choose “dam crests” from the LTPBR protocol and also choose “dam crests” from the LCT protocol. There is no requirement that users select and use all layers in a specific protocol within a project.
+![Protocol Tree](/images/technical-reference/metrics/Protocols&Layers.png)
 
-Protocols also store a set of metric definitions. These describe how layers are combined to calculate metrics within analyses. Each metric definition refers to a calculation that is the block of Python code within QRiS that actually reads the layer data and performs the metric calculation. Protocol authors can add metrics to protocols without the need for developers to be involved. However, a developer will still need to release a new version of QRiS if calculations change. For example a metric might be “dam density” that refers to the “dam crest” layer as well as the “density” calculation method. When users add the dam density metric to their analysis, QRiS will know to read the dam crest layer and send it to the “area density” calculation Python code that will report the count of point features in each valley bottom polygon.
+Users can add any layer to their data capture event, mixing and matching from multiple protocols if they so wish.  For example, above the user might choose "Beaver Dams" from the *[Beaver Census Protocol](/technical-reference/protocols/protocol-library/dce-protocols/beaver-census-protocol)*, BRAT CIS from the *[BRAT CIS Protocol](/technical-reference/protocols/protocol-technical-reference)* and “dam crests” from the [LTPBR protocol](/technical-reference/protocols/protocol-library/dce-protocols/ltpbr-dce-protocol). There is no requirement that users select and use all layers in a specific protocol within a project. The protocols define the layer names, layer type (e.g. point, line, polygon), attributes, attribute choices and what symbology to use to display the layer (see [technical reference](/technical-reference/protocols/protocol-technical-reference) if authoring custom protocols). 
+
+
+Protocols also store a set of [metric definitions](/technical-reference/metric_calculations). These describe how layers are combined to calculate metrics within [analyses](/software-help/analyses). Each metric definition refers to a calculation that is the block of Python code within QRiS that actually reads the layer data and performs the metric calculation. Protocol authors can add metrics to protocols without the need for developers to be involved. However, a developer will still need to release a new version of QRiS if calculations change. For example a metric might be “dam density” that refers to the “dam crest” layer as well as the “density” calculation method. When users add the dam density metric to their analysis, QRiS will know to read the dam crest layer and send it to the “area density” calculation Python code that will report the count of point features in each valley bottom polygon.
 
 <ToolsWrapper
   size="sm"
@@ -31,3 +43,13 @@ Protocols also store a set of metric definitions. These describe how layers are 
   ]}
   />
 
+## How users access protocols
+Users can access protocols through the QRiS user interface, where they can browse and select from the available protocols that have been synchronized to their computer. The protocol tree displays all the protocols and their associated layer definitions, allowing users to easily find and add the layers they need for their data capture events and analyses. This video illustrates how users can access and use protocols in QRiS:
+
+<YouTubeEmbed videoId="vlOkrqlb9xE" title="Accessing Protocols in QRiS" />
+
+:::note
+Note that those involved in monitoring streams and riverscapes programmatically are used to following specific, published "protocols", which define how to collect data in the field or desktop and often how to analyze that data.
+
+In QRiS, a "QRiS protocol" is a technical definition of layers and metrics that can be used to implement geospatial monitoring with data capture events of such field or desktop protocols. For example, the *Beaver Census Protocol* in QRiS defines the layers and metrics needed to implement a field protocol for surveying beaver dams at individual observation events (i.e. snap shots in time) we refer to as data capture events. As part of the review process for adding new protocols to the [Riverscapes XML repository](https://github.com/Riverscapes/RiverscapesXML) we ask that protocol authors provide references to any published field or desktop protocols that their QRiS protocol is intended to support.
+:::
