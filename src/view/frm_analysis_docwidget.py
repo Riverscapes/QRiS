@@ -67,11 +67,14 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_QuitOnClose)
+        self.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)  # <--- Add this line
         # Store the connections so they can be disconnected when the form is closed
         self.connections = {}
         self.setupUi()
 
         self.frmMetricValue = None
+
+        self.destroyed.connect(self.cleanup_connections)
 
     def configure_analysis(self, project: Project, analysis: Analysis, event: Event):
 
@@ -328,14 +331,26 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             self.build_table()
 
     def resizeEvent(self, event):
-        if self.table.columnWidth(0) > self.table.width():
-            self.table.setColumnWidth(0, int(self.table.width() * 0.8))
-        QtWidgets.QDockWidget.resizeEvent(self, event)
+        try:
+            if hasattr(self, "table") and isinstance(self.table, QtWidgets.QTableWidget):
+                if self.table.columnWidth(0) > self.table.width():
+                    self.table.setColumnWidth(0, int(self.table.width() * 0.8))
+        except RuntimeError:
+            # This can happen if the widget has been deleted during undock
+            pass
+        super().resizeEvent(event)
 
     def closeEvent(self, event):
         for signal in list(self.connections.keys()):
             signal.disconnect(self.connections.pop(signal))
         QtWidgets.QDockWidget.closeEvent(self, event)
+
+    def cleanup_connections(self, *args):
+        for signal in list(self.connections.keys()):
+            try:
+                signal.disconnect(self.connections.pop(signal))
+            except Exception:
+                pass
 
     def setupUi(self):
 
