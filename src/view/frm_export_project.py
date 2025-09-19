@@ -376,39 +376,39 @@ class FrmExportProject(QtWidgets.QDialog):
                     envelope = hull
                 else:
                     envelope = envelope.combine(hull)
-
+            if envelope is not None and not envelope.isNull() and not envelope.isEmpty():
+                output_geom = envelope.convexHull()
         else:
             # get the extent of the selected AOI
             aoi_id = self.cbo_project_bounds_aoi.currentData()
             aoi: SampleFrame = self.qris_project.aois[aoi_id] if aoi_id in self.qris_project.aois else self.qris_project.valley_bottoms[aoi_id] 
             lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername=sample_frame_features', aoi.name, "ogr")
             lyr.setSubsetString(f"sample_frame_id = {aoi.id}")
-            envelope = lyr.getFeatures().__next__().geometry()
+            output_geom = lyr.getFeatures().__next__().geometry()
 
-        if envelope is not None and not envelope.isNull() and not envelope.isEmpty():
-            envelope_hull = envelope.convexHull()
-            # check if the envelope is empty or null, or not a polygon type
-            if envelope_hull.isEmpty() or envelope_hull.isNull() or envelope_hull.wkbType() not in [ogr.wkbPolygon, ogr.wkbMultiPolygon]:
-                QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Please select a different AOI or there are enough layer geometries in the project to produce a polygon project bounds.")
-                return
-            extent = envelope_hull.boundingBox()
-            centroid = envelope_hull.centroid().asPoint()
-            geojson = envelope_hull.asJson()
-            # write to file
-            geojson_filename = "project_bounds.geojson"
-            geojson_path = os.path.abspath(os.path.join(self.txt_outpath.text(), geojson_filename).replace("\\", "/"))
-            with open(geojson_path, 'w') as f:
-                f.write(geojson)
+        # check if the envelope is empty or null, or not a polygon type
+        if output_geom.isEmpty() or output_geom.isNull() or output_geom.wkbType() not in [ogr.wkbPolygon, ogr.wkbMultiPolygon]:
+            QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Please select a different AOI or there are enough layer geometries in the project to produce a polygon project bounds.")
+            return
 
-            project_bounds = rsxml.project_xml.ProjectBounds(centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
-                                                 bounding_box=rsxml.project_xml.BoundingBox(minLat=extent.yMinimum(),
-                                                                                minLng=extent.xMinimum(),
-                                                                                maxLat=extent.yMaximum(),
-                                                                                maxLng=extent.xMaximum()),
-                                                 filepath=geojson_filename)
-        else:
-            project_bounds = None
-            QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Project will still be created but without bounds.")
+        extent = output_geom.boundingBox()
+        centroid = output_geom.centroid().asPoint()
+        geojson = output_geom.asJson()
+        # write to file
+        geojson_filename = "project_bounds.geojson"
+        geojson_path = os.path.abspath(os.path.join(self.txt_outpath.text(), geojson_filename).replace("\\", "/"))
+        with open(geojson_path, 'w') as f:
+            f.write(geojson)
+
+        project_bounds = rsxml.project_xml.ProjectBounds(centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
+                                                bounding_box=rsxml.project_xml.BoundingBox(minLat=extent.yMinimum(),
+                                                                            minLng=extent.xMinimum(),
+                                                                            maxLat=extent.yMaximum(),
+                                                                            maxLng=extent.xMaximum()),
+                                                filepath=geojson_filename)
+        # else:
+        #     project_bounds = None
+        #     QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Project will still be created but without bounds.")
 
         xml_path = os.path.abspath(os.path.join(self.txt_outpath.text(), "project.rs.xml").replace("\\", "/"))
 
