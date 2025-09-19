@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [1.1.9] 2025 SEP 19
+
+### Fixed
+- Error when metric has no description #763
+- Some projects failing to fully export #751
+- Project Bounds Not Updating When Exporting QRiS Project #764
+- Problem exporting Climate Engine timeseries #731
+- QRiS Basemaps should respect the Region setting from RViewer #726
+
+### Added
+- Allow Import from any non-project ToC Layer #634
+
+### Changed
+- Analysis dock panel is now locked down to avoid QGIS crash.
+- Increment QRiS dependency to QViewer 1.0.4 #781
+
+
 ## [1.1.8] 2025 AUG 29
 
 ### Fixed
