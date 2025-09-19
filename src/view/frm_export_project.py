@@ -929,7 +929,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     analysis_metrics.append([metric_id, metric.level_id])
 
                 if 'analyses' not in keep_layers:
-                    keep_layers['analyses'] = {'id_field': 'analysis_id', 'id_values': []}
+                    keep_layers['analyses'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['analyses']['id_values'].append(str(analysis.id))
                 if 'analysis_metrics' not in keep_layers:
                     keep_layers['analysis_metrics'] = {'id_field': 'analysis_id', 'id_values': []}
