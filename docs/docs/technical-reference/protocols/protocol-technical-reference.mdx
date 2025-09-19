@@ -32,6 +32,32 @@ Creating a new file for the same protocol makes available the possibility of mai
 ### Decoupling Specification From Implementation
 One of the most important concepts is the decoupling of the protocol specification (XML file) and the DCE layers that are created using the specification. Once a DCE layer is created, the definition is loaded into the QRiS project and its overall design should be considered immutable, with the exception of a few display/labeling attributes (see specification). After the DCE layer has been created, the protocol can change or get deprecated, the design of layers can evolve, but the DCE layer instance remains in the project as it was originally created. QRiS will never attempt to update the fundamental design of DCE layers (fields, field types etc) to reflect the latest version of a protocol. DCE layers reflect a snapshot of the protocol at the point in time when they were created.
 
+Protocol Element|Add|Delete|Edit (Current Version)|Edit (New Version)|
+---|---|---|---|---|
+**Layers**|Y|N|-|-
+Label|-|-|Y|-
+Description|-|-|Y|-
+Symbology|-|-|Y|-
+MenuItems|-|-|Y|-
+Hierarchy|-|-|Y|-
+**Fields**|Y (update layer version)|N|N|-
+Label|-|-|Y|-
+MinimumValue|Y|N|Y|-
+MaximumValue|Y|N|Y|-
+Precision|Y|N|Y|-
+DefaultValue|Y|N|Y|-
+Visibility|Y (update layer version)|-|N|Y
+Values|Y|-|N|Y
+**Metrics**|Y|N|-|-
+Label|-|-|Y|-
+DefaultLevel|-|-|Y|-
+Description|-|-|Y|-
+DefinitionURL|-|-|Y|-
+MinimumValue|-|-|Y|-
+MaximumValue|-|-|Y|-
+Precision|-|-|Y|-
+Parameters (any attribute)|-|-|N|Y
+
 **Example Scenario**
 
 User adds Layer DAM CRESTS from Protocol A to a DCE. User digitizes features based on this specification.
