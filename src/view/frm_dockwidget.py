@@ -39,7 +39,7 @@ from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVE
 from ..model.planning_container import PlanningContainer
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_TEMPORARY, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
+from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_LAYER, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
 from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, AOI_MACHINE_CODE, SampleFrame
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
@@ -417,19 +417,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif model_data == VALLEY_BOTTOM_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import Valley Bottom From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT_LAYER))
                     self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Valley Bottom', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_CREATE))
                 elif model_data == SURFACE_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
                 elif model_data == AOI_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import AOI From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT_LAYER))
                     self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) AOI', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_CREATE))
                 elif model_data == SAMPLE_FRAME_MACHINE_CODE:
                     import_sample_frame_menu = self.menu.addMenu('Import Sample Frame From ...  ')
                     self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_sample_frame_menu, 'Temporary Layer', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_sample_frame_menu, 'Layer in Map', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_LAYER))
                     # self.add_context_menu_item(import_sample_frame_menu, 'QRiS Project', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_COPY), False)
                     new_sample_frame_menu = self.menu.addMenu('Create New Sample Frame ...  ')
                     self.add_context_menu_item(new_sample_frame_menu, 'Empty Sample Frame (Manual)', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_NEW))   
@@ -439,18 +439,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, True))
                     import_menu = self.menu.addMenu('Import Context Vector From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_context_vector(model_item))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_LAYER))
                 elif model_data == CATCHMENTS_MACHINE_CODE:
                     self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import Profile From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_LAYER))
                     self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_CREATE))
                 elif model_data == CrossSections.CROSS_SECTIONS_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import Cross Sections From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT_LAYER))
                     self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Cross Sections', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_CREATE))
                 else:
                     f'Unhandled group folder clicked in QRiS project tree: {model_data}'
@@ -528,7 +528,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
                     import_menu = self.menu.addMenu('Import Features From ...')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
-                    self.add_context_menu_item(import_menu, 'Temporary Layer', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_TEMPORARY))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
                     if model_data.menu_items is not None:
                         if 'copy_from_valley_bottom' in model_data.menu_items:
                             self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
@@ -1005,8 +1005,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
             import_source_layer = QgsVectorLayer(import_source_path, 'import_source')
 
-        if mode == DB_MODE_IMPORT_TEMPORARY:
-            if mode == DB_MODE_IMPORT_TEMPORARY:
+        if mode == DB_MODE_IMPORT_LAYER:
+            if mode == DB_MODE_IMPORT_LAYER:
                 import_source_path = self.get_toc_layer([layer_type])
             if import_source_path is None:
                 return
@@ -1308,7 +1308,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
             if import_source_path is None:
                 return
-        if import_source_path == DB_MODE_IMPORT_TEMPORARY:
+        if import_source_path == DB_MODE_IMPORT_LAYER:
             import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry, QgsWkbTypes.LineGeometry, QgsWkbTypes.PointGeometry])
             if import_source_path is None:
                 return
@@ -1334,15 +1334,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def get_toc_layer(self, layer_types: list) -> QgsVectorLayer:
 
-        frm_toc = FrmTOCLayerPicker(self, "Select layer to import", layer_types)
+        frm_toc = FrmTOCLayerPicker(self, "Select layer to import", layer_types, temporary_layers_only=False)
         if not frm_toc.layer_count > 0:
             return
         result = frm_toc.exec_()
         if result != QtWidgets.QDialog.Accepted:
             return
-        if frm_toc.layer is None:
+        out_layer: QgsVectorLayer = frm_toc.layer
+        if out_layer is None:
             return
-        return frm_toc.layer
+        # check if the source path is the same as the project file. if so, reject it
+        if isinstance(out_layer, QgsVectorLayer):
+            if out_layer.dataProvider().dataSourceUri().startswith(self.project.project_file):
+                QtWidgets.QMessageBox.information(self, 'Import Layer', 'The selected layer is already part of the current QRiS project.\n\nPlease select a different map layer to import.')
+                return
+        return out_layer
 
     def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
         """Initiates adding a new aoi"""
@@ -1353,7 +1359,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        if mode == DB_MODE_IMPORT_TEMPORARY:
+        if mode == DB_MODE_IMPORT_LAYER:
             import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
@@ -1384,7 +1390,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        if mode == DB_MODE_IMPORT_TEMPORARY:
+        if mode == DB_MODE_IMPORT_LAYER:
             import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
@@ -1431,7 +1437,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        if mode == DB_MODE_IMPORT_TEMPORARY:
+        if mode == DB_MODE_IMPORT_LAYER:
             import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
             if import_source_path is None:
                 return
@@ -1461,7 +1467,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_path = browse_vector(self, 'Select a line dataset to import as a new profile.', QgsWkbTypes.GeometryType.LineGeometry)
             if import_source_path is None:
                 return
-        if mode == DB_MODE_IMPORT_TEMPORARY:
+        if mode == DB_MODE_IMPORT_LAYER:
             import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
             if import_source_path is None:
                 return
@@ -1490,7 +1496,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        if mode == DB_MODE_IMPORT_TEMPORARY:
+        if mode == DB_MODE_IMPORT_LAYER:
             import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
             if import_source_path is None:
                 return
