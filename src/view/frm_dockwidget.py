@@ -239,7 +239,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.treeView.expand(self.model.indexFromItem(node))
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
-                region = self.settings.getValue('basemapRegion')
+                # region = self.settings.getValue('basemapRegion')
+                region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
                 self.model.appendRow(self.qrave.BaseMaps.regions[region])
                 self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
                 self.basemap_manager = RiverscapesMapManager('Basemaps')
