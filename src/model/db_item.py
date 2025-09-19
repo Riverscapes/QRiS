@@ -6,7 +6,7 @@ import sqlite3
 DB_MODE_NEW = 'new'
 DB_MODE_CREATE = 'create'
 DB_MODE_IMPORT = 'import'
-DB_MODE_IMPORT_TEMPORARY = 'import_temporary'
+DB_MODE_IMPORT_LAYER = 'import_map_layer'
 DB_MODE_PROMOTE = 'promote'
 DB_MODE_COPY = 'copy'
 
