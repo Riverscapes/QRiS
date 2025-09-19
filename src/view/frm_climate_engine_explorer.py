@@ -290,9 +290,10 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             curs.execute('SELECT * FROM time_series WHERE time_series_id = ?', (time_series_id,))
             time_series = curs.fetchone()
             time_series_name = time_series[1]
-            dataset_id, variable_id = time_series_name.split(' ')
-            dataset_name = next((key for key, dataset in self.datasets.items() if dataset['datasetId'] == dataset_id), None)
             metadata = json.loads(time_series[5])
+            dataset_id = metadata.get('dataset', 'unknown_dataset')
+            variable_id = metadata.get('variable', 'unknown_variable')
+            dataset_name = self.datasets[dataset_id]['datasetName'] if dataset_id in self.datasets else dataset_id
             y_label = metadata['units'] if 'units' in metadata else 'Value'
             for sample_frame_feature_id in sample_frame_feature_ids:
                 curs.execute('SELECT time_value, value FROM sample_frame_time_series WHERE time_series_id = ? AND sample_frame_fid = ? AND time_value BETWEEN ? AND ?',
@@ -300,7 +301,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 data[sample_frame_feature_id] = [(datetime.strptime(row[0], '%Y-%m-%d'), row[1]) for row in curs.fetchall()]
 
         # write the data to a CSV file
-        file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Export Data', f'{dataset_name}_{variable_id}', 'CSV Files (*.csv)')[0]
+        file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Export Data', f'{time_series_name}', 'CSV Files (*.csv)')[0]
         if file_name == '':
             return
         with open(file_name, 'w') as file:
