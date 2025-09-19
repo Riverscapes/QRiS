@@ -9,7 +9,7 @@ from ..model.project import Project
 from ..model.cross_sections import CrossSections, insert_cross_sections
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
-from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.import_temp_layer import ImportMapLayer
 
 from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
@@ -140,7 +140,7 @@ class FrmCrossSections(QtWidgets.QDialog):
                         attributes['display_label'] = self.cboAttribute.currentData(QtCore.Qt.UserRole).name
                     if self.layer_id == 'memory':
                         fc_name = f'{self.qris_project.project_file}|layername=cross_section_features'
-                        task = ImportTemporaryLayer(self.import_source_path, fc_name, attributes, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
+                        task = ImportMapLayer(self.import_source_path, fc_name, attributes, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
                         result = task.run()
                         self.on_import_complete(result)
                         # this is getting stuck if run as a task:

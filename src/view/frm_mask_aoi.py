@@ -12,7 +12,7 @@ from ..model.scratch_vector import ScratchVector
 
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
-from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.import_temp_layer import ImportMapLayer
 
 from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
@@ -163,7 +163,7 @@ class FrmAOI(QtWidgets.QDialog):
                         clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
                 
                 if self.layer_id == 'memory':
-                    import_mask_task = ImportTemporaryLayer(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
+                    import_mask_task = ImportMapLayer(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
                 else:
                     import_mask_task = ImportFeatureClass(self.import_source_path, mask_path, layer_attributes, field_map, clip_mask, self.attribute_filter, self.qris_project.project_file, explode_geometries=False)
                 # DEBUG

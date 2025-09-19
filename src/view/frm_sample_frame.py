@@ -19,7 +19,7 @@ from .frm_new_attribute import FrmNewAttribute
 
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
-from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.import_temp_layer import ImportMapLayer
 from ..gp.sample_frame import SampleFrameTask
 
 from .widgets.metadata import MetadataWidget
@@ -182,7 +182,7 @@ class FrmSampleFrame(QDialog):
                 attributes['sample_frame_id'] = self.sample_frame.id
                 
                 if isinstance(self.import_source_path, QgsVectorLayer):
-                    import_mask_task = ImportTemporaryLayer(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
+                    import_mask_task = ImportMapLayer(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask, self.attribute_filter, self.qris_project.project_file)
                 else:
                     import_mask_task = ImportFeatureClass(self.import_source_path, sample_frame_path, attributes, out_field_map, clip_mask, attribute_filter=self.attribute_filter, proj_gpkg=self.qris_project.project_file)
                 # # DEBUG

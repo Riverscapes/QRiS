@@ -7,7 +7,7 @@ from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
 from ..gp.feature_class_functions import get_field_names, get_field_values
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
-from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.import_temp_layer import ImportMapLayer
 
 from .frm_import_dce_field_values import FrmAssignFieldValues
 from .utilities import add_standard_form_buttons
@@ -257,7 +257,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
 
 
             if self.temp_layer is not None:
-                import_task = ImportTemporaryLayer(self.temp_layer, self.target_path, layer_attributes, field_maps, clip_mask)
+                import_task = ImportMapLayer(self.temp_layer, self.target_path, layer_attributes, field_maps, clip_mask)
             else:
                 import_task = ImportFeatureClass(self.import_path, self.target_path, layer_attributes, field_maps, clip_mask)
             # self.buttonBox.setEnabled(False)
