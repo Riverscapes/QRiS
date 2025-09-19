@@ -15,7 +15,7 @@ from ..model.project import Project
 
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
-from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.import_temp_layer import ImportMapLayer
 
 
 class FrmScratchVector(QtWidgets.QDialog):
@@ -117,7 +117,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                         clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
 
                 if isinstance(self.import_source_path, QgsVectorLayer):
-                    task = ImportTemporaryLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
+                    task = ImportMapLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
                 else:
                     task = ImportFeatureClass(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file, explode_geometries=False)
                 # Call the run command directly during development to run the process synchronousely.

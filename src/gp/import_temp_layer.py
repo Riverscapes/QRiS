@@ -2,18 +2,18 @@ import os
 import json
 from typing import List
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCoordinateTransformContext, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCoordinateTransformContext, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtCore import pyqtSignal, QVariant
 
 from .import_feature_class import ImportFieldMap
 from ..gp.feature_class_functions import layer_path_parser
 
-MESSAGE_CATEGORY = 'QRiS_ImportTemporaryLayer'
+MESSAGE_CATEGORY = 'QRiS_ImportMapLayer'
 
 
-class ImportTemporaryLayer(QgsTask):
+class ImportMapLayer(QgsTask):
     """
-    Use only for qgis temporary layers. All others use ImportFeatureClass instead.
+    Use only for qgis layers. All others use ImportFeatureClass instead.
 
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
     """
@@ -22,7 +22,7 @@ class ImportTemporaryLayer(QgsTask):
     import_complete = pyqtSignal(bool, int, int, int)
 
     def __init__(self, source_layer: QgsVectorLayer, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None):
-        super().__init__(f'Import Temporary Layer', QgsTask.CanCancel)
+        super().__init__(f'Import Map Layer', QgsTask.CanCancel)
 
         self.source_layer = source_layer.clone()
         self.clip_mask = clip_mask # (fc_name, field_name, feature_id)
@@ -111,7 +111,15 @@ class ImportTemporaryLayer(QgsTask):
 
             self.source_layer.startEditing()
             self.out_feats = 0
-            for feat in self.source_layer.getFeatures():
+
+            # --- Support feature selection ---
+            selected_fids = self.source_layer.selectedFeatureIds()
+            if selected_fids:
+                feature_iter = self.source_layer.getFeatures(QgsFeatureRequest().setFilterFids(selected_fids))
+            else:
+                feature_iter = self.source_layer.getFeatures()
+
+            for feat in feature_iter:
                 if self.attributes is not None:
                     for field_name, field_value in self.attributes.items():
                         feat[field_name] = field_value
@@ -187,18 +195,18 @@ class ImportTemporaryLayer(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Import Feature Class (from temporary layer) completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage('Import Feature Class (from map layer) completed', MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 QgsMessageLog.logMessage(
-                    'Feature Class import (from temporary layer) not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                    'Feature Class import (from mapy layer) not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Feature Class import (from temporary layer) exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f'Feature Class import (from map layer) exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
                 # raise self.exception
 
         self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
         QgsMessageLog.logMessage(
-            'Feature Class import (from temporary layer) was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+            'Feature Class import (from map layer) was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

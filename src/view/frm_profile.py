@@ -10,7 +10,7 @@ from ..model.profile import Profile, insert_profile
 from ..model.scratch_vector import ScratchVector
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
-from ..gp.import_temp_layer import ImportTemporaryLayer
+from ..gp.import_temp_layer import ImportMapLayer
 
 from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
@@ -133,7 +133,7 @@ class FrmProfile(QtWidgets.QDialog):
                         if clip_item.id > 0:        
                             clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
                     if self.layer_id == 'memory':
-                        task = ImportTemporaryLayer(self.import_source_path, fc_path, {'profile_id': self.profile.id}, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
+                        task = ImportMapLayer(self.import_source_path, fc_path, {'profile_id': self.profile.id}, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
                         # DEBUG task.run()
                         task.import_complete.connect(self.on_import_complete)
                         QgsApplication.taskManager().addTask(task)
