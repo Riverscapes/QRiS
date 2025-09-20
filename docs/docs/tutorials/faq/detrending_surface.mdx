@@ -1,0 +1,49 @@
+---
+title: Detrending and Relative Elevation Models to get Channel Areas or Valley Bottoms
+banner: true
+sidebar_position: 7
+---
+# Detrending and Relative Elevation Models to get Channel Areas or Valley Bottoms
+
+A user submitted a very reasonable question about using high resolution topography to derive a relative elevation model and use that to threshold and derive channel area polygons.  
+
+## User Question
+
+> User Question in blockquote
+
+*[Joe's](https://www.riverscapes.net/users/5826874) responses in italics*
+
+>This is what I'm thinking, operationally and for efficiency's sake, for change detection of erosional features in QRiS:
+> - Map the bottom of channels using contours from DTM (I hand digitized)
+> - Use channels to create REM.
+> - Make contour polygons
+> - Select polygons of REM values ≤ 0.5m
+> - Upload into QRiS as active channel extents
+> - Subsequent drone images have to use the 0.5m value for mapping
+> - "Area of active channel extents" is the data currency.
+
+This is all logical and reasonable, but you might just stick with the beautifully manually digitized polygons. See comments below and video.
+
+> Can you foresee any issues with this?
+
+*Loads! This is very sensitive to how you generate your relative elevation model. Also, when you say change detection, do you mean positionally, or just in some gross summary metric (e.g. change in channel area, or proportion change)?*
+
+
+> Is there a better way you have come up with already for this?
+
+*Not per se. But after lots and lots of years of writing algorithms, for this sort of thing I trust a manually digitized polygon mapping much better than any algorithm. LiDAR data in particular is noisy.* 
+
+
+> Am I missing something from a geomorphologist's perspective? Is 0.5 a reasonable cutoff from the REM for an active channel?
+
+*No. It might be for that site, but a threshold elevation is a function of the hydrology of the basin, the topography of that site and hydraulics. When dealing with absolute relative elevation units of length, you need to look for where are the inflection points where you start inundating a lot more area, vs stay contained in the channel. A crude illustration of this is in the video.*
+
+## Video illustration
+
+[Joe's](https://www.riverscapes.net/users/5826874) response elaborated in video:
+<YouTubeEmbed videoId="x7SwPZ8COLQ" />
+
+
+:::note
+If you have a raster in [context](/software-help/context/raster-layers) or in [surfaces](/software-help/inputs/surfaces) you can use the [Raster Slider](/software-help/inputs/surfaces#raster-slider-tool) tool to create a detrended surface or relative elevation model in QRiS.
+:::
