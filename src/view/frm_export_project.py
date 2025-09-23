@@ -1027,7 +1027,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses', 'analysis_metrics', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments', 'planning_containers']:
+        for layer in ['analyses', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments', 'planning_containers']:
             # get the layer
             lyr: ogr.Layer = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list
@@ -1048,6 +1048,8 @@ class FrmExportProject(QtWidgets.QDialog):
             curs = conn.cursor()
             curs.execute("DELETE FROM event_rasters WHERE event_id NOT IN (SELECT id FROM events)")
             curs.execute("DELETE FROM planning_container_events WHERE planning_container_id NOT IN (SELECT id FROM planning_containers)")
+            curs.execute("DELETE FROM metric_values WHERE analysis_id NOT IN (SELECT id FROM analyses)")
+            curs.execute("DELETE FROM analysis_metrics WHERE analysis_id NOT IN (SELECT id FROM analyses)")
             conn.commit()  # Commit the transaction before executing VACUUM
 
             conn.execute("VACUUM")
