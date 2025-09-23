@@ -49,17 +49,11 @@ def safe_make_abspath(in_path: str, cwd_path: str) -> str:
         return in_path
 
 
-def is_url(url: str) -> bool:
-    """Check if the path is a url
-
-    Args:
-        path (str): _description_
-
-    Returns:
-        bool: _description_
-    """
-    try:
-        result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except ValueError:
+def is_url(value):
+    if not isinstance(value, str):
         return False
+    # Optionally, check for empty string
+    if not value:
+        return False
+    result = urlparse(value)
+    return all([result.scheme, result.netloc])
