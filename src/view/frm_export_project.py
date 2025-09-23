@@ -23,6 +23,7 @@ def rsxml_import():
 
 from ...__version__ import __version__ as installed_qris_version
 from ..model.event import Event, EVENT_TYPE_LOOKUP
+from ..model.planning_container import PlanningContainer
 from ..model.analysis import Analysis
 from ..model.profile import Profile
 from ..model.pour_point import PourPoint
@@ -171,6 +172,13 @@ class FrmExportProject(QtWidgets.QDialog):
         for event in self.qris_project.events.values():
             add_to_node(events_node, event, event.name)
         self.export_layers_model.appendRow(events_node)
+
+        planning_containers_node = QtGui.QStandardItem("Planning Containers")
+        planning_containers_node.setCheckable(True)
+        planning_containers_node.setCheckState(QtCore.Qt.Checked)
+        for pc in self.qris_project.planning_containers.values():
+            add_to_node(planning_containers_node, pc, pc.name)
+        self.export_layers_model.appendRow(planning_containers_node)
 
         # Analysis
         analyses_node = QtGui.QStandardItem("Analyses")
@@ -909,6 +917,21 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 self.rs_project.realizations.append(realization)
 
+        # add planning containers
+        planning_containers_nodes = self.export_layers_model.findItems("Planning Containers")
+        if planning_containers_nodes:
+            planning_container_node = planning_containers_nodes[0]
+            for i in range(planning_container_node.rowCount()):
+                planning_container_item = planning_container_node.child(i)
+                if planning_container_item.checkState() == QtCore.Qt.Unchecked:
+                    continue
+                planning_container: PlanningContainer = planning_container_item.data(QtCore.Qt.UserRole)
+                if len(planning_container.planning_events) == 0:
+                    continue
+                if 'planning_containers' not in keep_layers:
+                    keep_layers['planning_containers'] = {'id_field': 'id', 'id_values': []}
+                keep_layers['planning_containers']['id_values'].append(str(planning_container.id))
+
         # add analyses
         analysis_nodes = self.export_layers_model.findItems("Analyses")
         if analysis_nodes:
@@ -1004,7 +1027,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses', 'analysis_metrics', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments']:
+        for layer in ['analyses', 'analysis_metrics', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments', 'planning_containers']:
             # get the layer
             lyr: ogr.Layer = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list
@@ -1021,9 +1044,10 @@ class FrmExportProject(QtWidgets.QDialog):
         # use sqlite3 to vacuum the geopackage
         with sqlite3.connect(out_geopackage) as conn:
 
-            # unfortunately, event_rasters table does not have an fid column, we need to delete the rows manually
+            # Delete orphaned records
             curs = conn.cursor()
             curs.execute("DELETE FROM event_rasters WHERE event_id NOT IN (SELECT id FROM events)")
+            curs.execute("DELETE FROM planning_container_events WHERE planning_container_id NOT IN (SELECT id FROM planning_containers)")
             conn.commit()  # Commit the transaction before executing VACUUM
 
             conn.execute("VACUUM")
