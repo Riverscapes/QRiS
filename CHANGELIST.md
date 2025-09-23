@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## ]1.1.10] 2025 SEP 23
+
+### Fixed
+- Cannot close Analysis dock panel #793
+- Fix check url if input is not a string
+- Export Project with Planning Container Error #794
+- Fix bug when not including analyses in export
+
+
 ## [1.1.9] 2025 SEP 19
 
 ### Fixed
