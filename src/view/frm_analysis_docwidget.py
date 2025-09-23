@@ -67,7 +67,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_QuitOnClose)
-        self.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)  # <--- Add this line
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)  # <--- Add this line
         # Store the connections so they can be disconnected when the form is closed
         self.connections = {}
         self.setupUi()
