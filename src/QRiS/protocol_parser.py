@@ -90,11 +90,12 @@ class ProtocolDefinition:
     def unique_key(self):
         return f'{self.machine_code}::{self.version}'
 
-def load_protocol_definitions(project_directory: str) -> List[ProtocolDefinition]:
+def load_protocol_definitions(project_directory: str, show_experimental: bool = None) -> List[ProtocolDefinition]:
     """Load protocol from xml"""
 
-    settings = QSettings(ORGANIZATION, APPNAME)
-    show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, True, type=bool)
+    if show_experimental is None:
+        settings = QSettings(ORGANIZATION, APPNAME)
+        show_experimental = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, type=bool)
 
     directories = [project_directory]
     q_settings = QSettings(ORGANIZATION, APPNAME)
@@ -110,7 +111,7 @@ def load_protocol_definitions(project_directory: str) -> List[ProtocolDefinition
             if filename.endswith('.xml'):
                 protocol = load_protocool_from_xml(os.path.join(protocol_directory, filename))
                 if protocol is not None:
-                    if protocol.status == 'experimental' and not show_experimental_protocols:
+                    if protocol.status == 'experimental' and not show_experimental:
                         continue
                     if protocol.status == 'deprecated':
                         continue

@@ -1,11 +1,13 @@
 import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QSettings
 
 from ...model.project import Project
 from ...model.event import PLANNING_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, AS_BUILT_MACHINE_CODE, DESIGN_MACHINE_CODE
 from ...model.layer import Layer
 
+from ...QRiS.settings import Settings
 from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocol_definitions
 
 from ..frm_event_picker import FrmEventPicker
@@ -13,6 +15,9 @@ from ..frm_layer_metric_details import FrmLayerMetricDetails
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
+ORGANIZATION = 'Riverscapes'
+APPNAME = 'QRiS'
+SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
 
 class LayerTreeWidget(QtWidgets.QWidget):
     def __init__(self, parent, qris_project:Project, event_type_id: int, mandatory_layers=None):
@@ -21,13 +26,13 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.qris_project = qris_project
         self.event_type_id = event_type_id
         self.mandatory_layers = mandatory_layers
-        
-        # Load the protocols from the local project directory, user defined directory, and the resources protocol directory
-        self.protocols = load_protocol_definitions(os.path.dirname(self.qris_project.project_file))
+        self.tree_model = QtGui.QStandardItemModel(self)
+
+        settings = QSettings(ORGANIZATION, APPNAME)
+        self.show_experimental = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, bool)
 
         self.setupUi()
 
-        self.tree_model = None
         self.load_protocol_layer_tree()
 
         self.layers_model = QtGui.QStandardItemModel()
@@ -74,13 +79,19 @@ class LayerTreeWidget(QtWidgets.QWidget):
 
     def load_protocol_layer_tree(self):
 
-        layer_names = [layer.label for protocol in self.protocols for layer in protocol.layers]
+        # Load the protocols from the local project directory, user defined directory, and the resources protocol directory
+        protocols = load_protocol_definitions(os.path.dirname(self.qris_project.project_file), self.show_experimental)
+
+        layer_names = [layer.label for protocol in protocols for layer in protocol.layers]
         duplicate_layers = [item for item in set(layer_names) if layer_names.count(item) > 1]
 
         # Rebuild the tree
-        self.tree_model = QtGui.QStandardItemModel(self)
-        for protocol in self.protocols:
-            protocol_si = QtGui.QStandardItem(protocol.label)
+        self.tree_model.clear()
+        for protocol in protocols:
+            label = protocol.label
+            if protocol.status == 'experimental':
+                label += ' (Experimental)'
+            protocol_si = QtGui.QStandardItem(label)
             if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
                 if protocol.protocol_type.lower() != 'dce':
                     continue
@@ -205,6 +216,12 @@ class LayerTreeWidget(QtWidgets.QWidget):
         else:
             return
 
+    def on_show_experimental_changed(self, state):
+        self.show_experimental = state == QtCore.Qt.Checked
+        if self.show_experimental:
+            QtWidgets.QMessageBox.warning(self, "Experimental Protocols", "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.")
+        self.load_protocol_layer_tree()
+
     def setupUi(self):
         
         self.horiz_layers = QtWidgets.QHBoxLayout(self)
@@ -221,6 +238,11 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.available_layers_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.available_layers_tree.customContextMenuRequested.connect(self.on_right_click_tree)
         self.vert_layer_tree.addWidget(self.available_layers_tree)
+
+        chk_show_experimental = QtWidgets.QCheckBox('Show Experimental Protocols', self)
+        chk_show_experimental.setChecked(self.show_experimental)
+        chk_show_experimental.stateChanged.connect(self.on_show_experimental_changed)
+        self.vert_layer_tree.addWidget(chk_show_experimental)
 
         # Add Remove Buttons
         self.vert_buttons = QtWidgets.QVBoxLayout(self)
@@ -255,6 +277,6 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.layers_in_use_list.customContextMenuRequested.connect(self.on_right_click_list)
         self.vert_layers.addWidget(self.layers_in_use_list)
 
-
-
-
+        # dummy label to take up space so the list view matches the protocol tree height
+        lbl_empty = QtWidgets.QLabel('')
+        self.vert_layers.addWidget(lbl_empty)
