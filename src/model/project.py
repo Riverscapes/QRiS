@@ -98,7 +98,7 @@ class Project(DBItem):
         
         # attempt to update protocols 
         try:
-            current_protocols = load_protocol_definitions(os.path.dirname(self.project_file))
+            current_protocols = load_protocol_definitions(os.path.dirname(self.project_file), show_experimental=True)
             if current_protocols:
                 for current_protocol in current_protocols:
                     if current_protocol.machine_code in [protocol.machine_code for protocol in self.protocols.values()]:

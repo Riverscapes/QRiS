@@ -31,17 +31,12 @@ class FrmSettings(QDialog):
 
         # Get the dockwidget location from the settings
         dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
-        if dock_location == 'left':
-            self.left_radio.setChecked(True)
-        else:
-            self.right_radio.setChecked(True)
+        self.left_radio.setChecked(dock_location == 'left')
+        self.right_radio.setChecked(dock_location == 'right')
 
         # Get the remove layers on close setting
         remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, False, type=bool)
-        if remove_layers_on_close is True:
-            self.chk_remove_layers_on_close.setChecked(True)
-        else:
-            self.chk_remove_layers_on_close.setChecked(False)
+        self.chk_remove_layers_on_close.setChecked(remove_layers_on_close)
 
         # Get the default export path
         default_export_path = settings.value(DEFAULT_EXPORT_PATH, '')
@@ -53,6 +48,7 @@ class FrmSettings(QDialog):
 
         show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, type=bool)
         self.chkShowExperimentalProtocols.setChecked(show_experimental_protocols)
+        self.chkShowExperimentalProtocols.stateChanged.connect(self.on_show_experimental_changed)
 
     def accept(self):
 
@@ -89,6 +85,10 @@ class FrmSettings(QDialog):
         path = QFileDialog.getExistingDirectory(self, "Select local protocol folder")
         if path:
             self.txt_protocol_folder.setText(path)
+
+    def on_show_experimental_changed(self, state):
+        if state == Qt.Checked:
+            QMessageBox.warning(self, "Experimental Protocols", "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.")
 
     def setup_ui(self):
 
@@ -163,6 +163,7 @@ class FrmSettings(QDialog):
         self.horiz_protocol_folder.addWidget(btn_protocol_folder)
 
         self.chkShowExperimentalProtocols = QCheckBox("Show experimental protocols")
+        self.chkShowExperimentalProtocols.setToolTip("Check this box to show experimental protocols in the protocol list. Experimental protocols are protocols that are still under development and testing.")
         self.protocol_layout.addWidget(self.chkShowExperimentalProtocols)
 
         self.protocol_layout.addStretch(1)
