@@ -7,13 +7,17 @@ description: Protocol to capture riverscape feature observations and riverscape 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-The *LTPBR V2 DCE (Data Capture Events) Protocol* provides a standardized method for monitoring riverscape changes over time, using both visual and numerical data. This protocol enables users to digitize the location, distribution, and characteristics of riverscape features, which can then be used to assess the health and function of a riverscape. 
+## Overview
+
+The ***LTPBR V2 DCE (Data Capture Events) Protocol*** provides a standardized method for monitoring riverscape changes over time, using both visual and numerical data. This protocol enables users to digitize the location, distribution, and characteristics of riverscape features, which can then be used to assess the health and function of a riverscape. 
 
 A key benefit of the DCE protocol is its versatility, allowing for riverscape assessments throughout all phases of a restoration project (design, implementation, and monitoring). This enables users to evaluate project effectiveness and identify potential changes where needed. It can also be used to identify areas with high restoration potential, thereby informing site selection for LTPBR projects.
 
+:::note
 QRiS offers powerful analytical functions that present data in both graphs and tables, enabling users to quantify temporal changes and identify limiting factors. This numerical and visual approach provides the necessary insights to make informed decisions for restoration projects. The system also allows for an unlimited number of DCEs per project, providing flexibility to organize riverscape surveys and assessments into distinct events or combine multiple surveys into a single DCE as required.
+:::
 
-## Protocol Summary
+### Protocol Summary
 
 Attribute|Value
 ---|---
@@ -24,39 +28,84 @@ XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols
 Citation|	Weber N., Wheaton J.M., Shalcross A., Al-Chokhachy R, Bailey P., Bartelt K., Bennett S., Bouwes B., Bouwes N., Gilbert J., Dickard M., Heitke J., Jordan C., Glassic H., MacFarlane W.W., Miller S., Saunders C., Whitehead K. 2024. Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health. Version 2.0. Prepared by Anabranch Solutions and Utah State University Riverscapes Assessment and Monitoring Lab. Prepared for the Bureau of Land Management. Logan, UT. 81 pp. DOI: 10.5281/zenodo.13769899
 Author|Nick Weber  
 
-## Layers 
+## Layers & Metrics
+
+<Tabs>
+  <TabItem value="structural elements" label="Structural Elements" default>
+Type|Metrics|Description
+---|---|---
+Point, Line, Polygon|`Jam Count`,`Jam Area`, `Jam Density`,`Dam Count`, `Dam Density`|*Maps the distribution and characteristics of structural elements (natural and artificial woody debris jams and beaver dams)*
+  </TabItem>
+    <TabItem value="observations" label="Observations" default>
+Type|Metrics|Description
+---|---|---
+Point, Line, Polygon|NA|*A flexible set of layers used to document practical, logistical, and cautionary features that are relevant to LTPBR implementation and monitoring*
+  </TabItem>
+  <TabItem value="riparian vegentation" label="Vegetation Extents">
+Type|Metrics|Description
+---|---|---
+Polygon|`% Riparian Vegetation`|*Classification and mapping of vegetated portions of the valley bottom where the vegetation assemblage is dominated by riparian and wetland species*
+  </TabItem>
+  <TabItem value="inundation extents" label="Inundation Extents">
+Type|Metrics|Description
+---|---|---
+Polygon|`% Free Flowing`, `% Overflow`, `% Backwater/Ponded`, `Free Flowing Area`, `Overflow Area`, `Ponded Area`|*Mapping the distribution of simple surface-flow types such as ponded, free-flowing, and overflowing. Used to generate metrics of increasing habitat complexity, quantity, and floodplain connectivity (from Bartelt et al. 2021)*
+  </TabItem>
+  <TabItem value="active extents" label="Active Extents">
+Type|Metrics|Description
+---|---|---
+Polygon|`Proportion of Active Valley Bottom`|*Classification and mapping the riverscape area that is part of the current active channel and floodplain; i.e., the 'active' portion of the valley bottom*
+*Active Channel Extents*|Polygon|`% Inundated`|Mapping of the active channel extent
+</TabItem>
+  <TabItem value="active channel lines" label="Active Channel Lines">
+Type|Metrics|Description
+---|---|---
+Line|`Channel Sinuosity`,`Channel Length`, `Primary Channel Length`, `Secondary Channel Length`, `Relative Flow Length`|*Mapping of the active channel planform as primary and non-primary channels*
+    </TabItem>
+  <TabItem value="channel junctions" label="Channel Junctions">
+Type|Metrics|Description
+---|---|---
+Point|`Floodplain Channel Head Count`, `Floodplain Channel Head Density`, `Confluence Count`, `Confluence Density`, `Diffluence Count`, `Diffluence Density`|*Mapping the abundance and distribution of active channel confluences, diffluences, and channel heads*
+  </TabItem>
+  <TabItem value="geomorphic units" label="Geomorphic Units">
+Type|Metrics|Description
+---|---|---
+Point, Polygon|`Mid Channel Bar Count`, `Mid Channel Bar Density`, `Mid Channel Bar Area`, `Riffle Count`, `Riffle Density`, `Riffle Area`, `Pool Count`, `Pool Density`, `Pool Area`|*Representation of the distribution and characteristics of geomorphic features within the active channel. Used to produce estimates of habitat complexity and quantity*
+  </TabItem>
+  <TabItem value="risk potential" label="Risk Potential">
+Type|Metrics|Description
+---|---|---
+Polygon|NA|*Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes*
+  </TabItem>
+  <TabItem value="sem cluer and thorne" label="Cluer and Thorne">
+Type|Metrics|Description
+---|---|---
+Polygon|`SEM Stage 0 Area`, `SEM Stage 1 Area`, `SEM Stage 2 Area`, `SEM Stage 3 Area`, `SEM Stage 4 Area`, `SEM Stage 5 Area`, `SEM Stage 6 Area`, `SEM Stage 7 Area`, `SEM Stage 8 Area`|*Classification of the riverscape according to the stream evolution model stages described by Cluer and Thorn 2014*
+  </TabItem>
+  <TabItem value="dam crests" label="Dam Crests">
+Type|Metrics|Description
+---|---|---
+Line|NA|*Representation of the crest profile of natural and/or artificial dams, used to produce metrics that include dam abundance and total crest length (from Bartelt et al. 2021).*
+  </TabItem>
+    </Tabs>
+
+<details open>
+<summary>*How to Use This Protocol*</summary>
 
 The protocol uses multiple layers organized into two separate groups. The *Observations* group contains layers related to riverscape features and structural elements, while the *Assessments* group contains layers related to risk potential, channel evolution models, and beaver dam building. 
 
 - *Observations*: structural elements, observations, vegetation extents, inundation extents, active extents, active channel, active channel lines, channel junctions, geomorphic unit extents, geomorphic units.
 - *Assessments*: risk potential, SEM Cluer and Thorne, dam crests, recovery potential. 
-
-Attribute|Type|Metrics|Description
----|---|---|---
-*Structural Elements*|Point, Line, Polygon|`Jam Count`,`Jam Area`, `Jam Density`,`Dam Count`, `Dam Density`|Maps the distribution and characteristics of structural elements (natural and artificial woody debris jams and beaver dams)
-*Observations*|Point, Line, Polygon|NA|A flexible set of layers used to document practical, logistical, and cautionary features that are relevant to LTPBR implementation and monitoring.
-*Vegetation Extents*|Polygon|`% Riparian Vegetation`|Classification and mapping of vegetated portions of the valley bottom where the vegetation assemblage is dominated by riparian and wetland species.
-*Inundation Extents*|Polygon|`% Free Flowing`, `% Overflow`, `% Backwater/Ponded`, `Free Flowing Area`, `Overflow Area`, `Ponded Area`|Mapping the distribution of simple surface-flow types such as ponded, free-flowing, and overflowing. Used to generate metrics of increasing habitat complexity, quantity, and floodplain connectivity (from Bartelt et al. 2021)
-*Active Extents*|Polygon|`Proportion of Active Valley Bottom`|Classification and mapping the riverscape area that is part of the current active channel and floodplain; i.e., the 'active' portion of the valley bottom.
-*Active Channel Extents*|Polygon|`% Inundated`|Mapping of the active channel extent
-*Active Channel Lines*|Line|`Channel Sinuosity`,`Channel Length`, `Primary Channel Length`, `Secondary Channel Length`, `Relative Flow Length`|Mapping of the active channel planform as primary and non-primary channels
-*Channel Junctions*|Point|`Floodplain Channel Head Count`, `Floodplain Channel Head Density`, `Confluence Count`, `Confluence Density`, `Diffluence Count`, `Diffluence Density`|Mapping the abundance and distribution of active channel confluences, diffluences, and channel heads.
-*Geomorphic Units*|Point, Polygon|`Mid Channel Bar Count`, `Mid Channel Bar Density`, `Mid Channel Bar Area`, `Riffle Count`, `Riffle Density`, `Riffle Area`, `Pool Count`, `Pool Density`, `Pool Area`|Representation of the distribution and characteristics of geomorphic features within the active channel. Used to produce estimates of habitat complexity and quantity.
-*Risk Potential*|Point, Line, Polygon|NA|Identification and mapping of anthropogenic features that would limit the area available for riverscape expansion (i.e., limit recovery potential)
-*SEM Cluer and Thorne*|Polygon|`SEM Stage 0 Area`, `SEM Stage 1 Area`, `SEM Stage 2 Area`, `SEM Stage 3 Area`, `SEM Stage 4 Area`, `SEM Stage 5 Area`, `SEM Stage 6 Area`, `SEM Stage 7 Area`, `SEM Stage 8 Area`|Classification of the riverscape according to the stream evolution model stages described by Cleur and Thorn 2014.
-*Dam Crests*|Line|NA|Representation of the crest profile of natural and/or artificial dams, used to produce metrics that include dam abundance and total crest length (from Bartelt et al. 2021).
-*Recovery Potential*|Polygon|NA|Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes.
-*Beaver Sign*|Point|NA|A simple rapid field survey of beaver activity.
-*BRAT Vegetation Suitability*|Polygon|NA|Mapping and classification of vegetated areas of the valley bottom according to their suitability as forage and dam building material by beaver (from McFarland et al. 2017).
+</details>
 
 ![DCE-Example](/images/technical-reference/metrics/ltpbr-dce-protocol.png)
 *Example of LTPBR V2 DCE protocol in practice at Wall Creek. Digitized layer extents and symbology are stored in the QRiS geopackage and can be displayed in any QGIS (.qgz) project.*
 
-## Video Demonstration
+### Video Demonstration
 
 <YouTubeEmbed videoId="m6l3gqZn08U" />
 
-## Layer Attributes
+### Layer Attributes
 
 <Tabs>
   <TabItem value="structural elements" label="Structural Elements" default>
@@ -139,7 +188,7 @@ Attribute|Type|Metrics|Description
 *Medium*|Feature, infrastructure, or land use at modest risk from being negatively affected by LTPBR actions. 
 *Low*|Feature, infrastructure, or land use at lowest risk from being negatively affected by LTPBR actions. 
   </TabItem>
-  <TabItem value="sem cluer and thorne" label="SEM Cluer and Thorne">
+  <TabItem value="sem cluer and thorne" label="Cluer and Thorne">
   **SEM Stage**|**Description**
 ---|---
 *Stage 1-Sinuous, Single Thread*|Dynamically stable and laterally active channel within a floodplain complex
@@ -172,57 +221,253 @@ Attribute|Type|Metrics|Description
   </TabItem>
     </Tabs>
     
-## Metric Attributes
+### Metric Attributes
 
-:::note 
+:::warning
 All metrics in LTPBR V2 DCE are calculated within the sample frames polygon layer. Any digitized features outside of the sample frame polygon will not be calculated within QRiS. Furthermore, all density and ratio metrics are normalized by either the valley bottom area, valley bottom length, or channel area.   
 :::
 
-**Metric**|**Description**|**Calculation**
----|---|---
-*Jam Count*|Count of all jams|`Count[Jam(Points)] + Count[Jam(Polygons)]`
-*Jam Density*|Number of jams per unit length of riverscape|`Count[Jam(Points)] + Count[Jam(Polygons)] / Valley Bottom Length`
-*Jam Area*|Summed area of jams|`Sum[Jam(Polygons) Area]`
-*Dam Count*|Count of all dams|`Count[Dam(Points)] + Count[Dam(Lines)]`
-*Dam Density*|Number of dams per unit length of riverscape|`Count[Dam(Points)] + Count[Dam(Lines)] / Valley Bottom Length`
-*% Riparian Vegetation*|Percent of valley bottom covered by riparian vegetation|`Riparian Vegetation Area / Valley Bottom Area`
-*% Free Flowing*|Percent of active channel classified as free-flowing|`Riparian Vegetation Area / Valley Bottom Area`
-*Free Flowing Area*|Summed area of active channel classified as free flowing|`Sum[Free Flowing Area]`
-*% Ponded*|Percent of active channel classified as ponded|`Riparian Vegetation Area / Valley Bottom Area`
-*Ponded Area*|Summed area of active channel classified as ponded|`Sum[Ponded Area]`
-*% Overflow*|Percent of active channel classified as overflow|`Riparian Vegetation Area / Valley Bottom Area`
-*Overflow Area*|Summed area of active channel classified as overflow|`Sum[Overflow Area]`
-*Proportion of Active Valley Bottom*|Percent of valley bottom classified as 'active' (e.g., riparian vegetation, active channel, etc)|`Active Valley Bottom Area / Valley Bottom Area`
-*% Inundated*|Percent of valley bottom inundated by active channel(s)|`Active Channel Area / Valley Bottom Area`
-*Channel Sinuosity*|Sinuosity of the primary channel|`Sinuosity(Primary Channel)`
-*Channel Length*|Sum of all primary and non-primary channel lengths|`Sum(Primary Channel Length + Non-Primary Channel Length(s))`
-*Primary Channel Length*|Sum of primary channel length|`Sum(Primary Channel Length)`
-*Secondary Channel Length*|Sum of non-primary channel length(s)|`Sum(Non-Primary Channel Length(s))`
-*Relative Flow Length*|Sum of all channel lengths per unit length of riverscape|`Sum[Primary Channel Length + Non-Primary Channel Length(s)] / Valley Bottom Length`
-*Floodplain Channel Head Count*|Count of all channel heads|`Count(Channel Heads)`
-*Floodplain Channel Head Density*|Number of channel heads per unit length of riverscape|`Count(Channel Heads) / Valley Bottom Length`
-*Confluence Count*|Count of all confluences|`Count(Confluences)`
-*Confluence Density*|Number of confluences per unit length of riverscape|`Count(Confluences) / Valley Bottom Length`
-*Diffluence Count*|Count of all diffluencecs|`Count(Diffluences)`
-*Diffluence Density*|Number of diffluences per unit length of riverscape|`Count(Diffluences) / Valley Bottom Length`
-*Mid Channel Bar Count*|Count of all mid channel bars|`Count(Mid Channel Bars)`
-*Mid Channel Bar Density*|Number of mid channel bars per unit length of riverscape|`Count(Mid Channel Bars) / Valley Bottom Length`
-*Mid Channel Bar Area*|Summed area of all mid channel bars|`Sum[Mid Channel Bar Area]`
-*Riffle Count*|Count of all riffles|`Count(Riffles)`
-*Riffle Density*|Number of riffles per unit length of riverscape|`Count(Riffles) / Valley Bottom Length`
-*Riffle Area*|Summed area of all riffles|`Sum[Riffle Area]`
-*Pool Count*|Count of all pools|`Count(Pools)`
-*Pool Density*|Number of pools per unit length of riverscape|`Count(Pools) / Valley Bottom Length`
-*Pool Area*|Summed area of all pools|`Sum[Pool Area]`
-*SEM Stage 0 Area*|Summed area of all Stage 0 polygons|`Sum[Stage 0 Area]`
-*SEM Stage 1 Area*|Summed area of all Stage 1 polygons|`Sum[Stage 1 Area]`
-*SEM Stage 2 Area*|Summed area of all Stage 2 polygons|`Sum[Stage 2 Area]`
-*SEM Stage 3 Area*|Summed area of all Stage 3 polygons|`Sum[Stage 3 Area]`
-*SEM Stage 4 Area*|Summed area of all Stage 4 polygons|`Sum[Stage 4 Area]`
-*SEM Stage 5 Area*|Summed area of all Stage 5 polygons|`Sum[Stage 5 Area]`
-*SEM Stage 6 Area*|Summed area of all Stage 6 polygons|`Sum[Stage 6 Area]`
-*SEM Stage 7 Area*|Summed area of all Stage 7 polygons|`Sum[Stage 7 Area]`
-*SEM Stage 8 Area*|Summed area of all Stage 8 polygons|`Sum[Stage 8 Area]`
+<Tabs>
+  <TabItem value="jam count" label="Jam Count" default>
+Description|Calculation
+---|---|
+Count of all jams|`Count[Jam(Points)] + Count[Jam(Polygons)]`
+  </TabItem>
+  <TabItem value="jam density" label="Jam Density">
+Description|Calculation
+---|---|
+Number of jams per unit length of riverscape|`Count[Jam(Points)] + Count[Jam(Polygons)] / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="jam area" label="Jam Area">
+Description|Calculation
+---|---|
+Summed area of jams|`Sum[Jam(Polygons) Area]`
+  </TabItem>
+  <TabItem value="dam count" label="Dam Count">
+Description|Calculation
+---|---|
+Count of all dams|`Count[Dam(Points)] + Count[Dam(Lines)]`
+  </TabItem>
+  <TabItem value="dam density" label="Dam Density">
+Description|Calculation
+---|---|
+Number of dams per unit length of riverscape|`Count[Dam(Points)] + Count[Dam(Lines)] / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="& riparian vegentation" label="% Riparian Vegetation">
+Description|Calculation
+---|---|
+Percent of valley bottom covered by riparian vegetation|`Riparian Vegetation Area / Valley Bottom Area`
+  </TabItem>
+  <TabItem value="% free flowing" label="% Free Flowing">
+Description|Calculation
+---|---|
+Percent of active channel classified as free-flowing|`Riparian Vegetation Area / Valley Bottom Area`
+  </TabItem>
+  <TabItem value="free flowing area" label="Free Flowing Area">
+Description|Calculation
+---|---|
+Summed area of active channel classified as free flowing|`Sum[Free Flowing Area]`
+  </TabItem>
+  <TabItem value="% ponded" label="% Ponded">
+Description|Calculation
+---|---|
+Percent of active channel classified as ponded|`Riparian Vegetation Area / Valley Bottom Area`
+  </TabItem>
+  <TabItem value="ponded area" label="Ponded Area">
+Description|Calculation
+---|---|
+*Summed area of active channel classified as ponded|`Sum[Ponded Area]`
+  </TabItem>
+  <TabItem value="% overflow" label="% Overflow">
+Description|Calculation
+---|---|
+Percent of active channel classified as overflow|`Riparian Vegetation Area / Valley Bottom Area`
+  </TabItem>
+  <TabItem value="overflow area" label="Overflow Area">
+Description|Calculation
+---|---|
+|Summed area of active channel classified as overflow|`Sum[Overflow Area]`
+  </TabItem>
+  <TabItem value="proportion active valley bottom" label="Proportion of Active Valley Bottom">
+Description|Calculation
+---|---|
+Percent of valley bottom classified as 'active' (e.g., riparian vegetation, active channel, etc)|`Active Valley Bottom Area / Valley Bottom Area`
+  </TabItem>
+  <TabItem value="% inundated" label="% Inundated">
+Description|Calculation
+---|---|
+Percent of valley bottom inundated by active channel(s)|`Active Channel Area / Valley Bottom Area`
+  </TabItem>
+  <TabItem value="channel sinuosity" label="Channel Sinuosity">
+Description|Calculation
+---|---|
+Sinuosity of the primary channel|`Sinuosity(Primary Channel)`
+  </TabItem>
+  <TabItem value="channel length" label="Channel Length">
+Description|Calculation
+---|---|
+Sum of all primary and non-primary channel lengths|`Sum(Primary Channel Length + Non-Primary Channel Length(s))`
+  </TabItem>
+  <TabItem value="primary channel length" label="Primary Channel Length">
+Description|Calculation
+---|---|
+Sum of primary channel length|`Sum(Primary Channel Length)`
+  </TabItem>
+  <TabItem value="secondary channel length" label="Secondary Channel Length">
+Description|Calculation
+---|---|
+Sum of non-primary channel length(s)|`Sum(Non-Primary Channel Length(s))`
+  </TabItem>
+  <TabItem value="relative flow length" label="Relative Flow Length">
+Description|Calculation
+---|---|
+Sum of all channel lengths per unit length of riverscape|`Sum[Primary Channel Length + Non-Primary Channel Length(s)] / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="floddplain channel head count" label="Floodplain Channel Head Count">
+Count of all channel heads|`Count(Channel Heads)`
+  </TabItem>
+  <TabItem value="floodplain channel head density" label="Floodplain Channel Head Density">
+Description|Calculation
+---|---|
+|Number of channel heads per unit length of riverscape|`Count(Channel Heads) / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="confluence count" label="Confluence Count">
+Description|Calculation
+---|---|
+Count of all confluences|`Count(Confluences)`
+  </TabItem>
+  <TabItem value="confluence density" label="Confluence Density">
+Description|Calculation
+---|---|
+|Number of confluences per unit length of riverscape|`Count(Confluences) / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="diffluence count" label="Diffluence Count">
+Description|Calculation
+---|---|
+Count of all diffluencecs|`Count(Diffluences)`
+  </TabItem>
+  <TabItem value="diffluence density" label="Diffluence Density">
+Description|Calculation
+---|---|
+Number of diffluences per unit length of riverscape|`Count(Diffluences) / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="mid channel bar count" label="Mid Channel Bar Count">
+Description|Calculation
+---|---|
+Count of all mid channel bars|`Count(Mid Channel Bars)`
+  </TabItem>
+  <TabItem value="mid channel bar density" label="Mid Channel Bar Density">
+Description|Calculation
+---|---|
+Number of mid channel bars per unit length of riverscape|`Count(Mid Channel Bars) / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="mid channel bar area" label="Mid Channel Bar Area">
+Description|Calculation
+---|---|
+Summed area of all mid channel bars|`Sum[Mid Channel Bar Area]`
+  </TabItem>
+  <TabItem value="riffle count" label="Riffle Count">
+Description|Calculation
+---|---|
+Count of all riffles|`Count(Riffles)`
+  </TabItem>
+  <TabItem value="riffle density" label="Riffle Density">
+Description|Calculation
+---|---|
+Number of riffles per unit length of riverscape|`Count(Riffles) / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="riffle area" label="Riffle Area">
+Description|Calculation
+---|---|
+Summed area of all riffles|`Sum[Riffle Area]`
+  </TabItem>
+  <TabItem value="pool count" label="Pool Count">
+Description|Calculation
+---|---|
+Count of all pools|`Count(Pools)`
+  </TabItem>
+  <TabItem value="pool density" label="Pool Density">
+Description|Calculation
+---|---|
+Number of pools per unit length of riverscape|`Count(Pools) / Valley Bottom Length`
+  </TabItem>
+  <TabItem value="pool area" label="Pool Area">
+Description|Calculation
+---|---|
+Summed area of all pools|`Sum[Pool Area]`
+  </TabItem>
+  <TabItem value="stage 0 area" label="Stage 0 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 0 polygons|`Sum[Stage 0 Area]`
+  </TabItem>
+  <TabItem value="stage 1 area" label="Stage 1 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 1 polygons|`Sum[Stage 1 Area]`
+  </TabItem>
+  <TabItem value="stage 2 area" label="Stage 2 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 2 polygons|`Sum[Stage 2 Area]`
+  </TabItem>
+  <TabItem value="stage 3 area" label="Stage 3 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 3 polygons|`Sum[Stage 3 Area]`
+  </TabItem>
+  <TabItem value="stage 4 area" label="Stage 4 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 4 polygons|`Sum[Stage 4 Area]`
+  </TabItem>
+  <TabItem value="stage 5 area" label="Stage 5 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 5 polygons|`Sum[Stage 5 Area]`
+  </TabItem>
+  <TabItem value="stage 6 area" label="Stage 6 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 6 polygons|`Sum[Stage 6 Area]`
+  </TabItem>
+  <TabItem value="stage 7 area" label="Stage 7 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 7 polygons|`Sum[Stage 7 Area]`
+  </TabItem>
+  <TabItem value="stage 8 area" label="Stage 8 Area">
+Description|Calculation
+---|---|
+Summed area of all Stage 8 polygons|`Sum[Stage 8 Area]`
+  </TabItem>
+    </Tabs>
+
+## Resources 
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Weber et al. 2024",
+        description: "Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://zenodo.org/records/13769899",
+       },
+               {
+        title: "Bartelt et al. 2021",
+        description: "Valley bottom inundation patterns in beaver-modified streams: A potential proxy for hydrologic inefficiency",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://digitalcommons.usu.edu/cgi/viewcontent.cgi?article=9375&context=etd",
+       },
+       {
+        title: "Cluer and Thorne. 2014",
+        description: "A Stream Evolution Model Integrating Habitat and Ecosystem Benefits",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://www.researchgate.net/publication/263304250_A_Stream_Evolution_Model_Integrating_Habitat_and_Ecosystem_Benefits",
+       },
+    ]}
+    />
 
 
 
