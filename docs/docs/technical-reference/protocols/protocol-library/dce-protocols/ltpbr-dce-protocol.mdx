@@ -3,6 +3,10 @@ title: LTPBR V2 DCE Protocol
 sidebar_position: 3
 description: Protocol to capture riverscape feature observations and riverscape assessments based on LTPBR V2. 
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 The *LTPBR V2 DCE (Data Capture Events) Protocol* provides a standardized method for monitoring riverscape changes over time, using both visual and numerical data. This protocol enables users to digitize the location, distribution, and characteristics of riverscape features, which can then be used to assess the health and function of a riverscape. 
 
 A key benefit of the DCE protocol is its versatility, allowing for riverscape assessments throughout all phases of a restoration project (design, implementation, and monitoring). This enables users to evaluate project effectiveness and identify potential changes where needed. It can also be used to identify areas with high restoration potential, thereby informing site selection for LTPBR projects.
@@ -54,9 +58,9 @@ Attribute|Type|Metrics|Description
 
 ## Layer Attributes
 
-### Structural Elements
-
-**Type**|**Description**
+<Tabs>
+  <TabItem value="structural elements" label="Structural Elements" default>
+    **Type**|**Description**
 ---|---
 *Dam*|single structural element, created by beaver or as a restoration structure, that functions like a beaver dam
 *Dam Complex*|a collection of dams that are being mapped as a single point or polygon
@@ -64,10 +68,9 @@ Attribute|Type|Metrics|Description
 *Jam Complex*|a collection of jams identified by a single point or polygon feature
 *Root Mass*|the structural element is formed by a mass of rhizomatous roots or vegetation
 *Other Structural Elements*|used for other structural element types, natural or constructed, that might occur within your riverscape
-
-### Vegetation Extents
-
-**Type**|**Description**
+  </TabItem>
+  <TabItem value="riparian vegentation" label="Vegetation Extents">
+    **Type**|**Description**
 ---|---
 *Riparian*|species native to the riparian zone or wetlands. Typical riparian spp. include sedges, rushes, willow, cottonwood, alder, etc.   
 *Non-Riparian*|species not native to the riparian zone or wetlands. Typical non-riparian spp. include sagebrush, juniper, pine, fir, etc.
@@ -84,25 +87,22 @@ Attribute|Type|Metrics|Description
 *2-Moderately Suitable*|Preferred deciduous species are less abundant, and the plant assemblage consists of upland and grassland species. Other suitable building material such as sagebrush are present.
 *3-Suitable*|Areas where preferred species are less abundant but other suitable building and forage are present including cattails and herbaceous riparian and wetland plants.
 *4-Preferred*|Areas with vegetative cover dominated by preferred forage and dam building species i.e., willow, aspen, alder, cottonwood and other deciduous riparian species.
-
-### Inundation Extents
-
-**Type**|**Description**
+  </TabItem>
+  <TabItem value="inundation extents" label="Inundation Extents">
+    **Type**|**Description**
 ---|---
 *Ponded*|structurally-forced backwater ponding behind a channel-spanning structural element. Backwater may be contained within or be outside of the existing active channel
 *Overflow*|structurally-forced flow out of the active channel floodplain and/or otherwise exposed in channel surfaces (e.g. bars)
 *Free Flowing*|flow is contained within the contemporary active channel and is not obstructed by a channel spanning structural element (e.g., beaver dam or log jam)
-
-### Active Extents
-
-**Type**|**Description**
+  </TabItem>
+  <TabItem value="active extents" label="Active Extents">
+    **Type**|**Description**
 ---|---
 *Active*|The combined portion of the valley bottom classified as part of the active channel and floodplain under the current geomorphic and hydrologic conditions.
 *Inactive*|The portion of the valley bottom that is not part of the active channel or floodplain under current geomorphic and hydrologic conditions.
-
-### Active Channel Lines
-
-**Type**|**Description**
+</TabItem>
+  <TabItem value="active channel lines" label="Active Channel Lines">
+    **Type**|**Description**
 ---|---
 *Primary*|The continuous channel thread that carries the largest proportion of the total surface flow
 *Non-Primary*|Any other active channel thread. Non-primary channels are separated from the main channel by islands that are generally vegetated. Non-primary channels should not be drawn for thalwegs around bar features that are still a part of the active channel
@@ -111,19 +111,17 @@ Attribute|Type|Metrics|Description
 ---|---
 *Centerline*|The approximate centerline of the active channel
 *Thalweg*|The approximate thalweg, which is generally the deepest point along a channel cross-section or point that carries the greatest amount of flow.
-
-### Channel Junctions
-
-**Type**|**Description**
+    </TabItem>
+  <TabItem value="channel junctions" label="Channel Junctions">
+  **Type**|**Description**
 ---|---
 *Diffluence*|Location where an active, non-primary channel splits away (diverges) from the primary channel or another non-primary channel. Difluences are the upstream end of any non-primary active channel
 *Confluence (Anabranch)*|Approximate location where an active non-primary channel reenters the primary channel or another non-primary channel. Confluences are the downstream end of any non-primary active channel
 *Confluence (Tributary)*|Location where a tributary enters an active channel
 *Channel Head*|Channel heads are one mechanism in which new anabranches are created. Channel heads are distinguished as the most upstream point at which flow becomes concentrated between definable banks. The downstream point in which the anabranch channel meets the main channel should be marked as a channel head confluence
-
-### Geomorphic Units
-
-**Unit Type**|**Tier 1**|**Tier 2**|**Description**
+  </TabItem>
+  <TabItem value="geomorphic units" label="Geomorphic Units">
+  **Unit Type**|**Tier 1**|**Tier 2**|**Description**
 ---|---|---|---
 *Pool*|Concavity|Bowl|Pools are bowl shaped channel concavities that are laterally and longitudinally concave.
 *Pond*|Concavity|Bowl|Surface water impoundment caused by a flow obstruction such as a beaver dam or woody debris jam.
@@ -133,17 +131,16 @@ Attribute|Type|Metrics|Description
 *Bank Attached Bar*|Convexity|Mound|Similar to mid-channel bars but attached to banks on the inside of channel meanders. Commonly referred to as ‘point bars’.
 *Glide/Run*|Planar|Planar|Low-slope planar features. These sections of channel lack convex or concave shape and are neither depositional nor erosional (i.e., transport).
 *Rapid*|Planar|Panar|Steeper gradient than Glide/Run, but also planar unit with higher relative roughness.
-
-### Risk Potential
-**Unit Type**|**Description**
+  </TabItem>
+  <TabItem value="risk potential" label="Risk Potential">
+  **Unit Type**|**Description**
 ---|---
 *High*|Feature, infrastructure, or land use at highest risk from being negatively affected by LTPBR actions. 
 *Medium*|Feature, infrastructure, or land use at modest risk from being negatively affected by LTPBR actions. 
 *Low*|Feature, infrastructure, or land use at lowest risk from being negatively affected by LTPBR actions. 
-
-### SEM Cluer and Thorne
-
-**SEM Stage**|**Description**
+  </TabItem>
+  <TabItem value="sem cluer and thorne" label="SEM Cluer and Thorne">
+  **SEM Stage**|**Description**
 ---|---
 *Stage 1-Sinuous, Single Thread*|Dynamically stable and laterally active channel within a floodplain complex
 *Stage 2-Channelized*|Re-sectioned land drainage, flood control, or navigation channels
@@ -154,10 +151,9 @@ Attribute|Type|Metrics|Description
 *Stage 7-Laterally Active*|Channel with frequent floodplain connection develops sinuous course, is laterally active and has symmetrical cross-section promoting bar accretion at inner margins and toe scour and renewed bank retreat along outer margins of expanding/migrating beds
 *Stage 8-Anastomosing Meta-Stable Channel Network*|Post-disturbance channel featuring anastomosed planform connected to a frequently inundated floodplain that supports wet woodland or grassland that is bounded by set-back terraces on one or both margins.
 *Stage 0-Anastomosing Wet Woodland or Anastomosing Grassed Wetland*|Pre-disturbance, dynamically meta-stable network of anabranching channels and floodplain with vegetated islands supporting wet woodland or grassland
-
-### Dam Crests
-
-**Structure Source**|**Description**
+  </TabItem>
+  <TabItem value="dam crests" label="Dam Crests">
+  **Structure Source**|**Description**
 ---|---
 *Natural*|Dam was originally constructed by beaver
 *Artificial*|Dam was constructed as a beaver dam analog by restoration construction crew
@@ -173,7 +169,9 @@ Attribute|Type|Metrics|Description
 ---|---
 *Active*|Structure is actively being maintained by beaver
 *Inactive*|There is evidence of past maintenance by beaver, applicable to natural dams if maintenance is not fresh (active)
-
+  </TabItem>
+    </Tabs>
+    
 ## Metric Attributes
 
 :::note 
