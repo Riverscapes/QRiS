@@ -1,6 +1,15 @@
 # QRiS Plugin
 
-## ]1.1.10] 2025 SEP 23
+## [1.1.11] 2025 SEP 26
+
+### Fixed
+- Error on Import from Map Layer #792
+
+### Changed
+- Change Behavior for Experimental Protocols in DCE and QRiS Settings forms. #798
+
+
+## [1.1.10] 2025 SEP 23
 
 ### Fixed
 - Cannot close Analysis dock panel #793
