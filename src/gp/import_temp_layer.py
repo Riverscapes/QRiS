@@ -24,8 +24,9 @@ class ImportMapLayer(QgsTask):
     def __init__(self, source_layer: QgsVectorLayer, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None):
         super().__init__(f'Import Map Layer', QgsTask.CanCancel)
 
-        self.source_layer = source_layer.clone()
-        self.clip_mask = clip_mask # (fc_name, field_name, feature_id)
+        # Instead of clone(), create a true in-memory copy
+        self.source_layer = self._make_memory_copy(source_layer)
+        self.clip_mask = clip_mask
         self.dest_path = dest_path
         self.attributes = attributes
         self.proj_gpkg = proj_gpkg
@@ -35,6 +36,21 @@ class ImportMapLayer(QgsTask):
         self.in_feats = 0
         self.out_feats = 0
         self.skipped_feats = 0
+
+    def _make_memory_copy(self, layer: QgsVectorLayer) -> QgsVectorLayer:
+        """Create a true in-memory copy of the input layer."""
+        mem_layer = QgsVectorLayer(
+            f"{QgsWkbTypes.displayString(layer.wkbType())}?crs={layer.crs().authid()}",
+            "memory_copy",
+            "memory"
+        )
+        mem_layer_data = mem_layer.dataProvider()
+        mem_layer_data.addAttributes(layer.fields())
+        mem_layer.updateFields()
+        feats = [f for f in layer.getFeatures()]
+        mem_layer_data.addFeatures(feats)
+        mem_layer.updateExtents()
+        return mem_layer
 
     def run(self):
 
