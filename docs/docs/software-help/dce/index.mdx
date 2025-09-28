@@ -8,37 +8,61 @@ Efficient and streamlined collection of geospatial data is critical to the succe
 
 There are several phases to a river restoration project, such as planning, implementation and monitoring. QRiS helps you collect data in each of these phases by organzing data into a series of **data capture events** (DCE). An event might be an afternoon spent mapping a reach of river, or a day spent surveying a restoration site. It might be a planning event or capturing an as-built design. Post implementation you might have one or more monitoring events and over time you might repeat this cycle with subsequent phases that repeat some or all of these.
 
+:::tip
 The central goal of QRiS is to help you capture the geospatial data that is appropriate for the phase of your project. There are suggested feature classes and attributes for each event type, but you can customize these to suit your needs.
 
 Once you have digitized the features for several data capture events over time, you can generate an [analysis](../analyses) to compare the changes in your riverscape over time.
+:::
 
 ## Create a Data Capture Event
 
-Right click on the **Data Capture Events** folder in the QRiS project tree and select **Add New Data Capture Event**. Provide a name for the event and pick the layers that you want to include. You can change which layers are included in an event at any time by right clicking on the event and selecting **Edit Data Capture Event**.
+![dce-overview](/images/software-help/dce/DCE-Overview.png)
 
-### Basic Properties
+Right click on the `Data Capture Events` folder in the QRiS project tree and select `Add New Data Capture Event`. Provide a name for the event and pick the layers that you want to include. You can change which layers are included in an event at any time by right clicking on the event and selecting `Edit Data Capture Event`. Once you have created your event, it appears in the QRiS project tree with all the layers that you included shown below it. 
 
-Choose whether the event represents a single point in time or a data range. You can choose the specificity of the dates you want to capture. For example, you might want to capture the year and month of a planning event, but only the year of a monitoring event. 
+### Layers
 
-Specify whether the event was captured in the field or in the office (desktop).
+![dce-layers](/images/software-help/dce/DCE-Layers.png)
 
-Specify whether the event represents the past, present or future. This is helpful context for consumers of the data to know the context of what is being represented.
+DCE layers along with their associated features and attributes are stored in custom-defined protocols within the protocol library (e.g., LTPBR V2). **You have the flexibility to use as many layers as needed, drawing from a single protocol or combining elements from multiple protocols.** 
 
-### Surfaces
-
-Typically you will want to include a surface for each event. This is the surface that you will use to digitize features. It might be a historic photograph, drone image or satellite dataset. You can pick one or more surfaces if you are are basing your work on multiple sources.
-
-## Layers
-
-Once you have created your event it appears in the QRiS project tree with all the layers that you included shown below it. You can add or remove layers at any time by right clicking on the event and selecting **Edit Data Capture Event**.
-
-Right click to add any layer to the map and starting digitizing features using the built in QGIS editing capabilities. After each feature is digitized a custom field form will appear to capture the attributes for that feature. The fields have been carefully curated for the specific feature type and event type.
+Once you have selected the layers, right click to add any layer to the map and starting digitizing features using the built in QGIS editing capabilities. After each feature is digitized a custom field form will appear to capture the attributes for that feature. The fields have been carefully curated for the specific feature type and event type.
 
 You can always go back and edit layers and features. You can also take advantage of all of the powerful QGIS editing tools during editing; merging, subtracting, splitting, etc.
 
+### Basic Properties
+
+![dce-properties](/images/software-help/dce/DCE-Basic_Properties.png)
+
+ The valley bottom polygon ssociated with your DCE can be selected under the `Associated Valley Bottom` section. This defines the boundary of your DCE and is linked to your DCE layers so it will be rendered alongside them in the map panel.   
+
+Choose whether the event represents a single point in time or a data range under the `Date` section. You can choose the specificity of the dates you want to capture. For example, you might want to capture the year and month of a planning event, but only the year of a monitoring event. 
+
+Under `Date Label`, you can specify whether the event represents the past, present or future. This is helpful context for consumers of the data to know the context of what is being represented.
+
+Finally, you can specify whether the event was captured in the field or in the office (desktop).
+
+### Surfaces
+
+![dce-surfaces](/images/software-help/dce/DCE-Surfaces.png)
+
+Typically you will want to include a surface for each event. *This is the raster imagery that you will use to digitize features for your DCE*. It might be a historic photograph, drone image or satellite dataset. You can pick one or more surfaces if you are are basing your work on multiple sources.
+
+### Description
+
+Descriptive narrative related to the context, considerations, and constraints associated with the DCE. Descriptions may include (but not limited to) imagery context, etc.
+
+### Metadata
+
+Associated metadata with your DCE. This can include (but not limited to) website links, file & folder locations, data sources, etc. Also comes with read-only QRiS metadata populated with information from the interface.
+
 ### Digitizing Considerations
 
-When digitizing it's important to think about the  layer being digitized and if there are specific considerations that need to be taken into account. In particular, you should consider the following:
+When digitizing it's important to think about the layer being digitized and if there are specific considerations that need to be taken into account. In particular, you should consider the following:
 
 - During [analyses](../analyses) Data Capture Event features are processed within [sample frame](../sample-frames) polygons. For example, structure points are counted within each sample frame polygon and vegetation types are summarized by area within each polygon. Therefore, it can be useful to have the sample frame polygons added to the map while digitizing event features.
 - Related to the previous point, it's important for some feature types to maintain mutual exclusivity to avoid "double counting" during [analyses](../analyses). For example, if you are digitizing active and inactive floodplains, you should avoid gaps and overlaps between the two feature types. This can be accomplished by using the [topology checker](https://docs.qgis.org/3.40/en/docs/user_manual/plugins/core_plugins/plugins_topology_checker.html) during editing.
+
+### Help
+
+If users need help or assistance with LTPBR DCEs or the interface, click on the Help button in the lower left hand corner of the interface window.
