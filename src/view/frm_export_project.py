@@ -1025,6 +1025,15 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['attachments'] = {'id_field': 'attachment_id', 'id_values': []}
                 keep_layers['attachments']['id_values'].append(str(attachment.id))
 
+        # need to add the attachments to the project xml as a realization
+        if len(attachments) > 0:
+            realization = rsxml.project_xml.Realization(xml_id='attachments',
+                                                name='Attachments',
+                                                date_created=date_created.toPyDateTime(),
+                                                product_version=qris_version,
+                                                datasets=attachments)
+            self.rs_project.realizations.append(realization)
+
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
         for layer in ['analyses', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments', 'planning_containers']:
