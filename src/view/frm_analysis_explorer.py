@@ -13,7 +13,7 @@ from ..model.db_item import DBItemModel
 from ..model.event import DCE_EVENT_TYPE_ID
 from ..model.analysis import Analysis
 from ..model.metric import Metric
-from ..model.sample_frame import get_sample_frame_ids
+from ..model.sample_frame import get_sample_frame_ids, get_sample_frame_sequence
 
 class FrmAnalysisExplorer(QtWidgets.QDialog):
 
@@ -216,9 +216,9 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         x_label = []
         topology = []
 
-        sample_frame_features = get_sample_frame_ids(self.qris_project.project_file, self.analysis.sample_frame.id)
+        sample_frame_features = get_sample_frame_sequence(self.qris_project.project_file, self.analysis.sample_frame.id)
 
-        for sample_frame_feature in sample_frame_features.values():
+        for sample_frame_feature in sample_frame_features:
             for m in metric_values:
                 if m['sample_frame_feature_id'] == sample_frame_feature.id:
                     if m['event_id'] != event_id:

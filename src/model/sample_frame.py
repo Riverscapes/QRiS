@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from typing import Dict
+from typing import Dict, List
 
 from qgis.core import QgsVectorLayer
 
@@ -118,3 +118,58 @@ def get_sample_frame_ids(db_path: str, sample_frame_id: int) -> Dict[int, DBItem
         raise ex
 
     return labels
+
+def get_sample_frame_sequence(db_path: str, sample_frame_id: int) -> List[DBItem]:
+    """
+    Returns an ordered list of DBItems for the sample frame features.
+    Tries flows_into, then display_label (if all are unique integers), then fid order.
+    """
+    sequence = []
+    try:
+        with sqlite3.connect(db_path) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT fid, display_label, flows_into FROM sample_frame_features WHERE sample_frame_id = ?', [sample_frame_id])
+            values = curs.fetchall()
+            fids = [v[0] for v in values]
+            flows_into = [v[2] for v in values]
+            display_labels = [v[1] for v in values]
+
+            # 1. Try flows_into: build a chain if all flows_into are valid or null (last)
+            flows_into_valid = (
+                all((fi is None or fi in fids) for fi in flows_into) and
+                len(values) == len(set(fids))
+            )
+            if flows_into_valid and any(fi is not None for fi in flows_into):
+                referenced = set(fi for fi in flows_into if fi is not None)
+                start_candidates = [fid for fid in fids if fid not in referenced]
+                if len(start_candidates) == 1:
+                    fid_to_next = {v[0]: v[2] for v in values}
+                    fid_to_row = {v[0]: v for v in values}
+                    fid = start_candidates[0]
+                    while fid is not None:
+                        row = fid_to_row[fid]
+                        sequence.append(DBItem('sample_frame_features', row[0], row[1]))
+                        fid = fid_to_next.get(fid)
+                    return sequence
+
+            # 2. Try display_label: all must be non-null, integer, and unique
+            if (
+                all(lbl is not None and str(lbl).isdigit() for lbl in display_labels) and
+                len(set(int(lbl) for lbl in display_labels)) == len(display_labels)
+            ):
+                label_to_row = {int(v[1]): v for v in values}
+                for label in sorted(label_to_row):
+                    row = label_to_row[label]
+                    sequence.append(DBItem('sample_frame_features', row[0], row[1]))
+                return sequence
+
+            # 3. Fallback: use fid order as sequence
+            for v in sorted(values, key=lambda x: x[0]):
+                sequence.append(DBItem('sample_frame_features', v[0], v[1]))
+            return sequence
+
+    except Exception as ex:
+        sequence = []
+        raise ex
+
+    return sequence
