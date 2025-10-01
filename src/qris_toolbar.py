@@ -204,20 +204,8 @@ class QRiSToolbar:
 
         return action
 
-    # TODO Remove this I don't think it is needed
-    # def initProcessing(self):
-        # self.provider = Provider()
-        # QgsApplication.processingRegistry().addProvider(self.provider)
-
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
-        # DEBUG: REMOVE ME
-        # from ..test.rsxml_test import rsxml_test
-        # rsxml_test()
-
-        # Initialize the processing framework
-        # self.initProcessing()
 
         # Listen for the signal when a project is being loaded
         # so we can try and reload the relevant QRiS project
@@ -494,10 +482,6 @@ class QRiSToolbar:
 
         self.toggle_widget(forceOn=True)
 
-        # update metrics definitions
-        # self.update_metrics(db_path)
-
-        
         # now we can create the project object and load the tree
         self.set_project_path_settings(db_path)
         self.dockwidget.build_tree_view(db_path)
@@ -530,12 +514,6 @@ class QRiSToolbar:
             QSettings().setValue('Projections/layerDefaultCrs', default_crs)
             QSettings().setValue('app/projections/newProjectCrsBehavior', default_crs_behavior)
 
-        # We set the project path in the project settings. This way it will be saved with the QgsProject file
-        # if self.dockwidget is None or self.dockwidget.isHidden() is True:
-        #     # self.toggle_widget(forceOn=True)
-        #     project = QRiSProject()
-        #     project.load_project_file(dialog_return[0])
-        #     self.open_project(project)
 
     def load_mru_projects(self):
 
