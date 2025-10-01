@@ -205,33 +205,34 @@ class QRiSToolbar:
         return action
 
     def initGui(self):
-        """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        """Create a single QRiS menu button with icon and text, containing Project and Help submenus."""
 
-        # Listen for the signal when a project is being loaded
-        # so we can try and reload the relevant QRiS project
-        self.qproject.readProject.connect(self.onProjectLoad)
+        # Create the main menu for the QRiS toolbar button
+        self.qris_menu = QtWidgets.QMenu()
+        self.project_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Project')
+        self.help_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/help'), 'Help')
 
-        # Trigger the check for relative paths on whether the homePath has changed
-        self.qproject.homePathChanged.connect(self.project_homePathChanged)
-        # Close project when the project is cleared
-        self.qproject.cleared.connect(self.close_project)
-
-        icon_path = ':/plugins/qris_toolbar/qris_icon'
-        self.add_action(icon_path, text='QRiS', callback=self.run, parent=self.iface.mainWindow(), add_to_menu=False)
-
-        # --- PROJECT MENU ---
-        project_menu = self.add_toolbar_menu('Project')
-        self.add_menu_action(project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
-        self.add_menu_action(project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
-        self.mru_menu = project_menu.addMenu(QtGui.QIcon(f':/plugins/qris_toolbar/folder'), 'Recent QRiS Projects')
-        self.add_menu_action(project_menu, 'close', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
+        # Populate Project menu
+        self.add_menu_action(self.project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
+        self.add_menu_action(self.project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
+        self.mru_menu = self.project_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Recent QRiS Projects')
+        self.add_menu_action(self.project_menu, 'close', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
         self.load_mru_projects()
 
-        # --- HELP MENU --
-        help_menu = self.add_toolbar_menu('Help')
-        self.add_menu_action(help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
-        self.add_menu_action(help_menu, 'settings', 'Settings', self.show_settings, True, 'QRiS Settings')
-        self.add_menu_action(help_menu, 'qris_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
+        # Populate Help menu
+        self.add_menu_action(self.help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
+        self.add_menu_action(self.help_menu, 'settings', 'Settings', self.show_settings, True, 'QRiS Settings')
+        self.add_menu_action(self.help_menu, 'qris_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
+
+        # Create the toolbar button with icon and text
+        self.qris_button = QtWidgets.QToolButton(self.toolbar)
+        self.qris_button.setText('  QRiS')
+        self.qris_button.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/qris_icon'))
+        self.qris_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.qris_button.setMenu(self.qris_menu)
+        self.qris_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)  # Clicking anywhere opens the menu
+
+        self.toolbar.addWidget(self.qris_button)
 
         canvas = self.iface.mapCanvas()
         self.watershed_html_tool = QgsMapToolEmitPoint(canvas)
