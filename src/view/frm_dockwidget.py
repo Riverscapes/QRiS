@@ -1880,16 +1880,31 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.project.remove(db_item)
             self.check_and_remove_event_layers(events_node, event)
             self.remove_empty_child_nodes(events_node)
-            # check if the event is also in any planning containers, if so, then remove the event layer from that event as well
+            # Collect all planning container nodes that contain this event
             for planning_container in self.project.planning_containers.values():
                 if db_item.event_id in planning_container.planning_events:
-                    event = self.project.events[db_item.event_id]
-                    parent = model_item.parent()
-                    while parent.data(QtCore.Qt.UserRole) != event:
-                        parent = parent.parent()
-                    events_node = parent
-                    self.check_and_remove_event_layers(events_node, event)
-                    self.remove_empty_child_nodes(events_node)
+                    # Find the planning container node in the tree
+                    root = self.model.invisibleRootItem()
+                    def find_planning_container_node(node):
+                        if node.data(QtCore.Qt.UserRole) == planning_container:
+                            return node
+                        for i in range(node.rowCount()):
+                            result = find_planning_container_node(node.child(i))
+                            if result:
+                                return result
+                        return None
+                    pc_node = find_planning_container_node(root)
+                    if pc_node:
+                        # Find the event node under this planning container
+                        for i in range(pc_node.rowCount()):
+                            event_node = pc_node.child(i)
+                            if event_node.data(QtCore.Qt.UserRole).id == db_item.event_id:
+                                # Remove the event layer node under this event node
+                                for j in range(event_node.rowCount()):
+                                    el_node = event_node.child(j)
+                                    if isinstance(el_node.data(QtCore.Qt.UserRole), type(db_item)) and el_node.data(QtCore.Qt.UserRole) == db_item:
+                                        event_node.removeRow(j)
+                                        break
         else:
             model_item.parent().removeRow(model_item.row())
             if isinstance(db_item, Event):
