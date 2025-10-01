@@ -261,7 +261,8 @@ class FrmExportProject(QtWidgets.QDialog):
         self.txt_outpath.setText(outpath)
 
     def accept(self) -> None:
-
+        if not self.validate_tree():
+            return
         # use only the first three components of the version
         qris_version = ".".join(installed_qris_version.split(".")[:3])
         # check if rsxml is available. If not show a message box and return
@@ -1149,6 +1150,92 @@ class FrmExportProject(QtWidgets.QDialog):
             self.txt_existing_path.setEnabled(True)
             self.btn_existing.setEnabled(True)
             self.lbl_existing.setEnabled(True)
+
+    def get_checked_items(self, name: str):
+        nodes = self.export_layers_model.findItems(name)
+        if nodes:
+            node = nodes[0]
+            for i in range(node.rowCount()):
+                item = node.child(i)
+                if item.checkState() == QtCore.Qt.Checked:
+                    yield item.data(QtCore.Qt.UserRole)
+
+    def validate_tree(self) -> bool:
+        
+        event_ids = {event.id for event in self.get_checked_items("Data Capture Events")}
+        planning_container: PlanningContainer
+        for planning_container in self.get_checked_items("Planning Containers"):
+            all_checked = all(dce_id in event_ids for dce_id in planning_container.planning_events.keys())
+            if not all_checked:
+                # item.setCheckState(QtCore.Qt.Unchecked)
+                message_box("Export Validation",
+                    f"All Data Capture Events associated with '{planning_container.name}' must be selected for export before the Planning Container can be checked.")
+                return False
+
+        # # DCE's have associated Valley Bottoms
+        # for item in self.dce_items:
+        #     if item.checkState() == QtCore.Qt.Checked:
+        #         dce: DataCaptureEvent = item.data(QtCore.Qt.UserRole)
+        #         has_valley_bottom = False
+        #         for valley_bottom in dce.valley_bottoms:
+        #             valley_bottom_item = self.find_valley_bottom_item(valley_bottom.id)
+        #             if valley_bottom_item and valley_bottom_item.checkState() == QtCore.Qt.Checked:
+        #                 has_valley_bottom = True
+        #                 break
+        #         if not has_valley_bottom:
+        #             item.setCheckState(QtCore.Qt.Unchecked)
+        #             msg = QtWidgets.QMessageBox()
+        #             msg.setIcon(QtWidgets.QMessageBox.Warning)
+        #             msg.setText(f"The Data Capture Event '{dce.name}' was unchecked because it does not have any associated Valley Bottoms selected for export.")
+        #             msg.setWindowTitle("Data Capture Event Unchecked")
+        #             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        #             msg.exec_()
+
+        # # Analyses have associated Valley Bottoms, Centerlines.
+        # for item in self.analysis_items:
+        #     if item.checkState() == QtCore.Qt.Checked:
+        #         analysis: Analysis = item.data(QtCore.Qt.UserRole)
+        #         has_valley_bottom = False
+        #         for valley_bottom in analysis.valley_bottoms:
+        #             valley_bottom_item = self.find_valley_bottom_item(valley_bottom.id)
+        #             if valley_bottom_item and valley_bottom_item.checkState() == QtCore.Qt.Checked:
+        #                 has_valley_bottom = True
+        #                 break
+        #         if not has_valley_bottom:
+        #             item.setCheckState(QtCore.Qt.Unchecked)
+        #             msg = QtWidgets.QMessageBox()
+        #             msg.setIcon(QtWidgets.QMessageBox.Warning)
+        #             msg.setText(f"The Analysis '{analysis.name}' was unchecked because it does not have any associated Valley Bottoms selected for export.")
+        #             msg.setWindowTitle("Analysis Unchecked")
+        #             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        #             msg.exec_()
+
+        # # Metric Values have associated sample frames, and layers (DCE's).
+        # for item in self.analysis_metric_items:
+        #     if item.checkState() == QtCore.Qt.Checked:
+        #         analysis_metric: AnalysisMetric = item.data(QtCore.Qt.UserRole)
+        #         has_sample_frame = False
+        #         has_layer = False
+        #         if analysis_metric.analysis.sample_frame is not None:
+        #             sample_frame_item = self.find_sample_frame_item(analysis_metric.analysis.sample_frame.id)
+        #             if sample_frame_item and sample_frame_item.checkState() == QtCore.Qt.Checked:
+        #                 has_sample_frame = True
+        #         for layer in analysis_metric.analysis.event_layers:
+        #             layer_item = self.find_event_layer_item(layer.id)
+        #             if layer_item and layer_item.checkState() == QtCore.Qt.Checked:
+        #                 has_layer = True
+        #                 break
+        #         if not has_sample_frame or not has_layer:
+        #             item.setCheckState(QtCore.Qt.Unchecked)
+        #             msg = QtWidgets.QMessageBox()
+        #             msg.setIcon(QtWidgets.QMessageBox.Warning)
+        #             msg.setText(f"The Analysis Metric '{analysis_metric.metric.name}' was unchecked because it does not have its associated Sample Frame or Event Layer selected for export.")
+        #             msg.setWindowTitle("Analysis Metric Unchecked")
+        #             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        #             msg.exec_()
+        
+        return True
+    
 
     def setupUi(self):
 
