@@ -1,5 +1,20 @@
 # QRiS Plugin
 
+## [1.1.12] 2025 OCT 1
+
+### Fixed
+- Include missing entry in project.rs.xml for attachments in project export
+- Intermittent Sample Frame order issue #776
+- Error when deleting a layer in a DCE that is part of a Planning Container #802
+
+### Added
+- Validate planning containers for export #803
+
+### Changed
+- QRiS Toolbar UI Changes #808
+- Housekeeping: Remove old unused code from qris_toolbar.py
+
+
 ## [1.1.11] 2025 SEP 26
 
 ### Fixed
