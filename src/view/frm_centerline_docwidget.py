@@ -78,25 +78,11 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         iface.mapCanvas().refresh()
         layer_uri = f'linestring?crs={self.polygon_crs.authid()}'
 
-        self.layer_centerline = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CENTERTLINE_MACHINE_CODE, "QRIS Centerline Preview", driver='memory')
+        self.layer_centerline = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CENTERTLINE_MACHINE_CODE, "QRIS Centerline Preview", symbology_key='centerlines_temp', driver='memory')
         self.layer_start_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_STARTLINE_MACHINE_CODE, "QRIS Centerline Start Preview", driver='memory')
         self.layer_end_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_ENDLINE_MACHINE_CODE, "QRIS Centerline End Preview", driver='memory')
 
-        # set centerline symboloyg to a dark blue line with an arrowhead at the last vertex
-        self.layer_centerline.renderer().symbol().setColor(QColor('darkblue'))
-        self.layer_centerline.renderer().symbol().setWidth(0.66)
-
-        arrowhead = QgsSimpleMarkerSymbolLayer().create({'name': 'arrowhead', 'color': 'darkblue', 'size': '6.0', 'stroke_width': '3.0', 'angle': '0.0', 'offset': '0.0', 'horizontal_anchor_point': '1', 'vertical_anchor_point': '1', 'placement': 'centralpoint', 'shape': 'marker', 'marker': 'arrowhead', 'marker_width': '0.75',
-                                                         'marker_height': '0.75', 'marker_only_for_endpoints': '0', 'use_custom_symbol_size': '0', 'scale_method': 'diameter', 'scale_factor': '1', 'outline_width': '0', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_join_style': 'miter', 'outline_cap_style': 'square'})
-
-        # set stroke width to 0.66
-        arrowhead.setStrokeWidth(0.66)
-
-        main_symbol = QgsMarkerLineSymbolLayer().create()
-        main_symbol.setPlacement(QgsMarkerLineSymbolLayer.LastVertex)
-        main_symbol.subSymbol().changeSymbolLayer(0, arrowhead)
-        self.layer_centerline.renderer().symbol().appendSymbolLayer(main_symbol)
-
+        # Set the symbology of the preview layers
         self.layer_start_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
         self.layer_end_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
 
@@ -214,6 +200,11 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     @pyqtSlot()
     def capture_polygon(self):
+        # Defensive: check if the layer is still valid
+        if not self.polygon_layer or not QgsProject.instance().mapLayer(self.polygon_layer.id()):
+            self.geom_polygon = None
+            self.txtPolygon.setText('Polygon layer is missing or has been deleted')
+            return
 
         features = self.polygon_layer.selectedFeatures()
 
