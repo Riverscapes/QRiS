@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [1.1.13] 2025 OCT 3
+
+### Fixed
+- Bug when exporting project using MacOS
+- Add all layers to map from project node missing certain layers #820
+
+### Changed
+- Improve symbology on Cross Sections and Centerlines #809
+
 ## [1.1.12] 2025 OCT 1
 
 ### Fixed
