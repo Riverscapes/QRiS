@@ -59,12 +59,8 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
         layer_uri = f'linestring'
 
-        self.layer_preview_cl = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_XS_CENTERLINE_MACHINE_CODE, "QRIS XS Centerline Preview", driver='memory')
-        self.layer_preview_xs = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CROSS_SECTIONS_MACHINE_CODE, "QRIS Cross Section Preview", driver='memory')
-
-        self.layer_preview_cl.renderer().symbol().symbolLayer(0).setColor(QColor('darkblue'))
-        self.layer_preview_cl.renderer().symbol().symbolLayer(0).setWidth(0.66)
-        self.layer_preview_xs.renderer().symbol().symbolLayer(0).setColor(QColor('cornflowerblue'))
+        self.layer_preview_cl = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_XS_CENTERLINE_MACHINE_CODE, "QRIS XS Centerline Preview", symbology_key='centerlines_temp', driver='memory')
+        self.layer_preview_xs = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CROSS_SECTIONS_MACHINE_CODE, "QRIS Cross Section Preview", symbology_key='cross_sections_temp', driver='memory')
 
         if self.profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE:
             layer_name = 'profile_centerlines'

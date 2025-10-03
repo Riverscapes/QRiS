@@ -116,7 +116,7 @@ class QRisMapManager(RiverscapesMapManager):
     def build_profile_layer(self, profile: Profile) -> QgsMapLayer:
 
         if profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE:
-            symbology = 'centerline'
+            symbology = 'centerlines'
             layer_name = 'profile_centerlines'
         else:
             symbology = 'profile'
