@@ -729,9 +729,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_event_single_layer(event, db_item)
             [self.map_manager.build_raster_layer(raster) for raster in event.rasters]
         elif isinstance(db_item, Project):
+            [self.map_manager.build_valley_bottom_layer(valley_bottom) for valley_bottom in self.project.valley_bottoms.values()]
+            [self.map_manager.build_profile_layer(centerline) for centerline in self.project.profiles.values()]
+            [self.map_manager.build_cross_section_layer(cross_sections) for cross_sections in self.project.cross_sections.values()]
             [self.map_manager.build_sample_frame_layer(sample_frame) for sample_frame in self.project.sample_frames.values()]
+            [self.map_manager.build_scratch_vector(scratch) for scratch in self.project.scratch_vectors.values()]
             [self.map_manager.build_aoi_layer(mask) for mask in self.project.aois.values()]
             [self.map_manager.build_raster_layer(raster) for raster in self.project.surface_rasters().values()]
+            [self.map_manager.build_raster_layer(raster) for raster in self.project.scratch_rasters().values()]
+            [self.map_manager.build_pour_point_map_layer(pour_point) for pour_point in self.project.pour_points.values()]
             [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
         elif isinstance(db_item, PourPoint):
             self.map_manager.build_pour_point_map_layer(db_item)

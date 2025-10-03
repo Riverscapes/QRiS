@@ -30,7 +30,8 @@ from qgis.core import (
     QgsAttributeEditorContainer,
     QgsDefaultValue,
     QgsAction,
-    QgsAttributeEditorAction
+    QgsAttributeEditorAction,
+    QgsMessageLog
 )
 
 
@@ -397,8 +398,7 @@ class QRisMapManager(RiverscapesMapManager):
             self.set_virtual_dimension(feature_layer, 'area')
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
-
-        config: dict = event_layer.layer.metadata # .get('fields', {})
+        config: dict = event_layer.layer.metadata
         if 'fields' not in config:
             config['fields'] = []
             
@@ -422,9 +422,15 @@ class QRisMapManager(RiverscapesMapManager):
         # prepare the metadata attribute editor widget
         self.set_metadata_attribute_editor(feature_layer, 'metadata', 'Metadata', config)
         column_index = feature_layer.fields().indexOf('metadata')
-        layer_attr_table_config = feature_layer.attributeTableConfig()
-        layer_attr_table_config.setColumnHidden(column_index, True)
-        feature_layer.setAttributeTableConfig(layer_attr_table_config)
+        if column_index != -1:
+            layer_attr_table_config = feature_layer.attributeTableConfig()
+            layer_attr_table_config.setColumnHidden(column_index, True)
+            feature_layer.setAttributeTableConfig(layer_attr_table_config)
+        else:
+            QgsMessageLog.logMessage(
+                f"'metadata' field not found in layer '{feature_layer.name()}'. Skipping column hide.",
+                "QRiS", Qgis.Warning
+            )
 
     def add_brat_cis(self, feature_layer: QgsVectorLayer) -> None:
         # first read and set the lookup tables
