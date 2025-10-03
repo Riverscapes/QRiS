@@ -278,8 +278,8 @@ class FrmExportProject(QtWidgets.QDialog):
             message_box("Output Path", "Please select an output path for the Riverscapes project.")
             return
 
-        # make sure the start of the output path is a valid drive letter
-        if not os.path.exists(self.txt_outpath.text()[0:2]):
+        outpath = self.txt_outpath.text()
+        if not os.path.isdir(os.path.dirname(outpath)):
             message_box("Invalid Output Path", "The output path is invalid. Please select a valid output path.")
             return
 
