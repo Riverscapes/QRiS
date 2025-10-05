@@ -303,3 +303,37 @@ In general, you will be expected to apply what we cover in exercises to your own
 <YouTubeEmbed videoId="eOSFg83Jk4c" />
 
 ### G. As-Builts
+
+Overview of ArcGIS Online (AGOL) Products that collect offline as-built data (FieldMaps & Survey123) and how offline layers are organized 
+
+#### Importing AGOL Offline Data into QRiS
+
+1. Download offline data and add to QGIS project (in this example, offline data was downloaded from AGOL Experience Builder) 
+2. Right click on `Data Capture Events` bin, select `Low-Tech Process-Based Restoration` and click on `Add New As-Built Survey` to create a new as-built event. 
+3. Select the relevant as-built layers you want to add from the *As-Built Protocol* to the `Layers in Use` panel. 
+4. Fill out relevant metadata values under `Basic Properties`, including *Valley Bottom*, *Associated Design*, *As-Built Phase*, *Survey & Construction Date(s)*, *Observerors*, and *Survey Sources* relevant to your project. 
+5. Under `Bases for As-Built`, select raster layers and/or Data Capture Events that will be used as context for your as-built. 
+6. (Optional) Fill out descriptive narratives and other relevant details about your as-built under the `Description` and `Metadata` tabs. 
+7. Once complete, right click on the newly created as-built event in the Data Capture Events bin and select `Add All Layers to the Map`.
+8. Expand the As-Built Event and right click on the the Structure Points/Lines layer, select `Import Features From...`, and click on `Layer in Map`. 
+9. Select the layer that contains your survey data. 
+10. A new window will appear where you can copy structure values from your survey date and add those to your QRiS As-Built. To do so, find the field that contains the structure type values in your survey data and click on the `Assign` button under the *Transfer Values* field. 
+11. Another window will appear where you can correlate the structure type values in your survey data to the ones listed in the As-Built Protocol. 
+12. Click `Ok` once you are done assigning values.
+13. (Optional) You can also assign other fields as notes/comments by check marking the box next to `Notes` under the *Copy Values* field for the relevant field storing notes/comments. You can also keep any field in your survey data as metadata (i.e., added as seperate field in QRiS). 
+14. Click `Ok` once you are done assigning values and the Structure Points/Lines layer should populate with features.
+
+<YouTubeEmbed videoId="YjaluN5lnCw" />
+
+#### Exporting QRIS Data to As-Built Survey in AGOL
+
+1. Create a temporary Geopackaage to store QRiS As-Built data by right clicking on any folder in the *Browser* panel, selecting `New`, and clicking on `Geopackage`.
+2. Click and drag As-Built Structure Points/Lines layer(s) from the Layer panel and drop into the newly formed geoapckage. 
+3. Open ArcPro and add AGOL As-Built survey to map. 
+4. Add the QRiS data stored in the geopackage to the map by finding the geopackage, expanding it, and dragging the layer(s) into the map.
+5. Find the `Append` tool. 
+6. Once opened, fill out the `Target Dataset` with your AGOL As-Built data, the `Input Datasets` with your QRiS data, and select the *Use the field map to reconcile field differencex* option under `Field Matching Type`. 
+7. Align the QRiS fields with the corresponding AGOL fields by selecting the pencil icon under each field and selecting the appropriate field in the popup window that appears. 
+8. Click `Run` to append the dataset.  
+
+<YouTubeEmbed videoId="4Cd6FLaxqVs" />
