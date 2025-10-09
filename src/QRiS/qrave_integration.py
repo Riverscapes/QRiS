@@ -2,9 +2,10 @@ import os
 import importlib
 
 from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal
-from qgis.utils import plugins
 from qgis.PyQt.QtGui import QStandardItem, QIcon
 from qgis.PyQt.QtWidgets import QMenu
+from qgis.core import QgsMessageLog, Qgis
+from qgis.utils import plugins
 
 from .path_utilities import parse_posix_path
 
@@ -13,48 +14,64 @@ NAMES = ['riverscapes_viewer_dev', 'riverscapes_viewer']
 
 
 class QRaveIntegration(QObject):
-
     qrave_to_qris = pyqtSignal(str, str, dict)
 
     def __init__(self, parent):
         super(QRaveIntegration, self).__init__(parent)
-        # from https://gis.stackexchange.com/questions/403501/using-qgis-plugin-from-another-plugin
+        try:
+            # from https://gis.stackexchange.com/questions/403501/using-qgis-plugin-from-another-plugin
 
-        self.name = None
-        self.plugin_instance = None
-        self.symbology_folders = None
-        self.qrave_map_layer = None
-        self.metric_definitions_folder = None
-        self.protocol_folder = None
+            self.name = None
+            self.plugin_instance = None
+            self.symbology_folders = None
+            self.qrave_map_layer = None
+            self.metric_definitions_folder = None
+            self.protocol_folder = None
 
-        # Attemp to find RAVE plugin using lower case names
-        plugins_lower_case = {k.lower(): k for k in plugins.keys()}
-        rave_names_lower_case = [name.lower() for name in NAMES]
-        matched_lower_case_name = next((pname for pname in rave_names_lower_case if pname in plugins_lower_case), None)
-        if matched_lower_case_name is not None:
+            # Attemp to find RAVE plugin using lower case names
+            plugins_lower_case = {k.lower(): k for k in plugins.keys()}
+            rave_names_lower_case = [name.lower() for name in NAMES]
+            matched_lower_case_name = next((pname for pname in rave_names_lower_case if pname in plugins_lower_case), None)
+            if matched_lower_case_name is not None:
 
-            self.name = plugins_lower_case[matched_lower_case_name]
-            self.plugin_instance = plugins[self.name]
-            self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
-            self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
-                                      parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
+                self.name = plugins_lower_case[matched_lower_case_name]
+                self.plugin_instance = plugins[self.name]
+                self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
+                self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
+                                          parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
 
-            self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..'))
-            self.metric_definitions_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'metrics'))
-            self.protocol_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'protocols'))
-            self.climate_engine_json = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'climate_engine_datasets.json'))
+                self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..'))
+                self.metric_definitions_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'metrics'))
+                self.protocol_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'protocols'))
+                self.climate_engine_json = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'climate_engine_datasets.json'))
 
-            self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
-            self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
-            self.QRaveBaseMap = self.basemaps_module.QRaveBaseMap
-            self.BaseMaps = self.basemaps_module.BaseMaps()
-            self.BaseMaps.load()
+                self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
+                self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
+                self.QRaveBaseMap = self.basemaps_module.QRaveBaseMap
+                self.BaseMaps = self.basemaps_module.BaseMaps()
+                self.BaseMaps.load()
 
-            if self.plugin_instance.dockwidget:
-                # Check if the signal is already connected
-                if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:
-                    self.plugin_instance.dockwidget.layerMenuOpen.disconnect()
-                self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
+                QgsMessageLog.logMessage(f"Riverscapes Viewer plugin '{self.name}' loaded successfully.", "QRiS", Qgis.Info)
+                
+                if self.plugin_instance.dockwidget:
+                    # Check if the signal is already connected
+                    if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:
+                        self.plugin_instance.dockwidget.layerMenuOpen.disconnect()
+                    self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
+
+        except Exception as ex:
+
+            QgsMessageLog.logMessage(
+                f"Error initializing QRaveIntegration: {str(ex)}",
+                "QRiS",
+                Qgis.Critical
+            )
+            self.name = None
+            self.plugin_instance = None
+            self.symbology_folders = None
+            self.qrave_map_layer = None
+            self.metric_definitions_folder = None
+            self.protocol_folder = None
 
     def qrave_add_to_map_menu_item(self, menu: QMenu, item: QStandardItem, data):
         """Custom menu to show at the bottom of the QRave context menu
