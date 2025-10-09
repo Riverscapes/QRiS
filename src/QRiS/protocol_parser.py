@@ -69,6 +69,7 @@ class MetricDefinition:
     precision: Optional[int] = None
     parameters: List[Any] = None
     protocol_defintion = None
+    status = 'active'
 
 @dataclass
 class ProtocolDefinition:
@@ -263,7 +264,8 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
             minimum_value=float(metric_elem.find('MinimumValue').text) if metric_elem.find('MinimumValue') is not None else None,
             maximum_value=float(metric_elem.find('MaximumValue').text) if metric_elem.find('MaximumValue') is not None else None,
             precision=int(metric_elem.find('Precision').text) if metric_elem.find('Precision') is not None else None,
-            parameters=parameters if len(parameters) > 0 else None
+            parameters=parameters if len(parameters) > 0 else None,
+            status=metric_elem.attrib.get('status', 'active')
         )
         protocol.metrics.append(metric)
 

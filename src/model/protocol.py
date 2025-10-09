@@ -83,6 +83,8 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
             metric_metadata['maximum_value'] = metric_definition.maximum_value
         if metric_definition.precision is not None:
             metric_metadata['precision'] = metric_definition.precision
+        if metric_definition.status is not None:
+            metric_metadata['status'] = metric_definition.status
         
         metric_id, metric = insert_metric(
             project_file,
