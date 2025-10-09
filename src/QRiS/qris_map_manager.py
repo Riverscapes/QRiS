@@ -31,7 +31,8 @@ from qgis.core import (
     QgsDefaultValue,
     QgsAction,
     QgsAttributeEditorAction,
-    QgsMessageLog
+    QgsMessageLog,
+    QgsCoordinateReferenceSystem
 )
 
 
@@ -239,6 +240,8 @@ class QRisMapManager(RiverscapesMapManager):
         point_fc_path = self.project.project_file + '|layername=' + 'pour_points'
         # point_feature_layer = self.create_db_item_feature_layer(self.project.map_guid, pour_point_group_layer, point_fc_path, pour_point, 'fid', 'pour_point')
         point_feature_layer = QgsVectorLayer(point_fc_path, 'Pour Point', 'ogr')
+        if point_feature_layer and not point_feature_layer.crs().isValid():
+            point_feature_layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
         QgsProject.instance().addMapLayer(point_feature_layer, False)
         pour_point_layer_node = pour_point_group_layer.addLayer(point_feature_layer)
@@ -250,6 +253,8 @@ class QRisMapManager(RiverscapesMapManager):
         catchment_fc_path = self.project.project_file + '|layername=' + 'catchments'
         # catchment_feature_layer = self.create_db_item_feature_layer(self.project.map_guid, pour_point_group_layer, catchment_fc_path, pour_point, 'fid', 'catchment')
         catchment_feature_layer = QgsVectorLayer(catchment_fc_path, 'Catchment', 'ogr')
+        if catchment_feature_layer and not catchment_feature_layer.crs().isValid():
+            catchment_feature_layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         catchment_feature_layer.setSubsetString('pour_point_id = ' + str(pour_point.id))
         QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
         qml = self.get_symbology_qml('catchment')
@@ -378,6 +383,9 @@ class QRisMapManager(RiverscapesMapManager):
 
         fc_path = f'{self.project.project_file}|layername={fc_name}|subset=event_id = {event.id} AND event_layer_id = {event_layer.layer.id}'
         feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, event_layer, None, event_layer.layer.qml)
+        if feature_layer and not feature_layer.crs().isValid():
+            feature_layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
+        
         for id_field, id_value in {'event_id': event.id, 'event_layer_id': event_layer.layer.id}.items():
             QgsExpressionContextUtils.setLayerVariable(feature_layer, id_field, id_value)
             # Set the default value from the variable
