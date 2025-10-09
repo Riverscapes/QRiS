@@ -36,6 +36,7 @@ class Metric(DBItem):
         self.min_value = self.metadata.get('minimum_value', None) if self.metadata else None
         self.max_value = self.metadata.get('maximum_value', None) if self.metadata else None
         self.precision = self.metadata.get('precision', None) if self.metadata else None  # No precision = full float value
+        self.status = self.metadata.get('status', 'active') if self.metadata else 'active'  # active, deprecated
 
     def can_calculate_automated(self, qris_project, event_id, analysis_id) -> bool: 
 

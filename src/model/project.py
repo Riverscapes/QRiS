@@ -107,12 +107,45 @@ class Project(DBItem):
                         # TODO layer mutable properties
                         # metrics
                         for metric in current_protocol.metrics:
-                            if (metric.id, metric.version, current_protocol.machine_code) not in [(m.machine_name, m.version, m.protocol_machine_code) for m in self.metrics.values()]:
-                                metric_id, metric = insert_metric(self.project_file, metric.label, metric.id, current_protocol.machine_code, metric.description, metric.default_level, metric.calculation_machine_code, metric.parameters, None, metric.definition_url, None, metric.version) 
-                                self.metrics[metric_id] = metric
+                            key_tuple = (metric.id, metric.version, current_protocol.machine_code)
+                            existing_metrics = [
+                                m for m in self.metrics.values()
+                                if (m.machine_name, m.version, m.protocol_machine_code) == key_tuple
+                            ]
+                            if not existing_metrics:
+                                metric_id, metric_obj = insert_metric(
+                                    self.project_file, metric.label, metric.id, current_protocol.machine_code,
+                                    metric.description, metric.default_level, metric.calculation_machine_code,
+                                    metric.parameters, None, metric.definition_url, None, metric.version
+                                )
+                                self.metrics[metric_id] = metric_obj
                             else:
-                                # TODO update mutable properties for existing metrics?
-                                pass
+                                # Update status if changed
+                                existing_metric = existing_metrics[0]
+                                if existing_metric.status != metric.status:
+                                    # Update in-memory
+                                    existing_metric.status = metric.status
+                                    # Update in database
+                                    import json
+                                    from .metric import update_metric
+                                    # Update metadata dict with new status
+                                    metadata = existing_metric.metadata or {}
+                                    metadata['status'] = metric.status
+                                    update_metric(
+                                        self.project_file,
+                                        existing_metric.id,
+                                        existing_metric.name,
+                                        existing_metric.machine_name,
+                                        existing_metric.protocol_machine_code,
+                                        existing_metric.description,
+                                        existing_metric.default_level_id,
+                                        existing_metric.metric_function,
+                                        existing_metric.metric_params,
+                                        existing_metric.base_unit,
+                                        existing_metric.definition_url,
+                                        metadata,
+                                        existing_metric.version
+                                    )
         except Exception as e:
             QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
         
