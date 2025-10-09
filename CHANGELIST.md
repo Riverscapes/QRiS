@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [1.1.14] 2025 OCT 9
+
+### Fixed
+- Stability improvements for #604, #364, #823
+- Force dce and pour point layers coordinate reference #820
+
+### Added
+- Add Deprecated Attribute to Metrics in Protocols #812
+
+### Removed
+- housekeeping: remove old json metric function
+
+
 ## [1.1.13] 2025 OCT 3
 
 ### Fixed
