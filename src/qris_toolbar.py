@@ -280,18 +280,24 @@ class QRiSToolbar:
         """Cleanup necessary items here when plugin dockwidget is closed.
         This occurs when the user clicks the X button on the top right of
         the dockable widget."""
+        try:
+            # disconnects
+            self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
+            self.close_project()
 
-        # disconnects
-        self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
-        self.close_project()
+            # remove this statement if dockwidget is to remain
+            # for reuse if plugin is reopened
+            # Commented next statement since it causes QGIS crashe
+            # when closing the docked window:
+            # self.dockwidget = None
 
-        # remove this statement if dockwidget is to remain
-        # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
-        self.pluginIsActive = False
+            self.pluginIsActive = False
+        except Exception as ex:
+            QgsMessageLog.logMessage(
+                f"Error in onClosePlugin: {str(ex)}",
+                "QRiS",
+                Qgis.Critical
+            )
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -347,8 +353,14 @@ class QRiSToolbar:
             self.close_project()
 
         # Load a version of the QRave code we can use for cross-plugin integration
-        # if self.qrave is None:
-        self.qrave = QRaveIntegration(self.toolbar)
+        if self.toolbar is not None and isinstance(self.toolbar, QtWidgets.QToolBar):
+            try:
+                self.qrave = QRaveIntegration(self.toolbar)
+            except Exception as ex:
+                QgsMessageLog.logMessage(f"Error initializing QRaveIntegration: {str(ex)}", "QRiS", Qgis.Critical)
+        else:
+            QgsMessageLog.logMessage("QRiS toolbar is not valid when initializing QRaveIntegration.", "QRiS", Qgis.Critical)
+
         if self.qrave.name is not None:
             self.settings.setValue('symbologyDir', self.qrave.symbology_folders)
             self.settings.setValue('protocolsDir', self.qrave.protocol_folder)
