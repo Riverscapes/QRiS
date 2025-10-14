@@ -14,7 +14,7 @@ from .raster import Raster, load_rasters
 from .event import Event, load as load_events
 from .planning_container import PlanningContainer, load as load_planning_containers
 from .event_layer import EventLayer
-from .metric import Metric, load_metrics, insert_metric
+from .metric import Metric, load_metrics, insert_metric, update_metric
 from .pour_point import PourPoint, load_pour_points
 from .scratch_vector import ScratchVector, load_scratch_vectors
 from .stream_gage import StreamGage, load_stream_gages
@@ -125,9 +125,6 @@ class Project(DBItem):
                                 if existing_metric.status != metric.status:
                                     # Update in-memory
                                     existing_metric.status = metric.status
-                                    # Update in database
-                                    import json
-                                    from .metric import update_metric
                                     # Update metadata dict with new status
                                     metadata = existing_metric.metadata or {}
                                     metadata['status'] = metric.status
