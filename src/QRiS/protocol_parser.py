@@ -69,8 +69,7 @@ class MetricDefinition:
     precision: Optional[int] = None
     parameters: List[Any] = None
     protocol_defintion = None
-    status = 'active'
-
+    status: str = 'active'
 @dataclass
 class ProtocolDefinition:
     machine_code: str
