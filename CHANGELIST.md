@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+### [1.1.15] 2025 OCT 14
+
+### Fixed
+- Projects not to opening in version 1.1.14 #825
+- Fix bug when updating metric definitions
+- Deleting DCE in QRiS Doesn't Remove Layers from Map #827
+
+### Changed
+- Collapse Project Tree Nodes by Default #833
+
+
 ## [1.1.14] 2025 OCT 9
 
 ### Fixed
