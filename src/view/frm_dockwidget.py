@@ -1892,6 +1892,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Remove the layer from the map first
         if isinstance(db_item, PourPoint):
             self.map_manager.remove_pour_point_layers(db_item)
+        elif isinstance(db_item, Event):
+            # Remove all event layers from the map
+            for event_layer in db_item.event_layers:
+                self.map_manager.remove_db_item_layer(self.project.map_guid, event_layer)
+            # Remove all rasters associated with the event
+            for raster in db_item.rasters:
+                self.map_manager.remove_db_item_layer(self.project.map_guid, raster)
+            # Optionally, remove the event itself from the map if it has a layer
+            self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
         else:
             self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
 
