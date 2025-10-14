@@ -249,6 +249,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Reconnect any qirs layers back to the edit session signals
         self.traverse_tree(self.model.invisibleRootItem(), self.reconnect_layer_edits)
 
+        # Collapse all nodes except the root
+        def collapse_all_nodes(node):
+            idx = self.model.indexFromItem(node)
+            if idx.isValid() and node != self.model.invisibleRootItem():
+                self.treeView.collapse(idx)
+            for row in range(node.rowCount()):
+                collapse_all_nodes(node.child(row))
+
+        collapse_all_nodes(self.model.invisibleRootItem())
+
+        # Uncollapse the project root node
+        self.treeView.expand(self.model.indexFromItem(project_node))
+
+        # Uncollapse basemaps if present
+        if self.qrave is not None and self.qrave.BaseMaps is not None:
+            region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
+            basemap_node = self.qrave.BaseMaps.regions.get(region)
+            if basemap_node is not None:
+                self.treeView.expand(self.model.indexFromItem(basemap_node))
+
         return
     
     def double_click_tree_item(self, idx: QModelIndex):
@@ -1717,14 +1737,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if not isinstance(layer, QgsVectorLayer):
                         return
                     if layer.isEditable():
-                            node.setText(node.data(QtCore.Qt.UserRole).name + ' (Editing)')
-                            # make the text bold
-                            font = node.font()
-                            font.setBold(True)
-                            font.setItalic(False)
-                            node.setFont(font)
-                            node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
-                            return True
+                        node.setText(node.data(QtCore.Qt.UserRole).name + ' (Editing)')
+                        # make the text bold
+                        font = node.font()
+                        font.setBold(True)
+                        font.setItalic(False)
+                        node.setFont(font)
+                        node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+                        return True
                     else:
                         feature_count = layer.featureCount()
                         if feature_count == 0:
