@@ -102,6 +102,7 @@ class Project(DBItem):
             if current_protocols:
                 for current_protocol in current_protocols:
                     if current_protocol.machine_code in [protocol.machine_code for protocol in self.protocols.values()]:
+                        updated = False
                         protocol_id = [protocol.id for protocol in self.protocols.values() if protocol.machine_code == current_protocol.machine_code][0]
                         # update existing protocol
                         # TODO layer mutable properties
@@ -119,6 +120,8 @@ class Project(DBItem):
                                     metric.parameters, None, metric.definition_url, None, metric.version
                                 )
                                 self.metrics[metric_id] = metric_obj
+                                QgsMessageLog.logMessage(
+                                    f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.","QRiS", Qgis.Info)
                             else:
                                 # Update status if changed
                                 existing_metric = existing_metrics[0]
@@ -143,6 +146,12 @@ class Project(DBItem):
                                         metadata,
                                         existing_metric.version
                                     )
+                                    QgsMessageLog.logMessage(
+                                        f"Metric '{existing_metric.name}' (ID: {existing_metric.machine_name}, Version: {existing_metric.version}) status updated to '{metric.status}' in protocol '{current_protocol.machine_code}'.",
+                                        "QRiS", Qgis.Info
+                                    )
+                        if updated == True:
+                            QgsMessageLog.logMessage(f"Protocol '{current_protocol.machine_code}' updated.", "QRiS", Qgis.Info)
         except Exception as e:
             QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
         
