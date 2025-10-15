@@ -380,10 +380,21 @@ class QRiSToolbar:
         # Get the dockwidget location from the settings
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
+        dock_area = dock_widget_locations[dock_location]
 
-        # show the dockwidget
-        self.iface.addDockWidget(dock_widget_locations[dock_location], self.dockwidget)
+        # Add and show the dock widget in the correct area
+        self.iface.addDockWidget(dock_area, self.dockwidget)
         self.dockwidget.show()
+
+        # Tabify QRiS with all other dock widgets in the same area
+        main_window = self.iface.mainWindow()
+        for dock_widget in main_window.findChildren(QtWidgets.QDockWidget):
+            if dock_widget is not self.dockwidget and main_window.dockWidgetArea(dock_widget) == dock_area:
+                main_window.tabifyDockWidget(self.dockwidget, dock_widget)
+
+        # Bring QRiS to the front/top
+        self.dockwidget.raise_()
+        self.dockwidget.setFocus()
 
     def toggle_widget(self, forceOn=False):
 
@@ -510,7 +521,7 @@ class QRiSToolbar:
             if project_srs is not None:
                 QSettings().setValue('Projections/layerDefaultCrs', project_srs)
                 QSettings().setValue('app/projections/newProjectCrsBehavior', 'usePresetCrs')
-                # get map crs from project_srs id
+                # get map crs from project_sRS id
                 crs = QgsCoordinateReferenceSystem(project_srs)
                 if crs is not None:
                     self.iface.mapCanvas().setDestinationCrs(crs)
