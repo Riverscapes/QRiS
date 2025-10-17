@@ -48,8 +48,9 @@ class FrmNewProject(QtWidgets.QDialog):
         else:
             self.setWindowTitle('Edit Project Properties')
             self.txtName.setText(project.name)
-            if 'tags' in self.metadata_widget.metadata['system']:
-                self.tags = self.metadata_widget.metadata['system']['tags']
+            system_meta = self.metadata_widget.metadata.get('system', {})
+            if 'tags' in system_meta:
+                self.tags = system_meta['tags']
                 self.txtTags.setText(', '.join(self.tags))
             self.txtDescription.setPlainText(project.description)
 
