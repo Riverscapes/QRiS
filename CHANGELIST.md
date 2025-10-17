@@ -1,5 +1,15 @@
 # QRiS Plugin
 
+### [1.1.16] 2025 OCT 17
+
+### Fixed
+- Error When Trying to Open Properties for Older QRiS Project #839
+- Metric export: use the current display units and are included in column names. #835, #836. #617, #618,
+
+### Changed
+- Change QRiS panel so it opens as full dock #838
+
+
 ### [1.1.15] 2025 OCT 14
 
 ### Fixed
