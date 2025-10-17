@@ -9,6 +9,7 @@ from ..model.metric_value import MetricValue, load_metric_values
 from ..model.analysis import Analysis
 from ..model.project import Project
 from ..model.metric import Metric
+from ..lib.unit_conversion import short_unit_name
 
 from .utilities import add_standard_form_buttons
 
@@ -80,10 +81,18 @@ class FrmExportMetrics(QtWidgets.QDialog):
                         values = {'analysis_name': analysis.name, 'sample_frame_id': sample_frame_feature.id, 'data_capture_event_id': data_capture_event.id, 'sample_frame_feature_name': sample_frame_feature.name, 'data_capture_event_name': data_capture_event.name}
                         for analysis_metric in analysis.analysis_metrics.values():
                             metric: Metric = analysis_metric.metric
+                            
+                            output_unit = self.analysis.units.get(metric.unit_type, None)
+                            if metric.normalized and output_unit != 'ratio':
+                                display_unit = self.analysis.units['distance']
+                                normalization_unit = self.analysis.units['distance']
+                            display_unit = None if output_unit in ['count', 'ratio'] else output_unit
+                            metric_name = f'{metric.name} ({short_unit_name(output_unit)}'
+                            metric_name = metric_name + f'/{short_unit_name(normalization_unit)})' if metric.normalized and output_unit != 'ratio' else metric_name + ')'
                             metric_value: MetricValue = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
-                            value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.automated_value
+                            value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.current_value(display_unit)
                             value = value if value is not None else ''
-                            values.update({metric.name: value})
+                            values.update({metric_name: value})
                         out_values.append(values)
 
             if self.combo_format.currentText() == 'CSV':
