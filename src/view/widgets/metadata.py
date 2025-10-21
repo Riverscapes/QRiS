@@ -172,16 +172,17 @@ class MetadataWidget(QtWidgets.QWidget):
         # Set the focus to edit the key
         self.table.setCurrentCell(self.table.rowCount() - 1, 0)
         self.table.editItem(key_item)
-
+        self.cmdDelete.setEnabled(True)  # Always enable after adding
 
     def delete_row(self):
-
-        # need to delete from metadata dict as well
-        if self.table.currentRow() > -1:
-            if self.table.item(self.table.currentRow(), 0) is not None:
-                key = self.table.item(self.table.currentRow(), 0).text()
+        row = self.table.currentRow()
+        if row > -1:
+            key_item = self.table.item(row, 0)
+            key = key_item.text() if key_item is not None else None
+            if key:
                 self.delete_item('metadata', key)
-        self.table.removeRow(self.table.currentRow())
+            self.table.removeRow(row)
+            self.cmdDelete.setEnabled(False)
 
     def delete_item(self, metadata_type: str, key: str):
 
@@ -204,10 +205,13 @@ class MetadataWidget(QtWidgets.QWidget):
         # we need to disable the delete button if a system metadata key is selected
         row = self.table.currentRow()
         if row > -1:
-            if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
+            widget = self.table.cellWidget(row, 1)
+            if widget is not None and getattr(widget, 'is_system', False):
                 self.cmdDelete.setEnabled(False)
             else:
                 self.cmdDelete.setEnabled(True)
+        else:
+            self.cmdDelete.setEnabled(False)
 
     def validate(self) -> bool:
 
