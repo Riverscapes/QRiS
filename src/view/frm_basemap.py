@@ -69,14 +69,14 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtName.setText(name)
 
             # Attempt to parse the raster type from the source raster name
-            if 'dem' in self.txtName.text().lower():
+            if 'hillshade' in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Hillshade'))
+            elif 'dem' in self.txtName.text().lower():
                 self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Digital Elevation Model (DEM)'))
             elif 'vbet' in self.txtName.text().lower():
                 self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Valley Bottom Evidence'))
             elif 'detrended' in self.txtName.text().lower():
                 self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Detrended Surface'))
-            elif 'hillshade' in self.txtName.text().lower():
-                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Hillshade'))
             else:
                 self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Other'))
             self.set_hillshade()
