@@ -173,10 +173,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         ltv: QgsLayerTreeView = iface.layerTreeView()
         # workaround for QGIS < 3.32
         if hasattr(ltv, 'contextMenuAboutToShow'):
+            try:
+                ltv.contextMenuAboutToShow.disconnect(self.add_context_batch_edit_attributes)
+            except TypeError:
+                # Was not connected yet, ignore
+                pass
             ltv.contextMenuAboutToShow.connect(self.add_context_batch_edit_attributes)
         else:
             version = Qgis.QGIS_VERSION
-            QgsMessageLog().logMessage(f'The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.', 'QRiS', level=Qgis.Warning)
+            QgsMessageLog().logMessage(
+                f'The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.',
+                'QRiS', level=Qgis.Warning)
 
     def build_tree_view(self, project_file, new_item=None):
         """
@@ -1803,17 +1810,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
 
     def add_context_batch_edit_attributes(self, menu: QtWidgets.QMenu) -> None:
-        
         layer: QgsVectorLayer = iface.activeLayer()
         if not layer:
             return
         if layer.type() != QgsMapLayer.VectorLayer:
             return
-        
+
         event_layer_field_index = layer.fields().indexOf('event_layer_id')
         if event_layer_field_index == -1:
             return
-        
+
+        # Prevent duplicate menu items
+        for action in menu.actions():
+            if action.text() == 'Batch Edit QRiS Attributes':
+                return
+
         menu.addSeparator()
         menu.addAction('Batch Edit QRiS Attributes', self.batch_edit_attributes)
 
