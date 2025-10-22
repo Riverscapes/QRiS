@@ -83,6 +83,7 @@ from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_valley_bottom import FrmValleyBottom
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
+from .frm_layer_type import FrmLayerTypeDialog
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 from ..lib.map import get_zoom_level, get_map_center
@@ -202,23 +203,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         project_node = self.add_child_to_project_tree(rootNode, self.project)
         inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
 
-        riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
-        [self.add_child_to_project_tree(riverscapes_node, item) for item in self.project.valley_bottoms.values()]
+        self.riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.riverscapes_node, item) for item in self.project.valley_bottoms.values()]
 
-        surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
-        [self.add_child_to_project_tree(surfaces_node, item) for item in self.project.rasters.values() if item.is_context is False]
+        self.surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.surfaces_node, item) for item in self.project.rasters.values() if item.is_context is False]
 
-        aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
-        [self.add_child_to_project_tree(aoi_node, item) for item in self.project.aois.values()]
+        self.aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.aoi_node, item) for item in self.project.aois.values()]
 
-        sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
-        [self.add_child_to_project_tree(sample_frames_node, item) for item in self.project.sample_frames.values()]
+        self.sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.sample_frames_node, item) for item in self.project.sample_frames.values()]
 
-        profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
-        [self.add_child_to_project_tree(profiles_node, item) for item in self.project.profiles.values()]
+        self.profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.profiles_node, item) for item in self.project.profiles.values()]
 
-        cross_sections_node = self.add_child_to_project_tree(inputs_node, CrossSections.CROSS_SECTIONS_MACHINE_CODE)
-        [self.add_child_to_project_tree(cross_sections_node, item) for item in self.project.cross_sections.values()]
+        self.cross_sections_node = self.add_child_to_project_tree(inputs_node, CrossSections.CROSS_SECTIONS_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.cross_sections_node, item) for item in self.project.cross_sections.values()]
 
         self.context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.is_context is True]
@@ -242,7 +243,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         attachments_node = self.add_child_to_project_tree(project_node, ATTACHMENT_MACHINE_CODE)
         [self.add_child_to_project_tree(attachments_node, item) for item in self.project.attachments.values()]
 
-        for node in [project_node, inputs_node, riverscapes_node, surfaces_node, aoi_node, sample_frames_node, profiles_node, cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
+        for node in [project_node, inputs_node, self.riverscapes_node, self.surfaces_node, self.aoi_node, self.sample_frames_node, self.profiles_node, self.cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
@@ -378,7 +379,44 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def qris_from_qrave(self, layer_path, layer_type, metadata):
 
         if layer_type == 'raster':
-            self.add_raster(self.context_node, True, layer_path, meta=metadata)
+            frm = FrmLayerTypeDialog(['Surface Raster', 'Context Raster'])
+            result = frm.exec_()
+            selected_type = frm.selected_type()
+            if result == QtWidgets.QDialog.Rejected or selected_type is None:
+                return
+            elif selected_type == 'Surface Raster':
+                is_context = False
+                node = self.surfaces_node
+            else:
+                is_context = True
+                node = self.context_node
+            self.add_raster(node, is_context, layer_path, meta=metadata)
+        elif layer_type == 'polygon':
+            frm = FrmLayerTypeDialog(['Riverscape (Valley Bottom)', 'AOI', 'Sample Frame', 'Context Vector'])
+            result = frm.exec_()
+            selected_type = frm.selected_type()
+            if result == QtWidgets.QDialog.Rejected or selected_type is None:
+                return
+            elif selected_type == 'Riverscape (Valley Bottom)':
+                self.add_valley_bottom(self.riverscapes_node,layer_path, meta=metadata)
+            elif selected_type == 'AOI':
+                self.add_aoi(self.aoi_node, layer_path, meta=metadata)
+            elif selected_type == 'Sample Frame':
+                self.add_sample_frame(self.sample_frames_node, layer_path, meta=metadata)
+            else:
+                self.add_context_vector(self.context_node, layer_path, meta=metadata)
+        elif layer_type == 'line':
+            frm = FrmLayerTypeDialog(['Profile/Centerline', 'Cross Sections', 'Context Vector'])
+            result = frm.exec_()
+            selected_type = frm.selected_type()
+            if result == QtWidgets.QDialog.Rejected or selected_type is None:
+                return
+            elif selected_type == 'Profile/Centerline':
+                self.add_profile(self.profiles_node, layer_path, meta=metadata)
+            elif selected_type == 'Cross Sections':
+                self.add_cross_sections(self.cross_sections_node, layer_path, meta=metadata)
+            else:
+                self.add_context_vector(self.context_node, layer_path, meta=metadata)
         else:
             self.add_context_vector(self.context_node, layer_path, meta=metadata)
 
@@ -1384,7 +1422,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
         return out_layer
 
-    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int):
+    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, meta: dict = None):
         """Initiates adding a new aoi"""
 
         import_source_path = None
@@ -1399,6 +1437,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmAOI(self, self.project, import_source_path)
+        if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
+            if 'project_metadata' in meta:
+                for key, value in meta['project_metadata'].items():
+                    key = f'Project {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'layer_metadata' in meta:
+                for key, value in meta['layer_metadata'].items():
+                    key = f'Layer {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'symbology' in meta:
+                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -1462,7 +1514,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         add_to_map = add_to_map_method()
         self.add_child_to_project_tree(parent_node, sample_frame_method(), add_to_map)
 
-    def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int):
+    def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int, meta=None):
         """Initiates adding a new valley bottom"""
 
         import_source_path = None
@@ -1477,6 +1529,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmValleyBottom(self, self.project, import_source_path)
+        if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
+            if 'project_metadata' in meta:
+                for key, value in meta['project_metadata'].items():
+                    key = f'Project {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'layer_metadata' in meta:
+                for key, value in meta['layer_metadata'].items():
+                    key = f'Layer {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'symbology' in meta:
+                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -1494,7 +1560,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.add_child_to_project_tree(parent_node, frm.valley_bottom, frm.chkAddToMap.isChecked())
 
         
-    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int):
+    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, meta: dict = None):
 
         import_source_path = None
         if mode == DB_MODE_IMPORT:
@@ -1507,6 +1573,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmProfile(self, self.project, import_source_path)
+        if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
+            if 'project_metadata' in meta:
+                for key, value in meta['project_metadata'].items():
+                    key = f'Project {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'layer_metadata' in meta:
+                for key, value in meta['layer_metadata'].items():
+                    key = f'Layer {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'symbology' in meta:
+                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -1522,7 +1602,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 parent_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
 
-    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int):
+    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int, meta: dict = None):
 
         import_source_path = None
         if mode == DB_MODE_IMPORT:
@@ -1536,6 +1616,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
 
         frm = FrmCrossSections(self, self.project, import_source_path)
+
+        if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
+            if 'project_metadata' in meta:
+                for key, value in meta['project_metadata'].items():
+                    key = f'Project {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'layer_metadata' in meta:
+                for key, value in meta['layer_metadata'].items():
+                    key = f'Layer {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'symbology' in meta:
+                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.cross_sections, frm.chkAddToMap.isChecked())
