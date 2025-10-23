@@ -1,6 +1,20 @@
 # QRiS Plugin
 
-### [1.1.16] 2025 OCT 17
+## [1.1.17] 2025 OCT 23
+
+### Fixed
+- Duplicate Batch Edit QRiS Attributes When Selecting QRiS Layer #842
+- Can't Delete Metdata Rows in QRiS Properties When Creating New Project #841
+- Changing Raster Type When Importing Hillshade into QRiS 
+
+### Added
+- Add option to direct RS Viewer layers into specific  QRiS nodes.
+
+### Changed
+- Change initial docking to the right #838
+
+
+## [1.1.16] 2025 OCT 17
 
 ### Fixed
 - Error When Trying to Open Properties for Older QRiS Project #839
