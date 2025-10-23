@@ -15,7 +15,7 @@ REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
 LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
 SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
 
-default_dock_widget_location = 'left'
+default_dock_widget_location = 'right'
 
 class FrmSettings(QDialog):
     def __init__(self, settings: QSettings, qris_project: Project):
