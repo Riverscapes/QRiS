@@ -1,0 +1,83 @@
+---
+title: Risk Assessment Protocol
+sidebar_position: 2
+description: Protocol to evaluate infrastructure risks and recovery potential.
+---
+
+The Risk Assessment Protocol is designed to identify and evaluate potential restoration risks to infrastructure and assess recovery potential in valley bottoms. The protocol consists of four key components:
+- **Stream Assessment**: This component evaluates LTPBR opportunities within streams.   
+- **Land Use Assessment**: This step analyzes current and historical land use to gauge the recovery potential of restoration. 
+- **Infrastructure Risk Assessment**: This focuses on identifying and assessing risks to infrastructure typically found in valley bottoms, such as buildings, roads, bridges, canals, and diversions.
+- **Property Assessment**: This final component assesses input and support for LTPBR from local property owners, managers, and stakeholders.
+
+## Protocol Summary
+
+Attribute|Value
+---|---
+Name|Risk Assessment Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/risk_assessment_protocol.xml
+Citation|Burgert et al. 2025. Risk Assessment Protocol. Prepared by Anabranch Solutions. 
+Author|Zach Burgert 
+
+## Layers
+
+Attribute|Type|Description
+---|---|---
+*Stream Assessment*|Linestring|evaluate LTPBR opportunity by assessing stream order, bank material, bed material, riparian vegetation health, and flood risk. 
+*Land Use Assessment*|Polygon|evaluate current and estimated historic land use of the valley bottom, as well as the departure of current riparian vegetation from historical conditions.
+*Infrastructure Risk Assessment*|Point, Linestring, and Polygon|assign a categorical risk value to identified infrastructure within the valley bottom based on its location to the stream and other relevant factors, such as flood risk.
+*Property Assessment*|Point|evaluate the willingness of the landowner or manager to permit LTPBR processes on their property, and gauge the general attitudes of local property owners and stakeholders towards LTPBR.
+
+## Layer Attributes
+
+**`Stream Assessment`**
+
+Field|Description|Values
+---|---|---
+*Stream Order Wadeability*|assessment of stream size for LTPBR| <li> *1st through 3rd Order Wadable Stream* </li> <li> *3rd through 5th Order Wadable Stream* </li> <li> *5th Order Non-Wadable Stream or Higher* </li>
+*Bank Material*|assessment of bank erodibility by LTPBR structures| <li> *Loosely consolidated sediment and/or rock* </li> <li> *Moderately compacted sediment and/or rock* </li> <li> *compact sediment and/or rock* </li>
+*Bed Material*|assessment of bed material for potential habitat| <li> *sand, silt or clay* </li> <li> *fine to coarse gravel* </li> <li> *small cobbles* </li> <li> *large cobbles or boulders* </li> <li> *bedrock* </li>
+*Riparian Vegetation*|assessment of riparian vegetation for habitat or recovery potential| <li> *bare* </li> <li> *upland dominant (little to no riparian vegetation)* </li> <li> *mixture of riparian and upland species* </li> <li> *riparian dominant (little to no upland vegetation)* </li> 
+*Flood Risk*|assessment of stream for potential flood risks to LTPBR structures| <li> *evidence of small, frequent flood events* </li> <li> *evidence of medium-sized, infrequent flood events* </li> <li> *evidence of large, rare flood events* </li>
+*Opportunity Rating*|numeric value for LTPBR opportunity of given stream on scale from 0 (least ideal stream locations for LTPBR) to 5 (most ideal stream locations for LTPBR)| NA
+
+
+**`Land Use Assessment`**
+
+Field|Description|Values
+---|---|---
+*Current Land Use*|contemporary (e.g., < 50 years) land use of the valley bottom| <li> *undeveloped range or forest* </li> <li> *crop, pasture, or hay* </li> <li> *developed* </li> 
+*Historic Land Use*|estimated historic (e.g., > 50 years) land use of the valley bottom| <li> *undeveloped range or forest* </li> <li> *crop, pasture, or hay* </li> <li> *developed* </li>
+*Estimated Riparian Vegetation Departure*|assessment of riparian vegetation departure from historic conditions as result of changing land use| <li> *large departure from estimated historic conditions* </li> <li> *small departure from estimated historic conditions* </li> <li> *no change* </li> 
+
+**`Infrastructure Risk Assessment`**
+
+Layers: `Buildings`, `Roads`, `Bridges`, `Canals`, `Diversions`, `Culverts`, and `Other`
+
+Field|Description|Values
+---|---|---
+*Location*|location within valley bottom  | <li> *within valley bottom and adjacent to channel* </li> <li> *within valley bottom and nonadjacent to channel* </li> <li> *outside valley bottom* </li> 
+*Flood Risk*|potential risk of contemporary flooding to infrastructure| <li> *high risk* </li> <li> *medium risk* </li> <li> *low risk* </li>
+*LTPBR Risk*|potential risk of infrastructure being impacted by LTPBR based on location and flood risk | <li> *high probability of being negatively impacted by LTPBR* </li> <li> *medium probability of being negatively impacted by LTPBR* </li> <li> *low probability of being negatively impacted by LTPBR* </li> 
+
+**`Property Assessment`**
+
+Layer: `Property Assessment`
+
+Field|Description|Values
+---|---|---
+*Channel and Floodplain Adjustments in Valley Bottom*|willingness of landowner/manager to allow stream and floodplain adjustments in valley bottom| <li> *landowner/manager willing to allow stream and floodplain adjustment in all of valley bottom* </li> <li> *landowner/manager willing to allow stream and floodplain adjustment in some portions of valley bottom* </li> <li> *landowner/manager unwilling to allow stream and floodplain adjustment in valley bottom* </li> 
+*Wood Accumulation and Beaver Activity in Valley Bottom*|willingness of landowner/manager to allow wood accumulation and/or beaver activity in valley bottom| <li> *landowner/manager willing to allow dynamic processes* </li> <li> *landowner/manager willing to allow some processes* </li> <li> *landowner/manager unwilling to allow processes of wood accumulation and/or beaver activity* </li>
+*Adaptive Management*|willingness of landowner/manager to participate in adaptive management| <li> *landowner/manager committed to follow up monitoring, maintenance, and treatments* </li> <li> *landowner/manager committed to follow up monitoring, maintenance, and treatments but limited resources restrict adaptive management* </li> <li> *landowner/manager wants single intervention; no follow up monitoring, maintenance, or treatments* </li> 
+
+Layer: `Adjacent Landowner Assessment`
+
+Field|Description|Values
+---|---|---
+*Support for LTPBR*|local support of landowners towards LTPBR actions| <li> *large majority of adjacent landowners approve of LTPBR actions near their property* </li> <li> *some adjacent landowners approve of LTPBR actions near their property* </li> <li> *small minority of adjacent landowners approve of LTPBR actions near their property* </li> 
+
+## References 
+
+Bennett, S.N., Wheaton, J.M., Bouwes, N., Jordan, C.E., Macfarlane, W.W., Maestas, J.D., Portugal, E. and Shahverdian, S.M., 2019. Chapter 3 – Planning for Low-Tech Process-Based Restoration. In: J.M. Wheaton, S.N. Bennett, N. Bouwes, J.D. Maestas and S.M. Shahverdian (Editors), Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Utah State University Restoration Consortium, Logan, Utah. pp. 57.
