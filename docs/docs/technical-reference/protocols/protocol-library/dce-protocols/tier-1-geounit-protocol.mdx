@@ -1,0 +1,139 @@
+---
+title: Geomorphic Mapping of Riverscapes Protocol
+sidebar_position: 1
+description: Geomorphic Unit Assessment of Valley Bottom. 
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Overview 
+
+The ***Geomorphic Mapping of Riverscapes Protocol*** is the preliminary assessment of a valley bottom. This protocol helps identify and categorize Tier 1 geomorphic units, or ‘building blocks’, of a riverscape, as well as define the lateral boundaries (i.e., margins) of the valley bottom.
+
+The main purpose of this protocol is to **inventory the resources that define a riverscape’s setting**. This provides crucial insights into the natural and human-caused processes that shape a valley bottom. From this, a deeper understanding of channel form & function, geomorphic condition, and riparian health can be understood (*Bennet et al. 2019*). Furthermore, this protocol identifies sources of current or past human development or natural disturbances that influence or have altered the riverscape. 
+
+:::warning
+The Tier 1 protocol should be completed before digitization of pre-project monitoring, design, or as-built implementation. Within QRiS, you can add this protocol to your project by right clicking on the `Data Capture Events` container, selecting `Add New Data Capture Event` and finding the protocol in the list provided. 
+:::
+
+![Tier1-Example](/images/technical-reference/metrics/Tier1-GeoUnits-Slide.png)
+*Example of geomorphic unit mapping in different valley settings.*
+
+:::tip
+By understanding these processes, you can tailor more effective restoration designs and actions that target key components of your riverscape and maximize ecological uplift. This includes setting realistic goals, managing expectations, and assessing potential risks in your riverscape (*Bennet et al. 2019*). Therefore, this protocol should be the first (and most important) step of the LTPBR planning phase.  
+:::
+
+### Protocol Summary
+
+Attribute|Value
+---|---
+Name|Geomorphic Mapping of Riverscapes Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/riverscape_geomorphic_mapping_protocol.xml
+Citation|Burgert et al. 2025. Geomorphic Mapping of Riverscapes Protocol. Prepared by Anabranch Solutions. 
+Author|Zach Burgert  
+
+## Layers & Metrics
+
+Attribute|Type|Metrics|Description
+---|---|---|---
+*Tier 1 Gemorphic Units*|Polygon|`Active Channel Ratio`, `Active Floodplain Ratio`, `Inactive Floodplain Ratio`|landforms shaped and distinguished by vertical flood stage height 
+*Margins*|Linestring|NA|abutment of channel against valley bottom, valley, or anthropogenic feature. 
+
+<details open>
+<summary>*How to Use This Protocol*</summary>
+
+The following step-by-step guide will show you how to map your riverscape using this protocol. 
+
+- Start by digitizing Tier 1 channel extents and Tier 1 fan extents within the valley bottom to map the river network and most discernable geomorphic features.  
+- Next, digitize the remaining Tier 1 geomorphic units to identify the landforms that fundamentally shape the valley bottom. 
+- Finally, digitize the margins of the active channel(s). This will identify the confining features that constrain a channel's form or function and identify potential risks for LTPBR.  
+
+Once those layers are digitized, you can calculate metrics to assess the valley bottom’s condition and its restoration potential. These include: 
+ 
+- **Active Channel Ratio**: The ratio of active channel area to valley bottom area.  
+- **Active Floodplain Ratio**: The ratio of active floodplain area to valley bottom area.
+- **Inactive Floodplain Ratio**: The ratio of inactive floodplain area to valley bottom area.
+</details>
+
+![Geomorphic-Mapping-Example](/images/technical-reference/metrics/geomorphic-mapping-protocol.png)
+*Example of geomorphic mapping protocol in practice at Wall Creek. Digitized layer extents and symbology are stored in the QRiS geopackage and can be displayed in any QGIS (.qgz) project.*
+
+### Video Demonstartion
+
+<YouTubeEmbed videoId="yS7huAxrJp8" />
+
+### Layer Attributes 
+
+<Tabs>
+  <TabItem value="Tier 1 Geomorphic Units" label="Tier 1 Geomorphic Units" default>
+    Geomorphic Unit Type|Description
+---|---
+*Channel*|Portion of valley bottom that is inundated by bankfull flow.
+*Active Floodplain*|Portion of valley bottom that is frequently flooded by the contemporary flood regime. Evidence of active floodplain can include active riparian vegetation, alluvial flood deposits, wood deposition, etc. 
+*Inactive Floodplain*|Portion of valley bottom that is not flooded or rarely flooded by  the contemporary flood regime. Evidence of inactive floodplain can include relic riparian vegetation, upload vegetation encroachment, remnant alluvial and wood deposits, etc.  
+*Terrace*|Relic floodplain that is no longer flooded by the maximum contemporary flood regime. This includes floodplains that were once inundated by historic flood regimes before channel downcutting and resulting incision disconnected the channel from these floodplains and created new ones at lower elevations.  
+*Alluvial Fan*|fan-shaped sediment deposit formed where a channel exits a high-sloped area and enters a low-sloped area. These features consist of well-sorted alluvium that is deposited as the channel's velocity decreases.
+*Colluvial Fan*|cone-shaped deposit of loose, poorly sorted sediment (colluvium) that forms at the base of a hillslope. It's created by unchanneled, gravity-driven processes like sheet wash or rainwash.
+*Moraine*|ridge-like deposit of compact, unsorted sediment (glacial till) formed by a melting or retreating glacier. 
+*Hillslope/Upland*|steeply-sloped landforms outside of the valley margins. These features were never flooded or shaped by the historical flood regime and consist of colluvium or bedrock.  
+  </TabItem>
+  <TabItem value="margins" label="Margins">
+    Margin Type|Description
+---|--- 
+*Valley Bottom Margin*|abutment of channel against valley bottom, defined by terraces or fans. 
+*Valley Margin*|abutment of channel against valley, defined by hillslopes.
+*Anthropogenic*|abutment of channel against anthropogenic feature or infrastructure (such as road, railroad, building, etc.)
+
+Anthropogenic Margin Type|Description
+---|---
+*Embankment*|artificial bank, wall, or mound, typically constructed with earthen materials such as soil, rock, or other aggregates. Its primary purpose is to provide an elevated platform for infrastructure to reduce flooding risk. 
+*Fence*|freestanding structure designed to enclose, delineate, or obstruct an area. It is typically constructed from a series of posts, wire, panels, or other components. 
+*Hedgerow*|barrier composed of a densely vegetated, layered planting of woody shrubs or trees. Traditionally used to limit soil erosion near the banks of rivers. 
+*Constructed Levee*|type of embankment specifically designed and engineered to contain, control, or divert the flow of a river and mitigate flooding. 
+*Railroad*|network or series of tracks used to transport trains. 
+*Road*|leveled pathway typically made of asphalt, concrete, or dirt designed to transport vehicles 
+*Wall*|upright structure typically made of concrete that serves to enclose, divide, or protect an area. 
+  </TabItem>
+</Tabs>
+
+### Metric Attributes
+
+<Tabs>
+  <TabItem value="Active Channel Ratio" label="Active Channel Ratio" default>
+  Description|Calculation
+  ---|---
+  *Proportion of the valley bottom that is inundated by bankfull flow. This includes channel polygons digitized in the Tier 1 Geomorphic Unit layer.*|`Sum (Channel Area) / Total Valley Bottom Area` 
+  </TabItem>
+  <TabItem value="Active Floodplain Ratio" label="Active Floodplain Ratio">
+  Description|Calculation
+  ---|---
+  *Proportion of the valley bottom that is flooded by the contemporary flood regime. This includes active floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.*|`Sum (Active Floodplain Area) / Total Valley Bottom Area`
+  </TabItem>
+  <TabItem value="Inactive Floodplain Ratio" label="Inactive Floodplain Ratio">
+  Description|Calculation
+  ---|---
+  *Proportion of the valley bottom that is not flooded by the contemporary flood regime. This includes inactive floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.*|`Sum (Inactive Floodplain Area) / Total Valley Bottom Area`
+  </TabItem>
+</Tabs>
+
+## Resources
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Bennett et al. 2019",
+        description: " Chapter 3 – Planning for Low-Tech Process-Based Restoration from LTPBR Design Manual",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://www.researchgate.net/publication/332304801_Chapter_3_-_Planning_for_Low-Tech_Process-Based_Restoration",
+       },
+               {
+        title: "Wheaton et al. 2015",
+        description: "Geomorphic Mapping and Taxonomy of Fluvial Landforms.",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://www.researchgate.net/publication/281321324_Geomorphic_Mapping_and_Taxonomy_of_Fluvial_Landforms",
+       },
+    ]}
+    />

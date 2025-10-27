@@ -4,15 +4,20 @@ sidebar_position: 1
 description: Protocol to document conceptual restoration designs as referenced in LTPBR V2. 
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Overview
+
 The *LTPBR V2 Design Protocol* is used to develop conceptual restoration plans. It helps users visualize:
 
 - **Proposed restoration structures** and their spatial & temporal distribution. 
 - **Anticipated gemorphic & hydraulic changes** to the riverscape. 
-- **Complex objectives** for multiple structures in a single, clear format.
+- **Complex objectives** for multiple structures.
 
 Essentially, the protocol allows restoration designs to convey the location, orientation, type, and expected hydrogeomorphic response of proposed structures. Users can create multiple designs to represent different phases of a project or to show various potential outcomes. Finally, the protocol allows users to digitize important riverscape features that might affect project logistics or influence the design itself.
 
-## Protocol Summary
+### Protocol Summary
 
 Attribute|Value
 ---|---
@@ -23,7 +28,7 @@ XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols
 Citation|Weber N., Wheaton J.M., Shalcross A., Al-Chokhachy R, Bailey P., Bartelt K., Bennett S., Bouwes B., Bouwes N., Gilbert J., Dickard M., Heitke J., Jordan C., Glassic H., MacFarlane W.W., Miller S., Saunders C., Whitehead K. 2024. Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health. Version 2.0. Prepared by Anabranch Solutions and Utah State University Riverscapes Assessment and Monitoring Lab. Prepared for the Bureau of Land Management. Logan, UT. 81 pp. [DOI: 10.5281/zenodo.13769899](https://zenodo.org/records/13769899)
 Author|Nick Weber
 
-## Layers 
+## Layers & Metrics 
  
 The protocol uses seven layers to organize different aspects of a restoration design planning. These layers represent riverscape observations, structure locations, complex extents, and Zones of Influence (ZOI).
 
@@ -31,25 +36,55 @@ The protocol uses seven layers to organize different aspects of a restoration de
 - **Observations** are digitized as points, lines, or polygons to highlight different feature’s location, orientation, spatial distribution, or key attributes. 
 - **Complex extents and ZOIs** are digitized as polygons to illustrate the area influenced by a single structure or group of structures.
 
-For a visual example, refer to the graphic below.
+![Design-Example](/images/technical-reference/metrics/Design-Protocol.png)
+*Example of LTPBR V2 Design protocol in practice at Bailey Flat. Digitized layer extents and symbology are stored in the QRiS geopackage and can be displayed in any QGIS (.qgz) project.*
 
-`Observations (Point, Line, Polygon)`
+### Layer Attributes
+
+<Tabs>
+  <TabItem value="Observation Points" label="Observation Points" default>
 
 *Description: highlight key valley bottom features and other important critical considerations that influence the restoration design*
 
-Attribute|Feature Class|Description
----|---|---
-Logistics|Point, Line, Polygon|Description
-Riverscape Feature|Point, Line|Description
-Design Considerations|Point|Description
-Building Materials|Point, Polygon|Description
-Photo Observation|Point|Description
-Caution|Point, Line, Polygon|Description
-Infrastructure|Polygon|Description
-Road|Line|Description
-Other|Point, Line, Polygon|Description
+Attribute|Description
+---|---
+Building Materials|Ideal areas for harvesting materials to be used in structure construction.
+Caution|Any feature that deserves caution, especially for the safety of construction or monitoring crews.
+Design Considerations|A feature or observation that should be considered in an LTPBR design, best clarified by including notes about how the featured might be incorporated into an LTPBR design.
+Logistics|Used to provide project annotations such as material staging locations, parking areas, camping, etc….
+Photo Observation|Photo observations made in the field.
+Other|Other features that may be relevant to LTPBR planning, design, or implementation.
+Riverscape Feature|Any riverscape feature that might be important to make note of in a design that might provide opportunities or risks. It is especially important to mark those that were observed in the field but hard to detect using aerial imagery.
+</TabItem>
+<TabItem value="Observation Lines" label="Observation Lines" default>
 
-`Structures (Point, Line)`
+*Description: highlight key valley bottom features and other important critical considerations that influence the restoration design*
+
+Attribute|Description
+---|---
+Caution|Any feature that deserves caution, especially for the safety of construction or monitoring crews.
+Logistics|Used to provide project annotations such as material staging locations, parking areas, camping, etc….
+Other|Other features that may be relevant to LTPBR planning, design, or implementation.
+Riverscape Feature|Any riverscape feature that might be important to make note of in a design that might provide opportunities or risks. It is especially important to mark those that were observed in the field but hard to detect using aerial imagery.
+Road|Access roads to the construction site as well as designated routes on the riverscape where roads may not currently exist.
+</TabItem>
+<TabItem value="Observation Polygons" label="Observation Polygons" default>
+
+*Description: highlight key valley bottom features and other important critical considerations that influence the restoration design*
+
+Attribute|Description
+---|---
+Building Materials|Ideal areas for harvesting materials to be used in structure construction.
+Caution|Any feature that deserves caution, especially for the safety of construction or monitoring crews.
+Infrastructure|Polygon|Any anthropogenic infrastructure in the riverscape that is important to be aware of or that might be at risk.
+Logistics|Used to provide project annotations such as material staging locations, parking areas, camping, etc….
+Other|Other features that may be relevant to LTPBR planning, design, or implementation.
+</TabItem>
+<TabItem value="Structure Complex Extents" label="Structure Complex Extents" default>
+
+*Description: polygon that defines an area where multiple structures are designed to work together to achieve a specific, complex objective.*
+</TabItem>
+<TabItem value="Structure Points & Lines" label="Structure Points/Lines" default>
 
 *Description: locations of design structures as points or lines. Points show location only, while lines also give orientation & length measurement of structure.*
 
@@ -95,55 +130,57 @@ Vanes|Zeedyk Structure|An in-channel structure usually constructed of posts and 
 Wicker Weirs|Zeedyk Structure|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
 Wood Jam|Wood Accumulation|Analogous to ALS being a placed accumulation of woody material that does not include driven posts.
 Zuni Bowl|Zeedyk Structure|An in-channel headcut control structure composed of rock-lined step falls and plunge pools intended to arrest the progression of headcuts.
+</TabItem>
+<TabItem value="Zones of Influence (Complex)" label="Zones of Influence (Complex)" default>
 
-`Structure Complex Extents (Polygon)`
-
-*Description: polygon that defines an area where multiple structures are designed to work together to achieve a specific, complex objective.*
-
-`Zone of Influence (Polygon)`
-
-*Description: anticipated areal effect that complex (i.e., multiple structures) or individual structure will influence*
-
-`Complex ZOI`
+*Description: anticipated areal effect that complex (i.e., multiple structures) will influence*
 
 Attribute|Description
 ---|---
-*Increase Channel Complexity*|Description
-*Increase Floodplain Connectivity*|Description
-*Overbank Flow Dispersal*|Description
-*Pond/Wetland Creation*|Description
-*Side-Channel Creation*|Description
-*Riparian/Wetland Expansion*|Description
-*Cover/Complexity*|Description
-*Widening and Aggradation*|Description
-*Accelerate Incision Recovery*|Description
-*Aggradation and Avulsion*|Description
-*Facilitte Beaver Translocation*|Description
-*Lateral Channel Migration*|Description
-*Headcut Arrest*|Description
+*Accelerate Incision Recovery*|Force channel widening to halt channel incision  
+*Aggradation and Avulsion*|Accelerate bank and bar formation to force channel into new pathways 
+*Cover/Complexity*|Enhance riparian vegetation cover or complexity 
+*Facilitate Beaver Translocation*|Enhance habitat and flow conditions suitable for beaver reintroduction
+*Headcut Arrest*|Stabilize active headcuts or prevent headcut formation 
+*Increase Channel Complexity*|Diversify flow patterns and increase geomorphic unit diversity 
+*Increase Floodplain Connectivity*|Elevate water table to establish hydrologic connectivity with floodplain 
+*Lateral Channel Migration*|Increase channel sinuosity to diveristy geomorphic conditions 
+*Overbank Flow Dispersal*|Force flow over existing river banks onto floodplain
+*Pond/Wetland Creation*|Create series of ponds or wetlands behind structures
+*Riparian/Wetland Expansion*|Enhance existing riparian or wetland conditions to facilitate habitat expansion 
+*Side-Channel Creation*|Divert flow from main channel into newly formed side-channels
+*Widening and Aggradation*|Erode channel banks to widen channel and increase sediment deposition  
+</TabItem>
+<TabItem value="Zones of Influence (Structure-Geomorphic)" label="Zones of Influence (Structure-Geomorphic)" default>
 
-`Structure ZOI (Hydraulic)`
-
-Attribute|Description
----|---
-*Eddy*|Description
-*Splitting Flow*|Description
-*Shunting Flow*|Description
-*Ponding Flow*|Description
-*Overflow*|Description
-*Constriction Jet*|Description
-*Divergent Flow*|Description
-
-`Structure ZOI (Geomorphic)`
+*Description: anticipated geomorphic effect (area) that individual structure will influence*
 
 Attribute|Description
 ---|---
-*Erode Bank*|Description
-*Erosion from Return Flow Headcut*|Description
-*Erosion from Plunge*|Description
-*Erosion from Convergent Jet*|Description
-*Erosion of Bar Edge*|Description
-*Deposition Overbank*|Description
-*Deposition of Bar*|Description
-*Deposition in Upstream Backwater*|Description
-*Scour Pool Formation*|Description
+*Deposition in Upstream Backwater*|Deposition in ponded water behind structure
+*Deposition of Bar*|Newly formed bar or expansion of existing bar by forced deposition 
+*Deposition Overbank*|Deposition outside of channel
+*Erode Bank*|Erosion of exisiting channel bank
+*Erosion from Convergent Jet*|Erosion of streambed or banks fored by narrow constriction  
+*Erosion of Bar Edge*|Erosion of existing channel bar 
+*Erosion from Plunge*|Erosion of channel bed by cascading water
+*Erosion from Return Flow Headcut*|Headcut erosion formed by excess flow concentration 
+*Scour Pool Formation*|Pool formation by erosion of streambed 
+</TabItem>
+<TabItem value="Zones of Influence (Structure-Hydraulic)" label="Zones of Influence (Structure-Hydraulic)" default>
+
+*Description: anticipated hydraulic effect (area) that individual structure will influence*
+
+Attribute|Description
+---|---
+*Constriction Jet*|Flow constricted to narrow area by structure 
+*Divergent Flow*|Flow that diverges or spreads out by structural forcing 
+*Eddy*|Circular vortex formed by structural obstruction of flow paths 
+*Overflow*|Flow that exceeds the capacity of the channel
+*Ponding Flow*|Pooling of flow behind structure 
+*Shunting Flow*|Flow diverted to specific pathway by structure  
+*Splitting Flow*|Flow separation by structural obstruction 
+</TabItem>
+    </Tabs>
+
+
