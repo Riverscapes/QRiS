@@ -11,10 +11,10 @@ To install QRiS, you'll first need to set up [QGIS](https://qgis.org/), a free a
 There are lots of resources on QGIS if you are new to GIS or QGIS. We have some Knowledge Base articles and tutorials available [here](https://riverscapes.freshdesk.com/support/solutions/folders/153000173894) to help you get started.
 :::
 
-QGIS is compatible with a variety of operating systems, including **Windows, macOS, Linux, and Android**. When choosing a QGIS version, you'll see two main types: Experimental (latest) Releases and Long Term Releases (LTR). LTR versions are generally more stable, while Experimental Releases offer the latest features.
+QGIS is compatible with a variety of operating systems, including **Windows, macOS, Linux, and Android**. When choosing a QGIS version, you'll see two main types: **Experimental (latest) Releases and Long Term Releases (LTR)**. LTR versions are generally more stable, while Experimental Releases offer the latest features.
 
 :::warning
-**QRiS is designed to work with version 3.32 or later**, and has been tested most extensively with [3.34.9](https://download.qgis.org/downloads/qgis-3.34.9.tar.bz2). All previous releases of QGIS can be found [here](https://qgis.org/download/)). If a specific QGIS version is required for a particular QRiS release, this information will be provided in the [release notes](https://github.com/Riverscapes/QRiS/releases) or as a pop-up within the QGIS Plugin Manager. Some users and developers have noticed issues with symbology and exports using 3.42, so if you encounter problems, consider downgrading to 3.32 or 3.36. Note that you can have multiple versions of QGIS installed on your computer.
+**QRiS is designed to work with the latest QGIS LTR**, so be sure to install that version (found [here](https://qgis.org/download/)). If a specific QGIS version is required for a particular QRiS release, this information will be provided in the [release notes](https://github.com/Riverscapes/QRiS/releases) or as a pop-up within the QGIS Plugin Manager.
 :::
 
 
@@ -64,16 +64,3 @@ For automatic updates, you can configure the Plugin Manager settings to `Check f
 ![qris update startup](/images/Update_QRiS_Plugin_2.png) 
 
 ![qris update home](/images/Update_QRiS_Home_Page.png) 
-
-## Installing Older Versions of QRiS
-
-QGIS is constantly issuing new releases. We attempt to make QRiS forward compatible, but occasionally there are bugs that emerge from our QGIS dependencies in newer releases. If you need to install an older version of QRiS, you can do so by downloading the specific version from the [QRiS GitHub Releases page](https://github.com/Riverscapes/QRiS/releases). 
-:::tip
-For troubleshooting, you can have multiple instances of QGIS installed on your computer and they will all attempt to load the QRiS plugin (and other plugins) across the multiple versions. Moreover, if you uninstall one of the versions of QGIS, you will notice your plugins still appear in the other versions of QGIS.
-:::
-
-![Releases Page](/images/install/Releases_Page.png)
-
-Once the version is dowloaded locally onto your device, you can install the plugin in QGIS by going to `Plugins > Manage and Install Plugins > Install from ZIP` and selecting the ZIP file.
-
-![Install-ZIP](/images/install/Install_ZIP_QGIS.png)

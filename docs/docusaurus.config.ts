@@ -183,23 +183,11 @@ const config: Config = {
       links: [
         {
           // Note that this NEEDS to match what's in the default template or we get another column
-          title: 'User Resources',
+          title: 'Support & Contact',
           items: [
             {
-              label: 'Join this User Community',
-              href: 'https://www.riverscapes.net/topics/33160/feed',
-            },
-            {
-              label: 'Search the Data Exchange',
-              href: 'https://data.riverscapes.net/s?type=Project&projectTypeId=riverscapesstudio&view=map',
-            },
-            {
-              label: 'Developers & Code Repository',
-              href: 'https://github.com/Riverscapes/QRiS',
-            },
-            {
               label: 'Knowledge Base',
-              href: 'https://riverscapes.freshdesk.com/a/solutions/categories/153000297758/folders/153000763613?view=all',
+              href: 'https://riverscapes.freshdesk.com/support/solutions/153000297758',
             },
           ],
         },
