@@ -3,6 +3,8 @@ import json
 import sqlite3
 from sqlite3 import Connection
 
+from PyQt5.QtCore import QObject, pyqtSignal
+
 from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
 from qgis.utils import spatialite_connect
 
@@ -23,10 +25,11 @@ from .cross_sections import CrossSections, load_cross_sections
 from .attachment import Attachment, load_attachments
 from .units import load_units
 from .db_item import DBItem, dict_factory, load_lookup_table
+from .db_item_spatial import DBItemSpatial
 
 from ..QRiS.path_utilities import parse_posix_path
 from ..QRiS.protocol_parser import load_protocol_definitions
-from typing import Generator
+from typing import Generator, Dict
 
 PROJECT_MACHINE_CODE = 'Project'
 
@@ -55,23 +58,26 @@ migrated_layers = [
     'valley_bottom_features'
 ]
 
-class Project(DBItem):
+class Project(DBItem, QObject):
+    project_changed = pyqtSignal()
 
     def __init__(self, project_file: str):
-        super().__init__('projects', 1, 'Placeholder')
+        DBItem.__init__(self, 'projects', 1, 'Placeholder')
+        QObject.__init__(self)
 
         self.project_file = parse_posix_path(project_file)
         with sqlite3.connect(self.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
 
-            curs.execute('SELECT id, name, description, map_guid, metadata FROM projects LIMIT 1')
+            curs.execute('SELECT id, name, description, map_guid, metadata, created_on FROM projects LIMIT 1')
             project_row = curs.fetchone()
-            self.name = project_row['name']
-            self.id = project_row['id']
-            self.description = project_row['description']
-            self.map_guid = project_row['map_guid']
-            self.metadata = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
+            self.name: str = project_row['name']
+            self.id: int = project_row['id']
+            self.description: str = project_row['description']
+            self.map_guid: str = project_row['map_guid']
+            self.metadata: dict = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
+            self.created_on: str = project_row['created_on']
 
             # get list of lookup tables
             lkp_tables = [row['name'] for row in curs.execute('SELECT DISTINCT name FROM lookups').fetchall()]
@@ -81,7 +87,7 @@ class Project(DBItem):
             self.sample_frames = load_sample_frames(curs)
             self.layers = load_layers(curs)
             self.protocols = load_protocols(curs, self.layers)
-            self.rasters = load_rasters(curs)
+            self.rasters= load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
             self.events = load_events(curs, self.protocols, None, self.layers, self.lookup_tables, self.rasters)
             self.planning_containers = load_planning_containers(curs, self.events)
@@ -124,7 +130,7 @@ class Project(DBItem):
                                     f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.","QRiS", Qgis.Info)
                             else:
                                 # Update status if changed
-                                existing_metric = existing_metrics[0]
+                                existing_metric: Metric = existing_metrics[0]
                                 if existing_metric.status != metric.status:
                                     # Update in-memory
                                     existing_metric.status = metric.status
@@ -156,7 +162,7 @@ class Project(DBItem):
             QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
         
 
-    def analysis_masks(self) -> dict:
+    def analysis_masks(self) -> Dict[int, SampleFrame]:
         masks = self.sample_frames.copy()
         masks.update(self.aois)
         masks.update(self.valley_bottoms)
@@ -168,14 +174,41 @@ class Project(DBItem):
     def get_absolute_path(self, relative_path: str) -> str:
         return parse_posix_path(os.path.join(os.path.dirname(self.project_file), relative_path))
 
-    def get_safe_file_name(self, raw_name: str, ext: str = None):
+    def get_safe_file_name(self, raw_name: str, ext: str = None) -> str:
         name = raw_name.strip().replace(' ', '_').replace('__', '_')
         if ext is not None:
             name = name + ext
         return name
 
-    def remove(self, db_item: DBItem):
+    def add_db_item(self, db_item) -> None:
+        """Add a new DBItem to the project and generate its spatial view if applicable."""
+        if isinstance(db_item, SampleFrame):
+            self.sample_frames[db_item.id] = db_item
+        elif isinstance(db_item, PourPoint):
+            self.pour_points[db_item.id] = db_item
+        elif isinstance(db_item, ScratchVector):
+            self.scratch_vectors[db_item.id] = db_item
+        elif isinstance(db_item, Raster):
+            self.rasters[db_item.id] = db_item
+        elif isinstance(db_item, Event):
+            self.events[db_item.id] = db_item
+        elif isinstance(db_item, Analysis):
+            self.analyses[db_item.id] = db_item
+        elif isinstance(db_item, Profile):
+            self.profiles[db_item.id] = db_item
+        elif isinstance(db_item, CrossSections):
+            self.cross_sections[db_item.id] = db_item
+        elif isinstance(db_item, PlanningContainer):
+            self.planning_containers[db_item.id] = db_item
+        elif isinstance(db_item, Attachment):
+            self.attachments[db_item.id] = db_item
+        else:
+            raise TypeError(f"Unsupported db_item type: {type(db_item)}")
+    
+        self.project_changed.emit()
 
+    def remove(self, db_item: DBItem) -> None:
+        """Remove a DBItem from the project."""
         if isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                 self.aois.pop(db_item.id)
@@ -216,17 +249,17 @@ class Project(DBItem):
         with sqlite3.connect(self.project_file) as conn:
             conn.execute('UPDATE projects SET metadata = ? WHERE id = ?', [json.dumps(self.metadata), self.id])
 
-    def scratch_rasters(self) -> dict:
+    def scratch_rasters(self) -> Dict[int, Raster]:
         """ Returns a dictionary of all project rasters EXCEPT basemaps"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.is_context is True}
 
-    def surface_rasters(self) -> dict:
+    def surface_rasters(self) -> Dict[int, Raster]:
         """ Returns a dictionary of all project surface rasters"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.is_context is False}
 
-    def get_vector_dbitems(self) -> Generator[DBItem, None, None]:
+    def get_vector_dbitems(self) -> Generator[DBItemSpatial, None, None]:
 
         # yield all vector dbitems
         for dbitem in self.aois.values():
@@ -247,6 +280,20 @@ class Project(DBItem):
             yield dbitem
         # for dbitem in self.layers.values():
         #     yield dbitem
+
+    def refresh_spatial_views(self) -> None:
+        """Recreate all spatial views in the project."""
+        for dbitem in self.get_vector_dbitems():
+            if not isinstance(dbitem, DBItemSpatial):
+                continue
+            dbitem.create_spatial_view(self.project_file)
+            if isinstance(dbitem, PourPoint):
+                dbitem.catchment.create_spatial_view(self.project_file)
+        for analysis in self.analyses.values():
+            analysis.create_spatial_view(self.project_file)
+        for event in self.events.values():
+            for event_layer in event.event_layers:
+                event_layer.create_spatial_view(self.project_file)
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
     """
@@ -275,7 +322,6 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
 
 
 def apply_db_migrations(db_path: str):
-
     conn: Connection = spatialite_connect(db_path)
     conn.execute('PRAGMA foreign_keys = ON;')
     conn.execute('SELECT EnableGpkgMode();')
@@ -288,16 +334,14 @@ def apply_db_migrations(db_path: str):
         if fc_name not in existing_layers:
             features_path = '{}|layername={}'.format(db_path, layer_name)
             create_geopackage_table(geometry_type, fc_name, db_path, features_path, None)
-            QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: create feature class {layer_name}', 'QRiS', Qgis.Info)
+            yield f'Applying QRiS Database Migrations: create feature class {layer_name}'
 
     try:
-        # find any aoi or valley bottom views and update them to use the sample frame feature class
         curs.execute('SELECT name FROM sqlite_master WHERE type="view"')
         views = curs.fetchall()
         for view in views:
             view_name = view[0]
             if view_name.startswith('vw_aoi') or view_name.startswith('vw_valley_bottom'):
-                # if the view has a mask_id column, update it to use the sample_frame_features feature class
                 curs.execute(f'PRAGMA table_info({view_name})')
                 columns = curs.fetchall()
                 mask_column_name = 'mask_id' if view_name.startswith('vw_aoi') else 'valley_bottom_id'
@@ -308,7 +352,7 @@ def apply_db_migrations(db_path: str):
                         conn.execute('BEGIN')
                         curs.execute(f'DROP VIEW IF EXISTS {view_name}')
                         curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}') 
-                        QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: updated view {view_name}', 'QRiS', Qgis.Info)
+                        yield f'Applying QRiS Database Migrations: updated view {view_name}'
                         conn.commit()
     except Exception as ex:
         conn.rollback()
@@ -324,7 +368,7 @@ def apply_db_migrations(db_path: str):
             if migration_row is None:
                 try:
                     migration_path = os.path.join(migrations_dir, migration_file)
-                    QgsMessageLog.logMessage(f'Appling QRiS Database Migrations: {migration_file}', 'QRiS', Qgis.Info)
+                    yield f'Applying QRiS Database Migrations: {migration_file}'
                     with open(migration_path, 'r') as f:
                         sql_commands = f.read()
                     conn.execute('BEGIN')
@@ -338,14 +382,18 @@ def apply_db_migrations(db_path: str):
         conn.rollback()
         raise ex
 
-def test_project(db_path):
+def test_project(db_path: str) -> bool:
+    """ Tests if the given database path is a valid QRiS project database """
+
+    if not os.path.exists(db_path):
+        return False
 
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = dict_factory
         curs = conn.cursor()
-
-        # cherck if the project table exists
+        # check if the project table exists
         curs.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="projects"')
         if curs.fetchone() is None:
-            raise Exception(f'The file {db_path} is not a QRiS project file.')
+            return False
+    return True
 
