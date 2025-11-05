@@ -92,6 +92,14 @@ class FrmAOI(QtWidgets.QDialog):
         self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
 
+        # After self.setupUi()
+        if self.qris_project.aois is not None and len(self.qris_project.aois) == 0:
+            self.chkProjectBounds.setChecked(True)
+        elif self.aoi is not None and self.aoi.project_bounds:
+            self.chkProjectBounds.setChecked(True)
+        else:
+            self.chkProjectBounds.setChecked(False)
+
     def promote_to_aoi(self, db_item: DBItem):
 
         self.txtName.setText(db_item.name)
@@ -123,8 +131,8 @@ class FrmAOI(QtWidgets.QDialog):
 
         if not validate_name(self, self.txtName):
             return
-        
-        # Check if the name is unique
+
+        # Check for unique name
         if self.qris_project.aois is not None:
             current_id = self.aoi.id if self.aoi is not None else None
             for aoi_id, aoi in self.qris_project.aois.items():
@@ -133,6 +141,9 @@ class FrmAOI(QtWidgets.QDialog):
                     self.txtName.setFocus()
                     return
 
+        self.metadata_widget.add_system_metadata('project_bounds', self.chkProjectBounds.isChecked())
+        self.aoi.project_bounds = self.chkProjectBounds.isChecked()
+
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
@@ -140,8 +151,9 @@ class FrmAOI(QtWidgets.QDialog):
             if self.aoi is not None:
                 self.aoi.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
             else:
-                self.aoi =  insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
+                self.aoi = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
                 self.qris_project.aois[self.aoi.id] = self.aoi
+                self.qris_project.project_changed.emit()
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An AOI with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -184,6 +196,18 @@ class FrmAOI(QtWidgets.QDialog):
         else:
             super(FrmAOI, self).accept()
 
+        # Unset project bounds for all other AOIs if this one is checked
+        if self.chkProjectBounds.isChecked():
+            for aoi in self.qris_project.aois.values():
+                if aoi is not self.aoi and getattr(aoi, "project_bounds", False):
+                    aoi.project_bounds = False
+                    if aoi.metadata is None:
+                        aoi.metadata = {}
+                    if 'system' not in aoi.metadata:
+                        aoi.metadata['system'] = {}
+                    aoi.metadata['system']['project_bounds'] = False
+                    aoi.update(self.qris_project.project_file, aoi.name, aoi.description, aoi.metadata)
+
     def on_import_complete(self, result: bool):
 
         if result is True:
@@ -218,6 +242,10 @@ class FrmAOI(QtWidgets.QDialog):
         self.txtName.setToolTip('The name of the AOI or Sample Frame')
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+
+        self.chkProjectBounds = QtWidgets.QCheckBox()
+        self.chkProjectBounds.setText('Set as Project Bounds')
+        self.grid.addWidget(self.chkProjectBounds, 1, 1, 1, 1)
 
         self.lblAttribute = QtWidgets.QLabel('Sample Frame Labels')
         self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
