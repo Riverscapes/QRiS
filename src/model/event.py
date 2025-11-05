@@ -221,7 +221,10 @@ def insert(db_path: str,
             event_layers = []
             for layer in layers:
                 curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?)', [event_id, layer.id])
-                event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
+                event_layer = EventLayer(curs.lastrowid, event_id, layer)
+                event_layers.append(event_layer)
+                # Create spatial view for this event layer
+                event_layer.create_spatial_view(db_path)
 
             event = Event(event_id, name, description, start, end, date_text, event_type, platform, 0, event_layers, rasters, metadata)
             conn.commit()
@@ -260,4 +263,7 @@ def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer], 
     for layer in layers:
         curs.execute('INSERT INTO event_layers (event_id, layer_id) VALUES (?, ?) ON CONFLICT (event_id, layer_id) DO NOTHING', [event_id, layer.id])
         if curs.rowcount != 0:
-            event_layers.append(EventLayer(curs.lastrowid, event_id, layer))
+            event_layer = EventLayer(curs.lastrowid, event_id, layer)
+            event_layers.append(event_layer)
+            # Create spatial view for this event layer
+            event_layer.create_spatial_view(curs.connection.database)

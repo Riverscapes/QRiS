@@ -1,18 +1,18 @@
 import json
 import sqlite3
+from typing import Dict
 
-from .db_item import DBItem
-from .raster import Raster
+from .db_item_spatial import DBItemSpatial
 from .sample_frame import SampleFrame
 from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
 
-class Analysis(DBItem):
+class Analysis(DBItemSpatial):
 
     def __init__(self, id: int, name: str, description: str, sample_frame: SampleFrame, metadata: dict = None):
-        super().__init__('analyses', id, name)
+        super().__init__('analyses', id, name, sample_frame.fc_name, 'sample_frame_id', 'Polygon')
         self.description = description
         self.icon = 'analysis'
         self.sample_frame = sample_frame
@@ -45,9 +45,43 @@ class Analysis(DBItem):
             except Exception as ex:
                 conn.rollback()
                 raise ex
+            
+        # Recreate the spatial view
+        self.create_spatial_view(db_path)
+    
+    def create_spatial_view(self, db_path: str) -> None:
+        """Create a spatial view of the Analysis features."""
+        with sqlite3.connect(db_path) as conn:
+            try:
+                # prepare sql string for each metric
+                sql_metric = ", ".join(
+                    [f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
+                sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
+                if sql_metric == '':
+                    sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"
+                curs = conn.cursor()
+                # check if the view already exists, if so, delete it
+                if self.check_spatial_view_exists(db_path):
+                    curs.execute(f"DROP VIEW {self.view_name}")
+                    curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")
+                    curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")
+                curs.execute(sql)
+                # add view to geopackage
+                sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
+                curs.execute(sql, [self.view_name, "features", self.view_name, "", self.epsg])
+                sql = (
+                    "INSERT INTO gpkg_geometry_columns "
+                    "(table_name, column_name, geometry_type_name, srs_id, z, m) "
+                    "VALUES (?, ?, ?, ?, ?, ?)"
+                )
+                curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
+                conn.commit()
+            except Exception as ex:
+                conn.rollback()
+                raise ex
 
 
-def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> dict:
+def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> Dict[int, Analysis] :
 
     curs.execute('SELECT * FROM analyses')
     analyses = {row['id']: Analysis(
@@ -72,7 +106,7 @@ def insert_analysis(db_path: str, name: str, description: str, sample_frame: Sam
 
     metadata_str = json.dumps(metadata) if metadata is not None else None
 
-    result = None
+    analysis = None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
@@ -86,8 +120,9 @@ def insert_analysis(db_path: str, name: str, description: str, sample_frame: Sam
 
             conn.commit()
         except Exception as ex:
-            result = None
             conn.rollback()
             raise ex
+        
+    analysis.create_spatial_view(db_path)
 
     return analysis

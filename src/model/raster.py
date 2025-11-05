@@ -2,6 +2,7 @@ import os
 import json
 import sqlite3
 from enum import Enum
+from typing import Dict
 
 from qgis.core import QgsRasterLayer
 from .db_item import DBItem
@@ -71,7 +72,7 @@ class Raster(DBItem):
         super().delete(db_path)
 
 
-def load_rasters(curs: sqlite3.Cursor) -> dict:
+def load_rasters(curs: sqlite3.Cursor) -> Dict[int, Raster]:
 
     curs.execute('SELECT * FROM rasters')
     return {row['id']: Raster(

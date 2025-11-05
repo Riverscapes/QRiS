@@ -1,5 +1,7 @@
 import json
 import sqlite3
+from typing import Dict
+
 from osgeo import ogr
 
 from .db_item import DBItem
@@ -21,7 +23,7 @@ class StreamGage(DBItem):
         self.id_column_name = 'fid'
 
 
-def load_stream_gages(curs: sqlite3.Cursor) -> dict:
+def load_stream_gages(curs: sqlite3.Cursor) -> Dict[int, StreamGage]:
 
     curs.execute('SELECT * FROM stream_gages')
     return {row['fid']: StreamGage(

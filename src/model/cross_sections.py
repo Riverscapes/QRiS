@@ -1,27 +1,20 @@
 import json
 import sqlite3
+from typing import Dict
 
-from qgis.core import QgsVectorLayer
-
-from .db_item import DBItem
+from .db_item_spatial import DBItemSpatial
 
 
-class CrossSections(DBItem):
+class CrossSections(DBItemSpatial):
     """ class to store cross sections database item"""
 
     CROSS_SECTIONS_MACHINE_CODE = 'Cross Sections'
 
     def __init__(self, id: int, name: str, description: str, metadata: dict = None):
-        super().__init__('cross_sections', id, name)
+        super().__init__('cross_sections', id, name, 'cross_section_features', 'cross_section_id', 'LineString')
         self.description = description
         self.metadata = metadata
         self.icon = 'line'
-        self.fc_name = 'cross_section_features'
-        self.fc_id_column_name = 'cross_section_id'
-
-    def feature_count(self, db_path: str) -> int:
-        temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset={self.fc_id_column_name} = {self.id}', 'temp', 'ogr')
-        return temp_layer.featureCount()
 
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
@@ -44,7 +37,7 @@ class CrossSections(DBItem):
                 raise ex
 
 
-def load_cross_sections(curs: sqlite3.Cursor) -> dict:
+def load_cross_sections(curs: sqlite3.Cursor) -> Dict[int, CrossSections]:
 
     curs.execute("""SELECT * FROM cross_sections""")
     return {row['id']: CrossSections(
@@ -71,5 +64,7 @@ def insert_cross_sections(db_path: str, name: str, description: str, metadata: d
         except Exception as ex:
             conn.rollback()
             raise ex
+        
+        cross_sections.create_spatial_view(db_path)
 
     return cross_sections
