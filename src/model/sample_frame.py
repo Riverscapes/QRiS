@@ -5,29 +5,34 @@ from typing import Dict, List
 from qgis.core import QgsVectorLayer
 
 from .db_item import DBItem
+from .db_item_spatial import DBItemSpatial 
 
 SAMPLE_FRAME_MACHINE_CODE = 'Sample Frame'
 AOI_MACHINE_CODE = 'AOI'
 VALLEY_BOTTOM_MACHINE_CODE = 'Valley Bottom'
 
-class SampleFrame(DBItem):
+class SampleFrame(DBItemSpatial):
 
     SAMPLE_FRAME_TYPE = 1
     AOI_SAMPLE_FRAME_TYPE = 2
     VALLEY_BOTTOM_SAMPLE_FRAME_TYPE = 3
 
     def __init__(self, id: int, name: str, description: str, metadata: dict = None, sample_frame_type=SAMPLE_FRAME_TYPE):
-        super().__init__('sample_frames', id, name)
-        self.description = description
-        self.metadata = metadata
-        self.user_metadata = None
+        super().__init__('sample_frames', id, name, 'sample_frame_features', 'sample_frame_id', 'Polygon')
+        
+        self.description: str = description
+        self.metadata: dict = metadata
+        self.user_metadata: dict = None
         self.fields = None
         self.default_flow_path_name = None
+        self.project_bounds: bool = False
         self.sample_frame_type = sample_frame_type
         if metadata is not None:
             self.fields = metadata.get('fields', None)
             self.default_flow_path_name = metadata.get('default_flow_path_name', None)
             self.user_metadata = metadata.get('metadata', None)
+            # get metadata['system']['project_bounds'] if exists
+            self.project_bounds = metadata.get('system', {}).get('project_bounds', False)
 
         if self.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
             self.icon = 'mask'
@@ -35,14 +40,6 @@ class SampleFrame(DBItem):
             self.icon = 'valley_bottom'
         else:
             self.icon = 'mask_regular'
-
-        self.fc_name = 'sample_frame_features'
-        self.fc_id_column_name = 'sample_frame_id'
-    
-    def feature_count(self, db_path: str) -> int:
-        temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset={self.fc_id_column_name} = {self.id}', 'temp', 'ogr')
-        return temp_layer.featureCount()
-
 
     def update(self, db_path: str, name: str, description: str, metadata: dict=None) -> None:
 
@@ -67,7 +64,7 @@ class SampleFrame(DBItem):
                 raise ex
 
 
-def load_sample_frames(curs: sqlite3.Cursor, sample_frame_type=SampleFrame.SAMPLE_FRAME_TYPE) -> dict:
+def load_sample_frames(curs: sqlite3.Cursor, sample_frame_type=SampleFrame.SAMPLE_FRAME_TYPE) -> Dict[int, SampleFrame]:
 
     curs.execute("""SELECT * FROM sample_frames WHERE sample_frame_type_id = ?""", [sample_frame_type])
     return {row['id']: SampleFrame(
@@ -98,6 +95,8 @@ def insert_sample_frame(db_path: str, name: str, description: str, metadata: dic
             sample_frame = None
             conn.rollback()
             raise ex
+        
+        sample_frame.create_spatial_view(db_path)
 
     return sample_frame
 

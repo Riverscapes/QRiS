@@ -1,5 +1,6 @@
 import sqlite3
 import json
+from typing import Dict
 
 from .db_item import DBItem
 from ..gp.analysis_metrics import analysis_metric_unit_type
@@ -78,7 +79,7 @@ class Metric(DBItem):
                 return protocol
         return None
 
-def load_metrics(curs: sqlite3.Cursor) -> dict:
+def load_metrics(curs: sqlite3.Cursor) -> Dict[int, Metric] :
 
     curs.execute('SELECT * FROM calculations')
     metric_functions = {row['id']: row['metric_function'] for row in curs.fetchall()}

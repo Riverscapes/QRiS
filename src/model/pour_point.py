@@ -1,19 +1,20 @@
 import json
 import sqlite3
 from osgeo import ogr
+from typing import Dict
 
-from .db_item import DBItem
+from .db_item_spatial import DBItemSpatial
 
 POUR_POINTS_MACHINE_CODE = 'Pour Points'
 CATCHMENTS_MACHINE_CODE = 'CATCHMENTS'
 
 
-class PourPoint(DBItem):
+class PourPoint(DBItemSpatial):
     """Represents points on the map that  the usser has clicked on and delineated
     upstream catchments using stream statss"""
 
     def __init__(self, id: int, name: str, latitude: float, longitude: float, description: str, basin_chars: str, flow_stats: str):
-        super().__init__('pour_points', id, name)
+        super().__init__('pour_points', id, name, 'pour_points', 'fid', 'Point')
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
@@ -25,6 +26,8 @@ class PourPoint(DBItem):
         # override the default ID column name because this is a spatial table.
         self.id_column_name = 'fid'
 
+        self.catchment = Catchment(self.id)
+
     def update(self, db_path: str, name: str, description: str) -> None:
         """ Pour point is a feature class therefore need to use ogr to edit features.
         Can't use direct SQL
@@ -32,9 +35,10 @@ class PourPoint(DBItem):
 
         # Don't forget to include the write access modifier
         src_dataset = ogr.Open(db_path, 1)
-        src_layer = src_dataset.GetLayer(self.db_table_name)
+        src_layer: ogr.Layer = src_dataset.GetLayer(self.db_table_name)
         src_layer.SetAttributeFilter(f'fid={self.id}')
 
+        feature: ogr.Feature = None
         for feature in src_layer:
             feature.SetField('name', name)
             if description is None or len(description) < 1:
@@ -51,7 +55,7 @@ class PourPoint(DBItem):
         src_dataset = None
 
 
-def load_pour_points(curs: sqlite3.Cursor) -> dict:
+def load_pour_points(curs: sqlite3.Cursor) -> Dict[int, PourPoint]:
 
     curs.execute('SELECT * FROM pour_points')
     return {row['fid']: PourPoint(
@@ -72,7 +76,7 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     pour_point_id = None
 
     # Save pour point
-    layer = dataset.GetLayerByName('pour_points')
+    layer: ogr.Layer = dataset.GetLayerByName('pour_points')
     featureDefn = layer.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
     point = ogr.Geometry(ogr.wkbPoint)
@@ -94,9 +98,9 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     pour_point_id = outFeature.GetFID()
 
     # Save catchment polygon
-    layer = dataset.GetLayerByName('catchments')
+    layer: ogr.Layer = dataset.GetLayerByName('catchments')
     geojson = catchment['featurecollection'][1]['feature']['features'][0]['geometry']
-    polygon = ogr.CreateGeometryFromJson(json.dumps(geojson))
+    polygon: ogr.Geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
     polygon = polygon.MakeValid()
     featureDefn = layer.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
@@ -104,4 +108,12 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     outFeature.SetField('pour_point_id', pour_point_id)
     layer.CreateFeature(outFeature)
 
-    return PourPoint(pour_point_id, name, longitude, latitude, description, json.dumps(basin_chars), json.dumps(flow_stats))
+    pour_point = PourPoint(pour_point_id, name, longitude, latitude, description, json.dumps(basin_chars), json.dumps(flow_stats))
+    pour_point.create_spatial_view(project_file)
+    pour_point.catchment.create_spatial_view(project_file)
+
+    return pour_point
+
+class Catchment(DBItemSpatial):
+    def __init__(self, id: int):
+        super().__init__('catchments', id, 'Catchment', 'catchments', 'pour_point_id', 'Polygon')

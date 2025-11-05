@@ -1,6 +1,7 @@
 import os
 import json
 import sqlite3
+from typing import Dict
 
 from .db_item import DBItem
 from ..QRiS.path_utilities import parse_posix_path
@@ -64,7 +65,7 @@ class Attachment(DBItem):
         if os.path.exists(self.path):
             os.remove(self.path)
 
-def load_attachments(cursor: sqlite3.Cursor) -> dict:
+def load_attachments(cursor: sqlite3.Cursor) -> Dict[int, Attachment]:
     attachments = {}
     cursor.execute('SELECT attachment_id, attachment_type, display_label, path, description, metadata FROM attachments')
     for row in cursor.fetchall():
@@ -86,6 +87,6 @@ def insert_attachment(db_path: str, display_label: str, path: str, attachment_ty
 
     return Attachment(id=attachment_id, display_label=display_label, path=path, attachment_type=attachment_type, description=description, metadata=metadata)
 
-def attachments_path(project_file: str):
-
+def attachments_path(project_file: str) -> str:
+    """Get the attachments directory path for the given project file."""
     return parse_posix_path(os.path.join(os.path.dirname(project_file), 'attachments'))

@@ -24,7 +24,7 @@ class DBItem():
         self.name = name
         self.date = None
         self.metadata = None
-        
+
         # Nearly all the DBItem database tables are non-spatial and have
         # an ID column called "id". However, any spatial DBItem tables
         # will have a GIS generated ID column called "fid". These spatial
@@ -55,11 +55,20 @@ class DBItem():
             except Exception as ex:
                 conn.rollback()
                 raise ex
-            
-    def feature_count(self, db_path: str) -> int:
 
-        return None
-
+    def get_created_on(self, db_path: str) -> str:
+        """Retrieve the created_on date string from the database."""
+        created_on = None
+        with sqlite3.connect(db_path) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute(f'SELECT created_on FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])
+                row = curs.fetchone()
+                if row is not None:
+                    created_on = row[0]
+            except Exception as ex:
+                raise ex
+        return created_on
 
 class DBItemModel(QAbstractListModel):
     """ Model for any class derived from DBItem. Essentially allows for
