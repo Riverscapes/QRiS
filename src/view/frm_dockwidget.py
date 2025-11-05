@@ -87,6 +87,7 @@ from .frm_layer_type import FrmLayerTypeDialog
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 from ..lib.map import get_zoom_level, get_map_center
+from ..lib.rs_project import RSProject
 
 from ..QRiS.settings import Settings, CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -150,6 +151,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.settings = Settings()
 
         self.qris_project = None
+        self.rs_project = None
         self.map_manager = None
         self.basemap_manager = None
         self.menu = QtWidgets.QMenu()
@@ -186,12 +188,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 f'The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.',
                 'QRiS', level=Qgis.Warning)
 
-    def build_tree_view(self, project_file, new_item=None):
+    def build_tree_view(self, qris_project: Project, new_item=None):
         """
         Builds the project tree from scratch for the first time
         """
-        self.project = Project(project_file)
-        self.map_manager = QRisMapManager(self.project)
+        self.qris_project = qris_project
+        
+        # RS Project
+        self.rs_project = RSProject(self.qris_project)
+        self.qris_project.project_changed.connect(self.rs_project.write)
+        self.rs_project.write() # Ensure the RS project file is created if missing, or update it on opening the project.
+        
+        # Map Manager
+        self.map_manager = QRisMapManager(self.qris_project)
         self.map_manager.edit_mode_changed.connect(self.on_edit_session_change)
 
         self.model = QtGui.QStandardItemModel()
@@ -200,48 +209,48 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         rootNode = self.model.invisibleRootItem()
 
         # set the project root
-        project_node = self.add_child_to_project_tree(rootNode, self.project)
+        project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
         inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
 
         self.riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.riverscapes_node, item) for item in self.project.valley_bottoms.values()]
+        [self.add_child_to_project_tree(self.riverscapes_node, item) for item in self.qris_project.valley_bottoms.values()]
 
         self.surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.surfaces_node, item) for item in self.project.rasters.values() if item.is_context is False]
+        [self.add_child_to_project_tree(self.surfaces_node, item) for item in self.qris_project.rasters.values() if item.is_context is False]
 
         self.aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.aoi_node, item) for item in self.project.aois.values()]
+        [self.add_child_to_project_tree(self.aoi_node, item) for item in self.qris_project.aois.values()]
 
         self.sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.sample_frames_node, item) for item in self.project.sample_frames.values()]
+        [self.add_child_to_project_tree(self.sample_frames_node, item) for item in self.qris_project.sample_frames.values()]
 
         self.profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.profiles_node, item) for item in self.project.profiles.values()]
+        [self.add_child_to_project_tree(self.profiles_node, item) for item in self.qris_project.profiles.values()]
 
         self.cross_sections_node = self.add_child_to_project_tree(inputs_node, CrossSections.CROSS_SECTIONS_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.cross_sections_node, item) for item in self.project.cross_sections.values()]
+        [self.add_child_to_project_tree(self.cross_sections_node, item) for item in self.qris_project.cross_sections.values()]
 
         self.context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
-        [self.add_child_to_project_tree(self.context_node, item) for item in self.project.rasters.values() if item.is_context is True]
-        [self.add_child_to_project_tree(self.context_node, item) for item in self.project.scratch_vectors.values()]
+        [self.add_child_to_project_tree(self.context_node, item) for item in self.qris_project.rasters.values() if item.is_context is True]
+        [self.add_child_to_project_tree(self.context_node, item) for item in self.qris_project.scratch_vectors.values()]
 
         gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
         # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
-        [self.add_child_to_project_tree(catchments_node, item) for item in self.project.pour_points.values()]
+        [self.add_child_to_project_tree(catchments_node, item) for item in self.qris_project.pour_points.values()]
 
         climate_engine_node = self.add_child_to_project_tree(self.context_node, CLIMATE_ENGINE_MACHINE_CODE)
 
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
-        [self.add_event_to_project_tree(events_node, item) for item in self.project.events.values()]
-        [self.add_planning_container_to_project_tree(events_node, item) for item in self.project.planning_containers.values()]
+        [self.add_event_to_project_tree(events_node, item) for item in self.qris_project.events.values()]
+        [self.add_planning_container_to_project_tree(events_node, item) for item in self.qris_project.planning_containers.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
-        [self.add_child_to_project_tree(analyses_node, item) for item in self.project.analyses.values()]
+        [self.add_child_to_project_tree(analyses_node, item) for item in self.qris_project.analyses.values()]
 
         attachments_node = self.add_child_to_project_tree(project_node, ATTACHMENT_MACHINE_CODE)
-        [self.add_child_to_project_tree(attachments_node, item) for item in self.project.attachments.values()]
+        [self.add_child_to_project_tree(attachments_node, item) for item in self.qris_project.attachments.values()]
 
         for node in [project_node, inputs_node, self.riverscapes_node, self.surfaces_node, self.aoi_node, self.sample_frames_node, self.profiles_node, self.cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
@@ -360,13 +369,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.cross_sections_doc_widget.close()
             self.cross_sections_doc_widget = None
 
-        # Remove project from map
-        # remove_db_item_layer(self.project, self.project)
-        # disconnect the map manager
+        # Disconnect signals
         if self.map_manager is not None:
             if self.map_manager.receivers(self.map_manager.edit_mode_changed) > 0:
                 self.map_manager.edit_mode_changed.disconnect()
+        if self.qris_project is not None and self.rs_project is not None:
+            if self.qris_project.receivers(self.qris_project.project_changed) > 0:
+                self.qris_project.project_changed.disconnect()
+        
         self.model = None
+        self.rs_project = None
         self.qris_project = None
 
     def destroy_analysis_doc_widget(self):
@@ -454,7 +466,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.menu.addSeparator()
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
-                if len(self.project.analyses) > 0:
+                if len(self.qris_project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
@@ -464,7 +476,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Add Stream Gages To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
             elif model_data == ATTACHMENT_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Browse Attachments', 'folder', lambda: self.browse_item(model_data, attachments_path(self.project.project_file)))
+                self.add_context_menu_item(self.menu, 'Browse Attachments', 'folder', lambda: self.browse_item(model_data, attachments_path(self.qris_project.project_file)))
                 self.menu.addSeparator()
                 self.add_context_menu_item(self.menu, 'Add New File Attachment', 'add_file', lambda: self.add_attachment(model_item, Attachment.TYPE_FILE))
                 self.add_context_menu_item(self.menu, 'Add New Web Link Attachment', 'add_link', lambda: self.add_attachment(model_item, Attachment.TYPE_WEB_LINK))
@@ -501,7 +513,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(new_sample_frame_menu, 'Empty Sample Frame (Manual)', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_NEW))   
                     self.add_context_menu_item(new_sample_frame_menu, 'From QRiS Features', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_CREATE))
                 elif model_data == CONTEXT_NODE_TAG:
-                    self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.project.project_file))))
+                    self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.qris_project.project_file))))
                     self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, True))
                     import_menu = self.menu.addMenu('Import Context Vector From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_context_vector(model_item))
@@ -531,7 +543,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     if isinstance(model_data, Attachment):
                         if model_data.attachment_type == Attachment.TYPE_FILE:
-                            self.add_context_menu_item(self.menu, 'Open Attachment', 'open_external', lambda: self.browse_item(model_data, model_data.project_path(self.project.project_file)))
+                            self.add_context_menu_item(self.menu, 'Open Attachment', 'open_external', lambda: self.browse_item(model_data, model_data.project_path(self.qris_project.project_file)))
                         else:
                             self.add_context_menu_item(self.menu, 'Open Web Link', 'open_external', lambda: self.browse_item(model_data, model_data.path))
                     else:
@@ -579,7 +591,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
                 if isinstance(model_data, Project):
-                    self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.project.project_file)))
+                    self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
                     self.add_context_menu_item(self.menu, 'Export Project to Riverscapes Project', 'qris_icon', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
@@ -669,7 +681,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # Get the value of the group key for the child
             db_item = child.data(QtCore.Qt.UserRole)
             if group_key == 'raster_type':
-                group_value = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
+                group_value = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
             elif group_key == 'metadata_tag':
                 if db_item.metadata is not None and 'metadata' in db_item.metadata:
                     group_value = db_item.metadata['metadata'].get(metadata_tag, None)
@@ -743,12 +755,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
                 db_item = item.data(QtCore.Qt.UserRole)
-                type_name = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
+                type_name = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
                 combined = f"{type_name}|{db_item.name}"
                 item.setData(combined, USER_ROLES['raster_type'])
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
-                type_name = self.project.lookup_tables['lkp_raster_types'][db_item.raster_type_id]
+                type_name = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id]
                 if tree_node.child(i).data(USER_ROLES['raster_type']) > tree_node.child(i + 1).data(USER_ROLES['raster_type']):
                     current_order = False
                     break
@@ -769,10 +781,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # find 'hillshade_raster_id' in metadata or system metadata and add to map if it exists
             if db_item.metadata is not None:
                 if 'hillshade_raster_id' in db_item.metadata:
-                    self.map_manager.build_raster_layer(self.project.rasters[db_item.metadata['hillshade_raster_id']])
+                    self.map_manager.build_raster_layer(self.qris_project.rasters[db_item.metadata['hillshade_raster_id']])
                 elif 'system' in db_item.metadata:
                     if 'hillshade_raster_id' in db_item.metadata['system']:
-                        self.map_manager.build_raster_layer(self.project.rasters[db_item.metadata['system']['hillshade_raster_id']])
+                        self.map_manager.build_raster_layer(self.qris_project.rasters[db_item.metadata['system']['hillshade_raster_id']])
         elif isinstance(db_item, Event):
             [self.map_manager.build_event_single_layer(db_item, layer) for layer in db_item.event_layers]
             [self.map_manager.build_raster_layer(raster) for raster in db_item.rasters]
@@ -794,16 +806,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_event_single_layer(event, db_item)
             [self.map_manager.build_raster_layer(raster) for raster in event.rasters]
         elif isinstance(db_item, Project):
-            [self.map_manager.build_valley_bottom_layer(valley_bottom) for valley_bottom in self.project.valley_bottoms.values()]
-            [self.map_manager.build_profile_layer(centerline) for centerline in self.project.profiles.values()]
-            [self.map_manager.build_cross_section_layer(cross_sections) for cross_sections in self.project.cross_sections.values()]
-            [self.map_manager.build_sample_frame_layer(sample_frame) for sample_frame in self.project.sample_frames.values()]
-            [self.map_manager.build_scratch_vector(scratch) for scratch in self.project.scratch_vectors.values()]
-            [self.map_manager.build_aoi_layer(mask) for mask in self.project.aois.values()]
-            [self.map_manager.build_raster_layer(raster) for raster in self.project.surface_rasters().values()]
-            [self.map_manager.build_raster_layer(raster) for raster in self.project.scratch_rasters().values()]
-            [self.map_manager.build_pour_point_map_layer(pour_point) for pour_point in self.project.pour_points.values()]
-            [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.project.events.values()]
+            [self.map_manager.build_valley_bottom_layer(valley_bottom) for valley_bottom in self.qris_project.valley_bottoms.values()]
+            [self.map_manager.build_profile_layer(centerline) for centerline in self.qris_project.profiles.values()]
+            [self.map_manager.build_cross_section_layer(cross_sections) for cross_sections in self.qris_project.cross_sections.values()]
+            [self.map_manager.build_sample_frame_layer(sample_frame) for sample_frame in self.qris_project.sample_frames.values()]
+            [self.map_manager.build_scratch_vector(scratch) for scratch in self.qris_project.scratch_vectors.values()]
+            [self.map_manager.build_aoi_layer(mask) for mask in self.qris_project.aois.values()]
+            [self.map_manager.build_raster_layer(raster) for raster in self.qris_project.surface_rasters().values()]
+            [self.map_manager.build_raster_layer(raster) for raster in self.qris_project.scratch_rasters().values()]
+            [self.map_manager.build_pour_point_map_layer(pour_point) for pour_point in self.qris_project.pour_points.values()]
+            [[self.map_manager.build_event_single_layer(event, event_layer) for event_layer in event.event_layers] for event in self.qris_project.events.values()]
         elif isinstance(db_item, PourPoint):
             self.map_manager.build_pour_point_map_layer(db_item)
         elif isinstance(db_item, ScratchVector):
@@ -846,7 +858,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if features_only is True and isinstance(child_item.data(QtCore.Qt.UserRole), EventLayer):
                     event_layer: EventLayer = child_item.data(QtCore.Qt.UserRole)
                     fc_name = Layer.DCE_LAYER_NAMES[event_layer.layer.geom_type]
-                    temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}', 'temp', 'ogr')
+                    temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}', 'temp', 'ogr')
                     if temp_layer.featureCount() == 0:
                         continue
                 self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
@@ -860,7 +872,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         map_crs_id = map_crs.authid()
 
         # Get the project srs from metadata, if it exists
-        project_srs = self.project.metadata.get('project_srs', None)
+        project_srs = self.qris_project.metadata.get('project_srs', None)
 
         if map_crs_id == project_srs:
             QtWidgets.QMessageBox.information(self, 'Qris Project SRS', f'The current map SRS is the same as the Qris project SRS.\n\nCurrent Map SRS: {map_crs_id}\n\nCurrent Qris Project SRS: {project_srs}')
@@ -870,21 +882,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = QtWidgets.QMessageBox.question(self, 'Set Qris Project SRS', f'Would you like to set the change the Qris project SRS?\n\nCurrent Map SRS: {map_crs_id}\n\nCurrent Qris Project SRS: {project_srs}\n\nOr click "Reset" to clear the Qris project SRS.',
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Reset, QtWidgets.QMessageBox.No)
         if result == QtWidgets.QMessageBox.Yes:
-            self.project.metadata['project_srs'] = map_crs_id
-            self.project.update_metadata()
+            self.qris_project.metadata['project_srs'] = map_crs_id
+            self.qris_project.update_metadata()
 
         if result == QtWidgets.QMessageBox.Reset:
-            self.project.metadata['project_srs'] = None
-            self.project.update_metadata()
+            self.qris_project.metadata['project_srs'] = None
+            self.qris_project.update_metadata()
 
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
         if event_type_id == DESIGN_EVENT_TYPE_ID:
-            self.frm_event = FrmDesign(self, self.project, event_type_id)
+            self.frm_event = FrmDesign(self, self.qris_project, event_type_id)
         elif event_type_id == AS_BUILT_EVENT_TYPE_ID:
-            self.frm_event = FrmAsBuilt(self, self.project, event_type_id)
+            self.frm_event = FrmAsBuilt(self, self.qris_project, event_type_id)
         else:
-            self.frm_event = FrmEvent(self, self.project, event_type_id)
+            self.frm_event = FrmEvent(self, self.qris_project, event_type_id)
 
         result = self.frm_event.exec_()
         if result is not None and result != 0:
@@ -892,21 +904,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_planning_container(self, parent_node):
         """Initiates adding a new planning container"""
-        frm = FrmPlanningContainer(self, self.project)
+        frm = FrmPlanningContainer(self, self.qris_project)
         result = frm.exec_()
         if result is not None and result != 0:
             self.add_planning_container_to_project_tree(parent_node, frm.planning_container)
 
     def add_analysis(self, parent_node):
 
-        if len(self.project.sample_frames.values()) + len(self.project.aois.values()) + len(self.project.valley_bottoms.values()) == 0:
+        if len(self.qris_project.sample_frames.values()) + len(self.qris_project.aois.values()) + len(self.qris_project.valley_bottoms.values()) == 0:
             QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No sample frames, AOIs, or valley bottoms were found in the current QRiS Project.\n\nPlease prepare a sample frame, AOI, or valley bottom before running an analysis.')
             return
-        if len(self.project.events) == 0:
+        if len(self.qris_project.events) == 0:
             QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No data capture events were found in the current QRiS Project.\n\nPlease prepare a data capture or design event before running an analysis.')
             return
 
-        frm = FrmAnalysisProperties(self, self.project)
+        frm = FrmAnalysisProperties(self, self.qris_project)
         result = frm.exec_()
         if result is not None and result != 0:
             self.add_child_to_project_tree(parent_node, frm.analysis, False)
@@ -915,7 +927,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def open_analysis(self, analysis: Analysis):
 
         sample_frame: SampleFrame = analysis.sample_frame
-        fc_path = f"{self.project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
+        fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
         temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
         if temp_layer.featureCount() < 1:
             QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The sample frame for this analysis does not contain any features.\n\nPlease add features to this sample frame to proceed.')
@@ -923,11 +935,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.analysis_doc_widget is None:
             self.analysis_doc_widget = FrmAnalysisDocWidget(self)
-            self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
+            self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
             self.analysis_doc_widget.visibilityChanged.connect(self.destroy_analysis_doc_widget)
         else:
-            self.analysis_doc_widget.configure_analysis(self.project, analysis, None)
+            self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.analysis_doc_widget.show()
 
     def open_analysis_summary(self, analysis: Analysis=None):
@@ -936,17 +948,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if analysis is not None:
             analysis_id = analysis.id
 
-        frm = FrmAnalysisExplorer(self, self.project, analysis_id)
+        frm = FrmAnalysisExplorer(self, self.qris_project, analysis_id)
         frm.exec_()
 
     def export_analysis_table(self, analysis: Analysis = None):
 
-        frm = FrmExportMetrics(self, self.project, analysis)
+        frm = FrmExportMetrics(self, self.qris_project, analysis)
         frm.exec_()
 
     def add_attachment(self, model_item, attachment_type):
 
-        frm = FrmAttachment(self, self.iface, self.project, None, attachment_type)
+        frm = FrmAttachment(self, self.iface, self.qris_project, None, attachment_type)
         if attachment_type == Attachment.TYPE_FILE:
             browse_result = frm.source.browse()
             if browse_result is None or browse_result == '':
@@ -958,27 +970,27 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def climate_engine_explorer(self):
 
-        if len(self.project.sample_frames) + len(self.project.aois) + len(self.project.valley_bottoms) == 0:
+        if len(self.qris_project.sample_frames) + len(self.qris_project.aois) + len(self.qris_project.valley_bottoms) == 0:
             QtWidgets.QMessageBox.warning(self, 'No Climate Engine layers in QRiS Project', 'No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.')
             return
 
         if self.climate_engine_doc_widget is None:
-            self.climate_engine_doc_widget = FrmClimateEngineExplorer(self, self.project, self.map_manager)
+            self.climate_engine_doc_widget = FrmClimateEngineExplorer(self, self.qris_project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.climate_engine_doc_widget)
             
         self.climate_engine_doc_widget.show()
 
     def add_climate_engine_to_map(self):
         
-        frm = FrmClimateEngineMapLayer(self, self.project)
+        frm = FrmClimateEngineMapLayer(self, self.qris_project)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.map_manager.create_tile_layer(self.project.map_guid, frm.map_tile_url, frm.map_tile_layer_name, CLIMATE_ENGINE_MACHINE_CODE, 'wms')
+            self.map_manager.create_tile_layer(self.qris_project.map_guid, frm.map_tile_url, frm.map_tile_layer_name, CLIMATE_ENGINE_MACHINE_CODE, 'wms')
 
     def stream_gage_explorer(self):
 
         if self.stream_gage_doc_widget is None:
-            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.project, self.map_manager)
+            self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.qris_project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.stream_gage_doc_widget)
 
         # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
@@ -1024,7 +1036,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # TODO delete file if already exists, or handle with vector file writer options...
 
         if out_csv != "":  # TODO better file name validation here
-            cis_layer = QgsVectorLayer(f'{self.project.project_file}|layername={event_layer.layer.layer_id}')
+            cis_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={event_layer.layer.layer_id}')
             self.map_manager.add_brat_cis(cis_layer)  # This sets up the required aliases, and lookup values
             cis_layer.setSubsetString('event_id = ' + str(event_layer.event_id))  # filter to the capture event
             options = QgsVectorFileWriter.SaveVectorOptions()
@@ -1050,7 +1062,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         attributes = {'ReachID': 'reach_id'}
-        import_existing(import_source_path, self.project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
+        import_existing(import_source_path, self.qris_project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
 
         # self.add_child_to_project_tree(parent_node, db_item, True)
 
@@ -1060,7 +1072,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if photos_folder is None or photos_folder == '':
             return
 
-        frm = FrmImportPhotos(self, self.project, db_item, photos_folder)
+        frm = FrmImportPhotos(self, self.qris_project, db_item, photos_folder)
         result = frm.exec_()
         if result == QtWidgets.QDialog.Accepted:
             self.add_db_item_to_map(parent_node, db_item)
@@ -1069,7 +1081,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         layer_type = Layer.GEOMETRY_TYPES[db_item.layer.geom_type]
         fc_name = Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]
-        out_path = f'{self.project.project_file}|layername={fc_name}'
+        out_path = f'{self.qris_project.project_file}|layername={fc_name}'
 
         if mode == DB_MODE_IMPORT:
             import_source_path = browse_vector(self, 'Select feature class to import.', layer_type)
@@ -1086,10 +1098,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if mode == DB_MODE_COPY:
             layer_name = db_item.layer.layer_id
-            event_type = self.project.events[db_item.event_id].event_type.id
+            event_type = self.qris_project.events[db_item.event_id].event_type.id
             event_name = "Data Capture Event" if event_type == DATA_CAPTURE_EVENT_TYPE_ID else "Design"
             # filter events to only those with an event layer of the same type as the layer to be copied
-            dce_events = [event for event in self.project.events.values() if event.event_type.id == event_type]
+            dce_events = [event for event in self.qris_project.events.values() if event.event_type.id == event_type]
             # remove the current event
             dce_events = [event for event in dce_events if event.id != db_item.event_id]
             # filter events if layer name is within the event layers
@@ -1100,7 +1112,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 QtWidgets.QMessageBox.warning(self, f"No {event_name}s", f"There are no {event_name}s{filter_message} in the project.")
                 return
 
-            frm = FrmEventPicker(self, self.project, DATA_CAPTURE_EVENT_TYPE_ID, events=dce_events)
+            frm = FrmEventPicker(self, self.qris_project, DATA_CAPTURE_EVENT_TYPE_ID, events=dce_events)
             if frm.dce_events == [] or frm.dce_events is None:
                 return
             result = frm.exec_()
@@ -1122,7 +1134,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         elif mode == DB_MODE_COPY:
             feats = []
-            source_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}')
+            source_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}')
             new_fid = max([f.id() for f in source_layer.getFeatures()]) + 1
             for feature in import_source_path.getFeatures():
                 new_feature = QgsFeature()
@@ -1141,28 +1153,28 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.import_dce_complete(db_item, True)
 
         else:
-            frm = FrmImportDceLayer(self, self.project, db_item, import_source_path)
+            frm = FrmImportDceLayer(self, self.qris_project, db_item, import_source_path)
             frm.import_complete.connect(partial(self.import_dce_complete, db_item))
             frm.exec_()
 
     def copy_valley_bottom(self, db_item: DBItem):
 
         # check if there are any valley bottoms in the project
-        if len(self.project.valley_bottoms) == 0:
+        if len(self.qris_project.valley_bottoms) == 0:
             QtWidgets.QMessageBox.information(self, 'Copy Valley Bottom', 'No valley bottoms were found in the current project.')
             return
         # now use the layer picker to select the valley bottom to copy
-        valley_bottoms = [vb for vb in self.project.valley_bottoms.values()]
+        valley_bottoms = [vb for vb in self.qris_project.valley_bottoms.values()]
         frm = FrmLayerPicker(self, "Select Valley Bottom to Copy", valley_bottoms)
         result = frm.exec_()
         if result == QtWidgets.QDialog.Accepted:
             if frm.layer is None:
                 return
             # now copy the valley bottom
-            valley_bottom_layer = QgsVectorLayer(f'{self.project.project_file}|layername=sample_frame_features')
+            valley_bottom_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=sample_frame_features')
             valley_bottom_layer.setSubsetString(f'sample_frame_id = {frm.layer.id} ')
             feats = []
-            out_layer = QgsVectorLayer(f'{self.project.project_file}|layername={Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]}')
+            out_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]}')
             new_fid = 1 if out_layer.featureCount() == 0 else max([f.id() for f in out_layer.getFeatures()]) + 1
             for feature in valley_bottom_layer.getFeatures():
                 new_feature = QgsFeature()
@@ -1181,7 +1193,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def export_project(self, project: Project):
 
-        frm = FrmExportProject(self, self.project)
+        frm = FrmExportProject(self, self.qris_project)
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
@@ -1191,7 +1203,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if result is True:
             iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
-            layer = self.map_manager.get_db_item_layer(self.project.map_guid, db_item, None)
+            layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
             if layer is not None:
                 self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
             
@@ -1210,7 +1222,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def raster_slider(self, db_item: DBItem):
 
         if self.slider_doc_widget is None:
-            self.slider_doc_widget = FrmSlider(self, self.project, self.map_manager)
+            self.slider_doc_widget = FrmSlider(self, self.qris_project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.slider_doc_widget)
 
         self.slider_doc_widget.export_complete.connect(self.raster_slider_export_complete)
@@ -1223,7 +1235,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.add_db_item_to_map(None, db_item)
 
         if self.centerline_doc_widget is None:
-            self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.project, self.map_manager)
+            self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.qris_project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.centerline_doc_widget)
 
         self.centerline_doc_widget.export_complete.connect(self.centerline_save_complete)
@@ -1231,13 +1243,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.centerline_doc_widget.show()
 
     def flip_line(self, db_item: DBItem):
-        flip_line_geometry(self.project, db_item)
+        flip_line_geometry(self.qris_project, db_item)
         self.iface.mapCanvas().refreshAllLayers()
 
     def generate_xsections(self, db_item: DBItem):
 
         if self.cross_sections_doc_widget is None:
-            self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.project, db_item, self.map_manager)
+            self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.qris_project, db_item, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.cross_sections_doc_widget)
 
         self.cross_sections_doc_widget.export_complete.connect(self.save_complete)
@@ -1301,7 +1313,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.set_node_text(target_node, data_item)
 
             # Check if the item is in the map and update its name if it is
-            _layer = self.map_manager.get_db_item_layer(self.project.map_guid, data_item, None)
+            _layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, data_item, None)
 
         return target_node
 
@@ -1315,7 +1327,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Events
         for event_id in planning_container.planning_events.keys():
-            event = self.project.events[event_id]
+            event = self.qris_project.events[event_id]
             self.add_event_to_project_tree(planning_container_node, event, False)
         
         # Remove events that are no longer in the planning container
@@ -1353,7 +1365,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmRaster(self, self.iface, self.project, import_source_path, is_context, add_new_keys=False)
+        frm = FrmRaster(self, self.iface, self.qris_project, import_source_path, is_context, add_new_keys=False)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1385,7 +1397,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmScratchVector(self, self.iface, self.project, import_source_path, None, None)
+        frm = FrmScratchVector(self, self.iface, self.qris_project, import_source_path, None, None)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1417,7 +1429,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         # check if the source path is the same as the project file. if so, reject it
         if isinstance(out_layer, QgsVectorLayer):
-            if out_layer.dataProvider().dataSourceUri().startswith(self.project.project_file):
+            if out_layer.dataProvider().dataSourceUri().startswith(self.qris_project.project_file):
                 QtWidgets.QMessageBox.information(self, 'Import Layer', 'The selected layer is already part of the current QRiS project.\n\nPlease select a different map layer to import.')
                 return
         return out_layer
@@ -1436,7 +1448,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmAOI(self, self.project, import_source_path)
+        frm = FrmAOI(self, self.qris_project, import_source_path)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1458,7 +1470,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             # find the AOIs Node in the model
             rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
             aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
             parent_node = aoi_node
@@ -1485,7 +1497,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if mode == DB_MODE_CREATE:
             create = True
 
-        frm = FrmSampleFrame(self, self.project, import_source_path, create_sample_frame=create)
+        frm = FrmSampleFrame(self, self.qris_project, import_source_path, create_sample_frame=create)
         
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -1502,7 +1514,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
             # find the Sample Frames Node in the model
             rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
             sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
             parent_node = sample_frame_node
@@ -1528,7 +1540,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmValleyBottom(self, self.project, import_source_path)
+        frm = FrmValleyBottom(self, self.qris_project, import_source_path)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1553,7 +1565,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
                 # find the Sample Frames Node in the model
                 rootNode = self.model.invisibleRootItem()
-                project_node = self.add_child_to_project_tree(rootNode, self.project)
+                project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
                 inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
                 riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
                 parent_node = riverscapes_node
@@ -1572,7 +1584,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmProfile(self, self.project, import_source_path)
+        frm = FrmProfile(self, self.qris_project, import_source_path)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1597,7 +1609,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
                 # find the Profile Node in the model
                 rootNode = self.model.invisibleRootItem()
-                project_node = self.add_child_to_project_tree(rootNode, self.project)
+                project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
                 inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
                 parent_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
@@ -1615,7 +1627,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if import_source_path is None:
                 return
 
-        frm = FrmCrossSections(self, self.project, import_source_path)
+        frm = FrmCrossSections(self, self.qris_project, import_source_path)
 
         if meta is not None:
             if 'layer_label' in meta:
@@ -1669,10 +1681,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.warning(self, 'Error Determining US State', str(ex))
             return
 
-        frm = FrmPourPoint(self, self.project, transformed_point.y(), transformed_point.x(), None)
+        frm = FrmPourPoint(self, self.qris_project, transformed_point.y(), transformed_point.x(), None)
         result = frm.exec_()
         if result != 0:
-            stream_stats = StreamStats(self.project.project_file,
+            stream_stats = StreamStats(self.qris_project.project_file,
                                        transformed_point.y(),
                                        transformed_point.x(),
                                        frm.txtName.text(),
@@ -1695,10 +1707,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(pour_point, PourPoint):
             self.iface.messageBar().pushMessage('Stream Stats Complete', f'Catchment delineation successful for {pour_point.name}.', level=Qgis.Info, duration=5)
-            self.project.pour_points[pour_point.id] = pour_point
+            self.qris_project.pour_points[pour_point.id] = pour_point
 
             rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
             context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
@@ -1712,7 +1724,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(scratch_vector, ScratchVector):
             rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
             context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             self.add_child_to_project_tree(context_node, scratch_vector, add_to_map)
@@ -1724,7 +1736,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(centerline, Profile):
             rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
             profile_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(profile_node, centerline, add_to_map)
@@ -1736,7 +1748,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(item, DBItem):
             rootNode = self.model.invisibleRootItem()
-            project_node = self.add_child_to_project_tree(rootNode, self.project)
+            project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
             inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG) if is_input_node else project_node
             out_node = self.add_child_to_project_tree(inputs_node, machine_code)
             self.add_child_to_project_tree(out_node, item, add_to_map)
@@ -1750,37 +1762,37 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmNewProject(self, project=db_item)
         elif isinstance(db_item, Event):
             if db_item.event_type.id == DESIGN_EVENT_TYPE_ID:
-                frm = FrmDesign(self, self.project, db_item.event_type.id, event=db_item)
+                frm = FrmDesign(self, self.qris_project, db_item.event_type.id, event=db_item)
             elif db_item.event_type.id == AS_BUILT_EVENT_TYPE_ID:
-                frm = FrmAsBuilt(self, self.project, db_item.event_type.id, event=db_item)
+                frm = FrmAsBuilt(self, self.qris_project, db_item.event_type.id, event=db_item)
             else:
-                frm = FrmEvent(self, self.project, dce_event=db_item, event_type_id=db_item.event_type.id)
+                frm = FrmEvent(self, self.qris_project, dce_event=db_item, event_type_id=db_item.event_type.id)
         elif isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
-                frm = FrmAOI(self, self.project, None, db_item)
+                frm = FrmAOI(self, self.qris_project, None, db_item)
             elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
-                frm = FrmValleyBottom(self, self.project, None, db_item)
+                frm = FrmValleyBottom(self, self.qris_project, None, db_item)
             else:
-                frm = FrmSampleFrame(self, self.project, None, db_item)
+                frm = FrmSampleFrame(self, self.qris_project, None, db_item)
         elif isinstance(db_item, Profile):
-            frm = FrmProfile(self, self.project, None, db_item)
+            frm = FrmProfile(self, self.qris_project, None, db_item)
         elif isinstance(db_item, CrossSections):
-            frm = FrmCrossSections(self, self.project, None, db_item)
+            frm = FrmCrossSections(self, self.qris_project, None, db_item)
         elif isinstance(db_item, Raster):
-            frm = FrmRaster(self, self.iface, self.project, None, db_item.raster_type_id, db_item)
+            frm = FrmRaster(self, self.iface, self.qris_project, None, db_item.raster_type_id, db_item)
         elif isinstance(db_item, ScratchVector):
-            frm = FrmScratchVector(self, self.iface, self.project, None, None, db_item)
+            frm = FrmScratchVector(self, self.iface, self.qris_project, None, None, db_item)
         elif isinstance(db_item, PourPoint):
-            frm = FrmPourPoint(self, self.project, db_item.latitude, db_item.longitude, db_item)
+            frm = FrmPourPoint(self, self.qris_project, db_item.latitude, db_item.longitude, db_item)
         elif isinstance(db_item, Analysis):
-            frm = FrmAnalysisProperties(self, self.project, db_item)
+            frm = FrmAnalysisProperties(self, self.qris_project, db_item)
         elif isinstance(db_item, PlanningContainer):
-            frm = FrmPlanningContainer(self, self.project, db_item)
+            frm = FrmPlanningContainer(self, self.qris_project, db_item)
         elif isinstance(db_item, EventLayer):
             layer = db_item.layer
-            frm = FrmLayerMetricDetails(self, self.project, layer) 
+            frm = FrmLayerMetricDetails(self, self.qris_project, layer) 
         elif isinstance(db_item, Attachment):
-            frm = FrmAttachment(self, self.iface, self.project, db_item)
+            frm = FrmAttachment(self, self.iface, self.qris_project, db_item)
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 
@@ -1805,12 +1817,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def geospatial_summary(self, model_item, model_data: SampleFrame):
 
         # Check the feature count of the aoi, make sure there is one and only one polygon feature
-        aoi_layer = QgsVectorLayer(f'{self.project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
+        aoi_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
         if aoi_layer.featureCount() != 1:
             QtWidgets.QMessageBox.warning(self, 'Geospatial Summary', 'The selected AOI must contain exactly one polygon feature.')
             return
 
-        zonal_metrics_task = ZonalMetricsTask(self.project, model_data)
+        zonal_metrics_task = ZonalMetricsTask(self.qris_project, model_data)
         # -- DEBUG --
         # zonal_statistics_task.run()
         # -- PRODUCTION --
@@ -1833,7 +1845,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def set_edit_text(self, node: QtGui.QStandardItem):
 
         if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
-            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.project.map_guid, node.data(QtCore.Qt.UserRole), None)
+            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(QtCore.Qt.UserRole), None)
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
                     layer = layer_node.layer()
@@ -1888,9 +1900,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             
             if isinstance(data_item, EventLayer): 
                 fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
-                temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
+                temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
             else:
-                temp_layer = QgsVectorLayer(f'{self.project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
+                temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
             if temp_layer.featureCount() == 0:
                 node.setText(data_item.name + ' (Empty)')
                 font = node.font()
@@ -1939,7 +1951,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
         if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
-            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.project.map_guid, node.data(QtCore.Qt.UserRole), None)
+            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(QtCore.Qt.UserRole), None)
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
                     layer: QgsVectorLayer = layer_node.layer()
@@ -1985,7 +1997,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def geospatial_summary_complete(self, result, model_data, polygons, data):
 
         if result is True:
-            frm = FrmGeospatialMetrics(self, self.project, model_data, polygons, data)
+            frm = FrmGeospatialMetrics(self, self.qris_project, model_data, polygons, data)
             frm.exec_()
         else:
             self.iface.messageBar().pushMessage('Zonal Statistics Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
@@ -2002,28 +2014,28 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Event):
             # Remove all event layers from the map
             for event_layer in db_item.event_layers:
-                self.map_manager.remove_db_item_layer(self.project.map_guid, event_layer)
+                self.map_manager.remove_db_item_layer(self.qris_project.map_guid, event_layer)
             # Remove all rasters associated with the event
             for raster in db_item.rasters:
-                self.map_manager.remove_db_item_layer(self.project.map_guid, raster)
+                self.map_manager.remove_db_item_layer(self.qris_project.map_guid, raster)
             # Optionally, remove the event itself from the map if it has a layer
-            self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
+            self.map_manager.remove_db_item_layer(self.qris_project.map_guid, db_item)
         else:
-            self.map_manager.remove_db_item_layer(self.project.map_guid, db_item)
+            self.map_manager.remove_db_item_layer(self.qris_project.map_guid, db_item)
 
         # Remove the item from the project tree
         if isinstance(db_item, EventLayer):
-            event = self.project.events[db_item.event_id]
+            event = self.qris_project.events[db_item.event_id]
             # Traverse up the tree to find the event node
             parent = model_item.parent()
             while parent.data(QtCore.Qt.UserRole) != event:
                 parent = parent.parent()
             events_node = parent
-            self.project.remove(db_item)
+            self.qris_project.remove(db_item)
             self.check_and_remove_event_layers(events_node, event)
             self.remove_empty_child_nodes(events_node)
             # Collect all planning container nodes that contain this event
-            for planning_container in self.project.planning_containers.values():
+            for planning_container in self.qris_project.planning_containers.values():
                 if db_item.event_id in planning_container.planning_events:
                     # Find the planning container node in the tree
                     root = self.model.invisibleRootItem()
@@ -2052,7 +2064,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(db_item, Event):
                 # 1) check if the event is in any planning containers, if so, then remove the event from that planning container
                 # 2) we then need to remove the event from the planning container in the project tree, without causing a c++ wrapper error
-               for planning_container in self.project.planning_containers.values():
+               for planning_container in self.qris_project.planning_containers.values():
                     if db_item.id in planning_container.planning_events:
                         # Remove the event from the planning container
                         planning_container.planning_events.pop(db_item.id)
@@ -2069,11 +2081,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             self.remove_empty_child_nodes(parent_item)
 
             # Remove the item from the project
-            self.project.remove(db_item)
+            self.qris_project.remove(db_item)
 
         # Delete the item from the database
-        db_item.delete(self.project.project_file)
-        check_and_remove_unused_layers(self.project)
+        db_item.delete(self.qris_project.project_file)
+        check_and_remove_unused_layers(self.qris_project)
 
     def browse_item(self, db_item: DBItem, folder_path):
 
