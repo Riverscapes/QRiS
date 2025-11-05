@@ -48,10 +48,9 @@ from .view.frm_about import FrmAboutDialog
 from .view.frm_settings import FrmSettings, REMOVE_LAYERS_ON_CLOSE, DOCK_WIDGET_LOCATION, default_dock_widget_location
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
-from .model.project import apply_db_migrations, test_project
-from .model.metric import update_metric, insert_metric, verify_metric
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
+from .gp.load_project_task import LoadProjectTask
 from .gp.watershed_attributes import WatershedAttributes
 from .gp.update_metadata import update_metadata, check_metadata
 
@@ -266,12 +265,11 @@ class QRiSToolbar:
 
     def close_project(self):
         if self.dockwidget is not None:
-            # self.dockwidget.destroy_docwidget()
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, False, type=bool)
             if remove_layers is True:
-                if self.dockwidget.map_manager is not None:
-                    self.dockwidget.map_manager.remove_all_layers(self.dockwidget.project.map_guid)
+                if self.dockwidget.map_manager is not None and getattr(self.dockwidget, "qris_project", None) is not None:
+                    self.dockwidget.map_manager.remove_all_layers(self.dockwidget.qris_project.map_guid)
             self.dockwidget.close()
             self.iface.removeDockWidget(self.dockwidget)
             # self.dockwidget = None
@@ -474,48 +472,42 @@ class QRiSToolbar:
 
     def open_qris_project(self, db_path: str):
 
-        # Check if the darn thing is a qris project in the first place!
-        try:
-            test_project(db_path)
-        except Exception as ex:
-            QtWidgets.QMessageBox.warning(None, 'QRiS Project Load Error', f'Error loading QRiS project: {str(ex)}')
-            QgsMessageLog.logMessage(f'Error loading QRiS project: {str(ex)}', 'QRiS', Qgis.Critical)
-            return
+        # In your QRiSToolbar.open_qris_project:
+        def on_project_loaded(project):
+            
+            result = check_metadata(db_path)
+            if result is False:
+                # window dialog ask user if they want to update the metadata
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Warning)
+                msg.setText("Metadata Update Recommended")
+                msg.setInformativeText("The QRiS project you are attempting to open has an older metadata format. Would you like to update the metadata?")
+                msg.setWindowTitle("Metadata Update Recommended")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                msg.setDefaultButton(QtWidgets.QMessageBox.Yes)
+                retval = msg.exec_()
+                if retval == QtWidgets.QMessageBox.Yes:
+                    update_metadata(db_path)
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
-        settings.sync()
+            self.toggle_widget(forceOn=True)
+            self.set_project_path_settings(db_path)
+            self.dockwidget.build_tree_view(project)
+            self.qrave.qrave_to_qris.connect(self.dockwidget.qris_from_qrave)
+            self.add_project_to_mru_list(db_path)
+            self.set_map_srs()
 
-        # Apply database migrations to ensure latest schema
-        db_path = parse_posix_path(db_path)
-        self.update_database(db_path)
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
+            settings.sync()
 
-        result = check_metadata(db_path)
-        if result is False:
-            # window dialog ask user if they want to update the metadata
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Warning)
-            msg.setText("Metadata Update Recommended")
-            msg.setInformativeText("The QRiS project you are attempting to open has an older metadata format. Would you like to update the metadata?")
-            msg.setWindowTitle("Metadata Update Recommended")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            msg.setDefaultButton(QtWidgets.QMessageBox.Yes)
-            retval = msg.exec_()
-            if retval == QtWidgets.QMessageBox.Yes:
-                update_metadata(db_path)
+        task = LoadProjectTask(db_path, on_project_loaded)
+        QgsApplication.taskManager().addTask(task)
 
-        self.toggle_widget(forceOn=True)
-
-        # now we can create the project object and load the tree
-        self.set_project_path_settings(db_path)
-        self.dockwidget.build_tree_view(db_path)
-        self.qrave.qrave_to_qris.connect(self.dockwidget.qris_from_qrave)
-        self.add_project_to_mru_list(db_path)
-
+    def set_map_srs(self):
         # Set the map canvas to the project SRS
         default_crs = QSettings().value('Projections/layerDefaultCrs')
         default_crs_behavior = QSettings().value('app/projections/newProjectCrsBehavior')
-        project_srs = self.dockwidget.project.metadata.get('project_srs', None)
+        project_srs = self.dockwidget.qris_project.metadata.get('project_srs', None)
         trigger_repaint = False
         try:
             if project_srs is not None:
@@ -537,7 +529,6 @@ class QRiSToolbar:
             # restore default crs
             QSettings().setValue('Projections/layerDefaultCrs', default_crs)
             QSettings().setValue('app/projections/newProjectCrsBehavior', default_crs_behavior)
-
 
     def load_mru_projects(self):
 
@@ -633,12 +624,12 @@ class QRiSToolbar:
         else:
             self.iface.messageBar().pushMessage(f'Watershed Attributes Error.', 'Check the QGIS log for details.', level=Qgis.Critical, duration=5)
 
-    def update_database(self, db_path):
-        try:
-            apply_db_migrations(db_path)
-        except Exception as ex:
-            QtWidgets.QMessageBox.warning(None, 'QRiS Database Migration Error', 'Error Appling QRiS Database Migrations check the QGIS log for details.')
-            QgsMessageLog.logMessage(f'Error Appling QRiS Database Migrations: {str(ex)}', 'QRiS', Qgis.Critical)
+    # def update_database(self, db_path):
+    #     try:
+    #         apply_db_migrations(db_path)
+    #     except Exception as ex:
+    #         QtWidgets.QMessageBox.warning(None, 'QRiS Database Migration Error', 'Error Appling QRiS Database Migrations check the QGIS log for details.')
+    #         QgsMessageLog.logMessage(f'Error Appling QRiS Database Migrations: {str(ex)}', 'QRiS', Qgis.Critical)
 
     def configure_watershed_attribute_menu(self):
 
@@ -676,7 +667,7 @@ class QRiSToolbar:
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         qris_project = None
         if self.dockwidget is not None:
-            qris_project = self.dockwidget.project
+            qris_project = self.dockwidget.qris_project
 
         self.settings_dialog = FrmSettings(settings, qris_project)
         self.settings_dialog.exec_()
