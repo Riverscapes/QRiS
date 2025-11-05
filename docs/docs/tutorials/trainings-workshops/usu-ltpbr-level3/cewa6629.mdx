@@ -167,7 +167,29 @@ Include:
 #### a. RME Overview
 Slide deck going over the project, thematic tables, etc.?
 
+RME has *a lot* of attributes in the output feature class. Descriptions of each field can be found [here](https://tools.riverscapes.net/rme/data).
+
 #### b. Inventory of Opportunities
+
+**Exercise**: Across the _ HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
+
+1. Open the RME project in QGIS using the Viewer plugin.
+2. Bring in the Dominant Land Ownership (DGO) layer (Outputs > DGO Descriptive Metrics > Dominant Land Ownership (DGO)).
+3. Right click on the layer in the table of contents and open its attribute table.
+4. Click the "Select features using an expression" button on the top bar of the attribute table.
+5. Select features for a given land ownership type by typing the expression `"FCode" in (46006, 55800) and "ownership" = 'PVT'` (to select private land ownership for example). To see all available ownership options, you can find the fields category in the expression builder, click on the 'ownership' field and the click 'All' to see all available options. After executing the expression, the selected features should be highlighted.
+6. Use the 'Basic Statistics by Field' QGIS tool to sum up the area of the selected features. Make sure the correct layer is selected, and the 'only calculate statistics for selected features' box is checked. For the field, choose `segment_area`, which is the area in m<sup>2</sup> of each polygon. After running the tool, one of the statistics calculated is the **SUM** which can be converted to km<sup>2</sup> and noted down.
+7. Repeat the process for the remaining land ownership categories.
+
+embed video
+
+Now lets do the same thing but using SQL queries instead of GIS operations.
+
+1. Open SQLite Studio, and click on the 'new database' button on the left.
+2. Make sure that the extension option is changed to 'all file types' (rather than just .db type files) and then navigate to the rme output geopackage and select it.
+3. Press the 'connect' button to connect to the geopackage as a database.
+4. Open a script and type the command: `SELECT ownership AS owner, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800 GROUP BY ownership ORDER BY km2 desc` then execute the command (green play button). This one SQL command will provide all of the information you manually retrieved in QGIS. 
+
 PLACEHOLDER: exercise for querying RME outputs with high level filters (constraints) like FCode, ownership to assess opportunities. Exercise in QGIS then the same thing in SQLite Studio.
 group by stream_name is a good example of something very fast in SQLite that would be hard in Q.
 
