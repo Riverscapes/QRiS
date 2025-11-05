@@ -177,21 +177,23 @@ RME has *a lot* of attributes in the output feature class. Descriptions of each 
 2. Bring in the Dominant Land Ownership (DGO) layer (Outputs > DGO Descriptive Metrics > Dominant Land Ownership (DGO)).
 3. Right click on the layer in the table of contents and open its attribute table.
 4. Click the "Select features using an expression" button on the top bar of the attribute table.
-5. Select features for a given land ownership type by typing the expression `"FCode" in (46006, 55800) and "ownership" = 'PVT'` (to select private land ownership for example). To see all available ownership options, you can find the fields category in the expression builder, click on the 'ownership' field and the click 'All' to see all available options. After executing the expression, the selected features should be highlighted.
-6. Use the 'Basic Statistics by Field' QGIS tool to sum up the area of the selected features. Make sure the correct layer is selected, and the 'only calculate statistics for selected features' box is checked. For the field, choose `segment_area`, which is the area in m<sup>2</sup> of each polygon. After running the tool, one of the statistics calculated is the **SUM** which can be converted to km<sup>2</sup> and noted down.
+5. Select features for a given land ownership type by typing the expression `"FCode" in (46006, 55800) and "ownership" = 'PVT'` (to select private land ownership for example). To see all available ownership options, you can find the 'fields and values' option in the middle panel of the expression builder, expand it, then click on the 'ownership' field and the click 'All Unique' to see all available options. After executing the expression, the selected features should be highlighted.
+6. Use the 'Basic statistics for fields' QGIS tool to sum up the area of the selected features. Make sure the correct layer is selected, and the 'Selected features only' box is checked. For the field, choose `segment_area`, which is the area in m<sup>2</sup> of each polygon. After running the tool, one of the statistics calculated is the **SUM** which can be converted to km<sup>2</sup> and noted down.
 7. Repeat the process for the remaining land ownership categories.
 
-embed video
+<YouTubeEmbed videoId="OwbGHrt87Ns" />
 
 Now lets do the same thing but using SQL queries instead of GIS operations.
 
-1. Open SQLite Studio, and click on the 'new database' button on the left.
-2. Make sure that the extension option is changed to 'all file types' (rather than just .db type files) and then navigate to the rme output geopackage and select it.
-3. Press the 'connect' button to connect to the geopackage as a database.
-4. Open a script and type the command: `SELECT ownership AS owner, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800 GROUP BY ownership ORDER BY km2 desc` then execute the command (green play button). This one SQL command will provide all of the information you manually retrieved in QGIS. 
+1. Open SQLite Studio, and click on the 'Add a database' button on the top left.
+2. When navigating to a file, make sure that the extension option (Save as type) is changed to 'all file types' on the bottom of th window (rather than just .db type files) and then navigate to the rme output geopackage (riverscapes_metrics.gpkg) and select it.
+3. This will add the geopackage to the 'Databases' panel on the left. Once it is there click on it to highlight it, then press the 'Connect to the database' button to connect to the geopackage as a database (this should expand the database so you can see all of the tables inside).
+4. Push the 'Open SQL editor' button on the top, and in the editor panel type the command: `SELECT ownership AS owner, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY owner ORDER BY km2 DESC` then execute the command (blue play button). This one SQL command will provide all of the information you manually retrieved in QGIS.
+5. Try another command where we get the same information but by stream instead of owner: `SELECT stream_name AS stream, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY stream ORDER BY km2 DESC`. (Imagine how long it would have taken to manually do each individual stream using the QGIS method.) You could also create a table that shows each stream name and its area in each land ownership class by changing the query to `SELECT stream_name AS stream, ownership AS owner, SUM(segment_area)*0.000247105 AS acres FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY stream, owner`. Note that in this example area is converted directly to acres in the query.
 
-PLACEHOLDER: exercise for querying RME outputs with high level filters (constraints) like FCode, ownership to assess opportunities. Exercise in QGIS then the same thing in SQLite Studio.
-group by stream_name is a good example of something very fast in SQLite that would be hard in Q.
+<YouTubeEmbed videoId="-WrrCOiTLWY" />
+
+Often times, this type of tabular analysis is a useful first step for identifying areas where further spatial analysis can then be performed. Leveraging the capabilities of SQL by performing queries on the geopackage layers is an extremely useful and efficient way to perfrom this type of analysis.
 
 #### c. Statistics of metrics
 Report on statistics from a selection within RME. Histograms?
