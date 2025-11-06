@@ -21,15 +21,13 @@
  *                                                                         *
  ***************************************************************************/
 """
-import json
-import sqlite3
 import os.path
 
 from PyQt5.QtCore import pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
-from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsRasterLayer, QgsMessageLog, QgsRectangle
-from qgis.gui import QgsMapToolEmitPoint
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsMessageLog
+from qgis.gui import QgsMapToolEmitPoint, QgisInterface
 
 # TODO fix this
 from .gp.provider import Provider
@@ -49,7 +47,7 @@ from .view.frm_settings import FrmSettings, REMOVE_LAYERS_ON_CLOSE, DOCK_WIDGET_
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
 from .QRiS.qrave_integration import QRaveIntegration
-from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath, parse_posix_path
+from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
 from .gp.load_project_task import LoadProjectTask
 from .gp.watershed_attributes import WatershedAttributes
 from .gp.update_metadata import update_metadata, check_metadata
@@ -68,7 +66,7 @@ dock_widget_locations = {
 class QRiSToolbar:
     """QGIS Plugin Implementation."""
 
-    def __init__(self, iface):
+    def __init__(self, iface: QgisInterface):
         """Constructor.
 
         :param iface: An interface instance that will be passed to this class
@@ -429,7 +427,7 @@ class QRiSToolbar:
 
         self.qproject.writeEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'], project_file)
 
-    def get_project_path_settings(self):
+    def get_project_path_settings(self) -> str:
         """Fetch the QRiS project filepath from the QgsProject settings
         If it comes in as a relative path it is transformed and returned as an absolute path
 
@@ -471,10 +469,11 @@ class QRiSToolbar:
             self.open_qris_project(dialog_return[0])
 
     def open_qris_project(self, db_path: str):
+        # Disable menu and button
+        self.qris_menu.setEnabled(False)
+        self.qris_button.setEnabled(False)
 
-        # In your QRiSToolbar.open_qris_project:
         def on_project_loaded(project):
-            
             result = check_metadata(db_path)
             if result is False:
                 # window dialog ask user if they want to update the metadata
@@ -499,6 +498,9 @@ class QRiSToolbar:
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
             settings.sync()
+
+            self.qris_menu.setEnabled(True)
+            self.qris_button.setEnabled(True)
 
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)
@@ -540,7 +542,7 @@ class QRiSToolbar:
             if os.path.exists(mru):
                 self.add_menu_action(self.mru_menu, 'qris_icon', mru, (lambda mru: lambda: self.open_qris_project(mru))(mru), True, '')
 
-    def add_project_to_mru_list(self, db_path):
+    def add_project_to_mru_list(self, db_path: str):
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         mrus = settings.value(RECENT_PROJECT_LIST, [])
@@ -623,13 +625,6 @@ class QRiSToolbar:
             self.iface.messageBar().pushMessage(f'Watershed Attributes Complete.', f'Outputs at {output_path}', level=Qgis.Info, duration=5)
         else:
             self.iface.messageBar().pushMessage(f'Watershed Attributes Error.', 'Check the QGIS log for details.', level=Qgis.Critical, duration=5)
-
-    # def update_database(self, db_path):
-    #     try:
-    #         apply_db_migrations(db_path)
-    #     except Exception as ex:
-    #         QtWidgets.QMessageBox.warning(None, 'QRiS Database Migration Error', 'Error Appling QRiS Database Migrations check the QGIS log for details.')
-    #         QgsMessageLog.logMessage(f'Error Appling QRiS Database Migrations: {str(ex)}', 'QRiS', Qgis.Critical)
 
     def configure_watershed_attribute_menu(self):
 

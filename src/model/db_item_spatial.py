@@ -79,4 +79,4 @@ class DBItemSpatial(DBItem):
                 conn.commit()
             except Exception as ex:
                 conn.rollback()
-                raise ex
+                raise Exception(f"Error creating spatial view {self.view_name}: {ex}") from ex
