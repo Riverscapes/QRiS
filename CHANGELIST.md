@@ -1,5 +1,11 @@
 # QRiS Plugin
 
+## [1.1.18] 2025 NOV 6
+
+### Changed
+- QRiS Projects generate a constant Riverscapes Studio project.rs.xml file #843
+- QRiS Projects load as an asynchronous QgsTask
+
 ## [1.1.17] 2025 OCT 23
 
 ### Fixed
