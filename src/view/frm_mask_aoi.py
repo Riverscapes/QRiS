@@ -95,8 +95,8 @@ class FrmAOI(QtWidgets.QDialog):
         # After self.setupUi()
         if self.qris_project.aois is not None and len(self.qris_project.aois) == 0:
             self.chkProjectBounds.setChecked(True)
-        elif self.aoi is not None and self.aoi.project_bounds:
-            self.chkProjectBounds.setChecked(True)
+        elif self.aoi is not None:
+            self.chkProjectBounds.setChecked(getattr(self.aoi, "project_bounds", False))
         else:
             self.chkProjectBounds.setChecked(False)
 
@@ -142,18 +142,20 @@ class FrmAOI(QtWidgets.QDialog):
                     return
 
         self.metadata_widget.add_system_metadata('project_bounds', self.chkProjectBounds.isChecked())
-        self.aoi.project_bounds = self.chkProjectBounds.isChecked()
 
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
         try:
             if self.aoi is not None:
+                self.aoi.project_bounds = self.chkProjectBounds.isChecked()
                 self.aoi.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
             else:
                 self.aoi = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
-                self.qris_project.aois[self.aoi.id] = self.aoi
-                self.qris_project.project_changed.emit()
+                # Set project_bounds after AOI is created
+                self.aoi.project_bounds = self.chkProjectBounds.isChecked()
+                self.qris_project.add_db_item(self.aoi)
+
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An AOI with the name '{self.txtName.text()}' already exists. Please choose a unique name.")

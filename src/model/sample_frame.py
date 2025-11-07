@@ -43,7 +43,7 @@ class SampleFrame(DBItemSpatial):
 
     def update(self, db_path: str, name: str, description: str, metadata: dict=None) -> None:
 
-        description = description if len(description) > 0 else None
+        description = description if description is not None and len(description) > 0 else None
         metadata_str = json.dumps(metadata) if metadata is not None else None
         with sqlite3.connect(db_path) as conn:
             try:
