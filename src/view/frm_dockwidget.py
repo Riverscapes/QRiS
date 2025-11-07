@@ -771,7 +771,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
-                self.map_manager.build_aoi_layer(db_item)
+                aoi_layer = self.map_manager.build_aoi_layer(db_item)
+                aoi_layer.editingStopped.connect(lambda: self.qris_project.project_changed.emit())
             elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                 self.map_manager.build_valley_bottom_layer(db_item)
             else:

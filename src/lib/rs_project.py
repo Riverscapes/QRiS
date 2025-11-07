@@ -69,7 +69,7 @@ class RSProject:
     def get_project_bounds(self):
 
         # See if any of the aoi's are specified as bounds in thier metadata
-        for aoi in self.qris_project.sample_frames.values():
+        for aoi in self.qris_project.aois.values():
             if aoi.sample_frame_type != SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                 continue
             if aoi.project_bounds:
