@@ -78,12 +78,12 @@ def insert_profile(db_path: str, name: str, profile_type_id: int, description: s
             curs.execute('INSERT INTO profiles (name, profile_type_id, description, metadata) VALUES (?, ?, ?,?)', [name, profile_type_id, description, metadata_str])
             id = curs.lastrowid
             profile = Profile(id, name, profile_type_id, description, metadata)
+            profile.create_spatial_view(curs)
             conn.commit()
 
         except Exception as ex:
             profile = None
             conn.rollback()
             raise ex
-        profile.create_spatial_view(db_path)
 
     return profile
