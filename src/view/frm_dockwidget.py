@@ -215,20 +215,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
         [self.add_child_to_project_tree(self.riverscapes_node, item) for item in self.qris_project.valley_bottoms.values()]
 
-        self.surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.surfaces_node, item) for item in self.qris_project.rasters.values() if item.is_context is False]
-
         self.aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
         [self.add_child_to_project_tree(self.aoi_node, item) for item in self.qris_project.aois.values()]
-
-        self.sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
-        [self.add_child_to_project_tree(self.sample_frames_node, item) for item in self.qris_project.sample_frames.values()]
 
         self.profiles_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
         [self.add_child_to_project_tree(self.profiles_node, item) for item in self.qris_project.profiles.values()]
 
         self.cross_sections_node = self.add_child_to_project_tree(inputs_node, CrossSections.CROSS_SECTIONS_MACHINE_CODE)
         [self.add_child_to_project_tree(self.cross_sections_node, item) for item in self.qris_project.cross_sections.values()]
+
+        self.sample_frames_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.sample_frames_node, item) for item in self.qris_project.sample_frames.values()]
+
+        self.surfaces_node = self.add_child_to_project_tree(inputs_node, SURFACE_MACHINE_CODE)
+        [self.add_child_to_project_tree(self.surfaces_node, item) for item in self.qris_project.rasters.values() if item.is_context is False]
 
         self.context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
         [self.add_child_to_project_tree(self.context_node, item) for item in self.qris_project.rasters.values() if item.is_context is True]
