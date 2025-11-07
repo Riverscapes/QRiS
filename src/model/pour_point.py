@@ -109,8 +109,15 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     layer.CreateFeature(outFeature)
 
     pour_point = PourPoint(pour_point_id, name, longitude, latitude, description, json.dumps(basin_chars), json.dumps(flow_stats))
-    pour_point.create_spatial_view(project_file)
-    pour_point.catchment.create_spatial_view(project_file)
+    
+    try:
+        with sqlite3.connect(project_file) as conn:
+            curs = conn.cursor()
+            pour_point.create_spatial_view(curs)
+            pour_point.catchment.create_spatial_view(curs)
+            conn.commit()
+    except Exception as ex:
+        raise Exception(f"Error creating spatial views for pour point {pour_point_id}: {ex}") from ex
 
     return pour_point
 

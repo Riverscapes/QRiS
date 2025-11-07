@@ -89,15 +89,12 @@ def insert_sample_frame(db_path: str, name: str, description: str, metadata: dic
             curs.execute('INSERT INTO sample_frames (name, description, metadata, sample_frame_type_id) VALUES (?, ?, ?, ?)', [name, description, metadata_str, sample_frame_type])
             id = curs.lastrowid
             sample_frame = SampleFrame(id, name, description, metadata, sample_frame_type)
+            sample_frame.create_spatial_view(curs)
             conn.commit()
-
         except Exception as ex:
             sample_frame = None
             conn.rollback()
-            raise ex
-        
-        sample_frame.create_spatial_view(db_path)
-
+            raise Exception(f"Error inserting sample frame {name}: {ex}") from ex
     return sample_frame
 
 

@@ -283,17 +283,25 @@ class Project(DBItem, QObject):
 
     def refresh_spatial_views(self) -> None:
         """Recreate all spatial views in the project."""
-        for dbitem in self.get_vector_dbitems():
-            if not isinstance(dbitem, DBItemSpatial):
-                continue
-            dbitem.create_spatial_view(self.project_file)
-            if isinstance(dbitem, PourPoint):
-                dbitem.catchment.create_spatial_view(self.project_file)
-        for analysis in self.analyses.values():
-            analysis.create_spatial_view(self.project_file)
-        for event in self.events.values():
-            for event_layer in event.event_layers:
-                event_layer.create_spatial_view(self.project_file)
+        try:
+            with sqlite3.connect(self.project_file) as conn:
+                curs = conn.cursor()
+                for dbitem in self.get_vector_dbitems():
+                    if not isinstance(dbitem, DBItemSpatial):
+                        continue
+                    dbitem.create_spatial_view(curs)
+                    if isinstance(dbitem, PourPoint):
+                        dbitem.catchment.create_spatial_view(curs)
+                for analysis in self.analyses.values():
+                    analysis.create_spatial_view(curs)
+                for event in self.events.values():
+                    for event_layer in event.event_layers:
+                        event_layer.create_spatial_view(curs)
+                conn.commit()
+        except Exception as ex:
+            conn.rollback()
+            raise Exception(f"Error refreshing spatial views: {ex}") from ex
+
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
     """

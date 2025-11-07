@@ -59,12 +59,10 @@ def insert_cross_sections(db_path: str, name: str, description: str, metadata: d
             curs.execute('INSERT INTO cross_sections (name, description, metadata) VALUES (?, ?, ?)', [name, description, metadata_str])
             id = curs.lastrowid
             cross_sections = CrossSections(id, name, description, metadata)
+            cross_sections.create_spatial_view(curs)
             conn.commit()
-
         except Exception as ex:
             conn.rollback()
-            raise ex
-        
-        cross_sections.create_spatial_view(db_path)
+            raise Exception(f"Error inserting cross sections {name}: {ex}") from ex
 
     return cross_sections

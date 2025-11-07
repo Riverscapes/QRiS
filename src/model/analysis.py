@@ -34,7 +34,7 @@ class Analysis(DBItemSpatial):
                 curs.execute('UPDATE analyses SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
 
                 store_analysis_metrics(curs, self.id, analysis_metrics)
-
+                self.create_spatial_view(curs)
                 conn.commit()
 
                 self.name = name
@@ -44,41 +44,32 @@ class Analysis(DBItemSpatial):
 
             except Exception as ex:
                 conn.rollback()
-                raise ex
+                raise Exception(f"Error updating analysis {self.id}: {ex}") from ex
             
-        # Recreate the spatial view
-        self.create_spatial_view(db_path)
-    
-    def create_spatial_view(self, db_path: str) -> None:
+
+    def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Create a spatial view of the Analysis features."""
-        with sqlite3.connect(db_path) as conn:
-            try:
-                # prepare sql string for each metric
-                sql_metric = ", ".join(
-                    [f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
-                sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
-                if sql_metric == '':
-                    sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"
-                curs = conn.cursor()
-                # check if the view already exists, if so, delete it
-                if self.check_spatial_view_exists(db_path):
-                    curs.execute(f"DROP VIEW {self.view_name}")
-                    curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")
-                    curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")
-                curs.execute(sql)
-                # add view to geopackage
-                sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
-                curs.execute(sql, [self.view_name, "features", self.view_name, "", self.epsg])
-                sql = (
-                    "INSERT INTO gpkg_geometry_columns "
-                    "(table_name, column_name, geometry_type_name, srs_id, z, m) "
-                    "VALUES (?, ?, ?, ?, ?, ?)"
-                )
-                curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
-                conn.commit()
-            except Exception as ex:
-                conn.rollback()
-                raise ex
+        # prepare sql string for each metric
+        sql_metric = ", ".join(
+            [f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
+        sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
+        if sql_metric == '':
+            sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"
+        # check if the view already exists, if so, delete it
+        if self.check_spatial_view_exists(curs):
+            curs.execute(f"DROP VIEW {self.view_name}")
+            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")
+            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")
+        curs.execute(sql)
+        # add view to geopackage
+        sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
+        curs.execute(sql, [self.view_name, "features", self.view_name, "", self.epsg])
+        sql = (
+            "INSERT INTO gpkg_geometry_columns "
+            "(table_name, column_name, geometry_type_name, srs_id, z, m) "
+            "VALUES (?, ?, ?, ?, ?, ?)"
+        )
+        curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
 
 
 def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> Dict[int, Analysis] :
@@ -114,15 +105,12 @@ def insert_analysis(db_path: str, name: str, description: str, sample_frame: Sam
                 name, description if description is not None and len(description) > 0 else None, sample_frame.id, metadata_str])
             analysis_id = curs.lastrowid
             analysis = Analysis(analysis_id, name, description, sample_frame, metadata=metadata)
-
             store_analysis_metrics(curs, analysis_id, analysis_metrics)
             analysis.analysis_metrics = analysis_metrics
-
+            analysis.create_spatial_view(curs)
             conn.commit()
         except Exception as ex:
             conn.rollback()
-            raise ex
-        
-    analysis.create_spatial_view(db_path)
+            raise Exception(f"Error inserting analysis {name}: {ex}") from ex
 
     return analysis

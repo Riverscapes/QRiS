@@ -224,7 +224,7 @@ def insert(db_path: str,
                 event_layer = EventLayer(curs.lastrowid, event_id, layer)
                 event_layers.append(event_layer)
                 # Create spatial view for this event layer
-                event_layer.create_spatial_view(db_path)
+                event_layer.create_spatial_view(curs)
 
             event = Event(event_id, name, description, start, end, date_text, event_type, platform, 0, event_layers, rasters, metadata)
             conn.commit()
@@ -266,4 +266,4 @@ def save_event_layers(curs: sqlite3.Cursor, event_id: int, layers: List[Layer], 
             event_layer = EventLayer(curs.lastrowid, event_id, layer)
             event_layers.append(event_layer)
             # Create spatial view for this event layer
-            event_layer.create_spatial_view(curs.connection.database)
+            event_layer.create_spatial_view(curs)
