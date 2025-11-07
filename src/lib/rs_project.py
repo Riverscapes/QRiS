@@ -45,13 +45,17 @@ DEFAULT_EXPORT_PATH = 'default_export_path'
 class RSProject:
 
     def __init__(self, qris_project: Project):
+        
+        if not rsxml:
+            raise Exception("rsxml module not available, cannot create RSProject")
+            return
+        
         self.qris_project = qris_project
         self.project_rs_xml_path = os.path.join(os.path.dirname(self.qris_project.project_file), 'project.rs.xml')
         self.warehouse_id = None
         # if the project file already exists, we need to see if it has a warehouse id
         if os.path.exists(self.project_rs_xml_path):
-            if not rsxml:
-                return
+
             rs_project_existing = rsxml.project_xml.Project.load_project(self.project_rs_xml_path)
             self.warehouse_id = rs_project_existing.warehouse
         self.out_name = 'qris.gpkg'  # os.path.split(self.qris_project.project_file)[1]
