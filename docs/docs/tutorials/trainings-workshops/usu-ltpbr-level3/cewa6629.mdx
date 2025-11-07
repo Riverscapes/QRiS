@@ -44,10 +44,44 @@ This page appears here on the QRiS documentation site as QRiS users may find it 
         toolUrl: "https://www.riverscapes.net/networks/events/127681", 
         },
     ]}
-    />
+/>
 
 ## Prerequisites and Preparing for Class
 ### Background or Catch-Up Reading
+
+<ToolsWrapper
+    cardsize="md"
+    cards={[
+        {
+            title: "VBET",
+            description: "The original paper documenting the first version of the Valley Bottom Extraction Tool. It has undergone siginificant development since this paper, some of which will be covered in class.",
+            imageUrl: "/images/webinars/vbet_paper.png",
+            logoUrl: "/images/icons/vbet-icon-256x256-@2x.png",
+            toolUrl: "https://www.researchgate.net/publication/305661801_The_Valley_Bottom_Extraction_Tool_V-BET_A_GIS_tool_for_delineating_valley_bottoms_across_entire_drainage_networks"
+        },
+        {
+            title: "Beaver Restoration Assessment Tool (BRAT)",
+            description: "The paper documenting the Beaver Restoration Assessment Tool (BRAT). This also documents some components of the Anthropogenic Context and Hydrologic Context Tools, which were split out of BRAT.",
+            imageUrl: "/images/webinars/brat_paper.png",
+            logoUrl: "/images/icons/brat-icon-256x256-@1x.png",
+            toolUrl: "https://www.sciencedirect.com/science/article/pii/S0169555X15302166?casa_token=gI-EbsHaxoIAAAAA:t_xhB25FE0S76TJU1SS7FMm7EyKPKDtKKPQw-Sm_pqT7B9R-mODn-b7VjHnc6sz8tPxdFUSot6w"
+        },
+        {
+            title: "Confinement",
+            description: "Paper that documents the confinement algorithm and shows its application.",
+            imageUrl: "/images/webinars/confinement_paper.png",
+            logoUrl: "/images/icons/confinement-icon-256x256-@1x.png",
+            toolUrl: "https://www.researchgate.net/publication/331989955_Mapping_valley_bottom_confinement_at_the_network_scale"
+        },
+        {
+            title: "RCAT",
+            description: "The paper documenting the Riparian Condition Assessment Tool algorithm.",
+            imageUrl: "/images/webinars/rcat_paper.png",
+            logoUrl: "/images/icons/rcat.png",
+            toolUrl: "https://www.researchgate.net/publication/325098563_What_are_the_Conditions_of_Riparian_Ecosystems_Identifying_Impaired_Floodplain_Ecosystems_across_the_Western_US_Using_the_Riparian_Condition_Assessment_RCA_Tool"
+        }
+    ]}
+    />
 
 
 ### Software Requirements
@@ -165,6 +199,8 @@ Include:
 - workflow of remote assessment using models, field visits to sites, back to desktop to integrate what you learned from field visit
 - 
 
+---
+
 ### 2. Riverscapes Metric Engine
 
 #### a. RME Overview
@@ -186,6 +222,8 @@ RME has *a lot* of attributes in the output feature class. Descriptions of each 
 
 <YouTubeEmbed videoId="OwbGHrt87Ns" />
 
+---
+
 Now lets do the same thing but using SQL queries instead of GIS operations.
 
 1. Open SQLite Studio, and click on the 'Add a database' button on the top left.
@@ -201,12 +239,23 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 #### c. Statistics of metrics
 Report on statistics from a selection within RME. Histograms?
 
+---
+
 ### 3. Riverscape Network Models
 
 #### a. The Model Waterfall
 Slide deck going over models; after each model type, have them download that model type from data exchange for huc of their choosing. Open, explore.
 
 To help screen and prioritize, models provide inventory info, like we used above, as well as some info to get at condition.
+
+##### VBET Webinar
+
+<GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vR9yjK7wGkJe8g8y_jbSFY_2m_BFdYZsbD1Tym4JBhfXIFpTi7xToWx_58hOE1wLQ/pub?start=false&loop=false&delayms=5000"
+width={800}
+height={600} 
+/>
+
+<YouTubeEmbed videoId="j4wwlcYL8Ho" />
 
 #### b. Some exercize(s) using specific model types
 e.g., what's the average conversion to ag along some stream (this would be a good one to point out the need to area-weight averages)
@@ -218,6 +267,8 @@ This exercise demonstrates how a metric calculated by VBET (proportion of the fl
 <YouTubeEmbed videoId="Vk_oUCI6AAw" />
 
 <YouTubeEmbed videoId="ZG5djuMY-2Y" />
+
+---
 
 **Exercise (BRAT)**: Assessing restoration and conservation opportunities in one stream, contextualized by the rest of the basin.
 
