@@ -191,6 +191,24 @@ Forthcoming - Will post after class.
 You are welcome to download these projects as we use them in class, or download them all ahead of time. We suggest downloading them somewhere easy to navigate to (and making a favorite shortcut to that folder in QGIS) such as `c:/0_RS/CEWA6629/`. 
 :::
 
+<ToolsWrapper
+    sectionTitle="Riverscapes Data Exchange Projects for Exercises"
+    cards={[
+        {
+            title: "Metric Engine for Ogden River",
+            description: "Riverscape Metric Engine project for the Ogden River HUC10 watershed in northern Utah.",
+            logoUrl: "images/icons/rme-icon-256x256-@1x.png",
+            toolUrl: "https://data.riverscapes.net/p/c6cb3090-5e56-480d-8a67-14c877a42d13/"
+        },
+        {
+            title: "Rivercapes IGOs for Bear River",
+            description: "Riverscapes IGOs project for the Bear River watershed. This project type is a 'merged' RME where the DGO attributes from RME are attributed to the IGO points.",
+            logoUrl: "images/icons/rme-icon-256x256-@1x.png",
+            toolUrl: "https://data.riverscapes.net/p/58135c20-23dc-4fad-8380-d93c1fb710ab/"
+        }
+    ]}
+    />
+
 ### 1. Overview of Screening & Prioritization
 
 Slides to set the stage for the course. 
@@ -204,13 +222,17 @@ Include:
 ### 2. Riverscapes Metric Engine
 
 #### a. RME Overview
-Slide deck going over the project, thematic tables, etc.?
+
+<GoogleSlides src=""
+width={800}
+height={600} 
+/>
 
 RME has *a lot* of attributes in the output feature class. Descriptions of each field can be found [here](https://tools.riverscapes.net/rme/data).
 
 #### b. Inventory of Opportunities
 
-**Exercise**: Across the _ HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
+**Exercise**: Across the Ogden River HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
 
 1. Open the RME project in QGIS using the Viewer plugin.
 2. Bring in the Dominant Land Ownership (DGO) layer (Outputs > DGO Descriptive Metrics > Dominant Land Ownership (DGO)).
@@ -236,21 +258,31 @@ Now lets do the same thing but using SQL queries instead of GIS operations.
 
 Often times, this type of tabular analysis is a useful first step for identifying areas where further spatial analysis can then be performed. Leveraging the capabilities of SQL by performing queries on the geopackage layers is an extremely useful and efficient way to perfrom this type of analysis.
 
-#### c. Statistics of metrics
-Report on statistics from a selection within RME. Histograms?
+#### c. Statistical analysis of metrics
+
+**Exercise**: For a given stream in the Ogden River watershed (e.g., Middle Fork Ogden River), visualize the distribution of values for a continuous metric (e.g., valley bottom width (`integrated_width`)) using a histogram.
+
+1. Open the Ogden River RME project in QGIS using the Viewer plugin.
+2. Choose a metric with a continuous value (e.g., valley bottom width (`integrated_width`)) and bring it into the map (Outputs > Geomorphic Metrics > IGO Geomorphic Metrics > Integrated Width (IGO)).
+3. Filter the output to a specific stream (e.g., Middle Fork Ogden River). Right click on the layer in the table of contents, choose 'Filter...', then type the expression `"stream_name" = 'Middle Fork Ogden River'` and pressing OK (NOTE: you could also copy the level path value for a given stream and use `"level_path" = '<some level path value>'` to filter).
+4. Note how, because of the binning of values, the variation in the metric may not be well captured at the scale of a single stream. In this case, we will use a histogram to visualize the distribution of values for the entire stream, which will provide more context than the bins in the symbology. Find the 'Vector layer histogram' tool in the Processing Toolbox (you can search for it in the search bar at the top of the toolbox). Set the input layer to be the filtered, set the 'Attribute' to be `integrated_width`, increase the number of bins to 15, and press 'Run'. This will generate a histogram of all of the values for that stream.
 
 ---
 
 ### 3. Riverscape Network Models
 
 #### a. The Model Waterfall
-Slide deck going over models; after each model type, have them download that model type from data exchange for huc of their choosing. Open, explore.
+
+<GoogleSlides src=""
+width={800}
+height={600} 
+/>
 
 To help screen and prioritize, models provide inventory info, like we used above, as well as some info to get at condition.
 
 ##### VBET Webinar
 
-<GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vR9yjK7wGkJe8g8y_jbSFY_2m_BFdYZsbD1Tym4JBhfXIFpTi7xToWx_58hOE1wLQ/pub?start=false&loop=false&delayms=5000"
+<GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vR9yjK7wGkJe8g8y_jbSFY_2m_BFdYZsbD1Tym4JBhfXIFpTi7xToWx_58hOE1wLQ/pubembed?start=false&loop=false&delayms=5000"
 width={800}
 height={600} 
 />
@@ -258,7 +290,18 @@ height={600}
 <YouTubeEmbed videoId="j4wwlcYL8Ho" />
 
 #### b. Some exercize(s) using specific model types
-e.g., what's the average conversion to ag along some stream (this would be a good one to point out the need to area-weight averages)
+
+Information from the network models is resolved at the reach scale (channel reach or riverscape reach; ~100s of meters), but it's time consuming and potentially impractical to look at values for every reach across a watershed. For this reason, it's often useful to roll-up or summarize the information at larger spatial scales. This allows for simple comparision between, e.g., sub-watersheds or individual streams. Comparisons that this scale can then inform what streams you zoom in on to assess the information at the reach scale, helping your efforts to stay targeted and efficient. These exercises use simple examples of summarization of outputs at the watershed scale and individual stream scale to assess potential for beaver-based restoration.
+
+**Demo (BRAT)**: Assessing restoration and conservation opportunities in one stream, contextualized by the rest of the basin.
+
+<YouTubeEmbed videoId="Xk2w_XN0P08" />
+
+<YouTubeEmbed videoId="c4dvcSLDoQQ" />
+
+<YouTubeEmbed videoId="XQXlRHQtuXg" />
+
+---
 
 **Exercise (VBET)**: Compare the average low-lying proportion of valley bottom across two different streams.
 
@@ -270,22 +313,23 @@ This exercise demonstrates how a metric calculated by VBET (proportion of the fl
 
 ---
 
-**Exercise (BRAT)**: Assessing restoration and conservation opportunities in one stream, contextualized by the rest of the basin.
+**Demo (RCAT)**: Investigating RCAT outputs and intermediates along a stream to assess opportunity
 
-Information from the network models is resolved at the reach scale (channel reach or riverscape reach; ~100s of meters), but it's time consuming and potentially impractical to look at values for every reach across a watershed. For this reason, it's often useful to roll-up or summarize the information at larger spatial scales. This allows for simple comparision between, e.g., sub-watersheds or individual streams. Comparisons that this scale can then inform what streams you zoom in on to assess the information at the reach scale, helping your efforts to stay targeted and efficient. These exercises use simple examples of summarization of outputs at the watershed scale and individual stream scale to assess potential for beaver-based restoration.
+<YouTubeEmbed videoId="hbFscVHlHpc" />
 
-<YouTubeEmbed videoId="Xk2w_XN0P08" />
+---
 
-<YouTubeEmbed videoId="c4dvcSLDoQQ" />
+**Exercise (Riverscapes IGOs)**: Using Riverscapes IGOs to identify and compare potential streams for restoration.
 
-<YouTubeEmbed videoId="XQXlRHQtuXg" />
+1. Open the Riverscapes IGOs project for the Bear River watershed in QGIS using the Viewer plugin.
+2. 
 
-**Exercise (RCAT)**:
-
-<YouTubeEmbed videoId="" />
+---
 
 #### c. Create a merged project for custom extent
 draw geojson, upload in report generator
+
+---
 
 ### 4. Reach Typing
 
