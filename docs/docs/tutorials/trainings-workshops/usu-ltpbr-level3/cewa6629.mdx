@@ -269,12 +269,14 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 
 #### c. Statistical analysis of metrics
 
-**Exercise**: For a given stream in the Ogden River watershed (e.g., Middle Fork Ogden River), visualize the distribution of values for a continuous metric (e.g., valley bottom width (`integrated_width`)) using a histogram.
+**Exercise**: For a given stream in the HUC10 watershed (e.g., Middle Fork Ogden River), visualize the distribution of values for a continuous metric (e.g., valley bottom width (`integrated_width`)) using a histogram.
 
 1. Open the Ogden River RME project in QGIS using the Viewer plugin.
 2. Choose a metric with a continuous value (e.g., valley bottom width (`integrated_width`)) and bring it into the map (Outputs > Geomorphic Metrics > IGO Geomorphic Metrics > Integrated Width (IGO)).
 3. Filter the output to a specific stream (e.g., Middle Fork Ogden River). Right click on the layer in the table of contents, choose 'Filter...', then type the expression `"stream_name" = 'Middle Fork Ogden River'` and pressing OK (NOTE: you could also copy the level path value for a given stream and use `"level_path" = '<some level path value>'` to filter).
 4. Note how, because of the binning of values, the variation in the metric may not be well captured at the scale of a single stream. In this case, we will use a histogram to visualize the distribution of values for the entire stream, which will provide more context than the bins in the symbology. Find the 'Vector layer histogram' tool in the Processing Toolbox (you can search for it in the search bar at the top of the toolbox). Set the input layer to be the filtered, set the 'Attribute' to be `integrated_width`, increase the number of bins to 15, and press 'Run'. This will generate a histogram of all of the values for that stream.
+
+<YouTubeEmbed videoId="SLRdBm9paYo" />
 
 ---
 
@@ -282,12 +284,12 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 
 #### a. The Model Waterfall
 
-<GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vTtjfQ1QImK6Wi-g8BDMclGi3D_AZbcB1bYiCgUytSLE7yRvT8jSck_RaCA_4oJavObloKVsBrg2elY/pubembed?start=false&loop=false&delayms=5000"
+<GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vTwlZBxG3UNtMxvpU5B7ZVVLUYpe278XG2dXpUix8evumt0tKZTbLSBlpW8nfmhxx71t0jaodxAlqgP/pubembed?start=false&loop=false&delayms=3000"
 width={800}
 height={600} 
 />
 
-To help screen and prioritize, models provide inventory info, like we used above, as well as some info to get at condition.
+To help screen and prioritize, models provide inventory info, like we used above, as well as some information to get at condition.
 
 ##### VBET Webinar
 
