@@ -284,8 +284,6 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 
 #### a. The Model Waterfall
 
-
-
 To help screen and prioritize, models provide three different types of information: 1) descriptive information that is useful for high level screening/filtering (e.g., land ownership, flow type, etc. as in the earlier exercises), 2) intentory information as in the earlier exercises where we quantified the area of riverscape or length of channel wihtin a watershed that meet a certain criteria, like we used above, and 3) some information to get at condition to help assess where needs restoration and where there is the greatest potential for uplift.
 
 <GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vTwlZBxG3UNtMxvpU5B7ZVVLUYpe278XG2dXpUix8evumt0tKZTbLSBlpW8nfmhxx71t0jaodxAlqgP/pubembed?start=false&loop=false&delayms=3000"
@@ -302,7 +300,13 @@ height={600}
 
 <YouTubeEmbed videoId="j4wwlcYL8Ho" />
 
-#### b. Some exercize(s) using specific model types
+---
+
+#### b. RSCLI
+
+When you need to download more than a couple of projects from the Data Exchange, clicking on the download link, waiting for the file to zip, extracting it and saving it locally becomes time consuming and tedious. A command line tool exists to make this process faster and simpler. Documentation, including instructions on downloading the tool are found [here](https://docs.riverscapes.net/products/rscli).
+
+#### c. Some exercize(s) using specific model types
 
 Information from the network models is resolved at the reach scale (channel reach or riverscape reach; ~100s of meters), but it's time consuming and potentially impractical to look at values for every reach across a watershed. For this reason, it's often useful to roll-up or summarize the information at larger spatial scales. This allows for simple comparision between, e.g., sub-watersheds or individual streams. Comparisons that this scale can then inform what streams you zoom in on to assess the information at the reach scale, helping your efforts to stay targeted and efficient. These exercises use simple examples of summarization of outputs at the watershed scale and individual stream scale to assess potential for beaver-based restoration.
 
@@ -335,7 +339,7 @@ This exercise demonstrates how a metric calculated by VBET (proportion of the fl
 The exercises we've done so far have been fairly straightforward if the area you are assessing happens to be a HUC10 watershed and you can simply download the individual projects needed for analysis. But what do you do when your extent is larger, e.g.,  spanning multiple HUC10s, or very large, like an entire state. Downloading each project you need individually and manually merging features classes obviously would not be practical. We have had a few different strategies for dealing with this, most recently an interactive webpage for requesting data that we'll use here.
 
 :::info
-In these projects that are merged for large areas, we pull the metric/attribute values from the DGO polygons, but attach them to the IGO points. Points are much smaller (bytes) than polygons because they contain only a single vertex, so this strategy keeps the projects from getting too large (which both takes up hard drive space and causes GIS to crash). We use the DGO metrics to avoid complications that could arise from calculating statistics based on moving window metrics ()
+In these projects that are merged for large areas, we pull the metric/attribute values from the DGO polygons, but attach them to the IGO points. Points are much smaller (bytes) than polygons because they contain only a single vertex, so this strategy keeps the projects from getting too large (which both takes up hard drive space and causes GIS to crash). We use the DGO metrics to avoid complications that could arise from calculating statistics based on moving window metrics (e.g., overcounting area by adding up windows).
 :::
 
 **Exercise (Riverscapes IGOs)**: Using Riverscapes IGOs to filter down to a subset of streams across a large area
@@ -344,7 +348,7 @@ In this exercise, we will open a Riverscapes IGOs project together and come up w
 
 ---
 
-#### c. Create a merged project for custom extent
+#### d. Create a merged project for custom extent
 
 The primary assignment for this course will be to use the techniques learned here to select some specific reaches within a large area where it makes sense to plan restoration/conservation actions. To do so, you will need a Riverscapes IGOs project for your area of interest (~HUC8 extent or larger). 
 
@@ -356,17 +360,35 @@ The primary assignment for this course will be to use the techniques learned her
 4. Click on 'Save Layer Edits' then toggle editing off. (If you decide you want to edit the polygon in any way, you can toggle editing on and use any of the editing tools to modify the polygon.)
 5. Right click on the layer in the layers panel, navigate to 'Export' then click 'Save Features As...'. Change the format to GeoJSON, choose a file name and location, and then click 'OK' to export it. It will be added to the map and saved to the location you chose.
 
+<YouTubeEmbed videoId="5TiA9aZPci0" />
+
 ---
 
-#### d. Create a custom Riverscapes IGOs project
+**Exercise**: Generate a custom project
 
+1. Go to [https://staging.reports.riverscapes.net](https://staging.reports.riverscapes.net).
+2. Choose the 'IGO Scraper' option. After clicking, there is some general information that is worth reading through to understand the project that will be created.
+3. Click on 'CREATE THIS REPORT'.
+4. For the 'Select Area' option, choose 'UPLOAD', then click 'UPLOAD GEOPACKAGE OR GEOJSON FILE' and navigate to the GeoJSON layer you created.
+5. Verify the extent looks correct and click 'SUBMIT'.
+6. Give the project a name, and optionally a memo, then click 'START'. You will be returned to the 'MY REPORTS' tab of the page, which will show the project you have requested and its status (which will be 'queued' then 'running' at first).
+7. When the project is finished generating, click on the blue folder icon on the right to download a zipped file of the project.
 
+---
 
 ### 4. Reach Typing
 
-Serves two purposes: helps inform which metrics from the models may be relevant to condition in different settings. Helps find 'control' or similar reaches with varying condition to contextualize site.
+Reach typing serves two primary purposes in the context of screening and prioritization: 1) It helps inform which metrics from the models may be relevant to condition in different settings, based on the natural regimes of those settings. 2) When you are working in a given reach type, it helps find 'control' or similar reaches with varying condition to contextualize the site and its restoration potential.
 
-exercise: come up with some criteria for a specific reach type and apply it to merged project, report on length/area of that reach type
+<GoogleSlides />
+
+**Exercise**: Come up with some criteria for a specific reach type based on a reach you are interested in, and apply it to the merged project you created. Describe the reach type, and report on the riverscape area and length of that reach type across the project extent.
+
+### 5. Custom Data
+
+#### a. Running models using custom input data
+
+#### b. Adding custom datasets to analyses using DGOs as a sample frame
 
 
 
