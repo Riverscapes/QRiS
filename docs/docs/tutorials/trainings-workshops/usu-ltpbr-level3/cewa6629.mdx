@@ -286,7 +286,7 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 
 
 
-To help screen and prioritize, models provide inventory info, like we used above, as well as some information to get at condition.
+To help screen and prioritize, models provide three different types of information: 1) descriptive information that is useful for high level screening/filtering (e.g., land ownership, flow type, etc. as in the earlier exercises), 2) intentory information as in the earlier exercises where we quantified the area of riverscape or length of channel wihtin a watershed that meet a certain criteria, like we used above, and 3) some information to get at condition to help assess where needs restoration and where there is the greatest potential for uplift.
 
 <GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vTwlZBxG3UNtMxvpU5B7ZVVLUYpe278XG2dXpUix8evumt0tKZTbLSBlpW8nfmhxx71t0jaodxAlqgP/pubembed?start=false&loop=false&delayms=3000"
 width={800}
@@ -332,22 +332,39 @@ This exercise demonstrates how a metric calculated by VBET (proportion of the fl
 
 ---
 
-**Exercise (Riverscapes IGOs)**: Using Riverscapes IGOs to identify and compare potential streams for restoration.
+The exercises we've done so far have been fairly straightforward if the area you are assessing happens to be a HUC10 watershed and you can simply download the individual projects needed for analysis. But what do you do when your extent is larger, e.g.,  spanning multiple HUC10s, or very large, like an entire state. Downloading each project you need individually and manually merging features classes obviously would not be practical. We have had a few different strategies for dealing with this, most recently an interactive webpage for requesting data that we'll use here.
 
-1. Open the Riverscapes IGOs project for the Bear River watershed in QGIS using the Viewer plugin.
-2. 
+:::info
+In these projects that are merged for large areas, we pull the metric/attribute values from the DGO polygons, but attach them to the IGO points. Points are much smaller (bytes) than polygons because they contain only a single vertex, so this strategy keeps the projects from getting too large (which both takes up hard drive space and causes GIS to crash). We use the DGO metrics to avoid complications that could arise from calculating statistics based on moving window metrics ()
+:::
+
+**Exercise (Riverscapes IGOs)**: Using Riverscapes IGOs to filter down to a subset of streams across a large area
+
+In this exercise, we will open a Riverscapes IGOs project together and come up with screening criteria to filter down our results to something more manageable.
 
 ---
 
 #### c. Create a merged project for custom extent
-draw geojson, upload in report generator
+
+The primary assignment for this course will be to use the techniques learned here to select some specific reaches within a large area where it makes sense to plan restoration/conservation actions. To do so, you will need a Riverscapes IGOs project for your area of interest (~HUC8 extent or larger). 
+
+**Exercise**: Generate a GeoJSON feature class of the extent that you want to create a project for.
+
+1. In QGIS, click on the 'New Temporary Scratch Layer' to create a new feature class.
+2. Name the layer and select 'Polygon' as the geometry type. Make sure the projection is set to EPSG:4326 WGS 84 (the default projection for riverscapes network models), and click 'OK'. The new layer will be added to your table of contents with editing already toggled on.
+3. Click on the 'Add Polygon Feature' button in the digitizing toolbar and begin drawing the polygon extent you want. Single clicks add new vertices and a right click finalizes the digitization. 
+4. Click on 'Save Layer Edits' then toggle editing off. (If you decide you want to edit the polygon in any way, you can toggle editing on and use any of the editing tools to modify the polygon.)
+5. Right click on the layer in the layers panel, navigate to 'Export' then click 'Save Features As...'. Change the format to GeoJSON, choose a file name and location, and then click 'OK' to export it. It will be added to the map and saved to the location you chose.
 
 ---
+
+#### d. Create a custom Riverscapes IGOs project
+
+
 
 ### 4. Reach Typing
 
 Serves two purposes: helps inform which metrics from the models may be relevant to condition in different settings. Helps find 'control' or similar reaches with varying condition to contextualize site.
-Can pull River Styles content from fluvial geomorph slides.
 
 exercise: come up with some criteria for a specific reach type and apply it to merged project, report on length/area of that reach type
 
