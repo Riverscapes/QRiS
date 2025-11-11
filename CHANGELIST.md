@@ -1,6 +1,18 @@
 # QRiS Plugin
 
-## [1.1.18] 2025 NOV 6
+## [1.2.0.2] 2025 NOV 11
+
+### Fixed
+- Unable to create Data Capture Event due to database locking #871
+- Bug when setting Project Bounds in AOI #865
+- Bug with direct add from Riverscapes Viewer to QRiS Project node # 870
+
+### Changed
+- Reorder project tree parent items #867
+- rsxml module import check
+
+
+## [1.2.0.1] 2025 NOV 6
 
 ### Changed
 - QRiS Projects generate a constant Riverscapes Studio project.rs.xml file #843
