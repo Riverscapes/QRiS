@@ -410,11 +410,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if result == QtWidgets.QDialog.Rejected or selected_type is None:
                 return
             elif selected_type == 'Riverscape (Valley Bottom)':
-                self.add_valley_bottom(self.riverscapes_node,layer_path, meta=metadata)
+                self.add_valley_bottom(self.riverscapes_node, DB_MODE_IMPORT, layer_path, meta=metadata)
             elif selected_type == 'AOI':
-                self.add_aoi(self.aoi_node, layer_path, meta=metadata)
+                self.add_aoi(self.aoi_node, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT, layer_path, meta=metadata)
             elif selected_type == 'Sample Frame':
-                self.add_sample_frame(self.sample_frames_node, layer_path, meta=metadata)
+                self.add_sample_frame(self.sample_frames_node, DB_MODE_IMPORT, layer_path, meta=metadata)
             else:
                 self.add_context_vector(self.context_node, layer_path, meta=metadata)
         elif layer_type == 'line':
@@ -424,9 +424,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if result == QtWidgets.QDialog.Rejected or selected_type is None:
                 return
             elif selected_type == 'Profile/Centerline':
-                self.add_profile(self.profiles_node, layer_path, meta=metadata)
+                self.add_profile(self.profiles_node, DB_MODE_IMPORT, layer_path, meta=metadata)
             elif selected_type == 'Cross Sections':
-                self.add_cross_sections(self.cross_sections_node, layer_path, meta=metadata)
+                self.add_cross_sections(self.cross_sections_node, DB_MODE_IMPORT, layer_path, meta=metadata)
             else:
                 self.add_context_vector(self.context_node, layer_path, meta=metadata)
         else:
@@ -1435,19 +1435,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
         return out_layer
 
-    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, meta: dict = None):
+    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new aoi"""
 
-        import_source_path = None
-        if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new AOI.', QgsWkbTypes.GeometryType.PolygonGeometry)
-            if import_source_path is None:
-                return
-
-        if mode == DB_MODE_IMPORT_LAYER:
-            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
-            if import_source_path is None:
-                return
+        if import_source_path is None:
+            if mode == DB_MODE_IMPORT:
+                import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new AOI.', QgsWkbTypes.GeometryType.PolygonGeometry)
+                if import_source_path is None:
+                    return
+            elif mode == DB_MODE_IMPORT_LAYER:
+                import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
+                if import_source_path is None:
+                    return
 
         frm = FrmAOI(self, self.qris_project, import_source_path)
         if meta is not None:
@@ -1464,7 +1463,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     frm.metadata_widget.add_metadata(key, value[0])
             if 'symbology' in meta:
                 frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
-
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_aoi(db_item)
@@ -1480,26 +1478,39 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.aoi, frm.chkAddToMap.isChecked())
 
-    def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int):
+    def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new sample frame"""
 
-        import_source_path = None
-        if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Sample Frame.', QgsWkbTypes.GeometryType.PolygonGeometry)
-            if import_source_path is None:
-                return
-
-        if mode == DB_MODE_IMPORT_LAYER:
-            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
-            if import_source_path is None:
-                return
+        if import_source_path is None:
+            if mode == DB_MODE_IMPORT:
+                import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Sample Frame.', QgsWkbTypes.GeometryType.PolygonGeometry)
+                if import_source_path is None:
+                    return
+            elif mode == DB_MODE_IMPORT_LAYER:
+                import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
+                if import_source_path is None:
+                    return
 
         create = False
         if mode == DB_MODE_CREATE:
             create = True
 
         frm = FrmSampleFrame(self, self.qris_project, import_source_path, create_sample_frame=create)
-        
+        if meta is not None:
+            if 'layer_label' in meta:
+                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
+                frm.txtName.setText(meta['layer_label'])
+            if 'project_metadata' in meta:
+                for key, value in meta['project_metadata'].items():
+                    key = f'Project {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'layer_metadata' in meta:
+                for key, value in meta['layer_metadata'].items():
+                    key = f'Layer {key}'
+                    frm.metadata_widget.add_metadata(key, value[0])
+            if 'symbology' in meta:
+                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_sample_frame(db_item)
@@ -1527,19 +1538,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         add_to_map = add_to_map_method()
         self.add_child_to_project_tree(parent_node, sample_frame_method(), add_to_map)
 
-    def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int, meta=None):
-        """Initiates adding a new valley bottom"""
+    def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
+        """Initiates adding a new Valley Bottom"""
 
-        import_source_path = None
-        if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Valley Bottom.', QgsWkbTypes.GeometryType.PolygonGeometry)
-            if import_source_path is None:
-                return
-
-        if mode == DB_MODE_IMPORT_LAYER:
-            import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
-            if import_source_path is None:
-                return
+        if import_source_path is None:
+            if mode == DB_MODE_IMPORT:
+                import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Valley Bottom.', QgsWkbTypes.GeometryType.PolygonGeometry)
+                if import_source_path is None:
+                    return
+            elif mode == DB_MODE_IMPORT_LAYER:
+                import_source_path = self.get_toc_layer([QgsWkbTypes.PolygonGeometry])
+                if import_source_path is None:
+                    return
 
         frm = FrmValleyBottom(self, self.qris_project, import_source_path)
         if meta is not None:
@@ -1564,7 +1574,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
-                # find the Sample Frames Node in the model
+                # find the Valley Bottoms Node in the model
                 rootNode = self.model.invisibleRootItem()
                 project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
                 inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
@@ -1573,17 +1583,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.add_child_to_project_tree(parent_node, frm.valley_bottom, frm.chkAddToMap.isChecked())
 
         
-    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, meta: dict = None):
+    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
 
-        import_source_path = None
-        if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, 'Select a line dataset to import as a new profile.', QgsWkbTypes.GeometryType.LineGeometry)
-            if import_source_path is None:
-                return
-        if mode == DB_MODE_IMPORT_LAYER:
-            import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
-            if import_source_path is None:
-                return
+        if import_source_path is None:
+            if mode == DB_MODE_IMPORT:
+                import_source_path = browse_vector(self, 'Select a line dataset to import as a new profile.', QgsWkbTypes.GeometryType.LineGeometry)
+                if import_source_path is None:
+                    return
+            elif mode == DB_MODE_IMPORT_LAYER:
+                import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
+                if import_source_path is None:
+                    return
 
         frm = FrmProfile(self, self.qris_project, import_source_path)
         if meta is not None:
@@ -1615,18 +1625,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 parent_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
 
-    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int, meta: dict = None):
+    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
+        """Initiates adding a new cross section layer"""
 
-        import_source_path = None
-        if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, 'Select a line dataset to import as a new cross section layer.', QgsWkbTypes.GeometryType.LineGeometry)
-            if import_source_path is None:
-                return
-
-        if mode == DB_MODE_IMPORT_LAYER:
-            import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
-            if import_source_path is None:
-                return
+        if import_source_path is None:
+            if mode == DB_MODE_IMPORT:
+                import_source_path = browse_vector(self, 'Select a line dataset to import as a new cross section layer.', QgsWkbTypes.GeometryType.LineGeometry)
+                import_source_path = None if import_source_path == '' else import_source_path
+                if import_source_path is None:
+                    return
+            elif mode == DB_MODE_IMPORT_LAYER:
+                import_source_path = self.get_toc_layer([QgsWkbTypes.LineGeometry])
+                if import_source_path is None:
+                    return
 
         frm = FrmCrossSections(self, self.qris_project, import_source_path)
 
@@ -1908,6 +1919,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 node.setText(data_item.name + ' (Empty)')
                 font = node.font()
                 font.setItalic(True)
+                font.setBold(False)
                 node.setFont(font)
             else:
                 node.setText(data_item.name)
