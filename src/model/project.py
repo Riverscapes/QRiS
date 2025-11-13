@@ -209,6 +209,11 @@ class Project(DBItem, QObject):
 
     def remove(self, db_item: DBItem) -> None:
         """Remove a DBItem from the project."""
+        if isinstance(db_item, DBItemSpatial):
+            with sqlite3.connect(self.project_file) as conn:
+                curs = conn.cursor()
+                db_item.drop_spatial_view(curs)
+                conn.commit()
         if isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                 self.aois.pop(db_item.id)
@@ -240,6 +245,7 @@ class Project(DBItem, QObject):
             self.attachments.pop(db_item.id)
         else:
             raise Exception('Attempting to remove unhandled database type from project')
+        self.project_changed.emit()
 
     def update_metadata(self, metadata: dict = None):
 
@@ -248,6 +254,8 @@ class Project(DBItem, QObject):
 
         with sqlite3.connect(self.project_file) as conn:
             conn.execute('UPDATE projects SET metadata = ? WHERE id = ?', [json.dumps(self.metadata), self.id])
+
+        self.project_changed.emit()
 
     def scratch_rasters(self) -> Dict[int, Raster]:
         """ Returns a dictionary of all project rasters EXCEPT basemaps"""

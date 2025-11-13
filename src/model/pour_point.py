@@ -54,6 +54,11 @@ class PourPoint(DBItemSpatial):
         src_layer = None
         src_dataset = None
 
+    def drop_spatial_view(self, curs: sqlite3.Cursor) -> None:
+        """Drop the spatial views for the pour point and its catchment."""
+        self.catchment.drop_spatial_view(curs)
+        super().drop_spatial_view(curs)
+
 
 def load_pour_points(curs: sqlite3.Cursor) -> Dict[int, PourPoint]:
 
