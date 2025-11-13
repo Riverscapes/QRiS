@@ -9,6 +9,7 @@ from PyQt5 import QtCore
 from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
 
 from ..model.project import Project
+from ..model.db_item import DBItem
 from ..model.raster import Raster
 from ..model.profile import Profile
 from ..model.pour_point import PourPoint
@@ -135,14 +136,14 @@ class RSProject:
                 raster_xml_id = f'context_{raster.id}'
             else:
                 raster_xml_id = f'surface_{raster.id}'
-
+            metadata_values = self.get_db_item_metadata(raster)
             raster_datasets.append(
                 rsxml.project_xml.Dataset(
                     xml_id=raster_xml_id,
                     name=raster.name,
                     path=raster.path,
+                    meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                     ds_type='Raster'))
-        
         return raster_datasets
 
     def build_sample_frames(self, sample_frames, sample_frame_type, name):
@@ -152,10 +153,11 @@ class RSProject:
         for sample_frame in sample_frames:
             if not sample_frame.sample_frame_type == sample_frame_type:
                 continue
-
+            metadata_values = self.get_db_item_metadata(sample_frame)
             out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=sample_frame.view_name,
                                                         name=sample_frame.name,
                                                         ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
+                                                        meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                                                         lyr_type=name))
         return out_layers
 
@@ -163,9 +165,11 @@ class RSProject:
         out_layers = []
         profile: Profile = None
         for profile in profiles:
+            metadata_values = self.get_db_item_metadata(profile)
             out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=profile.view_name,
                                                       name=profile.name,
                                                       ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
+                                                      meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                                                       lyr_type='profile'))
         return out_layers
     
@@ -173,9 +177,11 @@ class RSProject:
         out_layers = []
         cross_section: CrossSections = None
         for cross_section in cross_sections:
+            metadata_values = self.get_db_item_metadata(cross_section)
             out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=cross_section.view_name,
                                                       name=cross_section.name,
                                                       ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
+                                                      meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                                                       lyr_type='cross_section'))
         return out_layers
     
@@ -183,10 +189,12 @@ class RSProject:
         out_layers = []
         pour_point: PourPoint = None
         for pour_point in self.qris_project.pour_points.values():
+            metadata_values = self.get_db_item_metadata(pour_point)
             out_layers.append(rsxml.project_xml.GeopackageLayer(
                 lyr_name=pour_point.view_name,
                 name=pour_point.name,
                 ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
+                meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                 lyr_type='pour_point'))
             out_layers.append(rsxml.project_xml.GeopackageLayer(
                 lyr_name=pour_point.catchment.view_name,
@@ -214,7 +222,7 @@ class RSProject:
                 curs = conn.cursor()
                 curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{context_vector.fc_name}'")
                 geom_type = curs.fetchone()[0]
-
+            metadata_values = self.get_db_item_metadata(context_vector)
             context_layers.append(rsxml.project_xml.GeopackageLayer(summary=f'context_{geom_type.lower()}',
                                                         lyr_name=context_vector.fc_name,
                                                         name=context_vector.name,
@@ -243,8 +251,8 @@ class RSProject:
         event_realizations = []
         event: Event = None
         for event in events:
-            if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
-                continue
+            # if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
+            #     continue
             event_type = EVENT_TYPE_LOOKUP[event.event_type.id]
 
             # Search for photos for the dce in the photos folder
@@ -268,29 +276,26 @@ class RSProject:
                                                     meta_data=photo_meta,
                                                     ds_type='Image'))
 
-            meta = rsxml.project_xml.MetaData(values=[rsxml.project_xml.Meta(event_type, "")])
+            metadata_values = self.get_db_item_metadata(event)
+            metadata_values.append(rsxml.project_xml.Meta('Event Type', event_type))
             # prepare the datasets
             geopackage_layers = []
             layer: EventLayer = None
             for layer in event.event_layers:
-                if layer.feature_count(self.qris_project.project_file) == 0:
-                    continue
                 fc_name = Layer.DCE_LAYER_NAMES.get(layer.layer.geom_type, None)
                 if fc_name is None:
                     continue
-
+                layer_metadata_values = self.get_db_item_metadata(layer.layer)
                 gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=layer.view_name,
                                                 name=layer.name,
                                                 ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
+                                                meta_data=rsxml.project_xml.MetaData(values=layer_metadata_values),
                                                 lyr_type=layer.layer.layer_id)
                 geopackage_layers.append(gp_lyr)
-
             events_gpkg = rsxml.project_xml.Geopackage(xml_id=f'dce_{event.id}_gpkg',
                                             name=f'{event.name}',
                                             path=self.out_name,
                                             layers=geopackage_layers)
-
-
             event_creation = event.get_created_on(self.qris_project.project_file)
             if isinstance(event_creation, str):
                 try:
@@ -304,8 +309,7 @@ class RSProject:
                 date_created=event_creation,
                 product_version=self.qris_version,
                 datasets=[events_gpkg] + photo_datasets,
-                meta_data=meta
-            )
+                meta_data=rsxml.project_xml.MetaData(values=metadata_values))
 
             # add description if it exists
             if event.description:
@@ -376,13 +380,14 @@ class RSProject:
                     date_created = datetime.strptime(date_created, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     date_created = datetime.now()
-
+            metadata_values = self.get_db_item_metadata(analysis)
             realization = rsxml.project_xml.Realization(
                 xml_id=f'analysis_{analysis.id}',
                 name=analysis.name,
                 date_created=date_created,
                 product_version=self.qris_version,
-                datasets=[analysis_gpkg]
+                datasets=[analysis_gpkg],
+                meta_data=rsxml.project_xml.MetaData(values=metadata_values)
             )
             analysis_realizations.append(realization)
 
@@ -395,10 +400,12 @@ class RSProject:
         attachment: Attachment = None
         for attachment in self.qris_project.attachments.values():
             if attachment.attachment_type == Attachment.TYPE_FILE:
+                metadata_values = self.get_db_item_metadata(attachment)
                 attachments.append(rsxml.project_xml.Dataset(
                     xml_id=f'attachment_{attachment.id}',
                     name=attachment.name,
                     path=f'attachments/{attachment.path}',
+                    meta_data=rsxml.project_xml.MetaData(values=metadata_values),
                     ds_type='File'))
             elif attachment.attachment_type == Attachment.TYPE_WEB_LINK:
                 # Create a metadata entry for web link
@@ -419,6 +426,16 @@ class RSProject:
         )
 
         return attachments_realization
+
+    def get_db_item_metadata(self, db_item: DBItem):
+        metadata_values = []
+        if not db_item.metadata:
+            return metadata_values
+        for key, value in db_item.metadata.get('metadata', {}).items():
+            metadata_values.append(rsxml.project_xml.Meta(key, value))
+        for key, value in db_item.metadata.get('system', {}).items():
+            metadata_values.append(rsxml.project_xml.Meta(f'{key} (System)', f'{value}'))
+        return metadata_values
 
     def write(self):
 
