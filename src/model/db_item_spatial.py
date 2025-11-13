@@ -68,3 +68,9 @@ class DBItemSpatial(DBItem):
             "VALUES (?, ?, ?, ?, ?, ?)"
         )
         curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
+    
+    def drop_spatial_view(self, curs: sqlite3.Cursor) -> None:
+        """Drop the spatial view of the DB item features."""
+        curs.execute(f"DROP VIEW IF EXISTS {self.view_name}")
+        curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = ?", (self.view_name,))
+        curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = ?", (self.view_name,))
