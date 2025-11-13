@@ -23,7 +23,7 @@ class DBItem():
         self.id = id
         self.name = name
         self.date = None
-        self.metadata = None
+        self.metadata:dict = None
 
         # Nearly all the DBItem database tables are non-spatial and have
         # an ID column called "id". However, any spatial DBItem tables
