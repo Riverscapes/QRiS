@@ -2,7 +2,7 @@ import os
 import json
 from typing import List
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCoordinateTransformContext, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsFeatureRequest
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsWkbTypes, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtCore import pyqtSignal, QVariant
 
 from .import_feature_class import ImportFieldMap

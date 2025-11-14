@@ -1,8 +1,8 @@
 
 import math
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsFields, QgsFeature, QgsField, QgsGeometry, QgsPointXY, QgsLineString
-from qgis.PyQt.QtCore import pyqtSignal, QVariant
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsFeature, QgsGeometry, QgsPointXY, QgsLineString
+from qgis.PyQt.QtCore import pyqtSignal
 
 
 MESSAGE_CATEGORY = 'CrossSectionsTask'

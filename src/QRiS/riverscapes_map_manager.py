@@ -3,7 +3,7 @@ import sqlite3
 import json
 from textwrap import dedent
 
-from qgis.PyQt.QtGui import QStandardItem, QColor, QColorConstants
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import Qt, QVariant, pyqtSlot, pyqtSignal, QObject
 from qgis.utils import iface
 
