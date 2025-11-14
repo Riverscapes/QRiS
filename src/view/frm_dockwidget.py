@@ -854,7 +854,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if machine_code == STREAM_GAGE_MACHINE_CODE:
             self.map_manager.build_stream_gage_layer()
         else:
-            for row in range(0, model_item.rowCount()):
+            # Reverse the order of children
+            for row in reversed(range(0, model_item.rowCount())):
                 child_item = model_item.child(row)
                 if features_only is True and isinstance(child_item.data(QtCore.Qt.UserRole), EventLayer):
                     event_layer: EventLayer = child_item.data(QtCore.Qt.UserRole)
