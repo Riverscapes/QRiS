@@ -4,7 +4,7 @@ import sqlite3
 
 from osgeo import ogr
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext
+from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import create_geopackage_table

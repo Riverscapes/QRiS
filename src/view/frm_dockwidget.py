@@ -26,7 +26,7 @@ import os
 from functools import partial
 from osgeo import ogr
 
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsProject, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsRectangle, QgsRasterLayer, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView
