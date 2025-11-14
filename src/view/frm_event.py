@@ -91,8 +91,15 @@ class FrmEvent(QtWidgets.QDialog):
                     self.txtDateLabel.setText(self.metadata_widget.metadata['system']['date_label'])
 
             if self.layer_widget is not None:
+                # Collect all layer names and geometry types
+                layer_names = [el.layer.name for el in dce_event.event_layers]
+                duplicates = {name for name in layer_names if layer_names.count(name) > 1}
+
                 for event_layer in dce_event.event_layers:
-                    item = QtGui.QStandardItem(event_layer.layer.name)
+                    display_name = event_layer.layer.name
+                    if display_name in duplicates:
+                        display_name = f"{display_name} ({event_layer.layer.geom_type})"
+                    item = QtGui.QStandardItem(display_name)
                     item.setData(event_layer.layer, QtCore.Qt.UserRole)
                     item.setEditable(False)
                     self.layer_widget.layers_model.appendRow(item)
