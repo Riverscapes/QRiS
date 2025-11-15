@@ -29,7 +29,7 @@ from osgeo import ogr
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
 from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView
+from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
 from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
@@ -137,7 +137,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     closingPlugin = QtCore.pyqtSignal()
 
-    def __init__(self, iface, parent=None):
+    def __init__(self, iface: QgisInterface, parent=None):
         """Constructor."""
         super(QRiSDockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
@@ -593,7 +593,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
-                    self.add_context_menu_item(self.menu, 'Export Project to Riverscapes Project', 'qris_icon', lambda: self.export_project(model_data))
+                    self.add_context_menu_item(self.menu, 'Export as a New Project', 'qris_icon', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
 
@@ -1195,11 +1195,27 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def export_project(self, project: Project):
 
+        # check if there is an open edit session on any layers in the map
+        for layer in self.iface.mapCanvas().layers():
+            if layer.isEditable():
+                QtWidgets.QMessageBox.warning(self, 'Export Project', f'Please save or discard your edits on layer "{layer.name()}" before exporting the project.')
+                return
+        
+        # Refrfesh the map canvas to ensure all layers are flushed to disk before copying
+        self.iface.mapCanvas().refreshAllLayers()
+
+        QtWidgets.QMessageBox.information(
+            self,
+            'Export Project',
+            'Exporting a QRiS project will create a new copy of the project.\n\nTo ensure all data is included, it is recommended that you restart QGIS before exporting if you have made any edits or changes to this project.',
+            QtWidgets.QMessageBox.Ok
+        )
+
         frm = FrmExportProject(self, self.qris_project)
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
-            iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
+            self.iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
 
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
