@@ -7,22 +7,9 @@ import re
 from osgeo import ogr
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox
-from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
-from qgis.utils import iface
 from qgis.PyQt.QtCore import QSettings
 
-def rsxml_import():
-    try:
-        import rsxml
-        QgsMessageLog.logMessage('rsxml imported from system', 'Riverscapes Viewer', Qgis.Info)
-    except ImportError:
-        QgsMessageLog.logMessage('rsxml not found in system, importing from source', 'Riverscapes Viewer', Qgis.Info)
-        rsxml = None
-    return rsxml
-
-from ...__version__ import __version__ as installed_qris_version
-from ..model.event import Event, EVENT_TYPE_LOOKUP
+from ..model.event import Event
 from ..model.planning_container import PlanningContainer
 from ..model.analysis import Analysis
 from ..model.profile import Profile
@@ -43,20 +30,6 @@ APPNAME = 'QRiS'
 
 PROJECT_MACHINE_NAME = 'RiverscapesStudio'
 DEFAULT_EXPORT_PATH = 'default_export_path'
-
-
-def rsxml_check():
-    """ Check if rsxml is available and return True if it is, otherwise show a message box and return False.
-
-    Returns:
-        _type_: _description_
-    """
-    rsxml = rsxml_import()
-    if rsxml is None:
-        # Todo better message
-        message_box("Error", "rsxml module is not available. Please install rsxml to export to Riverscapes Studio.")
-        return False
-    return True
 
 
 class FrmExportProject(QtWidgets.QDialog):
@@ -82,12 +55,6 @@ class FrmExportProject(QtWidgets.QDialog):
             # use the parent of the project folder
             self.base_folder = os.path.dirname(os.path.dirname(self.qris_project.project_file))
         self.set_output_path()
-
-        # populate the AOI combo box with aoi names
-        for aoi_id, aoi in self.qris_project.aois.items():
-            self.cbo_project_bounds_aoi.addItem(aoi.name, aoi_id)
-        for valley_bottom_id, valley_bottom in self.qris_project.valley_bottoms.items():
-            self.cbo_project_bounds_aoi.addItem(valley_bottom.name, valley_bottom_id)
 
         # Inputs
         inputs_node = QtGui.QStandardItem("Inputs")
@@ -264,11 +231,6 @@ class FrmExportProject(QtWidgets.QDialog):
         if not self.validate_tree():
             return
         # use only the first three components of the version
-        qris_version = ".".join(installed_qris_version.split(".")[:3])
-        # check if rsxml is available. If not show a message box and return
-        rsxml = rsxml_import()
-        if not rsxml_check():
-            return
 
         if self.txt_rs_name.text() == "":
             message_box("Project Name", "Please enter a name for the Riverscapes project.")
@@ -297,26 +259,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 if ret == QtWidgets.QMessageBox.Cancel:
                     return
 
-        if self.opt_project_bounds_aoi.isChecked():
-            # if Select AOI is selected, then warn the user to select an AOI
-            if self.cbo_project_bounds_aoi.currentIndex() == 0:
-                message_box("Select an AOI", "Please specify an AOI or Valley Bottom, or select the 'Use intersection of all QRiS layers' option.")
-                return
-        if self.rdo_existing.isChecked():
-            if self.txt_existing_path.text() == "":
-                message_box("Select Existing Project", "Please select an existing QRiS Riverscapes project file (.rs.xml).")
-                return
-            rs_project_existing = rsxml.project_xml.Project.load_project(self.txt_existing_path.text())
-            if rs_project_existing is None:
-                message_box("Invalid Existing Project", "The existing project file does not exist or is not a valid Riverscapes project file.")
-                return
-            if rs_project_existing.project_type != PROJECT_MACHINE_NAME:
-                message_box("Wrong Project Type", "The existing project file is not a Riverscapes Studio project.")
-                return
-            if rs_project_existing.warehouse is None:
-                message_box("Missing Warehouse", "The selected project file does was not previously uploaded to the Data Exchange.")
-                return
-
         # create a new project folder if it doesn't exist
         if not os.path.exists(self.txt_outpath.text()):
             os.makedirs(self.txt_outpath.text())
@@ -325,142 +267,16 @@ class FrmExportProject(QtWidgets.QDialog):
         out_name = 'qris.gpkg'  # os.path.split(self.qris_project.project_file)[1]
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), out_name).replace("\\", "/"))
 
-        # Refrfesh the map canvas to ensure all layers are flushed to disk before copying
-        iface.mapCanvas().refreshAllLayers()
-
         shutil.copy(self.qris_project.project_file, out_geopackage)
-
-        # Project Bounds
-        if self.opt_project_bounds_all.isChecked():
-            # get the extent of all layers
-            envelope = None
-            for layer in ['dce_points', 'dce_lines', 'dce_polygons']:  # self.qris_project.layers.values():
-                geom = None
-                lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={layer}', layer, "ogr")
-                for f in lyr.getFeatures():
-                    feature_geom = f.geometry()
-                    if feature_geom.isNull() or feature_geom.isEmpty():
-                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', Qgis.Warning)
-                        continue
-                    if geom is None:
-                        geom = f.geometry()
-                    else:
-                        geom = geom.combine(f.geometry())
-                if geom is None or geom.isNull() or geom.isEmpty():
-                    continue
-                hull = geom.convexHull()
-                if envelope is None:
-                    envelope = hull
-                else:
-                    envelope = envelope.combine(hull)
-
-            for layer in self.qris_project.get_vector_dbitems():
-                geom = None
-                if isinstance(layer, PourPoint):
-                    fc_name = 'catchments'
-                    id_field = 'pour_point_id'
-                elif isinstance(layer, ScratchVector):
-                    continue
-                elif isinstance(layer, StreamGage):
-                    continue
-                else:
-                    fc_name = layer.fc_name
-                    id_field = layer.fc_id_column_name
-                lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}', layer.name, "ogr")
-                if id_field is not None:
-                    lyr.setSubsetString(f"{id_field} = {layer.id}")
-                for f in lyr.getFeatures():
-                    feature_geom = f.geometry()
-                    if feature_geom.isNull() or feature_geom.isEmpty():
-                        QgsMessageLog.logMessage(f"Feature {f.id()} in layer {layer} has no geometry", 'QRiS', Qgis.Warning)
-                        continue
-                    if geom is None:
-                        geom = feature_geom
-                    else:
-                        geom = geom.combine(feature_geom)
-                if geom is None or geom.isNull() or geom.isEmpty():
-                    continue
-                hull = geom.convexHull()
-                if envelope is None:
-                    envelope = hull
-                else:
-                    envelope = envelope.combine(hull)
-            if envelope is not None and not envelope.isNull() and not envelope.isEmpty():
-                output_geom = envelope.convexHull()
-        else:
-            # get the extent of the selected AOI
-            aoi_id = self.cbo_project_bounds_aoi.currentData()
-            aoi: SampleFrame = self.qris_project.aois[aoi_id] if aoi_id in self.qris_project.aois else self.qris_project.valley_bottoms[aoi_id] 
-            lyr = QgsVectorLayer(f'{self.qris_project.project_file}|layername=sample_frame_features', aoi.name, "ogr")
-            lyr.setSubsetString(f"sample_frame_id = {aoi.id}")
-            output_geom = lyr.getFeatures().__next__().geometry()
-
-        # check if the envelope is empty or null, or not a polygon type
-        if output_geom.isEmpty() or output_geom.isNull() or output_geom.wkbType() not in [ogr.wkbPolygon, ogr.wkbMultiPolygon]:
-            QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Please select a different AOI or there are enough layer geometries in the project to produce a polygon project bounds.")
-            return
-
-        extent = output_geom.boundingBox()
-        centroid = output_geom.centroid().asPoint()
-        geojson = output_geom.asJson()
-        # write to file
-        geojson_filename = "project_bounds.geojson"
-        geojson_path = os.path.abspath(os.path.join(self.txt_outpath.text(), geojson_filename).replace("\\", "/"))
-        with open(geojson_path, 'w') as f:
-            f.write(geojson)
-
-        project_bounds = rsxml.project_xml.ProjectBounds(centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
-                                                bounding_box=rsxml.project_xml.BoundingBox(minLat=extent.yMinimum(),
-                                                                            minLng=extent.xMinimum(),
-                                                                            maxLat=extent.yMaximum(),
-                                                                            maxLng=extent.xMaximum()),
-                                                filepath=geojson_filename)
-        # else:
-        #     project_bounds = None
-        #     QMessageBox.warning(self, "Project Bounds", "Unable to determine project bounds. Project will still be created but without bounds.")
-
-        xml_path = os.path.abspath(os.path.join(self.txt_outpath.text(), "project.rs.xml").replace("\\", "/"))
-
-        metadata_values = [rsxml.project_xml.Meta('QRiS Project Name', self.qris_project.name),
-                           rsxml.project_xml.Meta('QRiS Project Description', self.qris_project.description),
-                           rsxml.project_xml.Meta('ModelVersion', '1')]
-
-        for key, value in self.qris_project.metadata.items():
-            # if tags are empty, skip
-            if key == "tags":
-                continue
-            if value == "":
-                continue
-            if key == "metadata":
-                dict_metadata = value
-                for k, v in dict_metadata.items():
-                    metadata_values.append(rsxml.project_xml.Meta(k, v))
-            else:
-                metadata_values.append(rsxml.project_xml.Meta(key, value))
-
-        warehouse = None
-        if self.rdo_existing.isChecked():
-            rs_project_existing = rsxml.project_xml.Project.load_project(self.txt_existing_path.text())
-            warehouse = rs_project_existing.warehouse
-
-        self.rs_project = rsxml.project_xml.Project(name=self.txt_rs_name.text(),
-                                        proj_path=xml_path,
-                                        project_type=PROJECT_MACHINE_NAME,
-                                        meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                                        warehouse=warehouse,
-                                        description=self.txt_description.toPlainText(),
-                                        bounds=project_bounds)
 
         date_created = QtCore.QDateTime.currentDateTime()
 
         keep_layers: dict = {}  # {layer_name: {id_field: id_field_name, id_values: [id_values]}}
 
         # Inputs
-        input_layers = []
         inputs_node = self.export_layers_model.findItems("Inputs")[0]
 
         # Surface Rasters
-        raster_datasets = []
         raster_node = self.find_child_node(inputs_node, "Surfaces")
         if raster_node:
             for i in range(raster_node.rowCount()):
@@ -468,12 +284,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 if raster_item.checkState() == QtCore.Qt.Unchecked:
                     continue
                 raster: Raster = raster_item.data(QtCore.Qt.UserRole)
-
-                # check if raster is surface or context
-                if raster.is_context:
-                    raster_xml_id = f'context_{raster.id}'
-                else:
-                    raster_xml_id = f'surface_{raster.id}'
 
                 if 'rasters' not in keep_layers:
                     keep_layers['rasters'] = {'id_field': 'id', 'id_values': []}
@@ -484,11 +294,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 if not os.path.exists(os.path.dirname(out_raster_path)):
                     os.makedirs(os.path.dirname(out_raster_path))
                 shutil.copy(src_raster_path, out_raster_path)
-
-                raster_datasets.append(rsxml.project_xml.Dataset(xml_id=raster_xml_id,
-                                                     name=raster.name,
-                                                     path=raster.path,
-                                                     ds_type='Raster'))
 
         # Valley Bottoms
         valley_bottom_node = self.find_child_node(inputs_node, "Riverscapes")
@@ -507,19 +312,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 if 'sample_frames' not in keep_layers:
                     keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['sample_frames']['id_values'].append(str(valley_bottom.id))
-
-                view_name = f'vw_valley_bottom_{valley_bottom.id}'
-                self.create_spatial_view(view_name=view_name,
-                                         fc_name='sample_frame_features',
-                                         field_name='sample_frame_id',
-                                         id_value=valley_bottom.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='POLYGON')
-
-                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                          name=valley_bottom.name,
-                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                          lyr_type='valley_bottom'))
 
         # AOIs
         aoi_node = self.find_child_node(inputs_node, "AOIs")
@@ -540,19 +332,6 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['sample_frames']['id_values'].append(str(aoi.id))
 
-                view_name = f'vw_aoi_{aoi.id}'
-                self.create_spatial_view(view_name=view_name,
-                                         fc_name='sample_frame_features',
-                                         field_name='sample_frame_id',
-                                         id_value=aoi.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='POLYGON')
-
-                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                          name=aoi.name,
-                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                          lyr_type='aoi'))
-
         # Sample Frames
         sample_frame_node = self.find_child_node(inputs_node, "Sample Frames")
         if sample_frame_node:
@@ -569,19 +348,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 if 'sample_frames' not in keep_layers:
                     keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['sample_frames']['id_values'].append(str(sample_frame.id))
-
-                view_name = f'vw_sample_frame_{sample_frame.id}'
-                self.create_spatial_view(view_name=view_name,
-                                         fc_name='sample_frame_features',
-                                         field_name='sample_frame_id',
-                                         id_value=sample_frame.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='POLYGON')
-
-                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                          name=sample_frame.name,
-                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                          lyr_type='sample_frame'))
 
         # Profiles
         profile_node = self.find_child_node(inputs_node, "Profiles")
@@ -600,19 +366,6 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['profiles'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['profiles']['id_values'].append(str(profile.id))
 
-                view_name = f'vw_profile_{profile.id}'
-                self.create_spatial_view(view_name=view_name,
-                                         fc_name=profile_fc,
-                                         field_name='profile_id',
-                                         id_value=profile.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='LINESTRING')
-
-                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                          name=profile.name,
-                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                          lyr_type='profile'))
-
         # Cross Sections
         xsection_node = self.find_child_node(inputs_node, "Cross Sections")
         if xsection_node:
@@ -629,19 +382,6 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['cross_sections'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['cross_sections']['id_values'].append(str(xsection.id))
 
-                view_name = f'vw_cross_section_{xsection.id}'
-                self.create_spatial_view(view_name=view_name,
-                                         fc_name='cross_section_features',
-                                         field_name='cross_section_id',
-                                         id_value=xsection.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='LINESTRING')
-
-                input_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                          name=xsection.name,
-                                                          ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                          lyr_type='cross_section'))
-
         context_node = self.find_child_node(inputs_node, "Context")
 
         # need to prepare the Watershed catchments (pour points)
@@ -653,49 +393,16 @@ class FrmExportProject(QtWidgets.QDialog):
                 if pour_point_item.checkState() == QtCore.Qt.Unchecked:
                     continue
                 pour_point: PourPoint = pour_point_item.data(QtCore.Qt.UserRole)
-                pour_point_layers = []
 
                 if 'pour_points' not in keep_layers:
                     keep_layers['pour_points'] = {'id_field': 'fid', 'id_values': []}
                 keep_layers['pour_points']['id_values'].append(str(pour_point.id))
 
-                view_name = f'vw_pour_point_{pour_point.id}'
-                self.create_spatial_view(view_name=view_name,
-                                         fc_name='pour_points',
-                                         field_name='fid',
-                                         id_value=pour_point.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='POINT')
-
-                pour_point_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                               name=pour_point.name,
-                                                               ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                               lyr_type='pour_points'))
-
                 if 'catchments' not in keep_layers:
                     keep_layers['catchments'] = {'id_field': 'pour_point_id', 'id_values': []}
                 keep_layers['catchments']['id_values'].append(str(pour_point.id))
 
-                catchment_view = f'vw_catchment_{pour_point.id}'
-                self.create_spatial_view(view_name=catchment_view,
-                                         fc_name='catchments',
-                                         field_name='pour_point_id',
-                                         id_value=pour_point.id,
-                                         out_geopackage=out_geopackage,
-                                         geom_type='POLYGON')
-
-                pour_point_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=catchment_view,
-                                                               name=pour_point.name,
-                                                               ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                               lyr_type='catchments'))
-
-                pour_point_gpkgs.append(rsxml.project_xml.Geopackage(xml_id=f'pour_points_{pour_point.id}_gpkg',
-                                                         name=pour_point.name,
-                                                         path=out_name,
-                                                         layers=pour_point_layers))
-
         # context vectors
-        context_layers = []
         keep_context_layers = []
         for i in range(context_node.rowCount()):
             context_item = context_node.child(i)
@@ -707,11 +414,6 @@ class FrmExportProject(QtWidgets.QDialog):
             context = context_item.data(QtCore.Qt.UserRole)
             if isinstance(context, Raster):
                 raster: Raster = context_item.data(QtCore.Qt.UserRole)
-                # check if raster is surface or context
-                if raster.is_context:
-                    raster_xml_id = f'context_{raster.id}'
-                else:
-                    raster_xml_id = f'surface_{raster.id}'
 
                 if 'rasters' not in keep_layers:
                     keep_layers['rasters'] = {'id_field': 'id', 'id_values': []}
@@ -722,11 +424,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 if not os.path.exists(os.path.dirname(out_raster_path)):
                     os.makedirs(os.path.dirname(out_raster_path))
                 shutil.copy(raster_path, out_raster_path)
-
-                raster_datasets.append(rsxml.project_xml.Dataset(xml_id=raster_xml_id,
-                                                     name=raster.name,
-                                                     path=raster.path,
-                                                     ds_type='Raster'))
             else:
                 context_vector: ScratchVector = context_item.data(QtCore.Qt.UserRole)
                 # get the geom type for the feature class
@@ -741,19 +438,8 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['scratch_vectors'] = {'id_field': 'id', 'id_values': []}
                 keep_layers['scratch_vectors']['id_values'].append(str(context_vector.id))
 
-                context_layers.append(rsxml.project_xml.GeopackageLayer(summary=f'context_{geom_type.lower()}',
-                                                            lyr_name=context_vector.fc_name,
-                                                            name=context_vector.name,
-                                                            ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                            lyr_type='context'))
-
-        inputs_gpkg = rsxml.project_xml.Geopackage(xml_id=f'inputs_gpkg',
-                                       name=f'Inputs',
-                                       path=out_name,
-                                       layers=input_layers)
-
-        out_gpkgs = [inputs_gpkg]
-        if len(context_layers) > 0:
+        # out_gpkgs = [inputs_gpkg]
+        if len(keep_context_layers) > 0:
             # create the context geopackage and copy the layers
             context_gpkg = os.path.abspath(os.path.join(self.txt_outpath.text(), "context", "feature_classes.gpkg").replace("\\", "/"))
             if not os.path.exists(os.path.dirname(context_gpkg)):
@@ -788,17 +474,6 @@ class FrmExportProject(QtWidgets.QDialog):
             src_ds = None
             dst_ds = None
 
-            out_gpkgs.append(rsxml.project_xml.Geopackage(xml_id=f'context_gpkg',
-                                              name=f'Context',
-                                              path='context/feature_classes.gpkg',
-                                              layers=context_layers))
-
-        self.rs_project.realizations.append(rsxml.project_xml.Realization(xml_id=f'inputs',
-                                                              name='Inputs',
-                                                              date_created=date_created.toPyDateTime(),
-                                                              product_version=qris_version,
-                                                              datasets=raster_datasets + out_gpkgs + pour_point_gpkgs))
-
         all_photo_metadata = {}
         with sqlite3.connect(out_geopackage) as conn:
             # iterate through dce_points and get metadata for each photo
@@ -819,9 +494,9 @@ class FrmExportProject(QtWidgets.QDialog):
                 if event_item.checkState() == QtCore.Qt.Unchecked:
                     continue
                 event: Event = event_item.data(QtCore.Qt.UserRole)
-                if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
-                    continue
-                event_type = EVENT_TYPE_LOOKUP[event.event_type.id]
+                # if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
+                #     continue
+
 
                 if 'events' not in keep_layers:
                     keep_layers['events'] = {'id_field': 'id', 'id_values': []}
@@ -834,31 +509,12 @@ class FrmExportProject(QtWidgets.QDialog):
                 keep_layers['event_rasters']['id_values'].append(str(event.id))
 
                 # Search for photos for the dce in the photos folder
-                photo_datasets = []
-
                 source_photos_dir = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), "photos", f'dce_{str(event.id).zfill(3)}').replace("\\", "/"))
                 photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event.id).zfill(3)}').replace("\\", "/"))
                 if os.path.exists(source_photos_dir):
                     shutil.copytree(source_photos_dir, photo_dce_folder)
-                    # list photos in the photos folder
-                    for photo in os.listdir(photo_dce_folder):
-                        photo_metadata = all_photo_metadata[photo]
-                        photo_id = os.path.splitext(photo)[0]
-                        # get the lat long of the photo
-                        photo_meta = rsxml.MetaData(values=[rsxml.Meta('lat', photo_metadata['latitude']),
-                                                            rsxml.Meta('long', photo_metadata['longitude']),
-                                                            rsxml.Meta('timestamp', photo_metadata['timestamp'])
-                                                            ])
 
-                        photo_datasets.append(rsxml.Dataset(xml_id=photo_id,
-                                                            name=photo,
-                                                            path=f'photos/dce_{str(event.id).zfill(3)}/{photo}',
-                                                            meta_data=photo_meta,
-                                                            ds_type='Image'))
-
-                meta = rsxml.project_xml.MetaData(values=[rsxml.project_xml.Meta(event_type, "")])
                 # prepare the datasets
-                geopackage_layers = []
                 for layer in event.event_layers:
                     if self.chk_exclude_empty_layers.isChecked() and layer.feature_count(self.qris_project.project_file) == 0:
                         continue
@@ -875,48 +531,6 @@ class FrmExportProject(QtWidgets.QDialog):
                     if fc_name not in keep_layers:
                         keep_layers[fc_name] = {'id_field': 'event_layer_id', 'id_values': []}
                     keep_layers[fc_name]['id_values'].append(str(layer.layer.id))
-
-                    view_name = f'vw_{layer.layer.layer_id}_{event.id}'
-
-                    layer_fields: list = layer.layer.metadata.get('fields', None)
-                    out_fields = '*'
-                    if layer_fields is not None and len(layer_fields) > 0:
-                        out_fields = ", ".join([f"json_extract(metadata, '$.attributes.{field['id']}') AS \"{field['label']}\"" for field in layer_fields])
-                    sql = f"CREATE VIEW {view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {fc_name} WHERE event_id == {event.id} AND event_layer_id == {layer.layer.id}"
-                    self.create_spatial_view(view_name=view_name,
-                                             fc_name=fc_name,
-                                             field_name='event_id',
-                                             id_value=event.id,
-                                             out_geopackage=out_geopackage,
-                                             geom_type=geom_type.upper(),
-                                             sql=sql)
-
-                    gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=view_name,
-                                                   name=layer.name,
-                                                   ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                   lyr_type=layer.layer.layer_id)
-                    geopackage_layers.append(gp_lyr)
-
-                events_gpkg = rsxml.project_xml.Geopackage(xml_id=f'dce_{event.id}_gpkg',
-                                               name=f'{event.name}',
-                                               path=out_name,
-                                               layers=geopackage_layers)
-
-                # # self.rs_project.common_datasets.append(gpkg)
-                # ds = [RefDataset(lyr.lyr_name, lyr) for lyr in geopackage_layers]
-
-                realization = rsxml.project_xml.Realization(xml_id=f'realization_qris_{event.id}',
-                                                name=event.name,
-                                                date_created=date_created.toPyDateTime(),
-                                                product_version=qris_version,
-                                                datasets=[events_gpkg] + photo_datasets,
-                                                meta_data=meta)
-
-                # add description if it exists
-                if event.description:
-                    realization.description = event.description
-
-                self.rs_project.realizations.append(realization)
 
         # add planning containers
         planning_containers_nodes = self.export_layers_model.findItems("Planning Containers")
@@ -943,7 +557,6 @@ class FrmExportProject(QtWidgets.QDialog):
                     continue
                 analysis: Analysis = analysis_item.data(QtCore.Qt.UserRole)
 
-                geopackage_layers = []
                 # analysis: Analysis = analysis
                 sample_frame: SampleFrame = analysis.sample_frame
 
@@ -959,50 +572,10 @@ class FrmExportProject(QtWidgets.QDialog):
                     keep_layers['analysis_metrics'] = {'id_field': 'analysis_id', 'id_values': []}
                 keep_layers['analysis_metrics']['id_values'].append(str(analysis.id))
 
-                # create the analysis view
-                analysis_view = f'vw_analysis_{analysis.id}'
-
-                # prepare sql string for each metric
-                sql_metric = ", ".join(
-                    [f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in analysis.analysis_metrics.items()])
-                sql = f"""CREATE VIEW {analysis_view} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {analysis.id} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
-                if sql_metric == '':
-                    sql = f"CREATE VIEW {analysis_view} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {sample_frame.id}"
-                self.create_spatial_view(view_name=analysis_view,
-                                         fc_name=None,
-                                         field_name=None,
-                                         id_value=None,
-                                         out_geopackage=out_geopackage,
-                                         geom_type="POLYGON",
-                                         sql=sql)
-
-                gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=analysis_view,
-                                               name=analysis.name,
-                                               ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                               lyr_type='analysis')
-                geopackage_layers.append(gp_lyr)
-
-                analysis_gpkg = rsxml.project_xml.Geopackage(xml_id=f'{analysis.id}_gpkg',
-                                                 name=f'{analysis.name}',
-                                                 path=out_name,
-                                                 layers=geopackage_layers)
-
-                realization = rsxml.project_xml.Realization(xml_id=f'analysis_{analysis.id}',
-                                                name=analysis.name,
-                                                date_created=date_created.toPyDateTime(),
-                                                product_version=qris_version,
-                                                datasets=[analysis_gpkg])
-                # meta_data=meta)
-                self.rs_project.realizations.append(realization)
-
         # Attachments
-        attachments = []
         attachments_nodes = self.export_layers_model.findItems("Attachments")
         if attachments_nodes:
             attachments_node = attachments_nodes[0]
-            dest_attachments_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "attachments").replace("\\", "/"))
-            if not os.path.exists(dest_attachments_folder):
-                os.makedirs(dest_attachments_folder)
             for i in range(attachments_node.rowCount()):
                 child = attachments_node.child(i)
                 if child.checkState() == QtCore.Qt.Unchecked:
@@ -1010,30 +583,20 @@ class FrmExportProject(QtWidgets.QDialog):
                 attachment: Attachment = child.data(QtCore.Qt.UserRole)
                 # Process the attachment (e.g., copy files, collect web links)
                 if attachment.attachment_type == Attachment.TYPE_FILE:
+                    dest_attachments_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "attachments").replace("\\", "/"))
+                    if not os.path.exists(dest_attachments_folder):
+                        os.makedirs(dest_attachments_folder)
                     src_path = attachment.project_path(self.qris_project.project_file)
                     dst_path = attachment.project_path(dest_attachments_folder)
                     if os.path.exists(src_path):
                         shutil.copy(src_path, dst_path)
 
-                    attachments.append(rsxml.project_xml.Dataset(xml_id=f'attachment_{attachment.id}',
-                                name=attachment.name,
-                                path=f'attachments/{attachment.path}',
-                                ds_type='File'))
                 # elif attachment.attachment_type == Attachment.TYPE_WEB_LINK:
                 #     pass
                 
                 if 'attachments' not in keep_layers:
                     keep_layers['attachments'] = {'id_field': 'attachment_id', 'id_values': []}
                 keep_layers['attachments']['id_values'].append(str(attachment.id))
-
-        # need to add the attachments to the project xml as a realization
-        if len(attachments) > 0:
-            realization = rsxml.project_xml.Realization(xml_id='attachments',
-                                                name='Attachments',
-                                                date_created=date_created.toPyDateTime(),
-                                                product_version=qris_version,
-                                                datasets=attachments)
-            self.rs_project.realizations.append(realization)
 
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
@@ -1062,9 +625,12 @@ class FrmExportProject(QtWidgets.QDialog):
             curs.execute("DELETE FROM analysis_metrics WHERE analysis_id NOT IN (SELECT id FROM analyses)")
             conn.commit()  # Commit the transaction before executing VACUUM
 
+            # Write project name and description
+            project_name = self.txt_rs_name.text()
+            project_description = self.txt_description.toPlainText()
+            conn.execute("UPDATE projects SET name = ?, description = ? WHERE id = 1", (project_name, project_description))
+            conn.commit()
             conn.execute("VACUUM")
-
-        self.rs_project.write()
 
         return super().accept()
 
@@ -1075,27 +641,6 @@ class FrmExportProject(QtWidgets.QDialog):
             if child.text() == tag:
                 return child
         return None
-
-    @staticmethod
-    def create_spatial_view(view_name: str, fc_name, field_name: str, id_value: int, out_geopackage: str, geom_type: str, epsg: int = 4326, sql: str = None):
-        # create spaitail view of the aoi
-        sql = sql if sql is not None else f"CREATE VIEW {view_name} AS SELECT * FROM {fc_name} WHERE {field_name} == {id_value}"
-        with sqlite3.connect(out_geopackage) as conn:
-            curs = conn.cursor()
-            # check if the view already exists, if so, delete it
-            curs.execute(f"SELECT name FROM sqlite_master WHERE type='view' AND name='{view_name}'")
-            if curs.fetchone():
-                curs.execute(f"DROP VIEW {view_name}")
-                curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{view_name}'")
-                curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{view_name}'")
-
-            curs.execute(sql)
-            # add view to geopackage
-            sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
-            curs.execute(sql, [view_name, "features", view_name, "", epsg])
-            sql = "INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES (?, ?, ?, ?, ?, ?)"
-            curs.execute(sql, [view_name, 'geom', geom_type, epsg, 0, 0])
-            conn.commit()
 
     def browse_path(self):
 
@@ -1121,35 +666,28 @@ class FrmExportProject(QtWidgets.QDialog):
         self.base_folder = path.replace("/", "\\")
         self.set_output_path()
 
-    def change_project_bounds(self):
-
-        if self.opt_project_bounds_aoi.isChecked():
-            self.cbo_project_bounds_aoi.setEnabled(True)
-        else:
-            self.cbo_project_bounds_aoi.setEnabled(False)
-
     def set_checkbox_state(self, state: bool):
 
         for i in range(self.export_layers_model.rowCount()):
             item = self.export_layers_model.item(i)
             item.setCheckState(QtCore.Qt.Checked if state else QtCore.Qt.Unchecked)
 
-    def browse_existing(self):
+    # def browse_existing(self):
 
-        path = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Existing Project', '', 'Riverscapes Project (*.rs.xml)')[0]
-        if path:
-            self.txt_existing_path.setText(path)
+    #     path = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Existing Project', '', 'Riverscapes Project (*.rs.xml)')[0]
+    #     if path:
+    #         self.txt_existing_path.setText(path)
 
-    def change_new_or_existing(self):
+    # def change_new_or_existing(self):
 
-        if self.rdo_new.isChecked():
-            self.txt_existing_path.setEnabled(False)
-            self.btn_existing.setEnabled(False)
-            self.lbl_existing.setEnabled(False)
-        else:
-            self.txt_existing_path.setEnabled(True)
-            self.btn_existing.setEnabled(True)
-            self.lbl_existing.setEnabled(True)
+    #     if self.rdo_new.isChecked():
+    #         self.txt_existing_path.setEnabled(False)
+    #         self.btn_existing.setEnabled(False)
+    #         self.lbl_existing.setEnabled(False)
+    #     else:
+    #         self.txt_existing_path.setEnabled(True)
+    #         self.btn_existing.setEnabled(True)
+    #         self.lbl_existing.setEnabled(True)
 
     def get_checked_items(self, name: str):
         nodes = self.export_layers_model.findItems(name)
@@ -1171,68 +709,6 @@ class FrmExportProject(QtWidgets.QDialog):
                 message_box("Export Validation",
                     f"All Data Capture Events associated with '{planning_container.name}' must be selected for export before the Planning Container can be checked.")
                 return False
-
-        # # DCE's have associated Valley Bottoms
-        # for item in self.dce_items:
-        #     if item.checkState() == QtCore.Qt.Checked:
-        #         dce: DataCaptureEvent = item.data(QtCore.Qt.UserRole)
-        #         has_valley_bottom = False
-        #         for valley_bottom in dce.valley_bottoms:
-        #             valley_bottom_item = self.find_valley_bottom_item(valley_bottom.id)
-        #             if valley_bottom_item and valley_bottom_item.checkState() == QtCore.Qt.Checked:
-        #                 has_valley_bottom = True
-        #                 break
-        #         if not has_valley_bottom:
-        #             item.setCheckState(QtCore.Qt.Unchecked)
-        #             msg = QtWidgets.QMessageBox()
-        #             msg.setIcon(QtWidgets.QMessageBox.Warning)
-        #             msg.setText(f"The Data Capture Event '{dce.name}' was unchecked because it does not have any associated Valley Bottoms selected for export.")
-        #             msg.setWindowTitle("Data Capture Event Unchecked")
-        #             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        #             msg.exec_()
-
-        # # Analyses have associated Valley Bottoms, Centerlines.
-        # for item in self.analysis_items:
-        #     if item.checkState() == QtCore.Qt.Checked:
-        #         analysis: Analysis = item.data(QtCore.Qt.UserRole)
-        #         has_valley_bottom = False
-        #         for valley_bottom in analysis.valley_bottoms:
-        #             valley_bottom_item = self.find_valley_bottom_item(valley_bottom.id)
-        #             if valley_bottom_item and valley_bottom_item.checkState() == QtCore.Qt.Checked:
-        #                 has_valley_bottom = True
-        #                 break
-        #         if not has_valley_bottom:
-        #             item.setCheckState(QtCore.Qt.Unchecked)
-        #             msg = QtWidgets.QMessageBox()
-        #             msg.setIcon(QtWidgets.QMessageBox.Warning)
-        #             msg.setText(f"The Analysis '{analysis.name}' was unchecked because it does not have any associated Valley Bottoms selected for export.")
-        #             msg.setWindowTitle("Analysis Unchecked")
-        #             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        #             msg.exec_()
-
-        # # Metric Values have associated sample frames, and layers (DCE's).
-        # for item in self.analysis_metric_items:
-        #     if item.checkState() == QtCore.Qt.Checked:
-        #         analysis_metric: AnalysisMetric = item.data(QtCore.Qt.UserRole)
-        #         has_sample_frame = False
-        #         has_layer = False
-        #         if analysis_metric.analysis.sample_frame is not None:
-        #             sample_frame_item = self.find_sample_frame_item(analysis_metric.analysis.sample_frame.id)
-        #             if sample_frame_item and sample_frame_item.checkState() == QtCore.Qt.Checked:
-        #                 has_sample_frame = True
-        #         for layer in analysis_metric.analysis.event_layers:
-        #             layer_item = self.find_event_layer_item(layer.id)
-        #             if layer_item and layer_item.checkState() == QtCore.Qt.Checked:
-        #                 has_layer = True
-        #                 break
-        #         if not has_sample_frame or not has_layer:
-        #             item.setCheckState(QtCore.Qt.Unchecked)
-        #             msg = QtWidgets.QMessageBox()
-        #             msg.setIcon(QtWidgets.QMessageBox.Warning)
-        #             msg.setText(f"The Analysis Metric '{analysis_metric.metric.name}' was unchecked because it does not have its associated Sample Frame or Event Layer selected for export.")
-        #             msg.setWindowTitle("Analysis Metric Unchecked")
-        #             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        #             msg.exec_()
         
         return True
     
@@ -1284,70 +760,70 @@ class FrmExportProject(QtWidgets.QDialog):
         self.chk_qris_export_folder.clicked.connect(lambda checked: self.btn_output.setEnabled(not checked))
         self.horiz_output.addWidget(self.btn_output)
 
-        # Project Bounds
-        self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
-        self.lbl_project_bounds.setToolTip("Select the extent of the project. This is used for display purposes on the Riverscapes Data Exchange")
-        self.grid.addWidget(self.lbl_project_bounds, 3, 0, 1, 1, QtCore.Qt.AlignTop)
+        # # Project Bounds
+        # self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
+        # self.lbl_project_bounds.setToolTip("Select the extent of the project. This is used for display purposes on the Riverscapes Data Exchange")
+        # self.grid.addWidget(self.lbl_project_bounds, 3, 0, 1, 1, QtCore.Qt.AlignTop)
 
-        self.vert_project_bounds = QtWidgets.QVBoxLayout()
-        self.grid.addLayout(self.vert_project_bounds, 3, 1, 1, 1)
+        # self.vert_project_bounds = QtWidgets.QVBoxLayout()
+        # self.grid.addLayout(self.vert_project_bounds, 3, 1, 1, 1)
 
-        self.horiz_project_bounds_aoi = QtWidgets.QHBoxLayout()
-        self.vert_project_bounds.addLayout(self.horiz_project_bounds_aoi)
+        # self.horiz_project_bounds_aoi = QtWidgets.QHBoxLayout()
+        # self.vert_project_bounds.addLayout(self.horiz_project_bounds_aoi)
 
-        self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI or Valley Bottom")
-        self.opt_project_bounds_aoi.setToolTip("Use the extent of a selected AOI or Valley Bottom polygon")
-        self.opt_project_bounds_aoi.setChecked(True)
-        self.opt_project_bounds_aoi.clicked.connect(self.change_project_bounds)
-        self.horiz_project_bounds_aoi.addWidget(self.opt_project_bounds_aoi)
+        # self.opt_project_bounds_aoi = QtWidgets.QRadioButton("Use AOI or Valley Bottom")
+        # self.opt_project_bounds_aoi.setToolTip("Use the extent of a selected AOI or Valley Bottom polygon")
+        # self.opt_project_bounds_aoi.setChecked(True)
+        # # self.opt_project_bounds_aoi.clicked.connect(self.change_project_bounds)
+        # self.horiz_project_bounds_aoi.addWidget(self.opt_project_bounds_aoi)
 
-        self.cbo_project_bounds_aoi = QtWidgets.QComboBox()
-        self.cbo_project_bounds_aoi.addItem("Select AOI or Valley Bottom")
-        self.cbo_project_bounds_aoi.model().item(0).setEnabled(False)
-        self.horiz_project_bounds_aoi.addWidget(self.cbo_project_bounds_aoi)
+        # self.cbo_project_bounds_aoi = QtWidgets.QComboBox()
+        # self.cbo_project_bounds_aoi.addItem("Select AOI or Valley Bottom")
+        # self.cbo_project_bounds_aoi.model().item(0).setEnabled(False)
+        # self.horiz_project_bounds_aoi.addWidget(self.cbo_project_bounds_aoi)
 
-        self.opt_project_bounds_all = QtWidgets.QRadioButton("Use intersection of all QRiS layers")
-        self.opt_project_bounds_all.setToolTip("Use the extent of all QRiS layers in the project")
-        self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
-        self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
+        # self.opt_project_bounds_all = QtWidgets.QRadioButton("Use intersection of all QRiS layers")
+        # self.opt_project_bounds_all.setToolTip("Use the extent of all QRiS layers in the project")
+        # self.opt_project_bounds_all.clicked.connect(self.change_project_bounds)
+        # self.vert_project_bounds.addWidget(self.opt_project_bounds_all)
 
         # New or Existing Project
-        self.lbl_new_or_existing = QtWidgets.QLabel("Export Type")
-        self.lbl_new_or_existing.setToolTip("Select whether to create a new Riverscapes Studio project or update an existing project")
-        self.grid.addWidget(self.lbl_new_or_existing, 4, 0, 1, 1)
+        # self.lbl_new_or_existing = QtWidgets.QLabel("Export Type")
+        # self.lbl_new_or_existing.setToolTip("Select whether to create a new Riverscapes Studio project or update an existing project")
+        # self.grid.addWidget(self.lbl_new_or_existing, 4, 0, 1, 1)
 
-        self.group_new_or_existing = QtWidgets.QButtonGroup(self)
+        # self.group_new_or_existing = QtWidgets.QButtonGroup(self)
 
-        self.rdo_new = QtWidgets.QRadioButton("New Riverscapes Studio Project")
-        self.rdo_new.setToolTip("Export as a new Riverscapes Studio project")
-        self.group_new_or_existing.addButton(self.rdo_new)
-        self.rdo_new.setChecked(True)
-        self.rdo_new.clicked.connect(self.change_new_or_existing)
-        self.grid.addWidget(self.rdo_new, 4, 1, 1, 1)
+        # self.rdo_new = QtWidgets.QRadioButton("New Riverscapes Studio Project")
+        # self.rdo_new.setToolTip("Export as a new Riverscapes Studio project")
+        # self.group_new_or_existing.addButton(self.rdo_new)
+        # self.rdo_new.setChecked(True)
+        # self.rdo_new.clicked.connect(self.change_new_or_existing)
+        # self.grid.addWidget(self.rdo_new, 4, 1, 1, 1)
 
-        self.rdo_existing = QtWidgets.QRadioButton("Update Existing Riverscapes Studio Project")
-        self.rdo_existing.setToolTip("Update a previously uploaded Riverscapes Studio project")
-        self.group_new_or_existing.addButton(self.rdo_existing)
-        self.rdo_existing.clicked.connect(self.change_new_or_existing)
-        self.grid.addWidget(self.rdo_existing, 5, 1, 1, 1)
+        # self.rdo_existing = QtWidgets.QRadioButton("Update Existing Riverscapes Studio Project")
+        # self.rdo_existing.setToolTip("Update a previously uploaded Riverscapes Studio project")
+        # self.group_new_or_existing.addButton(self.rdo_existing)
+        # self.rdo_existing.clicked.connect(self.change_new_or_existing)
+        # self.grid.addWidget(self.rdo_existing, 5, 1, 1, 1)
 
-        self.horiz_existing = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz_existing, 6, 1, 1, 1)
+        # self.horiz_existing = QtWidgets.QHBoxLayout()
+        # self.grid.addLayout(self.horiz_existing, 6, 1, 1, 1)
 
-        self.lbl_existing = QtWidgets.QLabel("Existing Project rs.xml file")
-        self.lbl_existing.setEnabled(False)
-        self.horiz_existing.addWidget(self.lbl_existing)
+        # self.lbl_existing = QtWidgets.QLabel("Existing Project rs.xml file")
+        # self.lbl_existing.setEnabled(False)
+        # self.horiz_existing.addWidget(self.lbl_existing)
 
-        self.txt_existing_path = QtWidgets.QLineEdit()
-        self.txt_existing_path.setReadOnly(True)
-        self.txt_existing_path.setEnabled(False)
-        self.horiz_existing.addWidget(self.txt_existing_path)
+        # self.txt_existing_path = QtWidgets.QLineEdit()
+        # self.txt_existing_path.setReadOnly(True)
+        # self.txt_existing_path.setEnabled(False)
+        # self.horiz_existing.addWidget(self.txt_existing_path)
 
-        self.btn_existing = QtWidgets.QPushButton("...")
-        self.btn_existing.setMaximumWidth(30)
-        self.btn_existing.clicked.connect(self.browse_existing)
-        self.btn_existing.setEnabled(False)
-        self.horiz_existing.addWidget(self.btn_existing)
+        # self.btn_existing = QtWidgets.QPushButton("...")
+        # self.btn_existing.setMaximumWidth(30)
+        # self.btn_existing.clicked.connect(self.browse_existing)
+        # self.btn_existing.setEnabled(False)
+        # self.horiz_existing.addWidget(self.btn_existing)
 
         # add multiline box for description
         self.lbl_description = QtWidgets.QLabel("Description")
