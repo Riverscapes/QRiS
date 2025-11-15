@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [1.2.0.3] 2025 NOV 14
+
+### Fixed
+- Adding All DCE and Context Layers to Map is Reversed #868
+
+### Changed
+- Copy DCE (and all layers) metadata over to Realization metadata in Riverscape project #583
+- Make sure spatial views are cleared on db_item delete
+- Housekeeping: remove some unused imports
+- Layer Type Removed from Layers with Identical Names When Reopening a DCE in QRiS #828
+- Refactor export to remove xml and view generation
+
+
 ## [1.2.0.2] 2025 NOV 11
 
 ### Fixed
