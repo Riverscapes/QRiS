@@ -277,7 +277,7 @@ class RSProject:
                                                     ds_type='Image'))
 
             metadata_values = self.get_db_item_metadata(event)
-            metadata_values.append(rsxml.project_xml.Meta('Event Type', event_type))
+            metadata_values.append(rsxml.project_xml.Meta(event_type, ""))
             # prepare the datasets
             geopackage_layers = []
             layer: EventLayer = None
