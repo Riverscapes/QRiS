@@ -25,7 +25,10 @@
             "name": "Standalone Main Window",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/MainWindow.py",
+            "module": "src.MainWindow",
+            "env": {
+              "PYTHON_PATH": "${workspaceFolder}",
+            },
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
         },
