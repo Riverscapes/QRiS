@@ -1,6 +1,7 @@
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.utils import iface
 
@@ -20,9 +21,10 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmAOI(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str, aoi: SampleFrame = None):
+    def __init__(self, parent, qris_project: Project, import_source_path: str, aoi: SampleFrame = None):
 
-        self.qris_project = project
+        self.iface: QgisInterface = iface
+        self.qris_project = qris_project
         self.aoi = aoi
         self.import_source_path = import_source_path
         self.attribute_filter = None
@@ -150,6 +152,7 @@ class FrmAOI(QtWidgets.QDialog):
             if self.aoi is not None:
                 self.aoi.project_bounds = self.chkProjectBounds.isChecked()
                 self.aoi.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+                self.qris_project.project_changed.emit()
             else:
                 self.aoi = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
                 # Set project_bounds after AOI is created
@@ -190,10 +193,10 @@ class FrmAOI(QtWidgets.QDialog):
                 try:
                     self.aoi.delete(self.qris_project.project_file)
                     QgsApplication.messageLog().logMessage(f'Error Importing AOI: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                    iface.messageBar().pushMessage(f'Error Importing AOI', str(ex), level=Qgis.Critical, duration=5)
+                    self.iface.messageBar().pushMessage(f'Error Importing AOI', str(ex), level=Qgis.Critical, duration=5)
                 except Exception as ex_delete:
                     QgsApplication.messageLog().logMessage(f'Error Deleting AOI: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
-                    iface.messageBar().pushMessage(f'Error Deleting AOI', str(ex_delete), level=Qgis.Critical, duration=5)
+                    self.iface.messageBar().pushMessage(f'Error Deleting AOI', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
         else:
             super(FrmAOI, self).accept()
@@ -213,14 +216,14 @@ class FrmAOI(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if result is True:
-            iface.messageBar().pushMessage(f'AOI Imported', f'AOI "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
+            self.iface.messageBar().pushMessage(f'AOI Imported', f'AOI "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
         else:
             QgsApplication.messageLog().logMessage(f'Error Importing AOI Features', 'QRIS', level=Qgis.Critical)
             try:
                 self.aoi.delete(self.qris_project.project_file)
             except Exception as ex:
                 QgsApplication.messageLog().logMessage(f'Error Deleting AOI: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                iface.messageBar().pushMessage(f'Error Deleting AOI', str(ex), level=Qgis.Critical, duration=5)
+                self.iface.messageBar().pushMessage(f'Error Deleting AOI', str(ex), level=Qgis.Critical, duration=5)
             return
         super(FrmAOI, self).accept()
 

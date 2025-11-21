@@ -4,6 +4,7 @@ import json
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
+from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication
 
 from .widgets.metadata import MetadataWidget
@@ -18,10 +19,10 @@ from ..model.attachment import Attachment, attachments_path, insert_attachment
 
 class FrmAttachment(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface, project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE):
+    def __init__(self, parent, iface: QgisInterface, qris_project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE):
 
         self.iface = iface
-        self.project = project
+        self.qris_project = qris_project
         self.metadata = None
         self.attachment = attachment
         self.attachment_type = attachment_type if attachment is None else attachment.attachment_type
@@ -53,27 +54,25 @@ class FrmAttachment(QtWidgets.QDialog):
             self.txtDescription.setPlainText(attachment.description)
             if self.attachment_type == Attachment.TYPE_FILE:
                 self.extension = os.path.splitext(attachment.path)[1]
-                self.txtProjectPath.setText(self.attachment.project_path(self.project.project_file))
+                self.txtProjectPath.setText(self.attachment.project_path(self.qris_project.project_file))
                 self.lblSource.setVisible(False)
                 self.source.setEnabled(False)
                 self.source.setVisible(False)
             else:
                 self.source.lineEdit.setText(attachment.path)
-
-
         self.txtName.selectAll()
 
     def accept(self):
 
         # make sure there is not already an attachment with the same name
-        if self.txtName.text() in [a.name for a in self.project.attachments.values() if a.id != (self.attachment.id if self.attachment else None)]:
+        if self.txtName.text() in [a.name for a in self.qris_project.attachments.values() if a.id != (self.attachment.id if self.attachment else None)]:
             QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
             self.txtName.setFocus()
             return
         
         # make sure the new file path will not result in a duplicate name
         if self.attachment_type == Attachment.TYPE_FILE:
-            if self.txtProjectPath.text() in [a.path for a in self.project.attachments.values() if a.id != (self.attachment.id if self.attachment else None)]:
+            if self.txtProjectPath.text() in [a.path for a in self.qris_project.attachments.values() if a.id != (self.attachment.id if self.attachment else None)]:
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Path', f"An attachment with the path '{self.txtProjectPath.text()}' already exists. Please choose a unique path.")
                 self.txtProjectPath.setFocus()
                 return
@@ -86,10 +85,10 @@ class FrmAttachment(QtWidgets.QDialog):
                 new_path = self.source.lineEdit.text() if self.attachment_type == Attachment.TYPE_WEB_LINK else os.path.basename(self.txtProjectPath.text())
                 if self.attachment_type == Attachment.TYPE_FILE:
                     # Rename the file if the name has changed
-                    if self.txtProjectPath.text() != self.attachment.project_path(self.project.project_file):
-                        os.rename(self.attachment.project_path(self.project.project_file), self.txtProjectPath.text())
-
-                self.attachment.update(self.project.project_file, self.txtName.text(), path=new_path, description=self.txtDescription.toPlainText(), metadata=self.metadata)
+                    if self.txtProjectPath.text() != self.attachment.project_path(self.qris_project.project_file):
+                        os.rename(self.attachment.project_path(self.qris_project.project_file), self.txtProjectPath.text())
+                self.attachment.update(self.qris_project.project_file, self.txtName.text(), path=new_path, description=self.txtDescription.toPlainText(), metadata=self.metadata)
+                self.qris_project.project_changed.emit()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -107,8 +106,8 @@ class FrmAttachment(QtWidgets.QDialog):
                     QgsApplication.taskManager().addTask(task)
                 else:
                     # For web links, we don't need to copy files, just create the attachment
-                    self.attachment = insert_attachment(self.project.project_file, self.txtName.text(), self.source.lineEdit.text(), self.attachment_type, self.txtDescription.toPlainText(), self.metadata)
-                    self.project.attachments[self.attachment.id] = self.attachment
+                    self.attachment = insert_attachment(self.qris_project.project_file, self.txtName.text(), self.source.lineEdit.text(), self.attachment_type, self.txtDescription.toPlainText(), self.metadata)
+                    self.qris_project.add_db_item(self.attachment)
                     super().accept()
             except Exception as ex:
                 self.attachment = None
@@ -125,8 +124,8 @@ class FrmAttachment(QtWidgets.QDialog):
         if error:
             QgsApplication.messageLog().logMessage(f"Error copying file: {error}", "QRiS", Qgis.Critical)
         try:
-            self.attachment = insert_attachment(self.project.project_file, self.txtName.text(), os.path.basename(self.txtProjectPath.text()), self.attachment_type, self.txtDescription.toPlainText(), self.metadata)
-            self.project.attachments[self.attachment.id] = self.attachment
+            self.attachment = insert_attachment(self.qris_project.project_file, self.txtName.text(), os.path.basename(self.txtProjectPath.text()), self.attachment_type, self.txtDescription.toPlainText(), self.metadata)
+            self.qris_project.add_db_item(self.attachment)
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -154,11 +153,11 @@ class FrmAttachment(QtWidgets.QDialog):
         # Replace spaces with underscores and remove non-alphanumeric characters
         clean_name = re.sub('[^A-Za-z0-9_]+', '', self.txtName.text().replace(' ', '_'))
         if len(clean_name) > 0:
-            parent_folder = attachments_path(self.project.project_file)
+            parent_folder = attachments_path(self.qris_project.project_file)
             ext = ''
             if self.attachment_type == Attachment.TYPE_FILE:
                 ext = self.extension if self.extension is not None else os.path.splitext(self.source.lineEdit.text())[1]
-            self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext))))
+            self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.qris_project.get_safe_file_name(clean_name, ext))))
         else:
             self.txtProjectPath.setText('')
 

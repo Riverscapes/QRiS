@@ -4,6 +4,7 @@ import json
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import pyqtSlot
+from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
 
 from ..model.raster import Raster, insert_raster, SURFACES_PARENT_FOLDER, CONTEXT_PARENT_FOLDER
@@ -19,10 +20,10 @@ from ..QRiS.path_utilities import parse_posix_path
 
 class FrmRaster(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface, project: Project, import_source_path: str, is_context: bool, raster: Raster = None, add_new_keys=True):
+    def __init__(self, parent, iface: QgisInterface, qris_project: Project, import_source_path: str, is_context: bool, raster: Raster = None, add_new_keys=True):
 
         self.iface = iface
-        self.project = project
+        self.qris_project = qris_project
         self.is_context = is_context
         self.raster = raster
         self.hillshade_raster_path = None
@@ -38,8 +39,8 @@ class FrmRaster(QtWidgets.QDialog):
 
         self.setupUi()
 
-        raster_types = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_types'].items()}
-        raster_sources = {id: db_item for id, db_item in project.lookup_tables['lkp_raster_sources'].items()}
+        raster_types = {id: db_item for id, db_item in qris_project.lookup_tables['lkp_raster_types'].items()}
+        raster_sources = {id: db_item for id, db_item in qris_project.lookup_tables['lkp_raster_sources'].items()}
         self.raster_sources_model = QStandardItemModel()
         for raster_source in raster_sources.values():
             raster_name = raster_source.name
@@ -82,7 +83,7 @@ class FrmRaster(QtWidgets.QDialog):
             self.set_hillshade()
 
             # Masks (filtered to just AOI)
-            self.clipping_masks = {id: aoi for id, aoi in self.project.aois.items()}
+            self.clipping_masks = {id: aoi for id, aoi in self.qris_project.aois.items()}
             no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
             self.clipping_masks[0] = no_clipping
             self.masks_model = DBItemModel(self.clipping_masks)
@@ -116,7 +117,7 @@ class FrmRaster(QtWidgets.QDialog):
             self.chkHillshade.setChecked(False)
             self.chkHillshade.setVisible(False)
 
-            self.txtProjectPath.setText(project.get_absolute_path(raster.path))
+            self.txtProjectPath.setText(qris_project.get_absolute_path(raster.path))
 
             self.chkAddToMap.setVisible(False)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
@@ -147,7 +148,8 @@ class FrmRaster(QtWidgets.QDialog):
         if self.raster is not None:
             try:
                 raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
-                self.raster.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=self.metadata, raster_type_id=raster_type)
+                self.raster.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=self.metadata, raster_type_id=raster_type)
+                self.qris_project.project_changed.emit()
                 # TODO update hillshade if exists
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -161,16 +163,16 @@ class FrmRaster(QtWidgets.QDialog):
 
         else:
             # Inserting a new raster. Check name uniqueness before copying the raster file
-            if validate_name_unique(self.project.project_file, 'rasters', 'name', self.txtName.text()) is False:
+            if validate_name_unique(self.qris_project.project_file, 'rasters', 'name', self.txtName.text()) is False:
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
                 return
 
             try:
                 mask = self.cboMask.currentData(QtCore.Qt.UserRole)
-                mask_tuple = (self.project.project_file, mask.id) if mask.id > 0 else None
+                mask_tuple = (self.qris_project.project_file, mask.id) if mask.id > 0 else None
 
-                project_path = self.project.get_absolute_path(self.txtProjectPath.text())
+                project_path = self.qris_project.get_absolute_path(self.txtProjectPath.text())
 
                 if not os.path.isdir(os.path.dirname(project_path)):
                     os.makedirs(os.path.dirname(project_path))
@@ -181,7 +183,7 @@ class FrmRaster(QtWidgets.QDialog):
 
                 if self.chkHillshade.isChecked() is True:
                     self.hillshade_raster_name = f'{self.txtName.text()} hillshade'
-                    hillshade_path = self.project.get_absolute_path(self.hillshade_project_path)
+                    hillshade_path = self.qris_project.get_absolute_path(self.hillshade_project_path)
                     hillshade_task = Hillshade(project_path, hillshade_path)
                     hillshade_task.addSubTask(copy_raster, [], QgsTask.ParentDependsOnSubTask)
                     hillshade_task.hillshade_complete.connect(self.on_raster_copy_complete)
@@ -198,7 +200,7 @@ class FrmRaster(QtWidgets.QDialog):
                 self.buttonBox.setEnabled(True)
 
                 try:
-                    self.raster.delete(self.project.project_file)
+                    self.raster.delete(self.qris_project.project_file)
                 except Exception as ex2:
                     QgsMessageLog.logMessage(f'Error attempting to delete raster after the importing raster failed.\n{ex2}', 'Copy Raster', Qgis.Critical)
                 self.raster = None
@@ -215,18 +217,18 @@ class FrmRaster(QtWidgets.QDialog):
                 raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
                 metadata_json = self.metadata_widget.get_json()
                 metadata = json.loads(metadata_json) if metadata_json is not None else None
-                self.raster = insert_raster(self.project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, metadata)
-                self.project.rasters[self.raster.id] = self.raster
+                self.raster = insert_raster(self.qris_project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, metadata)
+                self.qris_project.add_db_item(self.raster)
                 if self.chkHillshade.isChecked() is True:
                     hillshade_metadata = {'system': {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}}
                     hillshade_metadata.update(metadata)
-                    self.hillshade = insert_raster(self.project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
-                    self.project.rasters[self.hillshade.id] = self.hillshade
+                    self.hillshade = insert_raster(self.qris_project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
+                    self.qris_project.add_db_item(self.hillshade)
                     if 'system' not in metadata:
                         metadata['system'] = dict()
                     metadata['system']['hillsahde_raster'] = self.hillshade_project_path
                     metadata['system']['hillshade_raster_id'] = self.hillshade.id
-                    self.raster.update(self.project.project_file, self.raster.name, self.raster.description, metadata=metadata)
+                    self.raster.update(self.qris_project.project_file, self.raster.name, self.raster.description, metadata=metadata)
 
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -240,7 +242,7 @@ class FrmRaster(QtWidgets.QDialog):
         else:
             self.iface.messageBar().pushMessage('Raster Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
             try:
-                self.raster.delete(self.project.project_file)
+                self.raster.delete(self.qris_project.project_file)
             except Exception as ex:
                 QgsMessageLog.logMessage(f'Error attempting to delete raster after the importing raster failed.: {ex}', 'QRiS_CopyRaster Task', Qgis.Critical)
             self.raster = None
@@ -256,8 +258,8 @@ class FrmRaster(QtWidgets.QDialog):
             # _name, ext = os.path.splitext(self.txtSourcePath.text())
             ext = '.tif' # We are only saving files as tif
             parent_folder = CONTEXT_PARENT_FOLDER if self.is_context else SURFACES_PARENT_FOLDER
-            self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name, ext))))
-            self.hillshade_project_path = parse_posix_path(os.path.join(parent_folder, self.project.get_safe_file_name(clean_name_hillshade, ext)))
+            self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.qris_project.get_safe_file_name(clean_name, ext))))
+            self.hillshade_project_path = parse_posix_path(os.path.join(parent_folder, self.qris_project.get_safe_file_name(clean_name_hillshade, ext)))
         else:
             self.txtProjectPath.setText('')
             self.hillshade_project_path = None

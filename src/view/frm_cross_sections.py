@@ -1,7 +1,8 @@
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import QgsApplication, QgsVectorLayer, QgsFeature
+from PyQt5 import QtCore, QtWidgets
+from qgis.gui import QgisInterface
+from qgis.core import QgsVectorLayer, QgsFeature
 from qgis.utils import Qgis, iface
 
 from ..model.db_item import DBItem, DBItemModel
@@ -19,9 +20,10 @@ from typing import Dict
 
 class FrmCrossSections(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str = None, cross_sections: CrossSections = None, output_features: Dict[float, QgsFeature] = None, metadata: dict = None):
+    def __init__(self, parent, qris_project: Project, import_source_path: str = None, cross_sections: CrossSections = None, output_features: Dict[float, QgsFeature] = None, metadata: dict = None):
 
-        self.qris_project = project
+        self.iface: QgisInterface = iface
+        self.qris_project = qris_project
         self.cross_sections = cross_sections
         self.import_source_path = import_source_path
         self.output_features = output_features
@@ -104,6 +106,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         if self.cross_sections is not None:
             try:
                 self.cross_sections.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+                self.qris_project.project_changed.emit()
                 super(FrmCrossSections, self).accept()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -117,7 +120,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         else:
             try:
                 self.cross_sections = insert_cross_sections(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
-                self.qris_project.cross_sections[self.cross_sections.id] = self.cross_sections
+                self.qris_project.add_db_item(self.cross_sections)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A cross sections layer with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))

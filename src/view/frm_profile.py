@@ -1,6 +1,7 @@
 import json
 
 from PyQt5 import QtCore, QtWidgets
+from qgis.gui import QgisInterface
 from qgis.core import QgsApplication, QgsVectorLayer
 from qgis.utils import Qgis, iface
 
@@ -18,9 +19,10 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmProfile(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str, profile: Profile = None):
+    def __init__(self, parent, qris_project: Project, import_source_path: str, profile: Profile = None):
 
-        self.qris_project = project
+        self.iface: QgisInterface = iface
+        self.qris_project = qris_project
         self.profile = profile
         self.import_source_path = import_source_path
         self.profile_type = Profile.ProfileTypes.GENERIC_PROFILE_TYPE  # mask_type
@@ -102,6 +104,7 @@ class FrmProfile(QtWidgets.QDialog):
         if self.profile is not None:
             try:
                 self.profile.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+                self.qris_project.project_changed.emit()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A profile with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -114,7 +117,7 @@ class FrmProfile(QtWidgets.QDialog):
         else:
             try:
                 self.profile = insert_profile(self.qris_project.project_file, self.txtName.text(), self.profile_type, self.txtDescription.toPlainText(), metadata)
-                self.qris_project.profiles[self.profile.id] = self.profile
+                self.qris_project.add_db_item(self.profile)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A profile with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -145,10 +148,10 @@ class FrmProfile(QtWidgets.QDialog):
                         self.profile.delete(self.qris_project.project_file)
                     except Exception as ex_delete:
                         # add to message bar and log
-                        iface.messageBar().pushMessage('Error Deleting Profile', str(ex_delete), level=Qgis.Critical, duration=5)
+                        self.iface.messageBar().pushMessage('Error Deleting Profile', str(ex_delete), level=Qgis.Critical, duration=5)
                         QgsApplication.messageLog().logMessage(f'Error Deleting Profile: {str(ex_delete)}', 'QRIS')
                     # add to message bar and log
-                    iface.messageBar().pushMessage('Error Importing Profile Features', str(ex), level=Qgis.Critical, duration=5)
+                    self.iface.messageBar().pushMessage('Error Importing Profile Features', str(ex), level=Qgis.Critical, duration=5)
                     QgsApplication.messageLog().logMessage(f'Error Importing Profile Features: {str(ex)}', 'QRIS', level=Qgis.Critical)
                     return
 
@@ -160,11 +163,11 @@ class FrmProfile(QtWidgets.QDialog):
                 self.profile.delete(self.qris_project.project_file)
             except Exception as ex:
                 # add to message bar and log
-                iface.messageBar().pushMessage('Error Deleting Profile', str(ex), level=Qgis.Critical, duration=5)
+                self.iface.messageBar().pushMessage('Error Deleting Profile', str(ex), level=Qgis.Critical, duration=5)
                 QgsApplication.messageLog().logMessage(f'Error Deleting Profile: {str(ex)}', 'QRIS', level=Qgis.Critical)
             return
         else:
-            iface.messageBar().pushMessage('Profile Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
+            self.iface.messageBar().pushMessage('Profile Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
             super(FrmProfile, self).accept()
 
     def setupUi(self):

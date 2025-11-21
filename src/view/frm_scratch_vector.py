@@ -2,9 +2,10 @@ import os
 import re
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.gui import QgisInterface
 
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
 from .widgets.metadata import MetadataWidget
@@ -20,10 +21,10 @@ from ..gp.import_temp_layer import ImportMapLayer
 
 class FrmScratchVector(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface, project: Project, import_source_path: str, vector_type_id: int, scratch_vector: ScratchVector = None):
+    def __init__(self, parent, iface: QgisInterface, qris_project: Project, import_source_path: str, vector_type_id: int, scratch_vector: ScratchVector = None):
 
         self.iface = iface
-        self.project = project
+        self.qris_project = qris_project
         self.vector_type_id = vector_type_id
         self.scratch_vector = scratch_vector
         self.import_source_path = import_source_path
@@ -34,7 +35,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
-        self.vector_types_model = DBItemModel(project.lookup_tables['lkp_scratch_vector_types'])
+        self.vector_types_model = DBItemModel(qris_project.lookup_tables['lkp_scratch_vector_types'])
         self.cboVectorType.setModel(self.vector_types_model)
 
         self.setWindowTitle('Import Existing Context Vector' if self.scratch_vector is None else 'Edit Context Vector Properties')
@@ -54,7 +55,7 @@ class FrmScratchVector(QtWidgets.QDialog):
             self.txtName.setText(self.layer_name)
 
             # Masks (filtered to just AOI)
-            self.clipping_masks = {id: aoi for id, aoi in self.project.aois.items()}
+            self.clipping_masks = {id: aoi for id, aoi in self.qris_project.aois.items()}
             no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
             self.clipping_masks[0] = no_clipping
             self.masks_model = DBItemModel(self.clipping_masks)
@@ -70,7 +71,7 @@ class FrmScratchVector(QtWidgets.QDialog):
             self.lblMask.setVisible(False)
             self.cboMask.setVisible(False)
 
-            self.txtProjectPath.setText(project.get_absolute_path(scratch_vector.gpkg_path))
+            self.txtProjectPath.setText(qris_project.get_absolute_path(scratch_vector.gpkg_path))
 
             self.chkAddToMap.setVisible(False)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
@@ -87,7 +88,8 @@ class FrmScratchVector(QtWidgets.QDialog):
 
         if self.scratch_vector is not None:
             try:
-                self.scratch_vector.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.metadata)
+                self.scratch_vector.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), self.metadata)
+                self.qris_project.project_changed.emit()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A context vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -100,7 +102,7 @@ class FrmScratchVector(QtWidgets.QDialog):
 
         else:
             # Inserting a new item. Check name uniqueness before copying the dataset
-            if validate_name_unique(self.project.project_file, 'scratch_vectors', 'name', self.txtName.text()) is False:
+            if validate_name_unique(self.qris_project.project_file, 'scratch_vectors', 'name', self.txtName.text()) is False:
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A context vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                 self.txtName.setFocus()
                 return
@@ -117,9 +119,9 @@ class FrmScratchVector(QtWidgets.QDialog):
                         clip_mask = ('sample_frame_features', 'sample_frame_id', clip_item.id)
 
                 if isinstance(self.import_source_path, QgsVectorLayer):
-                    task = ImportMapLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file)
+                    task = ImportMapLayer(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
                 else:
-                    task = ImportFeatureClass(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.project.project_file, explode_geometries=False)
+                    task = ImportFeatureClass(self.import_source_path, self.txtProjectPath.text(), clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file, explode_geometries=False)
                 # Call the run command directly during development to run the process synchronousely.
                 # DO NOT DEPLOY WITH run() UNCOMMENTED
                 # result = task.run()
@@ -144,14 +146,14 @@ class FrmScratchVector(QtWidgets.QDialog):
 
             try:
                 self.scratch_vector = insert_scratch_vector(
-                    self.project.project_file,
+                    self.qris_project.project_file,
                     self.txtName.text(),
                     self.fc_name,
-                    scratch_gpkg_path(self.project.project_file),
+                    scratch_gpkg_path(self.qris_project.project_file),
                     self.cboVectorType.currentData(QtCore.Qt.UserRole).id,
                     self.txtDescription.toPlainText(),
                     self.metadata)
-                self.project.scratch_vectors[self.scratch_vector.id] = self.scratch_vector
+                self.qris_project.add_db_item(self.scratch_vector)
 
             except Exception as ex:
                 if 'unique' in str(ex).lower():
@@ -169,9 +171,9 @@ class FrmScratchVector(QtWidgets.QDialog):
     def on_name_changed(self, new_name):
 
         clean_name = re.sub('[^A-Za-z0-9]+', '', self.txtName.text())
-        unique_name = get_unique_scratch_fc_name(self.project.project_file, clean_name)
+        unique_name = get_unique_scratch_fc_name(self.qris_project.project_file, clean_name)
         if len(clean_name) > 0:
-            self.txtProjectPath.setText(f'{scratch_gpkg_path(self.project.project_file)}|layername={unique_name}')
+            self.txtProjectPath.setText(f'{scratch_gpkg_path(self.qris_project.project_file)}|layername={unique_name}')
         else:
             self.txtProjectPath.setText('')
 

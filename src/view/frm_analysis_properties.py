@@ -298,6 +298,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if self.analysis is not None:
             try:
                 self.analysis.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics, metadata)
+                self.qris_project.project_changed.emit()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -308,7 +309,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         else:
             try:
                 self.analysis = insert_analysis(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics, metadata)
-                self.qris_project.analyses[self.analysis.id] = self.analysis
+                self.qris_project.add_db_item(self.analysis)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))

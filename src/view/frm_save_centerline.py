@@ -27,7 +27,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         self.setupUi()
         self.setWindowTitle('Create Centerline')
 
-        self.project = project
+        self.qris_project = project
         self.metrics = metrics
         self.centerline_geom = centerline_geom
         self.profile = None
@@ -58,9 +58,9 @@ class FrmSaveCenterline(QtWidgets.QDialog):
             metadata_json = self.metadata_widget.get_json()
             out_metadata = json.loads(metadata_json) if metadata_json is not None else None
 
-            self.profile = insert_profile(self.project.project_file, self.txtName.text(), Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, self.txtDescription.toPlainText(), out_metadata)
-            self.project.profiles[self.profile.id] = self.profile
-            out_layer = QgsVectorLayer(f'{self.project.project_file}|layername=profile_centerlines')
+            self.profile = insert_profile(self.qris_project.project_file, self.txtName.text(), Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, self.txtDescription.toPlainText(), out_metadata)
+            self.qris_project.add_db_item(self.profile)
+            out_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=profile_centerlines')
             out_feature = QgsFeature()
             out_feature.setFields(out_layer.fields())
             out_feature.setGeometry(self.centerline_geom)
@@ -73,7 +73,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         except Exception as ex:
             try:
                 if self.profile is not None:
-                    self.profile.delete(self.project.project_file)
+                    self.profile.delete(self.qris_project.project_file)
             except Exception as ex2:
                 QtWidgets.QMessageBox.warning(self, 'Error attempting to delete centerline after the saving of features failed.', str(ex2))
             QtWidgets.QMessageBox.warning(self, 'Error Saving Centerline Feature', str(ex))

@@ -1,6 +1,7 @@
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
+from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.utils import iface
 
@@ -20,9 +21,10 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmValleyBottom(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, import_source_path: str, valley_bottom: SampleFrame = None):
+    def __init__(self, parent, qris_project: Project, import_source_path: str, valley_bottom: SampleFrame = None):
 
-        self.qris_project = project
+        self.iface: QgisInterface = iface
+        self.qris_project = qris_project
         self.valley_bottom = valley_bottom
         self.import_source_path = import_source_path
         self.attribute_filter = None
@@ -113,9 +115,10 @@ class FrmValleyBottom(QtWidgets.QDialog):
         try:
             if self.valley_bottom is not None:
                 self.valley_bottom.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
+                self.qris_project.project_changed.emit()
             else:
                 self.valley_bottom = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
-                self.qris_project.valley_bottoms[self.valley_bottom.id] = self.valley_bottom
+                self.qris_project.add_db_item(self.valley_bottom)
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"A Valley Bottom with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -151,10 +154,10 @@ class FrmValleyBottom(QtWidgets.QDialog):
                 try:
                     self.valley_bottom.delete(self.qris_project.project_file)
                     QgsApplication.messageLog().logMessage(f'Error Importing Valley Bottom: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                    iface.messageBar().pushMessage(f'Error Importing Valley Bottom', str(ex), level=Qgis.Critical, duration=5)
+                    self.iface.messageBar().pushMessage(f'Error Importing Valley Bottom', str(ex), level=Qgis.Critical, duration=5)
                 except Exception as ex_delete:
                     QgsApplication.messageLog().logMessage(f'Error Deleting Valley Bottom: {str(ex_delete)}', 'QRIS', level=Qgis.Critical)
-                    iface.messageBar().pushMessage(f'Error Deleting Valley Bottom', str(ex_delete), level=Qgis.Critical, duration=5)
+                    self.iface.messageBar().pushMessage(f'Error Deleting Valley Bottom', str(ex_delete), level=Qgis.Critical, duration=5)
                 return
         else:
             super(FrmValleyBottom, self).accept()
@@ -162,14 +165,14 @@ class FrmValleyBottom(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if result is True:
-            iface.messageBar().pushMessage(f'Valley Bottom Imported', f'Valley Bottom "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
+            self.iface.messageBar().pushMessage(f'Valley Bottom Imported', f'Valley Bottom "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
         else:
             QgsApplication.messageLog().logMessage(f'Error Importing Valley Bottom Features', 'QRIS', level=Qgis.Critical)
             try:
                 self.valley_bottom.delete(self.qris_project.project_file)
             except Exception as ex:
                 QgsApplication.messageLog().logMessage(f'Error Deleting Valley Bottom: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                iface.messageBar().pushMessage(f'Error Deleting Valley Bottom', str(ex), level=Qgis.Critical, duration=5)
+                self.iface.messageBar().pushMessage(f'Error Deleting Valley Bottom', str(ex), level=Qgis.Critical, duration=5)
             return
         
         super(FrmValleyBottom, self).accept()

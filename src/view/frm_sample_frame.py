@@ -6,11 +6,13 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, QSize, QVariant, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout,  QGridLayout, QTabWidget, QGroupBox, QTreeView, QListWidget, QListWidgetItem, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
-from qgis.core import Qgis, QgsApplication, QgsVectorLayer, QgsWkbTypes
+from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.gui import QgisInterface
 from qgis.utils import iface
 
 from ..model.project import Project
 from ..model.db_item import DBItem, DBItemModel
+from ..model.db_item_spatial import DBItemSpatial
 from ..model.pour_point import PourPoint
 from ..model.scratch_vector import ScratchVector
 from ..model.sample_frame import SampleFrame, insert_sample_frame
@@ -38,9 +40,10 @@ class FrmSampleFrame(QDialog):
 
     complete = pyqtSignal(bool)
 
-    def __init__(self, parent, project: Project, import_source_path: str = None, sample_frame: SampleFrame = None, create_sample_frame: bool = False):
+    def __init__(self, parent, qris_project: Project, import_source_path: str = None, sample_frame: SampleFrame = None, create_sample_frame: bool = False):
         
-        self.qris_project = project
+        self.iface: QgisInterface = iface
+        self.qris_project = qris_project
         self.sample_frame = sample_frame
         self.import_source_path = import_source_path
         self.create_sample_frame = create_sample_frame
@@ -144,9 +147,10 @@ class FrmSampleFrame(QDialog):
         try:
             if self.sample_frame is not None:
                 self.sample_frame.update(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
+                self.qris_project.project_changed.emit()
             else:
                 self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
-                self.qris_project.sample_frames[self.sample_frame.id] = self.sample_frame            
+                self.qris_project.add_db_item(self.sample_frame)
         except Exception as ex:
             if 'unique' in str(ex).lower():
                 QMessageBox.warning(self, 'Duplicate Name', f"A sample frame with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -195,11 +199,11 @@ class FrmSampleFrame(QDialog):
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
-                except Exception as ex:
-                    print(f'Error attempting to delete sample_frame after the importing of features failed.')
-                    QMessageBox.warning(self, f'Error Importing Sample Frame Features', str(ex))
+                except Exception as ex_delete:
+                    QMessageBox.warning(self, f'Error Importing Sample Frame Features', str(ex_delete))
                     # enable the buttons
                     self.buttonBox.setEnabled(True)
+                self.iface.messageBar().pushMessage(f'Error Importing Sample Frame Features', str(ex), level=Qgis.Critical, duration=5)
                 return
             # finally:
                 # # enable the buttons
@@ -208,7 +212,7 @@ class FrmSampleFrame(QDialog):
         if self.create_sample_frame is True:
             try:
                 db_item_polygon = self.tab_inputs.cboFramePolygon.currentData(Qt.UserRole)
-                if isinstance(db_item_polygon, DBItem):
+                if isinstance(db_item_polygon, DBItemSpatial):
                     polygon_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={db_item_polygon.fc_name}')
                     polygon_layer.setSubsetString(f'{db_item_polygon.fc_id_column_name} = {db_item_polygon.id}')
                 else:
@@ -247,7 +251,7 @@ class FrmSampleFrame(QDialog):
 
     def on_import_complete(self, result):
         if result is True:
-            iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
+            self.iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
             self.complete.emit(True)
             super(FrmSampleFrame, self).accept()
         else:
@@ -256,7 +260,7 @@ class FrmSampleFrame(QDialog):
                 self.sample_frame.delete(self.qris_project.project_file)
             except Exception as ex:
                 QgsApplication.messageLog().logMessage(f'Error Deleting sample frame: {str(ex)}', 'QRIS', level=Qgis.Critical)
-                iface.messageBar().pushMessage(f'Error Deleting sample frame', str(ex), level=Qgis.Critical, duration=5)
+                self.iface.messageBar().pushMessage(f'Error Deleting sample frame', str(ex), level=Qgis.Critical, duration=5)
                 super(FrmSampleFrame, self).accept()
             return
 
