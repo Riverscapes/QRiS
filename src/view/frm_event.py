@@ -229,15 +229,20 @@ class FrmEvent(QtWidgets.QDialog):
         try:
             if self.dce_event is not None:
                 # Check if any GIS data might be lost
-                for event_layer in self.dce_event.event_layers:
-                    if event_layer.layer not in selected_layer_definitions and event_layer.layer not in event_layers:
-                        response = QtWidgets.QMessageBox.question(self, 'Possible Data Loss',
-                                                                  """One or more layers that were part of this data capture event are no longer associated with the event.
-                            Continuing might lead to the loss of geospatial data. Do you want to continue?
-                            "Click Yes to proceed and delete all data associated with layers that are no longer used by the
-                            current data capture event protocols. Click No to stop and avoid any data loss.""")
-                        if response == QtWidgets.QMessageBox.No:
-                            return
+                if any(event_layer.layer not in selected_layer_definitions and event_layer.layer not in event_layers for event_layer in self.dce_event.event_layers):
+                    response = QtWidgets.QMessageBox.question(
+                        self,
+                        'Possible Data Loss',
+                        (
+                            "One or more layers that were part of this data capture event are no longer associated with the event.\n\n"
+                            "Continuing might lead to the loss of geospatial data. Do you want to continue?\n\n"
+                            "Click Yes to proceed and delete all data associated with layers that are no longer used by the "
+                            "current data capture event protocols.\n"
+                            "Click No to stop and avoid any data loss."
+                        )
+                    )
+                    if response == QtWidgets.QMessageBox.No:
+                        return
 
                 self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), None, self.metadata_widget.get_data())
                 check_and_remove_unused_layers(self.qris_project)
