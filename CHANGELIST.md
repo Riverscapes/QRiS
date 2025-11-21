@@ -1,5 +1,13 @@
 # QRiS Plugin
 
+## [1.2.0.4] 2025 NOV 21
+
+### Fixed
+- Project xml files not correct for DCEs #881
+- Make sure updating an existing db_item will update the project.rs.xml
+- Only show dce layer data loss warning once #878
+
+
 ## [1.2.0.3] 2025 NOV 14
 
 ### Fixed
