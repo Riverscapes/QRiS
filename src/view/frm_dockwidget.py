@@ -1788,7 +1788,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = None
         if isinstance(db_item, Project):
-            frm = FrmNewProject(self, project=db_item)
+            frm = FrmNewProject(self, qris_project=db_item)
         elif isinstance(db_item, Event):
             if db_item.event_type.id == DESIGN_EVENT_TYPE_ID:
                 frm = FrmDesign(self, self.qris_project, db_item.event_type.id, event=db_item)

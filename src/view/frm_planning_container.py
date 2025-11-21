@@ -61,6 +61,7 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         try:
             if self.planning_container is not None:
                 self.planning_container.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), events, self.metadata_widget.get_data())
+                self.qris_project.project_changed.emit()
                 super().accept()
             else:
                 self.planning_container = insert(
@@ -71,7 +72,7 @@ class FrmPlanningContainer(QtWidgets.QDialog):
                     self.metadata_widget.get_data()
                 )
 
-                self.qris_project.planning_containers[self.planning_container.id] = self.planning_container
+                self.qris_project.add_db_item(self.planning_container)
                 super().accept()
 
         except Exception as ex:

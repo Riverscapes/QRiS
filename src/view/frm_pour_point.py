@@ -7,12 +7,12 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmPourPoint(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, latitude: float, longitude: float, pour_point: PourPoint):
+    def __init__(self, parent, qris_project: Project, latitude: float, longitude: float, pour_point: PourPoint):
         super().__init__(parent)
         self.setupUi()
 
         self.pour_point = pour_point
-        self.project = project
+        self.qris_project = qris_project
 
         if self.pour_point is None:
             self.setWindowTitle('Create New Pour Point with Catchment')
@@ -48,7 +48,8 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         if self.pour_point is not None:
             try:
-                self.pour_point.update(self.project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.pour_point.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText())
+                self.qris_project.project_changed.emit()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A pour point with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))

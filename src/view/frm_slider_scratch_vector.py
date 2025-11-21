@@ -1,12 +1,14 @@
 import os
 import re
-from PyQt5 import QtCore, QtGui, QtWidgets
+
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication
+from qgis.gui import QgisInterface
 from qgis.utils import iface
 
 from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
-from ..model.scratch_vector import ScratchVector, insert_scratch_vector, scratch_gpkg_path, get_unique_scratch_fc_name
+from ..model.scratch_vector import insert_scratch_vector, scratch_gpkg_path, get_unique_scratch_fc_name
 from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..QRiS.path_utilities import parse_posix_path
@@ -15,11 +17,13 @@ from ..gp.vectorize_task import VectorizeTask
 
 class FrmSliderScratchVector(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, raster_path, threshold_value, inverse: bool = False) -> None:
+    def __init__(self, parent, qris_project: Project, raster_path: str, threshold_value: float, inverse: bool = False) -> None:
         super().__init__(parent)
+        self.iface: QgisInterface = iface
+        
         self.setupUi()
 
-        self.project = project
+        self.qris_project = qris_project
         self.raster_path = raster_path
         self.threshold_value = threshold_value
         self.scratch_vector = None
@@ -27,7 +31,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
 
         self.setWindowTitle('Export Polygon to Scratch Vector')
 
-        self.vector_types_model = DBItemModel(project.lookup_tables['lkp_scratch_vector_types'])
+        self.vector_types_model = DBItemModel(qris_project.lookup_tables['lkp_scratch_vector_types'])
         self.cboVectorType.setModel(self.vector_types_model)
 
         self.txtName.textChanged.connect(self.on_name_changed)
@@ -50,13 +54,13 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        if validate_name_unique(self.project.project_file, 'scratch_vectors', 'name', self.txtName.text()) is False:
+        if validate_name_unique(self.qris_project.project_file, 'scratch_vectors', 'name', self.txtName.text()) is False:
             QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A scratch vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
             self.txtName.setFocus()
             return
 
         try:
-            self.fc_name = get_unique_scratch_fc_name(self.project.project_file, self.txtName.text())
+            self.fc_name = get_unique_scratch_fc_name(self.qris_project.project_file, self.txtName.text())
 
             simplify_value = self.dbsSimplifyTolerance.value()
             smoothing_value = self.dbsSmoothingOffset.value()
@@ -71,11 +75,11 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
 
             # --PRODUCTION--
             vectorize_task.on_complete.connect(self.on_complete)
-            self.buttonBox.setEnabled(False)
+            # self.buttonBox.setEnabled(False)
             QgsApplication.taskManager().addTask(vectorize_task)
 
         except Exception as ex:
-            self.buttonBox.setEnabled(True)
+            # self.buttonBox.setEnabled(True)
             self.scratch_vector = None
             QtWidgets.QMessageBox.warning(self, 'Error Vectorizing Raster', str(ex))
             return
@@ -87,14 +91,14 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
             try:
                 gpkg = os.path.dirname(self.txtProjectPath.text())
                 self.scratch_vector = insert_scratch_vector(
-                    self.project.project_file,
+                    self.qris_project.project_file,
                     self.txtName.text(),
                     self.fc_name,
                     gpkg,
                     self.cboVectorType.currentData(QtCore.Qt.UserRole).id,
                     self.txtDescription.toPlainText())
-                self.project.scratch_vectors[self.scratch_vector.id] = self.scratch_vector
-                iface.messageBar().pushMessage('Vectorize Raster Complete', f'{self.txtName.text()} saved successfully.', level=Qgis.Info, duration=5)
+                self.qris_project.add_db_item(self.scratch_vector)
+                self.iface.messageBar().pushMessage('Vectorize Raster Complete', f'{self.txtName.text()} saved successfully.', level=Qgis.Info, duration=5)
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A scratch vector with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
@@ -105,14 +109,14 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
 
             super(FrmSliderScratchVector, self).accept()
         else:
-            iface.messageBar().pushMessage('Vectorize Raster Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
-            self.buttonBox.setEnabled(True)
+            self.iface.messageBar().pushMessage('Vectorize Raster Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            # self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):
 
         clean_name = re.sub('[^A-Za-z0-9]+', '', self.txtName.text())
         if len(clean_name) > 0:
-            self.txtProjectPath.setText(parse_posix_path(os.path.join(scratch_gpkg_path(self.project.project_file), clean_name)))
+            self.txtProjectPath.setText(parse_posix_path(os.path.join(scratch_gpkg_path(self.qris_project.project_file), clean_name)))
         else:
             self.txtProjectPath.setText('')
 

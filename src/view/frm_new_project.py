@@ -4,6 +4,7 @@ import uuid
 import sqlite3
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.gui import QgisInterface
 from qgis.utils import iface
 from qgis.core import QgsApplication
 
@@ -20,10 +21,11 @@ class FrmNewProject(QtWidgets.QDialog):
     dataChange = QtCore.pyqtSignal(Project)
     newProjectComplete = QtCore.pyqtSignal(str, str)
 
-    def __init__(self, parent, last_parent_project: str=None, project: Project = None):
+    def __init__(self, parent, last_parent_project: str=None, qris_project: Project = None):
         super(FrmNewProject, self).__init__(parent)
 
-        metadata_json = json.dumps(project.metadata) if project is not None else None
+        self.iface: QgisInterface = iface
+        metadata_json = json.dumps(qris_project.metadata) if qris_project is not None else None
         
         # Pull the tags out of metadata if the exist
         self.tags = []     
@@ -39,20 +41,20 @@ class FrmNewProject(QtWidgets.QDialog):
                 self.root_path = parse_posix_path(self.last_project_folder)
                 self.txtPath.setText(self.root_path)
 
-        self.project = project
+        self.qris_project = qris_project
 
-        if project is None:
+        if qris_project is None:
             self.setWindowTitle('Create New Project')
             # Changes to project name change the project folder location
             self.txtName.textChanged.connect(self.update_project_folder)
         else:
             self.setWindowTitle('Edit Project Properties')
-            self.txtName.setText(project.name)
+            self.txtName.setText(qris_project.name)
             system_meta = self.metadata_widget.metadata.get('system', {})
             if 'tags' in system_meta:
                 self.tags = system_meta['tags']
                 self.txtTags.setText(', '.join(self.tags))
-            self.txtDescription.setPlainText(project.description)
+            self.txtDescription.setPlainText(qris_project.description)
 
         self.txtName.setFocus()
 
@@ -91,16 +93,17 @@ class FrmNewProject(QtWidgets.QDialog):
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
-        if isinstance(self.project, Project):
+        if isinstance(self.qris_project, Project):
             # Update the existing project
-            conn = sqlite3.connect(self.project.project_file)
-            cursor = conn.cursor()
             try:
-                cursor.execute('UPDATE projects SET name = ?, description = ?, metadata = ? WHERE id = ?', [self.txtName.text(), self.txtDescription.toPlainText(), metadata_json, self.project.id])
-                conn.commit()
-                self.project.name = self.txtName.text()
-                self.project.description = self.txtDescription.toPlainText()
-                self.project.metadata = metadata
+                with sqlite3.connect(self.qris_project.project_file) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE projects SET name = ?, description = ?, metadata = ? WHERE id = ?', [self.txtName.text(), self.txtDescription.toPlainText(), metadata_json, self.qris_project.id])
+                    conn.commit()
+                self.qris_project.name = self.txtName.text()
+                self.qris_project.description = self.txtDescription.toPlainText()
+                self.qris_project.metadata = metadata
+                self.qris_project.project_changed.emit()
             except Exception as ex:
                 conn.rollback()
                 QtWidgets.QMessageBox.warning(self, 'Error Updating Project', str(ex))
@@ -126,14 +129,13 @@ class FrmNewProject(QtWidgets.QDialog):
 
     def on_complete(self, result):
         if result is True:
-            iface.mainWindow().statusBar().showMessage(None)
+            self.iface.mainWindow().statusBar().showMessage(None)
             self.newProjectComplete.emit(self.project_dir, self.txtPath.text())
 
     def on_creating_layers(self, layer_number, count_layers):
-        iface.mainWindow().statusBar().showMessage('New QRIS Project: creating layer {} of {} layers in project.'.format(layer_number, count_layers))
-
+        self.iface.mainWindow().statusBar().showMessage('New QRIS Project: creating layer {} of {} layers in project.'.format(layer_number, count_layers))
     def on_creating_schema(self):
-        iface.mainWindow().statusBar().showMessage('New QRIS Project: applying project schema (this may take several moments...)')
+        self.iface.mainWindow().statusBar().showMessage('New QRIS Project: applying project schema (this may take several moments...)')
 
     def browse_root_folder(self):
 
