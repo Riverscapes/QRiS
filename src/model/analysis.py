@@ -12,20 +12,16 @@ default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio'
 class Analysis(DBItemSpatial):
 
     def __init__(self, id: int, name: str, description: str, sample_frame: SampleFrame, metadata: dict = None):
-        super().__init__('analyses', id, name, sample_frame.fc_name, 'sample_frame_id', 'Polygon')
+        super().__init__('analyses', id, name, sample_frame.fc_name, 'sample_frame_id', 'Polygon', metadata=metadata)
         self.description = description
         self.icon = 'analysis'
         self.sample_frame = sample_frame
         self.analysis_metrics = None
-        self.metadata = metadata
-        self.profile = metadata.get('centerline', None) if metadata is not None else None # really just the profile id
-        self.dem = metadata.get('dem', None) if metadata is not None else None
-        self.units = metadata.get('units', default_units) if metadata is not None else default_units
     
     def update(self, db_path: str, name: str, description: str, analysis_metrics: dict, metadata: dict = None) -> None:
 
         description = description if len(description) > 0 else None
-        self.metadata['units'] = self.units
+        metadata['units'] = self.units
         metadata_str = json.dumps(metadata) if metadata is not None else None
 
         with sqlite3.connect(db_path) as conn:
@@ -40,11 +36,17 @@ class Analysis(DBItemSpatial):
                 self.name = name
                 self.description = description
                 self.analysis_metrics = analysis_metrics
-                self.metadata = metadata
+                self.set_metadata(metadata)
 
             except Exception as ex:
                 conn.rollback()
                 raise Exception(f"Error updating analysis {self.id}: {ex}") from ex
+            
+    def set_metadata(self, metadata):
+        super().set_metadata(metadata)
+        self.profile = self.metadata.get('centerline', None) # really just the profile id
+        self.dem = self.metadata.get('dem', None)
+        self.units = self.metadata.get('units', default_units)
             
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:

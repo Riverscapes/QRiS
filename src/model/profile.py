@@ -27,10 +27,9 @@ class Profile(DBItemSpatial):
             metadata: Additional metadata for the profile.
         """
         fc_name = 'profile_centerlines' if profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE else 'profile_features'
-        super().__init__('profiles', id, name, fc_name, 'profile_id', 'Linestring')
+        super().__init__('profiles', id, name, fc_name, 'profile_id', 'Linestring', metadata=metadata)
         self.profile_type_id = profile_type_id
         self.description = description
-        self.metadata = metadata
         self.icon = 'line'
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
@@ -46,7 +45,7 @@ class Profile(DBItemSpatial):
 
                 self.name = name
                 self.description = description
-                self.metadata = metadata
+                self.set_metadata(metadata)
 
             except Exception as ex:
                 conn.rollback()

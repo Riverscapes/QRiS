@@ -24,18 +24,19 @@ RASTER_SLIDER_MACHINE_CODE = 'RASTER_SLIDER'
 
 class Raster(DBItem):
 
-    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str, is_context=False, metadata=None):
-        super().__init__('rasters', id, name)
+    def __init__(self, id: int, name: str, relative_project_path: str, raster_type_id: int, description: str, is_context: bool = False, metadata: dict = None):
+        super().__init__('rasters', id, name, metadata)
         self.path = relative_project_path
         self.raster_type_id = raster_type_id
         self.is_context = is_context
         self.description = description
         self.icon = 'raster'
-        self.metadata: dict = metadata
 
-        self.date = self.metadata.get('system', {}).get('date', None) if self.metadata else None
+    def set_metadata(self, metadata: dict) -> None:
+        super().set_metadata(metadata)
+        self.date = self.system_metadata.get('date', None)
 
-    def update(self, db_path: str, name: str, description: str = None, metadata=None, raster_type_id=None) -> None:
+    def update(self, db_path: str, name: str, description: str = None, metadata: dict = None, raster_type_id: int = None) -> None:
 
         # setup the output data. Do not change the raster object until the transaction is successful
         out_metadata = metadata if metadata is not None else self.metadata
@@ -53,9 +54,8 @@ class Raster(DBItem):
                 # Now update the raster object
                 self.name = name
                 self.description = out_description
-                self.metadata = out_metadata
+                self.set_metadata(out_metadata)
                 self.raster_type_id = out_raster_type_id
-                self.date = self.metadata.get('system', {}).get('date', None) if self.metadata else None
 
             except Exception as ex:
                 conn.rollback()

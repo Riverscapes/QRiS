@@ -24,7 +24,7 @@ class Layer(DBItem):
 
     def __init__(self, id: int, layer_id: str, layer_version, display_name: str, qml: str, is_lookup: bool, geom_type: str, description: str, metadata: dict = None):
         # Must use the display name as the official db_item name so that it is the string displayed in UI
-        super().__init__('layers', id, display_name)
+        super().__init__('layers', id, display_name, metadata)
         self.layer_id = layer_id
         self.layer_version = layer_version
         self.qml = qml
@@ -32,9 +32,6 @@ class Layer(DBItem):
         self.geom_type = geom_type
         self.description = description
         self.icon = 'layer'
-        self.metadata = metadata
-        self.fields = metadata.get('fields', None) if metadata else None
-        self.hierarchy = metadata.get('hierarchy', None) if metadata else None
 
     def unique_key(self):
         return f'{self.layer_id}::{self.layer_version}'
@@ -44,6 +41,12 @@ class Layer(DBItem):
             if self.id in protocol.protocol_layers:
                 return protocol
         return None
+    
+    def set_metadata(self, metadata: dict) -> None:
+        super().set_metadata(metadata)
+        self.fields = self.metadata.get('fields', None)
+        self.hierarchy = self.metadata.get('hierarchy', None)
+
 
 def load_layers(curs: sqlite3.Cursor) -> dict:
 

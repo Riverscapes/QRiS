@@ -15,7 +15,7 @@ class Attachment(DBItem):
     TYPE_WEB_LINK = 'weblink'
 
     def __init__(self, id: int, display_label: str, path: str, attachment_type: str, description: str = None, metadata: dict = None):
-        super().__init__('attachments', id, display_label)
+        super().__init__('attachments', id, display_label, metadata)
 
         self.id = id
         self.name = display_label
@@ -23,7 +23,6 @@ class Attachment(DBItem):
         self.path = path
         self.attachment_type = attachment_type
         self.description = description
-        self.metadata = metadata if metadata is not None else {}
         self.icon = 'link' if self.attachment_type == Attachment.TYPE_WEB_LINK else 'file'
 
     def update(self, db_path: str, display_label: str, path: str = None, description: str = None, metadata: dict = None) -> None:
@@ -41,7 +40,7 @@ class Attachment(DBItem):
                 self.name = display_label
                 self.path = out_path
                 self.description = description
-                self.metadata = metadata
+                self.set_metadata(metadata)
 
             except Exception as ex:
                 conn.rollback()

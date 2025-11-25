@@ -9,7 +9,7 @@ from ..QRiS.protocol_parser import ProtocolDefinition, MetricDefinition
 class Protocol(DBItem):
 
     def __init__(self, id: int, name: str, machine_code: str, has_custom_ui: bool, description: str, version: str, metadata: dict = None, protocol_layers: dict = None):
-        super().__init__('protocols', id, name)
+        super().__init__('protocols', id, name, metadata)
 
         self.description = description
         self.machine_code = machine_code
@@ -17,8 +17,8 @@ class Protocol(DBItem):
         self.has_custom_ui = has_custom_ui
         self.icon = 'protocol'
         self.protocol_layers = protocol_layers if protocol_layers else {}
-        self.metadata = metadata.get('metadata', None) if metadata else None
-        self.system_metadata: dict = metadata.get('system', None) if metadata else None
+        # self.metadata = metadata.get('metadata', None) if metadata else None
+        # self.system_metadata: dict = metadata.get('system', None) if metadata else None
         stored_protocol_type: str = self.system_metadata.get('protocol_type', 'dce') if self.system_metadata else 'dce'
         
         if self.machine_code == 'ASBUILT':

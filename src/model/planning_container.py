@@ -16,10 +16,9 @@ class PlanningContainer(DBItem):
                  planning_events: dict,
                  metadata: dict):
 
-        super().__init__('planning_containers', id, name)
+        super().__init__('planning_containers', id, name, metadata)
         self.description = description
         self.planning_events = planning_events # dict of event_id and representation_id
-        self.metadata = metadata
 
         self.icon = 'plan'
 
@@ -50,7 +49,7 @@ class PlanningContainer(DBItem):
                 self.name = name
                 self.description = description
                 self.planning_events = {event: representation_id for event, representation_id in planning_events.items() if representation_id is not None}
-                self.metadata = metadata
+                self.set_metadata(metadata)
                 conn.commit()
 
             except Exception as ex:

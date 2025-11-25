@@ -2,6 +2,7 @@ from PyQt5.QtCore import QAbstractListModel, QModelIndex
 from PyQt5.QtCore import Qt
 
 import sqlite3
+import json
 
 DB_MODE_NEW = 'new'
 DB_MODE_CREATE = 'create'
@@ -18,12 +19,12 @@ class DBItem():
     The name tracks the official name (that is normally unique across all
     objects of the same type."""
 
-    def __init__(self, db_table_name: str, id: int, name: str):
+    def __init__(self, db_table_name: str, id: int, name: str, metadata: dict = None):
         self.db_table_name = db_table_name
         self.id = id
         self.name = name
         self.date = None
-        self.metadata:dict = None
+        self.set_metadata(metadata)
 
         # Nearly all the DBItem database tables are non-spatial and have
         # an ID column called "id". However, any spatial DBItem tables
@@ -69,6 +70,34 @@ class DBItem():
             except Exception as ex:
                 raise ex
         return created_on
+
+    def set_metadata(self, metadata: dict):
+        self.metadata:dict = metadata or {}
+        self.user_metadata:dict = self.metadata.get('metadata', {})
+        self.system_metadata:dict = self.metadata.get('system', {})
+        self.locked: bool = self.system_metadata.get('locked', False)
+
+
+    def set_locked(self, db_path: str, locked: bool) -> None:
+        """Set the locked status of the item in the database."""
+
+        metadata = self.metadata or {}
+        system_metadata = metadata.get('system', {})
+        system_metadata['locked'] = locked
+        metadata['system'] = system_metadata
+        self.set_metadata(metadata)
+
+        with sqlite3.connect(db_path) as conn:
+            try:
+                curs = conn.cursor()
+                curs.execute(f'UPDATE {self.db_table_name} SET metadata = ? WHERE {self.id_column_name} = ?', 
+                    [json.dumps(self.metadata), self.id])
+                conn.commit()
+                self.locked = locked
+            except Exception as ex:
+                conn.rollback()
+                raise ex
+        
 
 class DBItemModel(QAbstractListModel):
     """ Model for any class derived from DBItem. Essentially allows for

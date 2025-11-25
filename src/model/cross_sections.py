@@ -11,9 +11,8 @@ class CrossSections(DBItemSpatial):
     CROSS_SECTIONS_MACHINE_CODE = 'Cross Sections'
 
     def __init__(self, id: int, name: str, description: str, metadata: dict = None):
-        super().__init__('cross_sections', id, name, 'cross_section_features', 'cross_section_id', 'LineString')
+        super().__init__('cross_sections', id, name, 'cross_section_features', 'cross_section_id', 'LineString', metadata=metadata)
         self.description = description
-        self.metadata = metadata
         self.icon = 'line'
 
 
@@ -30,7 +29,7 @@ class CrossSections(DBItemSpatial):
 
                 self.name = name
                 self.description = description
-                self.metadata = metadata
+                self.set_metadata(metadata)
 
             except Exception as ex:
                 conn.rollback()

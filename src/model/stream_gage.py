@@ -13,10 +13,9 @@ STREAM_GAGE_NODE_TAG = 'STREAMGAGES'
 class StreamGage(DBItem):
     """Represents USGS stream gages retrieved from NWIS"""
 
-    def __init__(self, id: int, site_code: str, site_name: str, metadata: str):
-        super().__init__('pour_points', id, site_name)
+    def __init__(self, id: int, site_code: str, site_name: str, metadata: dict):
+        super().__init__('pour_points', id, site_name, metadata)
         self.site_code = site_code
-        self.metadata = json.loads(metadata) if metadata is not None else None
         self.icon = 'watershed'
 
         # override the default ID column name because this is a spatial table.
@@ -30,7 +29,7 @@ def load_stream_gages(curs: sqlite3.Cursor) -> Dict[int, StreamGage]:
         row['fid'],
         row['site_code'],
         row['site_name'],
-        row['metadata']
+        json.loads(row['metadata']) if row['metadata'] is not None else None
     ) for row in curs.fetchall()}
 
 # def save_pour_point(project_file: str, latitude: float, longitude: float, catchment: dict, name: str, description: str, basin_chars: dict, flow_stats: dict) -> PourPoint:
