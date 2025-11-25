@@ -24,6 +24,9 @@
         <file alias="influence">../Images/influence.png</file>
         <file alias="json">../Images/json.png</file>
         <file alias="link">../Images/link.svg</file>
+        <file alias="lock">../Images/lock.svg</file>
+        <file alias="lock_open">../Images/lock_open.svg</file>
+        <file alias="lock_open_right">../Images/lock_open_right.svg</file>
         <file alias="open_external">../Images/open_external.svg</file>
         <file alias="map_search">../Images/map_search.svg</file>
         <file alias="metadata">../Images/metadata.png</file>
@@ -32,6 +35,7 @@
         <file alias="options">../Images/edit.svg</file>
         <file alias="plan">../Images/plan.svg</file>
         <file alias="protocol">../Images/protocol.png</file>
+        <file alias="project_export">../Images/project_export.svg</file>
         <file alias="refresh">../Images/refresh.svg</file>
         <file alias="search">../Images/search.svg</file>
         <file alias="sort">../Images/sort.svg</file>

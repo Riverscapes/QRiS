@@ -139,7 +139,7 @@ def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, loo
 
     curs.execute('SELECT * FROM event_layers')
     event_layers = [
-        EventLayer(row['id'], row['event_id'], layers[row['layer_id']])
+        EventLayer(row['id'], row['event_id'], layers[row['layer_id']], json.loads(row['metadata']) if row['metadata'] else None)
         for row in curs.fetchall()
         if row['layer_id'] in layers
     ]

@@ -15,8 +15,8 @@ class EventLayer(DBItemSpatial):
     used for each unique layer within an event (across multiple protocols
     and methods if needed)."""
 
-    def __init__(self, id, event_id, layer: Layer) -> None:
-        super().__init__('event_layers', id, layer.name, layer.DCE_LAYER_NAMES[layer.geom_type], 'event_layer_id', layer.geom_type)
+    def __init__(self, id, event_id, layer: Layer, metadata: dict = None) -> None:
+        super().__init__('event_layers', id, layer.name, layer.DCE_LAYER_NAMES[layer.geom_type], 'event_layer_id', layer.geom_type, metadata=metadata)
         self.event_id = event_id
         self.layer = layer
         self.icon = 'layer'
