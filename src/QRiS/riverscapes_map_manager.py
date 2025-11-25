@@ -108,6 +108,13 @@ class RiverscapesMapManager(QObject):
 
         return any([layer.layer().isEditable() for layer in self.get_product_key_layers()])
 
+    def update_layer_edit_state(self, project_key: str, db_item: DBItem):
+        """Set the layer's ReadOnly state based on db_item.locked."""
+        layer_node = self.get_db_item_layer(project_key, db_item, None)
+        if layer_node is not None:
+            layer: QgsMapLayer = layer_node.layer()
+            layer.setReadOnly(db_item.locked)
+
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
         return f'{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}'
 
@@ -291,8 +298,7 @@ class RiverscapesMapManager(QObject):
             iface.setActiveLayer(layer)
             iface.zoomToActiveLayer()
 
-        if self.get_edit_mode() is True:
-            layer.setReadOnly(True)
+        layer.setReadOnly(self.get_edit_mode() or db_item.locked)
 
         layer.editingStarted.connect(self.start_edits)
         layer.editingStopped.connect(self.stop_edits)

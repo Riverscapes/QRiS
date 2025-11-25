@@ -593,35 +593,41 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
-                    self.add_context_menu_item(self.menu, 'Export as a New Project', 'qris_icon', lambda: self.export_project(model_data))
+                    self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
 
                 if isinstance(model_data, EventLayer):
-                    if model_data.menu_items is not None:
-                        if 'import_photos' in model_data.menu_items:
-                            self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_item, model_data))
-                        # if 'validate_brat_capacity' in model_data.menu_items:
-                            # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
-                    self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
-                    import_menu = self.menu.addMenu('Import Features From ...')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
-                    if model_data.menu_items is not None:
-                        if 'copy_from_valley_bottom' in model_data.menu_items:
-                            self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
-                        if 'import_brat_results' in model_data.menu_items:
-                            self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
-                        if 'export_brat' in model_data.menu_items:
-                            self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
+                    if not model_data.locked:
+                        if model_data.menu_items is not None:
+                            if 'import_photos' in model_data.menu_items:
+                                self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_item, model_data))
+                            # if 'validate_brat_capacity' in model_data.menu_items:
+                                # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
+                        self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
+                        import_menu = self.menu.addMenu('Import Features From ...')
+                        self.add_context_menu_item(import_menu, 'Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
+                        self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
+                        if model_data.menu_items is not None:
+                            if 'copy_from_valley_bottom' in model_data.menu_items:
+                                self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
+                            if 'import_brat_results' in model_data.menu_items:
+                                self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
+                            if 'export_brat' in model_data.menu_items:
+                                self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
                     self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
+                    if model_data.locked:
+                        self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False))
+                    else:
+                        self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
                 if not isinstance(model_data, Project):
                     # if an event is under a planning container node, then do not show the delete option
                     if not (isinstance(model_data, Event) and isinstance(model_item.parent().data(QtCore.Qt.UserRole), PlanningContainer)):
-                        self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
+                        if not model_data.locked:
+                            self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
@@ -1277,6 +1283,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
 
+    def set_db_item_lock_state(self, db_item: DBItem, state: bool):
+        """Sets the lock state of a DBItem and updates the node icon accordingly"""
+        db_item.set_locked(self.qris_project.project_file, state)
+        self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
+        self.map_manager.update_layer_edit_state(self.qris_project.map_guid, db_item)
+
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False, collapsed: bool=False) -> QtGui.QStandardItem:
         """
         Looks at all child nodes of the parent_node and returns the existing QStandardItem
@@ -1877,7 +1889,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(QtCore.Qt.UserRole), None)
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
-                    layer = layer_node.layer()
+                    layer: QgsVectorLayer = layer_node.layer()
                     if not isinstance(layer, QgsVectorLayer):
                         return
                     if layer.isEditable():
@@ -1923,8 +1935,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         
         if isinstance(data_item, DBItem):
+            name = data_item.name
+            if data_item.locked:
+                name =  '\U0001F512 ' + name
             if any(isinstance(data_item, data_class) for data_class in [Project, Event, PlanningContainer, Analysis, PourPoint, Raster, StreamGage, ScratchVector, Attachment]):
-                node.setText(data_item.name)
+                node.setText(name)
                 return
             
             if isinstance(data_item, EventLayer): 
@@ -1932,20 +1947,21 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
             else:
                 temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
-            if temp_layer.featureCount() == 0:
-                node.setText(data_item.name + ' (Empty)')
+            if not data_item.locked and temp_layer.featureCount() == 0:
+                node.setText(name + ' (Empty)')
                 font = node.font()
                 font.setItalic(True)
                 font.setBold(False)
                 node.setFont(font)
             else:
-                node.setText(data_item.name)
+                node.setText(name)
                 # make the text normal
                 font = node.font()
                 font.setBold(False)
                 font.setItalic(False)
                 node.setFont(font)
                 node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+        return
 
     def add_context_batch_edit_attributes(self, menu: QtWidgets.QMenu) -> None:
         layer: QgsVectorLayer = iface.activeLayer()
