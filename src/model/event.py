@@ -44,7 +44,7 @@ class Event(DBItem):
                  rasters: List[Raster],
                  metadata: dict):
 
-        super().__init__('events', id, name)
+        super().__init__('events', id, name, metadata)
         self.description = description
         self.start = start
         self.end = end
@@ -54,7 +54,6 @@ class Event(DBItem):
         self.representation = None if representation is None else representation
         self.event_layers = event_layers
         self.rasters = rasters.copy() if rasters else []
-        self.metadata = metadata
 
         # use the start date as text
         self.date = f'{self.start.year}-{self.start.month}-{self.start.day}' if self.start else None

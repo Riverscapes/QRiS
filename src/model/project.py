@@ -76,8 +76,9 @@ class Project(DBItem, QObject):
             self.id: int = project_row['id']
             self.description: str = project_row['description']
             self.map_guid: str = project_row['map_guid']
-            self.metadata: dict = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
+            metadata: dict = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
             self.created_on: str = project_row['created_on']
+            self.set_metadata(metadata)
 
             # get list of lookup tables
             lkp_tables = [row['name'] for row in curs.execute('SELECT DISTINCT name FROM lookups').fetchall()]

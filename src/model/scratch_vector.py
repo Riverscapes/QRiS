@@ -15,13 +15,12 @@ CONTEXT_PARENT_FOLDER = 'context'
 class ScratchVector(DBItem):
 
     def __init__(self, id: int, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: dict = None):
-        super().__init__('scratch_vectors', id, name)
+        super().__init__('scratch_vectors', id, name, metadata)
 
         self.fc_name = fc_name
         self.gpkg_path = gpkg_path
         self.vector_type_id = vector_type_id
         self.description = description
-        self.metadata = metadata
         self.icon = 'vector'
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
@@ -36,7 +35,7 @@ class ScratchVector(DBItem):
 
                 self.name = name
                 self.description = description
-                self.metadata = metadata
+                self.set_metadata(metadata)
 
             except Exception as ex:
                 conn.rollback()

@@ -10,7 +10,7 @@ class DBItemSpatial(DBItem):
     Represents a spatial database item with support for spatial views in a GeoPackage.
     """
 
-    def __init__(self, db_table_name: str, id: int, name: str, fc_name: str, fc_id_column_name: str, geom_type: str, epsg: int = 4326):
+    def __init__(self, db_table_name: str, id: int, name: str, fc_name: str, fc_id_column_name: str, geom_type: str, epsg: int = 4326, metadata: dict = None):
         """
         Initialize a spatial DB item.
 
@@ -22,8 +22,9 @@ class DBItemSpatial(DBItem):
             fc_id_column_name: ID column name in the feature class.
             geom_type: Geometry type (e.g., 'Polygon').
             epsg: EPSG code for the spatial reference system.
+            metadata: Optional metadata dictionary.
         """
-        super().__init__(db_table_name, id, name)
+        super().__init__(db_table_name, id, name, metadata)
 
         self.fc_name: str = fc_name
         self.fc_id_column_name: str = fc_id_column_name

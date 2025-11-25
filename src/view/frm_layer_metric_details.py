@@ -100,7 +100,7 @@ class FrmLayerMetricDetails(QDialog):
             protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_updated_date = protocol.system_metadata.get('updated_date', 'Unknown') if protocol.system_metadata else "Unknown"
-            if protocol.metadata:
+            if protocol.user_metadata:
                 for key, value in protocol.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
         
@@ -136,8 +136,8 @@ class FrmLayerMetricDetails(QDialog):
             protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
             protocol_updated_date = protocol.system_metadata.get('updated_date', 'Unknown') if protocol.system_metadata else "Unknown"
-            if protocol.metadata:
-                for key, value in protocol.metadata.items():
+            if protocol.user_metadata:
+                for key, value in protocol.user_metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
         
         else:

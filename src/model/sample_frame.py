@@ -18,21 +18,10 @@ class SampleFrame(DBItemSpatial):
     VALLEY_BOTTOM_SAMPLE_FRAME_TYPE = 3
 
     def __init__(self, id: int, name: str, description: str, metadata: dict = None, sample_frame_type=SAMPLE_FRAME_TYPE):
-        super().__init__('sample_frames', id, name, 'sample_frame_features', 'sample_frame_id', 'Polygon')
+        super().__init__('sample_frames', id, name, 'sample_frame_features', 'sample_frame_id', 'Polygon', metadata=metadata)
         
         self.description: str = description
-        self.metadata: dict = metadata
-        self.user_metadata: dict = None
-        self.fields = None
-        self.default_flow_path_name = None
-        self.project_bounds: bool = False
         self.sample_frame_type = sample_frame_type
-        if metadata is not None:
-            self.fields = metadata.get('fields', None)
-            self.default_flow_path_name = metadata.get('default_flow_path_name', None)
-            self.user_metadata = metadata.get('metadata', None)
-            # get metadata['system']['project_bounds'] if exists
-            self.project_bounds = metadata.get('system', {}).get('project_bounds', False)
 
         if self.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
             self.icon = 'mask'
@@ -53,15 +42,18 @@ class SampleFrame(DBItemSpatial):
 
                 self.name = name
                 self.description = description
-                self.metadata = metadata
-                if metadata is not None:
-                    self.fields = metadata.get('fields', None)
-                    self.default_flow_path_name = metadata.get('default_flow_path_name', None)
-                    self.user_metadata = metadata.get('metadata', None)
+                self.set_metadata(metadata)
 
             except Exception as ex:
                 conn.rollback()
                 raise ex
+
+    def set_metadata(self, metadata: dict) -> None:
+        super().set_metadata(metadata)
+        # special handling for sample frame items
+        self.project_bounds = self.system_metadata.get('project_bounds', False)
+        self.fields = self.metadata.get('fields', None)
+        self.default_flow_path_name = self.metadata.get('default_flow_path_name', None)
 
 
 def load_sample_frames(curs: sqlite3.Cursor, sample_frame_type=SampleFrame.SAMPLE_FRAME_TYPE) -> Dict[int, SampleFrame]:
