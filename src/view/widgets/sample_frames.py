@@ -49,7 +49,12 @@ class SampleFrameWidget(QtWidgets.QWidget):
 
         if self.qris_map_manager is not None:
             sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
-            sample_frame_layer = self.qris_map_manager.build_sample_frame_layer(sample_frame)
+            if sample_frame.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                sample_frame_layer = self.qris_map_manager.build_valley_bottom_layer(sample_frame)
+            elif sample_frame.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                sample_frame_layer = self.qris_map_manager.build_aoi_layer(sample_frame)
+            else:
+                sample_frame_layer = self.qris_map_manager.build_sample_frame_layer(sample_frame)
 
         self.load_sample_frame_features()
 
@@ -70,7 +75,12 @@ class SampleFrameWidget(QtWidgets.QWidget):
 
         if self.qris_map_manager is not None:
             sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
-            sample_frame_layer_tree = self.qris_map_manager.build_sample_frame_layer(sample_frame)
+            if sample_frame.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                sample_frame_layer_tree = self.qris_map_manager.build_valley_bottom_layer(sample_frame)
+            elif sample_frame.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                sample_frame_layer_tree = self.qris_map_manager.build_aoi_layer(sample_frame)
+            else:
+                sample_frame_layer_tree = self.qris_map_manager.build_sample_frame_layer(sample_frame)
             sample_frame_layer: QgsVectorLayer = sample_frame_layer_tree.layer()
             iface.setActiveLayer(sample_frame_layer)
             sample_frame_feature_ids = self.get_selected_sample_frame_feature_ids()
