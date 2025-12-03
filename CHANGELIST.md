@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [1.2.0.5] 2025 DEC 02
+
+### Added
+- Ability to Lock Layers in QRiS to Prevent Deletion/Alterations by Others #876
+
+### Fixed
+- Sample Frame Widget updates to handle valley bottom and AOI types (preventing Climate Engine Explorer from loading)
+- Check and repair malformed json when loading project from database
+
+### Changed
+- Refactor reading and setting metadata in DBItem model
+- DB Migration: add metadata field to EventLayers table
+
 ## [1.2.0.4] 2025 NOV 21
 
 ### Fixed
