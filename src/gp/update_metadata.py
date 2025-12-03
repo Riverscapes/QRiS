@@ -1,9 +1,10 @@
 # Check the metatdata field of the event layers and update if needed
 
-import json
 import sqlite3
 
 from osgeo import ogr
+
+from ..lib.json_tools import safe_json_loads
 
 def update_metadata(project_file: str):
 
@@ -18,7 +19,7 @@ def update_metadata(project_file: str):
             layer_id = row[0]
             if not row[1]:
                 continue
-            meta = json.loads(row[1])
+            meta = safe_json_loads(row[1])
             if not meta:
                 continue
             if 'fields' not in meta:
@@ -36,7 +37,7 @@ def update_metadata(project_file: str):
                 layer_id = row[1]
                 if not row[1]:
                     continue
-                meta = json.loads(row[2])
+                meta = safe_json_loads(row[2])
                 if not meta:
                     continue
                 if not (set(meta.keys()) <= {'attributes', 'metadata'}):
@@ -77,7 +78,7 @@ def check_metadata(project_file: str):
                 value = row[0]
                 if value is None:
                     continue
-                meta = json.loads(value)
+                meta = safe_json_loads(value)
                 # if meta is empty, continue
                 if not meta:
                     continue
