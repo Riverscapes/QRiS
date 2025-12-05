@@ -43,7 +43,7 @@ from .lib.environment import load_env_vars
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
-from .view.frm_settings import FrmSettings, REMOVE_LAYERS_ON_CLOSE, DOCK_WIDGET_LOCATION, default_dock_widget_location
+from .view.frm_settings import FrmSettings, DOCK_WIDGET_LOCATION, default_dock_widget_location
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
 from .QRiS.qrave_integration import QRaveIntegration
@@ -206,17 +206,20 @@ class QRiSToolbar:
 
         # Create the main menu for the QRiS toolbar button
         self.qris_menu = QtWidgets.QMenu()
-        self.project_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Project')
-        self.help_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/help'), 'Help')
 
         # Populate Project menu
+        self.project_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Project')
         self.add_menu_action(self.project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
         self.add_menu_action(self.project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
         self.mru_menu = self.project_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Recent QRiS Projects')
         self.add_menu_action(self.project_menu, 'close', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
         self.load_mru_projects()
 
+        # Show Panel action
+        self.add_menu_action(self.qris_menu, 'qris_icon', 'Show QRiS Panel', self.toggle_widget, True, 'Show the QRiS Dockable Panel')
+
         # Populate Help menu
+        self.help_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/help'), 'Help')
         self.add_menu_action(self.help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
         self.add_menu_action(self.help_menu, 'settings', 'Settings', self.show_settings, True, 'QRiS Settings')
         self.add_menu_action(self.help_menu, 'qris_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
@@ -263,13 +266,9 @@ class QRiSToolbar:
 
     def close_project(self):
         if self.dockwidget is not None:
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, False, type=bool)
-            if remove_layers is True:
-                if self.dockwidget.map_manager is not None and getattr(self.dockwidget, "qris_project", None) is not None:
-                    self.dockwidget.map_manager.remove_all_layers(self.dockwidget.qris_project.map_guid)
-            self.dockwidget.close()
-            self.iface.removeDockWidget(self.dockwidget)
+            self.dockwidget.destroy_docwidget()
+            # self.dockwidget.close()
+            # self.iface.removeDockWidget(self.dockwidget)
             # self.dockwidget = None
 
     def onClosePlugin(self):
@@ -345,8 +344,8 @@ class QRiSToolbar:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-        if self.dockwidget is not None:
-            self.close_project()
+        if self.dockwidget is not None and self.dockwidget.qris_project is not None:
+            self.dockwidget.destroy_docwidget()
 
         # Load a version of the QRave code we can use for cross-plugin integration
         if self.toolbar is not None and isinstance(self.toolbar, QtWidgets.QToolBar):
@@ -365,21 +364,19 @@ class QRiSToolbar:
             self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load Riverscapes Viewer plugin.', level=Qgis.Critical, duration=5)
             self.iface.mainWindow().repaint()
 
-        # Create the dockwidget (after translation) and keep reference
-        self.dockwidget = QRiSDockWidget(self.iface)
-        if self.qrave.name is not None:
-            self.dockwidget.qrave = self.qrave
-
-        # connect to provide cleanup on closing of dockwidget
-        self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
         # Get the dockwidget location from the settings
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
         dock_area = dock_widget_locations[dock_location]
 
-        # Add and show the dock widget in the correct area
-        self.iface.addDockWidget(dock_area, self.dockwidget)
+        # Create the dockwidget (after translation) and keep reference
+        if self.dockwidget is None:
+            self.dockwidget = QRiSDockWidget(self.iface)
+            self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+            self.iface.addDockWidget(dock_area, self.dockwidget)
+            self.dockwidget.qrave = self.qrave
+            self.dockwidget.add_basemap_nodes()
+
         self.dockwidget.show()
 
         # Tabify QRiS with all other dock widgets in the same area

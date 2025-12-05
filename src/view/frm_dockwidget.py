@@ -84,6 +84,7 @@ from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_valley_bottom import FrmValleyBottom
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from .frm_layer_type import FrmLayerTypeDialog
+from .frm_settings import REMOVE_LAYERS_ON_CLOSE
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 from ..lib.map import get_zoom_level, get_map_center
@@ -153,13 +154,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.qris_project = None
         self.rs_project = None
         self.map_manager = None
-        self.basemap_manager = None
+        self.basemap_manager = RiverscapesMapManager('Basemaps')
         self.menu = QtWidgets.QMenu()
 
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.treeView.customContextMenuRequested.connect(self.open_menu)
         self.treeView.doubleClicked.connect(self.double_click_tree_item)
+
+        self.model = QtGui.QStandardItemModel()
+        self.treeView.setModel(self.model)
 
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
@@ -203,9 +207,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.map_manager = QRisMapManager(self.qris_project)
         self.map_manager.edit_mode_changed.connect(self.on_edit_session_change)
 
-        self.model = QtGui.QStandardItemModel()
-        self.treeView.setModel(self.model)
-        self.tree_state = {}
         rootNode = self.model.invisibleRootItem()
 
         # set the project root
@@ -254,14 +255,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         for node in [project_node, inputs_node, self.riverscapes_node, self.surfaces_node, self.aoi_node, self.sample_frames_node, self.profiles_node, self.cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
-        if self.qrave is not None:
-            if self.qrave.BaseMaps is not None:
-                # region = self.settings.getValue('basemapRegion')
-                region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
-                self.model.appendRow(self.qrave.BaseMaps.regions[region])
-                self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
-                self.basemap_manager = RiverscapesMapManager('Basemaps')
-                self.treeView.expanded.connect(self.expand_tree_item)
+
+        self.add_basemap_nodes()
+        # reorder nodes so basemaps is always at the bottom
+        
 
         # Reconnect any qirs layers back to the edit session signals
         self.traverse_tree(self.model.invisibleRootItem(), self.reconnect_layer_edits)
@@ -288,6 +285,30 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         return
     
+    def add_basemap_nodes(self):
+        if self.qrave is not None and self.qrave.BaseMaps is not None:
+            region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
+            # Check if basemap node already exists, if it does, move it to the bottom
+            root = self.model.invisibleRootItem()      
+            for row in range(root.rowCount()):
+                child = root.child(row)
+                if child.text() == 'Basemaps':
+                    basemap = root.takeRow(row)[0]
+                    root.appendRow(basemap)
+                    return
+                
+            self.model.appendRow(self.qrave.BaseMaps.regions[region])
+            self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
+            self.treeView.expanded.connect(self.expand_tree_item)
+
+    def clear_project_node(self):
+        root = self.model.invisibleRootItem()
+        for row in range(root.rowCount()):
+            child = root.child(row)
+            if isinstance(child.data(QtCore.Qt.UserRole), Project):
+                root.removeRow(row)
+                break
+
     def double_click_tree_item(self, idx: QModelIndex):
 
         model_item = self.model.itemFromIndex(idx)
@@ -341,11 +362,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def closeEvent(self, event):
 
-        self.closingPlugin.emit()
-        self.destroy_docwidget()
+        # self.closingPlugin.emit()
+        # self.destroy_docwidget()
         event.accept()
 
     def destroy_docwidget(self):
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
+        if remove_layers is True:
+            if self.map_manager is not None and self.qris_project is not None:
+                self.map_manager.remove_all_layers(self.qris_project.map_guid)
 
         self.destroy_analysis_doc_widget()
 
@@ -377,9 +404,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if self.qris_project.receivers(self.qris_project.project_changed) > 0:
                 self.qris_project.project_changed.disconnect()
         
-        self.model = None
+        self.clear_project_node()
         self.rs_project = None
         self.qris_project = None
+        self.map_manager = None
 
     def destroy_analysis_doc_widget(self):
         if self.analysis_doc_widget is not None:
@@ -595,7 +623,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
                     self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
-                    self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
+                    self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.destroy_docwidget())
 
                 if isinstance(model_data, EventLayer):
                     if not model_data.locked:
