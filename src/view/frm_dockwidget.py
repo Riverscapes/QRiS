@@ -27,7 +27,6 @@ from functools import partial
 from osgeo import ogr
 
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
-from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
 from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
@@ -177,7 +176,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.qrave = None
 
-        ltv: QgsLayerTreeView = iface.layerTreeView()
+        ltv: QgsLayerTreeView = self.iface.layerTreeView()
         # workaround for QGIS < 3.32
         if hasattr(ltv, 'contextMenuAboutToShow'):
             try:
@@ -870,7 +869,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # this is a group node, do nothing
             pass
         else:
-            iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
+            self.iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
 
     def add_basemap_to_map(self, model_item, trigger_repaint=False):
 
@@ -1185,8 +1184,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 new_fid += 1
             source_layer.startEditing()
             source_layer.addFeatures(feats)
-            source_layer.commitChanges()
-            self.import_dce_complete(db_item, True)
+            result = source_layer.commitChanges()
+            self.import_dce_complete(db_item, result)
 
         else:
             frm = FrmImportDceLayer(self, self.qris_project, db_item, import_source_path)
@@ -1254,17 +1253,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
         if result is True:
-            iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
+            self.iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
+            QgsMessageLog.logMessage(f'Import DCE completed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}', 'QRiS', Qgis.Info)
             layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
             if layer is not None:
                 self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
             
             # refresh map
-            iface.mapCanvas().refreshAllLayers()
-            iface.mapCanvas().refresh()
+            self.iface.mapCanvas().refreshAllLayers()
+            self.iface.mapCanvas().refresh()
             self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
         else:
-            iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
+            QgsMessageLog.logMessage(f'Import DCE failed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}', 'QRiS', Qgis.Warning)
 
     def validate_brat_cis(self, db_item: DBItem):
 
@@ -1992,7 +1993,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         return
 
     def add_context_batch_edit_attributes(self, menu: QtWidgets.QMenu) -> None:
-        layer: QgsVectorLayer = iface.activeLayer()
+        layer: QgsVectorLayer = self.iface.activeLayer()
         if not layer:
             return
         if layer.type() != QgsMapLayer.VectorLayer:
@@ -2012,7 +2013,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def batch_edit_attributes(self) -> None:
 
-        layer: QgsMapLayer = iface.activeLayer()
+        layer: QgsMapLayer = self.iface.activeLayer()
         if not layer:
             return
         if layer.type() == QgsMapLayer.VectorLayer:
