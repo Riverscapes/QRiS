@@ -471,6 +471,11 @@ class QRiSToolbar:
         self.qris_button.setEnabled(False)
 
         def on_project_loaded(project):
+
+            # Re-enable menu and button
+            self.qris_menu.setEnabled(True)
+            self.qris_button.setEnabled(True)
+
             result = check_metadata(db_path)
             if result is False:
                 # window dialog ask user if they want to update the metadata
@@ -495,9 +500,6 @@ class QRiSToolbar:
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
             settings.sync()
-
-            self.qris_menu.setEnabled(True)
-            self.qris_button.setEnabled(True)
 
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)
