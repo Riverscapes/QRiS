@@ -35,7 +35,7 @@ class FrmSettings(QDialog):
         self.right_radio.setChecked(dock_location == 'right')
 
         # Get the remove layers on close setting
-        remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, False, type=bool)
+        remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
         self.chk_remove_layers_on_close.setChecked(remove_layers_on_close)
 
         # Get the default export path
