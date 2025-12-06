@@ -969,7 +969,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         if self.analysis_doc_widget is None:
-            self.analysis_doc_widget = FrmAnalysisDocWidget(self)
+            self.analysis_doc_widget = FrmAnalysisDocWidget(self, self.iface)
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
             self.analysis_doc_widget.visibilityChanged.connect(self.destroy_analysis_doc_widget)
@@ -988,7 +988,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def export_analysis_table(self, analysis: Analysis = None):
 
-        frm = FrmExportMetrics(self, self.qris_project, analysis)
+        frm = FrmExportMetrics(self, self.iface, self.qris_project, analysis)
         frm.exec_()
 
     def add_attachment(self, model_item, attachment_type):
