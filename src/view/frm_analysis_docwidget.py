@@ -26,7 +26,7 @@ import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
-from qgis.utils import iface
+from qgis.gui import QgisInterface
 
 from ..model.project import Project
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
@@ -63,9 +63,10 @@ column = {
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
-    def __init__(self, parent):
+    def __init__(self, parent, iface: QgisInterface):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
+        self.iface = iface
         self.setAttribute(QtCore.Qt.WA_QuitOnClose)
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)  # <--- Add this line
         # Store the connections so they can be disconnected when the form is closed
@@ -282,12 +283,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                             QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
                             continue
             if errors is False and missing_data is False:
-                iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
+                self.iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
             else:
                 if missing_data is True:
-                    iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to missing data requirements. See log for details.', level=Qgis.Success)
+                    self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to missing data requirements. See log for details.', level=Qgis.Success)
                 if errors is True:
-                    iface.messageBar().pushMessage('Metrics', 'Onr or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
+                    self.iface.messageBar().pushMessage('Metrics', 'Onr or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
             self.load_table_values()
 
     def export_table(self):
@@ -295,11 +296,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # open modal dialog to select export file
         current_sample_frame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         current_data_capture_event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        frm = FrmExportMetrics(self, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
+        frm = FrmExportMetrics(self, self.iface, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
-            iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {frm.txtOutpath.text()}', level=Qgis.Success)
+            self.iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {frm.txtOutpath.text()}', level=Qgis.Success)
 
     def cmdProperties_clicked(self):
 

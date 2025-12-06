@@ -1,5 +1,12 @@
 # QRiS Plugin
 
+## [1.2.0.6] 2025 DEC 5
+
+### Changed
+- Changed panel close behavior and add show panel menu item #890, #891
+- Default "Remove Project Layers" Options Checkbox to On #893
+
+
 ## [1.2.0.5] 2025 DEC 02
 
 ### Added

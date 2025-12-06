@@ -27,7 +27,6 @@ from functools import partial
 from osgeo import ogr
 
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
-from qgis.utils import iface
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
 from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
@@ -84,6 +83,7 @@ from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_valley_bottom import FrmValleyBottom
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from .frm_layer_type import FrmLayerTypeDialog
+from .frm_settings import REMOVE_LAYERS_ON_CLOSE
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 from ..lib.map import get_zoom_level, get_map_center
@@ -153,13 +153,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.qris_project = None
         self.rs_project = None
         self.map_manager = None
-        self.basemap_manager = None
+        self.basemap_manager = RiverscapesMapManager('Basemaps')
         self.menu = QtWidgets.QMenu()
 
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.treeView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.treeView.customContextMenuRequested.connect(self.open_menu)
         self.treeView.doubleClicked.connect(self.double_click_tree_item)
+
+        self.model = QtGui.QStandardItemModel()
+        self.treeView.setModel(self.model)
 
         self.analysis_doc_widget = None
         self.slider_doc_widget = None
@@ -173,7 +176,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         self.qrave = None
 
-        ltv: QgsLayerTreeView = iface.layerTreeView()
+        ltv: QgsLayerTreeView = self.iface.layerTreeView()
         # workaround for QGIS < 3.32
         if hasattr(ltv, 'contextMenuAboutToShow'):
             try:
@@ -203,9 +206,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.map_manager = QRisMapManager(self.qris_project)
         self.map_manager.edit_mode_changed.connect(self.on_edit_session_change)
 
-        self.model = QtGui.QStandardItemModel()
-        self.treeView.setModel(self.model)
-        self.tree_state = {}
         rootNode = self.model.invisibleRootItem()
 
         # set the project root
@@ -254,14 +254,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         for node in [project_node, inputs_node, self.riverscapes_node, self.surfaces_node, self.aoi_node, self.sample_frames_node, self.profiles_node, self.cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
             self.treeView.expand(self.model.indexFromItem(node))
-        if self.qrave is not None:
-            if self.qrave.BaseMaps is not None:
-                # region = self.settings.getValue('basemapRegion')
-                region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
-                self.model.appendRow(self.qrave.BaseMaps.regions[region])
-                self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
-                self.basemap_manager = RiverscapesMapManager('Basemaps')
-                self.treeView.expanded.connect(self.expand_tree_item)
+
+        self.add_basemap_nodes()
+        # reorder nodes so basemaps is always at the bottom
+        
 
         # Reconnect any qirs layers back to the edit session signals
         self.traverse_tree(self.model.invisibleRootItem(), self.reconnect_layer_edits)
@@ -288,6 +284,30 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         return
     
+    def add_basemap_nodes(self):
+        if self.qrave is not None and self.qrave.BaseMaps is not None:
+            region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
+            # Check if basemap node already exists, if it does, move it to the bottom
+            root = self.model.invisibleRootItem()      
+            for row in range(root.rowCount()):
+                child = root.child(row)
+                if child.text() == 'Basemaps':
+                    basemap = root.takeRow(row)[0]
+                    root.appendRow(basemap)
+                    return
+                
+            self.model.appendRow(self.qrave.BaseMaps.regions[region])
+            self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
+            self.treeView.expanded.connect(self.expand_tree_item)
+
+    def clear_project_node(self):
+        root = self.model.invisibleRootItem()
+        for row in range(root.rowCount()):
+            child = root.child(row)
+            if isinstance(child.data(QtCore.Qt.UserRole), Project):
+                root.removeRow(row)
+                break
+
     def double_click_tree_item(self, idx: QModelIndex):
 
         model_item = self.model.itemFromIndex(idx)
@@ -341,11 +361,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def closeEvent(self, event):
 
-        self.closingPlugin.emit()
-        self.destroy_docwidget()
+        # self.closingPlugin.emit()
+        # self.destroy_docwidget()
         event.accept()
 
     def destroy_docwidget(self):
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
+        if remove_layers is True:
+            if self.map_manager is not None and self.qris_project is not None:
+                self.map_manager.remove_all_layers(self.qris_project.map_guid)
 
         self.destroy_analysis_doc_widget()
 
@@ -377,9 +403,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if self.qris_project.receivers(self.qris_project.project_changed) > 0:
                 self.qris_project.project_changed.disconnect()
         
-        self.model = None
+        self.clear_project_node()
         self.rs_project = None
         self.qris_project = None
+        self.map_manager = None
 
     def destroy_analysis_doc_widget(self):
         if self.analysis_doc_widget is not None:
@@ -595,7 +622,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
                     self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
-                    self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.close())
+                    self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.destroy_docwidget())
 
                 if isinstance(model_data, EventLayer):
                     if not model_data.locked:
@@ -842,7 +869,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # this is a group node, do nothing
             pass
         else:
-            iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
+            self.iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
 
     def add_basemap_to_map(self, model_item, trigger_repaint=False):
 
@@ -942,7 +969,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         if self.analysis_doc_widget is None:
-            self.analysis_doc_widget = FrmAnalysisDocWidget(self)
+            self.analysis_doc_widget = FrmAnalysisDocWidget(self, self.iface)
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
             self.analysis_doc_widget.visibilityChanged.connect(self.destroy_analysis_doc_widget)
@@ -961,7 +988,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def export_analysis_table(self, analysis: Analysis = None):
 
-        frm = FrmExportMetrics(self, self.qris_project, analysis)
+        frm = FrmExportMetrics(self, self.iface, self.qris_project, analysis)
         frm.exec_()
 
     def add_attachment(self, model_item, attachment_type):
@@ -1157,8 +1184,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 new_fid += 1
             source_layer.startEditing()
             source_layer.addFeatures(feats)
-            source_layer.commitChanges()
-            self.import_dce_complete(db_item, True)
+            result = source_layer.commitChanges()
+            self.import_dce_complete(db_item, result)
 
         else:
             frm = FrmImportDceLayer(self, self.qris_project, db_item, import_source_path)
@@ -1226,17 +1253,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
         if result is True:
-            iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
+            self.iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
+            QgsMessageLog.logMessage(f'Import DCE completed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}', 'QRiS', Qgis.Info)
             layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
             if layer is not None:
                 self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
             
             # refresh map
-            iface.mapCanvas().refreshAllLayers()
-            iface.mapCanvas().refresh()
+            self.iface.mapCanvas().refreshAllLayers()
+            self.iface.mapCanvas().refresh()
             self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
         else:
-            iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
+            QgsMessageLog.logMessage(f'Import DCE failed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}', 'QRiS', Qgis.Warning)
 
     def validate_brat_cis(self, db_item: DBItem):
 
@@ -1964,7 +1993,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         return
 
     def add_context_batch_edit_attributes(self, menu: QtWidgets.QMenu) -> None:
-        layer: QgsVectorLayer = iface.activeLayer()
+        layer: QgsVectorLayer = self.iface.activeLayer()
         if not layer:
             return
         if layer.type() != QgsMapLayer.VectorLayer:
@@ -1984,7 +2013,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def batch_edit_attributes(self) -> None:
 
-        layer: QgsMapLayer = iface.activeLayer()
+        layer: QgsMapLayer = self.iface.activeLayer()
         if not layer:
             return
         if layer.type() == QgsMapLayer.VectorLayer:

@@ -109,6 +109,9 @@ class RatioUnit(QgsUnitTypes):
         
 
 def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = False) -> float:
+    if value is None:
+        return None
+    
     if from_unit == to_unit:
         return value
     

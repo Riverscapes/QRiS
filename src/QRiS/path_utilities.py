@@ -14,19 +14,15 @@ def parse_posix_path(path: str) -> str:
 
 
 def safe_make_relpath(in_path: str, cwd_path: str) -> str:
-    """ Safely create an absolute path from a relative path
-
-    if this fails then just return the input
-
-    Args:
-        in_path (str): _description_
-        cwd_path (str): _description_
-
-    Returns:
-        str: _description_
+    """ Safely create a relative path from an absolute path.
+    If this fails (e.g., different drives), just return the input.
     """
     if in_path and len(in_path) > 0 and os.path.isabs(in_path):
-        return os.path.relpath(in_path, cwd_path)
+        try:
+            return os.path.relpath(in_path, cwd_path)
+        except ValueError:
+            # Different drives, can't make a relative path
+            return in_path
     else:
         return in_path
 
