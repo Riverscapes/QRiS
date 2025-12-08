@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [1.2.0.7] 2025 DEC 8
+
+### Fixed
+- Error if QGZ File on different drive than QRiS project #892
+- Fix messaging if import layer from dce fails
+- Fix Units in Analysis Export and fix 'percent' bug #835, #884
+
+### Changed
+- re-enable toolbar menu after open project task finished, even if error occurs
+
+
 ## [1.2.0.6] 2025 DEC 5
 
 ### Changed
