@@ -1,5 +1,10 @@
 # QRiS Plugin
 
+## [1.2.1] Dec 8 2025
+
+## Changed
+- Icons updated to svg format
+
 ## [1.2.0.7] 2025 DEC 8
 
 ### Fixed
