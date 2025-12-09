@@ -40,7 +40,8 @@
         <file alias="search">../Images/search.svg</file>
         <file alias="sort">../Images/sort.svg</file>
         <file alias="table">../Images/table.svg</file>
-        <file alias="qris_icon">../Images/qris_icon.svg</file>
+        <file alias="qris_icon">../icon.svg</file>
+        <file alias="qris_logo">../Images/qris_logo.svg</file>
         <file alias="camera">../Images/camera.svg</file>
         <file alias="save">../Images/save.svg</file>
         <file alias="slider">../Images/slider.svg</file>
