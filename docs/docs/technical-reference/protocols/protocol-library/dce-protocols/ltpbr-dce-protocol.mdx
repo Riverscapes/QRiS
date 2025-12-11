@@ -76,10 +76,15 @@ Type|Metrics|Description
 ---|---|---
 Point, Line, Polygon|NA|*A flexible set of layers used to document practical, logistical, and cautionary features that are relevant to LTPBR implementation and monitoring*
   </TabItem>
+  <TabItem value="recovery space" label="Recovery Space">
+Type|Metrics|Description
+---|---|---
+Polygon|`Percent Recovery Space`|*Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes*
+  </TabItem>
   <TabItem value="risk potential" label="Risk Potential">
 Type|Metrics|Description
 ---|---|---
-Polygon|NA|*Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes*
+Polygon|NA|*Identification and mapping of anthropogenic features that would limit the area available for riverscape expansion (i.e., limit recovery potential)*
   </TabItem>
   <TabItem value="structural elements" label="Structural Elements" default>
 Type|Metrics|Description
@@ -304,6 +309,7 @@ Metric|Description|Calculation
 *% Inundated*|Percent of valley bottom inundated by active channel(s)|`Active Channel Area / Valley Bottom Area`
 *% Riparian Vegetation*|Percent of valley bottom covered by riparian vegetation|`Riparian Vegetation Area / Valley Bottom Area`
 *Proportion of Active Valley Bottom*|Percent of valley bottom classified as 'active' (e.g., riparian vegetation, active channel, etc)|`Active Valley Bottom Area / Valley Bottom Area`
+*Percent Recovery Space*|Percent of valley bottom that is avaiable for restoration or recovery of aquatic/riparian processes|`Recovery Space Area / Valley Bottom Area`
   </TabItem>
     </Tabs>
 
