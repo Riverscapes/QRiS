@@ -4,19 +4,20 @@ sidebar_position: 2
 description: Instructions how to write and maintain protocols
 ---
 
+Protocols are XML 
 
 ## Protocol XML
-Each Protocol is be defined by a separate XML file that resides in the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
+Each Protocol is be defined by a separate XML file. Protocols that ship with QRiS reside in the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository. Protocols can also be develoed and deployed locally by placing the protocol XML in the root of the directory of the current QRiS project.
 
 A single protocol XML file contains both the layer and metric definitions. This is required for referential integrity, because the metrics refer to the layers within the protocol. Indeed metrics will only be able to refer to metrics within the protocol in which the metric is defined. In other words, an LTPBR metric cannot refer to an LCT layer.  
 
 ### Authoring and Editing Protocols
 
 :::tip
-QRiS will look for protocol XML files adjacent to the current QRiS project. This will allow protocol authors to experiment with draft protocols, similar to how local business logic files work for QViewer.
+QRiS looks for protocol XML files in the following locations: i) in the `%AppDta%\Roaming\QGIS\QGIS3\profiles\default\python\plugins\riverscapes_viewer\resources\QRiS\protocols` (ships with Riverscapes Viewer and is updated automatically by syncing to  [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML);  ii)  adjacent to the current QRiS project; and iii) in a user-specified local protocols folder from `Help` → `Settings` and adjusting the `Local Custom Protocols Folder` with `...`. These second and third options allows  protocol authors to experiment with draft protocols, similar to how [local business logic files](https://viewer.riverscapes.net/technical-reference/business-logic#customizing-business-logic--refreshing-the-project-explorer) work for Riverscapes Viewer.
 :::
 
-There is no user interface for writing protocols. Users are advised to use Visual Studio Code with linting based on the latest version of the protocol XSD rule file. This is similar to how users already develop new riverscapes project and business logic XML files.
+There is no user interface for writing protocols. Users are advised to use [Visual Studio Code](https://code.visualstudio.com/) with linting based on the latest version of the protocol XSD rule file. This is similar to how users already develop new riverscapes project and business logic XML files.
 
 ### Protocol Versioning
 QRiS protocols can be changed at any time. Any change to a protocol must increment its version number. Protocol owners have the option of either changing an existing protocol or splitting it into a new XML file:
@@ -175,3 +176,19 @@ A protocol can contain one or more metrics. Each metric is defined by a `Metric`
         - Attributes:
           - `field_id_ref`: references the id of the field
         - `Value`: (one or more) value to filter by
+
+
+----
+## Protocol Documentation
+The [QRiS Development Team](https://qris.riverscapes.net/About#development-team) will not approve a pull-request for a new protocol to deploy with QRiS without appropriate documentation. In addition to submitting a pull request to the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML), a pull request for a `*.mdx` protocol page to be found under the [QRiS Protocol Library](https://qris.riverscapes.net/protocols/protocol-library) part of this website.  
+
+Best practices include:
+1. Authoring a complete protocol documentation page on what is in the protocol and how to implement it with sections (as *.mdx - see here for how; easiest to copy an existing one as a template):
+  - Overview
+  - Protocol Summary table, including citaeable citation
+  - Layers & Metrics
+    - Video Demonstration
+    - Layer Attributes
+    - Metric Attributes
+2. Authoring an external report (PDF) and/or peer-reviewed publication that describes and/or vetts the methods and the *why* behind the *what* and *how*. If protocol document is a self-published document, we recommend [uploading to Zeondo](https://docs.riverscapes.net/get-involved/documentation/WebSites/Common/#add-a-doi-with-zenodo-for-your-website-or-tool) or ResearchGate for generation of a DOI and making it publicly available and the citations trackable. 
+
