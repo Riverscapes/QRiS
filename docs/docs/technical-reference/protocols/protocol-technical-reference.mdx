@@ -7,12 +7,12 @@ description: Instructions how to write and maintain protocols
 
 
 ## Protocol XML
-Each Protocol is be defined by a separate XML file. Protocols that ship with QRiS reside in the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository. Protocols can also be develoed and deployed locally by placing the protocol XML in the root of the directory of the current QRiS project.
+Each Protocol is be defined by a separate XML file. Protocols that ship with QRiS reside in the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). An [`protocol.xsd`](https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocol.xsd) “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository. 
 
 A single protocol XML file contains both the layer and metric definitions. This is required for referential integrity, because the metrics refer to the layers within the protocol. Indeed metrics will only be able to refer to metrics within the protocol in which the metric is defined. In other words, an LTPBR metric cannot refer to an LCT layer.  
 
 ### Authoring and Editing Protocols
-
+Protocols can also be developed and deployed locally by placing the protocol XML in the root of the directory of the current QRiS project.
 :::tip
 QRiS looks for protocol XML files in the following locations: i) in the `%AppDta%\Roaming\QGIS\QGIS3\profiles\default\python\plugins\riverscapes_viewer\resources\QRiS\protocols` (ships with Riverscapes Viewer and is updated automatically by syncing to  [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML);  ii)  adjacent to the current QRiS project; and iii) in a user-specified local protocols folder from `Help` → `Settings` and adjusting the `Local Custom Protocols Folder` with `...`. These second and third options allows  protocol authors to experiment with draft protocols, similar to how [local business logic files](https://viewer.riverscapes.net/technical-reference/business-logic#customizing-business-logic--refreshing-the-project-explorer) work for Riverscapes Viewer.
 :::
