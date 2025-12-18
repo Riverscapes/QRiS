@@ -184,7 +184,12 @@ class Project(DBItem, QObject):
     def add_db_item(self, db_item) -> None:
         """Add a new DBItem to the project and generate its spatial view if applicable."""
         if isinstance(db_item, SampleFrame):
-            self.sample_frames[db_item.id] = db_item
+            if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                self.aois[db_item.id] = db_item
+            elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                self.valley_bottoms[db_item.id] = db_item
+            else:
+                self.sample_frames[db_item.id] = db_item
         elif isinstance(db_item, PourPoint):
             self.pour_points[db_item.id] = db_item
         elif isinstance(db_item, ScratchVector):
