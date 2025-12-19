@@ -130,31 +130,60 @@ class Project(DBItem, QObject):
                                 QgsMessageLog.logMessage(
                                     f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.","QRiS", Qgis.Info)
                             else:
-                                # Update status if changed
                                 existing_metric: Metric = existing_metrics[0]
-                                if existing_metric.status != metric.status:
-                                    # Update in-memory
-                                    existing_metric.status = metric.status
-                                    # Update metadata dict with new status
-                                    metadata = existing_metric.metadata or {}
-                                    metadata['status'] = metric.status
-                                    update_metric(
+                                # Only update label, description, and metadata if changed
+                                update_needed = False
+                                new_label = metric.label if hasattr(metric, 'label') else existing_metric.name
+                                new_description = metric.description if hasattr(metric, 'description') else existing_metric.description
+                                new_status = metric.status if hasattr(metric, 'status') else existing_metric.status
+                                new_definition_url = metric.definition_url if hasattr(metric, 'definition_url') else existing_metric.definition_url
+                                # Start with a copy of the existing metadata
+                                new_metadata = dict(existing_metric.metadata) if existing_metric.metadata else {}
+                                # List of protocol attributes to check and update in metadata
+                                protocol_attrs = [
+                                    ('minimum_value', getattr(metric, 'minimum_value', None)),
+                                    ('maximum_value', getattr(metric, 'maximum_value', None)),
+                                    ('precision', getattr(metric, 'precision', None)),
+                                    ('tolerance', getattr(metric, 'tolerance', None)),
+                                    ('status', new_status),
+                                ]
+                                for key, value in protocol_attrs:
+                                    if value is not None:
+                                        if key not in new_metadata or new_metadata.get(key) != value:
+                                            new_metadata[key] = value
+                                            update_needed = True
+                                # Compare label
+                                if existing_metric.name != new_label:
+                                    update_needed = True
+                                # Compare description
+                                if existing_metric.description != new_description:
+                                    update_needed = True
+                                # Compare definition_url
+                                if existing_metric.definition_url != new_definition_url:
+                                    update_needed = True
+                                # Only update if metric_function and metric_params are unchanged
+                                if (existing_metric.metric_function == metric.calculation_machine_code and
+                                    existing_metric.metric_params == metric.parameters and
+                                    update_needed):
+                                    updated_metric = update_metric(
                                         self.project_file,
                                         existing_metric.id,
-                                        existing_metric.name,
+                                        new_label,
                                         existing_metric.machine_name,
                                         existing_metric.protocol_machine_code,
-                                        existing_metric.description,
-                                        existing_metric.default_level_id,
+                                        new_description,
+                                        metric.default_level,
                                         existing_metric.metric_function,
                                         existing_metric.metric_params,
-                                        existing_metric.base_unit,
-                                        existing_metric.definition_url,
-                                        metadata,
+                                        None,
+                                        new_definition_url,
+                                        new_metadata,
                                         existing_metric.version
                                     )
+                                    self.metrics[existing_metric.id] = updated_metric
+                                    updated = True
                                     QgsMessageLog.logMessage(
-                                        f"Metric '{existing_metric.name}' (ID: {existing_metric.machine_name}, Version: {existing_metric.version}) status updated to '{metric.status}' in protocol '{current_protocol.machine_code}'.",
+                                        f"Metric '{existing_metric.name}' (ID: {existing_metric.machine_name}, Version: {existing_metric.version}) label/description/metadata/status/definition_url updated in protocol '{current_protocol.machine_code}'.",
                                         "QRiS", Qgis.Info
                                     )
                         if updated == True:

@@ -158,7 +158,7 @@ def insert_metric(db_path: str, name: str, machine_name: str, protocol_machine_n
 
     return id, metric
 
-def update_metric(db_path: str, id: int, name: str, machine_name: str, protocol_machine_code: str, description: str, metric_level, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
+def update_metric(db_path: str, id: int, name: str, machine_name: str, protocol_machine_code: str, description: str, metric_level: str, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
     
         metric = None
         description = description if len(description) > 0 else None
@@ -191,7 +191,7 @@ def update_metric(db_path: str, id: int, name: str, machine_name: str, protocol_
                     unit_id = None
     
                 curs.execute('UPDATE metrics SET name = ?, description = ?, default_level_id = ?, calculation_id = ?, metric_params = ?, unit_id = ?, definition_url = ?, metadata = ? WHERE machine_name = ? and version = ?', [name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, machine_name, version])
-                metric = Metric(id, name, machine_name, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
+                metric = Metric(id, name, machine_name, protocol_machine_code, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
                 conn.commit()
     
             except Exception as ex:
