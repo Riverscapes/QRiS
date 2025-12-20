@@ -592,8 +592,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, SampleFrame):
                     if model_data.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                         self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                    if model_data.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
-                        self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
+                    # if model_data.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                    self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -1887,10 +1887,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def geospatial_summary(self, model_item, model_data: SampleFrame):
 
         # Check the feature count of the aoi, make sure there is one and only one polygon feature
-        aoi_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
-        if aoi_layer.featureCount() != 1:
-            QtWidgets.QMessageBox.warning(self, 'Geospatial Summary', 'The selected AOI must contain exactly one polygon feature.')
-            return
+        # aoi_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
+        # if aoi_layer.featureCount() != 1:
+        #     QtWidgets.QMessageBox.warning(self, 'Geospatial Summary', 'The selected AOI must contain exactly one polygon feature.')
+        #     return
 
         zonal_metrics_task = ZonalMetricsTask(self.qris_project, model_data)
         # -- DEBUG --
