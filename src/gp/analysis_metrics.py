@@ -155,7 +155,7 @@ def get_metric_layer_features(
         ogr.Feature: Features of the metric layer.
     """
     if metric_layer.get('input_ref', None) is not None:
-        if not metric_layer['usage'] == 'metric_layer':
+        if metric_layer['usage'] == 'surface':
             return None
         analysis_param = analysis_params.get(metric_layer['input_ref'], None)
         if analysis_param is None:
@@ -265,6 +265,8 @@ def length(project_file: str, sample_frame_feature_id: int, event_id: int, metri
     total_length = 0
     metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
     for metric_layer in metric_layers:
+        if metric_layer.get('usage', None) == 'normalization':
+            continue
         for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
             if feature is None:
                 continue
@@ -300,6 +302,8 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
     total_area = 0
     metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
     for metric_layer in metric_layers:
+        if metric_layer.get('usage', None) == 'normalization':
+            continue
         for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
             if feature is None:
                 continue
@@ -326,48 +330,58 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
     return total_area
 
 
-def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: str, analysis_params: dict):
-    """Get the sinuosity of the features in the specified layers that intersect the mask feature.
-
-       CalculationID: 4
+def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
     """
-
-    # Note that centerlines are not associated with an event_id, so the event_id is not used in this calculation.
+    Calculate the sinuosity of all line features in the specified layer(s) that intersect the sample frame,
+    by unioning all segments before calculation.
+    """
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    metric_layer = metric_layers[0]  # Sinuosity only uses one layer
 
-    metric_layer = metric_params['dce_layers'][0]
-    layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
-    ds: ogr.DataSource = ogr.Open(project_file)
-    layer: ogr.Layer = ds.GetLayerByName(layer_name)
-    layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-    layer.SetSpatialFilter(sample_frame_geom)
-    feature: ogr.Feature = layer.GetNextFeature()
-    if feature is None:
-        raise MetricInputMissingError(f'No features found in {layer_name} that intersect the mask feature.')
-    geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+    # Collect all clipped line geometries
+    line_geoms = []
+    for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+        geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+        if not geom.IsValid():
+            geom = geom.MakeValid()
+        if geom.Intersects(sample_frame_geom):
+            clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+            if clipped_geom is None or clipped_geom.IsEmpty():
+                continue
+            # Only consider line geometries
+            if clipped_geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+                epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
+                utm_srs = osr.SpatialReference()
+                utm_srs.ImportFromEPSG(epsg)
+                clipped_geom.TransformTo(utm_srs)
+                line_geoms.append(clipped_geom)
 
-    clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
-    if clipped_geom is None or clipped_geom.IsEmpty():
-        raise MetricInputMissingError(f'No features found in {layer_name} that intersect the mask feature.')
-    # raise error if the geometry is multi-part
-    if clipped_geom.GetGeometryType() is ogr.wkbMultiLineString:
-        clipped_geom = None
-        layer = None
-        ds = None
-        raise MetricCalculationError(f'Geometry in {layer_name} is multi-part after clipping to the sample frame. Please make sure the line feature in {layer_name} does not meadnder outside of the sample frame.')
-    epsg = get_utm_zone_epsg(geom.Centroid().GetX())
-    utm_srs = osr.SpatialReference()
-    utm_srs.ImportFromEPSG(epsg)
-    clipped_geom.TransformTo(utm_srs)
-    length = clipped_geom.Length()
+    # Union all line geometries
+    if not line_geoms:
+        return 0.0
+    union_geom = line_geoms[0].Clone()
+    for g in line_geoms[1:]:
+        union_geom = union_geom.Union(g)
+
+    # If union results in MultiLineString, convert to LineString if possible
+    if union_geom.GetGeometryType() == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
+        union_geom = union_geom.GetGeometryRef(0).Clone()
+
+    # Calculate sinuosity
+    if union_geom.GetGeometryType() not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+        return 0.0
+    if union_geom.GetPointCount() < 2:
+        return 0.0
+
+    length = union_geom.Length()
+    start_pt = union_geom.GetPoint(0)
+    end_pt = union_geom.GetPoint(union_geom.GetPointCount() - 1)
     segment_geom = ogr.Geometry(ogr.wkbLineString)
-    start_pt = clipped_geom.GetPoint(0)
-    end_pt = clipped_geom.GetPoint(clipped_geom.GetPointCount() - 1)
     segment_geom.AddPoint(start_pt[0], start_pt[1])
     segment_geom.AddPoint(end_pt[0], end_pt[1])
     distance = segment_geom.Length()
     if distance == 0:
-        # If the distance is zero, return zero to avoid division by zero
         return 0.0
 
     return length / distance
@@ -379,35 +393,53 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
        CalculationID: 5
     """
 
-    # TODO this is not currentl used, but will need to be updated
-
-    surface:Raster = analysis_params[metric_params['surfaces']['surface_name']]
+    surface: Raster = None
+    for input_param in metric_params.get('inputs', []):
+        if input_param.get('usage', None) == 'surface':
+            surface = analysis_params.get(input_param.get('input_ref', None), None)
+            break
     raster_layer = os.path.join(os.path.dirname(project_file), surface.path)
     if not os.path.exists(raster_layer):
         raise Exception(f'Expected Raster layer {raster_layer} does not exist.')
 
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    line_geoms = []
+    for metric_layer in metric_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
+            geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+            if not geom.IsValid():
+                geom = geom.MakeValid()
+            if geom.Intersects(sample_frame_geom):
+                clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                if clipped_geom is None or clipped_geom.IsEmpty():
+                    continue
+                if clipped_geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+                    epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
+                    utm_srs = osr.SpatialReference()
+                    utm_srs.ImportFromEPSG(epsg)
+                    clipped_geom.TransformTo(utm_srs)
+                    line_geoms.append(clipped_geom)
+    if not line_geoms:
+        raise MetricInputMissingError('No line features found for gradient calculation.')
 
-    metric_layer = metric_params['layers'][0]
-    ds: ogr.DataSource = ogr.Open(project_file)
-    layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_name'])
-    ds: ogr.DataSource = ogr.Open(project_file)
-    layer: ogr.Layer = ds.GetLayerByName(layer_name)
-    layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-    layer.SetSpatialFilter(sample_frame_geom)
-    feature: ogr.Feature = layer.GetNextFeature()
-    if feature is None:
-        raise MetricInputMissingError(f'No features found in {layer_name} that intersect the mask feature.')
-    geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+    # Union all line geometries
+    union_geom = line_geoms[0].Clone()
+    for g in line_geoms[1:]:
+        union_geom = union_geom.Union(g)
+    if union_geom.GetGeometryType() == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
+        union_geom = union_geom.GetGeometryRef(0).Clone()
 
-    epsg = get_utm_zone_epsg(geom.Centroid().GetX())
-    utm_srs = osr.SpatialReference()
-    utm_srs.ImportFromEPSG(epsg)
+    if union_geom.GetGeometryType() not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+        raise MetricCalculationError('Unioned geometry is not a line.')
+    if union_geom.GetPointCount() < 2:
+        raise MetricCalculationError('Unioned geometry does not have enough points.')
 
-    clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
-    clipped_geom.TransformTo(utm_srs)
-    start_pt = clipped_geom.GetPoint(0)
-    end_pt = clipped_geom.GetPoint(clipped_geom.GetPointCount() - 1)
+    start_pt = union_geom.GetPoint(0)
+    end_pt = union_geom.GetPoint(union_geom.GetPointCount() - 1)
+    utm_srs = union_geom.GetSpatialReference()
     point_start = ogr.Geometry(ogr.wkbPoint)
     point_start.AssignSpatialReference(utm_srs)
     point_start.AddPoint(start_pt[0], start_pt[1])
@@ -421,7 +453,9 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
     stats_start = zonal_statistics(raster_layer, buffer_start)
     stats_end = zonal_statistics(raster_layer, buffer_end)
 
-    length = clipped_geom.Length()
+    length = union_geom.Length()
+    if length == 0:
+        raise MetricCalculationError('Unioned geometry has zero length.')
 
     return (stats_end['minimum'] - stats_start['minimum']) / length
 
