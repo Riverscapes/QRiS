@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [1.2.1.1] Dec 19 2025
+
+### Fixed
+- New Valley Bottoms and AOIs not showing up in dropdown menus #906
+- Metric definitions not updating properly #860
+- Metric Enhancements, including sinuosity, gradients, and Input Layers  #882 #898 #861
+- Make sure Zonal Statistics is plumbed correctly to all polygons in AOI or Riverscape or Sample Frame #902
+
+
 ## [1.2.1] Dec 8 2025
 
 ## Changed
