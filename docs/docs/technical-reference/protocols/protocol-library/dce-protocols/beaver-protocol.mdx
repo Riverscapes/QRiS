@@ -1,0 +1,231 @@
+---
+title: Beaver Protocol
+sidebar_position: 9
+description: A protocol for beaver activity, dam & complex surveys, translocations, and potential conflicts.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+The **Beaver Protocol** is an assessment of beaver activity, dam & complex surveys, beaver translocations, and potential conflicts. This protocol is intended to assist with LTPBR planning & monitoring to evaluate & assess potential restoration sites for beaver presence, to collect field data and compare with modelled (e.g., BRAT) outputs, or to monitor as-builts for active beaver activity & use of LTPBR structures. 
+
+## Protocol Summary 
+
+Attribute|Value
+---|---
+Name|Beaver Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/beaver_protocol.xml
+Citation|NA
+Authors|Zach Burgert
+
+## Layers & Metrics
+
+<Tabs>
+  <TabItem value="beaver activity" label="Beaver Activity">
+Type|Metrics|Description
+---|---|---
+Point|NA|*Observations of beaver activity such as dens, lodges, chewed trees, and food caches, etc.*
+  </TabItem>
+<TabItem value="dam survey" label="Dam Survey">
+Type|Metrics|Description
+---|---|---
+Point|`Dam Count`,`Dam Density`, `Active Dam Count`, `Active Dam Density`, `Inactive Dam Count`, `Inactive Dam Density`|*Beaver dam survey standardized for Anabranch Solutions including information on type, status, & maintainance*
+  </TabItem>
+  <TabItem value="complex survey" label="Complex Survey">
+Type|Metrics|Description
+---|---|---
+Point|NA|*Beaver complex survey standardized for Anabranch Solutions including information on count of primary dams, secondary dams, total dams, and uncertainty*
+  </TabItem>
+  <TabItem value="beaver translocations" label="Beaver Translocations">
+Type|Metrics|Description
+---|---|---
+Point|NA|*Beaver translocation survey standardized for Anabranch Solutions including information on type, # of kits released, # of sub-adults released, # of adults released, and total # of beaver released*
+  </TabItem>
+  <TabItem value="ltpbr structures" label="LTPBR Structures">
+Type|Metrics|Description
+---|---|---
+Point|NA|*LTPBR structure types defined in [Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health Version 2.0](https://zenodo.org/records/13769899) (from Weber et al. 2024).*
+  </TabItem>
+  <TabItem value="beaver conflict" label="Beaver Conflict">
+Type|Metrics|Description
+---|---|---
+Polygon|NA|*Assessment of previous, current, & future conflicts between beaver activity and infrastructure, landowners, agriculture, etc.*
+  </TabItem>
+    </Tabs>
+
+<details open>
+<summary>*How to Use This Protocol*</summary>
+
+This protocol uses multiple layers organized into groups to collect data related to beaver acitivity. Below is a breakdown of each layer and how it should be used within this protocol.
+
+- *Beaver Activity*: Collects information on type of beaver activity observed. 
+- *Dam Survey*: Collects information (type, status, maintenance) on beaver dams surveyed.
+- *Complex Survey*: Collects information (number of primary dams, secondary dams, total dams) on beaver complexes surveyed.
+- *Beaver Translocations*: Collects information related to beaver translocation sites (type of site, counts of beaver released).
+- *LTPBR Structures*: Identifies locations of previously built LTPBR structures. 
+- *Beaver Conflict*: Collects information on potential conflicts between beaver activity and anthropogenic features (infrastructure, landowners, agriculture, etc.).
+</details>
+
+### Video Demonstration
+
+### Layer Attributes
+
+<Tabs>
+  <TabItem value="beaver activity" label="Beaver Activity">
+    **Type**|**Description**
+---|---
+*Bank Den*|NA
+*Bank Lodge*|NA
+*Canal*|NA
+*Chew Stick*|NA
+*Clipped Vegetation*|NA
+*Felled Tree*|NA
+*Food Cache*|NA
+*Harvested Branches*|NA
+*Other*|NA
+*Pond Excavation*|NA
+*Pond Lodge*|NA
+*Scat*|NA
+*Scent Mound*|NA
+*Set of Tracks*|NA
+*Skid Trail*|NA
+*Slide*|NA
+    </TabItem>
+    <TabItem value="dam survey" label="Dam Survey">
+**Type**|**Description**
+---|---
+*Primary Beaver Dam*|Main dam that beaver use as residence and to cache food. These tend to be the largest dams & typically have a den or lodge assoicated with them. 
+*Secondary Beaver Dam*|Smaller, auxillary dams used to support the primary dam against flooding or to expand deep water habitat for protection & access to food sources.
+*Beaver Occupied Primary BDA*|Primary BDA built by construction crews that is now occupied by beaver.
+*Beaver Occupied Secondary BDA*|Secondary BDA built by construction crews that is now occupied by beaver.
+
+**Dam Status**|**Description**
+---|---
+*Intact*|Little evidence of breaching or erosion around the structure, flow is primarily spilling over and/or flowing through the structure and water surface gradients are near 0.
+*Breached*|Some evidence of breaching as vegetative material and/or post loss, and/or erosion of the banks or streambed. Flow is concentrated near the breach, but the structure is still impounding water and reducing the water surface gradient and velocity behind the dam.
+*Blown Out*|A large portion of the structure has been damaged and/or lost during high flows. Water surface gradient is consistent with the streambed, and velocities are also similar or greater than unimpounded channel sections.
+
+**Actively Maintained**|**Description**
+---|---
+*Yes*|Significant evidence that dam in currently being maintaned by beaver (e.g., fresh cuttings near dam, tracks or scat present, food cache observed, etc.). 
+*No*|Little to no evidence that dam is currently being maintained by beaver (e.g., vegetation growth on dam, older building material used, etc.).
+  </TabItem>
+  <TabItem value="complex survey" label="Complex Survey">
+  **Fields**|**Description**
+---|---
+*Number of Primary Dams*|Total count of primary dams within the beaver complex
+*Number of Secondary Dams*|Total count of secondary dams within the beaver complex
+*Number of Dams*|Total count of all dams within the beaver complex including primary and secondary dams
+*Uncertainity*|Numeric value represting the uncertainty of the surveyor in identifying all dams within the beaver complex
+  </TabItem>
+  <TabItem value="beaver translocations" label="Beaver Translocations">
+  **Fields**|**Description**
+---|---
+*Type*|Type of translocation site including capture site where beaver are trapped, holding site where beaver are held for release, or release site where beaver are released
+*Number of Kits*|Total number of beaver kits (juveniles) captured, held, or released at the translocation site
+*Number of Sub-Adults*|Total number of beaver sub-adults captured, held, or released at the translocation site
+*Number of Adults*|Total number of beaver adults captured, held, or released at the translocation site
+*Number of Beaver*|Total number of beaver (including kits, sub-adults, and adults) captured, held, or released at the translocation site
+  </TabItem>
+  <TabItem value="ltpbr structures" label="LTPBR Structures">
+Attribute|Structure Class|Description
+---|---|---
+ALS|Wood Accumulation|Assisted log structure being a placed woody debris accumulation that does not include posts.
+ALS - Bank Attached|Wood Accumulation|ALS built extending from the bank towards the channel.
+ALS - Bank Blaster|Wood Accumulation|An ALS oriented to enhance bank erosion.
+ALS - Channel Spanning|Wood Accumulation|ALS built across the entire channel from bank to bank.
+ALS - Rhino|Wood Accumulation|ALS built to the rhino structure design specification.
+BDA|Beaver Dam Analog|The general term describing a semi-permeable – channel-spanning structural element designed to mimic the form and function of a natural beaver dam.
+BDA Postless|Beaver Dam Analog|A BDA constructed without the use of posts driven into the streambed that would be used to add stability to vegetative fill material.
+Bag Plugs|Vegetation Production|Structural treatment that uses bags made up of organic material, usually burlap, that can be filled with sediment and placed. Bag plug structures often mimic vegetative mases that might sluff into the channel.
+Fell Tree|Wood Accumulation|Strategic felling of a tree within a riverscape.
+Floodplain BDA|Beaver Dam Analog|A BDA structure constructed on floodplain surfaces, i.e., not build in an existing active channel anabranch.
+Floodplain LWD|Wood Accumulation|Placement of any large woody debris on the floodplain.
+Full Tree|Wood Accumulation|Placement of an entire tree whether fell, grip hoisted or positioned using another means.
+Grip Hoist Tree|Wood Accumulation|A tree that has fallen or that could be fell and then repositioned as a structural element using a grip-hoist.
+Headcut Treatment|Other|Any structural treatment intended to arrest headcut progression.
+Leaky Dam|Wood Accumulation|A channel spanning accumulation of smaller woody material with a high degree of porosity.
+One Rock Dam|Zeedyk Structure|A grade control structure build with a single layer of rock designed to stabilize the bed of channel by increasing roughness.
+PALS|Wood Accumulation|A post – assisted log structure, general term for a structural treatment constructed of woody debris secured in an accumulation by driving posts into the stream channel or floodplain.
+PALS - Bank Attached|Wood Accumulation|PALS that are attached to the margin (bank) of the active channel. Generally intended to direct flow away from the attached bank and potentially encouraging bar formation and lateral erosion and/or migration of the active channel.
+PALS - Bank Blaster|Wood Accumulation|PALS that are oriented to direct flow into a bank to enhance rates and magnitudes of bank erosion.
+PALS - Channel Spanning|Wood Accumulation|PALS build with sufficient material to span an active channel. Generally intended to enhance channel aggradation rates and/or encourage floodplain connectivity.
+PALS - Constriction Jet|Wood Accumulation|PALS that are constructed to direct flow into another non-erosive surface (boulder or armored bank) to enhance rates of bank or bed erosion.
+PALS - Left Bank Attached|Wood Accumulation|A left bank attached PALS.
+PALS - Mid Channel|Wood Accumulation|PALS built mid-channel, generally intended to enhance topographic complexity and bar formation.
+PALS - Rhino|Wood Accumulation|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+PALS - Right Bank Attached|Wood Accumulation|Right bank attached PALS.
+Post and Brush Plug|Vegetation Production|Densely packing small vegetation around rows of posts driven into the channel to form a channel spanning dam-like structure.
+Postline Wicker Weave|Beaver Dam Analog|A variant of a BDA in which woody branches are woven between posts in a fashion similar to wicker furniture construction. Produces a flat dam structure with a thin longitudinal profile.
+Primary BDA|Beaver Dam Analog|A large BDA that is generally designed and placed to have the greatest hydrologic and geomorphic impact. ‘Primary’ comes from beaver complexes that commonly contain one or more large pond-forming dams that are surrounded by smaller secondary dams.
+Rhino|Wood Accumulation|The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+Secondary BDA|Beaver Dam Analog|In a complex of BDA structures, secondary BDAs are often constructed downstream a Primary BDA to dispute gradient or within non-primary or overflow channels.
+Sedge Plugs|Vegetation Production|Cutting densely packed bricks of earth that are held together by sedges into the active channel spanning structure.
+Spreaders|Zeedyk Structure|A rock-lined depositional area designed to disperse channelized flow and restore sheet flow.
+Strategic Felling|Wood Accumulation|Felling of trees into the channel or floodplain.
+Tight PALS (BDA without sod)|Wood Accumulation|A channel spanning PALS built of small woody material. Similar but more porous than a typical BDA.
+Tree Dam|Wood Accumulation|A fell tree intended to act as a channel spanning dam, may have additional vegetative material, sediment, or sod additions to further decrease porosity.
+Tree Plug|Wood Accumulation|Using a single large fell tree to create a channel spanning dam-like structure.
+Vanes|Zeedyk Structure|An in-channel structure usually constructed of posts and designed to induce meandering and point formation.
+Wicker Weirs|Zeedyk Structure|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+Wood Jam|Wood Accumulation|Analogous to ALS being a placed accumulation of woody material that does not include driven posts.
+Zuni Bowl|Zeedyk Structure|An in-channel headcut control structure composed of rock-lined step falls and plunge pools intended to arrest the progression of headcuts.
+  </TabItem>
+  <TabItem value="beaver conflict" label="Beaver Conflict">
+**Fields**|**Description**
+---|---
+*Risk Type*|Type of anthropogenic risk associated with nearby beaver activity including infrastructure, landowner/property, agriculture, or other (value can also be defined by the user).
+*Status*|Determines if risk is historic, current, or will occur in the future. User can select multiple statuses if applicable.
+  </TabItem>
+    </Tabs>
+    
+### Metric Attributes
+
+  <Tabs>
+  <TabItem value="dam count" label="Dam Count" default>
+Metric|Description|Calculation
+---|---|---|
+*Dam Count*|Sum of all beaver dams surveyed in sample frame|`Sum(Beaver Dams)`
+  </TabItem>
+  <TabItem value="dam density" label="Dam Density" default>
+Metric|Description|Calculation
+---|---|---|
+*Dam Density*|Density of beaver dams surveyed in sample frame|`Sum(Beaver Dams)/Valley Bottom Centerline Length`
+  </TabItem>
+  <TabItem value="active dam count" label="Active Dam Count" default>
+Metric|Description|Calculation
+---|---|---|
+*Active Dam Count*|Sum of all beaver dams actively maintained in sample frame|`Sum(Maintained Beaver Dams)`
+  </TabItem>
+  <TabItem value="active dam density" label="Active Dam Density" default>
+Metric|Description|Calculation
+---|---|---|
+*Active Dam Density*|Density of beaver dams actively maintained in sample frame|`Sum(Maintained Beaver Dams)/Valley Bottom Centerline Length`
+  </TabItem>
+    <TabItem value="inactive dam count" label="Inactive Dam Count" default>
+Metric|Description|Calculation
+---|---|---|
+*Inactive Dam Count*|Sum of all beaver dams not actively maintained in sample frame|`Sum(Non-Maintained Beaver Dams)`
+  </TabItem>
+  <TabItem value="inactive dam density" label="Inactive Dam Density" default>
+Metric|Description|Calculation
+---|---|---|
+*Inactive Dam Density*|Density of beaver dams not actively maintained in sample frame|`Sum(Non-Maintained Beaver Dams)/Valley Bottom Centerline Length`
+  </TabItem>
+    </Tabs>
+
+## Resources 
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Weber et al. 2024",
+        description: "Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://zenodo.org/records/13769899",
+       },
+    ]}
+    />
