@@ -1,14 +1,12 @@
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from qgis.PyQt import QtCore, QtWidgets
 from qgis.core import QgsVectorLayer, QgsFeature, QgsGeometry
 
 from ..model.project import Project
 from ..model.profile import Profile, insert_profile
 
 from .widgets.metadata import MetadataWidget
-
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -105,7 +103,7 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         self.tabMetrics = QtWidgets.QWidget()
 
         self.tabs.addTab(self.tabDesc, 'Description')
-        self.tabs.addTab(self.tabMetrics, 'Metrics')
+        self.tabs.addTab(self.tabMetrics, 'Statistics')
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.tabDesc.layout = QtWidgets.QVBoxLayout()
@@ -120,6 +118,8 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         self.tableMetrics = QtWidgets.QTableWidget()
         self.tableMetrics.setColumnCount(2)
         self.tableMetrics.horizontalHeader().hide()
+        self.tableMetrics.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.tableMetrics.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.tableMetrics.verticalHeader().hide()
         self.tabMetrics.layout.addWidget(self.tableMetrics)
 
@@ -132,4 +132,4 @@ class FrmSaveCenterline(QtWidgets.QDialog):
         # self.chkAddToMap.setChecked(True)
         # self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'profiles#centerline-tool'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'inputs/valley-bottoms#centerline-tool'))
