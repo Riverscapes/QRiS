@@ -249,7 +249,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
-        self.gridButtons.addWidget(add_help_button(self, 'cross-sections'), 0, 0, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, 'inputs/cross-sections'), 0, 0, 1, 1)
 
         self.cmdGenerateXS = QtWidgets.QPushButton('Generate Cross Sections')
         self.cmdGenerateXS.setToolTip('Generate a preview of the cross sections')

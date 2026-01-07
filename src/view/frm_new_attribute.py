@@ -80,7 +80,7 @@ class FrmNewAttribute(QDialog):
         self.lstAttributes.setSelectionMode(QListWidget.MultiSelection)
         self.grid.addWidget(self.lstAttributes, 2, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'sample-frames'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'inputs/sample-frames'))
 
     def validate_name(self, name):
         
