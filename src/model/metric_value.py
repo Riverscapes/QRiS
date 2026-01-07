@@ -6,7 +6,7 @@ from .metric import Metric
 from .event import Event
 from .analysis import Analysis
 from .db_item import dict_factory
-from ..lib.unit_conversion import convert_units
+from ..lib.unit_conversion import convert_units, convert_count_per_length, convert_count_per_area
 
 class MetricValue():
 
@@ -24,7 +24,15 @@ class MetricValue():
     def current_value(self, display_unit: str = None):
         value = self.manual_value if self.is_manual else self.automated_value
         if display_unit is not None:
-            value = convert_units(value, self.metric.base_unit, display_unit, invert=self.metric.normalized)
+            if self.metric.normalization_unit_type is not None:
+                if self.metric.normalization_unit_type == 'distance':
+                    value = convert_count_per_length(value, self.metric.base_unit, display_unit)
+                elif self.metric.normalization_unit_type == 'area':
+                    value = convert_count_per_area(value, self.metric.base_unit, display_unit)
+                else:
+                    value = convert_units(value, self.metric.base_unit, display_unit, invert=self.metric.normalized)
+            else:
+                value = convert_units(value, self.metric.base_unit, display_unit, invert=self.metric.normalized)
         return value
     
     def current_value_as_string(self, display_unit: str = None):
