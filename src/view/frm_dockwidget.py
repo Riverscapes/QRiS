@@ -317,6 +317,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(model_data, Event):
                 return
             self.add_db_item_to_map(model_item, model_data)
+        if isinstance(model_data, ScratchVector) or isinstance(model_data, Raster):
+            self.add_db_item_to_map(model_item, model_data)
         if isinstance(model_data, Analysis):
             self.open_analysis(model_data)
         if isinstance(model_data, str):
