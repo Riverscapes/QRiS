@@ -1,6 +1,6 @@
 import json
 
-from PyQt5 import QtCore, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 from qgis.gui import QgisInterface
 from qgis.core import QgsApplication, QgsVectorLayer
 from qgis.utils import Qgis, iface
@@ -209,6 +209,7 @@ class FrmProfile(QtWidgets.QDialog):
         self.tabProperties.setLayout(self.grid)
 
         # Metadata Tab
+        self.metadata_widget.add_attribute_tab(self.tabs, "Statistics")
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
