@@ -160,7 +160,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
-        self.gridButtons.addWidget(add_help_button(self, 'raster-slider'), 0, 0, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, 'inputs/surfaces/#raster-slider-tool'), 0, 0, 1, 1)
 
         self.gridButtons.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
 

@@ -216,4 +216,4 @@ class FrmProfile(QtWidgets.QDialog):
         self.chkAddToMap.setChecked(True)
         self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'profiles'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'inputs/profiles'))

@@ -294,7 +294,7 @@ class FrmSampleFrame(QDialog):
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
-        self.buttonBox = add_standard_form_buttons(self, 'sample-frames')
+        self.buttonBox = add_standard_form_buttons(self, 'inputs/sample-frames')
         self.vert.addLayout(self.buttonBox)
 
 
