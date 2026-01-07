@@ -1,5 +1,24 @@
 # QRiS Plugin
 
+## [1.2.1.2] Jan 7 2026
+
+### Fixed
+- Bug when updating metric with no description.
+- Centerline tool bug when selecting polygon on map
+- Centerline Statistics Display Issues #851
+- Metric Analysis Densities Not Exporting Correctly #907
+- Fix broken doc links
+
+### Changed
+- Centerline symbology reference #832
+- Enhance labels for Zonal Statistics #913
+
+### Added
+- Double click Context Layers to Add to Map in QRiS Tree #914
+
+### Removed
+
+
 ## [1.2.1.1] Dec 19 2025
 
 ### Fixed
