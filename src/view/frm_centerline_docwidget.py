@@ -201,12 +201,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     @pyqtSlot()
     def capture_polygon(self):
         # Defensive: check if the layer is still valid
-        if not self.polygon_layer or not QgsProject.instance().mapLayer(self.polygon_layer.id()):
+        polygon_layer = self.map_manager.get_db_item_layer(self.project.map_guid, self.polygon_source, None).layer()
+        if not polygon_layer or not QgsProject.instance().mapLayer(polygon_layer.id()):
             self.geom_polygon = None
             self.txtPolygon.setText('Polygon layer is missing or has been deleted')
             return
 
-        features = self.polygon_layer.selectedFeatures()
+        features = polygon_layer.selectedFeatures()
 
         if len(features) == 1:
             self.geom_polygon = features[0].geometry()
@@ -432,7 +433,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
-        self.gridButtons.addWidget(add_help_button(self, 'profiles#centerline-tool'), 0, 0, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, 'inputs/valley-bottoms#centerline-tool'), 0, 0, 1, 1)
 
         # include a spacer to push the buttons to the right
         self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
