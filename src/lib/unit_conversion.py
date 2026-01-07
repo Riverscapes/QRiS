@@ -147,3 +147,30 @@ def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = Fal
         conversion_factor = 1 / conversion_factor
 
     return value * conversion_factor
+
+# --- Compound unit conversion helpers ---
+def convert_count_per_length(value, from_length_unit, to_length_unit):
+    """
+    Converts a metric in count/from_length_unit to count/to_length_unit.
+    Example: count/meter to count/mile.
+    """
+    if value is None or from_length_unit == to_length_unit:
+        return value
+    from_type = distance_units[from_length_unit]
+    to_type = distance_units[to_length_unit]
+    # factor = how many from_length_unit in one to_length_unit
+    factor = QgsUnitTypes.fromUnitToUnitFactor(from_type, to_type)
+    return value / factor
+
+def convert_count_per_area(value, from_area_unit, to_area_unit):
+    """
+    Converts a metric in count/from_area_unit to count/to_area_unit.
+    Example: count/m² to count/acre.
+    """
+    if value is None or from_area_unit == to_area_unit:
+        return value
+    from_type = area_units[from_area_unit]
+    to_type = area_units[to_area_unit]
+    # factor = how many from_area_unit in one to_area_unit
+    factor = QgsUnitTypes.fromUnitToUnitFactor(from_type, to_type)
+    return value / factor

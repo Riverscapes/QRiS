@@ -24,7 +24,7 @@
 
 import os
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
 from qgis.gui import QgisInterface
 

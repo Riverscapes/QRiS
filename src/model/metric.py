@@ -28,10 +28,20 @@ class Metric(DBItem):
         self.unit_type = analysis_metric_unit_type.get(self.metric_function, None)
         self.base_unit = default_units.get(self.unit_type, None)
         self.normalized = True if any(metric_layer.get('usage', None) == 'normalization' for metric_layer in metric_params.get('dce_layers', []) + metric_params.get('inputs', [])) else False
+        self.normalization_unit_type = None
         if self.normalized:
             self.base_unit = 'meters'
             if self.unit_type == 'distance':
                 self.unit_type = 'ratio'
+            elif self.unit_type == 'count':
+                # we need to determine if its count/length or count/area. currently if the input is centerline, we assume length, otherwise area
+                normalization_layers = [layer for layer in metric_params.get('dce_layers', []) + metric_params.get('inputs', []) if layer.get('usage', None) == 'normalization']
+                if len(normalization_layers) > 0:
+                    normalization_layer = normalization_layers[0]
+                    if normalization_layer.get('input_ref', None) == 'centerline':
+                        self.normalization_unit_type = 'distance'
+                    else:
+                        self.normalization_unit_type = 'area'
 
     def set_metadata(self, metadata):
         super().set_metadata(metadata)
