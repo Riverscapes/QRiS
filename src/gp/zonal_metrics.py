@@ -141,9 +141,9 @@ class ZonalMetrics:
                     polygon_metrics['count'] += 1
 
                     if inter.geom_type == 'LineString' or inter.geom_type == 'MultiLineString':
-                        polygon_metrics['length'] = inter.length if 'length' not in polygon_metrics else inter.length + polygon_metrics['length']
+                        polygon_metrics['length (m)'] = inter.length if 'length (m)' not in polygon_metrics else inter.length + polygon_metrics['length (m)']
                     elif inter.geom_type == 'Polygon' or inter.geom_type == 'MultiPolygon':
-                        polygon_metrics['area'] = inter.area if 'area' not in polygon_metrics else inter.area + polygon_metrics['area']
+                        polygon_metrics['area (m²)'] = inter.area if 'area (m²)' not in polygon_metrics else inter.area + polygon_metrics['area (m²)']
 
             metrics[polygon_id] = polygon_metrics
 
