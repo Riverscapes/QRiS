@@ -6,19 +6,21 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 class MetadataWidget(QtWidgets.QWidget):
 
     def __init__(self, parent: QtWidgets.QDialog, json_meta: str = None, new_keys: list = None):
-
         super().__init__(parent)
         self.json_meta = None
         self.new_keys = new_keys
         self.metadata = dict()
         self.system_metadata = dict()
-        self.attribute_metadat = dict()
+        self.attribute_metadata = dict()
         self.table: QtWidgets.QTableWidget = None
+        self._attribute_table: QtWidgets.QTableWidget = None
 
         self.create_table_ui()
 
         if json_meta is not None and json_meta != '' and json_meta != 'null':
             self.load_json(json_meta)
+
+
 
     def load_json(self, json_meta: str):
 
@@ -75,16 +77,15 @@ class MetadataWidget(QtWidgets.QWidget):
         self.metadata['metadata'] = out_metadata
 
     def create_table_ui(self):
-
         self.horiz = QtWidgets.QHBoxLayout()
         self.setLayout(self.horiz)
 
+        # Main metadata table
         self.table = QtWidgets.QTableWidget()
         self.table.setColumnCount(2)
         self.table.setRowCount(0)
         self.table.setHorizontalHeaderLabels(['Key', 'Value'])
-        # self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)  # First column
-        self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)  # Second column
+        self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked | QtWidgets.QAbstractItemView.SelectedClicked | QtWidgets.QAbstractItemView.EditKeyPressed)
@@ -107,22 +108,27 @@ class MetadataWidget(QtWidgets.QWidget):
         self.chkViewSystem.setToolTip('Show or hide read-only QRiS system metadata')
         self.chkViewSystem.stateChanged.connect(self.toggle_system_metadata)
 
-        # add buttons to layout on left side, then table on right side
+        # add buttons to layout on left side, then tables on right side
         self.vert = QtWidgets.QVBoxLayout()
         self.vert.addWidget(self.cmdAdd)
         self.vert.addWidget(self.cmdDelete)
         self.vert.addStretch()
 
         self.horiz.addLayout(self.vert)
-        
-        self.vert_table = QtWidgets.QVBoxLayout()  
+
+        self.vert_table = QtWidgets.QVBoxLayout()
         self.vert_table.addWidget(self.table)
         self.vert_table.addWidget(self.chkViewSystem)
+
 
         self.horiz.addLayout(self.vert_table)
 
     def load_table(self):
+        # Clear main table
+        self.table.setRowCount(0)
+        self._attribute_table = None
 
+        # Main metadata
         if self.metadata is not None:
             if 'metadata' in self.metadata:
                 for key, value in self.metadata['metadata'].items():
@@ -141,20 +147,55 @@ class MetadataWidget(QtWidgets.QWidget):
             for key, value in self.metadata['system'].items():
                 self.table.insertRow(self.table.rowCount())
                 key_item = QtWidgets.QTableWidgetItem(key)
-                # set the 'color: #666;' of the text of this cell to indicate it's read-only
                 key_item.setForeground(QtGui.QBrush(QtGui.QColor(102, 102, 102)))
                 key_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 self.table.setItem(self.table.rowCount() - 1, 0, key_item)
-
-                # set key as read-only
                 self.table.item(self.table.rowCount() - 1, 0).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 label_widget = MetadataValueLabel(str(value), editable=False, is_system=True)
                 self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
+
+        # Prepare attribute metadata table if attributes exist
+        if self.metadata is not None and 'attributes' in self.metadata and self.metadata['attributes']:
+            self._attribute_table = QtWidgets.QTableWidget()
+            self._attribute_table.setColumnCount(2)
+            self._attribute_table.setRowCount(0)
+            self._attribute_table.setHorizontalHeaderLabels(['Attribute', 'Value'])
+            self._attribute_table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+            self._attribute_table.verticalHeader().setVisible(False)
+            self._attribute_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+            self._attribute_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+            self._attribute_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            self._attribute_table.setAlternatingRowColors(True)
+            self._attribute_table.setSortingEnabled(True)
+            for key, value in self.metadata['attributes'].items():
+                self._attribute_table.insertRow(self._attribute_table.rowCount())
+                self._attribute_table.setItem(self._attribute_table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
+                self._attribute_table.setItem(self._attribute_table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
 
         self.table.cellClicked.connect(self.toggle_delete_button)
         initial_width = calculate_max_column_width(self.table)
         self.table.setColumnWidth(0, initial_width)
         self.toggle_system_metadata()
+
+    def get_attribute_table_widget(self):
+        """
+        Returns a QTableWidget displaying attribute metadata, or None if no attribute metadata exists.
+        """
+        return self._attribute_table
+    
+    def add_attribute_tab(self, tab_widget: QtWidgets.QTabWidget, tab_name: str = "Attributes") -> bool:
+        """
+        Adds the attribute metadata table as a new tab to the provided QTabWidget if attribute metadata exists.
+        Returns True if a tab was added, otherwise False.
+        """
+        attribute_table = self.get_attribute_table_widget()
+        if attribute_table is not None:
+            attr_tab = QtWidgets.QWidget()
+            attr_layout = QtWidgets.QVBoxLayout(attr_tab)
+            attr_layout.addWidget(attribute_table)
+            tab_widget.addTab(attr_tab, tab_name)
+            return True
+        return False
 
     def add_row(self):
 
