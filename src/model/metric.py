@@ -161,7 +161,8 @@ def insert_metric(db_path: str, name: str, machine_name: str, protocol_machine_n
 def update_metric(db_path: str, id: int, name: str, machine_name: str, protocol_machine_code: str, description: str, metric_level: str, metric_function, metric_params, default_unit, definition_url, metadata=None, version=1) -> Metric:
     
         metric = None
-        description = description if len(description) > 0 else None
+        if description is not None:
+            description = description if len(description) > 0 else None
         metadata_str = json.dumps(metadata) if metadata is not None else None
         metric_params_str = json.dumps(metric_params) if metric_params is not None else None
     
