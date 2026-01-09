@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [1.2.2] Jun 10 2026
+
+### Fixed
+- Missing profile symbology #832
+- Bug with show QRiS panel menu reseting open project  #891
+- Re-enable undocking/resizing of the Analysis dockable panel #918
+- Minor fix to area_proportion and sinuosity calculations
+
+
 ## [1.2.1.2] Jan 7 2026
 
 ### Fixed
@@ -15,8 +24,6 @@
 
 ### Added
 - Double click Context Layers to Add to Map in QRiS Tree #914
-
-### Removed
 
 
 ## [1.2.1.1] Dec 19 2025
