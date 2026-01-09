@@ -468,6 +468,10 @@ class QRiSToolbar:
             self.open_qris_project(dialog_return[0])
 
     def open_qris_project(self, db_path: str):
+        
+        if self.dockwidget is not None:
+             self.close_project()
+
         # Disable menu and button
         self.qris_menu.setEnabled(False)
         self.qris_button.setEnabled(False)
