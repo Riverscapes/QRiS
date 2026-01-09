@@ -121,7 +121,7 @@ class QRisMapManager(RiverscapesMapManager):
             symbology = 'centerlines_saved'
             layer_name = 'profile_centerlines'
         else:
-            symbology = 'profile'
+            symbology = 'profiles'
             layer_name = 'profile_features'
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
