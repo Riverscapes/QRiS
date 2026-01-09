@@ -481,6 +481,10 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
                     geom = None
                     clipped_geom = None
                     continue
+                epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
+                utm_srs = osr.SpatialReference()
+                utm_srs.ImportFromEPSG(epsg)
+                clipped_geom.TransformTo(utm_srs)
                 numerator_area += clipped_geom.GetArea()
             geom = None
             clipped_geom = None
@@ -490,15 +494,30 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
 
     if len(denominator_layers) == 0:
         # use the sample frame area as the denominator
-        denominator_area = sample_frame_geom.GetArea()
+        epsg = get_utm_zone_epsg(sample_frame_geom.Centroid().GetX())
+        utm_srs = osr.SpatialReference()
+        utm_srs.ImportFromEPSG(epsg)
+        proj_sample_frame_geom = sample_frame_geom.Clone()
+        proj_sample_frame_geom.TransformTo(utm_srs)
+        denominator_area = proj_sample_frame_geom.GetArea()
     else:
         for metric_layer in denominator_layers:
             for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
                 if feature is None:
                     continue
                 geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+                if not geom.IsValid():
+                    geom = geom.MakeValid() # Added MakeValid for consistency
                 if geom.Intersects(sample_frame_geom):
                     clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
+                    if clipped_geom is None or clipped_geom.IsEmpty():
+                         geom = None
+                         clipped_geom = None
+                         continue
+                    epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
+                    utm_srs = osr.SpatialReference()
+                    utm_srs.ImportFromEPSG(epsg)
+                    clipped_geom.TransformTo(utm_srs)
                     denominator_area += clipped_geom.GetArea()
                 geom = None
                 clipped_geom = None
