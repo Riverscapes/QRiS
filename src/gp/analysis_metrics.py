@@ -341,16 +341,21 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
 
     # Collect all clipped line geometries
     line_geoms = []
+    
     for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+        if feature is None:
+             continue
         geom: ogr.Geometry = feature.GetGeometryRef().Clone()
         if not geom.IsValid():
             geom = geom.MakeValid()
+        
         if geom.Intersects(sample_frame_geom):
             clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
             if clipped_geom is None or clipped_geom.IsEmpty():
                 continue
+            
             # Only consider line geometries
-            if clipped_geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+            if ogr.GT_Flatten(clipped_geom.GetGeometryType()) in [ogr.wkbLineString, ogr.wkbMultiLineString]:
                 epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
                 utm_srs = osr.SpatialReference()
                 utm_srs.ImportFromEPSG(epsg)
@@ -365,12 +370,19 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
         union_geom = union_geom.Union(g)
 
     # If union results in MultiLineString, convert to LineString if possible
-    if union_geom.GetGeometryType() == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
+    if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
         union_geom = union_geom.GetGeometryRef(0).Clone()
 
     # Calculate sinuosity
-    if union_geom.GetGeometryType() not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+    g_type_flat = ogr.GT_Flatten(union_geom.GetGeometryType())
+    if g_type_flat not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
         return 0.0
+    
+    # Handle MultiLineString specifically for points extraction
+    if g_type_flat == ogr.wkbMultiLineString:
+        # Check if we can just take start of first and end of last?
+        pass
+
     if union_geom.GetPointCount() < 2:
         return 0.0
 
@@ -465,7 +477,7 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
 
     metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
 
-    numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator').lower() == 'numerator']
+    numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator').lower() in ['numerator', 'input']]
     numerator_area = 0.0
         
     for metric_layer in numerator_layers:
