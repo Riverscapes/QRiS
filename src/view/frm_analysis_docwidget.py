@@ -63,12 +63,13 @@ column = {
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
+    closing = QtCore.pyqtSignal()
+
     def __init__(self, parent, iface: QgisInterface):
 
         super(FrmAnalysisDocWidget, self).__init__(parent)
         self.iface = iface
-        self.setAttribute(QtCore.Qt.WA_QuitOnClose)
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable)  # <--- Add this line
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable | QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
         # Store the connections so they can be disconnected when the form is closed
         self.connections = {}
         self.setupUi()
@@ -334,14 +335,16 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def resizeEvent(self, event):
         try:
             if hasattr(self, "table") and isinstance(self.table, QtWidgets.QTableWidget):
-                if self.table.columnWidth(0) > self.table.width():
-                    self.table.setColumnWidth(0, int(self.table.width() * 0.8))
+                # Dynamically size the Metric column (index 1) to 80% of width
+                if self.table.columnWidth(1) != int(self.table.width() * 0.8):
+                    self.table.setColumnWidth(1, int(self.table.width() * 0.8))
         except RuntimeError:
             # This can happen if the widget has been deleted during undock
             pass
         super().resizeEvent(event)
 
     def closeEvent(self, event):
+        self.closing.emit()
         for signal in list(self.connections.keys()):
             signal.disconnect(self.connections.pop(signal))
         QtWidgets.QDockWidget.closeEvent(self, event)
