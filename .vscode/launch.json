@@ -24,12 +24,23 @@
             "console": "integratedTerminal",
         },
         {
+            "name": "🧪 Test Analysis Metrics",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/test_analysis_metrics.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/..;${env:PYTHONPATH}"
+            }
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
-        },
+        }
     ]
 }
