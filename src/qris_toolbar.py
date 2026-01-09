@@ -344,9 +344,6 @@ class QRiSToolbar:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-        if self.dockwidget is not None and self.dockwidget.qris_project is not None:
-            self.dockwidget.destroy_docwidget()
-
         # Load a version of the QRave code we can use for cross-plugin integration
         if self.toolbar is not None and isinstance(self.toolbar, QtWidgets.QToolBar):
             try:
@@ -376,6 +373,11 @@ class QRiSToolbar:
             self.iface.addDockWidget(dock_area, self.dockwidget)
             self.dockwidget.qrave = self.qrave
             self.dockwidget.add_basemap_nodes()
+        else:
+            if self.dockwidget.qrave is None:
+                self.dockwidget.qrave = self.qrave
+            if self.dockwidget.qris_project is None:
+                self.dockwidget.add_basemap_nodes()
 
         self.dockwidget.show()
 
