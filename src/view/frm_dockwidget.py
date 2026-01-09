@@ -974,7 +974,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.analysis_doc_widget = FrmAnalysisDocWidget(self, self.iface)
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
-            self.analysis_doc_widget.visibilityChanged.connect(self.destroy_analysis_doc_widget)
+            self.analysis_doc_widget.closing.connect(self.destroy_analysis_doc_widget)
         else:
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.analysis_doc_widget.show()
