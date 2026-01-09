@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic'
 const config: Config = {
   title: 'QRiS', // Site title displayed in the browser tab
   tagline: 'Riverscapes Studio for QGIS', // Short description shown in meta tags
-  favicon: '/images/icons/QRiS.svg', // Path to site favicon
+  favicon: 'https://cdn.riverscapes.net/icons/products/qris/qris.svg', // Path to site favicon
 
   future: {
     v4: true, // Enables compatibility with upcoming Docusaurus v4 features
@@ -87,7 +87,7 @@ const config: Config = {
       title: 'Riverscapes Studio (QRiS)',
       logo: {
         alt: 'QRiS Logo',
-        src: '/images/icons/QRiS.svg',
+        src: 'https://cdn.riverscapes.net/icons/products/qris/qris.svg',
       },
       items: [
         //   {
