@@ -49,7 +49,7 @@ from .frm_calculate_all_metrics import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_analysis_units import FrmAnalysisUnits
-from .frm_analysis_explorer import FrmAnalysisExplorer
+from .frm_analysis_explorer2 import FrmAnalysisExplorer
 
 column = {
     'edit': 0,
@@ -60,6 +60,7 @@ column = {
     'status': 5,
     'warnings': 6
 }
+
 
 class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
@@ -89,7 +90,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.segments_model = DBItemModel(frame_ids)
         self.cboSampleFrame.setModel(self.segments_model)
 
-        # Events 
+        # Events
         self.events_model = DBItemModel({event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID})
         self.cboEvent.setModel(self.events_model)
 
@@ -111,12 +112,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         for row in range(len(analysis_metrics)):
             analysis_metric: AnalysisMetric = analysis_metrics[row]
             metric: Metric = analysis_metric.metric
-            
+
             edit_icon = QtGui.QIcon(':/plugins/qris_toolbar/options')
             item = QtWidgets.QTableWidgetItem()
             item.setIcon(edit_icon)
             self.table.setItem(row, column['edit'], item)
-        
+
             label_metric = QtWidgets.QTableWidgetItem()
             label_metric.setText(metric.name)
             self.table.setItem(row, column['metric'], label_metric)
@@ -126,10 +127,10 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             display_unit = short_unit_name(self.analysis.units.get(metric.unit_type, None))
             if metric.normalized:
                 if display_unit != 'ratio':
-                    normalization_unit = self.analysis.units['distance'] # TODO only normaization by distance is supported, need to add support for other Normalization types
+                    normalization_unit = self.analysis.units['distance']  # TODO only normaization by distance is supported, need to add support for other Normalization types
                     display_unit = f'{display_unit}/{short_unit_name(normalization_unit)}'
             label_units.setText(display_unit)
-            self.table.setItem(row, column['units'], label_units)           
+            self.table.setItem(row, column['units'], label_units)
 
             label_value = QtWidgets.QTableWidgetItem()
             self.table.setItem(row, column['value'], label_value)
@@ -144,7 +145,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.connections[self.table.itemClicked] = self.table.itemClicked.connect(lambda item: self.edit_metric_value(item) if item.column() == column['edit'] else None)
         self.connections[self.table.doubleClicked] = self.table.doubleClicked.connect(self.edit_metric_value)
         self.table.resizeColumnToContents(1)
-        
+
         self.load_table_values()
 
     def load_table_values(self):
@@ -250,7 +251,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             if dem is not None and dem in self.qris_project.rasters:
                 analysis_params['dem'] = self.qris_project.rasters[dem]
             valley_bottom = self.analysis.metadata.get('valley_bottom', None)
-            if valley_bottom is not None and valley_bottom in self.qris_project.valley_bottoms: 
+            if valley_bottom is not None and valley_bottom in self.qris_project.valley_bottoms:
                 analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[valley_bottom]
 
             for sample_frame_feature in sample_frame_features:
@@ -450,7 +451,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.table.setHorizontalHeaderLabels(['', 'Metric', 'Units', 'Value', 'Uncertainty', 'Status', ''])
-        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed) 
+        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
         self.table.horizontalHeader().setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)
         self.table.setColumnWidth(column['edit'], 16)
         self.table.setColumnWidth(column['metric'], int(self.table.width() * 0.8))
