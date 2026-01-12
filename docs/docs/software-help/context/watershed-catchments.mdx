@@ -1,52 +1,52 @@
 ---
-title: Watershed Catchments
+title: Catchment Delineations
 banner: true
-description: Delineating watershed catchments using StreamStats 
+description: Delineating catchments using StreamStats 
 ---
 
-The watershed catchment tool takes a point that you click on the map and delineates the watershed catchment upstream of that point. The tool uses the [StreamStats](https://streamstats.usgs.gov/ss/) service from the USGS to perform the delineation.
+The Catchment Delineation tool takes a point that you click on the map and delineates the catchment upstream of that point. The tool uses the [StreamStats](https://streamstats.usgs.gov/ss/) service from the USGS to perform the delineation.
 
 :::note
-This feature is only available in the continental United States.
+This feature is only available in the continental United States. See [here](https://www.usgs.gov/media/images/streamstats-status-map) for States covered and their status. Note, Florida, Texas and Nebraska are not currently operational.
 :::
 
-![watershed catchment tool](/images/software-help/watershed-catchments/watershed-catchment-overview.png)
+![catchment tool](/images/software-help/watershed-catchments/watershed-catchment-overview.png)
 
-## Creating a Watershed Catchment
+## Creating a Catchment
 
-To delineate a watershed catchment, first make sure that you have a QRiS project open. For this process to work it can be helpful to have a basemap loaded. To do this, click on the **Basemap** button in the toolbar and select a basemap from the list. A satellite or aerial basemap is recommended.
+To delineate a catchment, first make sure that you have a QRiS project open. For this process to work it can be helpful to have a basemap loaded. To do this, click on the **Basemap** button in the toolbar and select a basemap from the list. A satellite or aerial basemap is recommended.
 
 Next, zoom the map to the pour point (most downstream location) of the watershed. The pour point has to be defined extremely precisely, so it is recommended that you zoom in as far as possible. (See how StreamStats Works below.)
 
-Expand the **Context** folder in the QRiS project tree and right click on the **Watershed Catchments** item and select **Run USGS StreamStats**. A message will appear warning you that the tool will take a few minutes to run. Click **OK** to continue.
+Expand the **Context** folder in the QRiS project tree and right click on the **Catchment Delineationss** item and select **Run USGS StreamStats**. A message will appear warning you that the tool will take a few minutes to run. Click **OK** to continue.
 
 ![warning](/images/software-help/watershed-catchments/watershed-catchment-warning.png)
 
-Click on the map at the location of the pour point. It's vital that you click precisely on the center of the river. Missing the river even slightly will result in the delineation of a watershed catchment that represents the hillslope of the valley rather than the entire watershed. If you miss the river, you can click the **Clear** button in the toolbar and try again.
+Click on the map at the location of the pour point. It's vital that you click precisely on the center of the river. Missing the river even slightly will result in the delineation of a catchment that represents the hillslope of the valley rather than the entire watershed. If you miss the river, you can click the **Clear** button in the toolbar and try again.
 
 A form will appear for you to provide a name and description for the watershed. You can also request the basin characteristics for the pour point location. These are regional statistics for the watershed that StreamStats makes available for driving streamflow calculations. The statistics available vary by region. Click **OK** to continue.
 
-![watershed catchment form](/images/software-help/watershed-catchments/watershed-catchment.png)
+![catchment form](/images/software-help/watershed-catchments/watershed-catchment.png)
 
-A progress bar will appear in the bottom right corner of the screen. The tool will take a few minutes to run. When it is finished, the watershed catchment will be displayed on the map.
+A progress bar will appear in the bottom right corner of the screen. The tool will take a few minutes to run. When it is finished, the catchment will be displayed on the map.
 
-## Edit a Watershed Catchment
+## Edit a Catchment
 
-You can edit the properties of the watershed catchment by right clicking on the catchment in the QRiS project tree and selecting **Edit Catchment Properties**. This will open the same form that you used to create the catchment. You can change the name and description of the catchment. Click **OK** to save your changes.
+You can edit the properties of the catchment by right clicking on the catchment in the QRiS project tree and selecting **Edit Catchment Properties**. This will open the same form that you used to create the catchment. You can change the name and description of the catchment. Click **OK** to save your changes.
 
 ## Promote to AOI
 
-You can promote the watershed catchment to an [AOI](/software-help/aoi) by right clicking on the catchment in the QRiS project tree and selecting **Promote to AOI**. This will create a new AOI in the QRiS project tree and add the catchment to it. You can then use the AOI to clip other datasets as you bring them into the project.
+You can promote the catchment to an [AOI](/software-help/aoi) by right clicking on the catchment in the QRiS project tree and selecting **Promote to AOI**. This will create a new AOI in the QRiS project tree and add the catchment to it. You can then use the AOI to clip other datasets as you bring them into the project.
 
-A common workflow is to delineate two watershed catchments, one at the top and one at the bottom of your riverscape. You can then use QGIS editing capabilities to subtract the two polygons from each other to create a single polygon that represents just the hillslope that drains into your riverscape.
+A common workflow is to delineate two catchments, one at the top and one at the bottom of your riverscape. You can then use QGIS editing capabilities to subtract the two polygons from each other to create a single polygon that represents just the hillslope that drains into your riverscape.
 
-## Delete a Watershed Catchment
+## Delete a Catchment
 
-You can delete a watershed catchment by right clicking on the catchment in the QRiS project tree and selecting **Delete Catchment**. This will remove the catchment from the QRiS project tree and from the map.
+You can delete a catchment by right clicking on the catchment in the QRiS project tree and selecting **Delete Catchment**. This will remove the catchment from the QRiS project tree and from the map.
 
 ## How StreamStats Works
 
-StreamStats stores a raster representation of the streams for the entire continental United States. When you click on the map, the tool uses the coordinates of the click to determine the pixel in the raster that you clicked on. It then uses the raster to determine the upstream and downstream neighbors of that pixel. It then uses the neighbors to determine the upstream and downstream neighbors of those pixels, and so on. This process continues until the tool reaches the edge of the raster. The result is a delineation of the watershed catchment upstream of the pixel that you clicked on.
+StreamStats stores a raster representation of the streams for the entire continental United States. When you click on the map, the tool uses the coordinates of the click to determine the pixel in the raster that you clicked on. It then uses the raster to determine the upstream and downstream neighbors of that pixel. It then uses the neighbors to determine the upstream and downstream neighbors of those pixels, and so on. This process continues until the tool reaches the edge of the raster. The result is a delineation of the catchment upstream of the pixel that you clicked on.
 
 Therefore it is vital that when you click on the map that you are clicking on one of the raster cells that StreamStats has stored as a river cell. Missing the river will cause StreamStats to perform a simple topographic analysis of the hillslope rather than the entire watershed.
 

@@ -1,37 +1,118 @@
 ---
-title: Getting Data into QRiS & Up to Data Exchange
+title: Getting Data into QRiS & Up to Data Exchange - Dec 2024
 banner: true
 sidebar_position: 4
 description: Overview of Uploading QRiS Data to the Data Exchange 
 ---
+# Getting Data into QRiS & Up to Data Exchange
+## Webinar Details
+<div>
+  <div style={{ float: "right" }}>
+    <ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "See Webinar Event Details on RC",
+        description: "December 2, 2024 Webinar - hosted by the Riverscapes Consortium",
+        logoUrl: "/images/logos/blm_logo_transparent.png",
+        toolUrl: "https://www.riverscapes.net/networks/events/108561",
+        imageUrl: "/images/webinars/gettingDataIn.webp",
+        imageLink: "https://www.riverscapes.net/networks/events/108561",
+        },
+    ]}
+    />
+  </div>
+  <div style={{ float: "left" }}></div>
+    #### Webinar Sponsored By:
+    <LogoWrapper
+        size="sm"
+        logos={[
+            {
+                imageUrl: "/images/logos/blm_logo_transparent.png",
+                name: "Bureau of Land Management",
+                url: "https://www.blm.gov/programs/aquatics",
+            }
+        ]}
+    />
 
-On December 2, a free webinar on Getting Data into QRiS & up to Data Exchange.  
+    #### Webinar Presenter:
+    <LogoWrapper
+    size="sm"
+    logos={[
+        {
+        imageUrl: "/images/people/JoeWheaton_Circle.png",
+        name: "Joe Wheaton, Professor of Riverscapes, Utah State University",
+        url: "https://www.riverscapes.net/users/5826874"
+        },
+    ]}
+    />
 
-**The purpose of webinar is to illustrate getting data into QRiS & Sharing it via Data Exchange**. Below you can find the slides used, and a video of the 30 minute webinar. 
+ </div>
 
+
+
+
+### Description
+
+The purpose of webinar is to illustrate getting data into QRiS & Sharing it via Data Exchange. Below you can find the slides used, and a video of the 30 minute webinar. 
+
+------
+## Resources
+### Data Used in Webinar
+This exercise was entirely made up (not real project data). Here are the resources used and created in the webinar:
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "PBR Explorer project",
+        description: "Inspiration PBR Explorer project (Cottonwood Creek) for webinar from BLM and NDOW",
+        logoUrl: "/images/icons/lt-pbr-icon-256x256-@2x.png",
+        toolUrl: "https://pbr.riverscapes.net/project/2ab0ce76-32a6-11e9-07a4-0710ff46da13",
+        },        
+        {
+        title: "Geopackage & KMZ",
+        description: "Example KMZ and Geopackage feature class of 'existing' field data",
+        logoUrl: "/images/icons/zipIcon.png",
+        toolUrl: "https://riverscapes.freshdesk.com/helpdesk/attachments/153035768871",
+        },
+      {
+        title: "Demo Riverscapes Studio Project",
+        description: "Riverscapes Project created in Demo and added to Data Exchange",
+        logoUrl: "/images/logos/qris-icon-256x256-@2x.png",
+        toolUrl: "https://data.riverscapes.net/p/6ce0e412-15c1-4ceb-87aa-601f9a6b12c9/",
+        }
+    ]}
+  />
+
+   
+   
+### Webinar Slides
 <GoogleSlides
   src="https://docs.google.com/presentation/d/e/2PACX-1vS2PyhUJIvTFq_I-CcOg9gl3EefGceuf_TXunnLbxzjaOJx1C029yoUco8XFif2h7FGsdaLiUS5BLTk/embed?start=true&amp;loop=false&amp;delayms=3000"
   width={800}
   height={600}
 />
 
-## Video Demonstration
+### Video Recording of Webinar 
 
 <YouTubeEmbed videoId="u2bqHP2MbiU" />
 
-## Other Resources
+## See also: 
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Importing Features",
+        description: "Command Reference",
+        logoUrl: "/images/icons/lt-pbr-icon-256x256-@2x.png",
+        toolUrl: "/software-help/importing-features",
+        },        
+        
+    ]}
+  />
 
-This exercise was entirely made up (not real project data). Here are the resources used and created in the webinar:
+There are lots of situations where you may not want to draw ([edit or digitize](/tutorials/getting-started/digitizing)) your data from scratch in a QRiS project for a specific feature in a data capture event. For example, maybe you did a field survey with [Survey123](/tutorials/faq/arcgis-online/qris_agol), or maybe you have some data in another feature class (e.g. a shapefile, geopackage, KMZ, etc.). You can right click on any feature class layer in a Data Capture Event in QRiS, and use the Import Features From command.
 
-- [Inspiration PBR Explorer project for webinar from BLM and NDOW](https://pbr.riverscapes.net/project/2ab0ce76-32a6-11e9-07a4-0710ff46da13)
-- Example KMZ and Geopackage feature class of "existing" field data (see attachment below)
-- Riverscapes Project created in Demo and  added to Data Exchange:
-    - Joe Wheaton. (2024). [Dec 2 Demo Export](https://data.riverscapes.net/p/6ce0e412-15c1-4ceb-87aa-601f9a6b12c9/). A Riverscapes Project data set of type: Riverscapes Studio. Owned by: Joe Wheaton. Available from: https://data.riverscapes.net/p/6ce0e412-15c1-4ceb-87aa-601f9a6b12c9/ 
-
-
-See also: 
-
-[How do I bring in data from a field survey or existing layer to QRiS](https://riverscapes.freshdesk.com/support/solutions/articles/153000225642-how-do-i-bring-in-data-from-a-field-survey-or-existing-layer-to-qris-)
-
-[Attachments (1)](https://riverscapes.freshdesk.com/helpdesk/attachments/153035768871)
-
+In the video below, we show an example of doing this from a temporary scratch layer. We also illustrate how to use the attribute mapper to preserve the attribute categories from the original layer, but map them on to the attribute categories used as part of the protocol in that QRiS feature class. 
+<YouTubeEmbed videoId="yS2_W9KdN2Q" />

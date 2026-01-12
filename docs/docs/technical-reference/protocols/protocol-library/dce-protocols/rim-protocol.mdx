@@ -1,0 +1,101 @@
+---
+title: RIM Protocol
+sidebar_position: 3
+description: Protocol to aid in the efficient mapping of structurally forced inundation patterns in beaver impacted riverscapes.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Overview
+
+The ***RIM (Riverscape Inundation Mapping) Protocol*** was created with the intent to replace The Riverscapes Inundation Mapper Tool, or RIM, that was developed as part of Karen Bartelt's Thesis (Bartelt et al. 2021) to aid in the efficient mapping of structurally forced inundation patterns in beaver impacted riverscapes. 
+
+
+
+:::note
+RIM layers can also be used in the [LTPBR V2 DCE Protocol](https://qris.riverscapes.net/technical-reference/protocols/protocol-library/dce-protocols/ltpbr-dce-protocol) with a more limited subset of metrics.
+:::
+
+### Protocol Summary
+
+Attribute|Value
+---|---
+Name|RIM Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/rim_protocol.xml
+Citation|	Bartelt KM, Belmont P, Gilbert JT, Hammill E, Macfarlane WW, Saunders WC, et al. (2025) Mapping valley bottom inundation patterns from beaver dam activity: A potential proxy for hydrologic inefficiency. PLOS Water 4(11): e0000428. https://doi.org/10.1371/journal.pwat.0000428
+Author|Karen Bartelt
+
+## Layers & Metrics
+
+<Tabs>
+  <TabItem value="dam crests" label="Dam Crests">
+Type|Metrics|Description
+---|---|---
+Line|`Number of Dams`, `Dam Density`, `Number of Intact Dams`, `Intact Dam Density`, `Number of Breached Dams`, `Breached Dam Density`, `Number of Blown Out Dams`, `Blown Out Dam Density`, `Ratio of Dam Crest Length to the Valley Length (all dams)`, `Ratio of Dam Crest Length to the Valley Length (intact dams)`, `Ratio of Dam Crest Length to the Valley Length (active dam crest length)`, `Percent of Dam Crest Length that is Actively Structurally Forcing Flow`|*Representation of the crest profile of dams, with attributes to track whether they are active in causing structural forcing of flow, as well as their current physical status.*
+  </TabItem>
+<TabItem value="thalwegs" label="Thawegs">
+Type|Metrics|Description
+---|---|---
+Line|`Channel Gradient`,`Channel Length (main)`, `Channel Length (all)`, `Proportion of Total Thalweg that is the Main Thalweg`, `Relative Flow Length`, `Sinuosity (main)`|*Mapping of the different thalweg types to characterize hydrogeomorphic attributes*
+  </TabItem>
+  <TabItem value="inundation" label="Inundation">
+Type|Metrics|Description
+---|---|---
+Polygon|`Integrated Wetted Width`, `Total Inundated Area`, `Total Area of Free Flowing Inundation`, `Total Area of Ponded Inundation`, `Total Area of Overflow Inundation`, `Percent of the Valley Bottom that is Inundated`, `Percent of the Valley Bottom with Free Flowing Inundation`, `Percent of the Valley Bottom with Ponded Inundation`, `Percent of the Valley Bottom with Overflow Inundation`, `Shannon's Diversity Index Value`, `Shannons Evenness Index Value`  |*Mapping the distribution of simple surface-flow types such as ponded, free-flowing, and overflowing. Used to generate metrics of increasing habitat complexity, quantity, and floodplain connectivity.*
+  </TabItem>
+</Tabs>
+
+### Layer Attributes
+
+<Tabs>
+  <TabItem value="thalwegs" label="Thalwegs">
+    **Type**|**Description**
+---|---
+*Main*|The thalweg that follows the deepest point of the primary anabranch
+*Anabranch*|Thalwegs that follow the deepest point of a fully formed (i.e. has an active channel bed) secondary anabranch that is longer than 2 ocularly estimated bankfull channel widths
+*Split*|Thalwegs that follow the deepest point of structurally forced sheetflow, or short secondary anabranches
+*Braid*|Thalwegs within the primary anabranch that are not the main thalweg and are not structurally forced by large wood or beaver dams. These typically depart and return from the main thalweg or an anabranch thalweg
+    </TabItem>
+    <TabItem value="dam crests" label="Dam Crests">
+  **Dam State**|**Description**
+---|---
+*Intact*|A dam from which pond is fully maintained upstream of the dam
+*Breached*|A dam where partial removal or loss of material from the dam crest results in a lowering of the pond water surface elevation
+*Blown Out*|A dam where enough of the dam is breached or damaged such that the dam no longer backs up water
+
+  **Crest Type**|**Description**
+---|---
+*Active*|The portion of the dam that is actively backing up water upstream of the dam
+*Inactive*|The portion of the dam that is not actively backing up water upstream of the dam
+  </TabItem>
+  <TabItem value="inundation" label="Inundation">
+    **Type**|**Description**
+---|---
+*Ponded*|structurally-forced backwater ponding upstream behind a channel-spanning structural element
+*Overflow*|structurally-forced flow onto floodplain and/or otherwise exposed in channel surfaces (e.g. bars)
+*Free Flowing*|not obstructed by a channel-spanning structural element
+  </TabItem>
+  </Tabs>
+    
+## Resources 
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Weber et al. 2024",
+        description: "Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://zenodo.org/records/13769899",
+       },
+               {
+        title: "Bartelt et al. 2021",
+        description: "Valley bottom inundation patterns in beaver-modified streams: A potential proxy for hydrologic inefficiency",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://digitalcommons.usu.edu/cgi/viewcontent.cgi?article=9375&context=etd",
+       },
+    ]}
+    />
