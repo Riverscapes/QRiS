@@ -35,6 +35,17 @@
             }
         },
         {
+            "name": "🧪 Test Help Links",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/test_help_links.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/..;${env:PYTHONPATH}"
+            }
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
