@@ -35,15 +35,18 @@ More detailed info on this can be found by exploring [Riverscapes Viewer Integra
 
 ## Export To Riverscapes Project
 
+All QRIS projects exist simultaneously as a QRIS projact and a Riverscapes Studio project. This means upon creation of a new QRIS project a project.rs.xml is also ceated withing your project folder. This makes it possible to open the project in Riverscapes Viewer, as well as upload the project to the data exchange.
+
+However, there is also the ability to export your project directly from the QRIS plugin as either a copy or as a custom export where you have chosen what elements of the project you want included.
+
 You can export a QRiS project to a Riverscapes Project by right clicking on the top level of the project tree and selecting `Export To Riverscapes Project`. This will create a new Riverscapes Project folder, and copy the QRiS project GeoPackage file into it.
 
 When you export a window will pop up with the following options:
 
 ### Export Properties
 - **Riverscapes Project Name**- This is what will appear as the name of the project in the rs.xml (which controls the name on the Data Exchange and in the Riverscapes Viewer). It does not change the name of the project/.gpkg that you open in the QRIS project. 
+-**Let QRIS manage the export location**- checking this will elimante the need to specify an output path. By default the exported project folder will be stored alongside the original project folder on the same path.
 - **Ouput Path**- the location that the new project folder will save to (note: make sure it is in a separate location from the QRIS project so that folders dont overwrite).
-- **Project Bounds**- here you can select whether to use all QRIS layers or just an AOI to bound your project.
-- **Export Type**- here you can designate whether you are creating a new Riverscape Studio Project or updating an existing one. (Updating an existing one will require you to browse to the existng rs.xml file). 
 - **Description**- any relevant descriptive info that may be useful to the project. 
 
 ### Export Layers
