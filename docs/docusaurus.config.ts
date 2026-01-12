@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic'
 const config: Config = {
   title: 'QRiS', // Site title displayed in the browser tab
   tagline: 'Riverscapes Studio for QGIS', // Short description shown in meta tags
-  favicon: 'qris-icon.png', // Path to site favicon
+  favicon: 'https://cdn.riverscapes.net/icons/products/qris/qris.svg', // Path to site favicon
 
   future: {
     v4: true, // Enables compatibility with upcoming Docusaurus v4 features
@@ -87,7 +87,7 @@ const config: Config = {
       title: 'Riverscapes Studio (QRiS)',
       logo: {
         alt: 'QRiS Logo',
-        src: 'images/logo.png',
+        src: 'https://cdn.riverscapes.net/icons/products/qris/qris.svg',
       },
       items: [
         //   {
@@ -183,11 +183,23 @@ const config: Config = {
       links: [
         {
           // Note that this NEEDS to match what's in the default template or we get another column
-          title: 'Support & Contact',
+          title: 'User Resources',
           items: [
             {
+              label: 'Join this User Community',
+              href: 'https://www.riverscapes.net/topics/33160/feed',
+            },
+            {
+              label: 'Search the Data Exchange',
+              href: 'https://data.riverscapes.net/s?type=Project&projectTypeId=riverscapesstudio&view=map',
+            },
+            {
+              label: 'Developers & Code Repository',
+              href: 'https://github.com/Riverscapes/QRiS',
+            },
+            {
               label: 'Knowledge Base',
-              href: 'https://riverscapes.freshdesk.com/support/solutions/153000297758',
+              href: 'https://riverscapes.freshdesk.com/a/solutions/categories/153000297758/folders/153000763613?view=all',
             },
           ],
         },

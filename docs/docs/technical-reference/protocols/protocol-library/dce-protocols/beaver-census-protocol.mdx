@@ -1,5 +1,42 @@
 ---
 title: Beaver Census Protocol
-sidebar_position: 3
+sidebar_position: 5
 description: A protocol for documenting beaver habitat and ecology.
 ---
+
+The **Beaver Census Protocol** tracks beaver activity by logging the locations of dams and other signs of their presence, which is used in LTPBR planning to pinpoint sites where beaver populations currently exist or have historically colonized. This helps identify potential locations for translocation or suitable sites for LTPBR implementation. 
+
+## Protocol Summary 
+
+Attribute|Value
+---|---
+Name|Beaver Census Protocol
+Status|Production Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/beaver_census_protocol.xml
+Citation|Wheaton J.M., Bennett S.N., Bouwes, N., Maestas J.D. and Shahverdian S.M. (Editors). 2019. Low-Tech Process-Based Restoration of Riverscapes: Design Manual. Version 1.0. Utah State University Restoration Consortium. Logan, UT. 286 pp. DOI: 10.13140/RG.2.2.19590.63049/2.
+Author|Jordan Gilbert
+
+## Layers 
+
+The protocol consists of two point layers to assess beaver activity: *Beaver Dams* and *Beaver Signs*. 
+
+Attribute|Type|Description
+---|---|---
+*Beaver Dam*|Point|observations of beaver dams   
+*Beaver Sign*|Point|observations of beaver activity besides dam locations, such as lodges, chewed trees, and food caches
+
+## Layer Attributes
+
+### Beaver Dam
+
+Field|Description|Values
+---|---|---
+*Type*|type of beaver dam|<li> *Active Dam*: actively maintained by beaver </li> <li> *Inactive Dam*: no longer maintained by beaver but exists near active colonies </li> <li> *Relic Dam*: historically maintained by beaver colonies that have been extirpated from system </li> <li> *Uncertain*: unsure if dam is present or can't classify dam as active, inactive, or relic </li>
+*Confidence*|level of confidence for identifying dam location|<li> *High*: confident that identified location is a dam </li> <li> *Medium*: reasonably confident that identified location is a dam </li> <li> *Low*: low confidence that identified location is a dam</li>
+
+### Beaver Sign
+
+Field|Description|Values
+---|---|---
+*Type*|type of beaver activity|<li> *Bank Den* </li> <li> *Bank Lodge* </li> <li> *Canal* </li> <li> *Chew Stick* </li> <li> *Clipped Vegetation* </li> <li> *Felled Tree* </li> <li> *Food Cache* </li> <li> *Harvested Branches* </li> <li> *Other* </li> <li> *Pond Excavation* </li> <li> *Pond Lodge* </li> <li> *Scat* </li> <li> *Scent Mound* </li> <li> *Set of Tracks* </li> <li> *Skid Trail* </li> <li> *Slide* </li> 

@@ -1,0 +1,656 @@
+---
+title: Advanced LTPBR Planning
+banner: true
+sidebar_position: 1
+description: CEWA/WATS 6626 - Advanced LTPBR Planning Exercises
+---
+
+## Overview to CEWA/WATS 6626 
+This is the main resource page for the [CEWA/WATS 6626](https://lowtechpbr.restoration.usu.edu/workshops/2025/USU/Advanced/WATS-6626/) - Advanced LTPBR Planning course offered at Utah State University. This course is part of an [advanced series](https://lowtechpbr.restoration.usu.edu/workshops/2025/USU/Advanced/) of courses on Low Tech Process Based Restoration (LTPBR) offered through USU and the Riverscapes Consortium. The course is designed to provide hands-on experience with LTPBR planning using [QRiS](https://qris.riverscapes.net) and is a direct follow up to the [Introduction to LTPBR Planning](https://lowtechpbr.restoration.usu.edu/workshops/2025/USU/WATS-5622/) in the Intro to LTPBR Spring Series.
+
+> **Description:** Advanced course in site-scale planning of LTPBR projects using Riverscapes Studio. Students will assess current, historic and potential future conditions of riverscape health to prepare for design.
+
+:::info
+This page appears here on the QRiS documentation site as QRiS users may find it helpful for self-guided learning.
+:::
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "CEWA/WATS 6626 - Syllabus",
+        description: "Fall 2025 - Syllabus on LTPBR USU Site.",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2025/USU/Advanced/WATS-6626/",
+        },     
+        {
+        title: "Community",
+        description: "Community Page on Riverscapes Consortium for Advanced LTPBR CEWA Series 6626-6629",
+        logoUrl: "/images/icons/rc_icon.png",
+        toolUrl: "https://www.riverscapes.net/topics/45485/feed",
+        },
+        {
+            title: "Event Page for 2025 Course",
+            description: "Event Page with Meeting Joining Details",
+            logoUrl: "/images/icons/webinar.png",  
+            toolUrl: "https://www.riverscapes.net/topics/45485/events/127623", 
+        },
+    ]}
+    />
+## Prerequisites and Preparing for Class
+### Background or Catch-Up Reading
+We assume you have read and are familiar with [Chapter 3 of the Design Manual](https://lowtechpbr.restoration.usu.edu/manual/chap03/). This was assigned in WATS 5622/CEWA 5622, but if you have not taken that course, please read it now. If you have not taken WATS 5622/CEWA 5622, you should watch the [self-paced lecures](https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3/). 
+
+This course will be focused on how we quanatitative use mapping and analysis in QRiS to build off of these concepts from the Intro to Planning course:
+
+
+  <ToolsWrapper
+    cardsize="md"
+    cards={[
+        {
+        title: "Moudle 3C",
+        description: "Reading Riverscapes & Mapping the Valley Bottom",
+        imageUrl: "/images/webinars/03_C.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3/",
+        },
+        {
+        title: "Moudle 3D",
+        description: "Mapping and Estimating Structural Forcing",
+        imageUrl: "/images/webinars/03_D.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3/#d-recognizing-structural-forcing-in-riverscapes",
+        },
+                {
+        title: "Moudle 3E",
+        description: "Resource Inventory & Analysis - Risk Assessment, Condition Assessment & Recovery Space",
+        imageUrl: "/images/webinars/03_E.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3#e-risk-assessment-condition-assessment--recovery-potential",
+        },
+                {
+        title: "Moudle 3F",
+        description: "Connecting & Clarifying Objectives & Tying to Goals",
+        imageUrl: "/images/webinars/03_F.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3#f-connecting--clarifying-objectives--tying-to-goals",
+        },
+    ]}
+    />
+
+    
+
+### Software Requirements
+- Install QGiS and the [QRiS](https://qris.riverscapes.net/download) and [Riverscapes Viewer](https://viewer.riverscapes.net/Deploy/install-qgis/) Plugins (see [here](https://qris.riverscapes.net/download)).
+
+----
+## Main Assignment
+The main outcome of this workshop is to complete a LTPBR Planning Analysis for a project reach of your choosing using QRiS. 
+
+You will:
+1. Complete a Riverscapes LTPBR Planning Report (through planning section of [template](#report-template)) with your supporting maps and analyses using QRiS. This report will be saved as a PDF, and added as an [attatchment](https://qris.riverscapes.net/software-help/attachments/) to your Riverscapes Studio Project.
+2. Create a [QRiS Project](https://qris.riverscapes.net/software-help/projects), and [export a Riverscapes Studio Project](https://qris.riverscapes.net/software-help/projects#export-to-riverscapes-project) and [publish](https://viewer.riverscapes.net/tutorials/riverscapes-project-data-exchnage/) to the [Data Exchange](https://data.riverscapes.net).
+3. Create a [PBR Explorer](https://pbr.riverscapes.net) Project Entry for Proposed Work. You can optionally make this private and part of a Data Exchange Organization you create that you give instructor access to.
+4. Present a 10 minute presentation on Thursday of your project to the class. 
+5. Post a link to your presentation and Riverscapes Studio Project in the [Riverscapes Consortium Community](https://www.riverscapes.net/topics/45485/feed).
+
+:::tip
+**Yes, you can build off what you started.** For those of you that completed the [WATS/CEWA 5622 Introduction to Planning Course](https://lowtechpbr.restoration.usu.edu/workshops/2025/USU/WATS-5622/), you will already have chosen a site, and have the start of a report. It is perfectly reasonable to pick up the old report and the same site and just re-do and expand a more througough analysis and planning report using QRiS. It is also accepable to pick a new site and start fresh. 
+
+Those that have not taken WATS 5622 or did not complete that course assignment, will need to pick a site and write a report from scratch.
+:::
+
+#### Formative Exercise - Sharing your proposed site
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Submit your proposed site as Private PBR Explorer Project",
+        description: "Everyone will submit their proposed site as a Private PBR Explorer Project to a Data Exchange Organization we create and give you all access to. We will do this as in-class demo together on Monday.",
+        imageUrl: "/images/webinars/Communitities/PBR_Explorer.png",
+        logoUrl: "/images/icons/lt-pbr-icon-256x256-@2x.png",
+        toolUrl: "https://pbr.riverscapes.net",
+        },
+      ]}
+    />
+    *We will regroup at 3:15 PM on Monday to share your proposed sites and give feedback to each other on site selection.*
+
+### Homework
+
+#### Due Tuesday
+Today we covered how to create your own QRiS project, how to create an area of interset within it, how to bring datasets from Riverscapes Projects into your project, and how to read and map a riverscape. For homework, show up tomorrow with a QRiS project for your LTPBR Site populated with:
+- An AOI of your "project area"
+- At least one Catchment delineated from the bottom of your project area
+- At least one Catchment promotoed to an AOI
+- A current Data Capture Event with
+  - Valley geomorhpic units mapped
+  - Active confining margins mapped
+- At least one riverscape (valley bottom) representing your mapping
+- A VBET derived riverscape clipped to your project area
+- Centerlines for both your riverscapes (manual and VBET)
+- Some context layers clipped to your watershed or AOI
+
+-----
+## Resources
+### Class Recordings
+
+<details closed>
+<summary>Our meetings were recorded for your reference.</summary>
+
+The [playlist](https://youtube.com/playlist?list=PL0ZiZg4rilzISfj4HwzCE0afp1gkncCOP&si=EanpCjcKbGsl_ush) is organized by day. We missed a few bits here and there where we forgot to start recording, but the vast majority is there. 
+
+
+<YouTubeEmbed videoId="videoseries?si=ShLyh1OooBaksIn1&amp;list=PL0ZiZg4rilzISfj4HwzCE0afp1gkncCOP&si=D4lxz2xObqXKOCep" />
+</details>
+----
+## Community Resources
+    These communities from the [Riverscapes Consortium](https://www.riverscapes.net) are great places to ask questions, connect with colleagues and share your work.
+  
+ <ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Advanced CEWA LTPBR Series Community",
+        description: "The community for connecting with others in this class and the advanced series of Adavanced LTPBR courses.",
+        imageUrl: "/images/webinars/Communitities/ADV-CEWA-RCC.png",
+        logoUrl: "/images/icons/GetInovled.png",
+        toolUrl: "https://www.riverscapes.net/topics/45485/feed",
+        },
+        {
+        title: "Riverscapes Studio Users",
+        description: "Community of QRiS Users. Stay up to date on latest releases, webinars, trainings, ask questions and share your work.",
+        imageUrl: "/images/webinars/Communitities/QRiS_RCC.png",
+        logoUrl: "/images/logos/qris-icon-256x256-@2x.png",
+        toolUrl: "https://www.riverscapes.net/topics/33160/feed",
+        },
+                {
+        title: "LTPBR of Riverscapes - Practitioner Community",
+        description: "This community is intended to facilitate exchange between practitioners of LTPBR anywhere in the world.",
+        imageUrl: "/images/webinars/Communitities/LTPBR-RCC.png",
+        logoUrl: "/images/icons/lt-pbr-icon-256x256-@2x.png",
+        toolUrl: "https://www.riverscapes.net/topics/34422/feed",
+        },
+
+    ]}
+    />
+
+-------
+## Assignment Resources
+This section elaborates on some of the questions you engage with in the Conservation Planning Process (CPP) adapted from Bennett et al. (2019) and outlined in Chapter 3 of the LTPBR Design Manual. There are many ways to answer these questions. Here we focus on some workflows that still emphasize engagement with the questions, using QRiS to document what you are determining or mesuring, and leveraging (if appropriate) outputs from some of our nationally available datasets. You may be surprised for how many riverscapes you can do a decent job of this from the desktop. 
+
+:::tip
+If this class was in person, we would use Monday to approximate answers to these questions at the desktop and with freely available data. We would use Tuesday to get out in the field, see how good our desktop assessment was, fill in gaps of our ounderstanding from the desktop, and record new obeservations. Then we would use Wednesday to pull together both field and desktop evidence, and havea revised planning assesssment. You can do this on your own with the riverscapes you work in.
+:::
+
+### Report Template
+
+You can make your own report, or you can use [this Google Docs template](https://docs.google.com/document/d/1Su6NV2mZ4Z8f3hJI7gtVs-DWKYRSYGbIcKJLadyrGL8/edit?usp=sharing) for the report. You can expand and refine the section headings as you see fit, but you need to minimally include these sections and answer the questions posed. 
+
+If you do use a Google Doc, please share it with your instructor(s), so they can give you suggestions when you submit your project. You may choose to add other students, or make it visible to those with the link. 
+
+We show you how to use it in this video:
+<YouTubeEmbed videoId="NyxCr0p9XHU" />
+:::note
+When you submit your assignment, *please* do not submit it as a link to the Google Doc. Instead, export it as a PDF and submit the PDF as an attatchment in your Riverscapes Studio Project.
+:::
+
+#### Using Zotero Cite While You Write Add-ON
+*Optional*: [Zotero](https://www.zotero.org) is a powerful and free citation and bibliography manager (alternative to EndNote), which you can use to keep track of your citations. [This help reference](https://www.zotero.org/support/google_docs) explains how to use Zotero with Google Docs. You will need [Zotero Connector Extension](https://chrome.google.com/webstore/detail/zotero-connector/ekhagklcjbdpajgpjgmbionohlpdbjgc?hl=en) installed in your browser for it tow work with Google Docs.
+
+--------
+### CPP - Planning Resources
+
+We follow an adaptation of the NRCS's [Conservation Planning Process](https://www.nrcs.usda.gov/state-offices/tennessee/nine-step-conservation-planning-process), for Phase 1 (i.e. planning) as illustrated below:
+![CPP_LTPBR_P1-LT](https://capstone.restoration.usu.edu/assets/images/CPP_LTPBR_P1-LT.png)
+*Figure 3 from Bennett et al. (2019).*
+
+-  Bennett, S., Wheaton, J., Bouwes, N., Shahverdian, S., Macfarlane, W.W. and Portugal, E. 2019. **[Chapter 3 - Planning for Low-Tech Process-Based Restoration](http://dx.doi.org/10.13140/RG.2.2.15815.75680)**.  In: [Low-Tech Process-Based Restoration of Riverscapes: Design Manual - Version 1.0](https://lowtechpbr.restoration.usu.edu/manual). Wheaton JM, Bennett S, Shahverdian S, and Maestas JD, (Editors). [Utah State University](http://restoration.usu.edu/) Wheaton Ecogeomorphology & Topographic Analysis Lab. Logan, UT.  57 pp. DOI: [10.13140/RG.2.2.15815.75680](http://dx.doi.org/10.13140/RG.2.2.15815.75680).
+
+--------
+### 1. Problems & Opportunities 
+Perform an initial, broad-brush, description of problems and opportunities as suggested in page 5-7 of [Chapter 3 of the LTPBR Design Manual](http://lowtechpbr.restoration.usu.edu/manual/chap03/). 
+- Make sure to articulate the broad management goals as best you can. Your job is to restate those management goals as they are dictated by the client, project owner, land owner, policy or otherwise. It is not uncommon for the broad management goal to be somewhat peripherally connected to something that is likely to be improved or achieved by the proposed project. The goal of the conservation planning process is NOT to change the broad management goals. It is to assess whether or not proposed actions can reasonably be expected to achieve those management goals, or to contribute towards them. The broad management goals can act simply as a motivation for the proposed actions.
+- In very simple terms, *state the basic problems* as posed by the client, project owner, land owner, policy or otherwise. This is not a detailed problem statement, but rather a simple statement of the basic problem(s) as you understand them.
+- Include a simple articulation of *the opportunties* that exist within the riverscape to address the problems. This is not a detailed inventory of opportunities, but rather a simple statement of the basic opportunities as you understand them.
+- Include a cursory assessment of *whether or not the project reach is structurally starved to consider the appropriateness of Low-Tech PBR.* Note, that in the resource analysis this is more explicilty considered by comparing existing conditions and expected or historic. This is a screening step to decide early if LTPBR is an appropriate or inappropriate course of action.
+
+Also [define your](#c-populate-project-with-context-layers) [Areas of Interest](https://qris.riverscapes.net/software-help/inputs/aoi/) in terms of property boundaries, land ownership/managment, and/or watersheds.
+
+--------
+### 2. Project Objectives 
+It is important to restate the broad managment goals in terms of specific project objectives. Revisit the problem (from 1 above) and purpose and confirm or clarify and then recast management goals as SMART (Skidimore 2011) objectives (see page 8-9 of [Chapter 3](https://www.researchgate.net/publication/332304801_Chapter_3_-_Planning_for_Low-Tech_Process-Based_Restoration?channel=doi&linkId=5cad2a7e458515cd2b0d2fe1&showFulltext=true) and in terms of measurable objectives and indicators that tie to riverscape health. This is you articulating what success looks like in terms of measurable outcomes. Be clear as to whether or not the objectives are short-term (1-5 years), medium-term (5-10 years) or long-term (10+ years), and how many phases of work it might take. 
+- Clarify if the "project" is a series of project phases that collectively work together, or a single phase of work. 
+- Differentiate overall collective objectives towards achieving a sites full recovery space, versus objectives associated with a single phase of work (including a pilot phase) intended to contribute to that overall objective(s). The mapping of recovery space does not necessarily mean it is realistic to achieve that in a single phase of work with process based restoration.
+
+
+- Skidmore, P.B., Thorne, C.R., Cluer, B.L., Pess, G.R., Castro, J.M., Beechie, T.J. and Shea, C.C., 2011. [Science base and  tools  for  evaluating  stream  engineering,  management,  and  restoration  proposals](https://repository.library.noaa.gov/view/noaa/4020),  U.S.  Department  of  Commerce, Seatle, WA. 
+
+**Indicator Template Resources**
+
+An example template based on Table 3.1 on page 8 of [Chapter 3](https://www.researchgate.net/publication/332304801_Chapter_3_-_Planning_for_Low-Tech_Process-Based_Restoration?channel=doi&linkId=5cad2a7e458515cd2b0d2fe1&showFulltext=true) of the LTPBR Design Manual. is provided below.
+
+| Resource Type | Suggested Resource Link | Notes or Alternative Resource |
+|------------------------|-------------------------|-------------------------------|
+| Project Indicator Template |  [ Condition Worksheet.xlsx](https://s3-us-west-2.amazonaws.com/etalweb.joewheaton.org/Courses/WATS5350/Lowtech/birch/Condition+Worksheet.xlsx) | This is an excel template worksheet for populating active channel, active floodplain, vs. inaccessed floodplain mapping of your valley bottom as a means of cataloging condition and estimating recovery space and constraining design. To the extent possible, you will be using QRiS [Analyses](#analyses) to populate these tables (one for every sample frame or reach).|
+
+#### Overview of Project Indicator Template
+This 7 minute video gives an over of the condition worksheet (from [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project).
+<YouTubeEmbed videoId="DJ0GgLbUpGw" />
+
+:::tip
+Warning, most people grasp the idea of choosing the rows for this table (i.e. metrics and indicators) fairly quickly. They then realize that planning is essentially three columns of this table: existing conditions, estimated historic (for reference) and estimated future conditions (i.e. recovery space). Most tend to grasp the concept of recovery space being limited by estimated histroic too. **What confuses people most is how many tables they will end up with.** You have a separate table for every [sample frame](https://qris.riverscapes.net/software-help/inputs/sample-frames) or [area of interest](https://qris.riverscapes.net/software-help/inputs/aoi/) you choose as the spatial extent of your [analysis](https://qris.riverscapes.net/software-help/analyses). 
+
+Some think, all I need is one table for my entire property or project area. This may be simple and fine in some cases, but it often makes it difficult to differenatiate important spatial differences in condition and recovery space across the project area. This is why we often have multiple sample frames. 
+:::
+
+#### Populating Proportion of Active Valley Bottom Indicator
+It is not always appropriate to use *proportion of active valley bottom* as an indicator, but it is a common indicator for many riverscapes where space has been encroached and recovery space could include reclaiming back some of that space. This video illustrates the concept from a [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project. Even if it is not used as an indicator, it is useful thing to understand and map as part of the planning process to ascertain whehter it is something that is impaired and is realistic to target (i.e. there the currently proportion active perscentage is less than the recovery space percentage - both expressed as proportion of valley bottom area).
+<YouTubeEmbed videoId="BRIDPsWNYLU" />
+For this course, our in class exercise covers [proportion active mapping](#map-geomorphic-units) here and [recovery space here](#map-recovery-potential).
+
+
+--------
+### 3. Inventory of Resources
+See page 9-13 of Chapter 3
+
+#### Valley Bottom Mapping 
+Choose your riverscape extent (upstream and downstream) and map your valley bottom (laterally) as a [riverscape in QRiS](https://qris.riverscapes.net/software-help/inputs/valley-bottoms/). If you are including multiple reaches on the same riverscape that are seperated, keep these as separate riverscapes. If you are including tributary riverscapes, also keep these as separate riversccapes in QRiS. 
+
+We recommend typically classifying and mapping your riverscape into active channel, active floodplain and inactive floodplain components.  This begins with reading it and mapping it. We start this by [mapping valley geomorphic units](#f-map-valley-bottom-and-compare-to-vbet) and then allowing the delineation of valley bottom to fall out of that mapping of channels, floodplains, terraces, fans and hillslopes. 
+
+We can use multiple lines of evidence, including seeing if what [VBET estimates for our site](#f-map-valley-bottom-and-compare-to-vbet) is reasonable and confirms our mapping. 
+
+#### Identified Risks within & Adjacent to Riverscape 
+Map all infrastructure and land use within and adjacent to your riverscape of interest, as well as immediately downstream; use the risk matrix to evaluate).
+
+
+#### Recovery Space
+Synthesis for each project reach of proportion of valley bottom available as/for recovery space. This should reflect the stakeholder/landowner’s current values. 
+
+### 4. Resource Analysis
+#### Assessment of Current Conditions and Recovery Space 
+##### Geomorphic Context
+
+Mapping geomorphic context starts with the [valley bottom mapping (F)](#f-map-valley-bottom-and-compare-to-vbet) and [basic geomorphic mapping (E)](#e-map-geomorphic-units), but is really improved when we add the mapping of active confining margins based on the Fryirs et al. (2015) and O'Brien et al. (2019). We can do this in QRiS by digitizing a line layer of active confining margins using our [Geomorphic Mapping of Riverscapes Protocol](https://qris.riverscapes.net/technical-reference/protocols/protocol-library/dce-protocols/tier-1-geounit-protocol), which we will do as an [in-class exercise too (G)](#g-map-active-confining-margins).
+
+
+- O'Brien, G.R., Wheaton, J.M., Fryirs, K., Macfarlane, W.W., Brierley, G., Whitehead, K., Gilbert, J. and Volk, C., 2019. Mapping valley bottom confinement at the network scale. Earth Surface Processes and Landforms, 44(9): 1828-1845. DOI: [10.1002/esp.4615](https://dx.doi.org/10.1002/esp.4615)
+- Fryirs K, Wheaton JM, and Brierley G. 2015.  An approach for measuring confinement and assessing the influence of valley setting on river forms and processes. Earth Surface Processes & Landforms. DOI: [10.1002/esp.3893](https://dx.doi.org/10.1002/esp.3893)
+
+<details closed>
+This video below goes through some generic background on mapping confinement. It is based on a [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project at Brich Creek. 
+<YouTubeEmbed videoId="gaGobjVPuIo" />
+
+</details>
+
+##### Geomorphic Condition 
+There are various ways to assess geomorphic condition. Two possibilities in the [Weber et al. (2024) LTPBR V. 2 Protocol included in QRiS](/technical-reference/protocols/protocol-library/dce-protocols/ltpbr-dce-protocol) are:
+1. Maps (polygons) of active channel plus floodplain area of valley bottom as current vs. potential
+2. Estimates of geomorphic condition using the Cluer & Throne (2012) Riverscape Evolution Model (see pages 16-18 of [Chapter 3](https://lowtechpbr.restoration.usu.edu/manual/chap03/)).
+
+Note that the Cluer & Throne (2012) conceptual model does not necessarily apply to all riverscapes, but it can be a useful construct for some.
+- Cluer, B. and Thorne, C.R., 2013. A stream evolution model integrating habitat and ecosystem benefits. River Research and Applications, 29(8), pp.992-1003.
+
+:::tip
+For an introduction to fluvial geomorphology, see Joe's [Fluvial Geomorphology Class](https://riverscapes.github.io/Fluvial-Geomorphology/). For an explanation of the Cluer & Thorne (2013) Riverscape Evolution Model, see the video in details below or Collin Thorne's [lecture here in WATS/CEWA 5620](https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module1#d-missing-reference-condition-stage-zero).
+:::
+
+<details closed>
+This video below goes through some generic background on assessing geomorphic condition, primarily by using the Cluer & Thorne ([2013](https://pdfs.semanticscholar.org/97b5/7edce62571b00897b0ba5c182076772cf92a.pdf)) riverscape evolution model. 
+
+It is based on a [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project at Brich Creek. Applying this to Birch Creek requires a visit in the field and broader training than we have provided you in fluvial geomorphology then this class. As such, I explain to students of that class in the video below how I obtained them. 
+
+<YouTubeEmbed videoId="UIgoCEuE0Oc" />
+
+</details>
+
+##### Identification of pathways of recovery (optoinal)
+ If the riverscape evolution model is relevant to your site, it can be helpful to identify current stage(s) and target stage(s) and articulate what trajectory and geomorphic processes will be necessary to get to recovery space).
+
+ See page 16 of [Chapter 3](https://lowtechpbr.restoration.usu.edu/manual/chap03/) for more details.
+
+##### Flow Regime’s ability to "Do the Work" of Restoration
+
+It is crucial to assess the flow regime of your riverscape for process-based restoration to see if the hydrologic engine is present to do the work necessary to follow the desired recovery trajectory. This is not a hydrologic analysis course, but we do need to at least assess whether or not the flow regime is likely to be sufficient to mobilize sediment and wood, inundate floodplains and reconnect them to the active channel, and move water through the riverscape in a way that supports riparian vegetation and beaver activity.
+
+See pages 14-15 of [Chapter 3](https://lowtechpbr.restoration.usu.edu/manual/chap03/) for more details. For the US:
+
+<details closed>
+| Resource Type | Suggested Resource Link | Notes or Alternative Resource |
+|------------------------|-------------------------|-------------------------------|
+| Flow Regime Assessment |  [StreamStats](https://streamstats.usgs.gov/ss/) | Typical peak-flow statistics (e.g. Q2 and Q100) are easy to estimate using StreamSTats. You can download flow gague data and do your own regional curves, but this is a reasonable approximation in under 10 minutes. |
+| Stream Power & Flow Assessment | [Hydrologic Context](https://tools.riverscapes.net/hydro/) Estimates  | For a given segment of reach, anywhere in the lower 48, we provide a baseflow and Q2 streamflow estimate and stream power estimates. |
+| Stream Gage Explorer in QRiS | [Help Documentation](https://qris.riverscapes.net/software-help/context/stream-gage-explorer) | All this too does is is retrieve from NWIS (below) all the nearby stream gages and their records within your QRiS project.  |
+| National Water Information System (NWIS)| [USGS Water Data for Nation](https://waterdata.usgs.gov/nwis) | USGS's national repository of stream gage data and other water data. |
+
+:::note
+Although we have a [Catchment tool in QRiS that uses StreamStats](https://qris.riverscapes.net/software-help/context/watershed-catchments), the USGS API we call is currently unable to return the actual stream flow statistics. It is useful for returning a delineated watershed and basin statistics. So you can use [StreamStats](https://streamstats.usgs.gov/ss/) directly from the USGS site to get flow statistics for your site.
+:::
+
+
+In this video, I review how you can use [StreamStats](https://streamstats.usgs.gov/ss/) to address the flow regime's ability to "do the work" by simply getting you some discharge estimates. 
+
+It is based on a [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project at Brich Creek. 
+
+<YouTubeEmbed videoId="b2TL8fbKiBc" />
+
+</details>
+
+
+###### Riparian Condition to support Process of Wood Accumulation 
+
+Think about what you can do map  existing and potential woody resources (riparian and upland) for processes of wood recruitment, wood transport and wood accumulation.  From page 19 of [Chapter 3 of the LTPBR Manual](https://www.researchgate.net/publication/332304801_Chapter_3_-_Planning_for_Low-Tech_Process-Based_Restoration?channel=doi&linkId=5cad2a7e458515cd2b0d2fe1&showFulltext=true), we look at riparian conditions to address the key question of “**is it likely that a self-sustaining source of woody structure can be restored**?” 
+
+We can ask:
+- What is existing riparian vegetation in the valley bottom relative to historic conditions? *with RCAT*
+-  Can the riverscape and adjacent uplands support provide a source of woody debris and is natural wood recruitment possible? 
+- How accessible is the floodplain for flooding and riparian vegetation recruitment (infrastructure / like levees; this is the *active channel plus active floodplain* you did above?
+- What land uses are taking place in the valley bottom and are they compatible with maintaining a self-sustaining source of structure? 
+- How many woody debris jams are currently present? How many could be given the current wood supply? How many could be given the potential wood supply?
+
+As with geomorphic condition, these questions can often be answered simply by walking a site and assessing wood resources and  recruitment potential.  You can count jams off the imagery and report them as quantities or linear densities (i.e. jams per mile) for more consistent intercomparison across sites (e.g. as illustrated in [Weber et al. (2024) LTPBR V. 2 Protocol included in QRiS](/technical-reference/protocols/protocol-library/dce-protocols/ltpbr-dce-protocol)). 
+
+<details closed>
+The [Ripairan Condition Assessment Tool](http://tools.riverscapes.net/rcat) gets at some of these lines of evidence for some riverscapes. For others you will need to make an interpretation and your own assessment of riparian resources.
+
+| Resource Type | Suggested Resource Link | Notes or Alternative Resource |
+|------------------------|-------------------------|-------------------------------|
+|[Riparian Condition Assessment Tool](http://tools.riverscapes.net/rcat) | Get [RCAT data from Data Exchange](https://data.riverscapes.net/pt/rcat) | RCAT projects can be looked at to get a rough idea of riparian condition and wood recruitment potential. These are based on 30 m LANDSAT derivatives from LANDFIRE, and are descent. Sometimes combining this with aerial imagery and a site visit is adequate. Don't be afraid to overide what these models when run with coarse input data suggest, with what you observe on the ground. |
+| [National Wetland Inventory](https://www.fws.gov/program/national-wetlands-inventory) | NWI is now part of [Riverscapes Context](https://data.riverscapes.net/pt/rscontext) | NWI data can be useful to help identify existing wetlands and riparian areas. It is not perfect, but it is a good start. |
+
+Below we show what can be gleaned from RCAT as a line of evidence. It is based on a [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project at Brich Creek.
+<YouTubeEmbed videoId="GTmVEuMhpX8" />
+
+</details>
+
+#### Riparian Condition Capacity to support Process of Beaver Dam Activity
+
+Allowing beaver dispersing from upstream to move down in and maintain water in this reach could be adventagoues. Where beaver dam activity is an immediate, or long-term goal, the question to ask is whether or not beaver dam actiivty could be sustained and if so to what level? From basic observations (sometimes good enough from imagery at desktop - or improved with field visit)
+- Nubmer of Dams in a reach that can be supported currently (e.g. count of capacity)
+- Comparison to what might have been supported their historically (i.e. count of upper plausible extent of capacity)
+
+With that information you can compare what sort of recovery space is possible in terms of a capacity bump. Note that the recovery space may be less than historic capacity if the area within 100 m of the channel is not likely to increase is favorable production of vegetation to support dam building activity.  Finally, you can:
+- Count existing beaver dams
+- Compare existing dams to current and potential capacity (uplift potential)
+- Consider if there are any areas where beaver could cause unintended harm that may need to be mitigated and/or identified in adaptive management plan.
+
+
+<details closed>
+
+| Resource Type | Suggested Resource Link | Notes or Alternative Resource |
+|------------------------|-------------------------|-------------------------------|
+|[Beaver Restoration Assessment Tool](http://tools.riverscapes.net/BRAT)  | Get [BRAT for your site from Data Exchange](https://data.riverscapes.net/pt/riverscapes_brat) | See what BRAT estimates beaver dam capacity, risk of undesireable dams, and restoration and conservation opportunties with beaver dam building activity for your riverscape. |
+|Perform your own BRAT assessment with QRiS or by hand | *Experimental BRAT CIS Protocol* (documentation forthcoming) | Simply fill out the form and it uses the CIS to calculate an estimated capacity. You can also make this assessment by asking the questions that BRAT does in the field or at the desktop with the [BRAT cIS](http://brat.riverscapes.xyz/Workshops/2018/johnday.html#brat-capacity-modelling) paper form. |
+
+This video shows how to download and use the primary outputs of BRAT. It is based on a [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project at Brich Creek.
+<YouTubeEmbed videoId="wKWCY47Z8G0" />
+
+</details>
+
+### Project Objectives 
+Revisit problem and purpose and confirm or clarify and then recast management goals as SMART objectives (see page 8-9 of Chapter 3) and in terms of measurable objectives and indicators that tie to riverscape health.
+
+
+
+--------
+## In Class Exercises
+
+### Data for Exercises
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+
+        {
+        title: "Fall Creek Demo - Riverscapes Studio Projects",
+        description: "Riverscapes Studio Collection with Starter & Full Project for Fall Creek, Wyoming with context layers.",
+        logoUrl: "/images/logos/qris-icon-256x256-@2x.png",
+        toolUrl: "https://data.riverscapes.net/c/91ba18b7-45a0-4c7b-9d61-9a247a8c4dc1/projects/map",
+        imageUrl: "/images/webinars/FallCreekCard2.png",
+        imageLink: "https://data.riverscapes.net/c/91ba18b7-45a0-4c7b-9d61-9a247a8c4dc1/projects/map",
+        },     
+{
+        title: "Fall Creek - Riverscape Models for Context",
+        description: "Collection of Riversapes Context and Valley Bottom and Antro Projects from Data Exchange",
+        logoUrl: "/images/icons/vbet-icon-256x256-@2x.png",
+        toolUrl: "https://data.riverscapes.net/c/00d7fdec-c3d1-47d4-8f4e-78f6a07e5a2b/",
+        imageUrl: "/images/webinars/NRCS-CEAP-banner.png",
+        imageLink: "https://data.riverscapes.net/c/00d7fdec-c3d1-47d4-8f4e-78f6a07e5a2b/",
+        }, 
+
+    ]}
+    />
+
+
+
+
+
+In class, we will work through exercises to practice the steps of LTPBR Planning using QRiS. We will use freely available datasets from the [Riverscapes Data Exchange](https://data.riverscapes.net/) to create a QRiS project for a hypothetical assessment of Fall Creek, Wyoming.  
+
+:::tip
+In general, you will be expected to apply what we cover in exercises to your own project for the [assignment](#main-assignment).
+:::
+
+### A. Install and Open Project
+
+QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install them directly in QGIS. 
+
+1. In the QGIS menubar at the top of the page, Plugins > Manage and Install Plugins. 
+2. Install the Riverscapes Viewer plugin first. Search for Riverscapes Viewer and click the Install button. This is a required dependency for QRiS. 
+3. Install the QRiS plugin next. Follow the same steps to Plugins > Manage and Install Plugins and search for QRiS. Click the Install button.
+4. Create a new project, or open the [one provided](https://data.riverscapes.net/p/e1969064-3661-4ef2-8e43-586aaeac4a18/) after downloading
+<YouTubeEmbed videoId="JSspKEaYn4s" />
+### B. Download Riverscapes Projects and Explore Context layers
+
+1. Under the QRiS Plugin pane, right click on your project name, and select Browse Data Exchange Projects. This will open a Data Exchange window in your web browser, zoomed to the map area open in QGIS. 
+2. In the Data Exchange, you can zoom out as needed to be sure you select the HUC 10 you’re working within. Click your HUC 10 and find a Valley Bottom (VBET) project. Click the project. A banner at the top of the project page will alert you if there is a newer version of the Valley Bottom project run. Download your Valley Bottom project.
+3. Follow the same steps to find and download the Riverscapes Context and Anthro Projects as well. 
+<YouTubeEmbed videoId="hLWqKnW1Q0c" />
+### C. Populate Project with Context layers
+
+1. Open your Riverscapes Context Project throught the Riverscapes Viewer Plugin by browsing to and selecting the project.rs.xml
+
+![Open Project](/images/webinars/open-project.png)
+
+2. Browse the layers and double click on them to add them to the map, look for layers that help add context to our riverscape
+3. Once you have located contextual layers in the riverscapes project we are going to import them into our QRIS project
+    1. Right-click the DEM layer under Topography and Derivatives -> Add to QRIS 
+    2. Change the 'Clip to AOI' dropdown to our Project AOI -> click OK
+    3. Repeat this process for Slope Analysis, Wetlands, Existing Riparian and Historic Riparian.
+
+![Import Layers](/images/webinars/import-layers.png)
+
+<YouTubeEmbed videoId="HX5Mum-rI4o" />
+### D. Create a Data Capture Event
+
+1. Right-click Data Capture Events node -> Add New Data Capture Event
+2. Select Geomorphic Mapping of Riverscapes in the pop-up window. Click Add. 
+3. Under LTPBR Protocol, add layers:
+    1. Risk Potential (points, lines, polygons)
+    2. Recovery Space
+4. Name the DCE something useful, like 2025 Assessment
+5. In the Basic Properties tab, set the data of the DCE based on the date or date range of datasets used as your evidence layers (this may be difficult to do in our example since we are using basemaps)
+6. Under Surfaces, select your datasets that you plan to use as context for digitizing features
+7. In the Description tab, write a brief description of this DCE. A good description in this example would be, “This DCE represents the planning portion of this project. It is based on freely available datasets from the [Riverscapes Data Exchange](https://data.riverscapes.net/)”
+
+![Create DCE](/images/tutorials/DCE-example.png)
+<YouTubeEmbed videoId="q6zT7PAgSBQ" />
+### E. Map Geomorphic Units
+
+1. Add the Geomorphic Units layer to the map (either by double-clicking, or right-click -> add to map)
+2. With the Geomorphic Units layer selected, toggle editing. 
+3. Click Add Polygon Feature. Using this tool, digitize terraces and fans, then digitize your active channel. 
+    1. **Note**: This is a great place to start using the [Profile tool](/technical-reference/profile-tool). The Profile Tool provides a better understanding of a landscape than visual identification, resulting in better mapping accuracy. 
+        1. Pull cross-sections from hillslope -> valley bottom -> hillslope to help verify valley bottom boundaries. Try it again across sections of the riverscape you suspect are hillslope transitioning to valley bottom to fan. This can help you draw your unit boundaries more accurately. 
+4. Save edits by clicking the toggle editing button and save on the pop-up window
+
+![Geomorphic Units](/images/tutorials/geomorphic-units.png)
+<YouTubeEmbed videoId="9D53qm6BZvE" />
+### F. Map Valley Bottom and Compare to VBET
+
+#### Manually Map the Valley Bottom
+1. Right-click Riverscapes node -> Create New (Manually Digitized) Valley Bottom. Name and describe the layer in the pop-up window. 
+2. With the new valley bottom layer selected -> toggle editing. 
+3. Click Add Polygon Feature. 
+4. Digitize valley bottom polygons, informed by the hillshade and valley geomorphic units we just digitized. The valley bottom only (this layer) includes active channel and floodplain, and excludes fans and terraces. 
+5. Save edits by clicking the toggle editing button and save on the pop-up window. 
+
+![Valley Bottom](/images/tutorials/valley-bottom.png)
+
+#### Open a VBET Project to Compare and Import into Project
+1. Open the VBET Riverscapes project that we downloaded earlier through the Riverscapes Viewer by browsing to and selecting the project.rs.xml
+2. Expand the Outputs folder -> Right click on "Valley Bottom Extent (Hollow)" and select 'Add to QRIS'
+3. In the pop-up window select the "Project AOI" from the 'Clip to AOI' dropdown menu, click ok to import the layer
+4. That layer will now appear in your project under the context node, we will now promote it to a Riverscape
+    1. Right-click on the "Valley Bottom Extent (Hollow)" layer in Context -> Hover over 'Promote to...' and select "Riverscape Valley Bottom"
+    2. Rename the valley bottom to Something like "Fall Creek Valley Bottom VBET" to indicate that this valley bottom is from VBET and its for the riverscape of Fall Creek
+    3. Repeat steps i. and ii. but this time change the name to "Coburn Creek Valley Bottom VBET"
+5. Individually edit each of the 2 new riverscapes to achieve a few different things
+    1. Make sure there is one feature for each of the two riverscapes, you will need to delete extra features that dont correspond to the riverscape
+    2. Edit the valley bottom extent to include or exclude places you think the VBET output is wrong (if necessary)
+    3. Edit the valley bottoms to join in the correct location (sometimes vbet over exaggerates the mainstem valley bottom up the tributaries)
+
+![VBET Compare](/images/webinars/VBETcompare.png)
+
+<YouTubeEmbed videoId="VlCkXB07jUk" />
+### G. Map Active Confining Margins
+
+1. In your DCE -> Active Confining Margins layer -> double-click or right-click -> add to map
+2. With the Active Confining Margins layer selected, toggle editing.
+3. Digitize places where the channel abuts a confining margin. Select the appropriate attributes associated with each mapped margin
+4. Save edits by clicking the toggle editing button and save on the pop-up window.
+
+![Active Confining Margins](/images/tutorials/margins.png)
+<YouTubeEmbed videoId="z8ob8Ypg6j8" />
+### H. Map Risk
+
+1. Open the Anthro Riverscapes project that we downloaded earlier through the Riverscapes Viewer by browsing to and selecting the project.rs.xml
+2. In the Riverscapes Viewer panel, add potential risk layers to the map (layers such as roads, canals, land ownership, etc). We’ll use these as the basis for delineating your risk layers next. 
+4. Add one of your QRIS risk layers to the map and toggle editing. There are three different Risk Potential layers: points, lines, and polygons. Digitize these as:
+    1. Polygons: risk you may need to create a boundary on, like a building or pasture
+    2. Lines: roads, canals, etc
+    3. Points: culverts, bridges, etc
+5. Assign risk attributes for features including type and severity 
+6. Repeat on each layer individually as necessary.
+
+![Potential Risk](/images/tutorials/risk.png)
+<YouTubeEmbed videoId="EYvnCeAcvH4" />
+### I. Map Recovery Space
+
+The riverscape valley bottom is the baseline for recovery space, so we’ll start with that previously-digitized information. This step will duplicate the Valley Bottom geometry into the recovery space layer where we can make necessary edits without having to start from scratch.
+
+1. Right-click on the recovery space layer -> Import Features from Riverscapes Valley Bottom
+2. Toggle editing on the layer. Use the Reshape Features digitizing tool to make edits where necessary. 
+3. You will have to do this twice for your two different VBET riverscapes we created earlier. 
+
+Here, we can look at the risk layers we digitized and determine what we can actually recover in the riverscape. Consider what portions of the active floodplain are recoverable, versus parts separated by a berm, levee, or other limiting factor not involved in risk mapping. 
+
+![recovery space](/images/tutorials/recovery-potential.png)
+<YouTubeEmbed videoId="uT277glRfYI" />
+### J. Carol vs Pops, Differing Ideas on Recovery Space
+
+In Our [Module 4](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://s3-us-west-2.amazonaws.com/etalweb.joewheaton.org/RestorationConsortium/Workshops/2020/SGI/Materials/Module4/04_C_DesignRecoveryPotential.pdf) example Carol and Pops have differing ideas on what recovery space should look like. If we compare what we digitized it matches pops, so we need a way to create another recovery space for Carol to compare against.
+
+1. Create a New DCE and call it "2025 Assessment Carol"
+2. Follow the same steps we did earlier for creating a DCE but only select the recovery space layer from the LTPBR Procotol
+3. Rather than digitizing a new layer we can import from a previous DCE. Right-click the recovery space layer in the new DCE and select "+ Copy from Data Capture Event" -> Select the appropriate DCE.
+4. Add that layer to the map and toggle editing
+5. Delete the feature that corresponds to the Fall Creek Riverscape and edit the remaining feature to the extents that Carol drew as well as to the Property AOI
+6. Saved edits
+
+We now have 2 DCEs with different recovery space layers that we can compare in Analyses. However, we need a corresponding Sample Frame for that Analysis. 
+This will be addressed when we generate sampe frames.
+
+![recovery space Carol](/images/webinars/RecoveryPotential.png)
+
+### K. Assess the Riverscape Potential to Support Wood Accumulation and Beaver Activity
+
+1. Right-click on your main DCE and add the BRAT CIS Reaches layer from the BRAT CIS Protocol. Add the Structural Elements Points and Inundation Extents layers from the LTPBR Protocol. Click Ok to add them to your DCE.
+2. Use the Structural Elements layer to digitize dams and jams.
+3. Use the BRAT CIS layer to assess beaver activity capacity at a reach scale.
+4. Map the Inundation Extents layer.
+5. Using these layers as well as model outputs from BRAT and RCAT assess whether or not there is structural starvation in your riverscape and whether or not the riverscape has the ability to support beaver activity.
+
+<YouTubeEmbed videoId="pSy2hoXzwrw" />
+
+### L. Create a Planning Container
+
+1. Right-click Data Capture Events Folder -> +Low Tech Process Based Restoration -> Add New Planning Container
+2. In the pop-up, name it something useful, like 2025 LTPBR Planning. Click add -> select 2025 Assessment DCE. It will now populate the table. Change its representation to Contemporary. 
+
+Ideally, a planning container would also have both a Historic and Predicted DCE. A planning container simply copies DCEs into a new parent folder, which you’ll reference as the basis for LTPBR Design, when we get there. 
+
+![Planning Container](/images/tutorials/planning-container.png)
+<YouTubeEmbed videoId="4uUUn3rx9mE" />
+### M. Generating Sample Frames
+
+[Sample Frames](https://qris.riverscapes.net/software-help/inputs/sample-frames/) are what QRIS uses to calcualte [metrics](https://qris.riverscapes.net/technical-reference/metric_calculations/)(i.e. zonal statistics) within as part of [analyses](https://qris.riverscapes.net/software-help/analyses/). Sample Frames can be any polygon, but here we’ll consider two specific ways QRIS supports to create sample frames of riverscapes: i) using derived cross sections and ii) manually digitized cross sections (or reach breaks). If you want standardized reach lengths use derived cross sections. If you want to be in control of reach breaks then manually digitize cross sections. You may want to do this if there is a change in land ownership or a change in riverscape characteristics. 
+
+1. Right-click one of the Valley Bottom VBET layers -> Generate Centerline
+2. Use the [centerline tool](/software-help/inputs/valley-bottoms) to create and save a centerline to your project
+
+![Generate Centerline](/images/tutorials/centerline.png)
+
+3. Right-click the Centerline layer -> Generate Cross Sections
+4. Use the [cross section tool](/software-help/inputs/profiles) to create and save cross sections to your project
+
+![Generate Cross Sections](/images/tutorials/cross-sections.png)
+
+5. Now, we have the building blocks to create a sample frame. Right-click the Sample Frames folder -> Create New Sample Frame -> From QRiS Features
+6. In the pop-up window, select the input layers to build a sample frame from(this will autopopulate with the layers you just created). Give it a helpful name. Check Infer Topology from Centerline. 
+7. Do this for both of your VBET riverscape layers
+
+![Sample Frames](/images/tutorials/sample-frames.png)
+
+#### Create a Sample Frame to Compare Carol and Pops Recovery Space
+
+There are different ways to do this but the easiest uses a tool outside of QRIS to create a temporary layer to then import into the project
+
+1. Add your Coburn Creek Valley Bottom VBET layer to the map -> use the selection tool to select the feature -> search the processing toolbox for 'Select Extracted Features' tool.
+2. Make sure the correct layer is selected in the tool and click run (no need to save to a location, we just want a temporary layer)
+
+![Temporary Layer](/images/webinars/temporary-layer.png)
+
+3. Right-click the Sample Frames node -> Import Sample Frame from... -> select "Layer in Map"
+4. Choose the Temporary Layer in the dropdown, Give it a name like "SF Property", and select the "Property AOI" in the 'Clip to AOI' dropdown
+5. Leave all other fields as none and click ok
+
+<YouTubeEmbed videoId="4ZSVIPAE_cU" />
+### N. Analyses
+
+Now that we have created sample frames we can use those to create an analysis and calculate metric values derived from features we digitized.
+
+1. Right-click the Analyses folder -> Create New Analysis
+2. Give the Analysis a name
+3. Select the sample frame layer you want to use to calculate metrics in
+4. Select the appropriate valley bottom layer, centerline layer, and DEM layer
+5. You will see a large list of metrics to select from. Click none at the bottom-right to set all metrics to none. Setting all to none allows you to go through and only choose the ones you want to calculate. Change the dropdown to metric on the following metrics:
+    1. Active Floodplain Proportion
+    2. Active Channel Proportion
+    3. Proportion of Riverscape with recovery space
+6. Click OK
+
+![Start Analysis](/images/tutorials/start-analysis.png)
+
+7. On the window that pops up click calculate
+8. On the new window select All Sample Frames and click ok
+9. Values will calculate and populate in the table of metrics. Under the Mask Polygon Dropdown you can switch between your different sample frames to see the different metric values.
+
+![Calculate Analysis](/images/tutorials/analysis-calculate.png)
+
+Run the Analysis three times:
+1. Run an analysis on Fall Creek (make sure to select all the appropriate inputs for Fall Creek )
+2. Run an analysis on Coburn Creek (make sure to select all the appropriate inputs for Coburn Creek)
+3. Run an analyis to compare Carol and Pops. 
+    1. Select the SF Property layer as the sample frame input and the Coburn Creek Valley Bottom and centerlines when creating the analysis. 
+    2. Select the Proportion of Riverscape with recovery space metric and set the rest to none, click ok
+
+![Analysis](/images/webinars/analysis.png)
+
+    3. Run the calculation, but this time check "All Data Capture Events" options, click OK
+    4. Once it is calculated you can toggle between DCEs to see the differing values between Carol and Pops
+
+![Analysis Results](/images/webinars/analysis-results.png)
+
+Metrics can be recalculated at any time and values can be overridden with manual values if necessary. More help can be found on the [Analyses](/software-help/analyses) help page.
+<YouTubeEmbed videoId="a1Im3NP8MZE" />

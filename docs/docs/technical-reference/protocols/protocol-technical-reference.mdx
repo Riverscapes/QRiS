@@ -5,18 +5,24 @@ description: Instructions how to write and maintain protocols
 ---
 
 
+
 ## Protocol XML
-Each Protocol is be defined by a separate XML file that resides in the RiverscapesXML repository. An XSD “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository.
+Each Protocol is be defined by a separate XML file. Protocols that ship with QRiS reside in the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). An [`protocol.xsd`](https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocol.xsd) “rule file” defines the schema for these XML files and a GitHub “action” used to ensure that only protocols that validate against this rule file are be permitted into the git repository. 
 
 A single protocol XML file contains both the layer and metric definitions. This is required for referential integrity, because the metrics refer to the layers within the protocol. Indeed metrics will only be able to refer to metrics within the protocol in which the metric is defined. In other words, an LTPBR metric cannot refer to an LCT layer.  
 
 ### Authoring and Editing Protocols
-
+Protocols can also be developed and deployed locally by placing the protocol XML in the root of the directory of the current QRiS project.
 :::tip
-QRiS will look for protocol XML files adjacent to the current QRiS project. This will allow protocol authors to experiment with draft protocols, similar to how local business logic files work for QViewer.
+QRiS looks for protocol XML files in the following locations: 
+- i) in the `%AppDta%\Roaming\QGIS\QGIS3\profiles\default\python\plugins\riverscapes_viewer\resources\QRiS\protocols` (ships with Riverscapes Viewer and is updated automatically by syncing to  [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML);  
+- ii)  adjacent to the current QRiS project; and 
+- iii) in a user-specified local protocols folder from `Help` → `Settings` and adjusting the `Local Custom Protocols Folder` with `...`. 
+
+These second and third options allows  protocol authors to experiment with draft protocols, similar to how [local business logic files](https://viewer.riverscapes.net/technical-reference/business-logic#customizing-business-logic--refreshing-the-project-explorer) work for Riverscapes Viewer.
 :::
 
-There is no user interface for writing protocols. Users are advised to use Visual Studio Code with linting based on the latest version of the protocol XSD rule file. This is similar to how users already develop new riverscapes project and business logic XML files.
+There is no user interface for writing protocols. Users are advised to use [Visual Studio Code](https://code.visualstudio.com/) with linting based on the latest version of the protocol XSD rule file. 
 
 ### Protocol Versioning
 QRiS protocols can be changed at any time. Any change to a protocol must increment its version number. Protocol owners have the option of either changing an existing protocol or splitting it into a new XML file:
@@ -31,6 +37,32 @@ Creating a new file for the same protocol makes available the possibility of mai
 
 ### Decoupling Specification From Implementation
 One of the most important concepts is the decoupling of the protocol specification (XML file) and the DCE layers that are created using the specification. Once a DCE layer is created, the definition is loaded into the QRiS project and its overall design should be considered immutable, with the exception of a few display/labeling attributes (see specification). After the DCE layer has been created, the protocol can change or get deprecated, the design of layers can evolve, but the DCE layer instance remains in the project as it was originally created. QRiS will never attempt to update the fundamental design of DCE layers (fields, field types etc) to reflect the latest version of a protocol. DCE layers reflect a snapshot of the protocol at the point in time when they were created.
+
+Protocol Element|Add|Delete|Edit (Current Version)|Edit (New Version)|
+---|---|---|---|---|
+**Layers**|Y|N|-|-
+Label|-|-|Y|-
+Description|-|-|Y|-
+Symbology|-|-|Y|-
+MenuItems|-|-|Y|-
+Hierarchy|-|-|Y|-
+**Fields**|Y (update layer version)|N|N|-
+Label|-|-|Y|-
+MinimumValue|Y|N|Y|-
+MaximumValue|Y|N|Y|-
+Precision|Y|N|Y|-
+DefaultValue|Y|N|Y|-
+Visibility|Y (update layer version)|-|N|Y
+Values|Y|-|N|Y
+**Metrics**|Y|N|-|-
+Label|-|-|Y|-
+DefaultLevel|-|-|Y|-
+Description|-|-|Y|-
+DefinitionURL|-|-|Y|-
+MinimumValue|-|-|Y|-
+MaximumValue|-|-|Y|-
+Precision|-|-|Y|-
+Parameters (any attribute)|-|-|N|Y
 
 **Example Scenario**
 
@@ -149,3 +181,19 @@ A protocol can contain one or more metrics. Each metric is defined by a `Metric`
         - Attributes:
           - `field_id_ref`: references the id of the field
         - `Value`: (one or more) value to filter by
+
+
+----
+## Protocol Documentation
+The [QRiS Development Team](https://qris.riverscapes.net/About#development-team) will not approve a pull-request for a new protocol to deploy with QRiS without appropriate documentation. In addition to submitting a pull request to the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML), a pull request for a `*.mdx` protocol page to be found under the [QRiS Protocol Library](https://qris.riverscapes.net/protocols/protocol-library) part of this website.  
+
+Best practices include:
+1. Authoring a complete protocol documentation page on what is in the protocol and how to implement it with sections (as *.mdx - see here for how; easiest to copy an existing one as a template):
+  - Overview
+  - Protocol Summary table, including citaeable citation
+  - Layers & Metrics
+    - Video Demonstration
+    - Layer Attributes
+    - Metric Attributes
+2. Authoring an external report (PDF) and/or peer-reviewed publication that describes and/or vetts the methods and the *why* behind the *what* and *how*. If protocol document is a self-published document, we recommend [uploading to Zeondo](https://docs.riverscapes.net/get-involved/documentation/WebSites/Common/#add-a-doi-with-zenodo-for-your-website-or-tool) or ResearchGate for generation of a DOI and making it publicly available and the citations trackable. 
+
