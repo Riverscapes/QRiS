@@ -48,7 +48,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    image: 'images/logo.png', // Social sharing image
+    image: 'https://cdn.riverscapes.net/icons/products/qris/qris_32.png', // Social sharing image
 
     algolia: {
       // The application ID provided by Algolia

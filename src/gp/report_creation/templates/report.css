@@ -141,7 +141,7 @@ section.report-section>.report-header{
 #HeaderBar .projectType{ float: left}
 #HeaderBar .projectType{ float: left}
 #RiverscapesLogo {
-  background-image: url(https://riverscapes.net/assets/images/RiverscapesLogo.png);
+  background-image: url(https://cdn.riverscapes.net/icons/products/qris/qris.svg);
   background-size: contain;
   background-repeat: no-repeat;
   flex: 0 0 6%;

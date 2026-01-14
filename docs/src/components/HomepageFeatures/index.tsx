@@ -59,13 +59,13 @@ export default function HomepageFeatures() {
             title="Riverscapes Consortium"
             description="The main community platform site for the Riverscapes Consortium."
             link="https://riverscapes.net"
-            image="logos/rc_logo_wide.png"
+            image="https://cdn.riverscapes.net/icons/consortium/consortium.svg"
           />
           <ResourceCard
             title="Riverscapes Data Exchange"
             description="A public platform for discovering, sharing, and downloading Riverscapes compliant data."
             link="https://data.riverscapes.net/"
-            image="logos/data_exchange_wide.png"
+            image="lhttps://cdn.riverscapes.net/icons/products/data-exchange/data-exchange.svg"
           />
           <ResourceCard
             title="QRiS User Community"
