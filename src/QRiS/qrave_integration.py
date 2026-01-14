@@ -27,6 +27,7 @@ class QRaveIntegration(QObject):
             self.qrave_map_layer = None
             self.metric_definitions_folder = None
             self.protocol_folder = None
+            self.RemoteProject = None
 
             # Attemp to find RAVE plugin using lower case names
             plugins_lower_case = {k.lower(): k for k in plugins.keys()}
@@ -37,6 +38,12 @@ class QRaveIntegration(QObject):
                 self.name = plugins_lower_case[matched_lower_case_name]
                 self.plugin_instance = plugins[self.name]
                 self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
+                try:
+                    remote_project_module = importlib.import_module(f'{self.name}.src.classes.remote_project')
+                    self.RemoteProject = remote_project_module.RemoteProject
+                except ImportError:
+                    self.RemoteProject = None
+
                 self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
                                           parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
 
@@ -82,6 +89,9 @@ class QRaveIntegration(QObject):
             data (ProjectTreeData): ProjectTreeData (QRave)
         """
 
+        if self.RemoteProject and isinstance(data.project, self.RemoteProject):
+            return  # Do not add menu for remote projects
+        
         menu.addSeparator()
         menu.addCustomAction(QIcon(f':/plugins/qris_toolbar/add_to_map'), "Add to QRiS", lambda: self.add_to_qris(item, data))
 
