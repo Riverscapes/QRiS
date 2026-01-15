@@ -1,11 +1,14 @@
 import os
+import sys
+import re
+import importlib
+from glob import glob
 import json
 import sqlite3
 from datetime import datetime
 
 from osgeo import ogr
 
-from PyQt5 import QtCore
 from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
 
 from ..model.project import Project
@@ -24,13 +27,88 @@ from ..model.analysis import Analysis
 from ..model.attachment import Attachment
 
 def rsxml_import():
+
+    
+    target_version = None
+    wheel_path = None
+    
+    # 1. FIND THE VIEWER PLUGIN & TARGET VERSION
+    # Get the plugins directory (../../..) from src/lib/rs_project.py
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    plugins_dir = os.path.abspath(os.path.join(this_dir, '..', '..', '..'))
+    
+    # Look for riverscapes_viewer or riverscapes_viewer_dev
+    for viewer_dir in ['riverscapes_viewer', 'riverscapes_viewer_dev']:
+        plugin_path = os.path.join(plugins_dir, viewer_dir)
+        if not os.path.isdir(plugin_path):
+            continue
+
+        # Try to read version from src/__init__.py
+        init_path = os.path.join(plugin_path, 'src', '__init__.py')
+        if os.path.isfile(init_path):
+            try:
+                with open(init_path, 'r') as f:
+                    content = f.read()
+                    # Look for RSXML_VERSION = '2.2.1'
+                    match = re.search(r"RSXML_VERSION\s*=\s*['\"]([^'\"]+)['\"]", content)
+                    if match:
+                        target_version = match.group(1)
+            except Exception:
+                pass
+
+        # Find the wheel file
+        if target_version:
+             wheel_pattern = os.path.join(plugin_path, 'wheels', f'rsxml-{target_version}-*.whl')
+        else:
+             wheel_pattern = os.path.join(plugin_path, 'wheels', 'rsxml-*.whl')
+
+        wheels = glob(wheel_pattern)
+        
+        if wheels:
+            wheel_path = wheels[0]
+            # If we didn't find the variable but found a wheel, try to get version from filename as fallback
+            if not target_version:
+                try:
+                    start = wheel_path.rfind('rsxml-') + 6
+                    end = wheel_path.find('-', start)
+                    target_version = wheel_path[start:end]
+                except:
+                    pass
+            break
+            
+    # 2. TRY IMPORT & CHECK VERSION
     try:
         import rsxml
-        QgsMessageLog.logMessage('rsxml imported from system', 'Riverscapes Viewer', Qgis.Info)
+        loaded_version = getattr(rsxml, '__version__', None)
+        
+        # If we found a specific target version from the wheel/init, enforce it
+        if target_version and loaded_version != target_version:
+             QgsMessageLog.logMessage(f'Version mismatch: Loaded {loaded_version}, Target {target_version}. Reloading...', 'QRiS', Qgis.Warning)
+             raise ImportError("Version mismatch")
+             
+        QgsMessageLog.logMessage('rsxml imported from system', 'QRiS', Qgis.Info)
+        return rsxml
+
     except ImportError:
-        QgsMessageLog.logMessage('rsxml not found in system, importing from source', 'Riverscapes Viewer', Qgis.Info)
-        rsxml = None
-    return rsxml
+        # 3. LOAD FROM WHEEL IF NEEDED
+        if wheel_path:
+            if wheel_path not in sys.path:
+                sys.path.insert(0, wheel_path)
+            
+            try:
+                if 'rsxml' in sys.modules:
+                    import rsxml
+                    importlib.reload(rsxml)
+                else:
+                    import rsxml
+                    
+                QgsMessageLog.logMessage(f'rsxml imported from {os.path.basename(wheel_path)}', 'QRiS', Qgis.Info)
+                return rsxml
+            except ImportError:
+                pass
+
+        QgsMessageLog.logMessage('rsxml not found in system or sibling plugins', 'QRiS', Qgis.Warning)
+        return None
 
 rsxml = rsxml_import()
 from ...__version__ import __version__ as installed_qris_version
