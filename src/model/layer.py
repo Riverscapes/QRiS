@@ -177,6 +177,8 @@ def check_and_remove_unused_layers(qris_project):
                 for metric_id in metric_ids_to_delete:
                     del qris_project.metrics[metric_id]
 
+                # Manually clean up analysis_metrics since ON DELETE CASCADE is missing in schema for this relationship
+                curs.execute('DELETE FROM analysis_metrics WHERE metric_id IN (SELECT id FROM metrics WHERE protocol_id = ?)', (protocol.id,))
                 curs.execute('DELETE FROM metrics WHERE protocol_id = ?', (protocol.id,))
                 curs.execute('DELETE FROM protocols WHERE id = ?', (protocol.id,))
                 conn.commit()
