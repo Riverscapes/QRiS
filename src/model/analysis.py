@@ -87,7 +87,7 @@ def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> D
 
     for analysis_id, analysis in analyses.items():
         curs.execute('SELECT * FROM analysis_metrics WHERE analysis_id = ?', [analysis_id])
-        analysis.analysis_metrics = {row['metric_id']: AnalysisMetric(metrics[row['metric_id']], row['level_id']) for row in curs.fetchall()}
+        analysis.analysis_metrics = {row['metric_id']: AnalysisMetric(metrics[row['metric_id']], row['level_id']) for row in curs.fetchall() if row['metric_id'] in metrics}
 
     return analyses
 
