@@ -2,6 +2,7 @@
 """Common functionality used by regression tests."""
 
 import sys
+import os
 import logging
 
 
@@ -37,6 +38,8 @@ def get_qgis_app():
         #noinspection PyPep8Naming
         QGIS_APP = QgsApplication(sys.argv, gui_flag)
         # Make sure QGIS_PREFIX_PATH is set in your env if needed!
+        if 'QGIS_PREFIX_PATH' in os.environ:
+             QGIS_APP.setPrefixPath(os.environ['QGIS_PREFIX_PATH'], True)
         QGIS_APP.initQgis()
         s = QGIS_APP.showSettings()
         LOGGER.debug(s)
