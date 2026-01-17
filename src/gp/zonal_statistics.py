@@ -29,7 +29,7 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     raster_gt = raster_ds.GetGeoTransform()
     raster_nd = raster_ds.GetRasterBand(1).GetNoDataValue()
 
-    ogr_mem_driver = ogr.GetDriverByName('Memory')
+    ogr_mem_driver = ogr.GetDriverByName('MEM')
     gdl_mem_driver = gdal.GetDriverByName('MEM')
 
     # Attempt to delete existing feature class. This now
@@ -62,6 +62,11 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
 
     # Convert the polygon bounding box to cell offset coordinates
     offsets = boundingBoxToOffsets(extents, raster_gt)
+    
+    # Clamp the offsets to the raster dimensions to avoid out of bounds errors
+    # on exact edge alignments
+    offsets[1] = min(offsets[1], raster_ds.RasterYSize) # row2
+    offsets[3] = min(offsets[3], raster_ds.RasterXSize) # col2
 
     # Calculate the new geotransform for the polygonized raster
     new_geot = geotFromOffsets(offsets[0], offsets[2], raster_gt)
@@ -99,6 +104,7 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     # Discard the in-memory datasets
     tr_ds = None
     ogr_mem_ds = None
+    raster_ds = None 
     return results
 
 
