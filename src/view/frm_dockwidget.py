@@ -570,7 +570,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
                         self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
-                    if isinstance(model_data, Attachment):
+                    elif isinstance(model_data, Attachment):
                         if model_data.attachment_type == Attachment.TYPE_FILE:
                             self.add_context_menu_item(self.menu, 'Open Attachment', 'open_external', lambda: self.browse_item(model_data, model_data.project_path(self.qris_project.project_file)))
                         else:
