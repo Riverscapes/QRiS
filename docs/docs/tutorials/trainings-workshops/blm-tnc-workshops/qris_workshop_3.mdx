@@ -1,9 +1,199 @@
 ---
-title: QRiS Workshop 3 - Design
+title: QRiS Workshop 3 - Planning 
 banner: true
 sidebar_position: 3
 description: Workshop 3
 ---
-:::info
-Content will be updated prior to each workshop offering.
+
+At this point in our Wall Creek Example project we have done the following
+
+From Workshop 1:
+
+- Created a new QRIS project
+- Added layers to our QRIS project directly from a Riverscapes Context project in RiverscapesViewer.
+- Delineated an Area of Interest, both by manually drawing as well as using the Catchment Delineation Tool
+- Added aerial imagery to our project for context and digitizing riverscape features
+
+From Workshop 2:
+
+The main purpose of Workshop 2 was to go through the NRCS planning process using protocols in our QRIS project. This process consisted of the following:
+
+- Added a lidar DEM/hillshade for context
+- Created a Data Capture Event using the Geomorphic Mapping of Riverscapes(experimental) protocol
+- Mapped geomorphic units using our hillshade and aerial imagery as evidence
+- Mapped our valley bottom/riverscape using our geomorphic layer as context
+- Mapped confining margins using valley bottom/riverscape and geomorphic units as context
+- Added risk layers and recovery space from the LTBPR Protocol
+- Mapped risk and recovery space using risk and valley bottom to inform our total recovery space\
+- Created sample frames and ran an analysis to calculate active proportions and recovery space within our riverscape
+
+**Video Overview of Workshops 1 and 2**
+<YouTubeEmbed videoId="crP6PG82oiE" />
+
+Today we are going to expand and the basic planning process we did in Workshop 2 by exploring differing ideas of recovery space and how that might inform our reach breaks for current conditions. We will use that as well as other contextual layers to differentiate reach objectives that will inform our complex designs in Workshop 4. Furthermore we will perform Analyses again and explore how we can export that data to create indicator tables and figures to aid in our reporting.
+
+## Resources
+
+### Data for Demos and Excercises
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+
+        {
+        title: "Wall Creek Demo - Riverscapes Studio Projects",
+        description: "Riverscapes Studio Collection consisting of a starter projects (with and without surfaces/imagery), as well as the final project that this workshop will result in.",
+        logoUrl: "https://cdn.riverscapes.net/icons/products/qris/qris.svg",
+        toolUrl: "https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/map",
+        imageUrl: "/images/webinars/wall-creek.png",
+        imageLink: "https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/map",
+        }      
+    ]}
+    />
+### Resfresher on the Planning Process
+
+<ToolsWrapper
+    cardsize="md"
+    cards={[
+        {
+        title: "Moudle 3C",
+        description: "Reading Riverscapes & Mapping the Valley Bottom",
+        imageUrl: "/images/webinars/03_C.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3/",
+        },
+        {
+        title: "Moudle 3D",
+        description: "Mapping and Estimating Structural Forcing",
+        imageUrl: "/images/webinars/03_D.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3/#d-recognizing-structural-forcing-in-riverscapes",
+        },
+                {
+        title: "Moudle 3E",
+        description: "Resource Inventory & Analysis - Risk Assessment, Condition Assessment & Recovery Space",
+        imageUrl: "/images/webinars/03_E.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3#e-risk-assessment-condition-assessment--recovery-potential",
+        },
+                {
+        title: "Moudle 3F",
+        description: "Connecting & Clarifying Objectives & Tying to Goals",
+        imageUrl: "/images/webinars/03_F.png",
+        logoUrl: "/images/icons/USU-Social.jpg",
+        toolUrl: "https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3#f-connecting--clarifying-objectives--tying-to-goals",
+        },
+    ]}
+    />
+### Project Indicator Template 
+
+An example template based on Table 3.1 on page 8 of [Chapter 3](https://www.researchgate.net/publication/332304801_Chapter_3_-_Planning_for_Low-Tech_Process-Based_Restoration?channel=doi&linkId=5cad2a7e458515cd2b0d2fe1&showFulltext=true) of the LTPBR Design Manual. is provided below.
+
+| Resource Type | Suggested Resource Link | Notes or Alternative Resource |
+|------------------------|-------------------------|-------------------------------|
+| Project Indicator Template |  [ Condition Worksheet.xlsx](https://s3-us-west-2.amazonaws.com/etalweb.joewheaton.org/Courses/WATS5350/Lowtech/birch/Condition+Worksheet.xlsx) | This is an excel template worksheet for populating active channel, active floodplain, vs. inaccessed floodplain mapping of your valley bottom as a means of cataloging condition and estimating recovery space and constraining design. To the extent possible, you will be using QRiS [Analyses](#analyses) to populate these tables (one for every sample frame or reach).|
+
+#### Overview of Project Indicator Template
+This 7 minute video gives an over of the condition worksheet (from [Capstone class](https://capstone.restoration.usu.edu/Course_Topics/WATS_5350/Low-Tech/Projects/birch/birchplanning.html#cpp---planning-resources) and different example project).
+<YouTubeEmbed videoId="DJ0GgLbUpGw" />
+
+:::tip
+Warning, most people grasp the idea of choosing the rows for this table (i.e. metrics and indicators) fairly quickly. They then realize that planning is essentially three columns of this table: existing conditions, estimated historic (for reference) and estimated future conditions (i.e. recovery space). Most tend to grasp the concept of recovery space being limited by estimated histroic too. **What confuses people most is how many tables they will end up with.** You have a separate table for every [sample frame](https://qris.riverscapes.net/software-help/inputs/sample-frames) or [area of interest](https://qris.riverscapes.net/software-help/inputs/aoi/) you choose as the spatial extent of your [analysis](https://qris.riverscapes.net/software-help/analyses). 
+
+Some think, all I need is one table for my entire property or project area. This may be simple and fine in some cases, but it often makes it difficult to differenatiate important spatial differences in condition and recovery space across the project area. This is why we often have multiple sample frames. 
 :::
+
+# Self-Paced - Tutorial 3
+
+## Download and Open Existing Project
+
+1. Click the link in Resources above to take you to the project collection in the Data Exchange
+2. Download one of the starter projects (the one with surfaces is 1.7GB)
+3. Extract the downloaded .zip
+4. Open QGIS and click the QRIS plugin -> Project -> Open QRIS project
+5. Navigate to the extracted folder and click on the qris.gpkg then click open
+
+**Demo Video**
+<YouTubeEmbed videoId="JLNjaoWyxwg" />
+
+## Mapping Recovery Space
+
+1. Right-click Data Capture Events node -> Add New Data Capture Event
+2. Scroll to the Anabranch Planning Protocol (make sure Show Experimental Protocols is checked)
+3. Under that Protocol, select and add layers:
+    1. Recovery Space - Minimum
+    2. Recovery Space - Maximum
+4. Name the DCE something useful, like Workshop 3 Planning
+5. In the Basic Properties tab, set the data or date range based on LiDAR captured dates
+    1. In our example, it was captured between 11/4/2019-8/19/2020
+6. Under Surfaces, select your LiDAR surface and high-res imagery
+7. In the Description tab, write a brief description of this DCE. A good description in this example would be, “This DCE represents the planning portion of this project. It is based on high resolution imagery and LiDAR.”
+8. Right click one of the recovery space layers in the DCE and select Import Features From -> Riverscape Valley Bottom
+9. Add that layer to the map -> start editing the layer -> use the reshape tool to reshape the feature -> save and toggle editing
+10. Repeat steps 8 and 9 with the other recovery space layer. 
+
+![Recovery Space](/images/webinars/recovery_space.png)
+
+**Demo Video**
+<YouTubeEmbed videoId="xLiTziBTxNU" />
+
+## Creating Reach Breaks and Sample Frames
+
+1. Right-click Cross Sections node -> + Create New (Manually Digitized) Cross Sections
+2. Add that layer to the map and begin editing that layer
+3. Digitize cross sections where you have deemed reach breaks to be appropriate given reach objectives, risk constraints, and geomorphic characteristics
+4. Save edits and toggle editing
+5. Right click your cross sections layer in the QRIS panel and select Generate Sample Frames
+    1. In the pop-up give the sample frames a unique name and select the appropriate valley bottom, centerline, and cross sections to derive the sample frames from, click ok
+
+![Cross Sections](/images/webinars/cross_sections.png)
+
+**Demo Video**
+<YouTubeEmbed videoId="IrTjFTUKI20" />
+
+## Analysis
+
+Now that we have created sample frames we can use those to create an analysis and calculate metric values derived from features we digitized.
+
+1. Right-click the Analyses folder -> Create New Analysis
+2. Give the Analysis a name
+3. Select the sample frame layer we just created to calculate metrics in
+4. Select the appropriate valley bottom layer, centerline layer, and DEM layer
+5. You will see a large list of metrics to select from. Click none at the bottom-right to set all metrics to none. Setting all to none allows you to go through and only choose the ones you want to calculate. Change the dropdown to metric on the following metrics:
+    1. Dam count (Version 2, click help icon to find the correct one)
+    2. Dam density 
+    3. Jam Count 
+    4. Jam Density (Version 2, click help icon to find the correct one)
+    5. Active Floodplain Proportion
+    6. Maximum Potential Uplift Area
+    7. Maximum Potential Uplift (% of Riverscape)
+    8. Minimum Potential Uplift Area
+    9. Minimum Potential Uplift (% of Riverscape)
+6. Click OK
+
+![Start Analysis](/images/tutorials/start-analysis.png)
+
+7. On the window that pops up click calculate
+8. On the new window select All Sample Frames and and all Data Capture Events, click ok
+9. Values will calculate and populate in the table of metrics. Under the Mask Polygon Dropdown you can switch between your different sample frames to see the different metric values.
+
+![Calculate Analysis](/images/tutorials/analysis-calculate.png)
+
+Metrics can be recalculated at any time and values can be overridden with manual values if necessary. More help can be found on the [Analyses](/software-help/analyses) help page.
+
+**Demo Video**
+<YouTubeEmbed videoId="9R6_dSizo-0" />
+
+## Adding to an Existing Analysis
+
+**Demo Video**
+<YouTubeEmbed videoId="rckKno28Xps" />
+
+## Export Metrics table
+
+**Demo Video**
+<YouTubeEmbed videoId="ihUqnSIGUMQ" />
+
+## Making Figures in QGIS 
+
+**Demo Video**
+<YouTubeEmbed videoId="jElqZrtOu3Q" />
