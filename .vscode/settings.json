@@ -5,7 +5,8 @@
     },
     "python.terminal.activateEnvironment": true,
     "python.autoComplete.extraPaths": [
-        "${workspaceRoot}"
+        "${workspaceRoot}",
+        "${workspaceFolder}/.."
     ],
     "files.exclude": {
         "**/*.egg-info": true
@@ -25,6 +26,7 @@
     ],
     "python.analysis.extraPaths": [
         "${workspaceRoot}",
+        "${workspaceFolder}/..",
         "C:/Program Files/QGIS 3.40.8/apps/qgis-ltr/python"
     ],
 }
