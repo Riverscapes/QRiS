@@ -7,13 +7,10 @@ import numpy as np
 from osgeo import gdal, osr, ogr
 
 # Import the module under test
-try:
-    from ..src.gp.zonal_statistics import zonal_statistics
-except ImportError:
-    # If running directly from the test folder, we might need to adjust sys.path
-    import sys
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-    from ..src.gp.zonal_statistics import zonal_statistics
+import sys
+# Add the parent directory to sys.path so we can import 'qris_dev' as a package
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from qris_dev.src.gp.zonal_statistics import zonal_statistics
 
 from utilities import get_qgis_app
 
