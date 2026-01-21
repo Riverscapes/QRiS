@@ -121,10 +121,22 @@ class Project(DBItem, QObject):
                                 if (m.machine_name, m.version, m.protocol_machine_code) == key_tuple
                             ]
                             if not existing_metrics:
+                                metric_metadata = {}
+                                if metric.minimum_value is not None:
+                                    metric_metadata['minimum_value'] = metric.minimum_value
+                                if metric.maximum_value is not None:
+                                    metric_metadata['maximum_value'] = metric.maximum_value
+                                if metric.precision is not None:
+                                    metric_metadata['precision'] = metric.precision
+                                if metric.status is not None:
+                                    metric_metadata['status'] = metric.status
+                                if metric.hierarchy is not None:
+                                    metric_metadata['hierarchy'] = metric.hierarchy
+
                                 metric_id, metric_obj = insert_metric(
                                     self.project_file, metric.label, metric.id, current_protocol.machine_code,
                                     metric.description, metric.default_level, metric.calculation_machine_code,
-                                    metric.parameters, None, metric.definition_url, None, metric.version
+                                    metric.parameters, None, metric.definition_url, metric_metadata, metric.version
                                 )
                                 self.metrics[metric_id] = metric_obj
                                 QgsMessageLog.logMessage(
@@ -146,6 +158,7 @@ class Project(DBItem, QObject):
                                     ('precision', getattr(metric, 'precision', None)),
                                     ('tolerance', getattr(metric, 'tolerance', None)),
                                     ('status', new_status),
+                                    ('hierarchy', getattr(metric, 'hierarchy', None)),
                                 ]
                                 for key, value in protocol_attrs:
                                     if value is not None:

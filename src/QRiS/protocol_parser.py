@@ -70,6 +70,7 @@ class MetricDefinition:
     parameters: List[Any] = None
     protocol_defintion = None
     status: str = 'active'
+    hierarchy: Optional[List[str]] = None
 @dataclass
 class ProtocolDefinition:
     machine_code: str
@@ -252,6 +253,9 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
         if len(dce_layers) > 0:
             parameters['dce_layers'] = dce_layers
         
+        # hierarchy is a list of the text of HeirarchyItem elements
+        hierarchy = [h.text for h in metric_elem.findall('Hierarchy/HierarchyItem')]
+
         metric = MetricDefinition(
             id=metric_elem.attrib.get('id'),
             version=metric_elem.attrib.get('version'),
@@ -264,7 +268,8 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
             maximum_value=float(metric_elem.find('MaximumValue').text) if metric_elem.find('MaximumValue') is not None else None,
             precision=int(metric_elem.find('Precision').text) if metric_elem.find('Precision') is not None else None,
             parameters=parameters if len(parameters) > 0 else None,
-            status=metric_elem.attrib.get('status', 'active')
+            status=metric_elem.attrib.get('status', 'active'),
+            hierarchy=hierarchy if len(hierarchy) > 0 else None
         )
         protocol.metrics.append(metric)
 

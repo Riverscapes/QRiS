@@ -85,6 +85,8 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
             metric_metadata['precision'] = metric_definition.precision
         if metric_definition.status is not None:
             metric_metadata['status'] = metric_definition.status
+        if metric_definition.hierarchy is not None:
+            metric_metadata['hierarchy'] = metric_definition.hierarchy
         
         metric_id, metric = insert_metric(
             project_file,
