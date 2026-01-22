@@ -27,7 +27,12 @@ class Metric(DBItem):
         # This is the base unit as defined in the metric calculation function
         self.unit_type = analysis_metric_unit_type.get(self.metric_function, None)
         self.base_unit = default_units.get(self.unit_type, None)
-        self.normalized = True if any(metric_layer.get('usage', None) == 'normalization' for metric_layer in metric_params.get('dce_layers', []) + metric_params.get('inputs', [])) else False
+        
+        if metric_params is not None:
+            self.normalized = True if any(metric_layer.get('usage', None) == 'normalization' for metric_layer in metric_params.get('dce_layers', []) + metric_params.get('inputs', [])) else False
+        else:
+            self.normalized = False
+            
         self.normalization_unit_type = None
         if self.normalized:
             self.base_unit = 'meters'
@@ -51,6 +56,46 @@ class Metric(DBItem):
         self.precision = self.metadata.get('precision', None) # No precision = full float value
         self.status = self.metadata.get('status', 'active') # active, deprecated
         self.hierarchy = self.metadata.get('hierarchy', None)
+
+    def get_automation_availability(self, qris_project) -> str:
+        if not self.metric_params:
+             return "Manual Only"
+
+        if not qris_project.events:
+             metric_layers = self.metric_params.get('dce_layers', [])
+             if not metric_layers:
+                 return "Automated - All"
+             return "Manual Only"
+
+        supported_count = 0
+        total_count = len(qris_project.events)
+        
+        for event in qris_project.events.values():
+            if self.can_calculate_for_dce(event):
+                 supported_count += 1
+        
+        if supported_count == 0:
+            return "Manual Only"
+        elif supported_count == total_count:
+            return "Automated - All DCEs"
+        else:
+            return "Automated - Some DCEs"
+
+    def can_calculate_for_dce(self, dce) -> bool:
+        metric_layers = self.metric_params.get('dce_layers', []) if self.metric_params else []
+        
+        usage_layers = {}
+        for metric_layer in metric_layers:
+            usage = metric_layer.get('usage', None)
+            if usage not in usage_layers:
+                usage_layers[usage] = []
+            usage_layers[usage].append(metric_layer)
+        
+        for usage, layers in usage_layers.items():
+            layer_ids = [layer.get('layer_id_ref', None) for layer in layers]
+            if not any(event_layer.layer.layer_id in layer_ids for event_layer in dce.event_layers):
+                return False
+        return True
 
     def can_calculate_automated(self, qris_project, event_id, analysis_id) -> bool: 
 

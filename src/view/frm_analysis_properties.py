@@ -13,42 +13,43 @@ from ..model.metric import Metric
 from ..model.analysis_metric import AnalysisMetric
 
 from .frm_layer_metric_details import FrmLayerMetricDetails
+from .frm_layer_metric_details import FrmLayerMetricDetails
+from .widgets.metric_selector_stacked import MetricSelector
 from .utilities import validate_name, add_standard_form_buttons
 from ..QRiS.settings import CONSTANTS
 
-
 class FrmAnalysisProperties(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, analysis: Analysis = None):
-
-        self.qris_project = project
-        self.analysis = analysis
+    def __init__(self, parent, qris_project: Project, analysis: Analysis = None):
 
         super(FrmAnalysisProperties, self).__init__(parent)
+        
+        self.qris_project = qris_project
+        self.analysis = analysis
+        self.metric_selector = MetricSelector(self, self.qris_project, self.analysis)
+        
         self.setupUi()
 
         # Sample Frames
-        self.sampling_frames = {id: sample_frame for id, sample_frame in project.analysis_masks().items()}
+        self.sampling_frames = {id: sample_frame for id, sample_frame in self.qris_project.analysis_masks().items()}
         self.sampling_frames_model = DBItemModel(self.sampling_frames)
         self.cboSampleFrame.setModel(self.sampling_frames_model)
         self.cboSampleFrame.currentIndexChanged.connect(self.on_cboSampleFrame_currentIndexChanged)
 
         # Valley Bottoms
-        self.valley_bottoms = {id: valley_bottom for id, valley_bottom in project.valley_bottoms.items()}
+        self.valley_bottoms = {id: valley_bottom for id, valley_bottom in self.qris_project.valley_bottoms.items()}
         self.valley_bottoms_model = DBItemModel(self.valley_bottoms)
         self.cboValleyBottom.setModel(self.valley_bottoms_model)
 
         # Centerlines
-        self.centerlines = {id: profile for id, profile in project.profiles.items()}
+        self.centerlines = {id: profile for id, profile in self.qris_project.profiles.items()}
         self.centerlines_model = DBItemModel(self.centerlines)
         self.cboCenterline.setModel(self.centerlines_model)
 
         # DEMs
-        self.dems = {id: surface for id, surface in project.rasters.items() if surface.raster_type_id == 4}
+        self.dems = {id: surface for id, surface in self.qris_project.rasters.items() if surface.raster_type_id == 4}
         self.dems_model = DBItemModel(self.dems)
         self.cboDEM.setModel(self.dems_model)
-
-        self.load_metrics_table()
 
         if analysis is not None:
             self.setWindowTitle('Edit Analysis Properties')
@@ -84,15 +85,6 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                     index = self.cboDEM.findData(dem)
                     self.cboDEM.setCurrentIndex(index)
 
-            for row in range(self.metricsTable.rowCount()):
-                metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
-                cboStatus: QtWidgets.QComboBox = self.metricsTable.cellWidget(row, 1)
-                if metric.id in analysis.analysis_metrics:
-                    cboStatus.setCurrentIndex(analysis.analysis_metrics[metric.id].level_id)
-                else:
-                    # set to None if not found
-                    cboStatus.setCurrentIndex(0)
-
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
             self.cboCenterline.setEnabled(False)
@@ -106,14 +98,6 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         return 
         # return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
 
-    def toggle_all_metrics(self, level_id: str):
-            
-            for row in range(self.metricsTable.rowCount()):
-                cboStatus: QtWidgets.QComboBox = self.metricsTable.cellWidget(row, 1)
-                # find from text
-                idx = cboStatus.findText(level_id)
-                cboStatus.setCurrentIndex(idx)
-
     def on_cboSampleFrame_currentIndexChanged(self, index):
 
         # if the sample frame type is Valley Bottom, then set the Valley Bottom combo box to the selected valley bottom as well, then lock that combo box. if not, then unlock the combo box
@@ -125,38 +109,6 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 self.cboValleyBottom.setEnabled(False)
             else:
                 self.cboValleyBottom.setEnabled(True)
-
-    def load_metrics_table(self):
-        metrics = list(self.qris_project.metrics.values())
-        # we need to filter the metrics by only those that are in a layer
-
-        self.metricsTable.setRowCount(len(metrics))
-
-        for row in range(len(metrics)):
-            metric: Metric = metrics[row]
-            level_id = metric.default_level_id
-            if self.analysis is not None:
-                if metric.id in self.analysis.analysis_metrics:
-                    level_id = self.analysis.analysis_metrics[metric.id].level_id
-
-            label_item = QtWidgets.QTableWidgetItem()
-            label_item.setText(metric.name)
-            self.metricsTable.setItem(row, 0, label_item)
-            label_item.setData(QtCore.Qt.UserRole, metric)
-            label_item.setFlags(QtCore.Qt.ItemIsEnabled)
-
-            cboStatus = QtWidgets.QComboBox()
-            cboStatus.addItem('None', 0)
-            cboStatus.addItem('Metric', 1)
-            cboStatus.addItem('Indicator', 2)
-            cboStatus.setCurrentIndex(level_id)
-            self.metricsTable.setCellWidget(row, 1, cboStatus)
-
-            cmdHelp = QtWidgets.QPushButton()
-            cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
-            cmdHelp.setToolTip('Metric Definition')
-            cmdHelp.clicked.connect(lambda _, m=metric: FrmLayerMetricDetails(self, self.qris_project, metric=m).exec_())
-            self.metricsTable.setCellWidget(row, 2, cmdHelp)
 
     def setupUi(self):
 
@@ -208,40 +160,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         self.vert_metrics = QtWidgets.QVBoxLayout(self.metrics_tab)
         self.metrics_tab.setLayout(self.vert_metrics)
-
-        self.metricsTable = QtWidgets.QTableWidget(0, 3)
-        self.metricsTable.resize(500, 500)
-        self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.metricsTable.resizeColumnsToContents()
-        # self.metricsTable.horizontalHeader().setStretchLastSection(True)
-        self.metricsTable.setHorizontalHeaderLabels(['Metric', 'Status', None])
-        header = self.metricsTable.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
-        header.resizeSection(2, 10)
-        self.metricsTable.verticalHeader().setVisible(False)
-        self.metricsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.metricsTable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.vert_metrics.addWidget(self.metricsTable)
-
-        self.horiz_metric_buttons = QtWidgets.QHBoxLayout()
-        self.vert_metrics.addLayout(self.horiz_metric_buttons)
-        self.horiz_metric_buttons.addStretch()
-
-        self.lbl_metric_set_all = QtWidgets.QLabel('Set All to:')
-        self.horiz_metric_buttons.addWidget(self.lbl_metric_set_all)
-        self.cmd_set_all_metrics = QtWidgets.QPushButton('Metric')
-        self.cmd_set_all_metrics.clicked.connect(lambda: self.toggle_all_metrics('Metric'))
-        self.horiz_metric_buttons.addWidget(self.cmd_set_all_metrics)
-
-        self.cmd_set_all_indicators = QtWidgets.QPushButton('Indicator')
-        self.cmd_set_all_indicators.clicked.connect(lambda: self.toggle_all_metrics('Indicator'))
-        self.horiz_metric_buttons.addWidget(self.cmd_set_all_indicators)
-
-        self.cmd_clear_all = QtWidgets.QPushButton('None')
-        self.cmd_clear_all.clicked.connect(lambda: self.toggle_all_metrics('None'))
-        self.horiz_metric_buttons.addWidget(self.cmd_clear_all)
+        
+        self.vert_metrics.addWidget(self.metric_selector)
 
         # Description Tab
         self.txtDescription = QtWidgets.QPlainTextEdit()
@@ -282,17 +202,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             return
 
         # Must include at least one metric!
-        analysis_metrics = {}
-        for row in range(self.metricsTable.rowCount()):
-            metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
-            cboStatus = self.metricsTable.cellWidget(row, 1)
-            level_id = cboStatus.currentData(QtCore.Qt.UserRole)
-            if level_id > 0:
-                analysis_metrics[metric.id] = AnalysisMetric(metric, level_id)
+        analysis_metrics = self.metric_selector.get_selected_metrics()
+        # analysis_metrics = {}
+        # for row in range(self.metricsTable.rowCount()):
+        #     metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
+        #     cboStatus = self.metricsTable.cellWidget(row, 1)
+        #     level_id = cboStatus.currentData(QtCore.Qt.UserRole)
+        #     if level_id > 0:
+        #         analysis_metrics[metric.id] = AnalysisMetric(metric, level_id)
 
         if len(analysis_metrics) < 1:
             QtWidgets.QMessageBox.warning(self, 'Missing Metric', 'You must include at least one metric to continue.')
-            self.metricsTable.setFocus()
+            self.metric_selector.setFocus()
             return
 
         if self.analysis is not None:
