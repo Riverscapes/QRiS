@@ -3,33 +3,39 @@ title: QRiS Workshop 3 - Planning
 banner: true
 sidebar_position: 3
 description: Workshop 3
+title_icon: https://cdn.riverscapes.net/icons/miscellaneous/how-to/how-to.svg
 ---
 
+
+---------
+## Workshop 1 & 2 Review
 At this point in our Wall Creek Example project we have done the following
 
-From Workshop 1:
+### From [Workshop 1](/tutorials/trainings-workshops/blm-tnc-workshops/qris_workshop_1):
 
-- Created a new QRIS project
-- Added layers to our QRIS project directly from a Riverscapes Context project in RiverscapesViewer.
-- Delineated an Area of Interest, both by manually drawing as well as using the Catchment Delineation Tool
+- Created a [new QRIS project](https://qris.riverscapes.net/software-help/projects/#creating-a-new-project)
+- Added layers to our QRIS project directly from a Riverscapes Context project in [Riverscapes Viewer](https://viewer.riverscapes.net).
+- Delineated an [Area of Interest](https://qris.riverscapes.net/software-help/inputs/aoi/), both by manually drawing as well as using the [Catchment Delineation Tool](https://qris.riverscapes.net/software-help/context/watershed-catchments/)
 - Added aerial imagery to our project for context and digitizing riverscape features
 
-From Workshop 2:
+### From [Workshop 2](/tutorials/trainings-workshops/blm-tnc-workshops/qris_workshop_2):
 
-The main purpose of Workshop 2 was to go through the NRCS planning process using protocols in our QRIS project. This process consisted of the following:
+The main purpose of [Workshop 2](/tutorials/trainings-workshops/blm-tnc-workshops/qris_workshop_2) was to go through the [NRCS Conservation Planning Process](https://lowtechpbr.restoration.usu.edu/workshops/2020/SGI/Modules/module3#b-overview-of-planning--nrcs-conservation-planning-process) using [protocols](https://qris.riverscapes.net/technical-reference/protocols/) in our QRIS project. This process consisted of the following:
 
 - Added a lidar DEM/hillshade for context
-- Created a Data Capture Event using the Geomorphic Mapping of Riverscapes(experimental) protocol
+- Created a [Data Capture Event](https://qris.riverscapes.net/category/data-capture-events/) using the [Geomorphic Mapping of Riverscapes(experimental) protocol](https://qris.riverscapes.net/technical-reference/protocols/protocol-library/dce-protocols/tier-1-geounit-protocol/)
 - Mapped geomorphic units using our hillshade and aerial imagery as evidence
-- Mapped our valley bottom/riverscape using our geomorphic layer as context
+- Mapped our [valley bottom/riverscape](https://qris.riverscapes.net/software-help/inputs/valley-bottoms) using our geomorphic layer as context
 - Mapped confining margins using valley bottom/riverscape and geomorphic units as context
-- Added risk layers and recovery space from the LTBPR Protocol
+- Added risk layers and recovery space from the [LTBPR Protocol](https://qris.riverscapes.net/technical-reference/protocols/protocol-library/dce-protocols/ltpbr-dce-protocol)
 - Mapped risk and recovery space using risk and valley bottom to inform our total recovery space\
-- Created sample frames and ran an analysis to calculate active proportions and recovery space within our riverscape
+- Created [sample frames](https://qris.riverscapes.net/software-help/inputs/sample-frames) and ran an [analysis](https://qris.riverscapes.net/software-help/analyses) to calculate active proportions and recovery space within our riverscape
 
-**Video Overview of Workshops 1 and 2**
+#### Video Overview of Workshops 1 and 2
 <YouTubeEmbed videoId="crP6PG82oiE" />
 
+---------
+## Purpose
 Today we are going to expand and the basic planning process we did in Workshop 2 by exploring differing ideas of recovery space and how that might inform our reach breaks for current conditions. We will use that as well as other contextual layers to differentiate reach objectives that will inform our complex designs in Workshop 4. Furthermore we will perform Analyses again and explore how we can export that data to create indicator tables and figures to aid in our reporting.
 
 ## Resources
@@ -43,9 +49,9 @@ Today we are going to expand and the basic planning process we did in Workshop 2
         title: "Wall Creek Demo - Riverscapes Studio Projects",
         description: "Riverscapes Studio Collection consisting of a starter projects (with and without surfaces/imagery), as well as the final project that this workshop will result in.",
         logoUrl: "https://cdn.riverscapes.net/icons/products/qris/qris.svg",
-        toolUrl: "https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/map",
+        toolUrl: "https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/table",
         imageUrl: "/images/webinars/wall-creek.png",
-        imageLink: "https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/map",
+        imageLink: "https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/table",
         }      
     ]}
     />
@@ -102,20 +108,25 @@ Warning, most people grasp the idea of choosing the rows for this table (i.e. me
 Some think, all I need is one table for my entire property or project area. This may be simple and fine in some cases, but it often makes it difficult to differenatiate important spatial differences in condition and recovery space across the project area. This is why we often have multiple sample frames. 
 :::
 
-# Self-Paced - Tutorial 3
+-------------
+## Self-Paced - Tutorial 3
 
-## Download and Open Existing Project
+### Download and Open Existing Project
 
-1. Click the link in Resources above to take you to the project collection in the Data Exchange
-2. Download one of the starter projects (the one with surfaces is 1.7GB)
-3. Extract the downloaded .zip
-4. Open QGIS and click the QRIS plugin -> Project -> Open QRIS project
-5. Navigate to the extracted folder and click on the qris.gpkg then click open
+1. Go to the [Wall Creek Demo Project Collection](https://data.riverscapes.net/c/799b9a03-9e36-4cb3-ae48-a4c97c559252/projects/table) in the Data Exchange
+2. Download one of the starter projects
+:::tip
+The [Wall Creek Demo Starter without Imagery](https://data.riverscapes.net/p/26be6b0e-ca28-4cb5-9e1c-c18e460fd77c/) is only 40 MB. Whereas, the [	
+Wall Creek Demo Starter with Surfaces](https://data.riverscapes.net/p/c7945cc7-f6d8-4013-a4e3-486189cbd5b5/)] with surfaces and drone imagery is 1.7GB! 
+:::
+3. Extract the downloaded `.zip`
+4. Open QGIS and click the `QRIS plugin` → `Project` → `Open QRIS project`
+5. Navigate to the extracted folder and click on the `qris.gpkg` then click `Open`
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="JLNjaoWyxwg" />
 
-## Mapping Recovery Space
+### Mapping Recovery Space
 
 1. Right-click Data Capture Events node -> Add New Data Capture Event
 2. Scroll to the Anabranch Planning Protocol (make sure Show Experimental Protocols is checked)
@@ -133,10 +144,10 @@ Some think, all I need is one table for my entire property or project area. This
 
 ![Recovery Space](/images/webinars/recovery_space.png)
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="xLiTziBTxNU" />
 
-## Creating Reach Breaks and Sample Frames
+### Creating Reach Breaks and Sample Frames
 
 1. Right-click Cross Sections node -> + Create New (Manually Digitized) Cross Sections
 2. Add that layer to the map and begin editing that layer
@@ -147,10 +158,10 @@ Some think, all I need is one table for my entire property or project area. This
 
 ![Cross Sections](/images/webinars/cross_sections.png)
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="IrTjFTUKI20" />
 
-## Analysis
+### Analysis
 
 Now that we have created sample frames we can use those to create an analysis and calculate metric values derived from features we digitized.
 
@@ -180,20 +191,20 @@ Now that we have created sample frames we can use those to create an analysis an
 
 Metrics can be recalculated at any time and values can be overridden with manual values if necessary. More help can be found on the [Analyses](/software-help/analyses) help page.
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="9R6_dSizo-0" />
 
-## Adding to an Existing Analysis
+### Adding to an Existing Analysis
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="rckKno28Xps" />
 
-## Export Metrics table
+### Export Metrics table
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="ihUqnSIGUMQ" />
 
-## Making Figures in QGIS 
+### Making Figures in QGIS 
 
-**Demo Video**
+#### Demo Video
 <YouTubeEmbed videoId="jElqZrtOu3Q" />
