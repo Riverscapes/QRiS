@@ -11,6 +11,7 @@
         <file alias="alpha">../Images/alpha.svg</file>
         <file alias="calculate">../Images/calculate.svg</file>
         <file alias="category">../Images/category.svg</file>
+        <file alias="clear_filter">../Images/clear_filter.svg</file>
         <file alias="collapse">../Images/collapse.svg</file>
         <file alias="close">../Images/close.svg</file>
         <file alias="delete">../Images/delete.svg</file>
