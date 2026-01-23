@@ -51,6 +51,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.dems_model = DBItemModel(self.dems)
         self.cboDEM.setModel(self.dems_model)
 
+        self.cboValleyBottom.currentIndexChanged.connect(self.update_metric_selector)
+        self.cboCenterline.currentIndexChanged.connect(self.update_metric_selector)
+        self.cboDEM.currentIndexChanged.connect(self.update_metric_selector)
+
         if analysis is not None:
             self.setWindowTitle('Edit Analysis Properties')
 
@@ -97,6 +101,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         return 
         # return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
+
+    def update_metric_selector(self, index=None):
+        centerline = self.cboCenterline.currentData(QtCore.Qt.UserRole)
+        dem = self.cboDEM.currentData(QtCore.Qt.UserRole)
+        valley_bottom = self.cboValleyBottom.currentData(QtCore.Qt.UserRole)
+        
+        metadata = {}
+        if centerline: metadata['centerline'] = centerline.id
+        if dem: metadata['dem'] = dem.id
+        if valley_bottom: metadata['valley_bottom'] = valley_bottom.id
+        
+        self.metric_selector.set_analysis_metadata(metadata)
 
     def on_cboSampleFrame_currentIndexChanged(self, index):
 

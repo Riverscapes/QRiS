@@ -57,9 +57,17 @@ class Metric(DBItem):
         self.status = self.metadata.get('status', 'active') # active, deprecated
         self.hierarchy = self.metadata.get('hierarchy', None)
 
-    def get_automation_availability(self, qris_project) -> str:
+    def get_automation_availability(self, qris_project, analysis_metadata: dict = None) -> str:
         if not self.metric_params:
              return "Manual Only"
+
+        # If analysis parameters are provided, check if the required inputs are present
+        if analysis_metadata:
+            inputs = self.metric_params.get('inputs', [])
+            for analysis_input in inputs:
+                input_ref = analysis_input.get('input_ref')
+                if input_ref and analysis_metadata.get(input_ref) is None:
+                    return "Manual Only"
 
         if not qris_project.events:
              metric_layers = self.metric_params.get('dce_layers', [])
