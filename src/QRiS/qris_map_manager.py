@@ -360,13 +360,13 @@ class QRisMapManager(RiverscapesMapManager):
 
         project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
         events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_ROOT', group_name, project_group, True)
-        event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True)
+        event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True, True)
         
         group_layer = event_group_layer
         if event_layer.layer.hierarchy is not None:
             # need to add group layers for each hierarchy level
             for hierarchy_level in event_layer.layer.hierarchy:
-                group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}_{hierarchy_level}', hierarchy_level, group_layer, True)
+                group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}_{hierarchy_level}', hierarchy_level, group_layer, True, True)
 
         existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, group_layer)
         if existing_layer is not None:
