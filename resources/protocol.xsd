@@ -28,15 +28,18 @@
                     </xs:key>
                 </xs:element>
                 <xs:element name="Metrics" type="MetricsType" minOccurs="0" maxOccurs="1">
-                    <xs:unique name="UniqueMetricIDs">
+                    <xs:unique name="UniqueMetricIDVersion">
                         <xs:selector xpath="Metric"/>
                         <xs:field xpath="@id"/>
+                        <xs:field xpath="@version"/>
+                        <xs:field xpath="@status"/>
                     </xs:unique>
                 </xs:element>
             </xs:sequence>
             <xs:attribute name="machine_code" type="MachineCodeType" use="required"/>
             <xs:attribute name="version" type="xs:string" use="required"/>
             <xs:attribute name="status" type="ProtocolStatusType" use="required"/>
+            <xs:attribute name="protocol_type" type="ProtocolTypeType" use="optional"/>
         </xs:complexType>
     </xs:element>
 
@@ -123,6 +126,14 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:simpleType name="ProtocolTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="asbuilt"/>
+            <xs:enumeration value="design"/>
+            <xs:enumeration value="dce"/>
+        </xs:restriction>
+    </xs:simpleType>
+
     <!-- Layer Types -->
     <xs:complexType name="LayersType">
         <xs:sequence>
@@ -131,7 +142,7 @@
     </xs:complexType>
 
     <xs:complexType name="LayerType">
-        <xs:sequence>
+        <xs:all>
             <xs:element name="Label" type="xs:string" minOccurs="1" maxOccurs="1"/>
             <xs:element name="Symbology" type="xs:string" minOccurs="1" maxOccurs="1"/>
             <xs:element name="Description" type="xs:string" minOccurs="0" maxOccurs="1"/>
@@ -149,7 +160,7 @@
                     <xs:field xpath="@name" />
                 </xs:unique>
             </xs:element>
-        </xs:sequence>
+        </xs:all>
         <xs:attribute name="id" type="IdType" use="required"/>
         <xs:attribute name="version" type="xs:string" use="required"/>
         <xs:attribute name="geom_type" type="GeomType" use="required"/>
@@ -320,21 +331,31 @@
     </xs:complexType>
 
     <xs:complexType name="MetricType">
-        <xs:sequence>
+        <xs:all>
             <xs:element name="Label" type="xs:string" minOccurs="1" maxOccurs="1"/>
             <xs:element name="DefaultLevel" type="MetricLevelType" minOccurs="1" maxOccurs="1"/>
             <xs:element name="Description" type="xs:string" minOccurs="0" maxOccurs="1"/>
             <xs:element name="DefinitionURL" type="xs:string" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="Hierarchy" type="HierarchyItemsType" minOccurs="0" maxOccurs="1"/>
             <xs:element name="MinimumValue" type="xs:float" minOccurs="0" maxOccurs="1"/>
             <xs:element name="MaximumValue" type="xs:float" minOccurs="0" maxOccurs="1"/>
             <xs:element name="Precision" type="xs:integer" minOccurs="0" maxOccurs="1"/>
             <xs:element name="Parameters" type="MetricParametersType" minOccurs="0" maxOccurs="1">
             </xs:element>
-        </xs:sequence>
+        </xs:all>
         <xs:attribute name="id" type="IdType" use="required"/>
         <xs:attribute name="version" type="xs:string" use="required"/>
         <xs:attribute name="calculation_machine_code" type="xs:string" use="required"/>
+        <xs:attribute name="status" type="MetricStatusType" default="active"/>
     </xs:complexType>
+
+    <xs:simpleType name="MetricStatusType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="active"/>
+            <xs:enumeration value="deprecated"/>
+            <xs:enumeration value="experimental"/>
+        </xs:restriction>
+    </xs:simpleType>
 
     <xs:simpleType name="MetricLevelType">
         <xs:restriction base="xs:string">
@@ -375,6 +396,8 @@
             <xs:enumeration value="normalization"/>
             <xs:enumeration value="surface"/>
             <xs:enumeration value="metric_layer"/>
+            <xs:enumeration value="denominator"/>
+            <xs:enumeration value="numerator"/>
         </xs:restriction>
     </xs:simpleType>
 
