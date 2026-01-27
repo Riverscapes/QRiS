@@ -36,8 +36,15 @@ class EventLayer(DBItemSpatial):
                 self.menu_items = self.layer.metadata['menu_items']
 
     def feature_count(self, db_path: str) -> int:
-        temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
-        return temp_layer.featureCount()
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM {self.fc_name} WHERE event_layer_id = ? AND event_id = ?", (self.layer.id, self.event_id))
+                return cursor.fetchone()[0]
+        except Exception:
+            # Fallback for robustness
+            temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
+            return temp_layer.featureCount()
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Create a spatial view of the Event Layer features."""

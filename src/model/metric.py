@@ -66,14 +66,25 @@ class Metric(DBItem):
             inputs = self.metric_params.get('inputs', [])
             for analysis_input in inputs:
                 input_ref = analysis_input.get('input_ref')
-                if input_ref and analysis_metadata.get(input_ref) is None:
-                    return "Manual Only"
+                
+                # Case Insensitive Check
+                found = False
+                if input_ref:
+                    s_ref = str(input_ref).strip().lower()
+                    for key in analysis_metadata.keys():
+                        if str(key).strip().lower() == s_ref:
+                            if analysis_metadata[key] is not None:
+                                found = True
+                            break
+                            
+                if not found:
+                    return "No DCEs (Missing Inputs)"
 
         if not qris_project.events:
              metric_layers = self.metric_params.get('dce_layers', [])
              if not metric_layers:
-                 return "Automated - All"
-             return "Manual Only"
+                 return "All DCEs"
+             return "No DCEs (Manual Entry Only)"
 
         supported_count = 0
         total_count = len(qris_project.events)
@@ -83,26 +94,42 @@ class Metric(DBItem):
                  supported_count += 1
         
         if supported_count == 0:
-            return "Manual Only"
+            return "No DCEs (Manual Entry Only)"
         elif supported_count == total_count:
-            return "Automated - All DCEs"
+            ouptput_text = "DCE" if supported_count == 1 else "DCEs"
+            return f"All {supported_count} {ouptput_text}"
         else:
-            return "Automated - Some DCEs"
+            ouptput_text = "DCE" if supported_count == 1 else "DCEs"
+            return f"{supported_count} {ouptput_text}"
 
     def can_calculate_for_dce(self, dce) -> bool:
         metric_layers = self.metric_params.get('dce_layers', []) if self.metric_params else []
         
-        usage_layers = {}
+        usage_groups = {}
+        required_individual_layers = []
+
         for metric_layer in metric_layers:
             usage = metric_layer.get('usage', None)
-            if usage not in usage_layers:
-                usage_layers[usage] = []
-            usage_layers[usage].append(metric_layer)
+            if usage is not None:
+                if usage not in usage_groups:
+                    usage_groups[usage] = []
+                usage_groups[usage].append(metric_layer)
+            else:
+                required_individual_layers.append(metric_layer)
         
-        for usage, layers in usage_layers.items():
+        # Check Named Usage Groups (OR logic within group)
+        for usage, layers in usage_groups.items():
             layer_ids = [layer.get('layer_id_ref', None) for layer in layers]
             if not any(event_layer.layer.layer_id in layer_ids for event_layer in dce.event_layers):
                 return False
+
+        # Check Individual Required Layers (AND logic across all)
+        dce_layer_ids = {el.layer.layer_id for el in dce.event_layers}
+        for layer in required_individual_layers:
+            ref_id = layer.get('layer_id_ref')
+            if ref_id not in dce_layer_ids:
+                return False
+                
         return True
 
     def can_calculate_automated(self, qris_project, event_id, analysis_id) -> bool: 
@@ -117,16 +144,29 @@ class Metric(DBItem):
         # 1) Sort the layers by the 'usage', including None.
         # 2) iterate through the various usages. If more than one layer per usage, we only need to make sure one exists in the dce
 
-        usage_layers = {}
+        usage_groups = {}
+        required_individual_layers = []
+
         for metric_layer in metric_layers:
             usage = metric_layer.get('usage', None)
-            if usage not in usage_layers:
-                usage_layers[usage] = []
-            usage_layers[usage].append(metric_layer)
+            if usage is not None:
+                if usage not in usage_groups:
+                    usage_groups[usage] = []
+                usage_groups[usage].append(metric_layer)
+            else:
+                required_individual_layers.append(metric_layer)
         
-        for usage, layers in usage_layers.items():
+        # Check Named Usage Groups (OR logic within group)
+        for usage, layers in usage_groups.items():
             layer_ids = [layer.get('layer_id_ref', None) for layer in layers]
             if not any(event_layer.layer.layer_id in layer_ids for event_layer in dce.event_layers):
+                return False
+
+        # Check Individual Required Layers (AND logic across all)
+        dce_layer_ids = {el.layer.layer_id for el in dce.event_layers}
+        for layer in required_individual_layers:
+            ref_id = layer.get('layer_id_ref')
+            if ref_id not in dce_layer_ids:
                 return False
             
         analysis = qris_project.analyses.get(analysis_id, None)
