@@ -26,7 +26,7 @@ import os
 from functools import partial
 from osgeo import ogr
 
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
 from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
@@ -583,6 +583,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                             if any(isinstance(model_data, model_type) for model_type in [Event, PlanningContainer]):
                                 self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
+                            if isinstance(model_data, Event):
+                                self.menu.addSeparator()
+                                self.add_context_menu_item(self.menu, 'Lock All Layers in DCE', 'lock', lambda: self.set_event_lock_state(model_data, True, model_item))
+                                self.add_context_menu_item(self.menu, 'Unlock All Layers in DCE', 'lock_open_right', lambda: self.set_event_lock_state(model_data, False, model_item))
+                                self.menu.addSeparator()
                         else:
                             self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
@@ -619,6 +624,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     # self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
+                if any(isinstance(model_data, model_type) for model_type in [SampleFrame, Profile, CrossSections]):
+                     if model_data.locked:
+                        self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False, model_item))
+                     else:
+                        self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True, model_item))
+
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
@@ -646,9 +657,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                                 self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
                     self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
                     if model_data.locked:
-                        self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False))
+                        self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False, model_item))
                     else:
-                        self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True))
+                        self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True, model_item))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
@@ -1314,11 +1325,52 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
 
-    def set_db_item_lock_state(self, db_item: DBItem, state: bool):
+    def set_db_item_lock_state(self, db_item: DBItem, state: bool, tree_node: QtGui.QStandardItem = None):
         """Sets the lock state of a DBItem and updates the node icon accordingly"""
         db_item.set_locked(self.qris_project.project_file, state)
-        self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
+        
+        # Optimize UI update - only update this node if provided
+        if tree_node:
+            self.set_node_text(tree_node)
+        else:
+            self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
+            
         self.map_manager.update_layer_edit_state(self.qris_project.map_guid, db_item)
+
+    def set_event_lock_state(self, event: Event, state: bool, tree_node: QtGui.QStandardItem = None):
+        """Sets the lock state of all layers in an event"""
+        
+        project_key = self.qris_project.map_guid
+        product_key = self.map_manager.product_key
+        target_props = set()
+
+        # Batch update DB and collect IDs
+        for layer in event.event_layers:
+            layer.set_locked(self.qris_project.project_file, state)
+            # Match format from riverscapes_map_manager.__get_custom_property
+            prop = f'{product_key}::{project_key}::{layer.db_table_name}::{layer.id}'
+            target_props.add(prop)
+            
+        # Recursive function to update QGIS layers in one pass
+        def update_qgis_layers_recursive(node):
+            if isinstance(node, QgsLayerTreeLayer):
+                layer_prop = node.customProperty(product_key)
+                if layer_prop in target_props:
+                    qgis_layer = node.layer()
+                    if qgis_layer:
+                        qgis_layer.setReadOnly(state)
+            elif isinstance(node, QgsLayerTreeGroup):
+                 for child in node.children():
+                    update_qgis_layers_recursive(child)
+
+        # Update QGIS map layers
+        root = QgsProject.instance().layerTreeRoot()
+        update_qgis_layers_recursive(root)
+            
+        # Update the tree UI once at the end
+        # Optimization: Only traverse the specific event node if provided, otherwise full tree
+        node_to_update = tree_node if tree_node else self.model.invisibleRootItem()
+        self.traverse_tree(node_to_update, self.set_node_text)
 
     def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False, collapsed: bool=False) -> QtGui.QStandardItem:
         """
@@ -1355,14 +1407,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
             if isinstance(data_item, DBItem):
                 target_node = QtGui.QStandardItem(data_item.name)
+                # Set icon before calling set_node_text which might update it
+                target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
+                # IMPORTANT: Set data first so set_node_text can read the locked status
+                target_node.setData(data_item, QtCore.Qt.UserRole)
                 self.set_node_text(target_node, data_item) 
             else:
                 if data_item in GROUP_FOLDER_LABELS:
                     target_node = QtGui.QStandardItem(GROUP_FOLDER_LABELS[data_item])
                 else:
                     target_node = QtGui.QStandardItem(data_item)
-            target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
-            target_node.setData(data_item, QtCore.Qt.UserRole)
+                target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
+                target_node.setData(data_item, QtCore.Qt.UserRole)
+
             parent_node.appendRow(target_node)
             if collapsed is True:
                 self.treeView.collapse(parent_node.index())
@@ -1951,6 +2008,40 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             node.setFont(font)
                             node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
     
+    def get_lock_icon(self, base_icon_name: str) -> QtGui.QIcon:
+        """Generates an icon with a lock overlay on a fresh canvas"""
+        target_size = 32
+        
+        # Create a new transparent pixmap to serve as the canvas
+        final_pixmap = QtGui.QPixmap(target_size, target_size)
+        final_pixmap.fill(QtCore.Qt.transparent)
+        
+        # Draw base icon
+        if ':' in base_icon_name:
+            base_path = base_icon_name
+        else:
+            base_path = f':/plugins/qris_toolbar/{base_icon_name}'
+            
+        base_icon = QtGui.QIcon(base_path)
+        base_pixmap = base_icon.pixmap(target_size, target_size)
+        
+        painter = QtGui.QPainter(final_pixmap)
+        # Force scaling to fill the target size to prevent "shrinking" if the source is small
+        painter.drawPixmap(QtCore.QRect(0, 0, target_size, target_size), base_pixmap)
+
+        # Draw lock overlay
+        lock_icon = QtGui.QIcon(':/plugins/qris_toolbar/lock')
+        # Overlay size: 50% of the base
+        overlay_size = int(target_size * 0.5)
+        lock_pixmap = lock_icon.pixmap(overlay_size, overlay_size)
+        
+        x = target_size - overlay_size
+        y = target_size - overlay_size
+        painter.drawPixmap(x, y, lock_pixmap)
+        painter.end()
+        
+        return QtGui.QIcon(final_pixmap)
+
     def set_node_text(self, node: QtGui.QStandardItem, data_item: DBItem = None):
 
         data_item = node.data(QtCore.Qt.UserRole) if data_item is None else data_item
@@ -1966,9 +2057,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         
         if isinstance(data_item, DBItem):
+            # Update Icon based on lock state
+            if hasattr(data_item, 'icon'):
+                if data_item.locked:
+                    node.setIcon(self.get_lock_icon(data_item.icon))
+                else:
+                    node.setIcon(QtGui.QIcon(f':/plugins/qris_toolbar/{data_item.icon}'))
+
             name = data_item.name
-            if data_item.locked:
-                name =  '\U0001F512 ' + name
             if any(isinstance(data_item, data_class) for data_class in [Project, Event, PlanningContainer, Analysis, PourPoint, Raster, StreamGage, ScratchVector, Attachment]):
                 node.setText(name)
                 return
