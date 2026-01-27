@@ -7,6 +7,7 @@ from ...model.analysis_metric import AnalysisMetric
 from ...model.analysis import Analysis
 
 from ..frm_layer_metric_details import FrmLayerMetricDetails
+from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
 
 class CheckableComboBox(QtWidgets.QComboBox):
     # Custom signal to notify when the popup is closed (edit finished)
@@ -199,8 +200,25 @@ class MetricSelector(QtWidgets.QWidget):
         if enable_deprecated:
             self.act_include_deprecated.setChecked(True)
 
+    def get_metric_font(self, metric, level_id):
+        font = QtGui.QFont()
+        status = getattr(metric, 'status', 'active')
+        
+        if level_id > 0:
+            font.setBold(True)
+            
+        if status == 'deprecated':
+            font.setItalic(True)
+            
+        return font
+
     def on_metric_status_changed(self, metric_id: int, index: int):
         self.current_metrics_state[metric_id] = index
+        
+        # Get Font
+        # We need the metric object to determine deprecated status, which we can get from the item traversal below 
+        # provided we find it.
+        
         # Update text for sorting in Tree
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
         usage_display = ['None', 'Metric', 'Indicator'][index] if 0 <= index <= 2 else 'None'
@@ -208,7 +226,12 @@ class MetricSelector(QtWidgets.QWidget):
             item = iterator.value()
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric and metric.id == metric_id:
-                 item.setText(4, usage_display)
+                 item.setText(3, usage_display)
+                 
+                 # Update Font
+                 font = self.get_metric_font(metric, index)
+                 item.setFont(0, font)
+                 item.setFont(1, font)
                  break
             iterator += 1
         
@@ -218,9 +241,14 @@ class MetricSelector(QtWidgets.QWidget):
              if not item: continue
              metric = item.data(QtCore.Qt.UserRole)
              if metric and metric.id == metric_id:
-                 usage_item = self.metricsTable.item(row, 6)
+                 usage_item = self.metricsTable.item(row, 5)
                  if usage_item:
                      usage_item.setText(usage_display)
+                 
+                 # Update Font (Name and Version)
+                 font = self.get_metric_font(metric, index)
+                 if self.metricsTable.item(row, 2): self.metricsTable.item(row, 2).setFont(font)
+                 if self.metricsTable.item(row, 3): self.metricsTable.item(row, 3).setFont(font)
                  break
         
         self.update_usage_count_label()
@@ -327,17 +355,26 @@ class MetricSelector(QtWidgets.QWidget):
         self.vboxTree.setContentsMargins(0, 0, 0, 0)
         
         self.metricsTree = QtWidgets.QTreeWidget()
-        self.metricsTree.setHeaderLabels(['Metric', 'Version', 'Status', 'Availability', 'Usage', ''])
+        self.metricsTree.setHeaderLabels(['Metric', 'Version (Status)', 'Availability', 'Usage', 'Description'])
+        
+        # Header Tooltips
+        headerItem = self.metricsTree.headerItem()
+        headerItem.setToolTip(0, "Name of the metric or indicator.")
+        headerItem.setToolTip(1, "Version number and active status.")
+        headerItem.setToolTip(2, "Summary of the ability to calculatete metrics automatically based on the current layers and inputs for each DCE in the Project.")
+        headerItem.setToolTip(3, "Select usage level: Metric or Indicator. These will be included in the analysis accordingly.")
+        headerItem.setToolTip(4, "Description of the metric.")
+
         header = self.metricsTree.header()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.Fixed)
-        header.resizeSection(5, 40)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
         self.metricsTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.metricsTree.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.metricsTree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.metricsTree.customContextMenuRequested.connect(self.open_tree_context_menu)
         self.metricsTree.setSortingEnabled(True)
         self.vboxTree.addWidget(self.metricsTree)
         
@@ -348,9 +385,24 @@ class MetricSelector(QtWidgets.QWidget):
         self.vboxTable = QtWidgets.QVBoxLayout(self.pageTable)
         self.vboxTable.setContentsMargins(0, 0, 0, 0)
 
-        self.metricsTable = QtWidgets.QTableWidget(0, 8)
+        self.metricsTable = QtWidgets.QTableWidget(0, 7)
         self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.metricsTable.setHorizontalHeaderLabels(['Protocol', 'Group', 'Metric', 'Version', 'Status', 'Availability', 'Usage', None])
+        self.metricsTable.setHorizontalHeaderLabels(['Protocol', 'Group', 'Metric', 'Version (Status)', 'Availability', 'Usage', 'Description'])
+        
+        # Header Tooltips
+        table_tooltips = [
+            "The protocol that defines this metric.",
+            "Hierarchical group/category.",
+            "Name of the metric or indicator.",
+            "Version number and active status.",
+            "Automation availability status based on current inputs.",
+            "Select usage level: Metric or Indicator.",
+            "Description of the metric."
+        ]
+        for i, tip in enumerate(table_tooltips):
+            if self.metricsTable.horizontalHeaderItem(i):
+                self.metricsTable.horizontalHeaderItem(i).setToolTip(tip)
+
         header = self.metricsTable.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
@@ -358,12 +410,12 @@ class MetricSelector(QtWidgets.QWidget):
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Fixed)
-        header.resizeSection(7, 10)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
         self.metricsTable.verticalHeader().setVisible(False)
         self.metricsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.metricsTable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.metricsTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.metricsTable.customContextMenuRequested.connect(self.open_table_context_menu)
         self.metricsTable.setSortingEnabled(True)
         self.vboxTable.addWidget(self.metricsTable)
 
@@ -448,7 +500,7 @@ class MetricSelector(QtWidgets.QWidget):
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric:
                  status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
-                 item.setText(3, status)
+                 item.setText(2, status)
             it += 1
         
         # Update Table
@@ -459,8 +511,8 @@ class MetricSelector(QtWidgets.QWidget):
                  metric = metric_item.data(QtCore.Qt.UserRole)
                  if metric:
                      status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
-                     # Column 5 is Availability
-                     avail_item = self.metricsTable.item(row, 5)
+                     # Column 4 is Availability
+                     avail_item = self.metricsTable.item(row, 4)
                      if avail_item:
                          avail_item.setText(status)
         self.metricsTable.setSortingEnabled(True)
@@ -743,16 +795,18 @@ class MetricSelector(QtWidgets.QWidget):
             metric_item.setText(0, metric.name)
             metric_item.setData(0, QtCore.Qt.UserRole, metric)
             
-            # Version
-            metric_item.setText(1, str(metric.version) if metric.version else "")
-
-            # Status
+            font = self.get_metric_font(metric, level_id)
+            metric_item.setFont(0, font)
+            
+            # Version (Status)
             status = getattr(metric, 'status', 'active')
-            metric_item.setText(2, status)
+            ver_text = str(metric.version) if metric.version else ""
+            metric_item.setText(1, f"{ver_text} ({status})")
+            metric_item.setFont(1, font)
 
             # Availability
             calc_status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
-            metric_item.setText(3, calc_status)
+            metric_item.setText(2, calc_status)
 
             # Usage
             usage_display = ['None', 'Metric', 'Indicator'][level_id] if 0 <= level_id <= 2 else 'None'
@@ -760,7 +814,7 @@ class MetricSelector(QtWidgets.QWidget):
             # Use a specialized item for sorting if feasible, or just text
             # Setting text on column 4 allows sorting even if widget covers it?
             # QTreeWidget uses the item text for sorting.
-            metric_item.setText(4, usage_display)
+            metric_item.setText(3, usage_display)
 
             cboStatus = QtWidgets.QComboBox()
             cboStatus.addItem('None', 0)
@@ -769,17 +823,38 @@ class MetricSelector(QtWidgets.QWidget):
             cboStatus.setCurrentIndex(level_id)
             cboStatus.setProperty("metric_item", metric_item) 
             cboStatus.currentIndexChanged.connect(lambda idx, m_id=metric.id: self.on_metric_status_changed(m_id, idx))
-            self.metricsTree.setItemWidget(metric_item, 4, cboStatus)
+            self.metricsTree.setItemWidget(metric_item, 3, cboStatus)
 
-            # Help
-            cmdHelp = QtWidgets.QPushButton()
-            cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
-            cmdHelp.setToolTip('Metric Definition')
-            cmdHelp.clicked.connect(lambda _, m=metric: FrmLayerMetricDetails(self, self.qris_project, metric=m).exec_())
-            cmdHelp.setFixedWidth(30)
-            self.metricsTree.setItemWidget(metric_item, 5, cmdHelp)
+            # Description
+            metric_item.setText(4, metric.description)
+            metric_item.setToolTip(4, metric.description)
         
         self.metricsTree.setSortingEnabled(True)
+
+    def open_tree_context_menu(self, position):
+        item = self.metricsTree.itemAt(position)
+        if not item: return
+
+        metric = item.data(0, QtCore.Qt.UserRole)
+        if not metric: return
+
+        menu = QtWidgets.QMenu()
+        action_details = menu.addAction("Metric Details...")
+        action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+
+        menu.addSeparator()
+
+        action_matrix = menu.addAction("Automation Availability Matrix...")
+        # Use a closure capture to ensure current metadata is passed, not bound at definition time differently? 
+        # Actually lambda binding should be fine as long as self.analysis_metadata is updated on 'self'.
+        # However, let's explicitely pass self.analysis_metadata at call time
+        def open_matrix():
+            # QgsMessageLog.logMessage(f"Opening Matrix with Metadata: {self.analysis_metadata}", "QRiS", Qgis.Warning)
+            FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata).exec_()
+            
+        action_matrix.triggered.connect(open_matrix)
+        
+        menu.exec_(self.metricsTree.viewport().mapToGlobal(position))
 
     def load_metrics_table(self):
         pass
@@ -813,35 +888,33 @@ class MetricSelector(QtWidgets.QWidget):
             # Metric
             label_item = QtWidgets.QTableWidgetItem()
             label_item.setText(metric.name)
+            font = self.get_metric_font(metric, level_id)
+            label_item.setFont(font)
             self.metricsTable.setItem(row, 2, label_item)
             label_item.setFlags(QtCore.Qt.ItemIsEnabled)
 
-            # Version
+            # Version (Status)
+            status = getattr(metric, 'status', 'active')
+            ver_text = str(metric.version) if metric.version else ""
             ver_item = QtWidgets.QTableWidgetItem()
-            ver_item.setText(str(metric.version) if metric.version else "")
+            ver_item.setText(f"{ver_text} ({status})")
+            ver_item.setFont(font)
             ver_item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.metricsTable.setItem(row, 3, ver_item)
-
-            # Status
-            status = getattr(metric, 'status', 'active')
-            status_item = QtWidgets.QTableWidgetItem()
-            status_item.setText(status)
-            status_item.setFlags(QtCore.Qt.ItemIsEnabled)
-            self.metricsTable.setItem(row, 4, status_item)
 
             # Availability
             calc_status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
             calc_item = QtWidgets.QTableWidgetItem()
             calc_item.setText(calc_status)
             calc_item.setFlags(QtCore.Qt.ItemIsEnabled)
-            self.metricsTable.setItem(row, 5, calc_item)
+            self.metricsTable.setItem(row, 4, calc_item)
 
             # Usage
             usage_display = ['None', 'Metric', 'Indicator'][level_id] if 0 <= level_id <= 2 else 'None'
             
             # Create an item for sorting purposes
             usage_item = QtWidgets.QTableWidgetItem(usage_display)
-            self.metricsTable.setItem(row, 6, usage_item)
+            self.metricsTable.setItem(row, 5, usage_item)
 
             cboStatus = QtWidgets.QComboBox()
             cboStatus.addItem('None', 0)
@@ -849,18 +922,39 @@ class MetricSelector(QtWidgets.QWidget):
             cboStatus.addItem('Indicator', 2)
             cboStatus.setCurrentIndex(level_id)
             cboStatus.currentIndexChanged.connect(lambda idx, m_id=metric.id: self.on_metric_status_changed(m_id, idx))
-            self.metricsTable.setCellWidget(row, 6, cboStatus)
+            self.metricsTable.setCellWidget(row, 5, cboStatus)
 
-            # Help
-            cmdHelp = QtWidgets.QPushButton()
-            cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
-            cmdHelp.setToolTip('Metric Definition')
-            cmdHelp.clicked.connect(lambda _, m=metric: FrmLayerMetricDetails(self, self.qris_project, metric=m).exec_())
-            self.metricsTable.setCellWidget(row, 7, cmdHelp)
-        
+            # Description
+            desc_item = QtWidgets.QTableWidgetItem(metric.description)
+            desc_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            desc_item.setToolTip(metric.description)
+            self.metricsTable.setItem(row, 6, desc_item)
+
         self.metricsTable.resizeColumnsToContents()
-        self.metricsTable.setColumnWidth(6, 120) # Ensure Usage column is wide enough for ComboBox
+        self.metricsTable.setColumnWidth(5, 120) # Ensure Usage column is wide enough for ComboBox
         self.metricsTable.setSortingEnabled(True)
+
+    def open_table_context_menu(self, position):
+        item = self.metricsTable.itemAt(position)
+        if not item: return
+        
+        row = item.row()
+        metric_item = self.metricsTable.item(row, 0) # Metric stored in first column data
+        if not metric_item: return
+
+        metric = metric_item.data(QtCore.Qt.UserRole)
+        if not metric: return
+
+        menu = QtWidgets.QMenu()
+        action_details = menu.addAction("Metric Details...")
+        action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+
+        menu.addSeparator()
+
+        action_matrix = menu.addAction("Automation Availability Matrix...")
+        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata).exec_())
+        
+        menu.exec_(self.metricsTable.viewport().mapToGlobal(position))
 
     def toggle_all_metrics(self, level_id_text: str):
         metrics_update_map = {} # metric_id -> new_level_idx
@@ -887,8 +981,14 @@ class MetricSelector(QtWidgets.QWidget):
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric and metric.id in metrics_update_map:
                  new_idx = metrics_update_map[metric.id]
-                 item.setText(4, usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None') # Update sorting text
-                 w = self.metricsTree.itemWidget(item, 4)
+                 item.setText(3, usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None') # Update sorting text
+                 
+                 # Apply Font
+                 font = self.get_metric_font(metric, new_idx)
+                 item.setFont(0, font)
+                 item.setFont(1, font)
+
+                 w = self.metricsTree.itemWidget(item, 3)
                  if isinstance(w, QtWidgets.QComboBox):
                      w.blockSignals(True)
                      w.setCurrentIndex(new_idx)
@@ -908,11 +1008,16 @@ class MetricSelector(QtWidgets.QWidget):
                  usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None'
 
                  # Update sorting text
-                 usage_item = self.metricsTable.item(row, 6)
+                 usage_item = self.metricsTable.item(row, 5)
                  if usage_item:
                      usage_item.setText(usage_display)
+                 
+                 # Apply Font
+                 font = self.get_metric_font(metric, new_idx)
+                 if self.metricsTable.item(row, 2): self.metricsTable.item(row, 2).setFont(font)
+                 if self.metricsTable.item(row, 3): self.metricsTable.item(row, 3).setFont(font)
                      
-                 w = self.metricsTable.cellWidget(row, 6)
+                 w = self.metricsTable.cellWidget(row, 5)
                  if isinstance(w, QtWidgets.QComboBox):
                      w.blockSignals(True)
                      w.setCurrentIndex(new_idx)

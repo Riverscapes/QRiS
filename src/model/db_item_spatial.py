@@ -43,8 +43,14 @@ class DBItemSpatial(DBItem):
 
     def feature_count(self, db_path: str) -> int:
         """Get the feature count for the spatial item."""
-        temp_layer = self.get_temp_layer(db_path)
-        return temp_layer.featureCount()
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT COUNT(*) FROM {self.fc_name} WHERE {self.fc_id_column_name} = ?", (self.id,))
+                return cursor.fetchone()[0]
+        except Exception:
+            temp_layer = self.get_temp_layer(db_path)
+            return temp_layer.featureCount()
 
     def check_spatial_view_exists(self, curs: sqlite3.Cursor) -> bool:
         """Check if the spatial view exists."""

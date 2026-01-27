@@ -96,6 +96,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboValleyBottom.setEnabled(False)
         else:
             self.setWindowTitle('Create New Analysis')
+            # For new analysis, ensure we capture whatever is selected by default in the combo boxes
+            # (since we aren't explicitly setting them to -1 like in edit mode, they default to index 0)
+            self.update_metric_selector()
 
     def help(self, metric: Metric):
 
