@@ -44,9 +44,7 @@ class MetricValue():
     def uncertainty_as_string(self):
         if self.uncertainty is None:
             return ''
-        if self.is_manual:
-            return print_uncertanty(self.uncertainty)
-        return ''
+        return print_uncertanty(self.uncertainty)
 
     def save(self, db_path: str, analysis: Analysis, event: Event, sample_frame_feature_id: int, unit_id: int = None):
 
