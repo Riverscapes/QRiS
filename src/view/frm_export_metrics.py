@@ -129,6 +129,10 @@ class FrmExportMetrics(QtWidgets.QDialog):
                         value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.current_value_as_string(display_unit_for_value)
                         value = value if value is not None else ''
                         values.update({metric_name: value})
+                        
+                        if self.chkIncludeUncertainty.isChecked():
+                            uncertainty = metric_value.uncertainty_as_string()
+                            values.update({f'{metric_name} Uncertainty': uncertainty})
                     out_values.append(values)
 
         if self.combo_format.currentText() == 'CSV':
@@ -201,12 +205,18 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.export_grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.export_grid)
 
+        # check box for including uncertainty
+        self.chkIncludeUncertainty = QtWidgets.QCheckBox("Include Value Uncertainty Columns in Export")
+        self.chkIncludeUncertainty.setToolTip("Include the uncertainty value for each metric in the export")
+        self.chkIncludeUncertainty.setChecked(False)
+        self.export_grid.addWidget(self.chkIncludeUncertainty, 0, 0, 1, 2)
+
         # label for export format
         self.lbl_format = QtWidgets.QLabel("Export Format")
-        self.export_grid.addWidget(self.lbl_format, 0, 0, 1, 1)
+        self.export_grid.addWidget(self.lbl_format, 1, 0, 1, 1)
 
         self.horiz_format = QtWidgets.QHBoxLayout()
-        self.export_grid.addLayout(self.horiz_format, 0, 1, 1, 1)
+        self.export_grid.addLayout(self.horiz_format, 1, 1, 1, 1)
 
         # drop down for export format
         self.combo_format = QtWidgets.QComboBox()
@@ -220,10 +230,10 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # label for export location
         self.lbl_location = QtWidgets.QLabel("Export Path")
-        self.export_grid.addWidget(self.lbl_location, 1, 0, 1, 1)
+        self.export_grid.addWidget(self.lbl_location, 2, 0, 1, 1)
 
         self.horizOutput = QtWidgets.QHBoxLayout()
-        self.export_grid.addLayout(self.horizOutput, 1, 1, 1, 1)
+        self.export_grid.addLayout(self.horizOutput, 2, 1, 1, 1)
 
         # line edit for export location
         self.txtOutpath = QtWidgets.QLineEdit()
