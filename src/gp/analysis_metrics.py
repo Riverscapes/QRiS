@@ -181,11 +181,21 @@ def get_metric_layer_features(
                 continue
             metadata: dict = json.loads(metadata_value)
             attributes: dict = metadata.get('attributes', None)
+            
             if attributes is None:
+                attributes = {}
+            
+            field_ref = attribute_filter['field_id_ref']
+            
+            if field_ref not in attributes:
+                raise MetricCalculationError(f"Feature {feature.GetFID()} is missing required attribute '{field_ref}' for filtering.")
+
+            val = attributes[field_ref]
+            if val is None:
+                raise MetricCalculationError(f"Feature {feature.GetFID()} has a NULL value for required attribute '{field_ref}'.")
+
+            if val not in attribute_filter['values']:
                 continue
-            if attribute_filter['field_id_ref'] in attributes:
-                if attributes[attribute_filter['field_id_ref']] not in attribute_filter['values']:
-                    continue
 
         yield feature
         feature = None
