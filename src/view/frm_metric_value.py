@@ -1,9 +1,7 @@
-import os
 import traceback
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import Qgis, QgsMessageLog
-from qgis.utils import iface
+from qgis.core import Qgis, QgsMessageLog, QgsUnitTypes
 
 from ..model.project import Project
 from ..model.metric_value import MetricValue
@@ -11,12 +9,10 @@ from ..model.metric import Metric
 from ..model.analysis import Analysis
 from ..model.event import Event
 
-from .frm_layer_metric_details import FrmLayerMetricDetails
 from .utilities import add_standard_form_buttons
+from .frm_layer_metric_details import FrmLayerMetricDetails
+from ..lib.unit_conversion import convert_units, convert_count_per_length, convert_count_per_area, unit_types
 from ..gp import analysis_metrics
-from ..gp.analysis_metrics import normalization_factor
-from ..QRiS.settings import CONSTANTS
-from ..QRiS.path_utilities import parse_posix_path
 
 UNCERTAINTY_NONE = 'None'
 UNCERTAINTY_PLUS_MINUS = 'Plus/Minus'
@@ -26,23 +22,31 @@ UNCERTAINTY_MINMAX = 'Min/Max'
 
 class FrmMetricValue(QtWidgets.QDialog):
 
-    def __init__(self, parent, project: Project, metrics, analysis: Analysis, event: Event, sample_frame_id: int, metric_value: MetricValue):
+    def __init__(self, parent, project: Project, analysis: Analysis, event: Event, sample_frame_id: int, metric_value: MetricValue):
         super().__init__(parent)
         self.setupUi()
 
         self.setWindowTitle('Analysis Metric Value')
-
-        # hide these for now
-        self.cmdNext.setVisible(False)
-        self.cmdPrevious.setVisible(False)
 
         self.metric_value = metric_value
         self.qris_project = project
         self.analysis = analysis
         self.data_capture_event = event
         self.sample_frame_id = sample_frame_id
+        
+        # Determine initial display unit
+        unit_type = metric_value.metric.unit_type
+        lookup_type = unit_type
+        if unit_type == 'count' and metric_value.metric.normalized:
+             lookup_type = metric_value.metric.normalization_unit_type
+        self.current_unit = self.analysis.units.get(lookup_type, None)
+        
+        # Fallback to metric default if not in analysis preferences or valid default
+        if self.current_unit is None and unit_type in unit_types:
+             # Find a default or use the base unit
+             pass # Will be handled by load_units
 
-        metric_name_text = f'{metric_value.metric.name} ({self.qris_project.units[metric_value.metric.default_unit_id].display})' if metric_value.metric.default_unit_id is not None else f'{metric_value.metric.name}'
+        metric_name_text = f'{metric_value.metric.name}'
         self.txtMetric.setText(metric_name_text)
 
         if metric_value.metric.min_value is not None:
@@ -53,20 +57,30 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.valManual.setDecimals(metric_value.metric.precision)
         else:
             self.valManual.setDecimals(0)
+            
+        # Initialize UI Units 
+        self.load_units(unit_type)
 
+        # Load Manual Value (Converted to current unit)
         if metric_value.manual_value is not None:
-            self.valManual.setValue(metric_value.manual_value)
+            val = self.convert_to_display(metric_value.manual_value)
+            self.valManual.setValue(val)
 
         self.rdoManual.setChecked(metric_value.is_manual)
         self.valManual.setEnabled(self.rdoManual.isChecked())
 
+        # Load Automated Value (Always SI)
         if metric_value.automated_value is not None:
-            self.txtAutomated.setText(f'{metric_value.automated_value: .{self.metric_value.metric.precision}f}'if isinstance(metric_value.automated_value, float) and self.metric_value.metric.precision is not None else str(metric_value.automated_value))
+            self.update_automated_text(metric_value.automated_value)
+            
         self.rdoAutomated.setEnabled(metric_value.automated_value is not None)
 
         self.rdoAutomated.setChecked(not metric_value.is_manual)
 
         self.txtDescription.setPlainText(metric_value.description)
+        
+        # Connect Unit Change AFTER loading values to prevent double conversion or clearing
+        self.cboUnits.currentIndexChanged.connect(self.on_unit_changed)
 
         if self.metric_value.uncertainty is not None:
             self.load_uncertainty()
@@ -80,7 +94,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         # disable the automated value if unable to calculate
         if not self.metric_value.metric.can_calculate_automated(self.qris_project, self.data_capture_event.id, self.analysis.id):
             self.rdoAutomated.setEnabled(False)
-            self.cmdCalculate.setEnabled(False)
+            self.actionCalculate.setEnabled(False)
             self.txtAutomated.setPlaceholderText('Unable to calculate automated value due to missing required layer(s)')
             self.txtAutomated.setToolTip('Unable to calculate automated value due to missing required layer(s)')
             self.rdoAutomated.setToolTip('Unable to calculate automated value due to missing required layer(s)')
@@ -89,15 +103,171 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.valManual.setFocus()
         else:
             self.rdoAutomated.setEnabled(True)
-            self.cmdCalculate.setEnabled(True)
+            self.actionCalculate.setEnabled(True)
+
+    def load_units(self, unit_type):
+        """Populates the unit combobox and selects current default."""
+        self.cboUnits.blockSignals(True)
+        self.cboUnits.clear()
+        
+        effective_unit_type = unit_type
+        if unit_type == 'count' and self.metric_value.metric.normalized:
+            effective_unit_type = self.metric_value.metric.normalization_unit_type
+        
+        if effective_unit_type in unit_types and effective_unit_type not in ['count']:
+            units_dict = unit_types[effective_unit_type]
+            # units_dict is {DisplayName: Key/Code}
+            for name, code in units_dict.items():
+                display_name = name
+                if self.metric_value.metric.normalized and self.metric_value.metric.unit_type == 'count':
+                     display_name = f"count/{name}"
+                self.cboUnits.addItem(display_name, name)
+            
+            self.cboUnits.setEnabled(True)
+            self.cboUnits.setVisible(True)
+            self.lblUnits.setVisible(True)
+
+            if self.current_unit:
+                 index = self.cboUnits.findData(self.current_unit)
+                 if index >= 0:
+                     self.cboUnits.setCurrentIndex(index)
+                 else:
+                     if self.cboUnits.count() > 0:
+                         self.cboUnits.setCurrentIndex(0)
+                         self.current_unit = self.cboUnits.itemData(0)
+            else:
+                 if self.cboUnits.count() > 0:
+                     self.cboUnits.setCurrentIndex(0)
+                     self.current_unit = self.cboUnits.itemData(0)
+
+        else:
+            self.cboUnits.setEnabled(False)
+            self.cboUnits.setVisible(False)
+            self.lblUnits.setVisible(False)
+            self.current_unit = None
+            
+        self.cboUnits.blockSignals(False)
+
+    def on_unit_changed(self, index):
+        new_unit = self.cboUnits.currentData()
+        
+        old_unit = self.current_unit
+        
+        if not old_unit:
+            self.current_unit = new_unit
+            return
+
+        # Convert Manual Value
+        if self.valManual.value() != 0: 
+             # Step 1: Convert to Base (SI) using old unit
+             base_val = self.convert_to_base(self.valManual.value(), old_unit)
+             
+             # Step 2: Convert to New Unit
+             new_val = self.convert_to_display(base_val, new_unit)
+             self.valManual.setValue(new_val)
+        
+        self.current_unit = new_unit
+        
+        # Update Automated Value Display (convert SI -> new_unit)
+        if self.metric_value.automated_value is not None:
+            self.update_automated_text(self.metric_value.automated_value)
+
+    def convert_to_display(self, value_si, unit_name=None):
+        """Converts stored SI value to display unit."""
+        if value_si is None: return None
+        target_unit = unit_name if unit_name else self.current_unit
+        if not target_unit: return value_si
+        
+        return self._do_conversion(value_si, self.metric_value.metric.base_unit, target_unit, invert=False)
+
+    def convert_to_base(self, value_disp, unit_name=None):
+        """Converts display value back to SI base."""
+        if value_disp is None: return None
+        source_unit = unit_name if unit_name else self.current_unit
+        if not source_unit: return value_disp
+        
+        return self._do_conversion(value_disp, self.metric_value.metric.base_unit, source_unit, invert=True)
+
+    def _do_conversion(self, value, base_unit, target_unit_name, invert=False):
+        # Uses lib.unit_conversion logic
+        # Note: metric.normalized affects logic if density (count/length vs count/area)
+        
+        # If normalized, we need the normalization unit type
+        if self.metric_value.metric.normalized:
+            # When normalized, the metric unit type is 'count', but normalization is 'distance' or 'area'
+            # The 'target_unit_name' passed here is likely a distance or area unit (e.g. 'Meters', 'Acres')
+            norm_type = self.metric_value.metric.normalization_unit_type
+            
+            if norm_type == 'distance':
+                # Function signature: convert_count_per_length(value, from_unit, to_unit)
+                # If invert (Display -> Base): We have Count/Ft, want Count/M
+                # convert_count_per_length converts FROM base TO target. 
+                # e.g. val in per_meter, target='Feet' -> returns per_feet
+                # To invert, we need to think carefully.
+                # 1 per meter = 0.3048 per foot? No. 1/m * (1m/3.28ft) = 1/3.28 1/ft = 0.3048?
+                
+                # Let's rely on convert_count_per_length if not inverted.
+                if not invert:
+                     # Base (per meter) -> Target (per foot)
+                     return convert_count_per_length(value, base_unit, target_unit_name)
+                else:
+                     # Target (per foot) -> Base (per meter)
+                     # convert_count_per_length logic: value * (from_factor / to_factor)
+                     # Here we want to go backwards. 
+                     # Actually convert_count_per_length takes (value, unit_from, unit_to). 
+                     # So if we say convert_count_per_length(val, TargetUnit, BaseUnit) it should work? 
+                     # base_unit for metric is usually QgsUnitTypes.DistanceMeters (which is integer 1)
+                     # target_unit_name is string 'Feet'.
+                     return convert_count_per_length(value, target_unit_name, base_unit)
+                     
+            elif norm_type == 'area':
+                 if not invert:
+                     return convert_count_per_area(value, base_unit, target_unit_name)
+                 else:
+                     return convert_count_per_area(value, target_unit_name, base_unit)
+            else:
+                 # Fallback?
+                 return value
+        else:
+             # Standard conversion
+             # convert_units(value, from_unit, to_unit, invert=False)
+             # if invert=True handled inside? 
+             # Implementation of convert_units in lib:
+             # def convert_units(value, from_unit, to_unit, invert=False):
+             #    if invert: return value / factor ...
+             
+             # Actually convert_units signature in lib usually assumes conversion relative to base if arguments are vague?
+             # Let's look at signature in lib/unit_conversion.py
+             # It is imported. I haven't read the function body of convert_units in detail.
+             # Based on MetricValue.current_value:
+             # convert_units(value, self.metric.base_unit, display_unit, invert=self.metric.normalized)
+             
+             # If not normalized:
+             return convert_units(value, base_unit, target_unit_name, invert=invert)
+
+    def update_automated_text(self, value):
+        if value is None: 
+            self.txtAutomated.setText("")
+            return
+            
+        # Convert SI value to display unit
+        disp_val = self.convert_to_display(value)
+            
+        fmt = self.metric_value.metric.precision
+        txt = f'{disp_val: .{fmt}f}' if isinstance(disp_val, float) and fmt is not None else str(disp_val)
+        self.txtAutomated.setText(txt)
 
     def rdoManual_checkchanged(self):
         self.valManual.setEnabled(self.rdoManual.isChecked())
 
     def accept(self):
 
-        self.metric_value.manual_value = self.valManual.value()
-        # self.metric_value.automated_value = float(self.txtAutomated.text()) if len(self.txtAutomated.text()) > 0 else None
+        # Save Manual Value (Convert from Display Unit back to Base SI)
+        # self.valManual.value() is in self.current_unit
+        display_val = self.valManual.value()
+        base_val = self.convert_to_base(display_val)
+        
+        self.metric_value.manual_value = base_val
         self.metric_value.is_manual = self.rdoManual.isChecked()
         self.metric_value.description = self.txtDescription.toPlainText()
 
@@ -122,13 +292,6 @@ class FrmMetricValue(QtWidgets.QDialog):
             return
 
         super().accept()
-
-    def cmd_previous_metric_clicked(self):
-
-        print('TODO')
-
-    def cmd_next_metric_clicked(self):
-        print('TODO')
 
     def ManualUncertaintyChange(self):
 
@@ -186,6 +349,7 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
         try:
+            # Result IS SI (Base Units)
             result = metric_calculation(self.qris_project.project_file, self.sample_frame_id, self.data_capture_event.id, metric_params, analysis_params)
             self.metric_value.automated_value = result
         except Exception as ex:
@@ -196,7 +360,9 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.rdoAutomated.setEnabled(False)
             return
 
-        self.txtAutomated.setText(f'{result: .{self.metric_value.metric.precision}f}'if isinstance(result, float) and self.metric_value.metric.precision is not None else str(result))
+        # Display result formatted to current display unit
+        self.update_automated_text(result)
+        
         self.rdoAutomated.setChecked(True)
         self.rdoAutomated.setEnabled(True)
 
@@ -204,108 +370,106 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         self.resize(500, 200)
 
-        # Top level layout must include parent. Widgets added to this layout do not need parent.
+        # Top level layout
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
 
+        # Header Grid (Metric Name and Navigation)
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblMetric = QtWidgets.QLabel()
-        self.lblMetric.setText('Metric')
-        self.grid.addWidget(self.lblMetric, 0, 0, 1, 1)
+        self.lblMetric = QtWidgets.QLabel('Metric')
+        self.grid.addWidget(self.lblMetric, 0, 0)
 
         self.txtMetric = QtWidgets.QLineEdit()
         self.txtMetric.setReadOnly(True)
-        self.grid.addWidget(self.txtMetric, 0, 1, 1, 1)
+        self.grid.addWidget(self.txtMetric, 0, 1)
 
         self.cmdHelp = QtWidgets.QPushButton()
         self.cmdHelp.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/help'))
         self.cmdHelp.setToolTip('Help')
         self.cmdHelp.clicked.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=self.metric_value.metric).exec_())
-        self.grid.addWidget(self.cmdHelp, 0, 2, 1, 1)
+        self.grid.addWidget(self.cmdHelp, 0, 2)
 
-        self.horizMetric = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horizMetric, 0, 2, 1, 1)
-
-        self.cmdPrevious = QtWidgets.QPushButton()
-        # self.cmdPrevious.setText('Previous Metric')
-        self.cmdPrevious.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/arrow_up'))
-        self.cmdPrevious.clicked.connect(self.cmd_previous_metric_clicked)
-        self.cmdPrevious.setToolTip('Save Changes and Move to Previous Metric')
-        self.horizMetric.addWidget(self.cmdPrevious)
-
-        self.cmdNext = QtWidgets.QPushButton()
-        # self.cmdNext.setText('Next Metric')
-        self.cmdNext.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/arrow_down'))
-        self.cmdNext.setToolTip('Save Changes and Move to Next Metric')
-        self.cmdNext.clicked.connect(self.cmd_next_metric_clicked)
-        self.horizMetric.addWidget(self.cmdNext)
-
-        self.rdoManual = QtWidgets.QRadioButton()
-        self.rdoManual.setChecked(True)
-        self.rdoManual.setText('Manual Value')
-        self.rdoManual.toggled.connect(self.rdoManual_checkchanged)
-        self.grid.addWidget(self.rdoManual, 1, 0, 1, 1)
-
-        self.horiz_manual = QtWidgets.QHBoxLayout()
-        self.grid.addLayout(self.horiz_manual, 1, 1, 1, 1)
-
-        self.valManual = QtWidgets.QDoubleSpinBox()
-        self.horiz_manual.addWidget(self.valManual)
-
-        self.lblUbcertainty = QtWidgets.QLabel()
-        self.lblUbcertainty.setText('Uncertainty')
-        self.horiz_manual.addWidget(self.lblUbcertainty)
-
-        self.cboManualUncertainty = QtWidgets.QComboBox()
-        self.cboManualUncertainty.addItems([UNCERTAINTY_NONE, UNCERTAINTY_PLUS_MINUS, UNCERTAINTY_PERCENT, UNCERTAINTY_MINMAX])
-        self.horiz_manual.addWidget(self.cboManualUncertainty)
-        self.cboManualUncertainty.currentIndexChanged.connect(self.ManualUncertaintyChange)
-
-        self.ValManualPlusMinus = QtWidgets.QDoubleSpinBox()
-        self.horiz_manual.addWidget(self.ValManualPlusMinus)
-
-        self.ValManualUncertaintyLabelMin = QtWidgets.QLabel()
-        self.ValManualUncertaintyLabelMin.setText('Minimum')
-        self.horiz_manual.addWidget(self.ValManualUncertaintyLabelMin)
-
-        self.ValManualUncertaintyMin = QtWidgets.QDoubleSpinBox()
-        self.horiz_manual.addWidget(self.ValManualUncertaintyMin)
-
-        self.ValManualUncertaintyLabelMax = QtWidgets.QLabel()
-        self.ValManualUncertaintyLabelMax.setText('Maximum')
-        self.horiz_manual.addWidget(self.ValManualUncertaintyLabelMax)
-
-        self.ValManualUncertaintyMax = QtWidgets.QDoubleSpinBox()
-        self.horiz_manual.addWidget(self.ValManualUncertaintyMax)
-
-        self.rdoAutomated = QtWidgets.QRadioButton()
-        self.rdoAutomated.setText('Automated Value')
-        self.grid.addWidget(self.rdoAutomated, 2, 0, 1, 1)
-
-        self.txtAutomated = QtWidgets.QLineEdit()
-        self.txtAutomated.setReadOnly(True)
-        self.grid.addWidget(self.txtAutomated, 2, 1, 1, 1)
-
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-
-        self.cmdCalculate = QtWidgets.QPushButton()
-        # self.cmdCalculate.setText('Calculate')
-        self.cmdCalculate.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/calculate'))
-        self.cmdCalculate.setToolTip('Calculate Metric From GIS')
-        self.cmdCalculate.setSizePolicy(sizePolicy)
-        self.cmdCalculate.clicked.connect(self.cmd_calculate_metric_clicked)
-        self.grid.addWidget(self.cmdCalculate, 2, 2, 1, 1)
-
-        # self.lblUncertainty = QtWidgets.QLabel()
-        # self.lblUncertainty.setText('Uncertainty')
-        # self.grid.addWidget(self.lblUncertainty, 3, 0, 1, 1)
-
+        # Tabs
         self.tab = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tab)
 
+        self.tabValues = QtWidgets.QWidget()
+        self.tab.addTab(self.tabValues, 'Value')
+
+        # Value Tab Grid
+        self.gridValues = QtWidgets.QGridLayout(self.tabValues)
+
+        # --- Row 0: Display Units ---
+        self.horizUnits = QtWidgets.QHBoxLayout()
+        self.horizUnits.addStretch()
+        
+        self.lblUnits = QtWidgets.QLabel("Display Units:")
+        self.lblUnits.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.horizUnits.addWidget(self.lblUnits)
+        
+        self.cboUnits = QtWidgets.QComboBox()
+        self.horizUnits.addWidget(self.cboUnits)
+        
+        self.gridValues.addLayout(self.horizUnits, 0, 0, 1, 2)
+
+        # --- Row 1: Manual Value ---
+        self.rdoManual = QtWidgets.QRadioButton('Manual Value')
+        self.rdoManual.toggled.connect(self.rdoManual_checkchanged)
+        self.gridValues.addWidget(self.rdoManual, 1, 0)
+
+        self.valManual = QtWidgets.QDoubleSpinBox()
+        self.valManual.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.gridValues.addWidget(self.valManual, 1, 1)        
+        
+        # --- Row 2: Automated Value ---
+        self.rdoAutomated = QtWidgets.QRadioButton('Calculated Value')
+        self.gridValues.addWidget(self.rdoAutomated, 2, 0)
+
+        self.txtAutomated = QtWidgets.QLineEdit()
+        self.txtAutomated.setReadOnly(True)
+        self.txtAutomated.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.gridValues.addWidget(self.txtAutomated, 2, 1)
+
+        self.actionCalculate = QtWidgets.QAction(self.txtAutomated)
+        self.actionCalculate.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/calculate'))
+        self.actionCalculate.setToolTip('Calculate Metric From GIS')
+        self.actionCalculate.triggered.connect(self.cmd_calculate_metric_clicked)
+        self.txtAutomated.addAction(self.actionCalculate, QtWidgets.QLineEdit.TrailingPosition)
+        
+        # --- Row 3: Uncertainty ---
+        self.lblUbcertainty = QtWidgets.QLabel('Uncertainty')
+        self.gridValues.addWidget(self.lblUbcertainty, 3, 0)
+
+        self.horiz_uncertainty = QtWidgets.QHBoxLayout()
+        self.gridValues.addLayout(self.horiz_uncertainty, 3, 1)
+
+        self.cboManualUncertainty = QtWidgets.QComboBox()
+        self.cboManualUncertainty.addItems([UNCERTAINTY_NONE, UNCERTAINTY_PLUS_MINUS, UNCERTAINTY_PERCENT, UNCERTAINTY_MINMAX])
+        self.horiz_uncertainty.addWidget(self.cboManualUncertainty)
+        self.cboManualUncertainty.currentIndexChanged.connect(self.ManualUncertaintyChange)
+
+        self.ValManualPlusMinus = QtWidgets.QDoubleSpinBox()
+        self.horiz_uncertainty.addWidget(self.ValManualPlusMinus)
+
+        self.ValManualUncertaintyLabelMin = QtWidgets.QLabel('Minimum')
+        self.horiz_uncertainty.addWidget(self.ValManualUncertaintyLabelMin)
+
+        self.ValManualUncertaintyMin = QtWidgets.QDoubleSpinBox()
+        self.horiz_uncertainty.addWidget(self.ValManualUncertaintyMin)
+
+        self.ValManualUncertaintyLabelMax = QtWidgets.QLabel('Maximum')
+        self.horiz_uncertainty.addWidget(self.ValManualUncertaintyLabelMax)
+
+        self.ValManualUncertaintyMax = QtWidgets.QDoubleSpinBox()
+        self.horiz_uncertainty.addWidget(self.ValManualUncertaintyMax)
+        
+        self.horiz_uncertainty.addStretch()
+
+        self.gridValues.setRowStretch(4, 1)
+
+        # Other Tabs
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tab.addTab(self.txtDescription, 'Description')
 

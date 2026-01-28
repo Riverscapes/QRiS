@@ -117,10 +117,11 @@ def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = Fal
     
     # check if they are ratios first
     if from_unit in ratio_units and to_unit in ratio_units:
-        conversion_factor = ratio_units[from_unit] * ratio_units[to_unit]
+        # Source * (SourceFactor / TargetFactor)
+        conversion_factor = ratio_units[from_unit] / ratio_units[to_unit]
         if invert:
             conversion_factor = 1 / conversion_factor
-        return value / conversion_factor
+        return value * conversion_factor
 
     # get the base unit type from 
     if from_unit in distance_units:
