@@ -1,4 +1,5 @@
 import traceback
+import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog, QgsUnitTypes
@@ -11,6 +12,7 @@ from ..model.event import Event
 
 from .utilities import add_standard_form_buttons
 from .frm_layer_metric_details import FrmLayerMetricDetails
+from .widgets.metadata import MetadataWidget
 from ..lib.unit_conversion import convert_units, convert_count_per_length, convert_count_per_area, unit_types
 from ..gp import analysis_metrics
 
@@ -33,6 +35,9 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.analysis = analysis
         self.data_capture_event = event
         self.sample_frame_id = sample_frame_id
+
+        if self.metric_value.metadata:
+             self.metadata_widget.load_json(json.dumps(self.metric_value.metadata))
         
         # Determine initial display unit
         unit_type = metric_value.metric.unit_type
@@ -48,6 +53,9 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         metric_name_text = f'{metric_value.metric.name}'
         self.txtMetric.setText(metric_name_text)
+        
+        if metric_value.metric.description:
+            self.lblMetricDesc.setText(metric_value.metric.description)
 
         if metric_value.metric.min_value is not None:
             self.valManual.setMinimum(metric_value.metric.min_value)
@@ -270,6 +278,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.metric_value.manual_value = base_val
         self.metric_value.is_manual = self.rdoManual.isChecked()
         self.metric_value.description = self.txtDescription.toPlainText()
+        self.metric_value.metadata = self.metadata_widget.get_data()
 
         # Save manual unertainty, even if automated metrics are selected
         if self.cboManualUncertainty.currentText() == UNCERTAINTY_NONE:
@@ -391,6 +400,13 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.cmdHelp.clicked.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=self.metric_value.metric).exec_())
         self.grid.addWidget(self.cmdHelp, 0, 2)
 
+        self.lblMetricDesc = QtWidgets.QLabel()
+        self.lblMetricDesc.setWordWrap(True)
+        # Font style for description - maybe italic? 
+        font = self.lblMetricDesc.font()
+        self.lblMetricDesc.setFont(font)
+        self.grid.addWidget(self.lblMetricDesc, 1, 1, 1, 2)
+
         # Tabs
         self.tab = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tab)
@@ -471,9 +487,9 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         # Other Tabs
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.tab.addTab(self.txtDescription, 'Description')
+        self.tab.addTab(self.txtDescription, 'Notes')
 
-        self.metadata = QtWidgets.QTableWidget()
-        self.tab.addTab(self.metadata, 'Metadata')
+        self.metadata_widget = MetadataWidget(self)
+        self.tab.addTab(self.metadata_widget, 'Metadata')
 
         self.vert.addLayout(add_standard_form_buttons(self, 'analyses'))
