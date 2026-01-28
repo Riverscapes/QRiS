@@ -91,7 +91,7 @@ class ProtocolDefinition:
     def unique_key(self):
         return f'{self.machine_code}::{self.version}'
 
-def load_protocol_definitions(project_directory: str, show_experimental: bool = None) -> List[ProtocolDefinition]:
+def load_protocol_definitions(project_directory: str, show_experimental: bool = None, show_deprecated: bool = False) -> List[ProtocolDefinition]:
     """Load protocol from xml"""
 
     if show_experimental is None:
@@ -114,7 +114,7 @@ def load_protocol_definitions(project_directory: str, show_experimental: bool = 
                 if protocol is not None:
                     if protocol.status == 'experimental' and not show_experimental:
                         continue
-                    if protocol.status == 'deprecated':
+                    if protocol.status == 'deprecated' and not show_deprecated:
                         continue
                     protocols.append(protocol)
 

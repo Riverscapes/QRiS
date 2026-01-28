@@ -11,7 +11,7 @@ from qgis.utils import spatialite_connect
 from .analysis import Analysis, load_analyses
 from .sample_frame import SampleFrame, load_sample_frames
 from .layer import Layer, load_layers
-from .protocol import Protocol, load as load_protocols
+from .protocol import Protocol, load as load_protocols, update_protocol
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
 from .planning_container import PlanningContainer, load as load_planning_containers
@@ -105,14 +105,22 @@ class Project(DBItem, QObject):
         
         # attempt to update protocols 
         try:
-            current_protocols = load_protocol_definitions(os.path.dirname(self.project_file), show_experimental=True)
+            current_protocols = load_protocol_definitions(os.path.dirname(self.project_file), show_experimental=True, show_deprecated=True)
             if current_protocols:
                 for current_protocol in current_protocols:
                     if current_protocol.machine_code in [protocol.machine_code for protocol in self.protocols.values()]:
                         updated = False
                         protocol_id = [protocol.id for protocol in self.protocols.values() if protocol.machine_code == current_protocol.machine_code][0]
                         # update existing protocol
-                        # TODO layer mutable properties
+                        new_metadata = update_protocol(self.project_file, protocol_id, current_protocol)
+                        
+                        # Update in-memory object
+                        protocol_obj = self.protocols[protocol_id]
+                        protocol_obj.name = current_protocol.label
+                        protocol_obj.description = current_protocol.description
+                        protocol_obj.version = current_protocol.version
+                        protocol_obj.set_metadata(new_metadata)
+
                         # metrics
                         for metric in current_protocol.metrics:
                             key_tuple = (metric.id, metric.version, current_protocol.machine_code)
