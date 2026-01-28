@@ -204,11 +204,23 @@ class MetricSelector(QtWidgets.QWidget):
         font = QtGui.QFont()
         status = getattr(metric, 'status', 'active')
         
+        # Check if Protocol is Deprecated
+        # lookup protocol by machine code
+        protocol_status = 'active'
+        if hasattr(self.project, 'protocols'): # Safety check
+            for p in self.project.protocols.values():
+                if p.machine_code == metric.protocol_machine_code:
+                    if getattr(p, 'status', 'active') == 'deprecated':
+                        protocol_status = 'deprecated'
+                    break
+
         if level_id > 0:
             font.setBold(True)
             
-        if status == 'deprecated':
+        if status == 'deprecated' or protocol_status == 'deprecated':
             font.setItalic(True)
+            if protocol_status == 'deprecated':
+                 font.setStrikeOut(True) # Optional visual cue for protocol-level deprecation
             
         return font
 
@@ -666,20 +678,26 @@ class MetricSelector(QtWidgets.QWidget):
         return True
 
     def is_metric_in_universe(self, metric):
+        
+        # Check Protocol Status first
+        protocol_status = 'active'
+        protocol_experimental = False
+        for p in self.qris_project.protocols.values():
+            if p.machine_code == metric.protocol_machine_code:
+                if "experimental" in p.name.lower() or getattr(p, 'status', 'active') == 'experimental':
+                    protocol_experimental = True
+                
+                if getattr(p, 'status', 'active') == 'deprecated':
+                    protocol_status = 'deprecated'
+                break
+
         if not self.act_include_experimental.isChecked():
-             # Placeholder: Check if protocol implies experimental
-             protocol_name = ""
-             for p in self.qris_project.protocols.values():
-                 if p.machine_code == metric.protocol_machine_code:
-                     protocol_name = p.name
-                     break
-             
-             if "experimental" in protocol_name.lower():
+             if protocol_experimental:
                  return False
 
         if not self.act_include_deprecated.isChecked():
             status = getattr(metric, 'status', 'active')
-            if status == 'deprecated':
+            if status == 'deprecated' or protocol_status == 'deprecated':
                 return False
         
         return True
