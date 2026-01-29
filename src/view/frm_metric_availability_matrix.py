@@ -5,11 +5,13 @@ from ..model.metric import Metric
 from ..model.project import Project
 
 class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
-    def __init__(self, parent, project: Project, metric: Metric, analysis_metadata: dict = None):
+    def __init__(self, parent, project: Project, metric: Metric, analysis_metadata: dict = None, highlight_dce_id: int = None, limit_dces: List = None):
         super().__init__(parent)
         self.project = project
         self.metric = metric
         self.analysis_metadata = analysis_metadata or {}
+        self.highlight_dce_id = highlight_dce_id
+        self.limit_dces = limit_dces
         
         # DEBUG
         # from qgis.core import QgsMessageLog, Qgis
@@ -122,10 +124,23 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                  final_header = f"{display_text} ({usage})"
             
             tooltip_text = f"DCE Layer: {ref}\nUsage: {usage}"
+            
+            attr_filter = layer_def.get('attribute_filter')
+            if attr_filter:
+                tooltip_text += f"\nRequired Filter: {attr_filter.get('field_id_ref')} IN {attr_filter.get('values')}"
+            
             columns_info.append(('dce_layer', ref, final_header, tooltip_text))
 
         # Determine Rows (DCEs)
-        events = list(self.project.events.values())
+        if self.limit_dces:
+            events = self.limit_dces
+            if hasattr(events[0], 'id'): # Check if objects or IDs
+                pass
+            elif isinstance(events[0], int): # Convert IDs to objects
+                events = [e for e in self.project.events.values() if e.id in events]
+        else:
+            events = list(self.project.events.values())
+
         if not events:
             self.table.setRowCount(1)
             self.table.setColumnCount(1)
@@ -158,8 +173,18 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
         
         # Populate
         for row_idx, event in enumerate(events):
+            is_highlighted = self.highlight_dce_id and event.id == self.highlight_dce_id
+
             # 1. DCE Name
             item_name = QtWidgets.QTableWidgetItem(event.name)
+            
+            # Highlight DCE if requested
+            if is_highlighted:
+                font = item_name.font()
+                font.setBold(True)
+                item_name.setFont(font)
+                item_name.setBackground(QtGui.QColor("#cce5ff"))
+                
             self.table.setItem(row_idx, 0, item_name)
             
             # Track overall availability for this row
@@ -172,6 +197,10 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
             for col_idx, (c_type, ref, display_header, _) in enumerate(columns_info):
                 
                 status_item = QtWidgets.QTableWidgetItem()
+                if is_highlighted:
+                    font = status_item.font()
+                    font.setBold(True)
+                    status_item.setFont(font)
                 
                 if c_type == 'input':
                     # Check analysis metadata (Case Insensitive)
@@ -297,6 +326,12 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
             
             summary_item.setToolTip("\n".join(tool_tip_lines))
             summary_item.setTextAlignment(QtCore.Qt.AlignCenter)
+
+            if is_highlighted:
+                font = summary_item.font()
+                font.setBold(True)
+                summary_item.setFont(font)
+
             self.table.setItem(row_idx, len(columns_info) + 1, summary_item)
             
         self.table.resizeColumnsToContents()
