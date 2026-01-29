@@ -57,7 +57,7 @@ class Metric(DBItem):
         self.status = self.metadata.get('status', 'active') # active, deprecated
         self.hierarchy = self.metadata.get('hierarchy', None)
 
-    def get_automation_availability(self, qris_project, analysis_metadata: dict = None) -> str:
+    def get_automation_availability(self, qris_project, analysis_metadata: dict = None, limit_dces: list = None) -> str:
         if not self.metric_params:
              return "Manual Only"
 
@@ -86,10 +86,18 @@ class Metric(DBItem):
                  return "All DCEs"
              return "No DCEs (Manual Entry Only)"
 
+        # Filter events if limit_dces (IDs) provided
+        events_to_check = qris_project.events.values()
+        if limit_dces:
+            events_to_check = [e for e in events_to_check if e.id in limit_dces]
+            
         supported_count = 0
-        total_count = len(qris_project.events)
+        total_count = len(events_to_check)
         
-        for event in qris_project.events.values():
+        if total_count == 0:
+            return "No DCEs (Selected)"
+        
+        for event in events_to_check:
             if self.can_calculate_for_dce(event):
                  supported_count += 1
         
