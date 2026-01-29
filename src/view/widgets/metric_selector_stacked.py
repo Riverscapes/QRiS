@@ -207,8 +207,8 @@ class MetricSelector(QtWidgets.QWidget):
         # Check if Protocol is Deprecated
         # lookup protocol by machine code
         protocol_status = 'active'
-        if hasattr(self.project, 'protocols'): # Safety check
-            for p in self.project.protocols.values():
+        if hasattr(self.qris_project, 'protocols'): # Safety check
+            for p in self.qris_project.protocols.values():
                 if p.machine_code == metric.protocol_machine_code:
                     if getattr(p, 'status', 'active') == 'deprecated':
                         protocol_status = 'deprecated'

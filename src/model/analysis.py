@@ -74,6 +74,84 @@ class Analysis(DBItemSpatial):
         curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
 
 
+    def check_metric_feasibility(self, metric, project, event=None) -> Dict:
+        """
+        Checks if the automated metric can be calculated based on:
+        1. Automation definition existence
+        2. Required Inputs (Analysis Metadata)
+        3. Required DCE Layers (Project Configuration & Event Content)
+        
+        Returns:
+            dict: {
+                'status': str ('MANUAL_ONLY', 'FEASIBLE', 'FEASIBLE_EMPTY', 'NOT_FEASIBLE'),
+                'reasons': list[str]
+            }
+        """
+        result = {
+            'status': 'FEASIBLE',
+            'reasons': []
+        }
+        
+        # 1. Check Automation Definition
+        if not metric.metric_params:
+            result['status'] = 'MANUAL_ONLY'
+            return result
+            
+        # 2. Check Inputs (Analysis Metadata)
+        inputs = metric.metric_params.get('inputs', [])
+        for input_item in inputs:
+            ref = input_item.get('input_ref', '')
+            if not ref: continue
+                
+            # Check if this key exists in analysis metadata (case insensitive)
+            # metadata keys are usually lowercase, but let's be safe
+            found = False
+            for k, v in self.metadata.items():
+                if k.lower() == ref.lower() and v is not None:
+                    found = True
+                    break
+            
+            if not found:
+                 result['status'] = 'NOT_FEASIBLE'
+                 result['reasons'].append(f"Missing Input: {ref}")
+
+        # 3. Check DCE Layers
+        dce_layers = metric.metric_params.get('dce_layers', [])
+        for layer_def in dce_layers:
+            ref = layer_def.get('layer_id_ref')
+            if not ref: continue
+            
+            # Find Layer in Project
+            layer = next((l for l in project.layers.values() if l.layer_id == ref), None)
+            
+            if layer is None:
+                if result['status'] != 'NOT_FEASIBLE':
+                    result['status'] = 'NOT_FEASIBLE'
+                result['reasons'].append(f"Layer Not Found in Project: {ref}")
+                continue
+            
+            # Check Feature Counts if Event is provided
+            if event:
+                 with sqlite3.connect(project.project_file) as conn:
+                     curs = conn.cursor()
+                     try:
+                         # dce_points/lines/polys have layer_id and event_id
+                         table_name = layer.DCE_LAYER_NAMES.get(layer.geom_type)
+                         if table_name:
+                             curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND layer_id = ?", [event.id, layer.id])
+                             count = curs.fetchone()[0]
+                             if count == 0:
+                                 if result['status'] == 'FEASIBLE': 
+                                     result['status'] = 'FEASIBLE_EMPTY'
+                                 result['reasons'].append(f"Layer Empty: {ref}")
+                     except Exception as e:
+                         # Table might not exist or other error
+                         # We don't want to fail hard here, treating as potentially missing data
+                         pass
+
+        return result
+
+
 def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> Dict[int, Analysis] :
 
     curs.execute('SELECT * FROM analyses')
