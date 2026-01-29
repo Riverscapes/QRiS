@@ -57,10 +57,6 @@ class FrmMetricValue(QtWidgets.QDialog):
         if metric_value.metric.description:
             self.lblMetricDesc.setText(metric_value.metric.description)
 
-        if metric_value.metric.min_value is not None:
-            self.valManual.setMinimum(metric_value.metric.min_value)
-        if metric_value.metric.max_value is not None:
-            self.valManual.setMaximum(metric_value.metric.max_value)
         if metric_value.metric.precision is not None:
             self.valManual.setDecimals(metric_value.metric.precision)
         else:
@@ -68,6 +64,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             
         # Initialize UI Units 
         self.load_units(unit_type)
+        self.update_constraints()
 
         # Load Manual Value (Converted to current unit)
         if metric_value.manual_value is not None:
@@ -163,18 +160,23 @@ class FrmMetricValue(QtWidgets.QDialog):
         
         if not old_unit:
             self.current_unit = new_unit
+            self.update_constraints()
             return
 
         # Convert Manual Value
+        new_val = None
         if self.valManual.value() != 0: 
              # Step 1: Convert to Base (SI) using old unit
              base_val = self.convert_to_base(self.valManual.value(), old_unit)
              
              # Step 2: Convert to New Unit
              new_val = self.convert_to_display(base_val, new_unit)
-             self.valManual.setValue(new_val)
         
         self.current_unit = new_unit
+        self.update_constraints()
+
+        if new_val is not None:
+             self.valManual.setValue(new_val)
         
         # Update Automated Value Display (convert SI -> new_unit)
         if self.metric_value.automated_value is not None:
@@ -336,6 +338,24 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.ValManualPlusMinus.setValue(self.metric_value.uncertainty['Percent'])
         else:
             self.cboManualUncertainty.setCurrentText(UNCERTAINTY_NONE)
+
+    def update_constraints(self):
+        min_val = self.metric_value.metric.min_value
+        max_val = self.metric_value.metric.max_value
+        
+        # Reset defaults if None (Large range)
+        safe_min = -999999999
+        safe_max = 999999999
+        
+        if min_val is not None:
+            self.valManual.setMinimum(self.convert_to_display(min_val))
+        else:
+             self.valManual.setMinimum(safe_min)
+             
+        if max_val is not None:
+            self.valManual.setMaximum(self.convert_to_display(max_val))
+        else:
+            self.valManual.setMaximum(safe_max)
 
     def cmd_calculate_metric_clicked(self):
 
