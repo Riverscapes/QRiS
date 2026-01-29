@@ -11,10 +11,12 @@ from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
 from ..model.metric import Metric
 from ..model.analysis_metric import AnalysisMetric
+from ..model.event import DCE_EVENT_TYPE_ID
 
 from .frm_layer_metric_details import FrmLayerMetricDetails
 from .frm_layer_metric_details import FrmLayerMetricDetails
 from .widgets.metric_selector_stacked import MetricSelector
+from .widgets.event_library import EventLibraryWidget
 from .utilities import validate_name, add_standard_form_buttons
 from ..QRiS.settings import CONSTANTS
 
@@ -27,6 +29,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.qris_project = qris_project
         self.analysis = analysis
         self.metric_selector = MetricSelector(self, self.qris_project, self.analysis)
+        self.event_library = EventLibraryWidget(self, self.qris_project, [DCE_EVENT_TYPE_ID], allow_reorder=True)
+        self.event_library.event_checked.connect(self.on_event_checked)
         
         self.setupUi()
 
@@ -89,6 +93,34 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                     index = self.cboDEM.findData(dem)
                     self.cboDEM.setCurrentIndex(index)
 
+                # set the selected events
+                selected_events = analysis.metadata.get('selected_events', None)
+                if selected_events is not None:
+                    # Create ordered list of events
+                    all_events = [e for e in self.qris_project.events.values() if e.event_type.id == DCE_EVENT_TYPE_ID]
+                    event_map = {e.id: e for e in all_events}
+                    
+                    ordered_events = []
+                    # Add selected events in order
+                    for eid in selected_events:
+                        if eid in event_map:
+                            ordered_events.append(event_map[eid])
+                            
+                    # Add remaining events (unselected)
+                    for e in all_events:
+                        if e.id not in selected_events:
+                            ordered_events.append(e)
+                            
+                    self.event_library.load_events(ordered_events)
+                    self.event_library.set_selected_event_ids(selected_events)
+                    self.metric_selector.set_selected_dces(selected_events)
+                else:
+                    self.event_library.select_all()
+                    self.metric_selector.set_selected_dces(self.event_library.get_selected_event_ids())
+            else:
+                 self.event_library.select_all()
+                 self.metric_selector.set_selected_dces(self.event_library.get_selected_event_ids())
+
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
             self.cboCenterline.setEnabled(False)
@@ -99,6 +131,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             # For new analysis, ensure we capture whatever is selected by default in the combo boxes
             # (since we aren't explicitly setting them to -1 like in edit mode, they default to index 0)
             self.update_metric_selector()
+            self.event_library.select_all()
+            self.metric_selector.set_selected_dces(self.event_library.get_selected_event_ids())
 
     def help(self, metric: Metric):
 
@@ -116,6 +150,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if valley_bottom: metadata['valley_bottom'] = valley_bottom.id
         
         self.metric_selector.set_analysis_metadata(metadata)
+
+    def on_event_checked(self, event_ids):
+        metadata = self.analysis.metadata if self.analysis else {}
+        # metadata['selected_events'] = event_ids # Don't update analysis object yet, just UI
+        self.metric_selector.set_selected_dces(event_ids)
 
     def on_cboSampleFrame_currentIndexChanged(self, index):
 
@@ -182,6 +221,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         
         self.vert_metrics.addWidget(self.metric_selector)
 
+        # Data Capture Events Tab
+        self.dce_tab = QtWidgets.QWidget()
+        self.tabWidget.addTab(self.dce_tab, 'Data Capture Events')
+
+        self.vert_dce = QtWidgets.QVBoxLayout(self.dce_tab)
+        self.dce_tab.setLayout(self.vert_dce)
+        self.vert_dce.addWidget(self.event_library)
+
         # Description Tab
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabWidget.addTab(self.txtDescription, 'Description')
@@ -211,6 +258,13 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             metadata['dem'] = dem.id
         if valley_bottom is not None:
             metadata['valley_bottom'] = valley_bottom.id
+        
+        metadata['selected_events'] = self.event_library.get_selected_event_ids()
+
+        if len(metadata['selected_events']) < 1:
+            QtWidgets.QMessageBox.warning(self, 'Missing Event', 'You must select at least one Data Capture Event.')
+            self.tabWidget.setCurrentWidget(self.dce_tab)
+            return
 
         # determine if there are any features in the mask
         fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"

@@ -154,6 +154,7 @@ class MetricSelector(QtWidgets.QWidget):
         self.analysis = analysis
         self.analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
         self.is_tree_view = True
+        self.limit_dces = None
         
         # Initialize state
         self.current_metrics_state: Dict[int, int] = {}
@@ -191,8 +192,26 @@ class MetricSelector(QtWidgets.QWidget):
                         protocol = p
                         break
                 
-                if protocol and "experimental" in protocol.name.lower():
-                    enable_experimental = True
+                if protocol:
+                     # Check if protocol status is experimental
+                     # We might store status in metadata, or check name. 
+                     # Ideally Protocol object has a status attribute or similar.
+                     # Based on grep results, xml has status="experimental".
+                     # The python object seems to not expose it explicitly as a property in __init__ 
+                     # but likely passes it via metadata or we check name as fallback.
+                     
+                     # Check protocol metadata first (if available)
+                     p_status = ""
+                     if protocol.metadata and isinstance(protocol.metadata, dict):
+                         p_status = protocol.metadata.get('status', "")
+                         
+                     # Fallback to name check if status not clearly experimental
+                     if p_status.lower() == "experimental" or "experimental" in protocol.name.lower():
+                         enable_experimental = True
+                         
+                     # Also check for experimental status attribute if it exists
+                     if hasattr(protocol, 'status') and protocol.status == 'experimental':
+                         enable_experimental = True
 
         if enable_experimental:
             self.act_include_experimental.setChecked(True)
@@ -504,6 +523,10 @@ class MetricSelector(QtWidgets.QWidget):
         self.refresh_availability()
         self.update_visibility()
 
+    def set_selected_dces(self, dce_ids: list):
+        self.limit_dces = dce_ids
+        self.refresh_availability()
+
     def refresh_availability(self):
         # Update Tree
         it = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
@@ -511,7 +534,7 @@ class MetricSelector(QtWidgets.QWidget):
             item = it.value()
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric:
-                 status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
+                 status = metric.get_automation_availability(self.qris_project, self.analysis_metadata, self.limit_dces)
                  item.setText(2, status)
             it += 1
         
@@ -522,7 +545,7 @@ class MetricSelector(QtWidgets.QWidget):
              if metric_item:
                  metric = metric_item.data(QtCore.Qt.UserRole)
                  if metric:
-                     status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
+                     status = metric.get_automation_availability(self.qris_project, self.analysis_metadata, self.limit_dces)
                      # Column 4 is Availability
                      avail_item = self.metricsTable.item(row, 4)
                      if avail_item:
@@ -868,7 +891,7 @@ class MetricSelector(QtWidgets.QWidget):
         # However, let's explicitely pass self.analysis_metadata at call time
         def open_matrix():
             # QgsMessageLog.logMessage(f"Opening Matrix with Metadata: {self.analysis_metadata}", "QRiS", Qgis.Warning)
-            FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata).exec_()
+            FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_()
             
         action_matrix.triggered.connect(open_matrix)
         
@@ -970,7 +993,7 @@ class MetricSelector(QtWidgets.QWidget):
         menu.addSeparator()
 
         action_matrix = menu.addAction("Automation Availability Matrix...")
-        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata).exec_())
+        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
         
         menu.exec_(self.metricsTable.viewport().mapToGlobal(position))
 
@@ -1057,5 +1080,7 @@ class MetricSelector(QtWidgets.QWidget):
         return analysis_metrics
 
     def update_usage_count_label(self):
-        count = sum(1 for v in self.current_metrics_state.values() if v > 0)
-        self.lbl_usage_count.setText(f"{count} Metrics currently in use for this Analysis")
+        metrics_count = sum(1 for v in self.current_metrics_state.values() if v == 1)
+        indicators_count = sum(1 for v in self.current_metrics_state.values() if v == 2)
+        total_count = metrics_count + indicators_count
+        self.lbl_usage_count.setText(f"{indicators_count} Indicators and {metrics_count} Metrics currently in use for this Analysis ({total_count} Total)")

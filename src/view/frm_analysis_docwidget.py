@@ -82,7 +82,14 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cboSampleFrame.setModel(self.segments_model)
 
         # Events 
-        self.events_model = DBItemModel({event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID})
+        events = {event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID}
+        
+        # Filter events if selected_events metadata exists
+        selected_event_ids = self.analysis.metadata.get('selected_events')
+        if selected_event_ids:
+             events = {eid: evt for eid, evt in events.items() if eid in selected_event_ids}
+        
+        self.events_model = DBItemModel(events)
         self.cboEvent.setModel(self.events_model)
 
         # Configure the table

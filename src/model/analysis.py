@@ -51,10 +51,19 @@ class Analysis(DBItemSpatial):
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Create a spatial view of the Analysis features."""
+        
+        # Filter by selected events if known
+        event_filter = ""
+        if self.metadata and 'selected_events' in self.metadata:
+            selected_events = self.metadata['selected_events']
+            if selected_events:
+                 event_ids = ",".join([str(id) for id in selected_events])
+                 event_filter = f" AND metric_values.event_id IN ({event_ids})"
+
         # prepare sql string for each metric
         sql_metric = ", ".join(
-            [f'CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
-        sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
+            [f'MAX(CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END) AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
+        sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id}{event_filter} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
         if sql_metric == '':
             sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"
         # check if the view already exists, if so, delete it

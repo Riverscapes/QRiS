@@ -782,9 +782,12 @@ class AnalysisTable(QtWidgets.QWidget):
         analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
         
         current_dce_id = self.current_dce.id if self.current_dce else None
+
+        # Filter limit_dces using selected_events from analysis metadata
+        limit_dces = self.analysis.metadata.get('selected_events') if self.analysis and self.analysis.metadata else None
         
         action_matrix = menu.addAction("Automation Availability Matrix...")
-        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id).exec_())
+        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
         
         menu.addSeparator()
 
