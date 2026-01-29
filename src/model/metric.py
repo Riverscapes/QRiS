@@ -295,7 +295,7 @@ def update_metric(db_path: str, id: int, name: str, machine_name: str, protocol_
                 else:
                     unit_id = None
     
-                curs.execute('UPDATE metrics SET name = ?, description = ?, default_level_id = ?, calculation_id = ?, metric_params = ?, unit_id = ?, definition_url = ?, metadata = ? WHERE machine_name = ? and version = ?', [name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, machine_name, version])
+                curs.execute('UPDATE metrics SET name = ?, description = ?, default_level_id = ?, calculation_id = ?, metric_params = ?, unit_id = ?, definition_url = ?, metadata = ? WHERE id = ?', [name, description, metric_level_id, calculation_id, metric_params_str, unit_id, definition_url, metadata_str, id])
                 metric = Metric(id, name, machine_name, protocol_machine_code, description, metric_level_id, metric_function, metric_params, unit_id, definition_url, metadata, version)
                 conn.commit()
     

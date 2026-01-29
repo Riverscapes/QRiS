@@ -12,6 +12,24 @@ APPNAME = 'QRiS'
 SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
 LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
 
+def get_float_value(elem: ET.Element, tag: str) -> Optional[float]:
+    child = elem.find(tag)
+    if child is not None and child.text:
+        try:
+            return float(child.text)
+        except ValueError:
+            return None
+    return None
+
+def get_int_value(elem: ET.Element, tag: str) -> Optional[int]:
+    child = elem.find(tag)
+    if child is not None and child.text:
+        try:
+            return int(child.text)
+        except ValueError:
+            return None
+    return None
+
 FIELD_TYPES = {
     'ListField': 'list',
     'TextField': 'text',
@@ -264,9 +282,9 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
             default_level=metric_elem.find('DefaultLevel').text,
             description=metric_elem.find('Description').text if metric_elem.find('Description') is not None else None,
             definition_url=metric_elem.find('DefinitionURL').text if metric_elem.find('DefinitionURL') is not None else None,
-            minimum_value=float(metric_elem.find('MinimumValue').text) if metric_elem.find('MinimumValue') is not None else None,
-            maximum_value=float(metric_elem.find('MaximumValue').text) if metric_elem.find('MaximumValue') is not None else None,
-            precision=int(metric_elem.find('Precision').text) if metric_elem.find('Precision') is not None else None,
+            minimum_value=get_float_value(metric_elem, 'MinimumValue'),
+            maximum_value=get_float_value(metric_elem, 'MaximumValue'),
+            precision=get_int_value(metric_elem, 'Precision'),
             parameters=parameters if len(parameters) > 0 else None,
             status=metric_elem.attrib.get('status', 'active'),
             hierarchy=hierarchy if len(hierarchy) > 0 else None
