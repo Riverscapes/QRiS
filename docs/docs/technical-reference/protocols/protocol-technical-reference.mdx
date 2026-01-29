@@ -105,6 +105,10 @@ QRiS also has the option of reading protocol XML files from a local directory sp
     - `Meta` (one or more) name=”key”, value
   - `Layers` (optional) contains the layers defined in the protocol as specified below
   - `Metrics` (optional) contains the metrics defined in the protocol as specified below
+
+:::warning
+Protocols that have been deprecated will still display previously collected data in their respective DCEs. However, the deprecated protocol will no longer display in the `Properties` window and the user will lose the ability to collect protocol data in DCEs outside of the ones with existing data. 
+:::
     
 ### Layers
 Protocols can contain one or more layers. Each layer is defined by a `Layer` element defined as:
