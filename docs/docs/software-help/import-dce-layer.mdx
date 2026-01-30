@@ -1,0 +1,45 @@
+---
+title: Import DCE Layer
+---
+
+# Import DCE Layer
+
+The **Import DCE Layer** tool allows you to import features from an existing file or a temporary layer into a Data Capture Event (DCE) layer.
+
+## Overview
+
+This tool facilitates the migration of existing data into your QRiS project structure. It handles geometry import, attribute mapping, and optional spatial clipping.
+
+## Parameters
+
+### Input Selection
+* **Input Feature Class / Temporary Layer**: Displays the source dataset selected for import.
+* **Data Capture Event**: Displays the QRiS event associated with the target layer.
+* **Target Layer**: The destination layer in the QRiS project where features will be added.
+
+### Clip to AOI
+* **Clip to AOI**: Example methods to spatially filter the data. Select an Area of Interest (AOI) to clip the imported features, or choose "None" to retain the full dataset extent.
+
+### Fields
+
+You can choose to **Import Fields** or **Ignore Fields** using the radio buttons.
+
+When **Import Fields** is selected, a table displays the input fields and available mapping options:
+
+* **Input Field**: The name of the field in the source dataset.
+* **Data Type**: The data type of the source field.
+* **Retain Values**: Check this to store the original attribute values within the `metadata` column of the QRiS database. This preserves source data even if it doesn't map to a standard QRiS field.
+* **Transfer Values**: Use the "Assign..." button or the checkbox to map unique values from the input field to standard values in the destination schema. This is useful for standardizing categories or classifications.
+* **Copy Values**: Use the checkbox and dropdown to copy values from the input field directly into a compatible QRiS target field.
+
+## Usage
+
+1. **Verify Inputs**: Ensure the correct Input Feature Class and Target Layer are shown.
+2. **Set Clipping**: Choose an AOI to clip to, if necessary.
+3. **Map Attributes**:
+    * Review the field list.
+    * Decide which fields to retain as metadata.
+    * Map specific values or copy fields to target columns as needed.
+4. **Run**: Click **OK** to execute the import.
+
+The tool will process the features, handling any necessary geometry conversions (e.g., exploding multi-part geometries) and report the number of features successfully imported.
