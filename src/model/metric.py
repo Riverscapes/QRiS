@@ -84,7 +84,7 @@ class Metric(DBItem):
              metric_layers = self.metric_params.get('dce_layers', [])
              if not metric_layers:
                  return "All DCEs"
-             return "No DCEs (Manual Entry Only)"
+             return "No DCEs"
 
         # Filter events if limit_dces (IDs) provided
         events_to_check = qris_project.events.values()
@@ -102,7 +102,7 @@ class Metric(DBItem):
                  supported_count += 1
         
         if supported_count == 0:
-            return "No DCEs (Manual Entry Only)"
+            return "No DCEs"
         elif supported_count == total_count:
             ouptput_text = "DCE" if supported_count == 1 else "DCEs"
             return f"All {supported_count} {ouptput_text}"
