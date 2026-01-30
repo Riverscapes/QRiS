@@ -350,17 +350,34 @@ class MetricSelector(QtWidgets.QWidget):
         self.act_limit_metrics.setCheckable(True)
         self.act_limit_metrics.toggled.connect(self.update_visibility)
         
-        self.act_limit_automated = self.menu_advanced.addAction("Limit to Automated Calculations")
-        self.act_limit_automated.setCheckable(True)
-        self.act_limit_automated.toggled.connect(self.update_visibility)
+        self.menu_advanced.addSeparator()
 
-        self.act_limit_manual = self.menu_advanced.addAction("Limit to Manual Metrics")
+        # Type Filters Group
+        self.type_filter_group = QtWidgets.QActionGroup(self)
+        self.type_filter_group.setExclusive(True)
+
+        self.act_show_all = self.menu_advanced.addAction("Show All Metric Types")
+        self.act_show_all.setCheckable(True)
+        self.act_show_all.setChecked(True) # Default
+        self.act_show_all.toggled.connect(self.update_visibility)
+        self.type_filter_group.addAction(self.act_show_all)
+
+        self.act_limit_feasible = self.menu_advanced.addAction("Automated: Ready for Calculation")
+        self.act_limit_feasible.setCheckable(True)
+        self.act_limit_feasible.setToolTip("Show only metrics that can be calculated automatically for at least one DCE.")
+        self.act_limit_feasible.toggled.connect(self.update_visibility)
+        self.type_filter_group.addAction(self.act_limit_feasible)
+
+        self.act_limit_blocked = self.menu_advanced.addAction("Automated: Setup Required (Events/Inputs)")
+        self.act_limit_blocked.setCheckable(True)
+        self.act_limit_blocked.setToolTip("Show metrics that support automation but are missing required inputs or layers.")
+        self.act_limit_blocked.toggled.connect(self.update_visibility)
+        self.type_filter_group.addAction(self.act_limit_blocked)
+
+        self.act_limit_manual = self.menu_advanced.addAction("Manual Entry Only")
         self.act_limit_manual.setCheckable(True)
         self.act_limit_manual.toggled.connect(self.update_visibility)
-
-        # Mutual exclusivity
-        self.act_limit_automated.toggled.connect(lambda checked: self.act_limit_manual.setChecked(False) if checked else None)
-        self.act_limit_manual.toggled.connect(lambda checked: self.act_limit_automated.setChecked(False) if checked else None)
+        self.type_filter_group.addAction(self.act_limit_manual)
         
         self.menu_advanced.addSeparator()
         
@@ -526,6 +543,7 @@ class MetricSelector(QtWidgets.QWidget):
     def set_selected_dces(self, dce_ids: list):
         self.limit_dces = dce_ids
         self.refresh_availability()
+        self.update_visibility()
 
     def refresh_availability(self):
         # Update Tree
@@ -669,15 +687,25 @@ class MetricSelector(QtWidgets.QWidget):
             if self.current_metrics_state.get(metric.id, 0) == 0:
                 return False
         
-        if self.act_limit_automated.isChecked():
-            # Assuming 'Automated' is part of the string returned by get_automation_availability
-            status = metric.get_automation_availability(self.qris_project, self.analysis_metadata).lower()
-            if "automated" not in status:
+        # Availability Status Check
+        status = metric.get_automation_availability(self.qris_project, self.analysis_metadata, self.limit_dces)
+        status_lower = status.lower()
+        is_manual = "manual" in status_lower
+
+        if self.act_limit_feasible.isChecked():
+            # Must contain "DCE" and NOT start with "No" to be considered "Ready"
+            # (e.g. "All 5 DCEs", "1 DCE")
+            if "dce" not in status_lower or status_lower.startswith("no"):
+                return False
+
+        if self.act_limit_blocked.isChecked():
+            # Must start with "No DCEs" (implies Missing Inputs or Selected or just empty)
+            # But must NOT be manual.
+            if not status_lower.startswith("no dce"):
                 return False
 
         if self.act_limit_manual.isChecked():
-            status = metric.get_automation_availability(self.qris_project, self.analysis_metadata).lower()
-            if "manual" not in status:
+            if not is_manual:
                 return False
 
         # Note: Experimental and Deprecated checks are Universe checks. 
@@ -732,8 +760,7 @@ class MetricSelector(QtWidgets.QWidget):
         self.cbo_filter_group.set_all_check_state(QtCore.Qt.Checked)
         
         self.act_limit_metrics.setChecked(False)
-        self.act_limit_automated.setChecked(False)
-        self.act_limit_manual.setChecked(False)
+        self.act_show_all.setChecked(True) # Resets the exclusive group to "All"
         # Do not reset Universe filters (Experimental/Deprecated) as they are likely user preferences
         
         self.update_visibility()

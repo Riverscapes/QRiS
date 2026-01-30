@@ -7,6 +7,73 @@ class SortableTableWidgetItem(QtWidgets.QTableWidgetItem):
     def __lt__(self, other):
         return (self.data(QtCore.Qt.UserRole) or "") < (other.data(QtCore.Qt.UserRole) or "")
 
+class ReorderableTableWidget(QtWidgets.QTableWidget):
+    """
+    A QTableWidget that supports drag-and-drop row reordering without jumbling columns.
+    Default QTableWidget InternalMove does not strictly enforce whole-row moving well.
+    """
+    orderChanged = QtCore.pyqtSignal()
+
+    def dropEvent(self, event):
+        if event.source() == self and (event.dropAction() == QtCore.Qt.MoveAction or self.dragDropMode() == QtWidgets.QAbstractItemView.InternalMove):
+            
+            selection = self.selectedItems()
+            if not selection:
+                return
+            
+            # Identify unique rows involved in drag
+            drag_rows = sorted(list(set(item.row() for item in selection)))
+            
+            drop_index = self.indexAt(event.pos())
+            target_row = drop_index.row() if drop_index.isValid() else self.rowCount()
+            
+            # Determine insertion logic (below center?)
+            if drop_index.isValid():
+                rect = self.visualRect(drop_index)
+                if event.pos().y() > rect.center().y():
+                    target_row += 1
+
+            # Extract data
+            moved_rows_data = []
+            
+            # Use blockSignals to prevent itemChanged noise during move
+            self.blockSignals(True)
+            try:
+                for row in drag_rows:
+                    row_cols = []
+                    for col in range(self.columnCount()):
+                        row_cols.append(self.takeItem(row, col))
+                    moved_rows_data.append(row_cols)
+                
+                # Calculate insertion point adjustment
+                # Count rows strictly before target that are being removed
+                rows_before_target = len([r for r in drag_rows if r < target_row])
+                insert_row = target_row - rows_before_target
+                
+                # Remove rows (reverse order to keep indices valid)
+                for row in reversed(drag_rows):
+                    self.removeRow(row)
+                    
+                # Insert rows
+                for i, row_data in enumerate(moved_rows_data):
+                    self.insertRow(insert_row + i)
+                    for col, item in enumerate(row_data):
+                        self.setItem(insert_row + i, col, item)
+                
+                # Restore selection
+                self.clearSelection()
+                for i in range(len(moved_rows_data)):
+                    self.selectRow(insert_row + i)
+            finally:
+                self.blockSignals(False)
+
+            event.accept()
+            self.orderChanged.emit()
+            
+        else:
+            super().dropEvent(event)
+
+
 class EventLibraryWidget(QtWidgets.QWidget):
 # Implement a Event Library grid picker, which loads events in event library, exposes their date, and type (columns) allows sorting), and has a checkbox 
 
@@ -41,16 +108,12 @@ class EventLibraryWidget(QtWidgets.QWidget):
             # Create a checkbox and add it to the first column
             checkItem = QtWidgets.QTableWidgetItem()
             checkItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-            if self.allow_reorder:
-                checkItem.setFlags(checkItem.flags() | QtCore.Qt.ItemIsDragEnabled)
             checkItem.setCheckState(QtCore.Qt.Unchecked)
             self.table.setItem(i, 0, checkItem)
             
             # Store the entire Event object in the first column using a custom role
             item = QtWidgets.QTableWidgetItem(event.name)
             item.setData(QtCore.Qt.UserRole, event)
-            if self.allow_reorder:
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsDragEnabled)
 
             self.table.setItem(i, 1, item)
             
@@ -62,18 +125,12 @@ class EventLibraryWidget(QtWidgets.QWidget):
                 sort_key = (event.start.year or 0, event.start.month or 0, event.start.day or 0)
             date_item.setData(QtCore.Qt.UserRole, sort_key)
 
-            if self.allow_reorder:
-                date_item.setFlags(date_item.flags() | QtCore.Qt.ItemIsDragEnabled)
             self.table.setItem(i, 2, date_item)
 
             type_item = QtWidgets.QTableWidgetItem(event.event_type.name)
-            if self.allow_reorder:
-                type_item.setFlags(type_item.flags() | QtCore.Qt.ItemIsDragEnabled)
             self.table.setItem(i, 3, type_item)
 
             desc_item = QtWidgets.QTableWidgetItem(event.description or "")
-            if self.allow_reorder:
-                desc_item.setFlags(desc_item.flags() | QtCore.Qt.ItemIsDragEnabled)
             self.table.setItem(i, 4, desc_item)
         
         # resize column 0 to fit the checkboxes
@@ -86,7 +143,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
         self.table.blockSignals(True)
         for i in range(self.table.rowCount()):
             event: Event = self.table.item(i, 1).data(QtCore.Qt.UserRole)
-            if event.id in selected_events:
+            if event and event.id in selected_events:
                 self.table.item(i, 0).setCheckState(QtCore.Qt.Checked)
             else:
                 self.table.item(i, 0).setCheckState(QtCore.Qt.Unchecked)
@@ -100,7 +157,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
         for i in range(self.table.rowCount()):
             if self.table.item(i, 0).checkState() == QtCore.Qt.Checked:
                 event: Event = self.table.item(i, 1).data(QtCore.Qt.UserRole)
-                selected_events.append(event)
+                if event:
+                    selected_events.append(event)
         return selected_events
     
     def get_selected_event_ids(self) -> list:
@@ -110,7 +168,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
         for i in range(self.table.rowCount()):
             if self.table.item(i, 0).checkState() == QtCore.Qt.Checked:
                 event: Event = self.table.item(i, 1).data(QtCore.Qt.UserRole)
-                selected_events.append(event.id)
+                if event:
+                    selected_events.append(event.id)
         return selected_events
 
     def select_all(self):
@@ -167,21 +226,46 @@ class EventLibraryWidget(QtWidgets.QWidget):
         selected_events = self.get_selected_event_ids()
         self.event_checked.emit(selected_events)
 
+    def handle_manual_sort(self, logicalIndex):
+        # Provide one-shot sorting when reordering is enabled (which disables auto-sorting)
+        if not self.allow_reorder: return 
+
+        header = self.table.horizontalHeader()
+        
+        # Determine order: Toggle if same column, else Ascending
+        order = QtCore.Qt.AscendingOrder
+        if header.sortIndicatorSection() == logicalIndex and header.sortIndicatorOrder() == QtCore.Qt.AscendingOrder:
+            order = QtCore.Qt.DescendingOrder
+            
+        self.table.blockSignals(True) # avoid item changed signals
+        self.table.sortItems(logicalIndex, order)
+        self.table.blockSignals(False)
+        
+        header.setSortIndicator(logicalIndex, order)
+        
+        # Notify that order changed
+        self.on_event_checked()
+
     def setupUi(self):
 
         self.vert_layout = QtWidgets.QVBoxLayout(self)
         self.vert_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.table = QtWidgets.QTableWidget(self)
+        self.table = ReorderableTableWidget(self)
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(['', 'Name', 'Date', 'Type', 'Description'])
         # self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
         if self.allow_reorder:
-            self.table.setDragEnabled(True)
-            self.table.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
             self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             self.table.setSortingEnabled(False)
+            
+            # Enable sorting on click without enabling auto-sort state that blocks reordering logic (sort overrides insert)
+            self.table.horizontalHeader().setSectionsClickable(True)
+            self.table.horizontalHeader().sectionClicked.connect(self.handle_manual_sort)
+
+            # Connect the orderChanged signal to update any listeners (like the parent) if needed
+            self.table.orderChanged.connect(self.on_event_checked)
         else:
             self.table.setSortingEnabled(True)
         
@@ -208,6 +292,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
             self.side_btn_layout.addWidget(self.btnDown)
             self.side_btn_layout.addStretch()
 
+            # Add buttons first (left side)
             self.content_layout.addLayout(self.side_btn_layout)
             self.content_layout.addWidget(self.table)
         else:
