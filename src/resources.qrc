@@ -6,8 +6,8 @@
         <file alias="add_file">../Images/add_file.svg</file>
         <file alias="add_to_map">../Images/add_to_map.svg</file>
         <file alias="analysis_summary">../Images/analysis_summary.svg</file>
-        <file alias="arrow_down">../Images/arrow_down.png</file>
-        <file alias="arrow_up">../Images/arrow_up.png</file>
+        <file alias="arrow_drop_down">../Images/arrow_drop_down.svg</file>
+        <file alias="arrow_drop_up">../Images/arrow_drop_up.svg</file>
         <file alias="alpha">../Images/alpha.svg</file>
         <file alias="calculate">../Images/calculate.svg</file>
         <file alias="category">../Images/category.svg</file>
@@ -31,7 +31,6 @@
         <file alias="open_external">../Images/open_external.svg</file>
         <file alias="map_search">../Images/map_search.svg</file>
         <file alias="metadata">../Images/metadata.png</file>
-        <file alias="new_folder">../Images/new_folder.png</file>
         <file alias="new">../Images/add.svg</file>
         <file alias="options">../Images/edit.svg</file>
         <file alias="plan">../Images/plan.svg</file>
