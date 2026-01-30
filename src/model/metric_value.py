@@ -37,6 +37,8 @@ class MetricValue():
     
     def current_value_as_string(self, display_unit: str = None):
         value = self.current_value(display_unit)
+        if value is None:
+            return ''
         if isinstance(value, float) and self.metric.precision is not None:
             return f'{value: .{self.metric.precision}f}'
         return str(value)
@@ -98,9 +100,14 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, sample_fr
         curs = conn.cursor()
         curs.execute('SELECT * FROM metric_values WHERE (analysis_id = ?) AND (event_id = ?) AND (sample_frame_feature_id = ?)',
                      [analysis.id, event.id, sample_frame_feature_id])
-        return {
-            row['metric_id']: MetricValue(
-                metrics[row['metric_id']],
+        result = {}
+        for row in curs.fetchall():
+            metric_id = row['metric_id']
+            if metric_id not in metrics:
+                # Skip or log missing metric definitions
+                continue
+            result[metric_id] = MetricValue(
+                metrics[metric_id],
                 row['manual_value'],
                 row['automated_value'],
                 row['is_manual'],
@@ -109,8 +116,7 @@ def load_metric_values(db_path: str, analysis: Analysis, event: Event, sample_fr
                 row['unit_id'],
                 json.loads(row['metadata']) if row['metadata'] is not None else {}
             )
-            for row in curs.fetchall()
-        }
+        return result
 
 
 def print_uncertanty(uncertainty: dict):

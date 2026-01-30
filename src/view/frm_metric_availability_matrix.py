@@ -38,6 +38,19 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
         self.table.verticalHeader().setVisible(False)
         self.v_layout.addWidget(self.table)
         
+        # Legend / Explanation
+        legend_text = (
+            "<h4>Message Descriptions</h4>"
+            "<p><b>Not Added to DCE:</b> Automated calculation of the metric is unavailable due to missing required layers. "
+            "Add the layers to the DCE to enable automatic calculation of this metric.</p>"
+            "<p><b>No Features:</b> Calculation of this metric is possible, however the resulting value will likely be 0 "
+            "since no features have been digitized in this layer. Please make sure any missing features are digitized and included in this layer.</p>"
+        )
+        self.lbl_legend = QtWidgets.QLabel(legend_text)
+        self.lbl_legend.setWordWrap(True)
+        self.lbl_legend.setTextFormat(QtCore.Qt.RichText)
+        self.v_layout.addWidget(self.lbl_legend)
+
         h_layout = QtWidgets.QHBoxLayout()
         h_layout.addStretch()
         self.btn_close = QtWidgets.QPushButton("Close")
@@ -92,22 +105,12 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
             
             # Lookup clean name from Protocol
             display_text = ref
-            if metric_protocol:
-                 # Protocol.protocol_layers is a dict keyed by layer ID? 
-                 # Let's check src/model/protocol.py or protocol_parser.py
-                 # Based on protocol_parser it seems to parse into ProtocolDefinition object lists
-                 # But Protocol class has protocol_layers = {} in init.
-                 # We need to see how that dict is populated. 
-                 # Assuming it's a dict {layer.id: LayerDefinition} or similar.
-                 # Let's try standard lookup.
-                 
-                 # If protocol_layers is a dict:
-                 if ref in metric_protocol.protocol_layers:
-                     display_text = metric_protocol.protocol_layers[ref].label
-                 else:
-                     # If it's a list or not populated as expected, try fallback logic
-                     # or maybe it's populated differently.
-                     pass
+            if metric_protocol and metric_protocol.protocol_layers:
+                 # Search for layer by layer_id (ref) - protocol_layers is {int_id: LayerObj}
+                 for l in metric_protocol.protocol_layers.values():
+                     if l.layer_id == ref:
+                         display_text = l.name
+                         break
             
             # If usage is present and not 'Required', we might want to append it?
             # User request: Get rid of "Required" in title, use "DCE Layer" instead? 

@@ -65,6 +65,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # Store the connections so they can be disconnected when the form is closed
         self.connections = {}
         self.setupUi()
+        self.resize(500, 1000)
 
         self.frmMetricValue = None
 
@@ -83,12 +84,16 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         # Events 
         events = {event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID}
-        
-        # Filter events if selected_events metadata exists
+
+        # Filter events if selected_events metadata exists, but only keep those that still exist
         selected_event_ids = self.analysis.metadata.get('selected_events')
         if selected_event_ids:
-             events = {eid: evt for eid, evt in events.items() if eid in selected_event_ids}
-        
+            valid_event_ids = [eid for eid in selected_event_ids if eid in events]
+            events = {eid: evt for eid, evt in events.items() if eid in valid_event_ids}
+            # Optionally, update the analysis metadata to remove missing event IDs
+            if len(valid_event_ids) != len(selected_event_ids):
+                self.analysis.metadata['selected_events'] = valid_event_ids
+
         self.events_model = DBItemModel(events)
         self.cboEvent.setModel(self.events_model)
 

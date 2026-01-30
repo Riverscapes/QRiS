@@ -141,51 +141,23 @@ class Metric(DBItem):
         return True
 
     def can_calculate_automated(self, qris_project, event_id, analysis_id) -> bool: 
-
-        # check if the metric can be calulated automatically
+        """
+        Checks if the metric can be calculated automatically.
+        Delegates to Analysis.check_metric_feasibility for unified logic.
+        """
         dce = qris_project.events.get(event_id, None)
         if dce is None:
             return False 
-        # check if the metric is in the dce layers
-        metric_layers = self.metric_params.get('dce_layers', [])
-        # we need to be a bit more detailed here. 
-        # 1) Sort the layers by the 'usage', including None.
-        # 2) iterate through the various usages. If more than one layer per usage, we only need to make sure one exists in the dce
-
-        usage_groups = {}
-        required_individual_layers = []
-
-        for metric_layer in metric_layers:
-            usage = metric_layer.get('usage', None)
-            if usage is not None:
-                if usage not in usage_groups:
-                    usage_groups[usage] = []
-                usage_groups[usage].append(metric_layer)
-            else:
-                required_individual_layers.append(metric_layer)
-        
-        # Check Named Usage Groups (OR logic within group)
-        for usage, layers in usage_groups.items():
-            layer_ids = [layer.get('layer_id_ref', None) for layer in layers]
-            if not any(event_layer.layer.layer_id in layer_ids for event_layer in dce.event_layers):
-                return False
-
-        # Check Individual Required Layers (AND logic across all)
-        dce_layer_ids = {el.layer.layer_id for el in dce.event_layers}
-        for layer in required_individual_layers:
-            ref_id = layer.get('layer_id_ref')
-            if ref_id not in dce_layer_ids:
-                return False
             
         analysis = qris_project.analyses.get(analysis_id, None)
-        inputs = self.metric_params.get('inputs', None)
-        if inputs is not None:
-            for analysis_input in inputs:
-                input_id = analysis_input.get('input_ref', None)
-                if input_id is not None:
-                    if analysis.metadata.get(input_id, None) is None:
-                        return False
-        return True
+        if analysis is None:
+            return False
+            
+        # Use the robust check in Analysis that handles inputs, layers, usage groups, and empty data checks.
+        feasibility = analysis.check_metric_feasibility(self, qris_project, dce)
+        
+        # Allow calculation even if data is empty (returns 0 usually)
+        return feasibility.get('status') in ['FEASIBLE', 'FEASIBLE_EMPTY']
 
     def get_metric_protocol(self, protocols: dict):
         for protocol in protocols.values():

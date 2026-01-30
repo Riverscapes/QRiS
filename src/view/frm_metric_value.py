@@ -7,7 +7,7 @@ from qgis.core import Qgis, QgsMessageLog, QgsUnitTypes
 from ..model.project import Project
 from ..model.metric_value import MetricValue
 from ..model.metric import Metric
-from ..model.analysis import Analysis
+from ..model.analysis import Analysis, format_feasibility_text
 from ..model.event import Event
 
 from .utilities import add_standard_form_buttons
@@ -96,13 +96,22 @@ class FrmMetricValue(QtWidgets.QDialog):
         else:
             self.txtAutomated.setFocus()
 
+        # Check Feasibility for Automation
+        feasibility = self.analysis.check_metric_feasibility(self.metric_value.metric, self.qris_project, self.data_capture_event)
+        can_calculate = feasibility.get('status') in ['FEASIBLE', 'FEASIBLE_EMPTY']
+
         # disable the automated value if unable to calculate
-        if not self.metric_value.metric.can_calculate_automated(self.qris_project, self.data_capture_event.id, self.analysis.id):
+        if not can_calculate:
+            status = feasibility.get('status', 'NOT_FEASIBLE')
+            reasons = feasibility.get('reasons', [])
+            reason_msg = format_feasibility_text(status, reasons)
+
             self.rdoAutomated.setEnabled(False)
             self.actionCalculate.setEnabled(False)
-            self.txtAutomated.setPlaceholderText('Unable to calculate automated value due to missing required layer(s)')
-            self.txtAutomated.setToolTip('Unable to calculate automated value due to missing required layer(s)')
-            self.rdoAutomated.setToolTip('Unable to calculate automated value due to missing required layer(s)')
+            self.actionCalculate.setToolTip(reason_msg)
+            self.txtAutomated.setPlaceholderText("Calculation Not Feasible")
+            self.txtAutomated.setToolTip(reason_msg)
+            self.rdoAutomated.setToolTip(reason_msg)
             self.rdoManual.setChecked(True)
             self.rdoManual.setEnabled(True)
             self.valManual.setFocus()
