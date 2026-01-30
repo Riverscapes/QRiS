@@ -33,6 +33,9 @@ class MockAnalysis:
         print(f"MockAnalysis using distance unit: '{feet_str}'")
         self.metadata = {}
 
+    def check_metric_feasibility(self, metric, project, event=None):
+        return {'status': 'FEASIBLE', 'reasons': []}
+
 class MockProject:
     def __init__(self):
         self.project_file = ':memory:'

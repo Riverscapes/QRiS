@@ -2,6 +2,7 @@
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from ...model.metric import Metric
+from ...model.analysis import format_feasibility_text
 from ...model.metric_value import MetricValue, load_metric_values
 from ...model.analysis_metric import AnalysisMetric
 from ...lib.unit_conversion import short_unit_name, distance_units, area_units, ratio_units
@@ -147,6 +148,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
 
 class MetricStatusWidget_Labels(QtWidgets.QWidget):
     edit_clicked = QtCore.pyqtSignal()
+    warning_clicked = QtCore.pyqtSignal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -172,15 +174,16 @@ class MetricStatusWidget_Labels(QtWidgets.QWidget):
         self.lbl_source.setFont(font)
         self.layout.addWidget(self.lbl_source)
         
-        # 3. Warning Indicator
-        self.lbl_warning = QtWidgets.QLabel()
-        self.lbl_warning.setFixedSize(20, 20)
-        self.lbl_warning.setAlignment(QtCore.Qt.AlignCenter)
-        self.layout.addWidget(self.lbl_warning)
+        # 3. Warning Indicator (Button)
+        self.btn_warning = QtWidgets.QToolButton()
+        self.btn_warning.setFixedSize(20, 20)
+        self.btn_warning.setAutoRaise(True)
+        self.btn_warning.clicked.connect(self.warning_clicked)
+        self.layout.addWidget(self.btn_warning)
         
         self.layout.addStretch()
         
-    def update_state(self, is_manual, can_automated, feasibility):
+    def update_state(self, is_manual, can_automated, feasibility, metric=None, metric_value=None):
         source_text = ""
         source_tooltip = ""
         
@@ -202,22 +205,34 @@ class MetricStatusWidget_Labels(QtWidgets.QWidget):
             f_status = feasibility.get('status', 'FEASIBLE')
             f_reasons = feasibility.get('reasons', [])
             if f_status == 'NOT_FEASIBLE' or f_status == 'FEASIBLE_EMPTY':
-                 icon_std = QtWidgets.QStyle.SP_MessageBoxWarning if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxInformation
+                 icon_std = QtWidgets.QStyle.SP_MessageBoxCritical if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxWarning
                  icon = QtWidgets.QApplication.style().standardIcon(icon_std)
-                 msgs = ["Automation Not Feasible:" if f_status == 'NOT_FEASIBLE' else "Automation Feasible (Input Data Empty):"]
-                 msgs.extend([f" - {r}" for r in f_reasons])
-                 tooltip = "\n".join(msgs)
+                 tooltip = format_feasibility_text(f_status, f_reasons)
         
+        # Threshold Check (Blue Warning)
+        if icon is None and is_manual and metric and metric_value and metric_value.automated_value is not None:
+            tol = metric.tolerance
+            if tol is not None and metric_value.manual_value is not None:
+                try:
+                    diff = abs(metric_value.manual_value - metric_value.automated_value)
+                    if diff > tol:
+                        icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation)
+                        tooltip = f"Manual value differs from automated value by more than tolerance ({tol}).\nManual: {metric_value.manual_value}\nAutomated: {metric_value.automated_value}"
+                except Exception:
+                    pass
+
         if icon:
-            self.lbl_warning.setPixmap(icon.pixmap(16, 16))
+            self.btn_warning.setIcon(icon)
+            self.btn_warning.setVisible(True)
+            self.btn_warning.setToolTip(tooltip)
         else:
-            self.lbl_warning.clear()
-        self.lbl_warning.setToolTip(tooltip)
+            self.btn_warning.setVisible(False)
 
 
 class MetricStatusWidget_Buttons(QtWidgets.QWidget):
     manual_clicked = QtCore.pyqtSignal()
     automated_clicked = QtCore.pyqtSignal()
+    warning_clicked = QtCore.pyqtSignal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -257,14 +272,15 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
         self.layout.addWidget(self.btn_automated)
         
         # 3. Warning Indicator
-        self.lbl_warning = QtWidgets.QLabel()
-        self.lbl_warning.setFixedSize(20, 20)
-        self.lbl_warning.setAlignment(QtCore.Qt.AlignCenter)
-        self.layout.addWidget(self.lbl_warning)
+        self.btn_warning = QtWidgets.QToolButton()
+        self.btn_warning.setFixedSize(20, 20)
+        self.btn_warning.setAutoRaise(True)
+        self.btn_warning.clicked.connect(self.warning_clicked)
+        self.layout.addWidget(self.btn_warning)
         
         self.layout.addStretch()
 
-    def update_state(self, is_manual, can_automated, feasibility):
+    def update_state(self, is_manual, can_automated, feasibility, metric=None, metric_value=None):
         self.btn_manual.blockSignals(True)
         self.btn_automated.blockSignals(True)
         
@@ -280,33 +296,48 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
         
         # Feasibility / Enabled Logic
         f_status = feasibility.get('status', 'FEASIBLE') if feasibility else 'FEASIBLE'
-        tooltip = "Calculate Automated Value"
+
         if f_status == 'MANUAL_ONLY':
-             tooltip = "Manual Only Metric"
-        elif f_status == 'NOT_FEASIBLE':
-             tooltip = "Calculation Not Feasible"
-        elif f_status == 'FEASIBLE_EMPTY':
-             tooltip = "Calculate (Input Data Empty)"
+             self.btn_automated.setVisible(False)
+        else:
+             self.btn_automated.setVisible(True)
+             self.btn_automated.setEnabled(can_automated)
              
-        self.btn_automated.setEnabled(can_automated)
-        self.btn_automated.setToolTip(tooltip)
+             if f_status == 'FEASIBLE':
+                 tooltip = "Calculate Automated Value"
+             else:
+                 f_reasons = feasibility.get('reasons', [])
+                 tooltip = format_feasibility_text(f_status, f_reasons)
+             
+             self.btn_automated.setToolTip(tooltip)
         
         # Warning Logic
         icon = None
         warning_tooltip = ""
         if f_status == 'NOT_FEASIBLE' or f_status == 'FEASIBLE_EMPTY':
              f_reasons = feasibility.get('reasons', [])
-             icon_std = QtWidgets.QStyle.SP_MessageBoxWarning if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxInformation
+             icon_std = QtWidgets.QStyle.SP_MessageBoxCritical if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxWarning
              icon = QtWidgets.QApplication.style().standardIcon(icon_std)
-             msgs = ["Automation Not Feasible:" if f_status == 'NOT_FEASIBLE' else "Automation Feasible (Input Data Empty):"]
-             msgs.extend([f" - {r}" for r in f_reasons])
-             warning_tooltip = "\n".join(msgs)
+             warning_tooltip = format_feasibility_text(f_status, f_reasons)
         
+        # Threshold Check (Blue Warning)
+        if icon is None and is_manual and metric and metric_value and metric_value.automated_value is not None:
+            tol = metric.tolerance
+            if tol is not None and metric_value.manual_value is not None:
+                try:
+                    diff = abs(metric_value.manual_value - metric_value.automated_value)
+                    if diff > tol:
+                        icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation)
+                        warning_tooltip = f"Manual value differs from automated value by more than tolerance ({tol}).\nManual: {metric_value.manual_value}\nAutomated: {metric_value.automated_value}"
+                except Exception:
+                    pass
+
         if icon:
-            self.lbl_warning.setPixmap(icon.pixmap(16, 16))
+            self.btn_warning.setIcon(icon)
+            self.btn_warning.setVisible(True)
+            self.btn_warning.setToolTip(warning_tooltip)
         else:
-            self.lbl_warning.clear()
-        self.lbl_warning.setToolTip(warning_tooltip)
+            self.btn_warning.setVisible(False)
 
 class AnalysisTable(QtWidgets.QWidget):
 
@@ -659,10 +690,12 @@ class AnalysisTable(QtWidgets.QWidget):
         if self.layout_mode == "Labels":
             status_widget = MetricStatusWidget_Labels()
             status_widget.edit_clicked.connect(lambda: self._handle_edit(row))
+            status_widget.warning_clicked.connect(lambda: self._handle_warning(row))
         else:
             status_widget = MetricStatusWidget_Buttons()
             status_widget.manual_clicked.connect(lambda: self._handle_edit(row))
             status_widget.automated_clicked.connect(lambda: self._handle_calculate(row))
+            status_widget.warning_clicked.connect(lambda: self._handle_warning(row))
             
         self.table.setCellWidget(row, self.column['status'], status_widget)
         
@@ -710,7 +743,7 @@ class AnalysisTable(QtWidgets.QWidget):
                 status_widget = self.table.cellWidget(row, self.column['status'])
                 
                 metric_value = None
-                metric_value_text = 'null'
+                metric_value_text = ''
                 uncertainty_text = ''
                 
                 is_manual = None # Unknown
@@ -736,8 +769,11 @@ class AnalysisTable(QtWidgets.QWidget):
                 # Check Feasibility
                 feasibility = self.analysis.check_metric_feasibility(metric, self.qris_project, self.current_dce)
                 
+                # Determine if we can calculate (True if FEASIBLE or FEASIBLE_EMPTY)
+                can_calculate = feasibility.get('status', 'NOT_FEASIBLE') in ['FEASIBLE', 'FEASIBLE_EMPTY']
+
                 if status_widget:
-                    status_widget.update_state(is_manual, has_automated, feasibility)
+                    status_widget.update_state(is_manual, can_calculate, feasibility, metric, metric_value)
 
                 # self.set_status(row, feasibility) # Handled by update_state now
                 
@@ -750,7 +786,30 @@ class AnalysisTable(QtWidgets.QWidget):
         analysis_metric = self.table.item(row, self.column['metric']).data(QtCore.Qt.UserRole)
         metric_value = self.table.item(row, self.column['value']).data(QtCore.Qt.UserRole)
         self.metric_calculate_requested.emit(analysis_metric, metric_value)
+        
+    def _handle_warning(self, row):
+        item = self.table.item(row, self.column['metric'])
+        if not item: return
 
+        analysis_metric = item.data(QtCore.Qt.UserRole)
+        if not analysis_metric: return
+        metric = analysis_metric.metric
+        
+        analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
+        if self.current_dce:
+            current_dce_id = self.current_dce.id
+        else:
+             current_dce_id = None
+             
+        limit_dces = self.analysis.metadata.get('selected_events') if self.analysis and self.analysis.metadata else None
+        
+        # If no specific events selected in analysis, limit to current DCE context
+        if not limit_dces and self.current_dce:
+            limit_dces = [self.current_dce.id]
+        
+        dlg = FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces)
+        dlg.exec_()
+        
     def on_item_clicked(self, item):
         # Edit handling is now done via signal from widget
         pass
@@ -786,6 +845,10 @@ class AnalysisTable(QtWidgets.QWidget):
         # Filter limit_dces using selected_events from analysis metadata
         limit_dces = self.analysis.metadata.get('selected_events') if self.analysis and self.analysis.metadata else None
         
+        # If no specific events selected in analysis, limit to current DCE context
+        if not limit_dces and self.current_dce:
+            limit_dces = [self.current_dce.id]
+        
         action_matrix = menu.addAction("Automation Availability Matrix...")
         action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
         
@@ -793,7 +856,7 @@ class AnalysisTable(QtWidgets.QWidget):
 
         # Copy Value Actions
         val_item = self.table.item(row, self.column['value'])
-        if val_item and val_item.text() != "null":
+        if val_item and val_item.text() != "null" and val_item.text() != "":
             value_text = val_item.text()
             
             action_copy_val = menu.addAction("Copy Value")

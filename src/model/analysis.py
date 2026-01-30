@@ -124,41 +124,145 @@ class Analysis(DBItemSpatial):
                  result['status'] = 'NOT_FEASIBLE'
                  result['reasons'].append(f"Missing Input: {ref}")
 
-        # 3. Check DCE Layers
+        # 3. Check DCE Layers (With Usage Grouping)
         dce_layers = metric.metric_params.get('dce_layers', [])
-        for layer_def in dce_layers:
+        
+        usage_groups = {}
+        required_individual = []
+        
+        for lyr_def in dce_layers:
+            u = lyr_def.get('usage')
+            if u:
+                usage_groups.setdefault(u, []).append(lyr_def)
+            else:
+                required_individual.append(lyr_def)
+                
+        has_empty_required_layers = False
+
+        def check_single_layer(layer_def):
+            # Returns (is_valid_config, failure_reason, is_empty, empty_reason)
             ref = layer_def.get('layer_id_ref')
-            if not ref: continue
+            if not ref: return False, "Invalid Layer Ref", False, None
             
             # Find Layer in Project
             layer = next((l for l in project.layers.values() if l.layer_id == ref), None)
             
+            # Use display name if available, otherwise ref
+            layer_name = layer.name if layer else ref
+
             if layer is None:
-                if result['status'] != 'NOT_FEASIBLE':
-                    result['status'] = 'NOT_FEASIBLE'
-                result['reasons'].append(f"Layer Not Found in Project: {ref}")
-                continue
+                return False, f"{ref}: Not Found in Project", False, None
             
-            # Check Feature Counts if Event is provided
             if event:
-                 with sqlite3.connect(project.project_file) as conn:
+                # Check Configuration in DCE
+                # We prioritize configuration check (is checked in setup)
+                in_dce = False
+                for el in event.event_layers:
+                    if el.layer.layer_id == ref:
+                        in_dce = True
+                        break
+                if not in_dce:
+                     return False, f"{layer_name}: Not added to DCE", False, None
+                
+                # Check Feature Counts
+                is_empty = False
+                empty_msg = None
+                with sqlite3.connect(project.project_file) as conn:
                      curs = conn.cursor()
                      try:
                          # dce_points/lines/polys have layer_id and event_id
                          table_name = layer.DCE_LAYER_NAMES.get(layer.geom_type)
                          if table_name:
-                             curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND layer_id = ?", [event.id, layer.id])
+                             # Note: Column is event_layer_id, not layer_id (per schema.sql)
+                             curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND event_layer_id = ?", [event.id, layer.id])
                              count = curs.fetchone()[0]
                              if count == 0:
-                                 if result['status'] == 'FEASIBLE': 
-                                     result['status'] = 'FEASIBLE_EMPTY'
-                                 result['reasons'].append(f"Layer Empty: {ref}")
+                                 is_empty = True
+                                 empty_msg = f"{layer_name}: No features"
                      except Exception as e:
                          # Table might not exist or other error
-                         # We don't want to fail hard here, treating as potentially missing data
                          pass
+                return True, None, is_empty, empty_msg
+            
+            return True, None, False, None
+
+        # Check Individual Layers (Changed from AND to OR logic - at least one required)
+        if required_individual:
+            any_valid = False
+            any_non_empty = False
+            indiv_reasons = []
+            indiv_empty_reasons = []
+
+            for l_def in required_individual:
+                is_valid, fail_reason, is_empty, empty_reason = check_single_layer(l_def)
+                if is_valid:
+                    any_valid = True
+                    if not is_empty:
+                        any_non_empty = True
+                    else:
+                        indiv_empty_reasons.append(empty_reason)
+                else:
+                    indiv_reasons.append(fail_reason)
+            
+            if not any_valid:
+                result['status'] = 'NOT_FEASIBLE'
+                unique_reasons = sorted(list(set(indiv_reasons)))
+                result['reasons'].append("; ".join(unique_reasons))
+            elif not any_non_empty:
+                has_empty_required_layers = True
+                # If we have valid layers but ALL are empty, we mark as FEASIBLE_EMPTY
+                result['reasons'].append("; ".join(indiv_empty_reasons))
+
+        # Check Usage Groups (OR Logic)
+        for usage, l_defs in usage_groups.items():
+            group_valid = False
+            group_non_empty = False
+            group_fail_reasons = []
+            group_empty_reasons = []
+            
+            for l_def in l_defs:
+                is_valid, fail_reason, is_empty, empty_reason = check_single_layer(l_def)
+                if is_valid:
+                    group_valid = True
+                    if not is_empty:
+                        group_non_empty = True
+                    else:
+                        group_empty_reasons.append(empty_reason)
+                else:
+                    group_fail_reasons.append(fail_reason)
+            
+            if not group_valid:
+                 result['status'] = 'NOT_FEASIBLE'
+                 unique_reasons = sorted(list(set(group_fail_reasons)))
+                 result['reasons'].append("; ".join(unique_reasons))
+            elif not group_non_empty:
+                 has_empty_required_layers = True
+                 result['reasons'].append("; ".join(group_empty_reasons))
+
+        if result['status'] == 'FEASIBLE' and has_empty_required_layers:
+            result['status'] = 'FEASIBLE_EMPTY'
 
         return result
+
+def format_feasibility_text(f_status: str, f_reasons: list = None) -> str:
+    """Helper to generate consistent tooltip text from feasibility status and reasons."""
+    if f_reasons is None:
+        f_reasons = []
+    
+    msg = ""
+    if f_status == 'NOT_FEASIBLE':
+        msg = "Automation Not Feasible:"
+    elif f_status == 'FEASIBLE_EMPTY':
+        msg = "Automation Feasible (Input Data Empty):"
+    elif f_status == 'MANUAL_ONLY':
+        return "Manual Entry Only"
+    else: # FEASIBLE
+        return "Automation Feasible"
+
+    if f_reasons:
+        msg += "\n" + "\n".join([f" - {r}" for r in f_reasons])
+        
+    return msg
 
 
 def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> Dict[int, Analysis] :

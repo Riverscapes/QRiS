@@ -1,8 +1,11 @@
-from PyQt5 import QtWidgets, QtCore
+from qgis.PyQt import QtWidgets, QtCore, QtGui
 
-from ...model.db_item import DBItem
 from ...model.event import Event
 from ...model.project import Project
+
+class SortableTableWidgetItem(QtWidgets.QTableWidgetItem):
+    def __lt__(self, other):
+        return (self.data(QtCore.Qt.UserRole) or "") < (other.data(QtCore.Qt.UserRole) or "")
 
 class EventLibraryWidget(QtWidgets.QWidget):
 # Implement a Event Library grid picker, which loads events in event library, exposes their date, and type (columns) allows sorting), and has a checkbox 
@@ -52,7 +55,13 @@ class EventLibraryWidget(QtWidgets.QWidget):
             self.table.setItem(i, 1, item)
             
             # Set other event properties in the table
-            date_item = QtWidgets.QTableWidgetItem(event.date)
+            date_item = SortableTableWidgetItem(event.date)
+            # Create sort key from start date components, defaulting to 0 for None
+            sort_key = (0,0,0)
+            if event.start:
+                sort_key = (event.start.year or 0, event.start.month or 0, event.start.day or 0)
+            date_item.setData(QtCore.Qt.UserRole, sort_key)
+
             if self.allow_reorder:
                 date_item.setFlags(date_item.flags() | QtCore.Qt.ItemIsDragEnabled)
             self.table.setItem(i, 2, date_item)
@@ -61,6 +70,11 @@ class EventLibraryWidget(QtWidgets.QWidget):
             if self.allow_reorder:
                 type_item.setFlags(type_item.flags() | QtCore.Qt.ItemIsDragEnabled)
             self.table.setItem(i, 3, type_item)
+
+            desc_item = QtWidgets.QTableWidgetItem(event.description or "")
+            if self.allow_reorder:
+                desc_item.setFlags(desc_item.flags() | QtCore.Qt.ItemIsDragEnabled)
+            self.table.setItem(i, 4, desc_item)
         
         # resize column 0 to fit the checkboxes
         self.table.setColumnWidth(0, 30)
@@ -159,8 +173,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
         self.vert_layout.setContentsMargins(0, 0, 0, 0)
 
         self.table = QtWidgets.QTableWidget(self)
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(['', 'Name', 'Date', 'Type'])
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(['', 'Name', 'Date', 'Type', 'Description'])
         # self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
         if self.allow_reorder:
@@ -173,28 +187,31 @@ class EventLibraryWidget(QtWidgets.QWidget):
         
         self.table.itemChanged.connect(self.on_item_changed)
 
-        # Container for table and side buttons
+
+        # Container for table and side buttons (now left side)
         self.content_layout = QtWidgets.QHBoxLayout()
-        self.content_layout.addWidget(self.table)
 
         if self.allow_reorder:
             self.side_btn_layout = QtWidgets.QVBoxLayout()
-            
+
             self.btnUp = QtWidgets.QPushButton()
-            self.btnUp.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_ArrowUp))
+            self.btnUp.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/arrow_drop_up'))
             self.btnUp.setToolTip("Move Selection Up")
             self.btnUp.clicked.connect(self.move_item_up)
-            
+
             self.btnDown = QtWidgets.QPushButton()
-            self.btnDown.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_ArrowDown))
+            self.btnDown.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/arrow_drop_down'))
             self.btnDown.setToolTip("Move Selection Down")
             self.btnDown.clicked.connect(self.move_item_down)
 
             self.side_btn_layout.addWidget(self.btnUp)
             self.side_btn_layout.addWidget(self.btnDown)
             self.side_btn_layout.addStretch()
-            
+
             self.content_layout.addLayout(self.side_btn_layout)
+            self.content_layout.addWidget(self.table)
+        else:
+            self.content_layout.addWidget(self.table)
 
         self.vert_layout.addLayout(self.content_layout)
 
