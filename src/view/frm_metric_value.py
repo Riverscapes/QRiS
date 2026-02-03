@@ -366,6 +366,11 @@ class FrmMetricValue(QtWidgets.QDialog):
         else:
             self.valManual.setMaximum(safe_max)
 
+        # Update uncertainty widgets to same large range
+        for widget in [self.ValManualPlusMinus, self.ValManualUncertaintyMin, self.ValManualUncertaintyMax]:
+             widget.setMinimum(safe_min)
+             widget.setMaximum(safe_max)
+
     def cmd_calculate_metric_clicked(self):
 
         if self.metric_value.metric.metric_function is None:
