@@ -98,7 +98,7 @@ class Metric(DBItem):
             return "No DCEs (Selected)"
         
         for event in events_to_check:
-            if self.can_calculate_for_dce(event):
+            if self.can_calculate_for_dce(event, qris_project.protocols):
                  supported_count += 1
         
         if supported_count == 0:
@@ -110,7 +110,7 @@ class Metric(DBItem):
             ouptput_text = "DCE" if supported_count == 1 else "DCEs"
             return f"{supported_count} {ouptput_text}"
 
-    def can_calculate_for_dce(self, dce) -> bool:
+    def can_calculate_for_dce(self, dce, protocols: dict = None) -> bool:
         metric_layers = self.metric_params.get('dce_layers', []) if self.metric_params else []
         
         usage_groups = {}
@@ -125,18 +125,34 @@ class Metric(DBItem):
             else:
                 required_individual_layers.append(metric_layer)
         
+        # Pre-calc existing IDs
+        dce_layer_ref_ids = {el.layer.layer_id for el in dce.event_layers} # ref strings
+        dce_layer_db_ids = {el.layer.id for el in dce.event_layers} # db ints
+
+        metric_protocol = next((p for p in protocols.values() if p.machine_code == self.protocol_machine_code), None) if protocols else None
+        
+        def is_layer_present(layer_def):
+            ref = layer_def.get('layer_id_ref')
+            if not ref: return False
+            
+            if metric_protocol and hasattr(metric_protocol, 'protocol_layers'):
+                # Strict check
+                strict_layer = next((l for l in metric_protocol.protocol_layers.values() if l.layer_id == ref), None)
+                if strict_layer:
+                    return strict_layer.id in dce_layer_db_ids
+            
+            # Loose check fallback
+            return ref in dce_layer_ref_ids
+
         # Check Named Usage Groups (OR logic within group)
         for usage, layers in usage_groups.items():
-            layer_ids = [layer.get('layer_id_ref', None) for layer in layers]
-            if not any(event_layer.layer.layer_id in layer_ids for event_layer in dce.event_layers):
+            if not any(is_layer_present(layer) for layer in layers):
                 return False
 
         # Check Individual Required Layers (AND logic across all)
-        dce_layer_ids = {el.layer.layer_id for el in dce.event_layers}
         for layer in required_individual_layers:
-            ref_id = layer.get('layer_id_ref')
-            if ref_id not in dce_layer_ids:
-                return False
+             if not is_layer_present(layer):
+                 return False
                 
         return True
 
@@ -203,11 +219,12 @@ def insert_metric(db_path: str, name: str, machine_name: str, protocol_machine_n
             # Get the protocol id
             curs.execute('SELECT id FROM protocols WHERE machine_code = ?', [protocol_machine_name])
             protocol_id = curs.fetchone()[0]
-            # make sure the metric_name and version are unique
-            curs.execute('SELECT id FROM metrics WHERE name = ? AND version = ? AND protocol_id = ?', [name, version, protocol_id])
+            # make sure the metric_name and version are unique for this protocol
+            # Uniqueness is machine_name + version + protocol
+            curs.execute('SELECT id FROM metrics WHERE machine_name = ? AND version = ? AND protocol_id = ?', [machine_name, version, protocol_id])
             metric_ids = curs.fetchone()
             if metric_ids is not None:
-                raise ValueError(f"Metric '{name}' version '{version}' already exists in database.")
+                raise ValueError(f"Metric '{name}' (machine_name: {machine_name}) version '{version}' already exists in database for protocol {protocol_machine_name}.")
             # get the metric level id
             curs.execute('SELECT id FROM metric_levels WHERE name = ?', [metric_level])
             metric_level_ids = curs.fetchone()

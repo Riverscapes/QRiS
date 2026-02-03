@@ -145,7 +145,15 @@ class Analysis(DBItemSpatial):
             if not ref: return False, "Invalid Layer Ref", False, None
             
             # Find Layer in Project
-            layer = next((l for l in project.layers.values() if l.layer_id == ref), None)
+            # Scope to Metric Protocol if possible
+            metric_protocol = next((p for p in project.protocols.values() if p.machine_code == metric.protocol_machine_code), None) if hasattr(project, 'protocols') else None
+            layer = None
+            if metric_protocol and hasattr(metric_protocol, 'protocol_layers'):
+                 layer = next((l for l in metric_protocol.protocol_layers.values() if l.layer_id == ref), None)
+            
+            # Fallback
+            if layer is None:
+                layer = next((l for l in project.layers.values() if l.layer_id == ref), None)
             
             # Use display name if available, otherwise ref
             layer_name = layer.name if layer else ref
@@ -158,7 +166,7 @@ class Analysis(DBItemSpatial):
                 # We prioritize configuration check (is checked in setup)
                 in_dce = False
                 for el in event.event_layers:
-                    if el.layer.layer_id == ref:
+                    if el.layer.id == layer.id:
                         in_dce = True
                         break
                 if not in_dce:
