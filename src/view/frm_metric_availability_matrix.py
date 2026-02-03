@@ -250,12 +250,28 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          
                 
                 elif c_type == 'dce_layer':
-                     # Check if specific layer exists in DCE
+                     # Check if specific layer exists in DCE (Strict Protocol Check)
                      found_layer = None
-                     for event_layer in event.event_layers:
-                         if event_layer.layer.layer_id == ref:
-                             found_layer = event_layer
-                             break
+                     target_layer_db_id = None
+                     
+                     if metric_protocol and metric_protocol.protocol_layers:
+                         for l in metric_protocol.protocol_layers.values():
+                             if l.layer_id == ref:
+                                 target_layer_db_id = l.id
+                                 break
+                     
+                     if target_layer_db_id is not None:
+                         # Strict check: Find event layer with this exact DB ID
+                         for event_layer in event.event_layers:
+                             if event_layer.layer.id == target_layer_db_id:
+                                 found_layer = event_layer
+                                 break
+                     else:
+                        # Fallback for loose matching if protocol resolution fails
+                         for event_layer in event.event_layers:
+                             if event_layer.layer.layer_id == ref:
+                                 found_layer = event_layer
+                                 break
                      
                      if found_layer:
                          try:
@@ -307,7 +323,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          missing_inputs.append(str(input_ref))
             
             # DCE Layers logic (handled by metric object)
-            dce_ok = self.metric.can_calculate_for_dce(event)
+            dce_ok = self.metric.can_calculate_for_dce(event, self.qris_project.protocols)
             
             is_fully_available = inputs_ok and dce_ok
 
