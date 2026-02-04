@@ -4,9 +4,10 @@ import json
 from qgis.core import QgsWkbTypes
 
 from .db_item import DBItem
-# from .protocol import Protocol
+
 from ..QRiS.protocol_parser import LayerDefinition
 
+from typing import Dict
 
 class Layer(DBItem):
     """Represents the definition of a layer that can be used by an event protocol.
@@ -48,7 +49,7 @@ class Layer(DBItem):
         self.hierarchy = self.metadata.get('hierarchy', None)
 
 
-def load_layers(curs: sqlite3.Cursor) -> dict:
+def load_layers(curs: sqlite3.Cursor) -> Dict[int, Layer]:
 
     curs.execute('SELECT * FROM layers')
     return {row['id']: Layer(
@@ -86,7 +87,7 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol)
             'default_value': field.default_value,
         }
         if field.required is True:
-            out_field['required'] = field.required
+            out_field['value_required'] = field.required
 
         if field.allow_custom_values is True:
             out_field['allow_custom_values'] =  field.allow_custom_values
@@ -143,6 +144,48 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol)
 
     return layer, protocol
     
+def update_layer(project_file: str, layer_id: int, layer_definition: LayerDefinition) -> bool:
+    """Updates an existing layer definition in the database.
+    Currently only supports updating 'value_required' attribute of fields.
+    """
+    with sqlite3.connect(project_file) as conn:
+        conn.row_factory = sqlite3.Row
+        curs = conn.cursor()
+        
+        # Fetch current layer metadata
+        curs.execute('SELECT metadata FROM layers WHERE id = ?', (layer_id,))
+        row = curs.fetchone()
+        if not row:
+            return False
+            
+        metadata = json.loads(row['metadata']) if row['metadata'] else {}
+        existing_fields = metadata.get('fields', [])
+        
+        if not existing_fields:
+            return False
+            
+        layer_updated = False
+        
+        # Check and update fields
+        for field_def in layer_definition.fields:
+             for existing_field in existing_fields:
+                if existing_field['id'] == field_def.id:
+                    # Check and update value_required
+                    is_required = field_def.required
+                    current_required = existing_field.get('value_required', False)
+                    
+                    if current_required != is_required:
+                        existing_field['value_required'] = is_required
+                        layer_updated = True
+                        
+        if layer_updated:
+            metadata['fields'] = existing_fields
+            curs.execute('UPDATE layers SET metadata = ? WHERE id = ?', (json.dumps(metadata), layer_id))
+            conn.commit()
+            return True
+            
+    return False
+
 def check_and_remove_unused_layers(qris_project):
     
     with sqlite3.connect(qris_project.project_file) as conn:
