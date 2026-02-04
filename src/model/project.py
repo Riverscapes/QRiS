@@ -10,7 +10,7 @@ from qgis.utils import spatialite_connect
 
 from .analysis import Analysis, load_analyses
 from .sample_frame import SampleFrame, load_sample_frames
-from .layer import Layer, load_layers
+from .layer import Layer, load_layers, update_layer
 from .protocol import Protocol, load as load_protocols, update_protocol
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
@@ -120,6 +120,48 @@ class Project(DBItem, QObject):
                         protocol_obj.description = current_protocol.description
                         protocol_obj.version = current_protocol.version
                         protocol_obj.set_metadata(new_metadata)
+
+                        # Update layer fields (value_required only)
+                        for layer_def in current_protocol.layers:
+                            # Find matching layer by machine code (layer_id) and version within the current protocol
+                            existing_layer = None
+                            for l in protocol_obj.protocol_layers.values():
+                                if l.layer_id == layer_def.id:
+                                    if str(l.layer_version) == str(layer_def.version):
+                                        existing_layer = l
+                                        break
+                                    # Try float comparison if strings don't match exactly (e.g. "1.0" vs "1")
+                                    try:
+                                        if float(l.layer_version) == float(layer_def.version):
+                                            existing_layer = l
+                                            break
+                                    except ValueError:
+                                        pass
+
+                            if existing_layer:
+                                # Check if update is needed before calling update_layer
+                                update_needed = False
+                                if existing_layer.fields:
+                                    for field_def in layer_def.fields:
+                                        for existing_field in existing_layer.fields:
+                                            if existing_field['id'] == field_def.id:
+                                                # Check if value_required has changed
+                                                if existing_field.get('value_required', False) != field_def.required:
+                                                    update_needed = True
+                                                    break
+                                        if update_needed:
+                                            break
+                                
+                                if update_needed:
+                                    if update_layer(self.project_file, existing_layer.id, layer_def):
+                                         QgsMessageLog.logMessage(f"Updated fields for layer '{existing_layer.name}'", "QRiS", Qgis.Info)
+                                         # Also update the in-memory layer object
+                                         for field_def in layer_def.fields:
+                                            for existing_field in existing_layer.fields:
+                                                if existing_field['id'] == field_def.id:
+                                                    existing_field['value_required'] = field_def.required
+                                         # Ensure metadata dict is also sync'd (though it should be by reference)
+                                         existing_layer.metadata['fields'] = existing_layer.fields
 
                         # metrics
                         for metric in current_protocol.metrics:

@@ -2,13 +2,16 @@ import json
 import sqlite3
 
 from .db_item import DBItem
-from .metric import Metric, insert_metric
+from .metric import insert_metric
+from .layer import Layer
 
 from ..QRiS.protocol_parser import ProtocolDefinition, MetricDefinition
 
+from typing import Dict
+
 class Protocol(DBItem):
 
-    def __init__(self, id: int, name: str, machine_code: str, has_custom_ui: bool, description: str, version: str, metadata: dict = None, protocol_layers: dict = None):
+    def __init__(self, id: int, name: str, machine_code: str, has_custom_ui: bool, description: str, version: str, metadata: dict = None, protocol_layers: Dict[int, Layer] = None):
         super().__init__('protocols', id, name, metadata)
 
         self.description = description
@@ -16,7 +19,7 @@ class Protocol(DBItem):
         self.version = version
         self.has_custom_ui = has_custom_ui
         self.icon = 'protocol'
-        self.protocol_layers = protocol_layers if protocol_layers else {}
+        self.protocol_layers: Dict[int, Layer] = protocol_layers if protocol_layers else {}
         # self.metadata = metadata.get('metadata', None) if metadata else None
         # self.system_metadata: dict = metadata.get('system', None) if metadata else None
         stored_protocol_type: str = self.system_metadata.get('protocol_type', 'dce') if self.system_metadata else 'dce'
@@ -134,7 +137,7 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
 
     return protocol, metrics
 
-def load(curs: sqlite3.Cursor, layers: list) -> dict:
+def load(curs: sqlite3.Cursor, layers: list) -> Dict[int, Protocol] :
 
     curs.execute('SELECT * FROM protocols')
     protocols = {row['id']: Protocol(
@@ -149,7 +152,7 @@ def load(curs: sqlite3.Cursor, layers: list) -> dict:
 
     for protocol_id, protocol in protocols.items():
         curs.execute('SELECT layer_id FROM protocol_layers WHERE protocol_id = ?', (protocol_id,))
-        protocol_layers = {row['layer_id']: layers[row['layer_id']] for row in curs.fetchall()}
+        protocol_layers: Dict[int, Layer] = {row['layer_id']: layers[row['layer_id']] for row in curs.fetchall()}
         protocol.protocol_layers = protocol_layers
         protocols[protocol_id] = protocol
 

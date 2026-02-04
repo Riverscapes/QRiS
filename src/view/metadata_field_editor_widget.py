@@ -1,12 +1,12 @@
 import json
 import typing
 
-from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory
-from qgis.core import QgsVectorLayer, NULL
+from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory, QgsWidgetWrapper
+from qgis.core import QgsVectorLayer, NULL, QgsFieldConstraints
 
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox, QSlider
-from PyQt5.QtCore import Qt, QVariant, QSettings, pyqtSignal
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
+from qgis.PyQt.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox, QSlider
+from qgis.PyQt.QtCore import Qt, QVariant, pyqtSignal
 
 
 class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
@@ -61,7 +61,10 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                 continue
 
             # generate a label and a widget for each field
-            label = QLabel(field['label'])
+            label_text = field['label']
+            if field.get('value_required', False):
+                 label_text += ' *'
+            label = QLabel(label_text)
             self.grid.addWidget(label, row, 0, 1, 1)
             self.labels[field['id']] = label
             
@@ -156,6 +159,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     self.resetWidgetToDefault(widget)
             
             self.updateDependantWidgets()
+            self.validate_required_fields()
             self.loading = False
 
     def updateDependantWidgets(self):
@@ -220,11 +224,75 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
     def onValueChanged(self, value):
         self.updateDependantWidgets()
+        self.validate_required_fields()
         self.emitValueChanged()
 
     def onTextChanged(self):
         self.updateDependantWidgets()
+        self.validate_required_fields()
         self.emitValueChanged()
+
+    def validate_required_fields(self):
+        """
+        Check existing widgets for required fields and validity.
+        Update UI feedback style directly and emit constraint status.
+        """
+        if not hasattr(self, 'widgets') or not self.widgets:
+            return
+
+        border_style_error = "border: 1px solid red;"
+        border_style_normal = ""
+
+        # We need to find the specific config for each widget again since it's not stored on the widget
+        config_fields = self.config('fields')
+        
+        all_valid = True
+        errors = []
+
+        for field in config_fields:
+            if field.get('value_required', False):
+                widget = self.widgets.get(field['id'])
+                
+                # If widget is missing, hidden, or disabled it is not 'required' in this context
+                if widget and widget.isVisible() and widget.isEnabled():
+                    val = self.get_widget_value(widget)
+                    
+                    is_empty = False
+                    if val is None:
+                        is_empty = True
+                    elif isinstance(val, str) and str(val).strip() == "":
+                        is_empty = True
+                    elif isinstance(val, list) and len(val) == 0:
+                        is_empty = True
+                    
+                    if is_empty:
+                        self.set_widget_style(widget, border_style_error)
+                        all_valid = False
+                        errors.append(f"{field.get('label', field['id'])} is required.")
+                    else:
+                        self.set_widget_style(widget, border_style_normal)
+        
+        if not all_valid:
+            # Join errors for the tooltip/message
+            error_message = "\n".join(errors)
+            self.constraintResultVisibleChanged.emit(True)
+            # 2 = ConstraintFailureHard
+            self.constraintStatusChanged.emit("Required Fields", "Required fields missing", error_message, 2)
+        else:
+            self.constraintResultVisibleChanged.emit(False)
+            # 0 = ConstraintSuccess
+            self.constraintStatusChanged.emit("Required Fields", "All required fields filled", "", 0)
+
+    def set_widget_style(self, widget, style):
+        # Apply style to relevant input component
+        target = widget
+        if isinstance(widget, DependantComboBox):
+            target = widget.cboValues
+        elif isinstance(widget, QComboBox) and widget.isEditable():
+            target = widget.lineEdit()
+        
+        # Avoid overriding other styles if possible, but for now simple setStyleSheet
+        target.setStyleSheet(style)
 
     def toggle_widget_visibility(self, widget: QWidget, value: bool):
         
