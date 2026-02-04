@@ -1,7 +1,7 @@
 import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 
 from PyQt5.QtCore import QSettings
 
@@ -59,6 +59,9 @@ class FieldDefinition:
     allow_multiple_values: Optional[bool] = None
     derived_values: Optional[List[str]] = None
     slider: Optional[dict] = None
+    min: Optional[Union[float, int]] = None
+    max: Optional[Union[float, int]] = None
+    precision: Optional[int] = None
 
 @dataclass
 class LayerDefinition:
@@ -197,9 +200,20 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                         'step': float(field_elem.find('Slider').attrib.get('step')),
                     }
 
+            field_type = FIELD_TYPES[field_elem.tag]
+            min_val = None
+            max_val = None
+
+            if field_type == 'integer':
+                min_val = get_int_value(field_elem, 'MinimumValue')
+                max_val = get_int_value(field_elem, 'MaximumValue')
+            else:
+                min_val = get_float_value(field_elem, 'MinimumValue')
+                max_val = get_float_value(field_elem, 'MaximumValue')
+
             field = FieldDefinition(
                     id=field_elem.attrib.get('id'),
-                    type=FIELD_TYPES[field_elem.tag],
+                    type=field_type,
                     label=field_elem.find('Label').text,
                     required=field_elem.attrib.get('value_required') == 'true',
                     allow_custom_values=field_elem.find('Values').attrib.get('allow_custom_values') == 'true' if field_elem.find('Values') is not None else False,
@@ -210,7 +224,10 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
                     visibility_values=[v.text for v in field_elem.find('Visibility').find('Values').findall('Value')] if field_elem.find('Visibility') is not None else None,
                     allow_multiple_values=field_elem.find('Values').attrib.get('allow_multiple_values') == 'true' if field_elem.find('Values') is not None else None,
                     derived_values=derived_values,
-                    slider=slider
+                    slider=slider,
+                    min=min_val,
+                    max=max_val,
+                    precision=get_int_value(field_elem, 'Precision')
                 )
             fields.append(field)
 
