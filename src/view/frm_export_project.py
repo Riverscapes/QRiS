@@ -7,6 +7,7 @@ import re
 from osgeo import ogr
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import QSettings
 
 from ..model.event import Event
@@ -21,6 +22,7 @@ from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.stream_gage import StreamGage
 from ..model.sample_frame import SampleFrame
 from ..model.attachment import Attachment, attachments_path, parse_posix_path
+from ..lib.rs_project import RSProject
 
 from .utilities import add_standard_form_buttons, message_box
 
@@ -631,6 +633,17 @@ class FrmExportProject(QtWidgets.QDialog):
             conn.execute("UPDATE projects SET name = ?, description = ? WHERE id = 1", (project_name, project_description))
             conn.commit()
             conn.execute("VACUUM")
+
+        try:
+            # Load the new project from the exported geopackage
+            exported_project = QRiSProject(out_geopackage)
+            # Create the RSProject and write the project.rs.xml
+            rs_project = RSProject(exported_project)
+            rs_project.write()
+        except Exception as e:
+            # We don't want to fail the export if the xml generation fails
+            # But we should probably log it
+            QgsMessageLog.logMessage(f"Error generating project.rs.xml: {e}", APPNAME, Qgis.Warning)
 
         return super().accept()
 
