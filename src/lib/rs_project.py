@@ -147,33 +147,50 @@ class RSProject:
 
     def get_project_bounds(self):
 
-        # See if any of the aoi's are specified as bounds in thier metadata
-        for aoi in self.qris_project.aois.values():
-            if aoi.sample_frame_type != SampleFrame.AOI_SAMPLE_FRAME_TYPE:
-                continue
-            if aoi.project_bounds:
-                # get the bounds from the sample frame features
-                db_path = self.qris_project.project_file
-                temp_layer = QgsVectorLayer(f'{db_path}|layername=sample_frame_features|subset=sample_frame_id = {aoi.id}', 'temp', 'ogr')
-                if temp_layer.isValid() and temp_layer.featureCount() > 0:
-                    output_geom = temp_layer.getFeatures().__next__().geometry()
-                    extent = output_geom.boundingBox()
-                    centroid = output_geom.centroid().asPoint()
-                    geojson = output_geom.asJson()
-                    geojson_filename = "project_bounds.geojson"
-                    geojson_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), geojson_filename).replace("\\", "/"))
-                    with open(geojson_path, 'w') as f:
-                        f.write(geojson)
-                    project_bounds = rsxml.project_xml.ProjectBounds(
-                        centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
-                        bounding_box=rsxml.project_xml.BoundingBox(
-                            minLat=extent.yMinimum(),
-                            minLng=extent.xMinimum(),
-                            maxLat=extent.yMaximum(),
-                            maxLng=extent.xMaximum()),
-                        filepath=geojson_filename)
-                    return project_bounds
-        return None
+        # See if any of the aoi's or valley bottoms's are specified as bounds in thier metadata
+        candidates = list(self.qris_project.aois.values()) + list(self.qris_project.valley_bottoms.values())
+        target_frame = None
+        for frame in candidates:
+            if getattr(frame, 'project_bounds', False):
+                target_frame = frame
+                break
+        # If no explicit bounds found, try to find the best candidate
+        if target_frame is None:
+            # Try newest Valley Bottom first
+            vbs = list(self.qris_project.valley_bottoms.values())
+            if vbs:
+                vbs.sort(key=lambda x: x.id, reverse=True)
+                target_frame = vbs[0]
+            else:
+                 # Try newest AOI
+                 aois = list(self.qris_project.aois.values())
+                 if aois:
+                     aois.sort(key=lambda x: x.id, reverse=True)
+                     target_frame = aois[0]
+        if target_frame is None:
+            return None
+        # get the bounds from the sample frame features
+        db_path = self.qris_project.project_file
+        temp_layer = QgsVectorLayer(f'{db_path}|layername=sample_frame_features|subset=sample_frame_id = {target_frame.id}', 'temp', 'ogr')
+        if not (temp_layer.isValid() and temp_layer.featureCount() > 0):
+            return None    
+        output_geom = temp_layer.getFeatures().__next__().geometry()
+        extent = output_geom.boundingBox()
+        centroid = output_geom.centroid().asPoint()
+        geojson = output_geom.asJson()
+        geojson_filename = "project_bounds.geojson"
+        geojson_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), geojson_filename).replace("\\", "/"))
+        with open(geojson_path, 'w') as f:
+            f.write(geojson)
+        project_bounds = rsxml.project_xml.ProjectBounds(
+            centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
+            bounding_box=rsxml.project_xml.BoundingBox(
+                minLat=extent.yMinimum(),
+                minLng=extent.xMinimum(),
+                maxLat=extent.yMaximum(),                            
+                maxLng=extent.xMaximum()),
+            filepath=geojson_filename)
+        return project_bounds
 
     def build_project(self):
 
