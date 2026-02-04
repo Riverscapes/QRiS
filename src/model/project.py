@@ -141,7 +141,22 @@ class Project(DBItem, QObject):
                             if existing_layer:
                                 # Check if update is needed before calling update_layer
                                 update_needed = False
-                                if existing_layer.fields:
+                                
+                                # Check core properties
+                                if existing_layer.name != layer_def.label: update_needed = True
+                                if existing_layer.qml != layer_def.symbology: update_needed = True
+                                if existing_layer.description != layer_def.description: update_needed = True
+                                
+                                # Check Metadata properties
+                                existing_hierarchy = existing_layer.metadata.get('hierarchy', [])
+                                new_hierarchy = layer_def.hierarchy if layer_def.hierarchy is not None else []
+                                if existing_hierarchy != new_hierarchy: update_needed = True
+                                
+                                existing_menu_items = existing_layer.metadata.get('menu_items', [])
+                                new_menu_items = layer_def.menu_items if layer_def.menu_items is not None else []
+                                if existing_menu_items != new_menu_items: update_needed = True
+
+                                if not update_needed and existing_layer.fields:
                                     for field_def in layer_def.fields:
                                         for existing_field in existing_layer.fields:
                                             if existing_field['id'] == field_def.id:
@@ -149,17 +164,54 @@ class Project(DBItem, QObject):
                                                 if existing_field.get('value_required', False) != field_def.required:
                                                     update_needed = True
                                                     break
+                                                
+                                                # Check if min/max/precision has changed
+                                                if existing_field.get('min') != field_def.min:
+                                                    update_needed = True
+                                                    break
+                                                if existing_field.get('max') != field_def.max:
+                                                    update_needed = True
+                                                    break
+                                                if existing_field.get('precision') != field_def.precision:
+                                                    update_needed = True
+                                                    break
+
                                         if update_needed:
                                             break
                                 
                                 if update_needed:
                                     if update_layer(self.project_file, existing_layer.id, layer_def):
-                                         QgsMessageLog.logMessage(f"Updated fields for layer '{existing_layer.name}'", "QRiS", Qgis.Info)
-                                         # Also update the in-memory layer object
+                                         QgsMessageLog.logMessage(f"Updated fields/properties for layer '{existing_layer.name}'", "QRiS", Qgis.Info)
+                                         
+                                         # Update in-memory layer object properties
+                                         existing_layer.name = layer_def.label
+                                         existing_layer.qml = layer_def.symbology
+                                         existing_layer.description = layer_def.description
+                                         
+                                         # Update in-memory metadata
+                                         if layer_def.hierarchy:
+                                             existing_layer.metadata['hierarchy'] = layer_def.hierarchy
+                                         elif 'hierarchy' in existing_layer.metadata:
+                                             del existing_layer.metadata['hierarchy']
+                                             
+                                         if layer_def.menu_items:
+                                             existing_layer.metadata['menu_items'] = layer_def.menu_items
+                                         elif 'menu_items' in existing_layer.metadata:
+                                             del existing_layer.metadata['menu_items']
+                                         
+                                         # Also update the in-memory layer fields
                                          for field_def in layer_def.fields:
                                             for existing_field in existing_layer.fields:
                                                 if existing_field['id'] == field_def.id:
                                                     existing_field['value_required'] = field_def.required
+                                                    
+                                                    # Update keys handling removal if None
+                                                    for key, val in [('min', field_def.min), ('max', field_def.max), ('precision', field_def.precision)]:
+                                                        if val is not None:
+                                                            existing_field[key] = val
+                                                        elif key in existing_field:
+                                                            del existing_field[key]
+                                                            
                                          # Ensure metadata dict is also sync'd (though it should be by reference)
                                          existing_layer.metadata['fields'] = existing_layer.fields
 

@@ -102,6 +102,12 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol)
             out_field['derived_values'] = field.derived_values
         if field.slider is not None:
             out_field['slider'] = field.slider
+        if field.min is not None:
+            out_field['min'] = field.min
+        if field.max is not None:
+            out_field['max'] = field.max
+        if field.precision is not None:
+            out_field['precision'] = field.precision
         out_field = {k: v for k, v in out_field.items() if v is not None}
         fields.append(out_field)
         
@@ -146,14 +152,14 @@ def insert_layer(project_file: str, layer_definition: LayerDefinition, protocol)
     
 def update_layer(project_file: str, layer_id: int, layer_definition: LayerDefinition) -> bool:
     """Updates an existing layer definition in the database.
-    Currently only supports updating 'value_required' attribute of fields.
+    Supports updating label, symbology, description, hierarchy, menu_items, and field attributes.
     """
     with sqlite3.connect(project_file) as conn:
         conn.row_factory = sqlite3.Row
         curs = conn.cursor()
         
-        # Fetch current layer metadata
-        curs.execute('SELECT metadata FROM layers WHERE id = ?', (layer_id,))
+        # Fetch current layer data and metadata
+        curs.execute('SELECT display_name, qml, description, metadata FROM layers WHERE id = ?', (layer_id,))
         row = curs.fetchone()
         if not row:
             return False
@@ -161,30 +167,88 @@ def update_layer(project_file: str, layer_id: int, layer_definition: LayerDefini
         metadata = json.loads(row['metadata']) if row['metadata'] else {}
         existing_fields = metadata.get('fields', [])
         
-        if not existing_fields:
-            return False
-            
         layer_updated = False
         
-        # Check and update fields
-        for field_def in layer_definition.fields:
-             for existing_field in existing_fields:
-                if existing_field['id'] == field_def.id:
-                    # Check and update value_required
-                    is_required = field_def.required
-                    current_required = existing_field.get('value_required', False)
-                    
-                    if current_required != is_required:
-                        existing_field['value_required'] = is_required
-                        layer_updated = True
+        # 1. Update Core Columns (display_name, qml, description)
+        columns_to_update = []
+        params = []
+        
+        if row['display_name'] != layer_definition.label:
+            columns_to_update.append("display_name = ?")
+            params.append(layer_definition.label)
+            layer_updated = True
+            
+        if row['qml'] != layer_definition.symbology:
+            columns_to_update.append("qml = ?")
+            params.append(layer_definition.symbology)
+            layer_updated = True
+            
+        if row['description'] != layer_definition.description:
+            columns_to_update.append("description = ?")
+            params.append(layer_definition.description)
+            layer_updated = True
+
+        if columns_to_update:
+             sql = f"UPDATE layers SET {', '.join(columns_to_update)} WHERE id = ?"
+             params.append(layer_id)
+             curs.execute(sql, params)
+             conn.commit()
+
+        # 2. Update Metadata Properties (hierarchy, menu_items)
+        metadata_changed = False
+        
+        # Hierarchy
+        new_hierarchy = layer_definition.hierarchy if layer_definition.hierarchy is not None else []
+        current_hierarchy = metadata.get('hierarchy', [])
+        # Normalizing to None if empty list for consistent comparison if preferred, or just list
+        if new_hierarchy != current_hierarchy:
+             if new_hierarchy:
+                 metadata['hierarchy'] = new_hierarchy
+             elif 'hierarchy' in metadata: # Remove key if now empty/none
+                 del metadata['hierarchy']
+             metadata_changed = True
+
+        # Menu Items
+        new_menu_items = layer_definition.menu_items if layer_definition.menu_items is not None else []
+        current_menu_items = metadata.get('menu_items', [])
+        if new_menu_items != current_menu_items:
+            if new_menu_items:
+                metadata['menu_items'] = new_menu_items
+            elif 'menu_items' in metadata:
+                 del metadata['menu_items']
+            metadata_changed = True
+
+        # 3. Check and update fields
+        if existing_fields:
+            for field_def in layer_definition.fields:
+                for existing_field in existing_fields:
+                    if existing_field['id'] == field_def.id:
+                        # Check and update value_required
+                        is_required = field_def.required
+                        current_required = existing_field.get('value_required', False)
                         
-        if layer_updated:
-            metadata['fields'] = existing_fields
+                        if current_required != is_required:
+                            existing_field['value_required'] = is_required
+                            metadata_changed = True
+                        
+                        # Update min/max/precision
+                        for key, val in [('min', field_def.min), ('max', field_def.max), ('precision', field_def.precision)]:
+                            current_val = existing_field.get(key, None)
+                            if val is not None and current_val != val:
+                                existing_field[key] = val
+                                metadata_changed = True
+                            elif val is None and key in existing_field:
+                                # If value is removed in new definition, remove it from existing
+                                del existing_field[key]
+                                metadata_changed = True
+        
+        if metadata_changed:
+            metadata['fields'] = existing_fields # Ensure fields are written back
             curs.execute('UPDATE layers SET metadata = ? WHERE id = ?', (json.dumps(metadata), layer_id))
             conn.commit()
-            return True
+            layer_updated = True
             
-    return False
+        return layer_updated
 
 def check_and_remove_unused_layers(qris_project):
     
