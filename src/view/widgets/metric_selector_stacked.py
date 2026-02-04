@@ -219,6 +219,43 @@ class MetricSelector(QtWidgets.QWidget):
         if enable_deprecated:
             self.act_include_deprecated.setChecked(True)
 
+    def check_experimental_events(self, dce_ids: list):
+        """
+        Check if any of the selected events use an experimental protocol.
+        If so, automatically enable the 'Include Experimental' filter.
+        """
+        if not dce_ids:
+            return
+
+        enable_experimental = False
+        for eid in dce_ids:
+            event = self.qris_project.events.get(eid)
+            if not event: continue
+            
+            for event_layer in event.event_layers:
+                if hasattr(event_layer, 'layer') and event_layer.layer:
+                    protocol = event_layer.layer.get_layer_protocol(self.qris_project.protocols)
+                    if protocol:
+                        # Check protocol metadata first (if available)
+                        p_status = ""
+                        if protocol.metadata and isinstance(protocol.metadata, dict):
+                            p_status = protocol.metadata.get('status', "")
+                        
+                        # Fallback to name check if status not clearly experimental
+                        if p_status.lower() == "experimental" or "experimental" in protocol.name.lower():
+                            enable_experimental = True
+                            break
+                        
+                        # Also check for experimental status attribute if it exists
+                        if hasattr(protocol, 'status') and protocol.status == 'experimental':
+                            enable_experimental = True
+                            break
+            if enable_experimental:
+                break
+        
+        if enable_experimental:
+            self.act_include_experimental.setChecked(True)
+
     def get_metric_font(self, metric, level_id):
         font = QtGui.QFont()
         status = getattr(metric, 'status', 'active')
@@ -542,6 +579,7 @@ class MetricSelector(QtWidgets.QWidget):
 
     def set_selected_dces(self, dce_ids: list):
         self.limit_dces = dce_ids
+        self.check_experimental_events(dce_ids)
         self.refresh_availability()
         self.update_visibility()
 
