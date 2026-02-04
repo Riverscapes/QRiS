@@ -54,7 +54,7 @@ from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_planning_container import FrmPlanningContainer
 from .frm_asbuilt import FrmAsBuilt
 from .frm_basemap import FrmRaster
-from .frm_mask_aoi import FrmAOI
+from .frm_aoi_valley_bottom import FrmAOIValleyBottom
 from .frm_attachment import FrmAttachment
 from .frm_sample_frame import FrmSampleFrame
 from .frm_analysis_properties import FrmAnalysisProperties
@@ -80,7 +80,6 @@ from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
 from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
-from .frm_valley_bottom import FrmValleyBottom
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from .frm_layer_type import FrmLayerTypeDialog
 from .frm_settings import REMOVE_LAYERS_ON_CLOSE
@@ -1565,7 +1564,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if import_source_path is None:
                     return
 
-        frm = FrmAOI(self, self.qris_project, import_source_path)
+        frm = FrmAOIValleyBottom(self, self.qris_project, import_source_path, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1582,7 +1581,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
-            frm.promote_to_aoi(db_item)
+            frm.promote_to_sample_frame(db_item)
 
             # find the AOIs Node in the model
             rootNode = self.model.invisibleRootItem()
@@ -1593,7 +1592,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         result = frm.exec_()
         if result != 0:
-            self.add_child_to_project_tree(parent_node, frm.aoi, frm.chkAddToMap.isChecked())
+            self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
 
     def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new sample frame"""
@@ -1668,7 +1667,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if import_source_path is None:
                     return
 
-        frm = FrmValleyBottom(self, self.qris_project, import_source_path)
+        frm = FrmAOIValleyBottom(self, self.qris_project, import_source_path, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
         if meta is not None:
             if 'layer_label' in meta:
                 frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
@@ -1686,7 +1685,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
-            frm.promote_to_valley_bottom(db_item)
+            frm.promote_to_sample_frame(db_item)
             
         result = frm.exec_()
         if result != 0:
@@ -1697,7 +1696,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
                 riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
                 parent_node = riverscapes_node
-            self.add_child_to_project_tree(parent_node, frm.valley_bottom, frm.chkAddToMap.isChecked())
+            self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
 
         
     def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
@@ -1898,9 +1897,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm = FrmEvent(self, self.qris_project, dce_event=db_item, event_type_id=db_item.event_type.id)
         elif isinstance(db_item, SampleFrame):
             if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
-                frm = FrmAOI(self, self.qris_project, None, db_item)
+                frm = FrmAOIValleyBottom(self, self.qris_project, None, db_item)
             elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
-                frm = FrmValleyBottom(self, self.qris_project, None, db_item)
+                frm = FrmAOIValleyBottom(self, self.qris_project, None, db_item)
             else:
                 frm = FrmSampleFrame(self, self.qris_project, None, db_item)
         elif isinstance(db_item, Profile):
