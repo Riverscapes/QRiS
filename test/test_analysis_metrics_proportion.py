@@ -176,5 +176,36 @@ class TestMetricProportion(unittest.TestCase):
         # Polygon covers bottom half of SF
         self.assertAlmostEqual(result, 0.5, places=2)
 
+
+    def test_denominator_case_sensitivity_and_missing_usage(self):
+        """Test denominator usage is case-insensitive and safe against missing keys."""
+        metrics_params = {
+            'dce_layers': [
+                {
+                    'layer_id_ref': 'DENOM_LINES',
+                    'usage': 'Denominator'  # Mixed case
+                },
+                {
+                    'layer_id_ref': 'NUM_LINES',
+                    'usage': 'numerator'
+                },
+                {
+                    'layer_id_ref': 'SOME_IGNORED_LAYER'
+                    # Missing usage key - should be ignored and not crash
+                }
+            ]
+        }
+        
+        result = proportion(
+            self.gpkg_path,
+            sample_frame_feature_id=1,
+            event_id=100,
+            metric_params=metrics_params,
+            analysis_params={}
+        )
+        
+        # Num is half of Denom
+        self.assertAlmostEqual(result, 0.5, places=2)
+
 if __name__ == '__main__':
     unittest.main()

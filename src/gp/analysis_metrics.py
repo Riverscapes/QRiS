@@ -515,7 +515,7 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
             geom = None
             clipped_geom = None
 
-    denominator_layers = [layer for layer in metric_layers if layer.get('usage', None) == 'denominator']
+    denominator_layers = [layer for layer in metric_layers if str(layer.get('usage', '')).lower() == 'denominator']
     denominator_area = 0.0
 
     if len(denominator_layers) == 0:
@@ -585,7 +585,7 @@ def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, m
             clipped_geom = None
 
     # Denominator Layers
-    denominator_layers = [layer for layer in metric_layers if layer.get('usage', None) == 'denominator']
+    denominator_layers = [layer for layer in metric_layers if str(layer.get('usage', '')).lower() == 'denominator']
     denominator_value = 0.0
     if len(denominator_layers) == 0:
         # use the sample frame area as the denominator
