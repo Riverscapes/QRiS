@@ -257,7 +257,7 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
                     proportion = clipped_geom.Area() / geom.Area()
                 feature_count *= proportion
                 clipped_geom = None
-            total_feature_count += round(feature_count)
+            total_feature_count += feature_count
 
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
