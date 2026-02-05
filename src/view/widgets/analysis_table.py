@@ -201,11 +201,17 @@ class MetricStatusWidget_Labels(QtWidgets.QWidget):
         # Warning Logic
         icon = None
         tooltip = ""
-        if feasibility:
+
+        # Check Calculation Error
+        if metric_value and metric_value.metadata and metric_value.metadata.get('calculation_error'):
+             icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical)
+             tooltip = f"Calculation Error: {metric_value.metadata.get('calculation_error')}"
+
+        if icon is None and feasibility:
             f_status = feasibility.get('status', 'FEASIBLE')
             f_reasons = feasibility.get('reasons', [])
             if f_status == 'NOT_FEASIBLE' or f_status == 'FEASIBLE_EMPTY':
-                 icon_std = QtWidgets.QStyle.SP_MessageBoxCritical if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxWarning
+                 icon_std = QtWidgets.QStyle.SP_MessageBoxWarning if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxInformation
                  icon = QtWidgets.QApplication.style().standardIcon(icon_std)
                  tooltip = format_feasibility_text(f_status, f_reasons)
         
@@ -314,9 +320,15 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
         # Warning Logic
         icon = None
         warning_tooltip = ""
-        if f_status == 'NOT_FEASIBLE' or f_status == 'FEASIBLE_EMPTY':
+
+        # Check Calculation Error
+        if metric_value and metric_value.metadata and metric_value.metadata.get('calculation_error'):
+             icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical)
+             warning_tooltip = f"Calculation Error: {metric_value.metadata.get('calculation_error')}"
+
+        if icon is None and (f_status == 'NOT_FEASIBLE' or f_status == 'FEASIBLE_EMPTY'):
              f_reasons = feasibility.get('reasons', [])
-             icon_std = QtWidgets.QStyle.SP_MessageBoxCritical if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxWarning
+             icon_std = QtWidgets.QStyle.SP_MessageBoxWarning if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxInformation
              icon = QtWidgets.QApplication.style().standardIcon(icon_std)
              warning_tooltip = format_feasibility_text(f_status, f_reasons)
         
@@ -788,6 +800,13 @@ class AnalysisTable(QtWidgets.QWidget):
         self.metric_calculate_requested.emit(analysis_metric, metric_value)
         
     def _handle_warning(self, row):
+        # First check for calculation error
+        metric_value = self.table.item(row, self.column['value']).data(QtCore.Qt.UserRole)
+        if metric_value and metric_value.metadata and metric_value.metadata.get('calculation_error'):
+            QtWidgets.QMessageBox.critical(self, "Calculation Error", 
+                                           f"An error occurred while calculating this metric:\n\n{metric_value.metadata.get('calculation_error')}")
+            return
+
         item = self.table.item(row, self.column['metric'])
         if not item: return
 

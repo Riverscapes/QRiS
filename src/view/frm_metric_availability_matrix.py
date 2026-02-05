@@ -7,7 +7,7 @@ from ..model.project import Project
 class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
     def __init__(self, parent, project: Project, metric: Metric, analysis_metadata: dict = None, highlight_dce_id: int = None, limit_dces: List = None):
         super().__init__(parent)
-        self.project = project
+        self.qris_project = project
         self.metric = metric
         self.analysis_metadata = analysis_metadata or {}
         self.highlight_dce_id = highlight_dce_id
@@ -85,7 +85,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
 
         # Find the Protocol for this Metric to look up clean layer names
         metric_protocol = None
-        for p in self.project.protocols.values():
+        for p in self.qris_project.protocols.values():
             if p.machine_code == self.metric.protocol_machine_code:
                 metric_protocol = p
                 break
@@ -140,9 +140,9 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
             if hasattr(events[0], 'id'): # Check if objects or IDs
                 pass
             elif isinstance(events[0], int): # Convert IDs to objects
-                events = [e for e in self.project.events.values() if e.id in events]
+                events = [e for e in self.qris_project.events.values() if e.id in events]
         else:
-            events = list(self.project.events.values())
+            events = list(self.qris_project.events.values())
 
         if not events:
             self.table.setRowCount(1)
@@ -220,11 +220,11 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          
                          # Heuristic lookup based on ref string
                          if 'centerline' in str(ref).lower():
-                             found_obj = self.project.profiles.get(found_id)
+                             found_obj = self.qris_project.profiles.get(found_id)
                          elif 'dem' in str(ref).lower():
-                             found_obj = self.project.rasters.get(found_id)
+                             found_obj = self.qris_project.rasters.get(found_id)
                          elif 'valley' in str(ref).lower():
-                             found_obj = self.project.valley_bottoms.get(found_id)
+                             found_obj = self.qris_project.valley_bottoms.get(found_id)
                          
                          if found_obj:
                              input_name = found_obj.name
@@ -235,7 +235,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          
                          if found_obj and hasattr(found_obj, 'feature_count'):
                              try:
-                                 f_count = found_obj.feature_count(self.project.project_file)
+                                 f_count = found_obj.feature_count(self.qris_project.project_file)
                                  if f_count == 0:
                                      status_item.setText("No Features in Layer")
                                      status_item.setBackground(QtGui.QColor("#fff3cd"))
@@ -275,7 +275,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                      
                      if found_layer:
                          try:
-                             f_count = found_layer.feature_count(self.project.project_file)
+                             f_count = found_layer.feature_count(self.qris_project.project_file)
                              if f_count > 0:
                                  status_item.setText("Present")
                                  status_item.setBackground(QtGui.QColor("#d4edda"))

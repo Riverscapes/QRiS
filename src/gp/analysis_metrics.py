@@ -121,7 +121,7 @@ def get_clipped_input_geom(project_file, sample_frame_feature_id, db_item: DBIte
 
 def get_dce_layer_source(project_file: str, machine_code: str) -> tuple[str, int]:
 
-    with sqlite3.connect(project_file) as conn:
+    with sqlite3.connect(project_file, timeout=10.0) as conn:
         c = conn.cursor()
         c.execute(f"SELECT id, geom_type FROM layers WHERE fc_name = '{machine_code}'")
         layer_data = c.fetchone()
@@ -154,54 +154,58 @@ def get_metric_layer_features(
     Yields:
         ogr.Feature: Features of the metric layer.
     """
-    if metric_layer.get('input_ref', None) is not None:
-        if metric_layer['usage'] == 'surface':
-            return None
-        analysis_param = analysis_params.get(metric_layer['input_ref'], None)
-        if analysis_param is None:
-            raise MetricInputMissingError(f'Missing input reference {metric_layer["input_ref"]} in analysis parameters. Has this been specified in the analysis paramenters?')
-        db_item = analysis_params[metric_layer['input_ref']]
-        ds: ogr.DataSource = ogr.Open(project_file)
-        layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
-        layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
-    else:
-        layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
-        if layer_id is None:
-            return None
-        ds: ogr.DataSource = ogr.Open(project_file)
-        layer: ogr.Layer = ds.GetLayerByName(layer_name)
-        layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
-        layer.SetSpatialFilter(sample_frame_geom)
-    
-    attribute_filter = metric_layer.get('attribute_filter', None)
-    for feature in layer:
-        if attribute_filter is not None:
-            metadata_value = feature.GetField('metadata')
-            if metadata_value is None:
-                continue
-            metadata: dict = json.loads(metadata_value)
-            attributes: dict = metadata.get('attributes', None)
-            
-            if attributes is None:
-                attributes = {}
-            
-            field_ref = attribute_filter['field_id_ref']
-            
-            if field_ref not in attributes:
-                raise MetricCalculationError(f"Feature {feature.GetFID()} is missing required attribute '{field_ref}' for filtering.")
-
-            val = attributes[field_ref]
-            if val is None:
-                raise MetricCalculationError(f"Feature {feature.GetFID()} has a NULL value for required attribute '{field_ref}'.")
-
-            if val not in attribute_filter['values']:
-                continue
-
-        yield feature
-        feature = None
-    
-    layer = None
     ds = None
+    layer = None
+    try:
+        if metric_layer.get('input_ref', None) is not None:
+            if metric_layer['usage'] == 'surface':
+                return None
+            analysis_param = analysis_params.get(metric_layer['input_ref'], None)
+            if analysis_param is None:
+                raise MetricInputMissingError(f'Missing input reference {metric_layer["input_ref"]} in analysis parameters. Has this been specified in the analysis paramenters?')
+            db_item = analysis_params[metric_layer['input_ref']]
+            ds: ogr.DataSource = ogr.Open(project_file)
+            layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
+            layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
+        else:
+            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
+            if layer_id is None:
+                return None
+            ds: ogr.DataSource = ogr.Open(project_file)
+            layer: ogr.Layer = ds.GetLayerByName(layer_name)
+            layer.SetAttributeFilter(f"event_id = {event_id} and event_layer_id = {layer_id}")
+            layer.SetSpatialFilter(sample_frame_geom)
+        
+        attribute_filter = metric_layer.get('attribute_filter', None)
+        for feature in layer:
+            if attribute_filter is not None:
+                metadata_value = feature.GetField('metadata')
+                if metadata_value is None:
+                    continue
+                metadata: dict = json.loads(metadata_value)
+                attributes: dict = metadata.get('attributes', None)
+                
+                if attributes is None:
+                    attributes = {}
+                
+                field_ref = attribute_filter['field_id_ref']
+                
+                if field_ref not in attributes:
+                    raise MetricCalculationError(f"Feature {feature.GetFID()} is missing required attribute '{field_ref}' for filtering.")
+
+                val = attributes[field_ref]
+                if val is None or val == 'NULL' or val == '':
+                    raise MetricCalculationError(f"Feature {feature.GetFID()} has a NULL value for required attribute '{field_ref}'.")
+
+                if val not in attribute_filter['values']:
+                    continue
+
+            yield feature
+            feature = None
+            
+    finally:
+        layer = None
+        ds = None
 
 
 def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict) -> int:

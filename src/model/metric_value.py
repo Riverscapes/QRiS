@@ -50,7 +50,7 @@ class MetricValue():
 
     def save(self, db_path: str, analysis: Analysis, event: Event, sample_frame_feature_id: int, unit_id: int = None):
 
-        with sqlite3.connect(db_path) as conn:
+        with sqlite3.connect(db_path, timeout=10.0) as conn:
             curs = conn.cursor()
             try:
                 curs.execute("""INSERT INTO metric_values (
