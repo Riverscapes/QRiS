@@ -2,6 +2,12 @@
   "folders": [
     {
       "path": ".."
+    },
+    {
+      "path": "../../riverscapes_viewer_dev/resources/QRiS/protocols"
+    },
+    {
+      "path": "D:/NAR_Data/QRIS/Test_120"
     }
   ],
   "settings": {

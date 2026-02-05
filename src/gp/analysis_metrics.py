@@ -219,6 +219,8 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
     total_feature_count = 0
     metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
     for metric_layer in metric_layers:
+        if metric_layer.get('usage', None) == 'normalization':
+            continue
         for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
             if feature is None:
                 continue
