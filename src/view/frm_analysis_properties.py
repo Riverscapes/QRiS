@@ -1,6 +1,4 @@
-import os
-
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 from qgis.core import QgsVectorLayer
 
 from ..model.analysis import Analysis, insert_analysis
@@ -10,15 +8,11 @@ from ..model.profile import Profile
 from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
 from ..model.metric import Metric
-from ..model.analysis_metric import AnalysisMetric
 from ..model.event import DCE_EVENT_TYPE_ID
 
-from .frm_layer_metric_details import FrmLayerMetricDetails
-from .frm_layer_metric_details import FrmLayerMetricDetails
-from .widgets.metric_selector_stacked import MetricSelector
+from .widgets.metric_library import MetricLibrary
 from .widgets.event_library import EventLibraryWidget
 from .utilities import validate_name, add_standard_form_buttons
-from ..QRiS.settings import CONSTANTS
 
 class FrmAnalysisProperties(QtWidgets.QDialog):
 
@@ -28,7 +22,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         
         self.qris_project = qris_project
         self.analysis = analysis
-        self.metric_selector = MetricSelector(self, self.qris_project, self.analysis)
+        self.metric_selector = MetricLibrary(self, self.qris_project, self.analysis)
         self.event_library = EventLibraryWidget(self, self.qris_project, [DCE_EVENT_TYPE_ID], allow_reorder=True)
         self.event_library.event_checked.connect(self.on_event_checked)
         
