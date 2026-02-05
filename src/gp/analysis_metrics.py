@@ -244,14 +244,14 @@ def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric
             geom: ogr.Geometry = feature.GetGeometryRef()
             if geom is None:
                 continue
-            if geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbPolygon, ogr.wkbMultiPolygon, ogr.wkbMultiLineString]:
+            if ogr.GT_Flatten(geom.GetGeometryType()) in [ogr.wkbLineString, ogr.wkbPolygon, ogr.wkbMultiPolygon, ogr.wkbMultiLineString]:
                 clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
                 epsg = get_utm_zone_epsg(geom.Centroid().GetX())
                 utm_srs = osr.SpatialReference()
                 utm_srs.ImportFromEPSG(epsg)
                 clipped_geom.TransformTo(utm_srs)
                 geom.TransformTo(utm_srs)
-                if geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+                if ogr.GT_Flatten(geom.GetGeometryType()) in [ogr.wkbLineString, ogr.wkbMultiLineString]:
                     proportion = clipped_geom.Length() / geom.Length()
                 else:
                     proportion = clipped_geom.Area() / geom.Area()
@@ -442,7 +442,7 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
                 clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
                 if clipped_geom is None or clipped_geom.IsEmpty():
                     continue
-                if clipped_geom.GetGeometryType() in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+                if ogr.GT_Flatten(clipped_geom.GetGeometryType()) in [ogr.wkbLineString, ogr.wkbMultiLineString]:
                     epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
                     utm_srs = osr.SpatialReference()
                     utm_srs.ImportFromEPSG(epsg)
@@ -455,10 +455,10 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
     union_geom = line_geoms[0].Clone()
     for g in line_geoms[1:]:
         union_geom = union_geom.Union(g)
-    if union_geom.GetGeometryType() == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
+    if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
         union_geom = union_geom.GetGeometryRef(0).Clone()
 
-    if union_geom.GetGeometryType() not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+    if ogr.GT_Flatten(union_geom.GetGeometryType()) not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
         raise MetricCalculationError('Unioned geometry is not a line.')
     if union_geom.GetPointCount() < 2:
         raise MetricCalculationError('Unioned geometry does not have enough points.')
@@ -576,7 +576,11 @@ def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, m
                     geom = None
                     clipped_geom = None
                     continue
-                numerator_value += clipped_geom.GetArea() if clipped_geom.GetGeometryType() in [ogr.wkbPolygon, ogr.wkbMultiPolygon] else clipped_geom.Length()
+                epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
+                utm_srs = osr.SpatialReference()
+                utm_srs.ImportFromEPSG(epsg)
+                clipped_geom.TransformTo(utm_srs)
+                numerator_value += clipped_geom.GetArea() if ogr.GT_Flatten(clipped_geom.GetGeometryType()) in [ogr.wkbPolygon, ogr.wkbMultiPolygon] else clipped_geom.Length()
             geom = None
             clipped_geom = None
 
@@ -585,7 +589,12 @@ def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, m
     denominator_value = 0.0
     if len(denominator_layers) == 0:
         # use the sample frame area as the denominator
-        denominator_value = sample_frame_geom.GetArea()
+        epsg = get_utm_zone_epsg(sample_frame_geom.Centroid().GetX())
+        utm_srs = osr.SpatialReference()
+        utm_srs.ImportFromEPSG(epsg)
+        proj_sample_frame_geom = sample_frame_geom.Clone()
+        proj_sample_frame_geom.TransformTo(utm_srs)
+        denominator_value = proj_sample_frame_geom.GetArea()
     else:
         for metric_layer in denominator_layers:
             for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
@@ -594,7 +603,15 @@ def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, m
                 geom: ogr.Geometry = feature.GetGeometryRef().Clone()
                 if geom.Intersects(sample_frame_geom):
                     clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
-                    denominator_value += clipped_geom.GetArea() if clipped_geom.GetGeometryType() in [ogr.wkbPolygon, ogr.wkbMultiPolygon] else clipped_geom.Length()
+                    if clipped_geom is None or clipped_geom.IsEmpty():
+                        geom = None
+                        clipped_geom = None
+                        continue
+                    epsg = get_utm_zone_epsg(clipped_geom.Centroid().GetX())
+                    utm_srs = osr.SpatialReference()
+                    utm_srs.ImportFromEPSG(epsg)
+                    clipped_geom.TransformTo(utm_srs)
+                    denominator_value += clipped_geom.GetArea() if ogr.GT_Flatten(clipped_geom.GetGeometryType()) in [ogr.wkbPolygon, ogr.wkbMultiPolygon] else clipped_geom.Length()
                 geom = None
                 clipped_geom = None
     
