@@ -157,15 +157,37 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                             metric_value.automated_value = result
                             if frm.chkForceActive.isChecked():
                                 metric_value.is_manual = False
+                            
+                            # Clear any previous errors
+                            if metric_value.metadata is None:
+                                metric_value.metadata = {}
+                            metric_value.metadata.pop('calculation_error', None)
+                            
                             metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
                             QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {sample_frame_feature.id}', 'QRiS_Metrics', Qgis.Info)
                         except MetricInputMissingError as ex:
                             missing_data = True
                             QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
+                            
+                            # Persist Error
+                            if metric_value.metadata is None:
+                                metric_value.metadata = {}
+                            metric_value.metadata['calculation_error'] = str(ex)
+                            metric_value.automated_value = None
+                            metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
+                            
                             continue
                         except Exception as ex:
                             errors = True
                             QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
+
+                            # Persist Error
+                            if metric_value.metadata is None:
+                                metric_value.metadata = {}
+                            metric_value.metadata['calculation_error'] = str(ex)
+                            metric_value.automated_value = None
+                            metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
+
                             continue
             if errors is False and missing_data is False:
                 self.iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
@@ -241,6 +263,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             metric_value.automated_value = result
             metric_value.is_manual = False 
             
+            # Clear any previous errors
+            if metric_value.metadata is None:
+                metric_value.metadata = {}
+            metric_value.metadata.pop('calculation_error', None)
+            
             metric_value.save(self.qris_project.project_file, self.analysis, event, mask_feature.id)
             
             QtWidgets.QApplication.restoreOverrideCursor()
@@ -248,9 +275,18 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             self.load_table_values()
             
         except Exception as ex:
+            # Persist Error
+            if metric_value.metadata is None:
+                metric_value.metadata = {}
+            metric_value.metadata['calculation_error'] = str(ex)
+            metric_value.automated_value = None
+            metric_value.save(self.qris_project.project_file, self.analysis, event, mask_feature.id)
+            
             QtWidgets.QApplication.restoreOverrideCursor()
-            QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
+            # QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
             QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)
+            
+            self.load_table_values()
 
     def resizeEvent(self, event):
         try:
