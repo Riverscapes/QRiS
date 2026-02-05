@@ -177,6 +177,9 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
         # Populate
         for row_idx, event in enumerate(events):
             is_highlighted = self.highlight_dce_id and event.id == self.highlight_dce_id
+            
+            # Pre-calculate overall DCE availability to determine if missing layers are optional
+            dce_ok = self.metric.can_calculate_for_dce(event, self.qris_project.protocols)
 
             # 1. DCE Name
             item_name = QtWidgets.QTableWidgetItem(event.name)
@@ -289,8 +292,13 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                              status_item.setBackground(QtGui.QColor("#d4edda"))
                              status_item.setToolTip(f"Found: {found_layer.layer.name}\nError checking features: {str(e)}")
                      else:
-                         status_item.setText("Layer Not Added to DCE")
-                         status_item.setBackground(QtGui.QColor("#f8d7da"))
+                         if dce_ok:
+                             status_item.setText("Optional Layer Not Added")
+                             status_item.setBackground(QtGui.QColor("#fff3cd"))
+                             status_item.setToolTip(f"Layer Not Added: {ref}\nMetric is still calculable because other required layers in this group are present.")
+                         else:
+                             status_item.setText("Layer Not Added to DCE")
+                             status_item.setBackground(QtGui.QColor("#f8d7da"))
                 
                 self.table.setItem(row_idx, col_idx + 1, status_item)
             
@@ -323,7 +331,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          missing_inputs.append(str(input_ref))
             
             # DCE Layers logic (handled by metric object)
-            dce_ok = self.metric.can_calculate_for_dce(event, self.qris_project.protocols)
+            # Already calculated dce_ok above
             
             is_fully_available = inputs_ok and dce_ok
 

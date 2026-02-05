@@ -118,12 +118,12 @@ class Metric(DBItem):
 
         for metric_layer in metric_layers:
             usage = metric_layer.get('usage', None)
-            if usage is not None:
-                if usage not in usage_groups:
-                    usage_groups[usage] = []
-                usage_groups[usage].append(metric_layer)
-            else:
-                required_individual_layers.append(metric_layer)
+            # Create a group key: lowercase usage string OR special key for None
+            usage_key = str(usage).lower() if usage is not None else '__default_no_usage__'
+            
+            if usage_key not in usage_groups:
+                usage_groups[usage_key] = []
+            usage_groups[usage_key].append(metric_layer)
         
         # Pre-calc existing IDs
         dce_layer_ref_ids = {el.layer.layer_id for el in dce.event_layers} # ref strings
