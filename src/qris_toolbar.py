@@ -23,9 +23,8 @@
 """
 import os.path
 
-from PyQt5.QtCore import pyqtSlot
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.PyQt.QtCore import QSettings
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import QSettings, pyqtSlot
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsMessageLog
 from qgis.gui import QgsMapToolEmitPoint, QgisInterface
 

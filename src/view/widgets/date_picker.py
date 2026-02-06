@@ -3,7 +3,7 @@ from datetime import datetime
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from ..model.datespec import DateSpec
+from ...model.datespec import DateSpec
 
 NONE_TEXT = 'None'
 
@@ -76,14 +76,18 @@ class FrmDatePicker(QtWidgets.QWidget):
 
         return is_valid_date, error_message
 
+    def set_to_today(self):
+        today = datetime.now()
+        self.set_date_spec(DateSpec(today.year, today.month, today.day))
+
     def setupUi(self):
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.horiz = QtWidgets.QHBoxLayout(self)
+        self.horiz.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.horiz)
 
         self.lblYear = QtWidgets.QLabel()
-        self.lblYear.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblYear.setText('Year')
         self.horiz.addWidget(self.lblYear)
 
@@ -91,7 +95,6 @@ class FrmDatePicker(QtWidgets.QWidget):
         self.horiz.addWidget(self.cboYear)
 
         self.lblMonth = QtWidgets.QLabel()
-        self.lblMonth.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblMonth.setText('Month')
         self.horiz.addWidget(self.lblMonth)
 
@@ -99,9 +102,15 @@ class FrmDatePicker(QtWidgets.QWidget):
         self.horiz.addWidget(self.cboMonth)
 
         self.lblDay = QtWidgets.QLabel()
-        self.lblDay.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.lblDay.setText('Day')
         self.horiz.addWidget(self.lblDay)
 
         self.cboDay = QtWidgets.QComboBox()
         self.horiz.addWidget(self.cboDay)
+        
+        self.btnToday = QtWidgets.QPushButton("Today")
+        self.btnToday.setToolTip("Set to today's date")
+        self.btnToday.clicked.connect(self.set_to_today)
+        self.horiz.addWidget(self.btnToday)
+        
+        self.horiz.addStretch()

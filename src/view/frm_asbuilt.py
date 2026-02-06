@@ -1,17 +1,16 @@
-
 import json
 import sqlite3
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.project import Project
 from ..model.layer import Layer
-from ..model.event import Event, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID
+from ..model.event import Event, DESIGN_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID
 from ..model.datespec import DateSpec
 
 from .frm_event import FrmEvent
-from .frm_date_picker import FrmDatePicker
+from .widgets.date_picker import FrmDatePicker
 
 class FrmAsBuilt(FrmEvent):
 
@@ -82,8 +81,29 @@ class FrmAsBuilt(FrmEvent):
         surface_tab_index = self.tab.indexOf(self.surfaces_widget)
         self.tab.setTabText(surface_tab_index, 'Bases for As-Built')
 
+        # Add sub-tabs to "Bases for As-Built"
+        self.tabsBases = QtWidgets.QTabWidget()
+        self.vert_surfaces.setContentsMargins(9, 9, 9, 9)
+        self.vert_surfaces.addWidget(self.tabsBases)
+
+        # Tab 1: Surfaces (Using existing surface library)
+        self.tabSurfaces = QtWidgets.QWidget()
+        self.vertSurfacesTab = QtWidgets.QVBoxLayout(self.tabSurfaces)
+        self.vertSurfacesTab.setContentsMargins(9, 9, 9, 9)
+        # Move surface_library from surface_widget (parent) to this new tab
+        self.vert_surfaces.removeWidget(self.surface_library)
+        self.vertSurfacesTab.addWidget(self.surface_library)
+        self.tabsBases.addTab(self.tabSurfaces, 'Surfaces')
+
+        # Tab 2: Data Capture Events
+        self.tabDCEs = QtWidgets.QWidget()
+        self.vertDCEs = QtWidgets.QVBoxLayout(self.tabDCEs)
+        self.vertDCEs.setContentsMargins(9, 9, 9, 9)
+        self.tabsBases.addTab(self.tabDCEs, 'Data Capture Events')
+
         self.horiz_corresponding_dce = QtWidgets.QHBoxLayout()
-        self.vert_surfaces.addLayout(self.horiz_corresponding_dce)
+        self.vertDCEs.addLayout(self.horiz_corresponding_dce)
+        self.vertDCEs.addStretch(1)
 
         self.lblAssociatedDCE = QtWidgets.QLabel('Corresponding Data Capture Event', self)
         self.horiz_corresponding_dce.addWidget(self.lblAssociatedDCE)
@@ -152,13 +172,13 @@ class FrmAsBuilt(FrmEvent):
                     self.cboAssociatedDCE.setCurrentIndex(associatedDCE_index)
         
         else:
-            # iterate through the tree model and children to find the first 'structure_points' layer
-            for index in range(self.layer_widget.tree_model.rowCount()):
-                protocol_item = self.layer_widget.tree_model.item(index)
-                for layer_index in range(protocol_item.rowCount()):
-                    layer_item = protocol_item.child(layer_index)
-                    if 'structure_points' in layer_item.data(QtCore.Qt.UserRole).id:
-                        self.layer_widget.add_selected_layers(layer_item)
+            # iterate through available layers to find the first 'structure_points' layer
+            for p, l in self.layer_widget.available_layers:
+                 if 'structure_points' in l.id:
+                      key = self.layer_widget.get_layer_unique_key(p, l)
+                      self.layer_widget.current_layers_state[key] = True
+            
+            self.layer_widget.full_refresh_ui()
                 
 
     def pick_dce_by_date(self):
@@ -202,13 +222,11 @@ class FrmAsBuilt(FrmEvent):
 
         # there must be at least one 'structure_points' or 'structure_lines' layer selected
         selected_layers = []
-        for index in range(self.layer_widget.layers_model.rowCount()):
-            item = self.layer_widget.layers_model.item(index)
-            item_data = item.data(QtCore.Qt.UserRole)
-            if isinstance(item_data, Layer):
-                selected_layers.append(item_data.layer_id)
-            elif isinstance(item_data, tuple):
-                selected_layers.append(item_data[1].id)
+        for p, l in self.layer_widget.available_layers:
+             key = self.layer_widget.get_layer_unique_key(p, l)
+             if self.layer_widget.current_layers_state.get(key, False):
+                  selected_layers.append(l.id)
+
         if any('structure_points' in layer or 'structure_lines' in layer for layer in selected_layers) is False:
             QtWidgets.QMessageBox.critical(self, 'As-Built Layers', 'At least one structure layer (points or lines) must be selected for As-Builts.')
             return

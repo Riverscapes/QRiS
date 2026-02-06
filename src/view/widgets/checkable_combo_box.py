@@ -89,6 +89,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
 
     def add_command_item(self, text, data):
         item = QtGui.QStandardItem(text)
+        item.setToolTip(text)
         item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         item.setData(data)
         font = item.font()

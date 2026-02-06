@@ -49,7 +49,7 @@ from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..model.attachment import Attachment, ATTACHMENT_MACHINE_CODE, attachments_path
 
-from .frm_design2 import FrmDesign
+from .frm_design import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_planning_container import FrmPlanningContainer
 from .frm_asbuilt import FrmAsBuilt

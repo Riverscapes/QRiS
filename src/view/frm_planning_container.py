@@ -1,10 +1,10 @@
-
 import json
 
-from PyQt5 import QtWidgets
+from qgis.PyQt import QtWidgets
 
 from ..model.planning_container import PlanningContainer, insert
 from ..model.project import Project
+from ..model.event import DCE_EVENT_TYPE_ID
 
 from .widgets.metadata import MetadataWidget
 from .widgets.planning_event_library import PlanningEventLibraryWidget
@@ -33,10 +33,11 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         self.metadata_widget = MetadataWidget(self, json.dumps(init_metadata))
         self.layer_widget = None
         self.event_library = None
-        self.event_library = PlanningEventLibraryWidget(self, qris_project, [1, 4, 5])
+        self.event_library = PlanningEventLibraryWidget(self, qris_project, [DCE_EVENT_TYPE_ID])
 
         self.setupUi()
         self.setWindowTitle(f'Create New Planning Container' if self.planning_container is None else f'Edit Planning Container')
+        self.resize(900, 600)
 
         if self.planning_container is not None:
             self.txtName.setText(self.planning_container.name)
@@ -107,11 +108,19 @@ class FrmPlanningContainer(QtWidgets.QDialog):
 
         # Event Library
         if self.event_library is not None:
-            self.tab.addTab(self.event_library, 'Associated Events')
+            self.tabEvents = QtWidgets.QWidget()
+            self.vertEvents = QtWidgets.QVBoxLayout(self.tabEvents)
+            self.vertEvents.setContentsMargins(9, 9, 9, 9)
+            self.vertEvents.addWidget(self.event_library)
+            self.tab.addTab(self.tabEvents, 'Associated Events')
 
         # Description
+        self.tabDescription = QtWidgets.QWidget()
+        self.vertDescription = QtWidgets.QVBoxLayout(self.tabDescription)
+        self.vertDescription.setContentsMargins(9, 9, 9, 9)
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.tab.addTab(self.txtDescription, 'Description')
+        self.vertDescription.addWidget(self.txtDescription)
+        self.tab.addTab(self.tabDescription, 'Description')
 
         # Metadata
         self.tab.addTab(self.metadata_widget, 'Metadata')

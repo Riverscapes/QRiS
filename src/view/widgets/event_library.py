@@ -122,6 +122,10 @@ class EventLibraryWidget(QtWidgets.QWidget):
             self.cbo_filter_type.addItem(t)
         self.cbo_filter_type.blockSignals(False)
 
+        # Hide the filter dropdown if we are restricted to a single event type
+        is_single_type_mode = self.limit_event_types is not None and len(self.limit_event_types) == 1
+        self.cbo_filter_type.setVisible(not is_single_type_mode)
+
     def refresh_table_view(self):
         search_text = self.txt_filter_search.text().lower().strip()
         checked_types = self.cbo_filter_type.get_checked_items()
@@ -187,13 +191,29 @@ class EventLibraryWidget(QtWidgets.QWidget):
         self.lbl_view_count.setText(f"Viewing {visible_count} of {total_count} Events")
         
         sel_events = self.get_selected_events_objects()
-        
-        dce_count = sum(1 for e in sel_events if e.event_type.id == DCE_EVENT_TYPE_ID)
-        design_count = sum(1 for e in sel_events if e.event_type.id == DESIGN_EVENT_TYPE_ID)
-        asbuilt_count = sum(1 for e in sel_events if e.event_type.id == AS_BUILT_EVENT_TYPE_ID)
         total = len(sel_events)
         
-        self.lbl_selection_summary.setText(f"{dce_count} DCE's, {design_count} Designs and {asbuilt_count} Asbuilts selected ({total} Total)")
+        parts = []
+        if self.limit_event_types is None or DCE_EVENT_TYPE_ID in self.limit_event_types:
+            dce_count = sum(1 for e in sel_events if e.event_type.id == DCE_EVENT_TYPE_ID)
+            parts.append(f"{dce_count} DCE's")
+            
+        if self.limit_event_types is None or DESIGN_EVENT_TYPE_ID in self.limit_event_types:
+            design_count = sum(1 for e in sel_events if e.event_type.id == DESIGN_EVENT_TYPE_ID)
+            parts.append(f"{design_count} Designs")
+            
+        if self.limit_event_types is None or AS_BUILT_EVENT_TYPE_ID in self.limit_event_types:
+            asbuilt_count = sum(1 for e in sel_events if e.event_type.id == AS_BUILT_EVENT_TYPE_ID)
+            parts.append(f"{asbuilt_count} Asbuilts")
+
+        if len(parts) == 0:
+            summary_text = "0 Events"
+        elif len(parts) == 1:
+            summary_text = parts[0]
+        else:
+            summary_text = ", ".join(parts[:-1]) + " and " + parts[-1]
+        
+        self.lbl_selection_summary.setText(f"{summary_text} selected ({total} Total)")
 
     def set_selected_event_ids(self, selected_events: list):
         self.checked_event_ids = set(selected_events)
@@ -353,6 +373,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(['', 'Name', 'Date', 'Type', 'Description'])
         self.table.verticalHeader().setVisible(False)
+        self.table.itemChanged.connect(self.on_item_changed)
         # Single Selection for HIGHLIGHTING
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
