@@ -62,8 +62,16 @@ class LayerLibraryWidget(QtWidgets.QWidget):
              self.full_refresh_ui()
 
     def load_definitions(self):
-        # Load protocols
-        protocols = load_protocol_definitions(os.path.dirname(self.qris_project.project_file), self.show_experimental)
+        # Load protocols - Always load experimental to check for usage, filter later if needed
+        protocols = load_protocol_definitions(os.path.dirname(self.qris_project.project_file), show_experimental=True)
+        
+        # Identify protocols used by the current event
+        used_protocol_machine_codes = set()
+        if self.dce_event:
+            for el in self.dce_event.event_layers:
+                p = el.layer.get_layer_protocol(self.qris_project.protocols)
+                if p:
+                    used_protocol_machine_codes.add(p.machine_code)
 
         self.available_layers = [] # List of (ProtocolDefinition, LayerDefinition)
 
@@ -82,18 +90,30 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             elif self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
                 if not p.protocol_type or p.protocol_type.strip().lower() != 'asbuilt':
                     continue
+            
+            # Skip experimental if disabled AND not used in this event
+            if p.status == 'experimental' and not self.show_experimental and p.machine_code not in used_protocol_machine_codes:
+                continue
 
             for l in p.layers:
                 self.available_layers.append((p, l))
 
     def init_state(self):
-        # Initialize all to false
+        # Initialize all to false and build uniqueness map
+        self.layer_id_map = {}
         for p, l in self.available_layers:
             key = self.get_layer_unique_key(p, l)
             self.current_layers_state[key] = False
+            
+            l_id_lower = l.id.lower()
+            if l_id_lower not in self.layer_id_map:
+                self.layer_id_map[l_id_lower] = []
+            self.layer_id_map[l_id_lower].append(key)
 
         # If editing an event, set included layers to True
         if self.dce_event:
+            has_experimental = False
+            
             for event_layer in self.dce_event.event_layers:
                 layer = event_layer.layer
                 # Find the matching definition
@@ -105,16 +125,45 @@ class LayerLibraryWidget(QtWidgets.QWidget):
                 # Using Layer.get_layer_protocol() might work if the protocol is in the project
                 proj_protocol = layer.get_layer_protocol(self.qris_project.protocols)
                 
+                target_proto_code = proj_protocol.machine_code if proj_protocol else None
+                if proj_protocol and proj_protocol.system_metadata and proj_protocol.system_metadata.get('status') == 'experimental':
+                    has_experimental = True
+                
+                target_layer_id = layer.layer_id
+
+                found_match = False
+
                 if proj_protocol:
                     # Construct key
                     # layer.layer_id matches def.id, layer.layer_version matches def.version
                     key = f"{proj_protocol.machine_code}::{str(proj_protocol.version)}::{layer.layer_id}::{str(layer.layer_version)}"
                     if key in self.current_layers_state:
                          self.current_layers_state[key] = True
-                    else:
-                        # Maybe legacy or version mismatch? 
-                        # Try loose matching or just log warning?
-                        pass
+                         found_match = True
+
+                # 2. Fuzzy Match (Machine Code + Layer ID)
+                if not found_match and target_proto_code:
+                     for avail_key in self.current_layers_state.keys():
+                        parts = avail_key.split('::')
+                        if len(parts) == 4:
+                            p_mc, p_ver, l_id, l_ver = parts
+                            if p_mc.lower() == target_proto_code.lower() and l_id.lower() == target_layer_id.lower():
+                                self.current_layers_state[avail_key] = True
+                                found_match = True
+
+                # 3. Unique Layer ID Fallback
+                # If the layer ID exists in exactly ONE loaded protocol definition, we assume it's a match.
+                # This handles cases like protocol renaming/typo fixes (GEOMPORPHIC vs GEOMORPHIC) 
+                # where the layer ID itself is stable and unique in the current context.
+                if not found_match:
+                    candidates = self.layer_id_map.get(target_layer_id.lower(), [])
+                    if len(candidates) == 1:
+                        self.current_layers_state[candidates[0]] = True
+                        found_match = True
+
+            # If we found any experimental protocols in use, force the flag to true for this session
+            if has_experimental:
+                self.show_experimental = True
 
     def setupUi(self):
         self.vert_layout = QtWidgets.QVBoxLayout(self)
@@ -237,6 +286,10 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.build_table()
         
         self.stackedWidget.setCurrentIndex(0)
+        
+        # Default to showing only included layers if editing an event
+        if self.dce_event:
+            self.act_limit_included.setChecked(True)
 
     def get_toggle_text(self):
         return "Switch to Table View" if self.is_tree_view else "Switch to Tree View"
