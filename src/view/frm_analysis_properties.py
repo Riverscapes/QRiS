@@ -7,8 +7,9 @@ from ..model.project import Project
 from ..model.profile import Profile
 from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
+
 from ..model.metric import Metric
-from ..model.event import DCE_EVENT_TYPE_ID
+from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 
 from .widgets.metric_library import MetricLibrary
 from .widgets.event_library import EventLibraryWidget
@@ -23,7 +24,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.qris_project = qris_project
         self.analysis = analysis
         self.metric_selector = MetricLibrary(self, self.qris_project, self.analysis)
-        self.event_library = EventLibraryWidget(self, self.qris_project, [DCE_EVENT_TYPE_ID], allow_reorder=True)
+        self.event_library = EventLibraryWidget(self, self.qris_project, [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID], allow_reorder=True)
         self.event_library.event_checked.connect(self.on_event_checked)
         
         self.setupUi()

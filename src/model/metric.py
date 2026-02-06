@@ -102,12 +102,12 @@ class Metric(DBItem):
                  supported_count += 1
         
         if supported_count == 0:
-            return "No DCEs"
+            return "No Events"
         elif supported_count == total_count:
-            ouptput_text = "DCE" if supported_count == 1 else "DCEs"
+            ouptput_text = "Event" if supported_count == 1 else "Events"
             return f"All {supported_count} {ouptput_text}"
         else:
-            ouptput_text = "DCE" if supported_count == 1 else "DCEs"
+            ouptput_text = "Event" if supported_count == 1 else "Events"
             return f"{supported_count} {ouptput_text}"
 
     def can_calculate_for_dce(self, dce, protocols: dict = None) -> bool:

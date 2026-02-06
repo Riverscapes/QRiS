@@ -68,6 +68,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
 
     def addItem(self, text, data=None):
         item = QtGui.QStandardItem(text)
+        item.setToolTip(text)
         item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
         item.setData(QtCore.Qt.Checked, QtCore.Qt.CheckStateRole) # Default checked
         if data is not None:
@@ -105,6 +106,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
                 total_checkable += 1
                 
         text = ", ".join(items)
+        self.setToolTip(text)
         
         if total_checkable == 0:
             text = self.empty_text
