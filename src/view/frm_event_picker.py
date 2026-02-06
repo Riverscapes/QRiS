@@ -6,10 +6,11 @@ from .utilities import add_standard_form_buttons
 
 class FrmEventPicker(QtWidgets.QDialog):
 
-    def __init__(self, parent, qris_project, event_type_id, layer_name=None, events=None):
+    def __init__(self, parent, qris_project, event_type_id, layer_name=None, events=None, show_copy_options=False):
         super().__init__(parent=parent)
         self.qris_project = qris_project
         self.event_type_id = event_type_id
+        self.show_copy_options = show_copy_options
         self.event_name = "Data Capture Event" if event_type_id == 1 else "Design"
         self.layer_name = layer_name
         self.layers = []
@@ -53,6 +54,28 @@ class FrmEventPicker(QtWidgets.QDialog):
         self.cboDCE = QtWidgets.QComboBox()
         self.cboDCE.currentIndexChanged.connect(self.cboDCE_currentIndexChanged)
         self.horizontalLayout.addWidget(self.cboDCE)
+
+        if self.show_copy_options:
+             self.grpOptions = QtWidgets.QGroupBox("Import Options")
+             self.vboxOptions = QtWidgets.QVBoxLayout(self.grpOptions)
+             
+             self.chkLayers = QtWidgets.QCheckBox("Layers")
+             self.chkLayers.setChecked(True)
+             self.vboxOptions.addWidget(self.chkLayers)
+             
+             self.chkBasicProps = QtWidgets.QCheckBox("Basic Properties (Date, Platform, etc.)")
+             self.chkBasicProps.setChecked(False)
+             self.vboxOptions.addWidget(self.chkBasicProps)
+
+             self.chkDescription = QtWidgets.QCheckBox("Description")
+             self.chkDescription.setChecked(False)
+             self.vboxOptions.addWidget(self.chkDescription)
+
+             self.chkMetadata = QtWidgets.QCheckBox("Metadata")
+             self.chkMetadata.setChecked(False)
+             self.vboxOptions.addWidget(self.chkMetadata)
+
+             self.verticalLayout.addWidget(self.grpOptions)
 
         # push the horizontal layout to the top
         self.verticalLayout.addStretch(1)

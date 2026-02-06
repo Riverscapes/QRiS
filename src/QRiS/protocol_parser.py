@@ -151,9 +151,9 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
 
     machine_code = root.attrib.get('machine_code')
     protocol_type = root.attrib.get('protocol_type', None)
-    if machine_code == 'ASBUILT':
+    if machine_code and machine_code.upper().strip() == 'ASBUILT':
         protocol_type = 'asbuilt'
-    elif machine_code == 'DESIGN':
+    elif machine_code and machine_code.upper().strip() == 'DESIGN':
         protocol_type = 'design'
     elif protocol_type is None:
         protocol_type = 'dce'

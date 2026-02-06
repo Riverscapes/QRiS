@@ -39,7 +39,7 @@
             <xs:attribute name="machine_code" type="MachineCodeType" use="required"/>
             <xs:attribute name="version" type="xs:string" use="required"/>
             <xs:attribute name="status" type="ProtocolStatusType" use="required"/>
-            <xs:attribute name="protocol_type" type="ProtocolTypeType" use="optional"/>
+            <xs:attribute name="protocol_type" type="ProtocolTypeType" use="required"/>
         </xs:complexType>
     </xs:element>
 
@@ -128,9 +128,9 @@
 
     <xs:simpleType name="ProtocolTypeType">
         <xs:restriction base="xs:string">
-            <xs:enumeration value="asbuilt"/>
-            <xs:enumeration value="design"/>
             <xs:enumeration value="dce"/>
+            <xs:enumeration value="design"/>
+            <xs:enumeration value="asbuilt"/>
         </xs:restriction>
     </xs:simpleType>
 

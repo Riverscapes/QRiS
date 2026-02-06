@@ -1,24 +1,24 @@
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 
 from ..model.event import Event, PLANNING_EVENT_TYPE_ID, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
-from ..model.layer import Layer, insert_layer, check_and_remove_unused_layers
+from ..model.layer import insert_layer, check_and_remove_unused_layers
 from ..model.protocol import Protocol, insert_protocol
 
 from ..QRiS.protocol_parser import ProtocolDefinition, LayerDefinition
-from .frm_date_picker import FrmDatePicker
+from .widgets.date_picker import FrmDatePicker
 from .widgets.metadata import MetadataWidget
 from .widgets.surface_library import SurfaceLibraryWidget
 from .widgets.event_library import EventLibraryWidget
-from .widgets.layer_tree import LayerTreeWidget
+from .widgets.layer_library import LayerLibraryWidget
+from .frm_event_picker import FrmEventPicker
 
-from datetime import date, datetime
+from datetime import datetime
 from .utilities import validate_name, add_standard_form_buttons
-
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
@@ -49,13 +49,14 @@ class FrmEvent(QtWidgets.QDialog):
         self.layer_widget = None
         self.event_library = None
         if event_type_id != PLANNING_EVENT_TYPE_ID:
-            self.layer_widget = LayerTreeWidget(self, qris_project, event_type_id)
+            self.layer_widget = LayerLibraryWidget(self, qris_project, event_type_id, dce_event)
         else:
             self.event_library = EventLibraryWidget(self, qris_project, [1, 4, 5])
 
         self.setupUi()
         dce_type = 'Data Capture' if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'Planning'
         self.setWindowTitle(f'Create New {dce_type} Event' if dce_event is None else f'Edit {dce_type} Event')
+        self.resize(900, 600)
 
         self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
         self.cboPlatform.setModel(self.platform_model)
@@ -89,19 +90,19 @@ class FrmEvent(QtWidgets.QDialog):
                 if 'date_label' in self.metadata_widget.metadata['system']:
                     self.txtDateLabel.setText(self.metadata_widget.metadata['system']['date_label'])
 
-            if self.layer_widget is not None:
-                # Collect all layer names and geometry types
-                layer_names = [el.layer.name for el in dce_event.event_layers]
-                duplicates = {name for name in layer_names if layer_names.count(name) > 1}
+            # if self.layer_widget is not None:
+            #     # Collect all layer names and geometry types
+            #     layer_names = [el.layer.name for el in dce_event.event_layers]
+            #     duplicates = {name for name in layer_names if layer_names.count(name) > 1}
 
-                for event_layer in dce_event.event_layers:
-                    display_name = event_layer.layer.name
-                    if display_name in duplicates:
-                        display_name = f"{display_name} ({event_layer.layer.geom_type})"
-                    item = QtGui.QStandardItem(display_name)
-                    item.setData(event_layer.layer, QtCore.Qt.UserRole)
-                    item.setEditable(False)
-                    self.layer_widget.layers_model.appendRow(item)
+            #     for event_layer in dce_event.event_layers:
+            #         display_name = event_layer.layer.name
+            #         if display_name in duplicates:
+            #             display_name = f"{display_name} ({event_layer.layer.geom_type})"
+            #         item = QtGui.QStandardItem(display_name)
+            #         item.setData(event_layer.layer, QtCore.Qt.UserRole)
+            #         item.setEditable(False)
+            #         self.layer_widget.layers_model.appendRow(item)
 
             self.surface_library.set_selected_surface_ids([r.id for r in dce_event.rasters])
 
@@ -116,6 +117,65 @@ class FrmEvent(QtWidgets.QDialog):
             self.lblEndDate.setVisible(True)
             self.uc_end.setVisible(True)
             self.lblStartDate.setText('Start Date')
+
+    def load_from_template(self):
+        # Filter events of same type
+        events = [e for e in self.qris_project.events.values() if e.event_type.id == self.event_type_id]
+        if self.dce_event:
+            events = [e for e in events if e.id != self.dce_event.id]
+        
+        # Sort events by name
+        events.sort(key=lambda x: x.name)
+
+        dlg = FrmEventPicker(self, self.qris_project, self.event_type_id, events=events, show_copy_options=True)
+        dlg.setWindowTitle("Select Template " + dlg.event_name)
+        
+        if dlg.exec_():
+            source_event = dlg.qris_event
+            
+            if dlg.chkDescription.isChecked():
+                self.txtDescription.setPlainText(source_event.description)
+                
+            if dlg.chkBasicProps.isChecked():
+                if source_event.platform:
+                     idx = self.platform_model.getItemIndexById(source_event.platform.id)
+                     self.cboPlatform.setCurrentIndex(idx)
+                
+                self.uc_start.set_date_spec(source_event.start)
+                self.uc_end.set_date_spec(source_event.end)
+                if any(date is not None for date in [source_event.end.day, source_event.end.year, source_event.end.month]):
+                    self.optDateRange.setChecked(True)
+                else:
+                    self.optSingleDate.setChecked(True)
+
+            if dlg.chkMetadata.isChecked() and source_event.metadata:
+                self.metadata_widget.load_json(json.dumps(source_event.metadata))
+                
+                meta = self.metadata_widget.metadata
+                if 'system' in meta:
+                    if 'valley_bottom_id' in meta['system']:
+                        index = self.valley_bottom_model.getItemIndexById(meta['system']['valley_bottom_id'])
+                        if index is not None:
+                            self.cboValleyBottom.setCurrentIndex(index)
+                    if 'phase' in meta['system']:
+                        self.txtPhase.setText(meta['system']['phase'])
+                    if 'date_label' in meta['system']:
+                        self.txtDateLabel.setText(meta['system']['date_label'])
+
+            if dlg.chkLayers.isChecked() and self.layer_widget:
+                # Reset all
+                for key in self.layer_widget.current_layers_state:
+                     self.layer_widget.current_layers_state[key] = False
+                
+                for event_layer in source_event.event_layers:
+                    l = event_layer.layer
+                    p = l.get_layer_protocol(self.qris_project.protocols)
+                    if p:
+                        key = f"{p.unique_key()}::{l.unique_key()}"
+                        if key in self.layer_widget.current_layers_state:
+                             self.layer_widget.current_layers_state[key] = True
+                
+                self.layer_widget.full_refresh_ui()
 
     def check_surface_types(self):
         """check that only one surface type of id == 4 is checked"""
@@ -160,13 +220,9 @@ class FrmEvent(QtWidgets.QDialog):
         event_layers = []
         # If this is not a planning container then there must be at least one layer!
         if self.layer_widget is not None:
-            for i in range(self.layer_widget.layers_model.rowCount()):
-                item = self.layer_widget.layers_model.item(i)
-                data = item.data(QtCore.Qt.UserRole)
-                if isinstance(data, Layer):
-                    event_layers.append(data)
-                else:
-                    selected_layer_definitions.append(data)
+            # New LayerSelector logic
+            event_layers, selected_layer_definitions = self.layer_widget.get_selected_layer_definitions(self.qris_project.layers)
+            
             if len(selected_layer_definitions) < 1 and len(event_layers) < 1:
                 QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
                 return
@@ -278,8 +334,7 @@ class FrmEvent(QtWidgets.QDialog):
 
     def setupUi(self):
 
-        self.resize(575, 550)
-        self.setMinimumSize(500, 400)
+        self.setMinimumSize(500, 500)
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
@@ -294,6 +349,14 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtName = QtWidgets.QLineEdit()
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+
+        self.btnLoadTemplate = QtWidgets.QPushButton("Load Layers and Properties from Existing DCE...")
+        self.btnLoadTemplate.clicked.connect(self.load_from_template)
+        
+        self.hboxTemplate = QtWidgets.QHBoxLayout()
+        self.hboxTemplate.addWidget(self.btnLoadTemplate)
+        self.hboxTemplate.addStretch(1)
+        self.grid.addLayout(self.hboxTemplate, 1, 1, 1, 1)
 
         self.tab = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tab)
@@ -369,18 +432,25 @@ class FrmEvent(QtWidgets.QDialog):
 
         # Surface Rasters
         if self.event_library is not None:
-            self.tab.addTab(self.event_library, 'Associated Events')
+             self.event_library_container = QtWidgets.QWidget()
+             self.vert_event_library = QtWidgets.QVBoxLayout(self.event_library_container)
+             # self.vert_event_library.setContentsMargins(0, 0, 0, 0)
+             self.vert_event_library.addWidget(self.event_library)
+             self.tab.addTab(self.event_library_container, 'Associated Events')
         
-        self.vert_surfaces = QtWidgets.QVBoxLayout(self)
-        self.surfaces_widget = QtWidgets.QWidget(self)
-        self.surfaces_widget.setLayout(self.vert_surfaces)
+        self.surfaces_widget = QtWidgets.QWidget()
+        self.vert_surfaces = QtWidgets.QVBoxLayout(self.surfaces_widget)
+        self.vert_surfaces.setContentsMargins(0, 0, 0, 0)
         self.vert_surfaces.addWidget(self.surface_library)
         self.tab.addTab(self.surfaces_widget, 'Surfaces')
         # self.tab.addTab(self.surface_library, 'Surfaces')
 
         # Description
+        self.tabDescriptionWidget = QtWidgets.QWidget()
+        self.vertDescription = QtWidgets.QVBoxLayout(self.tabDescriptionWidget)
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.tab.addTab(self.txtDescription, 'Description')
+        self.vertDescription.addWidget(self.txtDescription)
+        self.tab.addTab(self.tabDescriptionWidget, 'Description')
 
         # Metadata
         self.tab.addTab(self.metadata_widget, 'Metadata')
