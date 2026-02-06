@@ -29,7 +29,7 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     raster_gt = raster_ds.GetGeoTransform()
     raster_nd = raster_ds.GetRasterBand(1).GetNoDataValue()
 
-    ogr_mem_driver = ogr.GetDriverByName('MEM')
+    ogr_mem_driver = ogr.GetDriverByName('Memory') or ogr.GetDriverByName('MEM')
     gdl_mem_driver = gdal.GetDriverByName('MEM')
 
     # Attempt to delete existing feature class. This now
