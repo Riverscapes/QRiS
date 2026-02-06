@@ -26,7 +26,8 @@ class FrmDesign(FrmEvent):
         self.txtPhase.setVisible(True)
 
         self.lblPlatform.setVisible(False)
-        self.cboPlatform.setVisible(False)
+        self.wdgPlatform.setVisible(False)
+        # self.cboPlatform.setVisible(False)
         
         # self.lblRepresentation.setVisible(False)
         # self.cboRepresentation.setVisible(False)

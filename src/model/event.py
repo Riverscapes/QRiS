@@ -104,7 +104,7 @@ class Event(DBItem):
                     end_day = ?,
                     metadata = ?
                 WHERE id = ?""",
-                             [name, sql_description, platform.id, 0, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
+                             [name, sql_description, platform.id if platform else None, 0, start_date.year, start_date.month, start_date.day, end_date.year, end_date.month, end_date.day, sql_metadata, self.id])
 
                 update_intersect_table(curs, 'event_rasters', 'event_id', 'raster_id', self.id, [item.id for item in rasters])
 
@@ -153,7 +153,7 @@ def load(curs: sqlite3.Cursor, protocols: dict, methods: dict, layers: dict, loo
         DateSpec(row['end_year'], row['end_month'], row['end_day']),
         row['date_text'],
         lookups['lkp_event_types'][row['event_type_id']],
-        lookups['lkp_platform'][row['platform_id']],
+        lookups['lkp_platform'][row['platform_id']] if row['platform_id'] in lookups['lkp_platform'] else None,
         0,
         [event_layer for event_layer in event_layers if event_layer.event_id == row['id']],
         [basemap for event_id, basemap in event_basemaps if event_id == row['id']],
@@ -202,7 +202,7 @@ def insert(db_path: str,
                 name,
                 description,
                 event_type.id,
-                platform.id,
+                platform.id if platform else None,
                 None,
                 json.dumps(metadata) if metadata else None,
                 date_text if date_text else None,
