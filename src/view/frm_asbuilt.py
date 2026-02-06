@@ -47,7 +47,8 @@ class FrmAsBuilt(FrmEvent):
         self.tabGrid.addWidget(self.uc_construction, 6, 1)
 
         self.lblPlatform.setVisible(False)
-        self.cboPlatform.setVisible(False)
+        self.wdgPlatform.setVisible(False)
+        # self.cboPlatform.setVisible(False)
 
         # self.lblRepresentation.setVisible(False)
         # self.cboRepresentation.setVisible(False)

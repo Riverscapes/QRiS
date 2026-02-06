@@ -58,8 +58,13 @@ class FrmEvent(QtWidgets.QDialog):
         self.setWindowTitle(f'Create New {dce_type} Event' if dce_event is None else f'Edit {dce_type} Event')
         self.resize(900, 600)
 
-        self.platform_model = DBItemModel(qris_project.lookup_tables['lkp_platform'])
-        self.cboPlatform.setModel(self.platform_model)
+        self.platform_checkboxes = []
+        platforms = sorted(qris_project.lookup_tables['lkp_platform'].values(), key=lambda x: x.id)
+        for platform in platforms:
+            chk = QtWidgets.QCheckBox(platform.name)
+            chk.setProperty('db_item', platform)
+            self.vertPlatform.addWidget(chk)
+            self.platform_checkboxes.append(chk)
 
         self.optSingleDate.toggled.connect(self.on_opt_date_change)
 
@@ -73,7 +78,17 @@ class FrmEvent(QtWidgets.QDialog):
         if dce_event is not None:
             self.txtName.setText(dce_event.name)
             self.txtDescription.setPlainText(dce_event.description)
-            self.cboPlatform.setCurrentIndex(dce_event.platform.id - 1)
+            
+            platform_ids = []
+            if dce_event.metadata and 'system' in dce_event.metadata and 'platform_ids' in dce_event.metadata['system']:
+                platform_ids = dce_event.metadata['system']['platform_ids']
+            elif dce_event.platform:
+                platform_ids = [dce_event.platform.id]
+
+            for chk in self.platform_checkboxes:
+                item = chk.property('db_item')
+                if item.id in platform_ids:
+                    chk.setChecked(True)
 
             self.uc_start.set_date_spec(dce_event.start)
             self.uc_end.set_date_spec(dce_event.end)
@@ -137,9 +152,21 @@ class FrmEvent(QtWidgets.QDialog):
                 self.txtDescription.setPlainText(source_event.description)
                 
             if dlg.chkBasicProps.isChecked():
-                if source_event.platform:
-                     idx = self.platform_model.getItemIndexById(source_event.platform.id)
-                     self.cboPlatform.setCurrentIndex(idx)
+                
+                # Clear existing checks first or just set them? Usually set them.
+                for chk in self.platform_checkboxes:
+                    chk.setChecked(False)
+
+                platform_ids = []
+                if source_event.metadata and 'system' in source_event.metadata and 'platform_ids' in source_event.metadata['system']:
+                    platform_ids = source_event.metadata['system']['platform_ids']
+                elif source_event.platform:
+                    platform_ids = [source_event.platform.id]
+
+                for chk in self.platform_checkboxes:
+                    item = chk.property('db_item')
+                    if item.id in platform_ids:
+                        chk.setChecked(True)
                 
                 self.uc_start.set_date_spec(source_event.start)
                 self.uc_end.set_date_spec(source_event.end)
@@ -279,6 +306,16 @@ class FrmEvent(QtWidgets.QDialog):
         else:
             self.metadata_widget.delete_item('system', 'date_label')
 
+        selected_platforms = []
+        for chk in self.platform_checkboxes:
+            if chk.isChecked():
+                selected_platforms.append(chk.property('db_item').id)
+        
+        if len(selected_platforms) > 0:
+            self.metadata_widget.add_system_metadata('platform_ids', selected_platforms)
+        else:
+             self.metadata_widget.delete_item('system', 'platform_ids')
+
         if not self.metadata_widget.validate():
             return
 
@@ -300,7 +337,7 @@ class FrmEvent(QtWidgets.QDialog):
                     if response == QtWidgets.QMessageBox.No:
                         return
 
-                self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, self.cboPlatform.currentData(QtCore.Qt.UserRole), None, self.metadata_widget.get_data())
+                self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, None, None, self.metadata_widget.get_data())
                 check_and_remove_unused_layers(self.qris_project)
                 self.qris_project.project_changed.emit()
                 super().accept()
@@ -313,7 +350,7 @@ class FrmEvent(QtWidgets.QDialog):
                     self.uc_end.get_date_spec(),
                     '',
                     self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
-                    self.cboPlatform.currentData(QtCore.Qt.UserRole),
+                    None,
                     None, # self.cboRepresentation.currentData(QtCore.Qt.UserRole),
                     event_layers,
                     surface_rasters,
@@ -411,10 +448,13 @@ class FrmEvent(QtWidgets.QDialog):
         self.tabGrid.addWidget(self.uc_end, 6, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel('Event completed at')
+        self.lblPlatform.setAlignment(QtCore.Qt.AlignTop)
         self.tabGrid.addWidget(self.lblPlatform, 8, 0, 1, 1)
 
-        self.cboPlatform = QtWidgets.QComboBox()
-        self.tabGrid.addWidget(self.cboPlatform, 8, 1, 1, 1)
+        self.wdgPlatform = QtWidgets.QWidget()
+        self.vertPlatform = QtWidgets.QVBoxLayout(self.wdgPlatform)
+        self.vertPlatform.setContentsMargins(0, 0, 0, 0)
+        self.tabGrid.addWidget(self.wdgPlatform, 8, 1, 1, 1)
 
         self.lblDateLabel = QtWidgets.QLabel('Date Label')
         self.tabGrid.addWidget(self.lblDateLabel, 7, 0, 1, 1)
