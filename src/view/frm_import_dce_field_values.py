@@ -144,7 +144,7 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
 
         self.vLayout.addWidget(self.tblFields)
 
-        self.vLayout.addLayout(add_standard_form_buttons(self, 'import-dce-layer'))
+        self.vLayout.addLayout(add_standard_form_buttons(self, 'dce/import-dce-layer'))
 
         self.btnAddOutputField.clicked.connect(self.add_output_field)
         self.btnRemoveOutputField.clicked.connect(self.remove_output_field)
