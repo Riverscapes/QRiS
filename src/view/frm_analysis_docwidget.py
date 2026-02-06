@@ -33,7 +33,7 @@ from ..model.project import Project
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
 from ..model.analysis_metric import AnalysisMetric
 from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
-from ..model.event import DCE_EVENT_TYPE_ID, Event
+from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
 from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.sample_frame import get_sample_frame_ids
 from ..model.metric import Metric
@@ -83,7 +83,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cboSampleFrame.setModel(self.segments_model)
 
         # Events 
-        events = {event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id == DCE_EVENT_TYPE_ID}
+        valid_event_types = [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]
+        events = {event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id in valid_event_types}
 
         # Filter events if selected_events metadata exists, but only keep those that still exist
         selected_event_ids = self.analysis.metadata.get('selected_events')
