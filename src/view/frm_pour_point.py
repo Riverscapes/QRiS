@@ -1,4 +1,5 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtWidgets
+
 from ..model.pour_point import PourPoint
 from ..model.project import Project
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
@@ -117,16 +118,27 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.tabWidget = QtWidgets.QTabWidget()
         self.vert.addWidget(self.tabWidget)
 
+        # Description Tab
+        self.tabDescriptionPage = QtWidgets.QWidget()
+        layoutDescription = QtWidgets.QVBoxLayout(self.tabDescriptionPage)
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.tabWidget.addTab(self.txtDescription, 'Description')
+        layoutDescription.addWidget(self.txtDescription)
+        self.tabWidget.addTab(self.tabDescriptionPage, 'Description')
 
-        # self.tabBasin = QtWidgets.QTableWidget()
+        # Basin Characteristics Tab
+        self.tabBasinPage = QtWidgets.QWidget()
+        layoutBasin = QtWidgets.QVBoxLayout(self.tabBasinPage)
         self.basinTable = QtWidgets.QTableView()
         self.basinTable.verticalHeader().hide()
-        self.tabWidget.addTab(self.basinTable, 'Basin Characteristics')
+        layoutBasin.addWidget(self.basinTable)
+        self.tabWidget.addTab(self.tabBasinPage, 'Basin Characteristics')
 
+        # Flow Statistics Tab
+        self.tabFlowPage = QtWidgets.QWidget()
+        layoutFlow = QtWidgets.QVBoxLayout(self.tabFlowPage)
         self.tabFlow = QtWidgets.QTableWidget()
-        self.tabWidget.addTab(self.tabFlow, 'Flow Statistics')
+        layoutFlow.addWidget(self.tabFlow)
+        self.tabWidget.addTab(self.tabFlowPage, 'Flow Statistics')
 
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setText('Add to Map')

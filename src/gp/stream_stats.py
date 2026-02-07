@@ -52,29 +52,32 @@ class StreamStats(QgsTask):
                 return False
 
             self.watershed_data = delineate_watershed(self.latitude, self.longitude, state_code)
-            workspace_id = self.watershed_data['workspaceID'] if 'workspaceID' in self.watershed_data else None
+            
+            # Legacy code expected 'workspaceID'. The new API architecture is stateless.
+            # We pass the entire 'watershed_data' object (which is the SSHydroRequest) to subsequent calls.
+            # workspace_id = self.watershed_data['workspaceID'] if 'workspaceID' in self.watershed_data else None
+            # Note: The existing pour_point.save_pour_point logic likely expects certain keys in watershed_data.
+            # We must ensure compatibility there or update save_pour_point as well.
 
             if self.isCanceled():
                 return False
 
             basin_chars = None
             if self.get_basin_chars is True:
-                if workspace_id is None:
-                    self.exception = Exception('Unable to retrieve basin characteristics because no workspace ID was available from watershed delineation.')
-                    return False
-
-                basin_chars = retrieve_basin_characteristics(state_code, workspace_id)
+                # With new API, we pass the Delineate response structure, not a workspace ID
+                basin_chars = retrieve_basin_characteristics(self.watershed_data)
 
             if self.isCanceled():
                 return False
 
             flow_stats = None
             if self.get_flow_stats is True:
-                if workspace_id is None:
-                    self.exception = Exception('Unable to retrieve flow statistics because no workspace ID was available from watershed delineation.')
-                    return False
-
-                flow_stats = retrieve_flow_statistics(state_code, workspace_id)
+                # Flow stats are complex in new API. Attempting to retrieve via new workflow.
+                try:
+                    flow_stats = retrieve_flow_statistics(self.watershed_data)
+                except Exception as e:
+                    QgsMessageLog.logMessage(f'Flow Statistics failed/not supported yet: {e}', MESSAGE_CATEGORY, Qgis.Warning)
+                    flow_stats = None
 
             self.pour_point = save_pour_point(self.db_path, self.latitude, self.longitude, self.watershed_data, self.name, self.qris_description, basin_chars, flow_stats)
 
@@ -150,53 +153,136 @@ def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool
 
 # Returns dictionary of watershed info based on coordinates and U.S. state
 def delineate_watershed(lat, lon, rcode, file_dir=None):
-    url = "https://prodweba.streamstats.usgs.gov/streamstatsservices/watershed.geojson"
+    if not rcode:
+        raise Exception("Could not determine state code ('rcode') for the given coordinates.")
+
+    # New API: SS-Delineate
+    url = f"https://streamstats.usgs.gov/ss-delineate/v1/delineate/sshydro/{rcode}"
 
     parameters = {
-        "rcode": rcode,
-        "xlocation": lon,
-        "ylocation": lat,
-        "crs": "4326",
-        "includeparameters": "false",
-        "includeflowtypes": "false",
-        "includefeatures": "true",
-        "simplify": "true"
+        "lat": lat,
+        "lon": lon
     }
+    
+    QgsMessageLog.logMessage(f'Delineating watershed via {url}', MESSAGE_CATEGORY, Qgis.Info)
 
-    response = requests.get(url, params=parameters)
-    watershed_data = response.json()
+    try:
+        response = requests.get(url, params=parameters)
+        response.raise_for_status()
+        watershed_data = response.json()
+        # Response structure: {"stateAbbreviation": "RR", "bcrequest": { ... }}
+        
+        # Add a fake 'workspaceID' for backward compatibility if needed by save_pour_point or other consumers
+        # The new API is stateless, so there is no ID, but we can generate one or mock it.
+        if "workspaceID" not in watershed_data:
+             watershed_data["workspaceID"] = "stateless_v1"
+
+        # Backward Compatibility for 'featurecollection'
+        # Old API returned 'featurecollection' at root. New API nests it in bcrequest.wsresp.featurecollection
+        # and wraps it in an outer list [[{}, {}]].
+        # save_pour_point expects: catchment['featurecollection'][1]['feature']['features'][0]['geometry']
+        try:
+            fc = watershed_data.get("bcrequest", {}).get("wsresp", {}).get("featurecollection", [])
+            if fc and len(fc) > 0 and isinstance(fc[0], list):
+                # Unwrap the outer list to match legacy structure of [points_obj, watershed_obj]
+                watershed_data["featurecollection"] = fc[0]
+        except Exception:
+            # If structure is unexpected, don't crash here - let downstream handle or fail gracefully
+            pass
+
+    except Exception as e:
+        error_msg = f"Error in delineate_watershed: {str(e)}"
+        if 'response' in locals() and hasattr(response, 'text'):
+            error_msg += f". Response: {response.text}"
+        raise Exception(error_msg)
 
     if file_dir is not None:
-        save_json(watershed_data, file_dir, watershed_data["workspaceID"] + "_wats.geojson")
+        save_json(watershed_data, file_dir, "watershed.json")
     return watershed_data
 
 
 # Returns dictionary of river basin characteristics
-def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
-    basin_chars_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/parameters.json?rcode={0}&workspaceID={1}&includeparameters=true'
-    url = basin_chars_url.format(rcode, workspace_id)
-    response = requests.get(url)
+def retrieve_basin_characteristics(delineation_data, file_dir=None):
+    # New API: SS-Hydro
+    url = "https://streamstats.usgs.gov/ss-hydro/v1/basin-characteristics/calculate"
+    
+    # Payload: The Delineation Response matches the SSHydroRequest schema
+    payload = delineation_data.copy()
+    
+    # Ensure bcLabels is set (default '*' allows getting all available chars)
+    if "bcrequest" in payload and "bcLabels" not in payload["bcrequest"]:
+         payload["bcrequest"]["bcLabels"] = "*"
+
+    QgsMessageLog.logMessage(f'Calculating Basin Characteristics via {url}', MESSAGE_CATEGORY, Qgis.Info)
+
     try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
         basin_data = response.json()
     except Exception as ex:
-        raise Exception('Error retrieving basin characteristics') from ex
+        error_msg = f'Error retrieving basin characteristics: {str(ex)}'
+        if 'response' in locals() and hasattr(response, 'text'):
+            error_msg += f". Response: {response.text}"
+        raise Exception(error_msg)
+
     if file_dir is not None:
-        save_json(basin_data, file_dir, workspace_id + "_basin.json")
+        save_json(basin_data, file_dir, "basin_chars.json")
     return basin_data
 
 
 # Returns dictionary of river flow stats
-def retrieve_flow_statistics(rcode, workspace_id, file_dir=None):
-    flow_stats_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/flowstatistics.json?rcode={0}&workspaceID={1}&includeflowtypes=true'
-    url = flow_stats_url.format(rcode, workspace_id)
-    response = requests.get(url)
+def retrieve_flow_statistics(delineation_data, file_dir=None):
+    # New API: NSS Services
+    # This is a multi-step process and is significantly different from legacy.
+    # Step 1: Get Regression Regions
+    rr_url = "https://streamstats.usgs.gov/nssservices/regressionregions/bylocation"
+    
     try:
-        flow_data = response.json()
+        # Extract geometry from delineation_data
+        # Structure: delineation_data["bcrequest"]["wsresp"]["featurecollection"][0][1]["feature"]
+        # (Based on debug output observation)
+        bcrequest = delineation_data.get("bcrequest", {})
+        wsresp = bcrequest.get("wsresp", {})
+        fc = wsresp.get("featurecollection", [])
+        
+        poly_feature = None
+        if len(fc) > 0 and isinstance(fc[0], list) and len(fc[0]) > 1:
+             poly_feature = fc[0][1].get("feature")
+        
+        if not poly_feature:
+            raise Exception("Could not search for regression regions: Watershed geometry not found in response.")
+
+        # Construct simple FeatureCollection for NSS
+        rr_payload = {
+            "type": "FeatureCollection",
+            "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+            "features": [poly_feature]
+        }
+        
+        QgsMessageLog.logMessage(f'Retrieving Regression Regions via {rr_url}', MESSAGE_CATEGORY, Qgis.Info)
+        
+        response = requests.post(rr_url, json=rr_payload)
+        response.raise_for_status()
+        rr_data = response.json()
+        
+        # NOTE: Full implementation of Flow Stats (Scenarios -> Estimate) requires extensive mapping 
+        # of Basin Characteristics to Scenario variables. This is a large task.
+        # For now, we return the Regression Regions info as a placeholder or throw a Not Implemented error
+        # so the user knows this part is incomplete but doesn't crash the Delineation/Basin Chars.
+        
+        raise NotImplementedError("Full Flow Statistics computation via new API is not yet implemented.")
+
     except Exception as ex:
-        raise Exception('Error retrieving flow statistics') from ex
+        error_msg = f'Error retrieving flow statistics: {str(ex)}'
+        if 'response' in locals() and hasattr(response, 'text'):
+            error_msg += f". Response: {response.text}"
+        # raise Exception(error_msg) 
+        # Suppress fatal error for now, as Delineation/Basin Chars are more critical
+        QgsMessageLog.logMessage(error_msg, MESSAGE_CATEGORY, Qgis.Warning)
+        return {"error": "Flow Statistics not fully migrated to new API", "details": str(ex)}
 
     if file_dir is not None:
-        save_json(flow_data, file_dir, workspace_id + "_flow.json")
+        save_json(flow_data, file_dir, "flow_stats.json")
     return flow_data
 
 
