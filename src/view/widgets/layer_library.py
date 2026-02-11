@@ -43,7 +43,39 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
         self.setupUi()
         self.load_filters()
+        self.apply_initial_protocol_filter()
         self.load_current_view()
+
+    def apply_initial_protocol_filter(self):
+        if not self.dce_event:
+            return
+            
+        # Find used protocols
+        used_protocols = set()
+        for p, l in self.available_layers:
+            key = self.get_layer_unique_key(p, l)
+            if self.current_layers_state.get(key, False):
+                used_protocols.add(p.label)
+        
+        # If no protocols are used, we keep the default "All Selected" behavior
+        if not used_protocols:
+            return
+
+        # Uncheck all, then check used
+        model = self.cbo_filter_protocol.model()
+        model.blockSignals(True)
+        
+        for i in range(model.rowCount()):
+            item = model.item(i)
+            if item.isCheckable():
+                label = item.data()
+                if label in used_protocols:
+                    item.setCheckState(QtCore.Qt.Checked)
+                else:
+                    item.setCheckState(QtCore.Qt.Unchecked)
+                    
+        model.blockSignals(False)
+        self.cbo_filter_protocol.updateText()
 
     def get_layer_unique_key(self, protocol_def: ProtocolDefinition, layer_def: LayerDefinition):
         return f"{protocol_def.machine_code}::{str(protocol_def.version)}::{layer_def.id}::{str(layer_def.version)}"
