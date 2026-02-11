@@ -91,10 +91,6 @@ class LayerLibraryWidget(QtWidgets.QWidget):
                 if not p.protocol_type or p.protocol_type.strip().lower() != 'asbuilt':
                     continue
             
-            # Skip experimental if disabled AND not used in this event
-            if p.status == 'experimental' and not self.show_experimental and p.machine_code not in used_protocol_machine_codes:
-                continue
-
             for l in p.layers:
                 self.available_layers.append((p, l))
 
@@ -302,7 +298,16 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
     def load_filters(self):
         # Protocols
-        unique_protocols = sorted(list(set([p.label for p, l in self.available_layers])))
+        visible_protocols = set()
+        for p, l in self.available_layers:
+             if p.status == 'experimental' and not self.show_experimental:
+                 # Check usage
+                 key = self.get_layer_unique_key(p, l)
+                 if not self.current_layers_state.get(key):
+                      continue
+             visible_protocols.add(p.label)
+
+        unique_protocols = sorted(list(visible_protocols))
         
         self.cbo_filter_protocol.clear()
         if unique_protocols:
@@ -319,6 +324,13 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.update_visibility()
 
     def should_show_layer(self, protocol_def: ProtocolDefinition, layer_def: LayerDefinition):
+        # 0. Experimental Filter
+        if protocol_def.status == 'experimental' and not self.show_experimental:
+             # Check usage - show if included
+             key = self.get_layer_unique_key(protocol_def, layer_def)
+             if not self.current_layers_state.get(key, False):
+                 return False
+
         # 1. Search
         search = self.txt_filter_search.text().lower().strip()
         if search:
@@ -378,8 +390,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def on_show_experimental_toggled(self, checked):
         self.show_experimental = checked
         
-        # Reload everything
-        self.load_definitions()
+        self.load_filters()
+        self.update_visibility()
+        self.update_counts()
         
         # Ensure new layers have state in dictionary
         for p, l in self.available_layers:
