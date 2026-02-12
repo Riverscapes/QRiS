@@ -219,6 +219,11 @@ def retrieve_basin_characteristics(delineation_data, file_dir=None):
         response = requests.post(url, json=payload)
         response.raise_for_status()
         basin_data = response.json()
+        
+        # The API returns a list of parameters, but the application expects a dictionary with a 'parameters' key.
+        if isinstance(basin_data, list):
+            basin_data = { "parameters": basin_data }
+            
     except Exception as ex:
         error_msg = f'Error retrieving basin characteristics: {str(ex)}'
         if 'response' in locals() and hasattr(response, 'text'):
