@@ -465,7 +465,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             item = QtWidgets.QTreeWidgetItem(parent)
             item.setText(0, text)
             item.setToolTip(0, text)
-            item.setExpanded(True)
+            item.setExpanded(self.dce_event is not None)
             if data: item.setData(0, QtCore.Qt.UserRole, data)
             return item
 
@@ -681,28 +681,34 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.update_visibility()
         self.update_counts()
 
+    def collapse_tree_children(self, item: QtWidgets.QTreeWidgetItem):
+        item.setExpanded(False)
+        for i in range(item.childCount()):
+             self.collapse_tree_children(item.child(i))
+
+    def expand_tree_children(self, item: QtWidgets.QTreeWidgetItem):
+        item.setExpanded(True)
+        for i in range(item.childCount()):
+             self.expand_tree_children(item.child(i))
+
     def open_tree_context_menu(self, position):
         item = self.layersTree.itemAt(position)
         if not item: return
 
         data = item.data(0, QtCore.Qt.UserRole)
-        
         menu = QtWidgets.QMenu()
         
         if isinstance(data, tuple): # Layer
-             p, l = data
-             act_details = menu.addAction("Layer Details...")
-             act_details.triggered.connect(lambda: self.show_layer_details(p, l))
-
+            p, l = data
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Layer Details", lambda: self.show_layer_details(p, l))
         else: # Group or Protocol
-             act_inc = menu.addAction("Include All Child Layers")
-             act_inc.triggered.connect(lambda: self.set_children_state(item, True))
-             
-             act_rem = menu.addAction("Remove All Child Layers")
-             act_rem.triggered.connect(lambda: self.set_children_state(item, False))
-        
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/expand'), "Expand All Children", lambda: self.expand_tree_children(item))
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
+            menu.addSeparator()
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/checked_box'), "Include All Child Layers", lambda: self.set_children_state(item, True))
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/unchecked_box'), "Remove All Child Layers", lambda: self.set_children_state(item, False))
         if not menu.isEmpty():
-             menu.exec_(self.layersTree.viewport().mapToGlobal(position))
+            menu.exec_(self.layersTree.viewport().mapToGlobal(position))
 
     def show_layer_details(self, protocol_def: ProtocolDefinition, layer_def: LayerDefinition):
         # Ensure protocol definition is attached for context
