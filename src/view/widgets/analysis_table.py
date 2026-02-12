@@ -720,13 +720,10 @@ class AnalysisTable(QtWidgets.QWidget):
         metric = analysis_metric.metric
 
         menu = QtWidgets.QMenu()
-        action_details = menu.addAction("Metric Details...")
-        action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
-
+        menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
         menu.addSeparator()
 
         analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
-        
         current_dce_id = self.current_dce.id if self.current_dce else None
 
         # Filter limit_dces using selected_events from analysis metadata
@@ -736,29 +733,20 @@ class AnalysisTable(QtWidgets.QWidget):
         if not limit_dces and self.current_dce:
             limit_dces = [self.current_dce.id]
         
-        action_matrix = menu.addAction("Automation Availability Matrix...")
-        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
-        
+        menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
         menu.addSeparator()
 
         # Copy Value Actions
         val_item = self.table.item(row, self.column['value'])
         if val_item and val_item.text() != "null" and val_item.text() != "":
             value_text = val_item.text()
-            
-            action_copy_val = menu.addAction("Copy Value")
-            action_copy_val.triggered.connect(lambda: QtWidgets.QApplication.clipboard().setText(value_text.strip()))
-            
-            action_copy_val_units = menu.addAction("Copy Value with Units")
             units_text = self.table.item(row, self.column['units']).text()
-            
             # Logic to handle unit display text
             clipboard_text = f"{value_text.strip()} {units_text}"
             if units_text.lower() in ['ratio', 'count']:
                 clipboard_text = value_text.strip()
-            
-            action_copy_val_units.triggered.connect(lambda chk, t=clipboard_text: QtWidgets.QApplication.clipboard().setText(t))
-
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/copy_content'), "Copy Value", lambda: QtWidgets.QApplication.clipboard().setText(value_text.strip()))
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/copy_content_units'), "Copy Value with Units", lambda: QtWidgets.QApplication.clipboard().setText(clipboard_text))
         menu.exec_(self.table.viewport().mapToGlobal(position))
 
     def _handle_edit(self, row):

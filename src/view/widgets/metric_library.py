@@ -747,7 +747,7 @@ class MetricLibrary(QtWidgets.QWidget):
                     return child
             item = QtWidgets.QTreeWidgetItem(parent)
             item.setText(0, text)
-            item.setExpanded(True)
+            item.setExpanded(self.analysis is not None)
             return item
 
         for metric in metrics:
@@ -805,30 +805,31 @@ class MetricLibrary(QtWidgets.QWidget):
         
         self.metricsTree.setSortingEnabled(True)
 
+    def collapse_tree_children(self, item: QtWidgets.QTreeWidgetItem):
+        item.setExpanded(False)
+        for i in range(item.childCount()):
+             self.collapse_tree_children(item.child(i))
+
+    def expand_tree_children(self, item: QtWidgets.QTreeWidgetItem):
+        item.setExpanded(True)
+        for i in range(item.childCount()):
+             self.expand_tree_children(item.child(i))
+
     def open_tree_context_menu(self, position):
         item = self.metricsTree.itemAt(position)
         if not item: return
 
         metric = item.data(0, QtCore.Qt.UserRole)
-        if not metric: return
-
         menu = QtWidgets.QMenu()
-        action_details = menu.addAction("Metric Details...")
-        action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
-
-        menu.addSeparator()
-
-        action_matrix = menu.addAction("Automation Availability Matrix...")
-        # Use a closure capture to ensure current metadata is passed, not bound at definition time differently? 
-        # Actually lambda binding should be fine as long as self.analysis_metadata is updated on 'self'.
-        # However, let's explicitely pass self.analysis_metadata at call time
-        def open_matrix():
-            # QgsMessageLog.logMessage(f"Opening Matrix with Metadata: {self.analysis_metadata}", "QRiS", Qgis.Warning)
-            FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_()
-            
-        action_matrix.triggered.connect(open_matrix)
-        
-        menu.exec_(self.metricsTree.viewport().mapToGlobal(position))
+        if metric:
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+            menu.addSeparator()
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
+        elif item.childCount() > 0:
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/expand'), "Expand All Children", lambda: self.expand_tree_children(item))
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
+        if not menu.isEmpty():
+            menu.exec_(self.metricsTree.viewport().mapToGlobal(position))
 
     def load_metrics_table(self):
         pass

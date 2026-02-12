@@ -49,6 +49,11 @@
         <file alias="time">../Images/time.svg</file>
         <file alias="watershed">../Images/watershed.svg</file>
         <file alias="climate_engine">../Images/climate_engine.svg</file>
+        <file alias="checked_box">../Images/checked_box.svg</file>
+        <file alias="unchecked_box">../Images/unchecked_box.svg</file>
+        <file alias="fact_check">../Images/fact_check.svg</file>
+        <file alias="copy_content">../Images/copy_content.svg</file>
+        <file alias="copy_content_units">../Images/copy_content_units.svg</file>
 
         <!-- Node Icons -->
         <file alias="analysis">../Images/analysis.png</file>
