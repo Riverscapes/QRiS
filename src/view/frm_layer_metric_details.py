@@ -116,7 +116,7 @@ class FrmLayerMetricDetails(QDialog):
             metric_version = self.analysis_metric.version
             metric_description = self.analysis_metric.description if self.analysis_metric.description else "No description available."
             metric_function = self.analysis_metric.metric_function
-            # metric_params = self.analysis_metric.metric_params
+            metric_params = self.analysis_metric.metric_params
             metric_url = self.analysis_metric.definition_url if self.analysis_metric.definition_url else "No URL available."
 
             if self.analysis_metric.metadata:
@@ -167,9 +167,73 @@ class FrmLayerMetricDetails(QDialog):
                 <p><strong>Description:</strong> {metric_description}</p>
                 <p><strong>Calculation Type:</strong> {metric_function}</p>
                 <p><strong>URL:</strong> {metric_url}</p>
+                <p><strong>Calculation:</strong> {metric_function}</p>
                 """
             if metric_metadata:
                 self.html_content += "".join(metric_metadata)
+
+            if metric_params and isinstance(metric_params, dict):
+                self.html_content += "<h2>Parameters</h2>"
+                
+                # DCE Layers
+                if 'dce_layers' in metric_params:
+                    self.html_content += "<h3>DCE Layers</h3>"
+                    for layer in metric_params['dce_layers']:
+                        layer_ref = layer.get('layer_id_ref', 'Unknown Layer')
+                        usage = layer.get('usage', 'General')
+                        self.html_content += f"<p><strong>{layer_ref}</strong> ({usage})</p><ul>"
+                        
+                        # Attribute Filters
+                        if 'attribute_filter' in layer:
+                            filters = layer['attribute_filter']
+                            if isinstance(filters, dict): # Single filter
+                                filters = [filters]
+                            
+                            for filter_item in filters:
+                                field = filter_item.get('field_id_ref', 'Unknown Field')
+                                values = filter_item.get('values', [])
+                                self.html_content += f"<li>Filter: <em>{field}</em> IN {values}</li>"
+
+                        # Count Fields
+                        if 'count_fields' in layer:
+                             for count_field in layer['count_fields']:
+                                 field_ref = count_field.get('field_id_ref', '')
+                                 self.html_content += f"<li>Count Field: {field_ref}</li>"
+
+                        self.html_content += "</ul>"
+
+                # Inputs (Analysis Inputs)
+                if 'inputs' in metric_params:
+                    self.html_content += "<h3>Analysis Inputs</h3>"
+                    for input_item in metric_params['inputs']:
+                        input_ref = input_item.get('input_ref', 'Unknown Input')
+                        usage = input_item.get('usage', 'General')
+                        self.html_content += f"<p><strong>{input_ref}</strong> ({usage})</p>"
+                        
+                        # Start details list if needed
+                        has_details = False
+                        details_html = "<ul>"
+
+                        if 'attribute_filter' in input_item:
+                            has_details = True
+                            filters = input_item['attribute_filter']
+                            if isinstance(filters, dict): filters = [filters]
+                            for filter_item in filters:
+                                field = filter_item.get('field_id_ref', 'Unknown Field')
+                                values = filter_item.get('values', [])
+                                details_html += f"<li>Filter: <em>{field}</em> IN {values}</li>"
+                        
+                        if has_details:
+                            self.html_content += details_html + "</ul>"
+                        
+            elif metric_params and isinstance(metric_params, list):
+                self.html_content += "<h2>Parameters</h2><ul>"
+                for param in metric_params:
+                    if isinstance(param, dict) and 'name' in param:
+                            self.html_content += f"<li><strong>{param.get('name', 'Unknown')} ({param.get('machine_name', '')}):</strong> {param.get('description', '')}</li>"
+                    else:
+                            self.html_content += f"<li>{param}</li>"
+                self.html_content += "</ul>"
 
         self.html_content += f"""
             <h1>Protocol Information</h1>
