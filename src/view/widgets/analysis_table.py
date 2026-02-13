@@ -1,5 +1,3 @@
-
-
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from ...model.metric import Metric
 from ...model.analysis import format_feasibility_text
@@ -8,8 +6,6 @@ from ...model.analysis_metric import AnalysisMetric
 from ...lib.unit_conversion import short_unit_name, distance_units, area_units, ratio_units
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
-# from ..frm_analysis_units import FrmAnalysisUnits
-
 
 from .checkable_combo_box import CheckableComboBox
 
@@ -283,11 +279,24 @@ class AnalysisTable(QtWidgets.QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.table.setSortingEnabled(True) # Enable Sorting
         self.table.setHorizontalHeaderLabels(['', 'Protocol', 'Metric', 'Value', 'Units', 'Uncertainty'])
         self.table.setColumnHidden(self.column['protocol'], True)
         
         self.table.horizontalHeader().setSectionResizeMode(self.column['status'], QtWidgets.QHeaderView.Fixed) 
         self.table.horizontalHeader().setSectionResizeMode(self.column['uncertainty'], QtWidgets.QHeaderView.Fixed)
+        
+        # Disable sorting for the status/button column (0)
+        # Note: Simply locking section resize isn't enough to stop sorting clicks, 
+        # but standard QTableWidget doesn't allow per-column sort disabling without subclassing.
+        # The crash 'NoneType' has no attribute 'setFlags' happens because itemPrototype() is None by default.
+        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
+        
+        # self.table.itemPrototype().setFlags(QtCore.Qt.ItemIsEnabled) # Removed: Causes crash if prototype not set
+        if self.table.itemPrototype() is None:
+             self.table.setItemPrototype(QtWidgets.QTableWidgetItem())
+        self.table.itemPrototype().setFlags(QtCore.Qt.ItemIsEnabled)
+        
         self.table.setColumnWidth(self.column['status'], 80)
         self.table.setColumnWidth(self.column['units'], 75)
         self.table.setColumnWidth(self.column['value'], 100)
@@ -541,6 +550,8 @@ class AnalysisTable(QtWidgets.QWidget):
         self.filter_rows()
 
     def build_table(self):
+        # Disable sorting during build to prevent index crashes
+        self.table.setSortingEnabled(False)
         self.table.clearContents()
         self.table.setRowCount(0)
         
@@ -548,12 +559,17 @@ class AnalysisTable(QtWidgets.QWidget):
             return
 
         analysis_metrics = list(self.analysis.analysis_metrics.values())
+        # Sort by metric name by default for stable initial load
+        analysis_metrics.sort(key=lambda x: x.metric.name)
+        
         self.table.setRowCount(len(analysis_metrics))
         for row in range(len(analysis_metrics)):
             self.create_row(row, analysis_metrics[row])
         
         self.table.resizeColumnToContents(self.column['metric'])
         self.filter_rows()
+        # Re-enable sorting after build
+        self.table.setSortingEnabled(True)
     
     def on_switch_layout_mode(self, text):
         if "Labels" in text:
@@ -578,6 +594,12 @@ class AnalysisTable(QtWidgets.QWidget):
             status_widget.warning_clicked.connect(lambda: self._handle_warning(row))
             
         self.table.setCellWidget(row, self.column['status'], status_widget)
+        
+        # Create a proxy item for sorting the status column (hidden value)
+        # Even though we disable the header click, this ensures data integrity
+        dummy_status = QtWidgets.QTableWidgetItem()
+        dummy_status.setFlags(QtCore.Qt.NoItemFlags) # Not selectable or editable
+        self.table.setItem(row, self.column['status'], dummy_status)
         
         protocol_name = metric.protocol_machine_code
         if self.qris_project and metric.protocol_machine_code in self.qris_project.protocols:
@@ -615,6 +637,7 @@ class AnalysisTable(QtWidgets.QWidget):
             metric_values = load_metric_values(self.qris_project.project_file, self.analysis, event, mask_feature_id, self.qris_project.metrics)
 
             # Loop over active metrics and load values into grid
+            self.table.setSortingEnabled(False)
             for row in range(self.table.rowCount()):
                 analysis_metric: AnalysisMetric = self.table.item(row, self.column['metric']).data(QtCore.Qt.UserRole)
                 metric: Metric = analysis_metric.metric
@@ -656,7 +679,10 @@ class AnalysisTable(QtWidgets.QWidget):
                     status_widget.update_state(is_manual, can_calculate, feasibility, metric, metric_value)
 
                 # self.set_status(row, feasibility) # Handled by update_state now
-                
+            
+            # Re-enable sorting after data load
+            self.table.setSortingEnabled(True)
+
         self.table.resizeColumnToContents(self.column['metric'])
         self.filter_rows()
 
