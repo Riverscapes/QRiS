@@ -2,7 +2,7 @@ import json
 
 from qgis.PyQt import QtCore, QtWidgets
 
-from ..model.event import Event, PLANNING_EVENT_TYPE_ID, insert as insert_event
+from ..model.event import Event, PLANNING_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, insert as insert_event
 from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
 from ..model.project import Project
@@ -52,6 +52,15 @@ class FrmEvent(QtWidgets.QDialog):
             self.layer_widget = LayerLibraryWidget(self, qris_project, event_type_id, dce_event)
         else:
             self.event_library = EventLibraryWidget(self, qris_project, [1, 4, 5])
+
+        # event type name
+        self.type_name = "Event"
+        if self.event_type_id == DCE_EVENT_TYPE_ID:
+            self.type_name = "DCE"
+        elif self.event_type_id == DESIGN_EVENT_TYPE_ID:
+            self.type_name = "Design"
+        elif self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
+            self.type_name = "As-Built"
 
         self.setupUi()
         dce_type = 'Data Capture' if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'Planning'
@@ -141,6 +150,10 @@ class FrmEvent(QtWidgets.QDialog):
         
         # Sort events by name
         events.sort(key=lambda x: x.name)
+
+        if not events:   
+            QtWidgets.QMessageBox.information(self, "No Templates", f"No existing {self.type_name}s found to use as a template.")
+            return
 
         dlg = FrmEventPicker(self, self.qris_project, self.event_type_id, events=events, show_copy_options=True)
         dlg.setWindowTitle("Select Template " + dlg.event_name)
@@ -387,7 +400,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.btnLoadTemplate = QtWidgets.QPushButton("Load Layers and Properties from Existing DCE...")
+        self.btnLoadTemplate = QtWidgets.QPushButton(f"Load Layers and Properties from Existing {self.type_name}...")
         self.btnLoadTemplate.clicked.connect(self.load_from_template)
         
         self.hboxTemplate = QtWidgets.QHBoxLayout()

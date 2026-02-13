@@ -30,10 +30,14 @@ class FrmEventPicker(QtWidgets.QDialog):
         # load list of events filtered by event type
         self.cboDCE.addItems([event.name for event in self.dce_events])
         # initialise the layers list
-        self.cboDCE_currentIndexChanged(0)
+        if self.dce_events:
+            self.cboDCE_currentIndexChanged(0)
 
     def cboDCE_currentIndexChanged(self, index):
         self.layers = []
+        if not self.dce_events or index < 0 or index >= len(self.dce_events):
+            return
+        
         self.qris_event = self.dce_events[index]
         for layer in self.qris_event.event_layers:
             self.layers.append(layer.layer)
