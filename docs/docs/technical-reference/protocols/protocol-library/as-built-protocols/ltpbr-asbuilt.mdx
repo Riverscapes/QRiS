@@ -1,13 +1,25 @@
 ---
-title: LTPBR As-Built Protocol
-description: Protocol to document the location and types of structures as they are built.
+title: LTPBR V2 As-Built Protocol
+sidebar_position: 1
+description: Protocol to document the location and types of as-built structures for LTPBR V2. 
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+:::tip[Final Version: Production Grade]
+
+This protocol is production grade and fully supported in QRiS. Layers and metrics have been finalized by the owner to be used in data collection & metric calculation. Updates may occur to existing layers or metrics but will not result in data loss to the user.
+
+:::
+
+## Overview
 
 The LTPBR As-Built Protocol is a survey of built structures. Many LTPBR projects are field fit during construction, and the structures that are ultimately built may differ from what was originally specified in an LTPBR design. As-Built surveys are used to document the location and types of structures as they are built. 
 
 The purpose of this protocol is track structure counts for reporting as well as types and locations for reference in designing future phases of the project. Tracking features as they were built also allows us to see and understand structure dynamics. You can see where structures fail, where they survive, as well as which ones act as a collection point for failed structures and other wood in the system.
    
-## Protocol Summary
+### Protocol Summary
 
 Attribute|Value
 ---|---
@@ -18,19 +30,22 @@ XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols
 Citation|Weber N., Wheaton J.M., Shalcross A., Al-Chokhachy R, Bailey P., Bartelt K., Bennett S., Bouwes B., Bouwes N., Gilbert J., Dickard M., Heitke J., Jordan C., Glassic H., MacFarlane W.W., Miller S., Saunders C., Whitehead K. 2024. Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health. Version 2.0. Prepared by Anabranch Solutions and Utah State University Riverscapes Assessment and Monitoring Lab. Prepared for the Bureau of Land Management. Logan, UT. 81 pp. [DOI: 10.5281/zenodo.13769899](https://zenodo.org/records/13769899)
 Author|Nick Weber
 
-## Layers
+## Layers & Metrics 
 This protocol has three layers. Two different options to collect structures and an observation layer for recording other information pertinent to the survey. Users can collect structure points, structure lines, or a combination of both for their survey. Structure lines may be more useful in the case of representing the actual geometries of structures and finding their lengths. Structure points are simply the location of the structure. 
 
 The example below shows an example of a digitized as-built survey. It is a combination of points and lines. When zoomed in close the labels to the structure type appear. Otherwise their symbology is a grouping of the structure form. The symbology has been simplified to group structure by form rather than have a unique symbol for every structure type. Form and the intended process linked to that form is more important to visually represent than the individual structure type.
 ![As-Built-Example](/images/technical-reference/metrics/as-built.png)
 
-### Surveying Protocol Layers Demo
+### Video Demonstration 
 <YouTubeEmbed videoId="R85bNmA8XgU" />
 
-### Structure Points
-Description- Locations of built structures as points. If lengths of structures are necessary use Structure Lines. 
+### Layer Attributes
 
 #### Structure Type:
+
+<Tabs>
+<TabItem value="Structure Points & Lines" label="Structure Points/Lines" default>
+*Description: locations of design structures as points or lines. Points show location only, while lines also give orientation & length measurement of structure.*
 Attribute|Structure Class|Description
 ---|---|---
 ALS|Wood Accumulation|Assisted log structure being a placed woody debris accumulation that does not include posts.
@@ -73,15 +88,23 @@ Vanes|Zeedyk Structure|An in-channel structure usually constructed of posts and 
 Wicker Weirs|Zeedyk Structure|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
 Wood Jam|Wood Accumulation|Analogous to ALS being a placed accumulation of woody material that does not include driven posts.
 Zuni Bowl|Zeedyk Structure|An in-channel headcut control structure composed of rock-lined step falls and plunge pools intended to arrest the progression of headcuts.
-                    
-### Structure Lines
-Description: location of built structures as lines. Suitable for use if delineating long structures such as a Primary BDA or if getting structure lengths is important.
+</TabItem>
+<TabItem value="Observation Points" label="Observation Points">
+*Description: any other relevant information about the survey that is worth leaving an annotation about.*
+</TabItem>
+</Tabs>
 
-#### Structure Type: 
+## Resources 
 
-Same specifications as Structure Points
-
-
-### Observation Points
-Description: any other relevant information about the survey that is worth leaving an annotation about. 
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Weber et al. 2024",
+        description: "Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://zenodo.org/records/13769899",
+       },
+        ]}
+/>
             
