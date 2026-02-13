@@ -6,13 +6,18 @@ import tempfile
 import json
 import sqlite3
 import sys
-from unittest.mock import MagicMock
+# from unittest.mock import MagicMock
 
-# Mock qgis before importing module under test
-sys.modules['qgis'] = MagicMock()
-sys.modules['qgis.core'] = MagicMock()
+# Use standard test utility to start QGIS
+try:
+    from utilities import get_qgis_app
+except ImportError:
+    from .utilities import get_qgis_app
 
-from osgeo import ogr, osr
+get_qgis_app()
+
+from osgeo import ogr, osr, gdal
+gdal.UseExceptions()
 
 # Add src to path
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
@@ -40,7 +45,7 @@ class TestMetricProportion(unittest.TestCase):
         srs.ImportFromEPSG(4326) 
         
         # 1. Create Sample Frame Layer
-        sf_layer = ds.CreateLayer('sample_frame_features', srs=srs, geom_type=ogr.wkbPolygon)
+        sf_layer = ds.CreateLayer('sample_frame_features', srs=srs, geom_type=ogr.wkbPolygon25D)
         sf_layer.CreateField(ogr.FieldDefn('fid', ogr.OFTInteger))
         
         # Create a Sample Frame Feature (Approx 1 degree box for simplicity of checking intersection, though huge)
@@ -60,7 +65,7 @@ class TestMetricProportion(unittest.TestCase):
         
         # 2. Create Denominator Layer (Lines) - e.g. "Main Channel"
         # Renamed to dce_lines to match Layer.DCE_LAYER_NAMES default
-        lines_layer = ds.CreateLayer('dce_lines', srs=srs, geom_type=ogr.wkbLineString)
+        lines_layer = ds.CreateLayer('dce_lines', srs=srs, geom_type=ogr.wkbLineString25D)
         lines_layer.CreateField(ogr.FieldDefn('event_id', ogr.OFTInteger))
         lines_layer.CreateField(ogr.FieldDefn('event_layer_id', ogr.OFTInteger))
         lines_layer.CreateField(ogr.FieldDefn('metadata', ogr.OFTString))
@@ -88,7 +93,7 @@ class TestMetricProportion(unittest.TestCase):
 
         # 4. Create Polygon Layer
         # Renamed to dce_polygons to match Layer.DCE_LAYER_NAMES default
-        poly_layer = ds.CreateLayer('dce_polygons', srs=srs, geom_type=ogr.wkbPolygon)
+        poly_layer = ds.CreateLayer('dce_polygons', srs=srs, geom_type=ogr.wkbPolygon25D)
         poly_layer.CreateField(ogr.FieldDefn('event_id', ogr.OFTInteger))
         poly_layer.CreateField(ogr.FieldDefn('event_layer_id', ogr.OFTInteger))
         poly_layer.CreateField(ogr.FieldDefn('metadata', ogr.OFTString))

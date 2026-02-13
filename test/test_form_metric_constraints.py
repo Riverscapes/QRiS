@@ -30,7 +30,7 @@ class MockAnalysis:
         # Use QgsUnitTypes to get the correct string key
         feet_str = QgsUnitTypes.toString(QgsUnitTypes.DistanceFeet)
         self.units = {'distance': feet_str, 'area': 'Acres'} 
-        print(f"MockAnalysis using distance unit: '{feet_str}'")
+        # print(f"MockAnalysis using distance unit: '{feet_str}'")
         self.metadata = {}
 
     def check_metric_feasibility(self, metric, project, event=None):
@@ -53,8 +53,6 @@ class MockEvent:
 class TestMetricConstraints(unittest.TestCase):
     
     def test_constraints_propagation(self):
-        print("Testing Metric Value Form Constraints...")
-        
         # 1. Setup Metric with Constraints (SI: Meters)
         # Min: 10m, Max: 200m, Precision: 2
         metric_metadata = {
@@ -155,8 +153,8 @@ class TestMetricConstraints(unittest.TestCase):
         min_val = form.valManual.minimum()
         max_val = form.valManual.maximum()
         
-        print(f"Feet - Expected Min: {expected_min}, Actual: {min_val}")
-        print(f"Feet - Expected Max: {expected_max}, Actual: {max_val}")
+        # print(f"Feet - Expected Min: {expected_min}, Actual: {min_val}")
+        # print(f"Feet - Expected Max: {expected_max}, Actual: {max_val}")
 
         # Allow small float diff (delta=0.01)
         self.assertAlmostEqual(min_val, expected_min, delta=0.01)
@@ -177,8 +175,8 @@ class TestMetricConstraints(unittest.TestCase):
         min_val_m = form.valManual.minimum()
         max_val_m = form.valManual.maximum()
         
-        print(f"Meters - Expected Min: 10.0, Actual: {min_val_m}")
-        print(f"Meters - Expected Max: 200.0, Actual: {max_val_m}")
+        # print(f"Meters - Expected Min: 10.0, Actual: {min_val_m}")
+        # print(f"Meters - Expected Max: 200.0, Actual: {max_val_m}")
         
         self.assertAlmostEqual(min_val_m, 10.0, places=4)
         self.assertAlmostEqual(max_val_m, 200.0, places=4)

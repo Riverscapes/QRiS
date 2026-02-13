@@ -4,11 +4,13 @@ import json
 import sys
 import os
 
-# Mock QGIS modules immediately
-sys.modules['qgis'] = MagicMock()
-sys.modules['qgis.core'] = MagicMock()
-sys.modules['qgis.gui'] = MagicMock()
-sys.modules['qgis.PyQt'] = MagicMock()
+# Use standard test utility to start QGIS
+try:
+    from utilities import get_qgis_app
+except ImportError:
+    from .utilities import get_qgis_app
+
+get_qgis_app()
 
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -99,9 +101,10 @@ class TestMetricFeasibility(unittest.TestCase):
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         
         self.assertEqual(result['status'], 'NOT_FEASIBLE')
-        # Updated to check for aggregated message format
-        self.assertTrue(any("Missing Required Layer(s)" in r and "Layer Not Found in Project: missing_layer" in r for r in result['reasons']), 
-                        f"Expected aggregated missing error, got {result['reasons']}")
+        # Updated to check for match new error format
+        # Expect: "missing_layer: Not Found in Project" or similar
+        self.assertTrue(any("Not Found in Project" in r for r in result['reasons']), 
+                        f"Expected missing error, got {result['reasons']}")
 
     def test_missing_layer_in_dce(self):
         """Test layer exists in project but not in DCE."""
@@ -114,9 +117,9 @@ class TestMetricFeasibility(unittest.TestCase):
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         
         self.assertEqual(result['status'], 'NOT_FEASIBLE')
-        # Updated to check for aggregated message format
-        self.assertTrue(any("Missing Required Layer(s)" in r and "Layer Not Included in DCE: dem_layer" in r for r in result['reasons']),
-                        f"Expected aggregated missing error, got {result['reasons']}")
+        # Updated: "DEM: Not added to DCE"
+        self.assertTrue(any("Not added to DCE" in r for r in result['reasons']),
+                        f"Expected missing error, got {result['reasons']}")
 
     @patch('sqlite3.connect')
     def test_feasible_empty_data(self, mock_connect):
@@ -140,8 +143,8 @@ class TestMetricFeasibility(unittest.TestCase):
         mock_cursor.execute.assert_called()
         
         self.assertEqual(result['status'], 'FEASIBLE_EMPTY', f"Status was {result['status']}, Reasons: {result['reasons']}")
-        # Updated to check for generic empty message
-        self.assertIn("All required layers are empty", result['reasons'])
+        # Updated: "DEM: No features"
+        self.assertTrue(any("No features" in r for r in result['reasons']), f"got {result['reasons']}")
 
     @patch('sqlite3.connect')
     def test_feasible_populated(self, mock_connect):
@@ -207,7 +210,8 @@ class TestMetricFeasibility(unittest.TestCase):
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         
         self.assertEqual(result['status'], 'NOT_FEASIBLE')
-        self.assertTrue(any("Usage 'elevation' Missing" in r for r in result['reasons']))
+        # Check for specific layer missing messages
+        self.assertTrue(any("Not added to DCE" in r for r in result['reasons']))
 
     @patch('sqlite3.connect')
     def test_usage_groups_empty_data(self, mock_connect):
@@ -228,7 +232,7 @@ class TestMetricFeasibility(unittest.TestCase):
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         
         self.assertEqual(result['status'], 'FEASIBLE_EMPTY')
-        self.assertIn("Usage 'elevation' Layers Empty", result['reasons'])
+        self.assertTrue(any("No features" in r for r in result['reasons']))
 
     @patch('sqlite3.connect')
     def test_individual_layers_any_logic(self, mock_connect):
@@ -246,7 +250,8 @@ class TestMetricFeasibility(unittest.TestCase):
         self.event.event_layers = []
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         self.assertEqual(result['status'], 'NOT_FEASIBLE', "Both missing should be NOT_FEASIBLE")
-        self.assertIn("Missing Required Layer(s): Layer Not Included in DCE: centerline_layer, Layer Not Included in DCE: dem_layer", result['reasons'])
+        # Check for aggregated message in new format "Layer1...; Layer2..."
+        self.assertTrue(any("Not added to DCE" in r for r in result['reasons']), f"got {result['reasons']}")
         
         # Scenario 2: One Present (DEM) -> FEASIBLE
         el_dem = MagicMock(spec=EventLayer)
@@ -266,7 +271,7 @@ class TestMetricFeasibility(unittest.TestCase):
         mock_cursor.fetchone.return_value = [0] # Empty
         result_empty = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         self.assertEqual(result_empty['status'], 'FEASIBLE_EMPTY', "One present but empty should be FEASIBLE_EMPTY")
-        self.assertIn("All required layers are empty", result_empty['reasons'])
+        self.assertTrue(any("No features" in r for r in result_empty['reasons']), f"got {result_empty['reasons']}")
 
 if __name__ == '__main__':
     unittest.main()

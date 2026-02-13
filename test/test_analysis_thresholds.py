@@ -30,6 +30,7 @@ class TestMetricThresholds(unittest.TestCase):
         mv = MagicMock(spec=MetricValue)
         mv.manual_value = manual
         mv.automated_value = automated
+        mv.metadata = {}
         return mv
 
     def test_threshold_exceeded(self):

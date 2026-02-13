@@ -2,11 +2,15 @@
 import unittest
 import os
 import sys
-from unittest.mock import MagicMock
+# from unittest.mock import MagicMock
 
-# Mock qgis 
-sys.modules['qgis'] = MagicMock()
-sys.modules['qgis.core'] = MagicMock()
+# Use standard test utility to start QGIS
+try:
+    from utilities import get_qgis_app
+except ImportError:
+    from .utilities import get_qgis_app
+
+get_qgis_app()
 
 # Add src
 current_dir = os.path.dirname(os.path.abspath(__file__)) 

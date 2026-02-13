@@ -5,6 +5,7 @@ import shutil
 import tempfile
 import numpy as np
 from osgeo import gdal, osr, ogr
+gdal.UseExceptions()
 
 # Import the module under test
 import sys
