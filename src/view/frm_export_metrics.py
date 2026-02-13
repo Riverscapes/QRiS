@@ -251,4 +251,4 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.vert.addStretch()
 
         # add standard form buttons
-        self.vert.addLayout(add_standard_form_buttons(self, "metrics"))
+        self.vert.addLayout(add_standard_form_buttons(self, "analyses#export-an-analysis"))

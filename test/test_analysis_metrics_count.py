@@ -6,13 +6,18 @@ import tempfile
 import json
 import sqlite3
 import sys
-from unittest.mock import MagicMock
+# from unittest.mock import MagicMock
 
-# Mock qgis before importing module under test
-sys.modules['qgis'] = MagicMock()
-sys.modules['qgis.core'] = MagicMock()
+# Use standard test utility to start QGIS
+try:
+    from utilities import get_qgis_app
+except ImportError:
+    from .utilities import get_qgis_app
 
-from osgeo import ogr, osr
+get_qgis_app()
+
+from osgeo import ogr, osr, gdal
+gdal.UseExceptions()
 
 # Add src to path
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
@@ -40,7 +45,7 @@ class TestMetricCount(unittest.TestCase):
         srs.ImportFromEPSG(4326) 
         
         # 1. Create Sample Frame Layer (1x1 degree box for simplicity)
-        sf_layer = ds.CreateLayer('sample_frame_features', srs=srs, geom_type=ogr.wkbPolygon)
+        sf_layer = ds.CreateLayer('sample_frame_features', srs=srs, geom_type=ogr.wkbPolygon25D)
         sf_layer.CreateField(ogr.FieldDefn('fid', ogr.OFTInteger))
         
         sf_feat = ogr.Feature(sf_layer.GetLayerDefn())
@@ -59,7 +64,7 @@ class TestMetricCount(unittest.TestCase):
         
         # 2. Create Pools Layer (Polygons)
         # ID 30
-        poly_layer = ds.CreateLayer('dce_polygons', srs=srs, geom_type=ogr.wkbPolygon)
+        poly_layer = ds.CreateLayer('dce_polygons', srs=srs, geom_type=ogr.wkbPolygon25D)
         poly_layer.CreateField(ogr.FieldDefn('event_id', ogr.OFTInteger))
         poly_layer.CreateField(ogr.FieldDefn('event_layer_id', ogr.OFTInteger))
         poly_layer.CreateField(ogr.FieldDefn('metadata', ogr.OFTString))

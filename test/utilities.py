@@ -23,20 +23,41 @@ def get_qgis_app():
     If QGIS is already running the handle to that app will be returned.
     """
 
+    # We want to fail loudly if QGIS cannot be imported in tests
+    from qgis.PyQt import QtGui, QtCore, QtWidgets
+    from qgis.core import QgsApplication
+    from qgis.gui import QgsMapCanvas
     try:
-        from qgis.PyQt import QtGui, QtCore
-        from qgis.core import QgsApplication
-        from qgis.gui import QgsMapCanvas
-        from .qgis_interface import QgisInterface
+        from qgis_interface import QgisInterface
     except ImportError:
-        return None, None, None, None
+        from .qgis_interface import QgisInterface
 
     global QGIS_APP  # pylint: disable=W0603
 
     if QGIS_APP is None:
+        # Suppress benign Qt mime database errors on Windows
+        if 'QT_LOGGING_RULES' not in os.environ:
+             os.environ['QT_LOGGING_RULES'] = 'qt.core.mimedb=false'
+        
+        # Check for and clear any mocks that might block real QGIS loading
+        # This handles cases where test_analysis_*.py ran before us
+        try:
+            from unittest.mock import MagicMock
+            if 'qgis' in sys.modules and isinstance(sys.modules['qgis'], MagicMock):
+                LOGGER.debug("Detected mocked 'qgis' module. Clearing sys.modules to load real QGIS.")
+                del sys.modules['qgis']
+                # Remove all qgis submodules
+                for mod in list(sys.modules.keys()):
+                    if mod.startswith('qgis.'):
+                        del sys.modules[mod]
+        except ImportError:
+            pass
+
         gui_flag = True  # All test will run qgis in gui mode
         #noinspection PyPep8Naming
-        QGIS_APP = QgsApplication(sys.argv, gui_flag)
+        # QGIS_APP = QgsApplication(sys.argv, gui_flag)
+        # Use dummy bytes args to avoid TypeError with Windows/SIP bindings
+        QGIS_APP = QgsApplication([b"qgis_test"], gui_flag)
         # Make sure QGIS_PREFIX_PATH is set in your env if needed!
         if 'QGIS_PREFIX_PATH' in os.environ:
              QGIS_APP.setPrefixPath(os.environ['QGIS_PREFIX_PATH'], True)
@@ -47,7 +68,7 @@ def get_qgis_app():
     global PARENT  # pylint: disable=W0603
     if PARENT is None:
         #noinspection PyPep8Naming
-        PARENT = QtGui.QWidget()
+        PARENT = QtWidgets.QWidget()
 
     global CANVAS  # pylint: disable=W0603
     if CANVAS is None:

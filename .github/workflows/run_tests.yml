@@ -1,0 +1,61 @@
+name: QRiS Tests
+
+on:
+  # Trigger the workflow on push or pull request events but only for the master/main branch
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # Allow running manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  test_linux:
+    name: Test on Linux (QGIS LTR)
+    runs-on: ubuntu-latest
+    container: qgis/qgis:release-3_34  # Use the Long Term Release (LTR) version
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          # Install pip if not present (some QGIS images might miss it)
+          apt-get update && apt-get install -y python3-pip
+          
+          # Install requirements if the file exists
+          if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi
+          
+          # Install test-specific dependencies if needed (e.g. coverage, mock)
+          pip3 install coverage
+
+      - name: Run Tests
+        env:
+          # This tells Python where to look for your plugin code
+          PYTHONPATH: /github/workspace
+        run: |
+          # The workspace is mounted at /github/workspace in the container
+          # We run the tests using python's unittest module
+          python3 -m unittest discover -s test -p 'test_*.py'
+
+  test_linux_latest:
+    name: Test on Linux (QGIS Latest)
+    runs-on: ubuntu-latest
+    # QGIS 'latest' corresponds to the most recent stable release
+    container: qgis/qgis:latest 
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          apt-get update && apt-get install -y python3-pip
+          if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi
+
+      - name: Run Tests
+        env:
+          PYTHONPATH: /github/workspace
+        run: |
+          python3 -m unittest discover -s test -p 'test_*.py'

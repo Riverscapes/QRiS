@@ -6,13 +6,18 @@ import tempfile
 import json
 import sqlite3
 import sys
-from unittest.mock import MagicMock
+# from unittest.mock import MagicMock
 
-# Mock qgis before importing module under test
-sys.modules['qgis'] = MagicMock()
-sys.modules['qgis.core'] = MagicMock()
+# Use standard test utility to start QGIS
+try:
+    from utilities import get_qgis_app
+except ImportError:
+    from .utilities import get_qgis_app
 
-from osgeo import ogr, osr
+get_qgis_app()
+
+from osgeo import ogr, osr, gdal
+gdal.UseExceptions()
 
 # Add src to path
 current_dir = os.path.dirname(os.path.abspath(__file__)) 
@@ -37,7 +42,7 @@ class TestMetricFiltering(unittest.TestCase):
         # Create Data Layer
         srs = osr.SpatialReference()
         srs.ImportFromEPSG(26912) 
-        layer = ds.CreateLayer('dce_points', srs=srs, geom_type=ogr.wkbPoint)
+        layer = ds.CreateLayer('dce_points', srs=srs, geom_type=ogr.wkbPoint25D)
         layer.CreateField(ogr.FieldDefn('metadata', ogr.OFTString))
         layer.CreateField(ogr.FieldDefn('event_id', ogr.OFTInteger))
         layer.CreateField(ogr.FieldDefn('event_layer_id', ogr.OFTInteger))
