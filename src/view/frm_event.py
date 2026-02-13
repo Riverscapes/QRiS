@@ -473,7 +473,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.tabGrid.addWidget(self.lblDateLabel, 7, 0, 1, 1)
 
         self.txtDateLabel = QtWidgets.QLineEdit()
-        self.txtDateLabel.setPlaceholderText('Optional lable to express what the date represents.')
+        self.txtDateLabel.setPlaceholderText('Optional label to express what the date represents.')
         self.tabGrid.addWidget(self.txtDateLabel, 7, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)

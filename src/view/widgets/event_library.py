@@ -79,6 +79,10 @@ class EventLibraryWidget(QtWidgets.QWidget):
         # State
         self.all_events = [] 
         self.checked_event_ids = set()
+        
+        # Track current sort state explicitly
+        self.current_sort_col = -1
+        self.current_sort_order = QtCore.Qt.AscendingOrder
 
         self.setupUi()
         self.load_events()
@@ -163,17 +167,18 @@ class EventLibraryWidget(QtWidgets.QWidget):
                 item.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon_alias}'))
             self.table.setItem(i, 1, item)
             
-            # 2: Date
+            # 2: Date Label
+            date_label = event.system_metadata.get('date_label', "") or ""
+            date_label_item = QtWidgets.QTableWidgetItem(date_label)
+            self.table.setItem(i, 2, date_label_item)
+
+            # 3: Date
             date_item = SortableTableWidgetItem(event.date)
             sort_key = (0,0,0)
             if event.start:
                 sort_key = (event.start.year or 0, event.start.month or 0, event.start.day or 0)
             date_item.setData(QtCore.Qt.UserRole, sort_key)
-            self.table.setItem(i, 2, date_item)
-
-            # 3: Type
-            type_item = QtWidgets.QTableWidgetItem(event.event_type.name)
-            self.table.setItem(i, 3, type_item)
+            self.table.setItem(i, 3, date_item)
 
             # 4: Description
             desc_item = QtWidgets.QTableWidgetItem(event.description or "")
@@ -181,6 +186,11 @@ class EventLibraryWidget(QtWidgets.QWidget):
         
         self.table.setColumnWidth(0, 30)
         self.table.resizeColumnsToContents()
+        
+        if self.allow_reorder and self.current_sort_col != -1:
+            self.table.sortItems(self.current_sort_col, self.current_sort_order)
+            self.table.horizontalHeader().setSortIndicator(self.current_sort_col, self.current_sort_order)
+
         self.table.blockSignals(False)
         
         self.update_summary()
@@ -325,15 +335,27 @@ class EventLibraryWidget(QtWidgets.QWidget):
         if not self.allow_reorder: return 
 
         header = self.table.horizontalHeader()
-        order = QtCore.Qt.AscendingOrder
-        if header.sortIndicatorSection() == logicalIndex and header.sortIndicatorOrder() == QtCore.Qt.AscendingOrder:
-            order = QtCore.Qt.DescendingOrder
-            
+        
+        # New default order is Ascending
+        new_order = QtCore.Qt.AscendingOrder
+        
+        # If we are already sorting by this column, toggle the order
+        if self.current_sort_col == logicalIndex:
+            if self.current_sort_order == QtCore.Qt.AscendingOrder:
+                new_order = QtCore.Qt.DescendingOrder
+            else:
+                new_order = QtCore.Qt.AscendingOrder
+        
+        # Update state
+        self.current_sort_col = logicalIndex
+        self.current_sort_order = new_order
+
         self.table.blockSignals(True) 
-        self.table.sortItems(logicalIndex, order)
+        self.table.sortItems(logicalIndex, new_order)
         self.table.blockSignals(False)
         
-        header.setSortIndicator(logicalIndex, order)
+        # Update the visual indicator
+        header.setSortIndicator(logicalIndex, new_order)
         self.on_event_checked()
 
     def setupUi(self):
@@ -371,7 +393,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
         # --- Table ---
         self.table = ReorderableTableWidget(self)
         self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(['', 'Name', 'Date', 'Type', 'Description'])
+        self.table.setHorizontalHeaderLabels(['', 'Name', 'Date Label', 'Date', 'Description'])
         self.table.verticalHeader().setVisible(False)
         self.table.itemChanged.connect(self.on_item_changed)
         # Single Selection for HIGHLIGHTING
