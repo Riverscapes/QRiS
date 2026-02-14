@@ -1,6 +1,50 @@
 # QRiS Plugin
 
-## [1.2.2] Jun 10 2026
+## [1.2.3] Feb 13 2026
+
+### Fixed
+- Metrics Uniqueness not being recognized by protocol #959
+- Make sure denominator usage is available for inputs #937
+- Fix calculation for densities #954
+- Metric Filters for Available Calculations Not Displaying Properly #957
+- Densities Calculating for Metrics with Zero Values #953
+- OGR memory layer bug with Gradient metric #967
+- StreamStats API changes #966
+- Layers from experimental protocols not showing up in layer picker in new DCE form #971
+- Missing basin characteristics in Catchment Delineations #966
+- Fix error if no events to use as template for design or asbuilt
+- Add date label to event library, fix sorting bug 
+
+### Changed
+- Changes to Create New Analysis/Analysis Properties Form #933
+- Layer Groups are Reversed in DCE add all to Map #868
+- Analysis Properties Updates #933
+- Layer Locking Updates #901
+- Uncertainty improvements in Analysis/Metrics #941
+- Metric Value User Interface Improvements #866
+- Add attribute check for metric calculations #777
+- Updated handling for deprecated protocols
+- Manual Values Don't Exceed 100 in Analysis #860
+- DCE picker for Analyses #947
+- Refactor of Analysis Metrics Table
+- Allow Uncertainty to match match metric value constraints #955
+- Set default Analysis Properties filter to match state of DCE #958
+- Protocol Field Values Limited to 100 QRiS v1.2.2.2 #956
+- Make project export automatically create a project.rs.xml #949
+- Projects no longer have a project extents and unify aoi/valley bottom properties form #934
+- Improved UX for Metric Calculation Errors #777
+- Updates to proportion calculation #882
+- Enable metrics for asbuilts, designs #689
+- DCE Properties Redesign #944
+- Allow selection of multiple platforms on DCE properties form #772
+- Add value_required to DCE layer #499
+- Change Properties Protocol Filter to Only Display Protocols in Use #970
+- Add metric parameters to metric details form
+- Improved tree management in dce and metric libraries
+- Allow sortable headings in analysis table
+
+
+## [1.2.2] Jan 10 2026
 
 ### Fixed
 - Missing profile symbology #832
