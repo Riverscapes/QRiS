@@ -10,95 +10,6 @@ from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
 from .checkable_combo_box import CheckableComboBox
 
 
-class MetricStatusWidget_Labels(QtWidgets.QWidget):
-    edit_clicked = QtCore.pyqtSignal()
-    warning_clicked = QtCore.pyqtSignal()
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.layout.setContentsMargins(2,0,2,0)
-        self.layout.setSpacing(4)
-        
-        # 1. Edit Button
-        self.btn_edit = QtWidgets.QToolButton()
-        self.btn_edit.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/options'))
-        self.btn_edit.setAutoRaise(True)
-        self.btn_edit.setToolTip("Edit Metric Value")
-        self.btn_edit.setFixedSize(20, 20)
-        self.btn_edit.clicked.connect(self.edit_clicked)
-        self.layout.addWidget(self.btn_edit)
-        
-        # 2. Source Indicator (M/A)
-        self.lbl_source = QtWidgets.QLabel()
-        self.lbl_source.setAlignment(QtCore.Qt.AlignCenter)
-        self.lbl_source.setFixedSize(20, 20)
-        font = self.lbl_source.font()
-        font.setBold(True)
-        self.lbl_source.setFont(font)
-        self.layout.addWidget(self.lbl_source)
-        
-        # 3. Warning Indicator (Button)
-        self.btn_warning = QtWidgets.QToolButton()
-        self.btn_warning.setFixedSize(20, 20)
-        self.btn_warning.setAutoRaise(True)
-        self.btn_warning.clicked.connect(self.warning_clicked)
-        self.layout.addWidget(self.btn_warning)
-        
-        self.layout.addStretch()
-        
-    def update_state(self, is_manual, can_automated, feasibility, metric=None, metric_value=None):
-        source_text = ""
-        source_tooltip = ""
-        
-        if is_manual is not None:
-             if is_manual:
-                 source_text = "M"
-                 source_tooltip = "Manual Value"
-             else:
-                 source_text = "A"
-                 source_tooltip = "Automated Value"
-        
-        self.lbl_source.setText(source_text)
-        self.lbl_source.setToolTip(source_tooltip)
-        
-        # Warning Logic
-        icon = None
-        tooltip = ""
-
-        # Check Calculation Error
-        if metric_value and metric_value.metadata and metric_value.metadata.get('calculation_error'):
-             icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical)
-             tooltip = f"Calculation Error: {metric_value.metadata.get('calculation_error')}"
-
-        if icon is None and feasibility:
-            f_status = feasibility.get('status', 'FEASIBLE')
-            f_reasons = feasibility.get('reasons', [])
-            if f_status == 'NOT_FEASIBLE' or f_status == 'FEASIBLE_EMPTY':
-                 icon_std = QtWidgets.QStyle.SP_MessageBoxWarning if f_status == 'NOT_FEASIBLE' else QtWidgets.QStyle.SP_MessageBoxInformation
-                 icon = QtWidgets.QApplication.style().standardIcon(icon_std)
-                 tooltip = format_feasibility_text(f_status, f_reasons)
-        
-        # Threshold Check (Blue Warning)
-        if icon is None and is_manual and metric and metric_value and metric_value.automated_value is not None:
-            tol = metric.tolerance
-            if tol is not None and metric_value.manual_value is not None:
-                try:
-                    diff = abs(metric_value.manual_value - metric_value.automated_value)
-                    if diff > tol:
-                        icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation)
-                        tooltip = f"Manual value differs from automated value by more than tolerance ({tol}).\nManual: {metric_value.manual_value}\nAutomated: {metric_value.automated_value}"
-                except Exception:
-                    pass
-
-        if icon:
-            self.btn_warning.setIcon(icon)
-            self.btn_warning.setVisible(True)
-            self.btn_warning.setToolTip(tooltip)
-        else:
-            self.btn_warning.setVisible(False)
-
-
 class MetricStatusWidget_Buttons(QtWidgets.QWidget):
     manual_clicked = QtCore.pyqtSignal()
     automated_clicked = QtCore.pyqtSignal()
@@ -235,7 +146,6 @@ class AnalysisTable(QtWidgets.QWidget):
         self.analysis = None
         self.current_dce = None
         self.mask_feature_id = None
-        self.layout_mode = "Buttons" # "Labels" or "Buttons"
         self.setup_ui()
         self.connect_signals()
 
@@ -308,27 +218,6 @@ class AnalysisTable(QtWidgets.QWidget):
 
         self.main_layout.addWidget(self.table)
 
-        # Display Controls Layout
-        self.layoutDisplay = QtWidgets.QHBoxLayout()
-        
-        # Testing Switcher
-        self.lblTestOption = QtWidgets.QLabel("Testing Option:")
-        self.layoutDisplay.addWidget(self.lblTestOption)
-        
-        self.cboTestOption = QtWidgets.QComboBox()
-        self.cboTestOption.addItems(["A: Labels", "B: Buttons"])
-        self.cboTestOption.setCurrentText("B: Buttons")
-        self.cboTestOption.currentTextChanged.connect(self.on_switch_layout_mode)
-        self.layoutDisplay.addWidget(self.cboTestOption)
-        
-        self.layoutDisplay.addStretch()
-        self.btnUnits = QtWidgets.QToolButton()
-        self.btnUnits.setText('Units')
-        self.btnUnits.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.btnUnits.setToolTip('Change metric display units')
-        self.layoutDisplay.addWidget(self.btnUnits)
-        
-        self.main_layout.addLayout(self.layoutDisplay)
 
     def connect_signals(self):
         self.table.itemClicked.connect(self.on_item_clicked)
@@ -369,14 +258,18 @@ class AnalysisTable(QtWidgets.QWidget):
         self.act_limit_values = self.menu_advanced.addAction("Limit to Values Only")
         self.act_limit_values.setCheckable(True)
         self.act_limit_values.toggled.connect(self.filter_rows)
+
+        # Mutual Exclusivity for Value State
+        self.act_limit_not_calculated.toggled.connect(lambda checked: self.act_limit_values.setChecked(False) if checked else None)
+        self.act_limit_values.toggled.connect(lambda checked: self.act_limit_not_calculated.setChecked(False) if checked else None)
         
         self.btn_advanced.setMenu(self.menu_advanced)
 
     def setup_units_menu(self):
-        menu = QtWidgets.QMenu(self)
+        self.units_menu = QtWidgets.QMenu(self)
         
         # Distance Units
-        dist_menu = menu.addMenu('Distance')
+        dist_menu = self.units_menu.addMenu('Distance')
         self.dist_actions = {}
         ag_dist = QtWidgets.QActionGroup(self)
         for unit_name in distance_units.keys():
@@ -389,7 +282,7 @@ class AnalysisTable(QtWidgets.QWidget):
             self.dist_actions[unit_name] = action
 
         # Area Units
-        area_menu = menu.addMenu('Area')
+        area_menu = self.units_menu.addMenu('Area')
         self.area_actions = {}
         ag_area = QtWidgets.QActionGroup(self)
         for unit_name in area_units.keys():
@@ -402,7 +295,7 @@ class AnalysisTable(QtWidgets.QWidget):
             self.area_actions[unit_name] = action
 
         # Ratio Units
-        ratio_menu = menu.addMenu('Ratio')
+        ratio_menu = self.units_menu.addMenu('Ratio')
         self.ratio_actions = {}
         ag_ratio = QtWidgets.QActionGroup(self)
         for unit_name in ratio_units.keys():
@@ -414,8 +307,7 @@ class AnalysisTable(QtWidgets.QWidget):
             ag_ratio.addAction(action)
             self.ratio_actions[unit_name] = action
 
-        menu.aboutToShow.connect(self.update_menu_state)
-        self.btnUnits.setMenu(menu)
+        self.units_menu.aboutToShow.connect(self.update_menu_state)
 
     def update_menu_state(self):
         if not self.analysis:
@@ -571,27 +463,14 @@ class AnalysisTable(QtWidgets.QWidget):
         # Re-enable sorting after build
         self.table.setSortingEnabled(True)
     
-    def on_switch_layout_mode(self, text):
-        if "Labels" in text:
-            self.layout_mode = "Labels"
-        else:
-            self.layout_mode = "Buttons"
-        self.build_table()
-        self.load_values(self.current_dce, self.mask_feature_id)
-
     def create_row(self, row, analysis_metric: AnalysisMetric):
         metric: Metric = analysis_metric.metric
         
         # Status Widget
-        if self.layout_mode == "Labels":
-            status_widget = MetricStatusWidget_Labels()
-            status_widget.edit_clicked.connect(lambda: self._handle_edit(row))
-            status_widget.warning_clicked.connect(lambda: self._handle_warning(row))
-        else:
-            status_widget = MetricStatusWidget_Buttons()
-            status_widget.manual_clicked.connect(lambda: self._handle_edit(row))
-            status_widget.automated_clicked.connect(lambda: self._handle_calculate(row))
-            status_widget.warning_clicked.connect(lambda: self._handle_warning(row))
+        status_widget = MetricStatusWidget_Buttons()
+        status_widget.manual_clicked.connect(lambda: self._handle_edit(row))
+        status_widget.automated_clicked.connect(lambda: self._handle_calculate(row))
+        status_widget.warning_clicked.connect(lambda: self._handle_warning(row))
             
         self.table.setCellWidget(row, self.column['status'], status_widget)
         
@@ -749,18 +628,19 @@ class AnalysisTable(QtWidgets.QWidget):
         menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
         menu.addSeparator()
 
-        analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
-        current_dce_id = self.current_dce.id if self.current_dce else None
+        if metric.metric_params:
+            analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
+            current_dce_id = self.current_dce.id if self.current_dce else None
 
-        # Filter limit_dces using selected_events from analysis metadata
-        limit_dces = self.analysis.metadata.get('selected_events') if self.analysis and self.analysis.metadata else None
-        
-        # If no specific events selected in analysis, limit to current DCE context
-        if not limit_dces and self.current_dce:
-            limit_dces = [self.current_dce.id]
-        
-        menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
-        menu.addSeparator()
+            # Filter limit_dces using selected_events from analysis metadata
+            limit_dces = self.analysis.metadata.get('selected_events') if self.analysis and self.analysis.metadata else None
+            
+            # If no specific events selected in analysis, limit to current DCE context
+            if not limit_dces and self.current_dce:
+                limit_dces = [self.current_dce.id]
+            
+            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
+            menu.addSeparator()
 
         # Copy Value Actions
         val_item = self.table.item(row, self.column['value'])

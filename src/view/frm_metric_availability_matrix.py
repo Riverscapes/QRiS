@@ -180,6 +180,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
             
             # Pre-calculate overall DCE availability to determine if missing layers are optional
             dce_ok = self.metric.can_calculate_for_dce(event, self.qris_project.protocols)
+            has_empty_features = False
 
             # 1. DCE Name
             item_name = QtWidgets.QTableWidgetItem(event.name)
@@ -243,6 +244,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                                      status_item.setText("No Features in Layer")
                                      status_item.setBackground(QtGui.QColor("#fff3cd"))
                                      status_item.setToolTip(f"Input '{input_name}' exists but has 0 features.")
+                                     has_empty_features = True
                                  else:
                                      status_item.setToolTip(f"Input ID: {found_id}\nName: {input_name}\nFeatures: {f_count}")
                              except Exception as e:
@@ -287,6 +289,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                                  status_item.setText("No Features in Layer")
                                  status_item.setBackground(QtGui.QColor("#fff3cd"))
                                  status_item.setToolTip(f"Found: {found_layer.layer.name}\nWarning: Layer exists but has 0 features.")
+                                 has_empty_features = True
                          except Exception as e:
                              status_item.setText("Present")
                              status_item.setBackground(QtGui.QColor("#d4edda"))
@@ -339,9 +342,14 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
             tool_tip_lines = []
             if is_fully_available:
                 summary_item.setText("YES")
-                summary_item.setBackground(QtGui.QColor("#28a745")) # Green
-                summary_item.setForeground(QtGui.QColor("white"))
-                tool_tip_lines.append("Metric can be calculated for this DCE.")
+                if has_empty_features:
+                    summary_item.setBackground(QtGui.QColor("#fff3cd")) # Yellow
+                    summary_item.setForeground(QtGui.QColor("black"))
+                    tool_tip_lines.append("Metric can be calculated, but one or more layers have no features.")
+                else:
+                    summary_item.setBackground(QtGui.QColor("#28a745")) # Green
+                    summary_item.setForeground(QtGui.QColor("white"))
+                    tool_tip_lines.append("Metric can be calculated for this DCE.")
             else:
                 summary_item.setText("NO")
                 summary_item.setBackground(QtGui.QColor("#dc3545")) # Red

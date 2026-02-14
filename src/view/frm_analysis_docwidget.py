@@ -389,7 +389,10 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.vert.addLayout(self.horizExport)
 
         self.horizExport.addWidget(add_help_button(self, 'analyses'))
-        self.horizExport.addWidget(add_help_button(self, 'analyses/#metric-table', 'Icon Legend'))
+
+        self.cmdUnits = QtWidgets.QPushButton('Display Units')
+        self.cmdUnits.setMenu(self.table.units_menu)
+        self.horizExport.addWidget(self.cmdUnits)
 
         self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizExport.addItem(self.spacerItem)
