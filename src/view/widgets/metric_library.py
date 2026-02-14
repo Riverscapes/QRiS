@@ -823,8 +823,9 @@ class MetricLibrary(QtWidgets.QWidget):
         menu = QtWidgets.QMenu()
         if metric:
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
-            menu.addSeparator()
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
+            if metric.metric_params:
+                menu.addSeparator()
+                menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
         elif item.childCount() > 0:
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/expand'), "Expand All Children", lambda: self.expand_tree_children(item))
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
@@ -924,10 +925,11 @@ class MetricLibrary(QtWidgets.QWidget):
         action_details = menu.addAction("Metric Details...")
         action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
 
-        menu.addSeparator()
+        if metric.metric_params:
+            menu.addSeparator()
 
-        action_matrix = menu.addAction("Automation Availability Matrix...")
-        action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
+            action_matrix = menu.addAction("Automation Availability Matrix...")
+            action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
         
         menu.exec_(self.metricsTable.viewport().mapToGlobal(position))
 
