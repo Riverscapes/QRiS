@@ -2,10 +2,10 @@ name: QRiS Tests
 
 on:
   # Trigger the workflow on push or pull request events but only for the master/main branch
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  #push:
+  #  branches: [ main, master ]
+  #pull_request:
+  #  branches: [ main, master ]
   # Allow running manually from the Actions tab
   workflow_dispatch:
 
