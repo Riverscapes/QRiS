@@ -12,7 +12,7 @@ from qgis.core import (
     QgsVectorDataProvider, QgsTask, QgsMessageLog, Qgis,
     edit)
 from PyQt5.QtGui import *
-from qgis.PyQt.QtCore import QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QVariant, QMetaType, pyqtSignal
 from qgis.analysis import QgsNativeAlgorithms
 
 
@@ -98,9 +98,9 @@ class VectorizeTask(QgsTask):
             pv = raw_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField('raw_area_m', QVariant.Double),
-                              QgsField('max_elev_m', QVariant.Double),
-                              QgsField('surface_name', QVariant.String)])
+            pv.addAttributes([QgsField('raw_area_m', int(QMetaType.Type.Double)),
+                              QgsField('max_elev_m', int(QMetaType.Type.Double)),
+                              QgsField('surface_name', int(QMetaType.QString))])
             raw_vector.updateFields()
 
             # Create a context and scope
@@ -175,7 +175,7 @@ class VectorizeTask(QgsTask):
             pv = final_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField('area_m', QVariant.Int)])
+            pv.addAttributes([QgsField('area_m', int(QMetaType.Int))])
             final_vector.updateFields()
 
             # Loop through and add the areas

@@ -4,7 +4,7 @@ import json
 from textwrap import dedent
 
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import Qt, QVariant, pyqtSlot, pyqtSignal, QObject
+from qgis.PyQt.QtCore import Qt, QVariant, QMetaType, pyqtSlot, pyqtSignal, QObject
 from qgis.utils import iface
 
 from ..QRiS.path_utilities import is_url
@@ -463,11 +463,11 @@ class RiverscapesMapManager(QObject):
     def set_metadata_virtual_fields(self, feature_layer: QgsVectorLayer, field_config: dict = None, default_photo_path: str = None) -> None:
 
         field_types = {
-            'integer': QVariant.Int,
-            'float': QVariant.Double,
-            'boolean': QVariant.Bool,
-            'url': QVariant.Url,
-            'string': QVariant.String
+            'integer': QMetaType.Int,
+            'float': QMetaType.Double,
+            'boolean': QMetaType.Bool,
+            'url': QMetaType.QUrl,
+            'string': QMetaType.QString
         }
 
         fields = feature_layer.fields()
@@ -481,7 +481,7 @@ class RiverscapesMapManager(QObject):
         field_labels = {}
         if field_config is not None:
             for field in field_config.get('fields', []):
-                field_type = field_types.get(field['type'], QVariant.String)
+                field_type = field_types.get(field['type'], QMetaType.QString)
                 field_name = field['label']
                 field_labels.update({field['id']: field_name})
                 metadata_fields['attributes'].update({field['id']: field_type})
@@ -499,16 +499,16 @@ class RiverscapesMapManager(QObject):
                 # parse data type from values. do not change if the type is of a higher order
                 # e.g. if the value is a float, but the type is already a string, don't change it
                 existing_type = metadata_fields.get(key, None)
-                if isinstance(value, bool) and (existing_type is None or existing_type == QVariant.Bool):
-                    field_type = QVariant.Bool
-                if isinstance(value, int) and (existing_type is None or existing_type == QVariant.Int):
-                    field_type = QVariant.Int
-                elif isinstance(value, float) and (existing_type is None or existing_type == QVariant.Double):
-                    field_type = QVariant.Double
-                elif is_url(value) and (existing_type is None or existing_type == QVariant.Url):
-                    field_type = QVariant.Url
+                if isinstance(value, bool) and (existing_type is None or existing_type == QMetaType.Bool):
+                    field_type = QMetaType.Bool
+                if isinstance(value, int) and (existing_type is None or existing_type == QMetaType.Int):
+                    field_type = QMetaType.Int
+                elif isinstance(value, float) and (existing_type is None or existing_type == QMetaType.Double):
+                    field_type = QMetaType.Double
+                elif is_url(value) and (existing_type is None or existing_type == QMetaType.QUrl):
+                    field_type = QMetaType.QUrl
                 else:
-                    field_type = QVariant.String
+                    field_type = QMetaType.QString
                 # if 'metadata' not in metadata_fields:
                 #     metadata_fields.update({'metadata': {}})
                 metadata_fields['metadata'].update({key: field_type})
@@ -522,7 +522,7 @@ class RiverscapesMapManager(QObject):
                 if upper_key == 'attributes':
                     field_name = field_labels.get(key, field_name)
 
-                virtual_field = QgsField(field_name, field_type)
+                virtual_field = QgsField(field_name, int(field_type))
                 feature_layer.addExpressionField(f"""map_get(map_get(json_to_map("metadata"), '{upper_key}'), '{key}')""", virtual_field)
 
                 if key == "photo_path":
@@ -623,7 +623,7 @@ class RiverscapesMapManager(QObject):
         field_index = fields.indexFromName(field_name)
         if expression is not None:
             # Set field to display vegetation dam density based on values in other fields
-            virtual_field = QgsField(field_name, QVariant.Int)
+            virtual_field = QgsField(field_name, int(QMetaType.Int))
             feature_layer.addExpressionField(expression, virtual_field)
             feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(expression))
         widget_setup = QgsEditorWidgetSetup('ValueMap', lookup_config)
@@ -679,7 +679,8 @@ class RiverscapesMapManager(QObject):
         else:
             raise ValueError("Dimension must be 'area' or 'length'")
 
-        virtual_field = QgsField(field_name, QVariant.Double)
+        field_type = int(QMetaType.Double)
+        virtual_field = QgsField(field_name, int(field_type))
         feature_layer.addExpressionField(field_expression, virtual_field)
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
