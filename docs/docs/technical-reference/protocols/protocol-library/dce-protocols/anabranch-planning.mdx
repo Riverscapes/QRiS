@@ -35,26 +35,98 @@ Citation|NA
 Author|Zach Burgert
 
 ## Layers & Metrics 
+<Tabs>
+<TabItem value="assessment_layers" label="Assessment Layers">
+| Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `stream_assessment` | Stream Assessment | Line |NA|
+| `risk_assessment_point` | Risk Assessment (Point) | Point |`medium_risk count`, `high_risk_count`|
+| `risk_assessment_line` | Risk Assessment (Line) | Line |`medium_risk count`, `high_risk count`, `medium_risk length`, `high_risk_length`|
+| `risk_assessment_polygon` | Risk Assessment (Polygon) | Polygon |`medium_risk count`, `high_risk_count`, `medium_risk_area`, `high_risk_area`, `proportion_medium_risk_area`, `proportion_high_risk_area`|
+| `property_assessment` | Property Assessment | Polygon |NA|
+
+  </TabItem>
+  <TabItem value="recovery_space_layers" label="Recovery Space Layers">
+  | Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `minimum_recovery_space` | Minimum Recovery Space | Polygon |`area_minimum_recovery_space`, `proportion_minimum_recovery_space`|
+| `maximum_recovery_space` | Recovery Space | Polygon |`area_maximum_recovery_space`, `proportion_maximum_recovery_space`|
+  </TabItem>
+</Tabs>
 
 ### Video Demonstration
 
 ### Layer Attributes
+
 <Tabs>
-<TabItem value="metric_layers" label="Metric Layers">
-| Layer ID | Label | Geometry | Metrics |
-| :--- | :--- | :--- | :--- |
-| `risk_assessment_point` | Risk Assessment (Point) | Point |`medium_risk count`, `high_risk_count`|
-| `risk_assessment_line` | Risk Assessment (Line) | Line |`medium_risk count`, `high_risk count`, `medium_risk length`, `high_risk_length`|
-| `risk_assessment_polygon` | Risk Assessment (Polygon) | Polygon |`medium_risk count`, `high_risk_count`, `medium_risk_area`, `high_risk_area`, `proportion_medium_risk_area`, `proportion_high_risk_area`|
-| `minimum_recovery_space` | Minimum Recovery Space | Polygon |`area_minimum_recovery_space`, `proportion_minimum_recovery_space`|
-| `maximum_recovery_space` | Recovery Space | Polygon |`area_maximum_recovery_space`, `proportion_maximum_recovery_space`|
-  </TabItem>
-  <TabItem value="non_metric_layers" label="Non Metric Layers">
-  | Layer ID | Label | Geometry | Metrics |
-| :--- | :--- | :--- | :--- |
-| `stream_assessment` | Stream Assessment | Line |NA|
-| `property_assessment` | Property Assessment | Polygon |NA|
-  </TabItem>
+<TabItem value="stream_assessment" label="Stream Assessment">
+*Description: assessment of stream conditions and potential for LTPBR actions.*
+| Field Label | Type | Values / Constraints |
+| :--- | :--- | :--- |
+| **Wadeability for Low-Tech** | List | 1st through 3rd Order Wadeable Stream; 3rd through 5th Order Wadeable Stream; 5th Order Non-Wadeable Stream or Higher |
+| **Slope** | List | ≤ 3%; 3-6%; ≥ 7% |
+| **Bank Erodibility** | List | High Erodibility (loosely consolidated); Moderate Erodibility; Low Erodibility (compact) |
+| **Bed Material** | List | Clay; Silt; Sand; Gravel; Cobble; Boulder; Bedrock |
+| **Habitat Suitability for Beaver** | Multi-List | Preferred; Suitable; Unsuitable; Sufficient/Insufficient Food; Sufficient/Insufficient Vegetation; Dam Building/Blowout potential |
+| **Habitat Suitability for Fish** | Multi-List | Preferred; Suitable; Unsuitable; Sufficient/Insufficient Habitat Units; Streamside Vegetation; Food Sources |
+| **Habitat Units** | Multi-List | Riffles; Pools; Ponds; Bank Attached Bars; Mid Channel Bars; Chutes; Glide/Runs; Rapids/Cascades |
+| **Material for Low-Tech** | List | Bare (needs to be imported); Upland dominant; Mixture; Riparian dominant |
+| **Opportunity Rating** | Integer | Slider (0 to 5) |
+| **Notes** | Text | Field for additional observations |
+</TabItem>
+<TabItem value="risk_assessment" label="Risk Assessment">
+*Description: assessment of stream conditions and potential for LTPBR actions.*
+
+**Risk Assessment (Point)**
+| Field Label | Type | Values / Constraints |
+| :--- | :--- | :--- |
+| **Type** | List | Diversion; Culvert; Retention Pond; Dam; Weir; Barrier; Ford (Allows custom values) |
+| **Ownership** | List | Public; Private; Unknown |
+| **Potential Flood Risk** | List | Floods Regularly; Floods Occasionally; Floods Rarely; Flooded Historically; Minimal to No Flood Risk |
+| **Potential Fish Barrier** | List | Yes; No; Unsure |
+| **Potential LTPBR Impacts** | List | Likely increase in flood risk; Negligible increase in flood risk possible; No likely impact |
+| **Notes** | Text | Field for additional observations |
+
+**Risk Assessment (Line)**
+| Field Label | Type | Values / Constraints |
+| :--- | :--- | :--- |
+| **Type** | List | Road (Paved/Dirt); Trail or Track; Railroad; Bridge; Canal; Levee; Berm; Utility Line (Allows custom values) |
+| **Ownership** | List | Public; Private; Unknown |
+| **Potential Flood Risk** | List | Floods Regularly; Floods Occasionally; Floods Rarely; Flooded Historically; Minimal to No Flood Risk |
+| **Potential Fish Barrier** | List | Yes; No; Unsure |
+| **Potential LTPBR Impacts** | List | Likely increase in flood risk; Negligible increase in flood risk possible; No likely impact |
+| **Notes** | Text | Field for additional observations |
+
+**Risk Assessment (Polygon)**
+| Field Label | Type | Values / Constraints |
+| :--- | :--- | :--- |
+| **Type** | List | Agriculture (Crops/Pasture); Commercial; Residential; Industrial; Road or Parking; Reservoir (Allows custom values) |
+| **Ownership** | List | Public; Private; Unknown |
+| **Potential Flood Risk** | List | Floods Regularly; Floods Occasionally; Floods Rarely; Flooded Historically; Minimal to No Flood Risk |
+| **Potential Fish Barrier** | List | Yes; No; Unsure |
+| **Potential LTPBR Impacts** | List | Likely increase in flood risk; Negligible increase in flood risk possible; No likely impact |
+| **Notes** | Text | Field for additional observations |
+</TabItem>
+<TabItem value="property_assessment" label="Property Assessment">
+*Description: assessment of land ownership and stakeholder approval for LTPBR actions.*
+| Field Label | Type | Values / Constraints |
+| :--- | :--- | :--- |
+| **Parcel ID** | Text | Unique Parcel Identifier |
+| **Landowner Name** | Text | Name of Landowner or Organization |
+| **Current Land Use** | List | Undeveloped Range or Forest; Crop, Pasture, or Hay; Developed |
+| **Riparian Veg Departure** | List | Large Departure; Small Departure (from Estimated Historic Conditions) |
+| **Landowner Approval** | List | Full Approval (Dynamic Process); Approval (Some Process); Limited Intervention; Doesn't Approve |
+| **Adjacent Landowner** | List | Overwhelming Approval; Majority Approval; Minority Approval; Potential Water Rights Conflict(s) |
+| **Notes** | Text | Field for additional observations |
+</TabItem>
+<TabItem value="recovery_space" label="Recovery Space">
+*Description: assessment of the area available for LTPBR recovery.*
+
+| Layer Label | Description | Fields |
+| :--- | :--- | :--- |
+| **Recovery Space - Minimum** | Minimum Recovery Space | Notes (Text) |
+| **Recovery Space - Maximum** | Maximum Recovery Space | Notes (Text) |
+</TabItem>
 </Tabs>
 
 ### Metric Atributes
