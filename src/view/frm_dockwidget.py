@@ -29,7 +29,7 @@ from osgeo import ogr
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
-from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex
+from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex, QMetaType
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
@@ -1057,9 +1057,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 idx = self.layer.fields().indexFromName(field.name())
                 editorWidget = self.layer.editorWidgetSetup(idx)
                 if editorWidget.type() == 'ValueMap':
-                    return QgsField(field.displayName(), QVariant.String)
+                    return QgsField(field.displayName(), int(QMetaType.QString))
                 elif field.name() == 'observation_date':
-                    return QgsField(field.displayName(), QVariant.String)
+                    return QgsField(field.displayName(), int(QMetaType.QString))
                 else:
                     return self.layer.fields()[idx]
 

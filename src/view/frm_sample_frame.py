@@ -3,7 +3,7 @@ import json
 import sqlite3
 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import Qt, QSize, QVariant, pyqtSignal
+from PyQt5.QtCore import Qt, QSize, QVariant, QMetaType, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout,  QGridLayout, QTabWidget, QGroupBox, QTreeView, QListWidget, QListWidgetItem, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
@@ -335,7 +335,7 @@ class SampleFrameInputs(QWidget):
                 for field in fields:
                     self.cboDisplayLabel.addItem(field.name())
                     self.cboFlowPathField.addItem(field.name())
-                    if field.type() in [QVariant.Int, QVariant.Double]: # integer
+                    if field.type() in [QMetaType.Type.Int, QMetaType.Type.Double]: # integer
                         self.cboTopologyField.addItem(field.name())
 
     def load_clip_to_aoi(self):

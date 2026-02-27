@@ -29,7 +29,7 @@ REQUESTS = {
     },
     # daily data
     'daily': {
-        'url': 'http://waterdata.usgs.gov/nwis/dv',
+        'url': 'https://waterservices.usgs.gov/nwis/dv/',
         'fields': {
             'datetime': 'datetime',
             'discharge': '84956_00060_00003',
@@ -73,28 +73,31 @@ class StreamGageDischargeTask(QgsTask):
         try:
             params = {
                 'format': 'rdb',
-                'site_no': self.site_code,
-                'begin_date': self.start_date.strftime('%Y-%m-%d'),
-                'end_date': self.end_date.strftime('%Y-%m-%d')
+                'sites': self.site_code,
+                'startDT': self.start_date.strftime('%Y-%m-%d'),
+                'endDT': self.end_date.strftime('%Y-%m-%d')
             }
 
             request_meta = REQUESTS['daily']
             response = requests.get(request_meta['url'], params=params)
 
             if response.status_code == 200:
-                csv_raw = [line for line in response.text.split('\n') if not (line.startswith('#') or line.startswith('5s'))]
+                csv_raw = [line for line in response.text.splitlines() if line and not line.startswith('#') and not line.startswith('5s')]
 
                 headers = csv_raw[0].split('\t')
                 csv_data = csv.DictReader(csv_raw, delimiter='\t')
                 # agency_cd,site_no,datetime,tz_cd,89062_00060,89062_00060_cd,89063_00065,89063_00065_cd
-                sql_data = [(
-                    self.site_id,
-                    row['datetime'],
-                    row[headers[3]],
-                    row[headers[4]],
-                    row[headers[5]] if len(headers) > 6 else None,
-                    row[headers[6]] if len(headers) > 7 else None
-                ) for row in csv_data]
+                if len(headers) > 3:
+                     sql_data = [(
+                        self.site_id,
+                        row['datetime'],
+                        row[headers[3]],
+                        row[headers[4]],
+                        row[headers[5]] if len(headers) > 6 else None,
+                        row[headers[6]] if len(headers) > 7 else None
+                    ) for row in csv_data]
+                else:
+                    sql_data = []
 
                 conn = sqlite3.connect(self.db_path)
                 curs = conn.cursor()

@@ -3,7 +3,7 @@ import json
 from typing import List
 
 from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsWkbTypes, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsFeatureRequest
-from qgis.PyQt.QtCore import pyqtSignal, QVariant
+from qgis.PyQt.QtCore import pyqtSignal, QVariant, QMetaType
 
 from .import_feature_class import ImportFieldMap
 from ..gp.feature_class_functions import layer_path_parser
@@ -90,7 +90,7 @@ class ImportMapLayer(QgsTask):
             if self.attributes is not None:
                 fields = []
                 for field_name in self.attributes.keys():
-                    field = QgsField(field_name, QVariant.Int)
+                    field = QgsField(field_name, int(QMetaType.Int))
                     fields.append(field)
                 self.source_layer.dataProvider().addAttributes(fields)
                 self.source_layer.updateFields()
@@ -112,7 +112,7 @@ class ImportMapLayer(QgsTask):
             # add the metadata field to the source layer
             # Check first
             if self.source_layer.fields().lookupField('metadata') == -1:
-                field = QgsField('metadata', QVariant.String)
+                field = QgsField('metadata', int(QMetaType.QString))
                 self.source_layer.dataProvider().addAttributes([field])
                 self.source_layer.updateFields()
             
@@ -121,7 +121,7 @@ class ImportMapLayer(QgsTask):
                 for field_map in self.field_map:
                     if field_map.direct_copy is True:
                         if self.source_layer.fields().lookupField(field_map.dest_field) == -1:
-                            field = QgsField(field_map.dest_field, QVariant.String)
+                            field = QgsField(field_map.dest_field, int(QMetaType.QString))
                             self.source_layer.dataProvider().addAttributes([field])
                             self.source_layer.updateFields()
 
