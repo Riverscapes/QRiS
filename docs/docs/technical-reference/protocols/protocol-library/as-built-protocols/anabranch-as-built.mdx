@@ -4,6 +4,9 @@ sidebar_position: 2
 description: Protocol to document the location and types of as-built structures for Anabranch Solutions. 
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 :::warning[Warning: Experimental Protocol]
 
 This protocol is experimental and has not been finalized by the protocol owner. It can be changed at anytime which can break existing data or cause data loss. Please backup data if using this protocol. 
@@ -12,14 +15,72 @@ This protocol is experimental and has not been finalized by the protocol owner. 
 
 ## Overview 
 
+The *Anabranch As-Built Protocol* is the standardized protocol for capturing as-built data at Anabranch Solutions. 
+
+- **Finalized As-Built Structures**, their spatial location & distribution, and their orientation (optional).
+- **Detailed Structure Attributes** including structre type, maintenance vs new structures, complex and/or structure ID, structure height/width/length, # of posts, and # of large wood pieces.
+
+Users can collect as-built data in the field using assoicated ArcGIS surveys or at the desktop in QGIS.
+
 ### Protocol Summary
+
+Attribute|Value
+---|---
+Name|Anabranch As-Built Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/anabranch_as_built_protocol.xml
+Citation|NA
+Author|Zach Burgert
 
 ## Layers & Metrics 
 
 ### Video Demonstration
 
 ### Layer Attributes
+<Tabs>
+<TabItem value="structure_layers" label="Structure Layers">
+| Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `structure_points` | Structure Points | Point |`structure_count`, `structure_density`, `bda_count`, `bda_density`, `pals_count`, `pals_density`, `als_count`, `als_density`, `other_count`, `other_density`, `structure_length`|
+| `structure_lines` | Structure Lines | Linestring |*Same as Structure Points*|
+  </TabItem>
+  <TabItem value="observation_layers" label="Observation Layers">
+  | Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `observation_points_asbuilt` | Observations | Point |NA|
+  </TabItem>
+</Tabs>
 
 ### Metric Atributes
+<Tabs>
+  <TabItem value="structure_metrics" label="Structure Metrics">
+| Metric ID | Label | Precision | Description |Calculation|
+| :--- | :--- | :--- | :--- |:---|
+| `structure_count` | Structure Count | 1 | Count of structures (points and lines) within sample frame|`Count(structure_points) + Count(structure_lines)`|
+| `structure_density` | Structure Density | 3 | Density of structures (points and lines) within the sample frame |`(Count(structure_points) + Count(structure_lines))/ Riverscape Centerline`
+| `bda_count` | BDA Count | 1 | Count of BDA structures within the sample frame |`Count(BDA Points) + Count(BDA Lines)`
+| `bda_density` | BDA Density | 3 | Density of BDA structures within the sample frame |`(Count(BDA Points) + Count(BDA Lines))/ Riverscape Centerline`
+| `pals_count` | PALS Count | 1 | Count of PALS structures within the sample frame |`Count(PALS Points) + Count(PALS Lines)`
+| `pals_density` | PALS Density | 3 | Density of PALS structures within the sample frame |`(Count(PALS Points) + Count(PALS Lines))/ Riverscape Centerline`
+| `als_count` | ALS Count | 1 | Count of ALS structures within the sample frame |`Count(ALS Points) + Count(ALS Lines)`
+| `als_density` | ALS Density | 3 | Density of ALS structures within the sample frame |`(Count(ALS Points) + Count(ALS Lines))/ Riverscape Centerline`
+| `other_count` | Other Count | 1 | Count of Other structures within the sample frame |`Count(Other Points) + Count(Other Lines)`
+| `other_density` | Other Density | 3 | Density of Other structures within the sample frame |`(Count(Other Points) + Count(Other Lines))/ Riverscape Centerline`
+| `structure_length` | Structure Length | 3 | Total length of structures (lines) within the sample frame |`Sum(Structure (Lines) Length)`
+  </TabItem>
+</Tabs>
 
 ## Resources 
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Weber et al. 2024",
+        description: "Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://zenodo.org/records/13769899",
+       },
+        ]}
+/>
