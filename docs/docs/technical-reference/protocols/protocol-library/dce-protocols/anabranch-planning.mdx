@@ -61,71 +61,71 @@ Author|Zach Burgert
 <Tabs>
 <TabItem value="stream_assessment" label="Stream Assessment">
 *Description: assessment of stream conditions and potential for LTPBR actions.*
-| Field Label | Type | Values / Constraints |
+| Field Label | Type | Values |
 | :--- | :--- | :--- |
-| **Wadeability for Low-Tech** | List | 1st through 3rd Order Wadeable Stream; 3rd through 5th Order Wadeable Stream; 5th Order Non-Wadeable Stream or Higher |
-| **Slope** | List | ≤ 3%; 3-6%; ≥ 7% |
-| **Bank Erodibility** | List | High Erodibility (loosely consolidated); Moderate Erodibility; Low Erodibility (compact) |
-| **Bed Material** | List | Clay; Silt; Sand; Gravel; Cobble; Boulder; Bedrock |
-| **Habitat Suitability for Beaver** | Multi-List | Preferred; Suitable; Unsuitable; Sufficient/Insufficient Food; Sufficient/Insufficient Vegetation; Dam Building/Blowout potential |
-| **Habitat Suitability for Fish** | Multi-List | Preferred; Suitable; Unsuitable; Sufficient/Insufficient Habitat Units; Streamside Vegetation; Food Sources |
-| **Habitat Units** | Multi-List | Riffles; Pools; Ponds; Bank Attached Bars; Mid Channel Bars; Chutes; Glide/Runs; Rapids/Cascades |
-| **Material for Low-Tech** | List | Bare (needs to be imported); Upland dominant; Mixture; Riparian dominant |
-| **Opportunity Rating** | Integer | Slider (0 to 5) |
-| **Notes** | Text | Field for additional observations |
+| *Wadeability for Low-Tech* | List | <li>1st through 3rd Order Wadeable Stream</li> <li>3rd through 5th Order Wadeable Stream</li> <li>5th Order Non-Wadeable Stream or Higher </li>|
+| *Slope* | List | <li>≤ 3%</li> <li>3-6%</li> <li>≥7%</li> |
+| *Bank Erodibility* | List | <li>High Erodibility (loosely consolidated)</li> <li>Moderate Erodibility</li> <li>Low Erodibility (compact) </li>|
+| *Bed Material* | List | <li>Clay</li> <li>Silt</li> <li>Sand</li> <li>Gravel</li> <li>Cobble</li> <li>Boulder</li> <li>Bedrock</li> |
+| *Habitat Suitability for Beaver* | List (Multi-Select) | <li>Preferred/Suitable/Unsuitable Beaver Habitat</li> <li>Sufficient/Insufficient Food Sources</li> <li>Sufficient/Insufficient Vegetation Dam Building</li> <li>Possible/Unlikely Dam Building</li> <li>Possible/Unlikely Dam Blowout </li>|
+| *Habitat Suitability for Fish* | List (Multi-Select) | <li>Preferred/Suitable/Unsuitable Fish Habitat</li> <li>Sufficient/Insufficient Habitat Units</li> <li>Sufficient/Insufficient Streamside Vegetation</li> <li>Sufficient/Insufficient Food Sources</li> |
+| *Habitat Units* | List (Multi-Select) | <li>Riffles</li> <li>Pools</li> <li>Ponds</li> <li>Bank Attached Bars</li> <li>Mid Channel Bars</li> <li>Chutes</li> <li>Glide/Runs</li> <li>Rapids/Cascades</li> |
+| *Material for Low-Tech* | List | <li>Bare (needs to be imported)</li> <li>Upland dominant</li> <li>Mixture</li> <li>Riparian dominant</li> |
+| *Opportunity Rating* | Integer Slider| Quantitative value from 0 to 5 to evaluate LTPBR potential |
+| *Notes* | Text | Field for additional observations |
 </TabItem>
 <TabItem value="risk_assessment" label="Risk Assessment">
-*Description: assessment of stream conditions and potential for LTPBR actions.*
+*Description: assessment of infrastructure risks from potential LTPBR actions.*
 
 **Risk Assessment (Point)**
-| Field Label | Type | Values / Constraints |
+| Field Label | Type | Values |
 | :--- | :--- | :--- |
-| **Type** | List | Diversion; Culvert; Retention Pond; Dam; Weir; Barrier; Ford (Allows custom values) |
-| **Ownership** | List | Public; Private; Unknown |
-| **Potential Flood Risk** | List | Floods Regularly; Floods Occasionally; Floods Rarely; Flooded Historically; Minimal to No Flood Risk |
-| **Potential Fish Barrier** | List | Yes; No; Unsure |
-| **Potential LTPBR Impacts** | List | Likely increase in flood risk; Negligible increase in flood risk possible; No likely impact |
-| **Notes** | Text | Field for additional observations |
+| *Type* | List (w/Custom Values) | <li>Diversion</li> <li>Culvert</li> <li>Retention Pond</li> <li>Dam</li> <li>Weir</li> <li>Barrier</li> <li>Ford</li> |
+| *Ownership* | List | <li>Public</li> <li>Private</li> <li>Unknown</li> |
+| *Potential Flood Risk* | List | <li>Floods Regularly (e.g., every year or floodway)</li> <li>Floods Occasionally (i.e. active floodplain)</li> <li>Floods Rarely (i.e. in very large events)</li> <li>Flooded Historically (i.e. plausible flooding - inactive floodplain)</li> <li>Minimal to No Flood Risk</li> |
+| *Potential Fish Barrier* | List | <li>Yes</li> <li>No</li> <li>Unsure</li> |
+| *Potential LTPBR Impacts* | List | <li>Likely increase in flood risk</li> <li>Negligible increase in flood risk possible</li> <li>No likely impact</li> |
+| *Notes* | Text | Field for additional observations |
 
 **Risk Assessment (Line)**
-| Field Label | Type | Values / Constraints |
+| Field Label | Type | Values |
 | :--- | :--- | :--- |
-| **Type** | List | Road (Paved/Dirt); Trail or Track; Railroad; Bridge; Canal; Levee; Berm; Utility Line (Allows custom values) |
-| **Ownership** | List | Public; Private; Unknown |
-| **Potential Flood Risk** | List | Floods Regularly; Floods Occasionally; Floods Rarely; Flooded Historically; Minimal to No Flood Risk |
-| **Potential Fish Barrier** | List | Yes; No; Unsure |
-| **Potential LTPBR Impacts** | List | Likely increase in flood risk; Negligible increase in flood risk possible; No likely impact |
-| **Notes** | Text | Field for additional observations |
+| *Type* | List (w/Custom Values) | <li>Road (Paved/Dirt)</li> <li>Trail or Track</li> <li>Railroad</li> <li>Bridge</li> <li>Canal</li> <li>Levee</li> <li>Berm</li> <li>Utility Line</li> |
+| *Ownership* | List | <li>Public</li> <li>Private</li> <li>Unknown</li> |
+| *Potential Flood Risk* | List | <li>Floods Regularly (e.g., every year or floodway)</li> <li>Floods Occasionally (i.e. active floodplain)</li> <li>Floods Rarely (i.e. in very large events)</li> <li>Flooded Historically (i.e. plausible flooding - inactive floodplain)</li> <li>Minimal to No Flood Risk</li> |
+| *Potential Fish Barrier* | List | <li>Yes</li> <li>No</li> <li>Unsure</li> |
+| *Potential LTPBR Impacts* | List | <li>Likely increase in flood risk</li> <li>Negligible increase in flood risk possible</li> <li>No likely impact</li> |
+| *Notes* | Text | Field for additional observations |
 
 **Risk Assessment (Polygon)**
-| Field Label | Type | Values / Constraints |
+| Field Label | Type | Values |
 | :--- | :--- | :--- |
-| **Type** | List | Agriculture (Crops/Pasture); Commercial; Residential; Industrial; Road or Parking; Reservoir (Allows custom values) |
-| **Ownership** | List | Public; Private; Unknown |
-| **Potential Flood Risk** | List | Floods Regularly; Floods Occasionally; Floods Rarely; Flooded Historically; Minimal to No Flood Risk |
-| **Potential Fish Barrier** | List | Yes; No; Unsure |
-| **Potential LTPBR Impacts** | List | Likely increase in flood risk; Negligible increase in flood risk possible; No likely impact |
-| **Notes** | Text | Field for additional observations |
+| *Type* | List (w/Custom Values) | <li>Agriculture (Crops/Pasture)</li> <li>Commercial</li> <li>Residential</li> <li>Industrial</li> <li>Road or Parking</li> <li>Reservoir</li> |
+| *Ownership* | List | <li>Public</li> <li>Private</li> <li>Unknown</li> |
+| *Potential Flood Risk* | List | <li>Floods Regularly (e.g., every year or floodway)</li> <li>Floods Occasionally (i.e. active floodplain)</li> <li>Floods Rarely (i.e. in very large events)</li> <li>Flooded Historically (i.e. plausible flooding - inactive floodplain)</li> <li>Minimal to No Flood Risk</li> |
+| *Potential Fish Barrier* | List | <li>Yes</li> <li>No</li> <li>Unsure</li> |
+| *Potential LTPBR Impacts* | List | <li>Likely increase in flood risk</li> <li>Negligible increase in flood risk possible</li> <li>No likely impact</li> |
+| *Notes* | Text | Field for additional observations |
 </TabItem>
 <TabItem value="property_assessment" label="Property Assessment">
 *Description: assessment of land ownership and stakeholder approval for LTPBR actions.*
-| Field Label | Type | Values / Constraints |
+| Field Label | Type | Values |
 | :--- | :--- | :--- |
-| **Parcel ID** | Text | Unique Parcel Identifier |
-| **Landowner Name** | Text | Name of Landowner or Organization |
-| **Current Land Use** | List | Undeveloped Range or Forest; Crop, Pasture, or Hay; Developed |
-| **Riparian Veg Departure** | List | Large Departure; Small Departure (from Estimated Historic Conditions) |
-| **Landowner Approval** | List | Full Approval (Dynamic Process); Approval (Some Process); Limited Intervention; Doesn't Approve |
-| **Adjacent Landowner** | List | Overwhelming Approval; Majority Approval; Minority Approval; Potential Water Rights Conflict(s) |
-| **Notes** | Text | Field for additional observations |
+| *Parcel ID* | Text | Unique Parcel Identifier |
+| *Landowner Name* | Text | Name of Landowner or Organization |
+| *Current Land Use* | List | <li>Undeveloped Range or Forest</li> <li>Crop, Pasture, or Hay</li> <li>Developed</li> |
+| *Riparian Veg Departure* | List | <li>Large Departure from Estimated Historic Conditions</li> <li>Small Departure from Estimated Historic Conditions</li> |
+| *Landowner Approval* | List | <li>Approves of Low-Tech Restoration, Stream and Floodplain Adjustments by Beaver Activity and Wood Accumulation, and Adaptive Management</li> <li>Approves of Low-Tech Restoration but Willing to Only Allow Some Dynamic Processes in the Valley Bottom</li> <li>Approves of Low-Tech but Wants Limited Intervention(s) and Minor Processes in the Valley Bottom</li> <li>Doesn't Approve of Low-Tech</li> |
+| *Adjacent Landowner* | List | <li>Overwhelming Approval of LTPBR Actions</li> <li>Majorty Approval of LTPBR Actions</li> <li>Minority Approval of LTPBR Actions</li> <li>Potential Water Rights Conflict(s)</li> |
+| *Notes* | Text | Field for additional observations |
 </TabItem>
 <TabItem value="recovery_space" label="Recovery Space">
 *Description: assessment of the area available for LTPBR recovery.*
 
-| Layer Label | Description | Fields |
+| Layer | Description | Fields |
 | :--- | :--- | :--- |
-| **Recovery Space - Minimum** | Minimum Recovery Space | Notes (Text) |
-| **Recovery Space - Maximum** | Maximum Recovery Space | Notes (Text) |
+| *Recovery Space - Minimum* | Minimum Recovery Space for LTPBR | Notes (Text Field) |
+| *Recovery Space - Maximum* | Maximum Recovery Space for LTPBR| Notes (Text Field) |
 </TabItem>
 </Tabs>
 
