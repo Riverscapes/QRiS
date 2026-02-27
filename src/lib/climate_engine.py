@@ -68,12 +68,12 @@ def get_dataset_timeseries_polygon(dataset: str, variables: List[str], start_dat
               'area_reducer': area_reducer,
               'start_date': start_date,
               'end_date': end_date,
-              'coordinates': f'[{coordinates}]'}
+              'coordinates': f'[{json.dumps(coordinates)}]'}
 
     url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.post(url, data=params, headers=headers)
 
     if response.status_code == 200:
         return response.json()
@@ -109,7 +109,7 @@ def get_dataset_zonal_stats_polygon(dataset: str, variables: List[str], start_da
     url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.post(url, data=params, headers=headers)
 
     if response.status_code == 200:
         return response.json()

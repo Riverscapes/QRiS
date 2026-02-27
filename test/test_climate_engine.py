@@ -54,14 +54,14 @@ class TestClimateEngine(unittest.TestCase):
         self.assertIsNone(result)
 
     @patch('qris_dev.src.lib.climate_engine.get_api_key')
-    @patch('requests.get')
-    def test_get_dataset_timeseries_polygon_qgsgeometry(self, mock_get, mock_get_api_key):
+    @patch('requests.post')
+    def test_get_dataset_timeseries_polygon_qgsgeometry(self, mock_post, mock_get_api_key):
         mock_get_api_key.return_value = 'fake_key'
         
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = [{'date': '2020-01-01', 'value': 10}]
-        mock_get.return_value = mock_response
+        mock_post.return_value = mock_response
 
         # Create a simple QgsGeometry (Polygon)
         # Polygon from 0,0 to 10,0 to 10,10 to 0,10 to 0,0
@@ -77,23 +77,23 @@ class TestClimateEngine(unittest.TestCase):
         )
         
         self.assertIsNotNone(result)
-        mock_get.assert_called_once()
-        _, kwargs = mock_get.call_args
-        # Check if coordinates key is in params
-        self.assertIn('coordinates', kwargs['params'])
+        mock_post.assert_called_once()
+        _, kwargs = mock_post.call_args
+        # Check if coordinates key is in data
+        self.assertIn('coordinates', kwargs['data'])
         # Check structure of coordinates string. logic is f'[{coordinates}]' where coordinates is list of [x, y]
         # It should look something like "[[0.0, 0.0], [10.0, 0.0], ...]"
-        self.assertIn("[0.0, 0.0]", kwargs['params']['coordinates'])
+        self.assertIn("[0.0, 0.0]", kwargs['data']['coordinates'])
 
     @patch('qris_dev.src.lib.climate_engine.get_api_key')
-    @patch('requests.get')
-    def test_get_dataset_zonal_stats_polygon(self, mock_get, mock_get_api_key):
+    @patch('requests.post')
+    def test_get_dataset_zonal_stats_polygon(self, mock_post, mock_get_api_key):
         mock_get_api_key.return_value = 'fake_key'
         
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {'mean': 5.5}
-        mock_get.return_value = mock_response
+        mock_post.return_value = mock_response
 
         wkt = "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"
         geometry = QgsGeometry.fromWkt(wkt)
@@ -107,10 +107,10 @@ class TestClimateEngine(unittest.TestCase):
         )
 
         self.assertEqual(result, {'mean': 5.5})
-        mock_get.assert_called_once()
-        _, kwargs = mock_get.call_args
-        self.assertEqual(kwargs['params']['area_reducer'], 'mean')
-        self.assertEqual(kwargs['params']['temporal_statistic'], 'mean')
+        mock_post.assert_called_once()
+        _, kwargs = mock_post.call_args
+        self.assertEqual(kwargs['data']['area_reducer'], 'mean')
+        self.assertEqual(kwargs['data']['temporal_statistic'], 'mean')
 
 if __name__ == "__main__":
     unittest.main()
