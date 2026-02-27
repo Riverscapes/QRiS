@@ -4,6 +4,9 @@ sidebar_position: 6
 description: Protocol to collect relevant data for riverscape planning at Anabranch Solutions. 
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 :::warning[Warning: Experimental Protocol]
 
 This protocol is experimental and has not been finalized by the protocol owner. It can be changed at anytime which can break existing data or cause data loss. Please backup data if using this protocol. 
@@ -12,14 +15,109 @@ This protocol is experimental and has not been finalized by the protocol owner. 
 
 ## Overview 
 
+The *Anabranch Planning Protocol* is the standardized protocol for planning riverscape projects & collecting pre-design field data at Anabranch Solutions. 
+
+- **Stream Assessment**, their spatial distribution, and anticipated geomorphic & hydraulic changes to the riverscape. 
+- **Risk Assessment** to identify overarching objectives for groups of structures.
+- **Property Assessment** that may influence design decisions or project logistics.
+- **Recovery Space** to support permit applications and inform landowners of potential project outcomes.
+- **Metrics** to support permit applications and inform landowners of potential project outcomes.
+
+Users can create multiple designs to represent different phases of a project or to show various potential outcomes. For example, a user may create a Phase 1 design that includes structures implemented in the first year of a project and a Phase 2 design that includes structures implemented in the second year of a project. Or, a user may create mulitple design alternatives and generate a series of metrics used to inform management desicions. 
+
 ### Protocol Summary
+
+Attribute|Value
+---|---
+Name|Anabranch Design Protocol
+Status|Experimental Grade
+Version|1.0
+XML URL|https://github.com/Riverscapes/RiverscapesXML/blob/master/QRiS/protocols/anabranch_design_protocol.xml
+Citation|NA
+Author|Zach Burgert
 
 ## Layers & Metrics 
 
 ### Video Demonstration
 
 ### Layer Attributes
+<Tabs>
+<TabItem value="structure_layers" label="Structure Layers">
+| Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `structure_points` | Structure Points | Point |`structure_count_structures`, `structure_density_structures`, `bda_count`, `bda_density`, `pals_count`, `pals_density`, `als_count`, `als_density`, `other_count`, `other_density`|
+| `structure_lines` | Structure Lines | Linestring |`structure_count_structures`, `structure_density_structures`, `bda_count`, `bda_density`, `pals_count`, `pals_density`, `als_count`, `als_density`, `other_count`, `other_density`, `structure_length`|
+  </TabItem>
+  <TabItem value="observation_layers" label="Observation Layers">
+  | Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `observation_points` | Observation Points | Point |NA|
+| `observation_lines` | Observation Lines | Linestring |NA|
+| `observation_polygons` | Observation Polygons | Polygon |NA|
+  </TabItem>
+  <TabItem value="complex_layers" label="Complex Layers">
+| Layer ID | Label | Geometry | Metrics |
+| :--- | :--- | :--- | :--- |
+| `complexes` | Structure Complex Extents | Polygon | `complex_count`, `complex_area`, `structure_count_complexes`, `structure_density_complexes`, `fill_volume_complexes`|
+</TabItem>
+<TabItem value="zoi_layers" label="ZOI Layers">
+| Layer ID | Label | Geometry |Metrics|
+| :--- | :--- | :--- | :--- |
+| `zoi` | Zones of Influence | Polygon | `zoi_area`|
+</TabItem>
+<TabItem value="recovery_space_layers" label="Recovery Space Layers">
+| Layer ID | Label | Geometry | Metrics|
+| :--- | :--- | :--- | :--- |
+| `recovery_space` | Recovery Space | Polygon | `recovery_space_area`, `recovery_space_valley_bottom` |
+</TabItem>
+</Tabs>
 
 ### Metric Atributes
+<Tabs>
+  <TabItem value="structure_metrics" label="Structure Metrics">
+| Metric ID | Label | Precision | Description |Calculation|
+| :--- | :--- | :--- | :--- |:---|
+| `structure_count_structures` | Structure Count (Structures) | 1 | Count of structures (points and lines) within sample frame|`Count(structure_points) + Count(structure_lines)`|
+| `structure_density_structures` | Structure Density (Structures) | 3 | Density of structures (points and lines) within the sample frame |`(Count(structure_points) + Count(structure_lines))/ Riverscape Centerline`
+| `bda_count` | BDA Count | 1 | Count of BDA structures within the sample frame |`Count(BDA Points) + Count(BDA Lines)`
+| `bda_density` | BDA Density | 3 | Density of BDA structures within the sample frame |`(Count(BDA Points) + Count(BDA Lines))/ Riverscape Centerline`
+| `pals_count` | PALS Count | 1 | Count of PALS structures within the sample frame |`Count(PALS Points) + Count(PALS Lines)`
+| `pals_density` | PALS Density | 3 | Density of PALS structures within the sample frame |`(Count(PALS Points) + Count(PALS Lines))/ Riverscape Centerline`
+| `als_count` | ALS Count | 1 | Count of ALS structures within the sample frame |`Count(ALS Points) + Count(ALS Lines)`
+| `als_density` | ALS Density | 3 | Density of ALS structures within the sample frame |`(Count(ALS Points) + Count(ALS Lines))/ Riverscape Centerline`
+| `other_count` | Other Count | 1 | Count of Other structures within the sample frame |`Count(Other Points) + Count(Other Lines)`
+| `other_density` | Other Density | 3 | Density of Other structures within the sample frame |`(Count(Other Points) + Count(Other Lines))/ Riverscape Centerline`
+| `structure_length` | Structure Length | 3 | Total length of structures (lines) within the sample frame |`Sum(Structure (Lines) Length)`
+  | `fill_volume_structures` | Fill Volume (Structures) | 3 | Total fill volume of structures within the sample frame |`Sum(Structure (Points) Fill Volume)+Sum(Structure (Lines) Fill Volume)`
+  </TabItem>
+  <TabItem value="complex_metrics" label="Complex Metrics">
+| Metric ID | Label | Precision | Description |Calculation|
+| :--- | :--- | :--- | :--- |:---|
+| `complex_count` | Complex Count | 1 | Count of structure complexes within the sample frame |`Count(complexes)`
+| `complex_area` | Complex Area | 3 | Total area of structure complexes within the sample frame |`Area(complexes)`
+| `structure_count_complexes` | Structure Count (Complex) | 1 | Count of structures for complexes within the sample frame|`Count(number_of_structures(complexes))`
+| `structure_density_complexes` | Structure Density (Complex) | 3 | Density of structures for complexes within the sample frame|`Count(number_of_structures(complexes))/ Riverscape Centerline`
+| `fill_volume_complexes` | Fill Volume (Complex) | 3 | Total fill volume of structures for complexes within the sample frame |`Sum(estimated_fill_volume(complexes))`
+  </TabItem>
+  <TabItem value="riverscape_change_metrics" label="Riverscape Change Metrics">
+| Metric ID | Label | Precision | Description |Calculation|
+| :--- | :--- | :--- | :--- |:---|
+|`zoi_area`|ZOI Area | 3 | Total ZOI area within the sample frame |`Area(zoi)`|
+|`recovery_space_area`|Recovery Space Area | 3 | Total recovery space area within the sample frame |`Area(recovery_space)`|
+|`recovery_space_valley_bottom`|Recovery Space (% of Valley Bottom) | 3 | Ratio of recovery space to valley bottom area within the sample frame |`Area(recovery_space)/ Area(valley bottom)`|
+</TabItem>
+</Tabs>
 
 ## Resources 
+
+<ToolsWrapper
+    cardsize="sm"
+    cards={[
+        {
+        title: "Weber et al. 2024",
+        description: "Low-Tech Process-Based Restoration Design and Monitoring Protocol: Standard Methods for Developing Project Designs and Assessing Riverscape Health",
+        logoUrl: "/images/icons/reading.png",
+        toolUrl: "https://zenodo.org/records/13769899",
+       },
+        ]}
+/>

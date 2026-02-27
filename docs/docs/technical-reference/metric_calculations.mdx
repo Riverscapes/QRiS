@@ -128,3 +128,7 @@ Each layer can have the following parameters:
   - If not provided for a layer, then the layer will be used as a `numerator`.
   - If no `denominator` is provided, the sample frame area will be used as the denominator.
 - `attribute_filter`: An optional [attribute filter](managing_metrics#attribute-filters) to apply to the DCE layers.
+
+:::warning
+The proportion calcualtion can be used to normalize calculations with two different layer types such as integrated valley bottom width (riverscape area / rivercape length). However, the calculation will be displayed as unitless in the Analysis window. Therefore, it is recommended to detail the calculation and its units under the description textbox of the metric. 
+:::
