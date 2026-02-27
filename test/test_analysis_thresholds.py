@@ -6,7 +6,7 @@ import os
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from qris_dev.src.view.widgets.analysis_table import MetricStatusWidget_Labels
+from qris_dev.src.view.widgets.analysis_table import MetricStatusWidget_Buttons
 from qris_dev.src.model.metric import Metric
 from qris_dev.src.model.metric_value import MetricValue
 from qris_dev.test.utilities import get_qgis_app
@@ -34,7 +34,7 @@ class TestMetricThresholds(unittest.TestCase):
         return mv
 
     def test_threshold_exceeded(self):
-        widget = MetricStatusWidget_Labels()
+        widget = MetricStatusWidget_Buttons()
         widget.btn_warning = MagicMock()
         
         metric = self.create_metric(tolerance=5.0)
@@ -54,7 +54,7 @@ class TestMetricThresholds(unittest.TestCase):
         self.assertIn("differs from automated value by more than tolerance", args[0])
 
     def test_threshold_within_limits(self):
-        widget = MetricStatusWidget_Labels()
+        widget = MetricStatusWidget_Buttons()
         widget.btn_warning = MagicMock()
         
         metric = self.create_metric(tolerance=5.0)
@@ -69,7 +69,7 @@ class TestMetricThresholds(unittest.TestCase):
 
     def test_not_manual_mode(self):
         """If automated is selected, do not warn about manual diff."""
-        widget = MetricStatusWidget_Labels()
+        widget = MetricStatusWidget_Buttons()
         widget.btn_warning = MagicMock()
         
         metric = self.create_metric(tolerance=5.0)
