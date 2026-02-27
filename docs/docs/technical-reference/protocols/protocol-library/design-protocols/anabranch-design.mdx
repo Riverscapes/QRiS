@@ -36,10 +36,6 @@ Citation|NA
 Author|Zach Burgert
 
 ## Layers & Metrics 
-
-### Video Demonstration
-
-### Layer Attributes
 <Tabs>
 <TabItem value="structure_layers" label="Structure Layers">
 | Layer ID | Label | Geometry | Metrics |
@@ -68,6 +64,160 @@ Author|Zach Burgert
 | Layer ID | Label | Geometry | Metrics|
 | :--- | :--- | :--- | :--- |
 | `recovery_space` | Recovery Space | Polygon | `recovery_space_area`, `recovery_space_valley_bottom` |
+</TabItem>
+</Tabs>
+
+### Video Demonstration
+
+### Layer Attributes
+<Tabs>
+<TabItem value="structure_points_lines" label="Structure Points/Lines">
+*Description: locations of design structures as points or lines. Points show location only, while lines also give orientation & length measurement of structure.*
+Attribute|Structure Class|Description
+---|---|---|
+*ALS*|Wood Accumulation|Assisted log structure being a placed woody debris accumulation that does not include posts.
+*ALS - Bank Attached*|Wood Accumulation|ALS built extending from the bank towards the channel.
+*ALS - Bank Blaster*|Wood Accumulation|An ALS oriented to enhance bank erosion.
+*ALS - Channel Spanning*|Wood Accumulation|ALS built across the entire channel from bank to bank.
+*ALS - Rhino*|Wood Accumulation|ALS built to the rhino structure design specification.
+*BDA*|Beaver Dam Analog|The general term describing a semi-permeable – channel-spanning structural element designed to mimic the form and function of a natural beaver dam.
+*BDA Postless*|Beaver Dam Analog|A BDA constructed without the use of posts driven into the streambed that would be used to add stability to vegetative fill material.
+*Bag Plugs*|Vegetation Production|Structural treatment that uses bags made up of organic material, usually burlap, that can be filled with sediment and placed. Bag plug structures often mimic vegetative mases that might sluff into the channel.
+*Fell Tree*|Wood Accumulation|Strategic felling of a tree within a riverscape.
+Floodplain BDA|Beaver Dam Analog|A BDA structure constructed on floodplain surfaces, i.e., not build in an existing active channel anabranch.
+*Floodplain LWD*|Wood Accumulation|Placement of any large woody debris on the floodplain.
+*Full Tree*|Wood Accumulation|Placement of an entire tree whether fell, grip hoisted or positioned using another means.
+*Grip Hoist Tree*|Wood Accumulation|A tree that has fallen or that could be fell and then repositioned as a structural element using a grip-hoist.
+Headcut Treatment|Other|Any structural treatment intended to arrest headcut progression.
+*Leaky Dam*|Wood Accumulation|A channel spanning accumulation of smaller woody material with a high degree of porosity.
+*One Rock Dam*|Zeedyk Structure|A grade control structure build with a single layer of rock designed to stabilize the bed of channel by increasing roughness.
+*PALS*|Wood Accumulation|A post – assisted log structure, general term for a structural treatment constructed of woody debris secured in an accumulation by driving posts into the stream channel or floodplain.
+*PALS - Bank Attached*|Wood Accumulation|PALS that are attached to the margin (bank) of the active channel. Generally intended to direct flow away from the attached bank and potentially encouraging bar formation and lateral erosion and/or migration of the active channel.
+*PALS - Bank Blaster*|Wood Accumulation|PALS that are oriented to direct flow into a bank to enhance rates and magnitudes of bank erosion.
+*PALS - Channel Spanning*|Wood Accumulation|PALS build with sufficient material to span an active channel. Generally intended to enhance channel aggradation rates and/or encourage floodplain connectivity.
+*PALS - Constriction Jet*|Wood Accumulation|PALS that are constructed to direct flow into another non-erosive surface (boulder or armored bank) to enhance rates of bank or bed erosion.
+*PALS - Left Bank Attached*|Wood Accumulation|A left bank attached PALS.
+*PALS - Mid Channel*|Wood Accumulation|PALS built mid-channel, generally intended to enhance topographic complexity and bar formation.
+*PALS - Rhino*|Wood Accumulation|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+*PALS - Right Bank Attached*|Wood Accumulation|Right bank attached PALS.
+*Post and Brush Plug*|Vegetation Production|Densely packing small vegetation around rows of posts driven into the channel to form a channel spanning dam-like structure.
+*Postline Wicker Weave|Beaver Dam Analog|A variant of a BDA in which woody branches are woven between posts in a fashion similar to wicker furniture construction. Produces a flat dam structure with a thin longitudinal profile.
+*Primary BDA*|Beaver Dam Analog|A large BDA that is generally designed and placed to have the greatest hydrologic and geomorphic impact. ‘Primary’ comes from beaver complexes that commonly contain one or more large pond-forming dams that are surrounded by smaller secondary dams.
+*Rhino*|Wood Accumulation|The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+*Secondary BDA*|Beaver Dam Analog|In a complex of BDA structures, secondary BDAs are often constructed downstream a Primary BDA to dispute gradient or within non-primary or overflow channels.
+*Sedge Plugs*|Vegetation Production|Cutting densely packed bricks of earth that are held together by sedges into the active channel spanning structure.
+*Spreaders*|Zeedyk Structure|A rock-lined depositional area designed to disperse channelized flow and restore sheet flow.
+*Strategic Felling*|Wood Accumulation|Felling of trees into the channel or floodplain.
+*Tight PALS (BDA without sod)*|Wood Accumulation|A channel spanning PALS built of small woody material. Similar but more porous than a typical BDA.
+*Tree Dam*|Wood Accumulation|A fell tree intended to act as a channel spanning dam, may have additional vegetative material, sediment, or sod additions to further decrease porosity.
+*Tree Plug*|Wood Accumulation|Using a single large fell tree to create a channel spanning dam-like structure.
+*Vanes*|Zeedyk Structure|An in-channel structure usually constructed of posts and designed to induce meandering and point formation.
+*Wicker Weirs*|Zeedyk Structure|A specific PALS recipe used in large streams with high stream power. The structure is built to maximize contact with the stream bed and has a narrow upstream profile extending into a thick base downstream much like the horn of a rhino.
+*Wood Jam*|Wood Accumulation|Analogous to ALS being a placed accumulation of woody material that does not include driven posts.
+*Zuni Bowl*|Zeedyk Structure|An in-channel headcut control structure composed of rock-lined step falls and plunge pools intended to arrest the progression of headcuts.
+
+Additional Attributes|Description
+---|---|
+*Complex and/or Structure ID*|Unique ID to identify structure individually or part of larger complex. 
+*Structure Height/Width/Length*|Physical dimensions of the structure.
+*Number of Posts*|Number of posts used in the structure.
+*Estimated Fill Volume*|Estimated volume of fill material in the structure.
+</TabItem>
+<TabItem value="zoi" label="ZOI Layers">
+*Description: anticipated hydraulic effect (area) that individual structure will influence*
+
+**ZOI (Complex)**
+Attribute|Description
+---|---
+*Accelerate Incision Recovery*|Force channel widening to halt channel incision  
+*Aggradation and Avulsion*|Accelerate bank and bar formation to force channel into new pathways 
+*Cover/Complexity*|Enhance riparian vegetation cover or complexity 
+*Facilitate Beaver Translocation*|Enhance habitat and flow conditions suitable for beaver reintroduction
+*Headcut Arrest*|Stabilize active headcuts or prevent headcut formation 
+*Increase Channel Complexity*|Diversify flow patterns and increase geomorphic unit diversity 
+*Increase Floodplain Connectivity*|Elevate water table to establish hydrologic connectivity with floodplain 
+*Lateral Channel Migration*|Increase channel sinuosity to diveristy geomorphic conditions 
+*Overbank Flow Dispersal*|Force flow over existing river banks onto floodplain
+*Pond/Wetland Creation*|Create series of ponds or wetlands behind structures
+*Riparian/Wetland Expansion*|Enhance existing riparian or wetland conditions to facilitate habitat expansion 
+*Side-Channel Creation*|Divert flow from main channel into newly formed side-channels
+*Widening and Aggradation*|Erode channel banks to widen channel and increase sediment deposition 
+
+**ZOI (Structure-Geomorphic)**
+Attribute|Description
+---|---
+*Deposition in Upstream Backwater*|Deposition in ponded water behind structure
+*Deposition of Bar*|Newly formed bar or expansion of existing bar by forced deposition 
+*Deposition Overbank*|Deposition outside of channel
+*Erode Bank*|Erosion of exisiting channel bank
+*Erosion from Convergent Jet*|Erosion of streambed or banks fored by narrow constriction  
+*Erosion of Bar Edge*|Erosion of existing channel bar 
+*Erosion from Plunge*|Erosion of channel bed by cascading water
+*Erosion from Return Flow Headcut*|Headcut erosion formed by excess flow concentration 
+*Scour Pool Formation*|Pool formation by erosion of streambed 
+
+**ZOI (Structure-Hydraulic)**
+Attribute|Description
+---|---
+*Constriction Jet*|Flow constricted to narrow area by structure 
+*Divergent Flow*|Flow that diverges or spreads out by structural forcing 
+*Eddy*|Circular vortex formed by structural obstruction of flow paths 
+*Overflow*|Flow that exceeds the capacity of the channel
+*Ponding Flow*|Pooling of flow behind structure 
+*Shunting Flow*|Flow diverted to specific pathway by structure  
+*Splitting Flow*|Flow separation by structural obstruction 
+</TabItem>
+  <TabItem value="Observations" label="Observations" default>
+  *Description: highlight key valley bottom features and other important critical considerations that influence the restoration design*
+
+**Observation (Points)**
+Attribute|Description
+---|---
+*Building Materials*|Ideal areas for harvesting materials to be used in structure construction.
+*Caution*|Any feature that deserves caution, especially for the safety of construction or monitoring crews.
+*Design Considerations*|A feature or observation that should be considered in an LTPBR design, best clarified by including notes about how the featured might be incorporated into an LTPBR design.
+*Logistics*|Used to provide project annotations such as material staging locations, parking areas, camping, etc….
+*Photo Observation*|Photo observations made in the field.
+*Other*|Other features that may be relevant to LTPBR planning, design, or implementation.
+*Riverscape Feature*|Any riverscape feature that might be important to make note of in a design that might provide opportunities or risks. It is especially important to mark those that were observed in the field but hard to detect using aerial imagery.
+
+**Observation (Lines)**
+Attribute|Description
+---|---
+*Caution*|Any feature that deserves caution, especially for the safety of construction or monitoring crews.
+*Logistics*|Used to provide project annotations such as material staging locations, parking areas, camping, etc….
+*Other*|Other features that may be relevant to LTPBR planning, design, or implementation.
+*Riverscape Feature*|Any riverscape feature that might be important to make note of in a design that might provide opportunities or risks. It is especially important to mark those that were observed in the field but hard to detect using aerial imagery.
+*Road*|Access roads to the construction site as well as designated routes on the riverscape where roads may not currently exist.
+
+**Observation (Polygons)**
+Attribute|Description
+---|---
+*Building Materials*|Ideal areas for harvesting materials to be used in structure construction.
+*Caution*|Any feature that deserves caution, especially for the safety of construction or monitoring crews.
+*Infrastructure*|Polygon|Any anthropogenic infrastructure in the riverscape that is important to be aware of or that might be at risk.
+*Logistics*|Used to provide project annotations such as material staging locations, parking areas, camping, etc….
+*Other*|Other features that may be relevant to LTPBR planning, design, or implementation.
+</TabItem>
+<TabItem value="Structure Complex Extents" label="Structure Complex Extents" default>
+
+*Description: polygon that defines an area where multiple structures are designed to work together to achieve a specific, complex objective.*
+
+Attribute|Description
+---|---
+*Complex ID*|Unique ID assigned to complex.
+*Estimated Number of Structures*|Estimated number of structures in the complex.
+*Structure Uncertainty*|Uncertainty associated with structure count in the complex.
+*Estimated Total Fill Volume*|Estimated total fill volume of structures within the complex.
+*Notes*|Additional notes about the structure complex.
+</TabItem>
+<TabItem value="Recovery Space" label="Recovery Space" default>
+
+*Description: polygon that defines the potential recovery area from LTPBR.*
+
+Attribute|Description
+---|---
+*Notes*|Additional notes about the recovery space area.
 </TabItem>
 </Tabs>
 
