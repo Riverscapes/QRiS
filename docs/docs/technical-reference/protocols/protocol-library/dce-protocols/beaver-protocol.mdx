@@ -15,7 +15,7 @@ This protocol is experimental and has not been finalized by the protocol owner. 
 
 ## Overview
 
-The **Beaver Protocol** is an assessment of beaver activity, dam & complex surveys, beaver translocations, and potential conflicts. This protocol is intended to assist with LTPBR planning & monitoring to evaluate & assess potential restoration sites for beaver presence, to collect field data and compare with modelled (e.g., BRAT) outputs, or to monitor as-builts for active beaver activity & use of LTPBR structures. 
+The **Beaver Protocol** is an assessment of beaver activity, dam & complex surveys, beaver translocations, and potential conflicts. This protocol is intended to assist with LTPBR planning & monitoring to evaluate and assess potential restoration sites for beaver presence, to collect field data and compare with modelled (e.g., BRAT) outputs, or to monitor as-builts for active beaver activity & use of LTPBR structures. 
 
 ## Protocol Summary 
 
@@ -82,24 +82,9 @@ This protocol uses multiple layers organized into groups to collect data related
 
 <Tabs>
   <TabItem value="beaver activity" label="Beaver Activity">
-    **Type**|**Description**
+**Field Label**|**Values**
 ---|---
-*Bank Den*|NA
-*Bank Lodge*|NA
-*Canal*|NA
-*Chew Stick*|NA
-*Clipped Vegetation*|NA
-*Felled Tree*|NA
-*Food Cache*|NA
-*Harvested Branches*|NA
-*Other*|NA
-*Pond Excavation*|NA
-*Pond Lodge*|NA
-*Scat*|NA
-*Scent Mound*|NA
-*Set of Tracks*|NA
-*Skid Trail*|NA
-*Slide*|NA
+*Type*|<li>Bank Den </li> <li>Bank Lodge</li><li>Canal</li><li>Chew Stick</li><li>Clipped Vegetation</li><li>Felled Tree</li><li>Food Cache</li><li>Harvested Branches</li><li>Other</li><li>Pond Excavation</li><li>Pond Lodge</li><li>Scat</li><li>Scent Mound</li><li>Set of Tracks</li><li>Skid Trail</li><li>Slide</li>
     </TabItem>
     <TabItem value="dam survey" label="Dam Survey">
 **Type**|**Description**
@@ -191,38 +176,26 @@ Zuni Bowl|Zeedyk Structure|An in-channel headcut control structure composed of r
     
 ### Metric Attributes
 
-  <Tabs>
-  <TabItem value="dam count" label="Dam Count" default>
-Metric|Description|Calculation
----|---|---|
-*Dam Count*|Sum of all beaver dams surveyed in sample frame|`Sum(Beaver Dams)`
+<Tabs>
+  <TabItem value="count" label="Count Metrics" default>
+
+| Metric ID | Label | Precision | Description | Calculation |
+| :--- | :--- | :--- | :--- | :--- |
+| `dam_count` | **Total Dam Count** | 1 | Count of All Beaver Dams in Sample Frame. | `Count(Beaver Dams)` |
+| `active_dam_count` | **Active Dam Count** | 1 | Count of All Active Beaver Dams (Maintained = Yes). | `Count(Maintained Beaver Dams)` |
+| `inactive_dam_count` | **Inactive Dam Count** | 1 | Count of All Inactive Beaver Dams (Maintained = No). | `Count(Non-Maintained Beaver Dams)` |
+
   </TabItem>
-  <TabItem value="dam density" label="Dam Density" default>
-Metric|Description|Calculation
----|---|---|
-*Dam Density*|Density of beaver dams surveyed in sample frame|`Sum(Beaver Dams)/Valley Bottom Centerline Length`
+  <TabItem value="density" label="Density Metrics">
+
+| Metric ID | Label | Precision | Description | Calculation |
+| :--- | :--- | :--- | :--- | :--- |
+| `dam_density` | **Total Dam Density** | 3 | Density of All Beaver Dams normalized by Valley Bottom Centerline. | `Count(Beaver Dams)` / `Length (Valley Bottom Centerline)` |
+| `active_dam_density` | **Active Dam Density** | 3 | Density of All Active Beaver Dams normalized by Valley Bottom Centerline. | `Count(Maintained Beaver Dams)` / `Length (Valley Bottom Centerline)` |
+| `inactive_dam_density` | **Inactive Dam Density** | 3 | Density of All Inactive Beaver Dams normalized by Valley Bottom Centerline. | `Count(Non-Maintained Beaver Dams)` / `Length (Valley Bottom Centerline)` |
+
   </TabItem>
-  <TabItem value="active dam count" label="Active Dam Count" default>
-Metric|Description|Calculation
----|---|---|
-*Active Dam Count*|Sum of all beaver dams actively maintained in sample frame|`Sum(Maintained Beaver Dams)`
-  </TabItem>
-  <TabItem value="active dam density" label="Active Dam Density" default>
-Metric|Description|Calculation
----|---|---|
-*Active Dam Density*|Density of beaver dams actively maintained in sample frame|`Sum(Maintained Beaver Dams)/Valley Bottom Centerline Length`
-  </TabItem>
-    <TabItem value="inactive dam count" label="Inactive Dam Count" default>
-Metric|Description|Calculation
----|---|---|
-*Inactive Dam Count*|Sum of all beaver dams not actively maintained in sample frame|`Sum(Non-Maintained Beaver Dams)`
-  </TabItem>
-  <TabItem value="inactive dam density" label="Inactive Dam Density" default>
-Metric|Description|Calculation
----|---|---|
-*Inactive Dam Density*|Density of beaver dams not actively maintained in sample frame|`Sum(Non-Maintained Beaver Dams)/Valley Bottom Centerline Length`
-  </TabItem>
-    </Tabs>
+</Tabs>
 
 ## Resources 
 
