@@ -107,20 +107,24 @@ Anthropogenic Margin Type|Description
 ### Metric Attributes
 
 <Tabs>
-  <TabItem value="Active Channel Ratio" label="Active Channel Ratio" default>
-  Description|Calculation
-  ---|---
-  *Proportion of the valley bottom that is inundated by bankfull flow. This includes channel polygons digitized in the Tier 1 Geomorphic Unit layer.*|`Sum (Channel Area) / Total Valley Bottom Area` 
+  <TabItem value="Geomorphic Metrics" label="Geomorphic Metrics" default>
+| Metric ID | Label | Precision | Description | Calculation |
+| :--- | :--- | :--- | :--- | :--- |
+| `active_channel_proportion` | Active Channel Proportion | 2 | Proportion of Active Channel(s) within Valley Bottom of Each Sample Frame| `Sum (Active Channel Area) / Valley Bottom Area` |
+| `active_channel_area` | Area of Active Channel(s) within Valley Bottom of Each Sample Frame | 2 | Area of Active Channel within Valley Bottom of Each Sample Frame | `Sum (Active Channel Area)` |
+| `active_floodplain_proportion` | Active Floodplain Proportion | 2 | Proportion of Active Floodplain within Valley Bottom of Each Sample Frame | `Sum (Active Floodplain Area) / Valley Bottom Area` |
+| `active_floodplain_area` | Active Floodplain Area | 2 | Area of Active Floodplain within Valley Bottom of Each Sample Frame | `Sum (Active Floodplain Area)` |
+| `inactive_floodplain_proportion` | Inactive Floodplain Proportion | 2 | Proportion of Inactive Floodplain within Valley Bottom of Each Sample Frame | `Sum (Inactive Floodplain Area) / Valley Bottom Area` |
+| `inactive_floodplain_area` | Inactive Floodplain Area | 2 | Area of Inactive Floodplain within Valley Bottom of Each Sample Frame | `Sum (Inactive Floodplain Area)` |
   </TabItem>
-  <TabItem value="Active Floodplain Ratio" label="Active Floodplain Ratio">
-  Description|Calculation
-  ---|---
-  *Proportion of the valley bottom that is flooded by the contemporary flood regime. This includes active floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.*|`Sum (Active Floodplain Area) / Total Valley Bottom Area`
-  </TabItem>
-  <TabItem value="Inactive Floodplain Ratio" label="Inactive Floodplain Ratio">
-  Description|Calculation
-  ---|---
-  *Proportion of the valley bottom that is not flooded by the contemporary flood regime. This includes inactive floodplain polygons digitized in the Tier 1 Geomorphic Unit layer.*|`Sum (Inactive Floodplain Area) / Total Valley Bottom Area`
+  <TabItem value="Margin Metrics" label="Margin Metrics">
+| Metric ID | Label | Precision | Description | Calculation |
+| :--- | :--- | :--- | :--- | :--- |
+| `margin_length` | Total Margin Length | 2 | The total length of all margin types | `Sum (Total Margin Length)` |
+| `margin_length_left` | Margin Length (left) | 2 | The total length of left valley bottom margins | `Sum (Left Margin Length)` |
+| `margin_length_right` | Margin Length (right) | 2 | The total length of right valley bottom margins | `Sum (Right Margin Length)` |
+| `proportion_sediment_source` | Proportion of Margin that is a Sediment Source | 2 | The proportion of total margin length that has potential to supply sediment to the stream | `Sum (Length of Margins with Sediment Source) / Sum (Total Margin Length)` |
+| `proportion_wood_source` | Proportion of Margin that is a Wood Source | 2 | The proportion of total margin length that has potential to supply wood to the stream | `Sum (Length of Margins with Wood Source) / Sum (Total Margin Length)` |
   </TabItem>
 </Tabs>
 
