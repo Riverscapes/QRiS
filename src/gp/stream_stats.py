@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.pour_point import save_pour_point, PourPoint
 
-MESSAGE_CATEGORY = 'QRiS_StreamStatsTask'
+MESSAGE_CATEGORY = 'QRiS'
 
 
 class StreamStats(QgsTask):
@@ -19,7 +19,7 @@ class StreamStats(QgsTask):
     https://docs.qgis.org/3.22/en/docs/pyqgis_developer_cookbook/tasks.html
     """
 
-    def __init__(self, db_path: str, latitude: float, longitude: float, name: str, description: str, get_basic_chars: bool, get_flow_stats: bool, add_to_map: bool):
+    def __init__(self, db_path: str, latitude: float, longitude: float, name: str, description: str, get_basic_chars: bool, get_flow_stats: bool, add_to_map: bool, metadata: dict = None):
         super().__init__(f'{name} Stream Stats API Request at {longitude}, {latitude}', QgsTask.CanCancel)
         # self.duration = duration
         self.db_path = db_path
@@ -30,6 +30,7 @@ class StreamStats(QgsTask):
         self.get_basin_chars = get_basic_chars
         self.get_flow_stats = get_flow_stats
         self.add_to_map = add_to_map
+        self.metadata = metadata
         self.pour_point = None
         self.total = 0
         self.iterations = 0
@@ -70,16 +71,28 @@ class StreamStats(QgsTask):
             if self.isCanceled():
                 return False
 
+            flow_scenarios = None
             flow_stats = None
             if self.get_flow_stats is True:
-                # Flow stats are complex in new API. Attempting to retrieve via new workflow.
                 try:
-                    flow_stats = retrieve_flow_statistics(self.watershed_data)
+                    flow_scenarios = retrieve_flow_scenarios(self.watershed_data, basin_chars)
+                    flow_stats = calculate_flow_statistics(flow_scenarios, basin_chars)
                 except Exception as e:
                     QgsMessageLog.logMessage(f'Flow Statistics failed/not supported yet: {e}', MESSAGE_CATEGORY, Qgis.Warning)
+                    flow_scenarios = None
                     flow_stats = None
 
-            self.pour_point = save_pour_point(self.db_path, self.latitude, self.longitude, self.watershed_data, self.name, self.qris_description, basin_chars, flow_stats)
+            QgsMessageLog.logMessage(f"DEBUG: flow_scenarios to save: {json.dumps(flow_scenarios) if flow_scenarios is not None else 'None'}", MESSAGE_CATEGORY, Qgis.Info)
+            QgsMessageLog.logMessage(f"DEBUG: flow_stats to save: {json.dumps(flow_stats) if flow_stats is not None else 'None'}", MESSAGE_CATEGORY, Qgis.Info)
+        
+            # Ensure state_code is in metadata to avoid passing it as a separate parameter
+            if self.metadata is None:
+                self.metadata = {}
+            if 'system' not in self.metadata:
+                self.metadata['system'] = {}
+            self.metadata['system']['state_code'] = state_code
+            
+            self.pour_point = save_pour_point(self.db_path, self.latitude, self.longitude, self.watershed_data, self.name, self.qris_description, basin_chars, flow_stats, flow_scenarios, self.metadata)
 
         except Exception as ex:
             self.exception = ex
@@ -134,21 +147,22 @@ def transform_geometry(geometry, map_epsg: int, output_epsg: int):
     return transform.transform(geometry)
 
 
-# Makes all 4 api calls. Currently not working consistently due to time delays
-def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool, get_flow_statistics: bool, new_file_dir=None):
-    state_code, status = get_state_from_coordinates(lat, lon)
-    watershed_data = delineate_watershed(lat, lon, state_code, new_file_dir)
-    workspace_id = watershed_data["workspaceID"]
+# # Makes all 4 api calls. Currently not working consistently due to time delays
+# def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool, get_flow_statistics: bool, new_file_dir=None):
+#     state_code, status = get_state_from_coordinates(lat, lon)
+#     watershed_data = delineate_watershed(lat, lon, state_code, new_file_dir)
+#     workspace_id = watershed_data["workspaceID"]
 
-    basin_characteristics = None
-    if get_basin_characteristics is True:
-        basin_characteristics = retrieve_basin_characteristics(state_code, workspace_id, new_file_dir)
+#     basin_characteristics = None
+#     if get_basin_characteristics is True:
+#         basin_characteristics = retrieve_basin_characteristics(state_code, workspace_id, new_file_dir)
 
-    flow_statistics = None
-    if get_flow_statistics is True:
-        flow_statistics = retrieve_flow_statistics(state_code, workspace_id, new_file_dir)
+#     flow_statistics = None
+#     if get_flow_statistics is True:
+#         # Update to pass basin_characteristics
+#         flow_statistics = retrieve_flow_statistics(watershed_data, basin_characteristics, new_file_dir)
 
-    return (watershed_data, basin_characteristics, flow_statistics)
+#     return (watershed_data, basin_characteristics, flow_statistics)
 
 
 # Returns dictionary of watershed info based on coordinates and U.S. state
@@ -236,59 +250,150 @@ def retrieve_basin_characteristics(delineation_data, file_dir=None):
 
 
 # Returns dictionary of river flow stats
-def retrieve_flow_statistics(delineation_data, file_dir=None):
+def retrieve_flow_scenarios(delineation_data, basin_chars=None, file_dir=None):
     # New API: NSS Services
-    # This is a multi-step process and is significantly different from legacy.
     # Step 1: Get Regression Regions
     rr_url = "https://streamstats.usgs.gov/nssservices/regressionregions/bylocation"
-    
+    scenarios_url = "https://streamstats.usgs.gov/nssservices/scenarios"
+
     try:
         # Extract geometry from delineation_data
-        # Structure: delineation_data["bcrequest"]["wsresp"]["featurecollection"][0][1]["feature"]
-        # (Based on debug output observation)
         bcrequest = delineation_data.get("bcrequest", {})
         wsresp = bcrequest.get("wsresp", {})
         fc = wsresp.get("featurecollection", [])
-        
+
         poly_feature = None
-        if len(fc) > 0 and isinstance(fc[0], list) and len(fc[0]) > 1:
-             poly_feature = fc[0][1].get("feature")
-        
+        if len(fc) > 0:
+            if isinstance(fc[0], list) and len(fc[0]) > 1:
+                nested_item = fc[0][1]
+                if isinstance(nested_item, dict) and "feature" in nested_item:
+                    feat = nested_item["feature"]
+                    if feat.get("type") == "FeatureCollection" and "features" in feat:
+                        poly_feature = feat["features"][0]
+                    else:
+                        poly_feature = feat
+            elif isinstance(fc[0], dict) and fc[0].get("type") == "Feature":
+                poly_feature = fc[0]
+
         if not poly_feature:
             raise Exception("Could not search for regression regions: Watershed geometry not found in response.")
 
-        # Construct simple FeatureCollection for NSS
-        rr_payload = {
-            "type": "FeatureCollection",
-            "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-            "features": [poly_feature]
-        }
-        
+        rr_payload = poly_feature.get("geometry")
+        if not rr_payload:
+            if "coordinates" in poly_feature:
+                rr_payload = poly_feature
+            else:
+                raise Exception("Could not extract geometry from watershed feature.")
+
         QgsMessageLog.logMessage(f'Retrieving Regression Regions via {rr_url}', MESSAGE_CATEGORY, Qgis.Info)
-        
-        response = requests.post(rr_url, json=rr_payload)
-        response.raise_for_status()
-        rr_data = response.json()
-        
-        # NOTE: Full implementation of Flow Stats (Scenarios -> Estimate) requires extensive mapping 
-        # of Basin Characteristics to Scenario variables. This is a large task.
-        # For now, we return the Regression Regions info as a placeholder or throw a Not Implemented error
-        # so the user knows this part is incomplete but doesn't crash the Delineation/Basin Chars.
-        
-        raise NotImplementedError("Full Flow Statistics computation via new API is not yet implemented.")
+        rr_response = requests.post(rr_url, json=rr_payload)
+        rr_response.raise_for_status()
+        regression_regions = rr_response.json()
+        QgsMessageLog.logMessage(f"DEBUG: regression_regions response: {json.dumps(regression_regions)}", MESSAGE_CATEGORY, Qgis.Info)
+
+        # Step 2: Get Scenarios (GET with query params)
+        # Extract region and regression region codes
+        region = delineation_data.get('stateAbbreviation') or delineation_data.get('state', None)
+        regression_region_codes = []
+        if isinstance(regression_regions, list):
+            for reg in regression_regions:
+                code = reg.get('code')
+                if code:
+                    regression_region_codes.append(code)
+        # Get all available statistic groups by not passing an ID
+        scenarios_params = {
+            'regions': region,
+            'regressionregions': ','.join(regression_region_codes)
+        }
+        import urllib.parse
+        full_url = scenarios_url + '?' + urllib.parse.urlencode(scenarios_params)
+        QgsMessageLog.logMessage(f"DEBUG: Scenarios API full URL: {full_url}", MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(f"DEBUG: Scenarios API params: regions={region}, regressionregions={','.join(regression_region_codes)}", MESSAGE_CATEGORY, Qgis.Info)
+        try:
+            scenarios_response = requests.get(scenarios_url, params=scenarios_params)
+            QgsMessageLog.logMessage(f"DEBUG: Scenarios API response status: {scenarios_response.status_code}", MESSAGE_CATEGORY, Qgis.Info)
+            scenarios_response.raise_for_status()
+            scenarios_json = scenarios_response.json()
+            QgsMessageLog.logMessage(f"DEBUG: scenarios response: {json.dumps(scenarios_json)}", MESSAGE_CATEGORY, Qgis.Info)
+        except Exception as e:
+            QgsMessageLog.logMessage(f"ERROR: Scenarios API request failed: {str(e)}", MESSAGE_CATEGORY, Qgis.Warning)
+            if hasattr(scenarios_response, 'text'):
+                QgsMessageLog.logMessage(f"ERROR: Scenarios API response text: {scenarios_response.text}", MESSAGE_CATEGORY, Qgis.Warning)
+            raise
+        # The API returns a list; include all scenarios
+        scenarios_data = scenarios_json if isinstance(scenarios_json, list) else [scenarios_json]
+
+        # Only store regression regions and all scenarios for user review/input
+        flow_scenarios = {
+            "regressionRegions": regression_regions,
+            "scenarios": scenarios_data
+        }
+        QgsMessageLog.logMessage(f"DEBUG: retrieve_flow_statistics output: {json.dumps(flow_scenarios)}", MESSAGE_CATEGORY, Qgis.Info)
+
+        if file_dir is not None:
+            save_json(flow_scenarios, file_dir, "flow_scenarios.json")
+
+        return flow_scenarios
 
     except Exception as ex:
-        error_msg = f'Error retrieving flow statistics: {str(ex)}'
+        error_msg = f'Error retrieving flow scenarios: {str(ex)}'
+        QgsMessageLog.logMessage(f"DEBUG: retrieve_flow_statistics exception: {error_msg}", MESSAGE_CATEGORY, Qgis.Warning)
         if 'response' in locals() and hasattr(response, 'text'):
             error_msg += f". Response: {response.text}"
-        # raise Exception(error_msg) 
-        # Suppress fatal error for now, as Delineation/Basin Chars are more critical
         QgsMessageLog.logMessage(error_msg, MESSAGE_CATEGORY, Qgis.Warning)
-        return {"error": "Flow Statistics not fully migrated to new API", "details": str(ex)}
+        return {"error": "Flow Scenarios not fully migrated to new API", "details": str(ex)}
 
+def calculate_flow_statistics(flow_scenarios: dict, basin_chars: dict, file_dir: str = None):
+
+    estimates_url = "https://streamstats.usgs.gov/nssservices/scenarios/estimate"
+    estimates = []
+    
+    # Basin chars lookup mapped by uppercase code
+    bc_dict = {}
+    if basin_chars and 'parameters' in basin_chars:
+        for bc in basin_chars['parameters']:
+            if 'code' in bc and 'value' in bc:
+                bc_dict[bc['code'].upper()] = bc['value']
+                
+    scenarios = flow_scenarios.get('scenarios', [])
+    for scenario in scenarios:
+        # Fill in parameter values in the scenario 
+        for region in scenario.get('regressionRegions', []):
+            for param in region.get('parameters', []):
+                p_code = param.get('code', '').upper()
+                if p_code in bc_dict and bc_dict[p_code] is not None:
+                    param['value'] = bc_dict[p_code]
+                    
+        # The API expects an array of scenarios
+        payload = [scenario]
+        
+        try:
+            response = requests.post(estimates_url, json=payload)
+            response.raise_for_status()
+            
+            # The API returns a list; take the first one
+            results = response.json()
+            if isinstance(results, list) and len(results) > 0:
+                estimate_res = results[0]
+            else:
+                estimate_res = results
+                
+            estimates.append({
+                "scenario": scenario,
+                "estimate": estimate_res
+            })
+        except Exception as ex:
+            msg = str(ex)
+            if 'response' in locals() and hasattr(response, 'text'):
+                msg += f". Response: {response.text}"
+            estimates.append({
+                "scenario": scenario,
+                "error": msg
+            })
+            
     if file_dir is not None:
-        save_json(flow_data, file_dir, "flow_stats.json")
-    return flow_data
+        save_json(estimates, file_dir, "flow_estimates.json")
+    return estimates
 
 
 # Saves dictionary to custom location
@@ -300,6 +405,11 @@ def save_json(dict, directory, file_name):
 # Uses coordinates to determine U.S. state using API
 def get_state_from_coordinates(latitude: float, longitude: float):
     """https://www.usgs.gov/streamstats/about"""
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except (ValueError, TypeError):
+        return None, None
 
     # Get the states layer from the resources gpkg
     db_path = os.path.join(os.path.dirname(__file__), '..','..','resources', 'us_states.gpkg')
@@ -315,6 +425,6 @@ def get_state_from_coordinates(latitude: float, longitude: float):
     for feature in states_layer.selectedFeatures():
         if feature.geometry().intersects(point):
             return feature['STATE_ABBR'], feature['STATUS']
-    
+
     return None, None
-    
+
