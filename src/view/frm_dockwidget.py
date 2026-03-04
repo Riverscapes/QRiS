@@ -203,7 +203,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         
         # Map Manager
         self.map_manager = QRisMapManager(self.qris_project)
-        self.map_manager.edit_mode_changed.connect(self.on_edit_session_change)
+        self.map_manager.edit_mode_changed.connect(lambda *args: self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text))
 
         rootNode = self.model.invisibleRootItem()
 
@@ -255,8 +255,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.treeView.expand(self.model.indexFromItem(node))
 
         self.add_basemap_nodes()
-        # reorder nodes so basemaps is always at the bottom
-        
 
         # Reconnect any qirs layers back to the edit session signals
         self.traverse_tree(self.model.invisibleRootItem(), self.reconnect_layer_edits)
@@ -280,7 +278,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             basemap_node = self.qrave.BaseMaps.regions.get(region)
             if basemap_node is not None:
                 self.treeView.expand(self.model.indexFromItem(basemap_node))
-
         return
     
     def add_basemap_nodes(self):
@@ -361,13 +358,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.iface.mapCanvas().refreshAllLayers()
 
     def closeEvent(self, event):
-
-        # self.closingPlugin.emit()
-        # self.destroy_docwidget()
         event.accept()
 
     def destroy_docwidget(self):
-
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
         if remove_layers is True:
@@ -678,10 +671,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             action.triggered.connect(slot)
 
     def group_children(self, tree_node: QtGui.QStandardItem, group_key: str):
-        
         # Create a dictionary to hold the groups
         groups = {}
-
         # Collect the original children into a list
         original_children = []
         # Collect all children, including those nested within group nodes
@@ -752,7 +743,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Sort the groups folders to the top please
         self.sort_children(tree_node, 'node_type')
-
 
     def collect_all_children(self, tree_node: QtGui.QStandardItem):
         """Recursively collect all children of a tree node, including nested children."""
@@ -894,7 +884,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem, features_only=False):
         """Add all children of a group node to the map ToC
         """
-
         machine_code = model_item.data(QtCore.Qt.UserRole)
         if machine_code == STREAM_GAGE_MACHINE_CODE:
             self.map_manager.build_stream_gage_layer()
@@ -1607,9 +1596,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if import_source_path is None:
                     return
 
-        create = False
-        if mode == DB_MODE_CREATE:
-            create = True
+        create = True if mode == DB_MODE_CREATE else False            
 
         frm = FrmSampleFrame(self, self.qris_project, import_source_path, create_sample_frame=create)
         if meta is not None:
@@ -1697,7 +1684,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
                 parent_node = riverscapes_node
             self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
-
         
     def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
 
@@ -1848,7 +1834,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
             self.add_child_to_project_tree(catchments_node, pour_point, add_to_map)
-
         else:
             self.iface.messageBar().pushMessage('Stream Stats Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
@@ -1932,7 +1917,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if frm is not None:
             result = frm.exec_()
             if result is not None and result != 0:
-
                 # Adding the item into the tree again will ensure that it's name is up to date
                 # and that any child nodes are correct. It will also ensure that the corresponding
                 # map table of contents item is renamed.
@@ -1949,12 +1933,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def geospatial_summary(self, model_item, model_data: SampleFrame):
 
-        # Check the feature count of the aoi, make sure there is one and only one polygon feature
-        # aoi_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={model_data.fc_name}|subset={model_data.fc_id_column_name} = {model_data.id}', 'aoi', 'ogr')
-        # if aoi_layer.featureCount() != 1:
-        #     QtWidgets.QMessageBox.warning(self, 'Geospatial Summary', 'The selected AOI must contain exactly one polygon feature.')
-        #     return
-
         zonal_metrics_task = ZonalMetricsTask(self.qris_project, model_data)
         # -- DEBUG --
         # zonal_statistics_task.run()
@@ -1962,15 +1940,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         zonal_metrics_task.on_complete.connect(self.geospatial_summary_complete)
         QgsApplication.taskManager().addTask(zonal_metrics_task)
  
-
-    def on_edit_session_change(self):
-
-        self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text)
-               
     def traverse_tree(self, node: QtGui.QStandardItem, func: callable):
-
         func(node)
-
         for row in range(0, node.rowCount()):
             child_node = node.child(row)
             self.traverse_tree(child_node, func)
@@ -2015,17 +1986,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def get_lock_icon(self, base_icon_name: str) -> QtGui.QIcon:
         """Generates an icon with a lock overlay on a fresh canvas"""
         target_size = 32
-        
         # Create a new transparent pixmap to serve as the canvas
         final_pixmap = QtGui.QPixmap(target_size, target_size)
         final_pixmap.fill(QtCore.Qt.transparent)
-        
         # Draw base icon
         if ':' in base_icon_name:
             base_path = base_icon_name
         else:
             base_path = f':/plugins/qris_toolbar/{base_icon_name}'
-            
         base_icon = QtGui.QIcon(base_path)
         base_pixmap = base_icon.pixmap(target_size, target_size)
         
@@ -2049,7 +2017,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def set_node_text(self, node: QtGui.QStandardItem, data_item: DBItem = None):
 
         data_item = node.data(QtCore.Qt.UserRole) if data_item is None else data_item
-        
         if data_item is None:
             return
         
@@ -2265,12 +2232,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         check_and_remove_unused_layers(self.qris_project)
 
     def browse_item(self, db_item: DBItem, folder_path):
-
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
 
     def browse_data_exchange(self, db_item: DBItem):
-
         # Get the center and zoom level to build the search url
         canvas = self.iface.mapCanvas()
         center = get_map_center(canvas)
