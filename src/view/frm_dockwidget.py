@@ -1780,9 +1780,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.'
                                           '  Be sure to click on the precise stream location.'
-                                          '  A form will appear where you can provide a name and description for the point.'
+                                          '  \n\nA form will appear where you can provide a name and description for the point.'
                                           '  After you click OK, the pour point location will be transmitted to Stream Stats.'
-                                          '  This process can take from a few seconds to a few minutes depending on the size of the catchment.')
+                                          '  \n\nThis process can take from a few seconds to a few minutes depending on the size of the catchment.')
 
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.stream_stats_tool)
@@ -1812,14 +1812,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmPourPoint(self, self.qris_project, transformed_point.y(), transformed_point.x(), None)
         result = frm.exec_()
         if result != 0:
+            
+            get_basin = frm.radBasin.isChecked() or frm.radFlowStats.isChecked()
+            get_flow = frm.radFlowStats.isChecked()
+            
             stream_stats = StreamStats(self.qris_project.project_file,
                                        transformed_point.y(),
                                        transformed_point.x(),
                                        frm.txtName.text(),
                                        frm.txtDescription.toPlainText(),
-                                       frm.chkBasin.isChecked(),
-                                       frm.chkFlowStats.isChecked(),
-                                       frm.chkAddToMap.isChecked())
+                                       get_basin,
+                                       get_flow,
+                                       frm.chkAddToMap.isChecked(),
+                                       metadata=frm.metadata_widget.get_data())
 
             stream_stats.stream_stats_successfully_complete.connect(self.stream_stats_complete)
 

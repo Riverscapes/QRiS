@@ -1,4 +1,5 @@
 import sqlite3
+import re
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ..QRiS.settings import CONSTANTS
 
@@ -46,6 +47,20 @@ def add_standard_form_buttons(form: QtWidgets.QDialog, help_slug: str) -> QtWidg
     form.buttonBox.rejected.connect(form.reject)
 
     return form.horiz
+
+
+def format_superscript(text: str) -> str:
+    """Replaces numeric characters following a caret '^' in a string with their superscript equivalents."""
+    if not text:
+        return text
+    
+    def repl(match):
+        digits = match.group(1)
+        superscript_map = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+        return digits.translate(superscript_map)
+        
+    # Match a caret followed by one or more digits
+    return re.sub(r'\^(\d+)', repl, text)
 
 
 def add_help_button(form: QtWidgets.QDialog, help_slug: str, label: str='Help') -> QtWidgets.QWidget:
