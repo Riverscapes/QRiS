@@ -48,6 +48,7 @@ from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..model.attachment import Attachment, ATTACHMENT_MACHINE_CODE, attachments_path
+from .frm_query_builder import FrmQueryBuilder
 
 from .frm_design import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
@@ -76,6 +77,7 @@ from .frm_layer_metric_details import FrmLayerMetricDetails
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
 from .frm_export_layer import FrmExportLayer
+from .frm_query_builder import FrmQueryBuilder
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
@@ -568,6 +570,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             self.add_context_menu_item(self.menu, 'Open Attachment', 'open_external', lambda: self.browse_item(model_data, model_data.project_path(self.qris_project.project_file)))
                         else:
                             self.add_context_menu_item(self.menu, 'Open Web Link', 'open_external', lambda: self.browse_item(model_data, model_data.path))
+                    elif isinstance(model_data, EventLayer):
+                        self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                        self.add_context_menu_item(self.menu, 'Add To Map with Filter...', 'add_to_map_filtered', lambda: self.add_event_layer_to_map_with_filter(model_item, model_data))
                     else:
                         if any(isinstance(model_data, model_type) for model_type in [Project, Event, PlanningContainer]):
                             self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
@@ -1114,6 +1119,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result == QtWidgets.QDialog.Accepted:
             self.add_db_item_to_map(parent_node, db_item)
+
+    def add_event_layer_to_map_with_filter(self, model_item: QtGui.QStandardItem, event_layer: EventLayer):
+        dialog = FrmQueryBuilder(self, event_layer.layer, self.qris_project, layer_name=event_layer.name)
+        if dialog.exec_():
+             extra_filter = dialog.query_string
+             custom_name = dialog.txtLayerName.text()
+             if extra_filter:
+                 event = self.qris_project.events.get(event_layer.event_id)
+                 self.map_manager.build_event_single_layer(event, event_layer, add_to_map=True, extra_filter=extra_filter, layer_name_override=custom_name)
 
     def import_dce(self, db_item: DBItem, mode: int = DB_MODE_IMPORT):
 

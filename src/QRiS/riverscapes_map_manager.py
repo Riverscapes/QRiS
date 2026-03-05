@@ -250,7 +250,7 @@ class RiverscapesMapManager(QObject):
 
         return zoom
 
-    def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str, add_to_map: bool=True) -> QgsVectorLayer:
+    def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str, add_to_map: bool=True, layer_name_override: str=None) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified DBItem and adds it to the map.
         args:
@@ -260,7 +260,7 @@ class RiverscapesMapManager(QObject):
 
         zoom = self.test_for_zoom()
 
-        if add_to_map:
+        if add_to_map and layer_name_override is None:
             layer = self.get_db_item_layer(project_key, db_item, None)
             if layer is not None:
                 return layer.layer()
@@ -269,7 +269,9 @@ class RiverscapesMapManager(QObject):
         if id_field is not None:
             id_value = db_item.event_id if id_field == 'event_id' else db_item.id
             fc_path = fc_path + f'|subset={id_field} = {id_value}'
-        layer = QgsVectorLayer(fc_path, db_item.name, 'ogr')
+        
+        layer_name = layer_name_override if layer_name_override else db_item.name
+        layer = QgsVectorLayer(fc_path, layer_name, 'ogr')
         # QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
@@ -294,7 +296,13 @@ class RiverscapesMapManager(QObject):
             QgsProject.instance().addMapLayer(layer, False)
             if parent_group is not None:
                 tree_layer_node = parent_group.addLayer(layer)
-                tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, db_item))
+                
+                cust_prop = self.__get_custom_property(project_key, db_item)
+                if layer_name_override:
+                     # Unique property to avoid collision/reuse of single instance
+                    cust_prop += f"::FILTERED::{layer_name_override}"
+
+                tree_layer_node.setCustomProperty(self.product_key, cust_prop)
                 tree_layer_node.setCustomProperty("showFeatureCount", True)
                 tree_layer_node.setExpanded(False)
             
