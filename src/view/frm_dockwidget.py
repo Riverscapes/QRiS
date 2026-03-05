@@ -573,6 +573,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     elif isinstance(model_data, EventLayer):
                         self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
                         self.add_context_menu_item(self.menu, 'Add To Map with Filter...', 'add_to_map_filtered', lambda: self.add_event_layer_to_map_with_filter(model_item, model_data))
+                        self.menu.addSeparator()
                     else:
                         if any(isinstance(model_data, model_type) for model_type in [Project, Event, PlanningContainer]):
                             self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
@@ -653,6 +654,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                                 self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
                             if 'export_brat' in model_data.menu_items:
                                 self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
+                        self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
                     self.add_context_menu_item(self.menu, 'Export Layer Attributes', 'file_copy', lambda: self.export_layer_attributes(model_data))
                     if model_data.locked:
