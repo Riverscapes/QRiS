@@ -5,6 +5,7 @@ from textwrap import dedent
 from .riverscapes_map_manager import RiverscapesMapManager
 
 from ..model.project import Project, PROJECT_MACHINE_CODE
+from ..model.db_item import DBItem
 from ..model.sample_frame import SampleFrame, SAMPLE_FRAME_MACHINE_CODE, AOI_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
 from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
@@ -61,22 +62,47 @@ class QRisMapManager(RiverscapesMapManager):
             'QRiS Base Maps',
             BASEMAP_MACHINE_CODE]
 
-    def build_aoi_layer(self, aoi: SampleFrame) -> QgsMapLayer:
+    def get_layer_for_export(self, db_item: DBItem, add_to_map: bool = False) -> QgsVectorLayer:
+        """
+        Returns a configured QgsVectorLayer for the given DBItem suitable for export.
+        Does not add the layer to the map unless add_to_map is True.
+        """
+        layer = None
+        if isinstance(db_item, EventLayer):
+            # Need event object, which is not directly available from EventLayer
+            # Assuming project.events has it
+            event = self.project.events.get(db_item.event_id)
+            if event:
+                layer = self.build_event_single_layer(event, db_item, add_to_map=add_to_map)
+        elif isinstance(db_item, SampleFrame):
+            if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                layer = self.build_aoi_layer(db_item, add_to_map=add_to_map)
+            elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                layer = self.build_valley_bottom_layer(db_item, add_to_map=add_to_map)
+            else:
+                layer = self.build_sample_frame_layer(db_item, add_to_map=add_to_map)
+        # Add other types as needed
+        return layer
 
-        group_layer_name = 'AOIs'
-        mask_machine_code = AOI_MACHINE_CODE
-        symbology = 'mask'  # TODO do aois need a different mask type? make the reference here...
+    def build_aoi_layer(self, aoi: SampleFrame, add_to_map: bool = True) -> QgsMapLayer:
+
+        group_layer = None
+        if add_to_map:
+            group_layer_name = 'AOIs'
+            mask_machine_code = AOI_MACHINE_CODE
+            symbology = 'mask'  # TODO do aois need a different mask type? make the reference here...
+            
+            project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+            group_layer = self.get_group_layer(self.project.map_guid, mask_machine_code, group_layer_name, project_group, True)
+
+            existing_layer = self.get_db_item_layer(self.project.map_guid, aoi, group_layer)
+            if existing_layer is not None:
+                return existing_layer.layer()
+        
         layer_name = 'sample_frame_features'
-
-        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(self.project.map_guid, mask_machine_code, group_layer_name, project_group, True)
-
-        existing_layer = self.get_db_item_layer(self.project.map_guid, aoi, group_layer)
-        if existing_layer is not None:
-            return existing_layer
-
+        symbology = 'mask'
         fc_path = f'{self.project.project_file}|layername={layer_name}'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, aoi, 'sample_frame_id', symbology)
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, aoi, 'sample_frame_id', symbology, add_to_map=add_to_map)
 
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'AOI Feature ID')
@@ -92,17 +118,19 @@ class QRisMapManager(RiverscapesMapManager):
 
         return feature_layer
     
-    def build_sample_frame_layer(self, sample_frame: SampleFrame) -> QgsMapLayer:
+    def build_sample_frame_layer(self, sample_frame: SampleFrame, add_to_map: bool = True) -> QgsMapLayer:
 
-        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        group_layer = self.get_group_layer(self.project.map_guid, SAMPLE_FRAME_MACHINE_CODE, 'Sample Frames', project_group, True)
+        group_layer = None
+        if add_to_map:
+            project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+            group_layer = self.get_group_layer(self.project.map_guid, SAMPLE_FRAME_MACHINE_CODE, 'Sample Frames', project_group, True)
 
-        existing_layer = self.get_db_item_layer(self.project.map_guid, sample_frame, group_layer)
-        if existing_layer is not None:
-            return existing_layer
+            existing_layer = self.get_db_item_layer(self.project.map_guid, sample_frame, group_layer)
+            if existing_layer is not None:
+                return existing_layer.layer()
 
         fc_path = f'{self.project.project_file}|layername=sample_frame_features'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, sample_frame, 'sample_frame_id', 'sampling_frames')
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, sample_frame, 'sample_frame_id', 'sampling_frames', add_to_map=add_to_map)
 
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'Sample Frame Feature ID')
@@ -167,30 +195,32 @@ class QRisMapManager(RiverscapesMapManager):
 
         return feature_layer
     
-    def build_valley_bottom_layer(self, valley_bottom: SampleFrame) -> QgsMapLayer:
+    def build_valley_bottom_layer(self, valley_bottom: SampleFrame, add_to_map: bool = True) -> QgsMapLayer:
             
+        group_layer = None
+        if add_to_map:
             project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
             group_layer = self.get_group_layer(self.project.map_guid, VALLEY_BOTTOM_MACHINE_CODE, 'Valley Bottoms', project_group, True)
     
             existing_layer = self.get_db_item_layer(self.project.map_guid, valley_bottom, group_layer)
             if existing_layer is not None:
-                return existing_layer
+                return existing_layer.layer()
     
-            fc_path = f'{self.project.project_file}|layername=sample_frame_features'
-            feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'sample_frame_id', 'valley_bottom')
-    
-            # setup fields
-            self.set_hidden(feature_layer, 'fid', 'VB Feature ID')
-            self.set_hidden(feature_layer, 'sample_frame_id', 'Valley Bottom ID')
-            self.set_alias(feature_layer, 'display_label', 'Display Label')
-            self.set_hidden(feature_layer, 'flow_path', 'Flow Path', hide_in_attribute_table=True)
-            self.set_hidden(feature_layer, 'flows_into', 'Flows Into', hide_in_attribute_table=True)
-            self.set_multiline(feature_layer, 'description', 'Description')
-            self.set_hidden(feature_layer, 'metadata', 'Metadata')
-            self.set_virtual_dimension(feature_layer, 'area')
-            self.set_metadata_virtual_fields(feature_layer)
-    
-            return feature_layer
+        fc_path = f'{self.project.project_file}|layername=sample_frame_features'
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, valley_bottom, 'sample_frame_id', 'valley_bottom', add_to_map=add_to_map)
+
+        # setup fields
+        self.set_hidden(feature_layer, 'fid', 'VB Feature ID')
+        self.set_hidden(feature_layer, 'sample_frame_id', 'Valley Bottom ID')
+        self.set_alias(feature_layer, 'display_label', 'Display Label')
+        self.set_hidden(feature_layer, 'flow_path', 'Flow Path', hide_in_attribute_table=True)
+        self.set_hidden(feature_layer, 'flows_into', 'Flows Into', hide_in_attribute_table=True)
+        self.set_multiline(feature_layer, 'description', 'Description')
+        self.set_hidden(feature_layer, 'metadata', 'Metadata')
+        self.set_virtual_dimension(feature_layer, 'area')
+        self.set_metadata_virtual_fields(feature_layer)
+
+        return feature_layer
 
     def build_stream_gage_layer(self) -> QgsMapLayer:
 
@@ -341,36 +371,38 @@ class QRisMapManager(RiverscapesMapManager):
 
         return raster_layer
 
-    def build_event_single_layer(self, event: Event, event_layer: EventLayer) -> None:
+    def build_event_single_layer(self, event: Event, event_layer: EventLayer, add_to_map: bool = True) -> QgsVectorLayer:
         """
         Add a single layer for an event
         """
         # if lookup table then forget about it
         if event_layer.layer.is_lookup:
-            return
+            return None
 
-        machine_code = EVENT_MACHINE_CODE
-        group_name = 'Data Capture Events'
-        if event.event_type.id == DESIGN_EVENT_TYPE_ID:
-            machine_code = DESIGN_MACHINE_CODE
-            group_name = 'Designs'
-        if event.event_type.id == AS_BUILT_EVENT_TYPE_ID:
-            machine_code = AS_BUILT_MACHINE_CODE
-            group_name = 'As-Builts'
+        group_layer = None
+        if add_to_map:
+            machine_code = EVENT_MACHINE_CODE
+            group_name = 'Data Capture Events'
+            if event.event_type.id == DESIGN_EVENT_TYPE_ID:
+                machine_code = DESIGN_MACHINE_CODE
+                group_name = 'Designs'
+            if event.event_type.id == AS_BUILT_EVENT_TYPE_ID:
+                machine_code = AS_BUILT_MACHINE_CODE
+                group_name = 'As-Builts'
 
-        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
-        events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_ROOT', group_name, project_group, True)
-        event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True, True)
-        
-        group_layer = event_group_layer
-        if event_layer.layer.hierarchy is not None:
-            # need to add group layers for each hierarchy level
-            for hierarchy_level in event_layer.layer.hierarchy:
-                group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}_{hierarchy_level}', hierarchy_level, group_layer, True, True)
+            project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+            events_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_ROOT', group_name, project_group, True)
+            event_group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}', event.name, events_group_layer, True, True)
+            
+            group_layer = event_group_layer
+            if event_layer.layer.hierarchy is not None:
+                # need to add group layers for each hierarchy level
+                for hierarchy_level in event_layer.layer.hierarchy:
+                    group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}_{hierarchy_level}', hierarchy_level, group_layer, True, True)
 
-        existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, group_layer)
-        if existing_layer is not None:
-            return
+            existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, group_layer)
+            if existing_layer is not None:
+                return existing_layer.layer()
 
         if event_layer.layer.geom_type == 'Point':
             fc_name = 'dce_points'
@@ -382,7 +414,8 @@ class QRisMapManager(RiverscapesMapManager):
             raise Exception('Unknown geom type')
 
         fc_path = f'{self.project.project_file}|layername={fc_name}|subset=event_id = {event.id} AND event_layer_id = {event_layer.layer.id}'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, event_layer, None, event_layer.layer.qml)
+        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, event_layer, None, event_layer.layer.qml, add_to_map=add_to_map)
+        
         if feature_layer and not feature_layer.crs().isValid():
             feature_layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         
@@ -390,7 +423,8 @@ class QRisMapManager(RiverscapesMapManager):
             QgsExpressionContextUtils.setLayerVariable(feature_layer, id_field, id_value)
             # Set the default value from the variable
             field_index = feature_layer.fields().indexFromName(id_field)
-            feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
+            if field_index != -1:
+                feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
 
         self.set_hidden(feature_layer, 'fid', 'Feature ID')
         self.set_hidden(feature_layer, 'event_layer_id', 'Layer ID')
@@ -404,6 +438,8 @@ class QRisMapManager(RiverscapesMapManager):
         # add area field for polygon layers
         if event_layer.layer.geom_type == 'Polygon':
             self.set_virtual_dimension(feature_layer, 'area')
+
+        return feature_layer
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
         config: dict = event_layer.layer.metadata

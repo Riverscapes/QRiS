@@ -250,7 +250,7 @@ class RiverscapesMapManager(QObject):
 
         return zoom
 
-    def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str) -> QgsVectorLayer:
+    def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str, add_to_map: bool=True) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified DBItem and adds it to the map.
         args:
@@ -260,9 +260,10 @@ class RiverscapesMapManager(QObject):
 
         zoom = self.test_for_zoom()
 
-        layer = self.get_db_item_layer(project_key, db_item, None)
-        if layer is not None:
-            return layer
+        if add_to_map:
+            layer = self.get_db_item_layer(project_key, db_item, None)
+            if layer is not None:
+                return layer.layer()
 
         # Create a layer from the table
         if id_field is not None:
@@ -285,18 +286,24 @@ class RiverscapesMapManager(QObject):
             QgsExpressionContextUtils.setLayerVariable(layer, id_field, id_value)
             # Set the default value from the variable
             field_index = layer.fields().indexFromName(id_field)
-            layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
+            if field_index != -1: # Added check
+                layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
 
         # Finally add the new layer here
-        QgsProject.instance().addMapLayer(layer, False)
-        tree_layer_node = parent_group.addLayer(layer)
-        tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, db_item))
-        tree_layer_node.setCustomProperty("showFeatureCount", True)
-        tree_layer_node.setExpanded(False)
-        
-        if zoom:
-            iface.setActiveLayer(layer)
-            iface.zoomToActiveLayer()
+        if add_to_map:
+            QgsProject.instance().addMapLayer(layer, False)
+            if parent_group is not None:
+                tree_layer_node = parent_group.addLayer(layer)
+                tree_layer_node.setCustomProperty(self.product_key, self.__get_custom_property(project_key, db_item))
+                tree_layer_node.setCustomProperty("showFeatureCount", True)
+                tree_layer_node.setExpanded(False)
+            
+            if zoom:
+                iface.setActiveLayer(layer)
+                iface.zoomToActiveLayer()
+        else:
+             # Even if not adding to map, we might want to configure some things?
+             pass
 
         layer.setReadOnly(self.get_edit_mode() or db_item.locked)
 

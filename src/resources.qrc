@@ -20,6 +20,7 @@
         <file alias="download">../Images/download.svg</file>
         <file alias="expand">../Images/expand.svg</file>
         <file alias="file">../Images/file.svg</file>
+        <file alias="file_copy">../Images/file_copy.svg</file>
         <file alias="folder">../Images/folder.svg</file>
         <file alias="help">../Images/help.svg</file>
         <file alias="influence">../Images/influence.png</file>
