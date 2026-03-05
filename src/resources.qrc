@@ -7,6 +7,7 @@
         <file alias="add_to_map">../Images/add_to_map.svg</file>
         <file alias="add_to_map_filtered">../Images/add_to_map_filter.svg</file>
         <file alias="analysis_summary">../Images/analysis_summary.svg</file>
+        <file alias="distribution_analysis">../Images/distribution_analysis.svg</file>
         <file alias="arrow_drop_down">../Images/arrow_drop_down.svg</file>
         <file alias="arrow_drop_up">../Images/arrow_drop_up.svg</file>
         <file alias="alpha">../Images/alpha.svg</file>

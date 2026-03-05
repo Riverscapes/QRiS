@@ -63,6 +63,7 @@ from .frm_analysis_explorer import FrmAnalysisExplorer
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
+from .frm_distribution_analysis import FrmDistributionAnalysis
 from .frm_slider import FrmSlider
 from .frm_scratch_vector import FrmScratchVector
 from .frm_geospatial_metrics import FrmGeospatialMetrics
@@ -493,6 +494,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if len(self.qris_project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
+                self.add_context_menu_item(self.menu, 'Distribution Analysis', 'distribution_analysis', lambda: self.distribution_analysis())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Explore Climate Engine Timeseries', 'refresh', lambda: self.climate_engine_explorer())
                 self.add_context_menu_item(self.menu, 'Add Climate Engine Map Layer', 'add_to_map', lambda: self.add_climate_engine_to_map())
@@ -2258,6 +2260,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         db_item.delete(self.qris_project.project_file)
         check_and_remove_unused_layers(self.qris_project)
 
+    def distribution_analysis(self):
+        self.distribution_analysis_form = FrmDistributionAnalysis(self.iface.mainWindow(), self.qris_project, self.map_manager)
+        self.distribution_analysis_form.exec_()
+        
     def browse_item(self, db_item: DBItem, folder_path):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
