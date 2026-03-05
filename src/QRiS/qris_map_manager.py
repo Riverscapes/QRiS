@@ -1,5 +1,6 @@
 import os
 import json
+import copy
 from textwrap import dedent
 
 from .riverscapes_map_manager import RiverscapesMapManager
@@ -371,7 +372,7 @@ class QRisMapManager(RiverscapesMapManager):
 
         return raster_layer
 
-    def build_event_single_layer(self, event: Event, event_layer: EventLayer, add_to_map: bool = True) -> QgsVectorLayer:
+    def build_event_single_layer(self, event: Event, event_layer: EventLayer, add_to_map: bool = True, extra_filter: str = None, layer_name_override: str = None) -> QgsVectorLayer:
         """
         Add a single layer for an event
         """
@@ -401,8 +402,9 @@ class QRisMapManager(RiverscapesMapManager):
                     group_layer = self.get_group_layer(self.project.map_guid, f'{machine_code}_{event.id}_{hierarchy_level}', hierarchy_level, group_layer, True, True)
 
             existing_layer = self.get_db_item_layer(self.project.map_guid, event_layer, group_layer)
-            if existing_layer is not None:
-                return existing_layer.layer()
+            if existing_layer is not None and extra_filter is None:
+                layer = existing_layer.layer()
+                return layer
 
         if event_layer.layer.geom_type == 'Point':
             fc_name = 'dce_points'
@@ -413,8 +415,27 @@ class QRisMapManager(RiverscapesMapManager):
         else:
             raise Exception('Unknown geom type')
 
-        fc_path = f'{self.project.project_file}|layername={fc_name}|subset=event_id = {event.id} AND event_layer_id = {event_layer.layer.id}'
-        feature_layer = self.create_db_item_feature_layer(self.project.map_guid, group_layer, fc_path, event_layer, None, event_layer.layer.qml, add_to_map=add_to_map)
+        subset_string = f"event_id = {event.id} AND event_layer_id = {event_layer.layer.id}"
+        layer_name = event_layer.name
+        
+        if extra_filter:
+            subset_string += f" AND {extra_filter}"
+            if layer_name_override:
+                layer_name = layer_name_override
+            else:
+                layer_name += " (Filtered)"
+            
+        fc_path = f'{self.project.project_file}|layername={fc_name}|subset={subset_string}'
+        feature_layer = self.create_db_item_feature_layer(
+            self.project.map_guid, 
+            group_layer, 
+            fc_path, 
+            event_layer, 
+            None, 
+            event_layer.layer.qml, 
+            add_to_map=add_to_map,
+            layer_name_override=layer_name if extra_filter else None
+        )
         
         if feature_layer and not feature_layer.crs().isValid():
             feature_layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
@@ -442,7 +463,12 @@ class QRisMapManager(RiverscapesMapManager):
         return feature_layer
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
-        config: dict = event_layer.layer.metadata
+        if event_layer.layer.metadata:
+            # Create a deep copy to avoid mutating the shared layer definition
+            config = copy.deepcopy(event_layer.layer.metadata)
+        else:
+            config = {}
+        
         if 'fields' not in config:
             config['fields'] = []
             
