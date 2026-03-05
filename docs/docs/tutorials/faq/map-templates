@@ -1,0 +1,10 @@
+---
+title: Creating Maps with QGIS Map Layout and Map Templates
+banner: true
+sidebar_position: 8
+---
+
+Creating maps is often an important part of any given project. QRIS doesnt provide the ability to create map templates, however its predermined symbology and organization makes creating such maps a lot easier. This demo
+covers how to assemble the components of a map with the Map Layouts in QGIS. It also covers how to create and load map templates(.qpt), which allows a map to be made and reused over and over, while simply substituting out the necessary components. 
+
+<YouTubeEmbed videoId="Tis-TNu851g" />
