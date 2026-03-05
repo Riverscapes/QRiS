@@ -75,6 +75,7 @@ from .frm_layer_picker import FrmLayerPicker
 from .frm_layer_metric_details import FrmLayerMetricDetails
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .frm_export_metrics import FrmExportMetrics
+from .frm_export_layer import FrmExportLayer
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
@@ -648,6 +649,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             if 'export_brat' in model_data.menu_items:
                                 self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
                     self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
+                    self.add_context_menu_item(self.menu, 'Export Layer Attributes', 'file_copy', lambda: self.export_layer_attributes(model_data))
                     if model_data.locked:
                         self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False, model_item))
                     else:
@@ -1226,6 +1228,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             out_layer.addFeatures(feats)
             out_layer.commitChanges()
             self.import_dce_complete(db_item, True) 
+
+    def export_layer_attributes(self, db_item: DBItem):
+        """Exports the attributes of a layer to a User Selected file"""
+        layer = self.map_manager.get_layer_for_export(db_item)
+        if layer is None:
+            QtWidgets.QMessageBox.warning(self, 'Export Layer Attributes', 'Unable to find the layer for this item in the map or create a temporary configuration for export.')
+            return
+        frm = FrmExportLayer(self, layer)
+        frm.exec_()
 
     def export_project(self, project: Project):
 
