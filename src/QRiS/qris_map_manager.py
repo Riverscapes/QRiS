@@ -1,6 +1,5 @@
 import os
 import json
-import copy
 from textwrap import dedent
 
 from .riverscapes_map_manager import RiverscapesMapManager
@@ -463,12 +462,7 @@ class QRisMapManager(RiverscapesMapManager):
         return feature_layer
 
     def metadata_field(self, feature_layer: QgsVectorLayer, event_layer: EventLayer, field_name: str) -> None:
-        if event_layer.layer.metadata:
-            # Create a deep copy to avoid mutating the shared layer definition
-            config = copy.deepcopy(event_layer.layer.metadata)
-        else:
-            config = {}
-        
+        config: dict = event_layer.layer.metadata
         if 'fields' not in config:
             config['fields'] = []
             
