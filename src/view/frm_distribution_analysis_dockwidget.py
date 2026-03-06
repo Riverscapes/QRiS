@@ -1,30 +1,57 @@
 import sqlite3
 import xml.etree.ElementTree as ET
 from PyQt5 import QtWidgets, QtCore, QtGui
-from qgis.core import QgsVectorLayer, QgsProject, QgsField, QgsRectangle, QgsFeatureRequest, QgsGeometry, QgsCoordinateTransform, Qgis, QgsMessageLog, QgsDistanceArea
+from qgis.core import QgsVectorLayer, QgsProject, QgsCoordinateTransform, Qgis, QgsMessageLog, QgsDistanceArea, QgsGeometry, QgsFeatureRequest, QgsLayerTreeGroup
 
 from ..model.project import Project
-from ..model.event import Event, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID
+from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ..model.sample_frame import SampleFrame
-from ..model.event_layer import EventLayer
-from .utilities import add_standard_form_buttons
 
-class FrmDistributionAnalysis(QtWidgets.QDialog):
+class FrmDistributionAnalysisDockWidget(QtWidgets.QDockWidget):
+    """
+    Dockable version of the Disbrituion Analysis Tool.
+    Layout: Horizontal Split (Left=Inputs, Right=Chart)
+    """
 
-    def __init__(self, parent, qris_project: Project, map_manager):
-        super().__init__(parent)
+    def __init__(self, iface, qris_project: Project, map_manager):
+        # Parent to MainWindow so it docks properly
+        super().__init__("Distribution Analysis", iface.mainWindow())
+        self.setObjectName("DistributionAnalysisDock")
+        self.iface = iface
         self.qris_project = qris_project
         self.map_manager = map_manager
-        self.setWindowTitle("Distribution Analysis")
-        self.resize(600, 500)
+        
+        # Dock Specific Settings
+        self.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.TopDockWidgetArea)
         
         self.unit_factor = 1.0
         self.unit_label = ""
+        self.active_scope_layer = None
+        self.active_event_layer = None
+        self.current_distribution_data = None
         
         self.setupUi()
         
+        # Initial Population must happen after UI setup
+        if self.qris_project:
+            self.populate_scope()
+            self.populate_dce()
+
     def setupUi(self):
-        self.vert = QtWidgets.QVBoxLayout(self)
+        # Main Widget & Layout
+        self.main_widget = QtWidgets.QWidget()
+        self.setWidget(self.main_widget)
+        
+        self.main_layout = QtWidgets.QHBoxLayout(self.main_widget)
+        
+        # --- Left Side: Inputs ---
+        self.input_container = QtWidgets.QWidget()
+        self.input_container.setFixedWidth(300) # Constrain width
+        # Use a QVBox for the left side to allow pushing items to top
+        self.left_layout = QtWidgets.QVBoxLayout(self.input_container)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Form Layout for fields
         self.form_layout = QtWidgets.QFormLayout()
         
         # Line 1: Scope (Sample Frame, AOI, or Riverscape)
@@ -37,6 +64,7 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.scope_features_label = QtWidgets.QLabel("Mask Feature:")
         self.cmbScopeFeatures = QtWidgets.QComboBox()
         self.cmbScopeFeatures.currentIndexChanged.connect(self.calculate_distribution)
+        self.cmbScopeFeatures.currentIndexChanged.connect(self.update_map)
         self.form_layout.addRow(self.scope_features_label, self.cmbScopeFeatures)
         
         # Line 3: DCE/Design/As-Built
@@ -56,20 +84,33 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.cmbMetric = QtWidgets.QComboBox()
         self.cmbMetric.currentIndexChanged.connect(self.calculate_distribution)
         self.form_layout.addRow(self.metric_label, self.cmbMetric)
+        
+        # Interactive Map Checkbox
+        self.chkInteractive = QtWidgets.QCheckBox("Interactive Map")
+        self.chkInteractive.setChecked(True)
+        self.chkInteractive.stateChanged.connect(self.toggle_interactive)
+        self.form_layout.addRow("", self.chkInteractive)
+        
+        self.left_layout.addLayout(self.form_layout)
+        self.left_layout.addStretch() # Push inputs to top
+        
+        self.main_layout.addWidget(self.input_container)
 
-        self.vert.addLayout(self.form_layout)
-
-        # Result: Horizontal Bar Chart
+        # --- Right Side: Chart ---
+        self.chart_container = QtWidgets.QWidget()
+        self.chart_layout = QtWidgets.QVBoxLayout(self.chart_container)
+        self.chart_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.chart_label = QtWidgets.QLabel("Distribution Summary:")
-        self.vert.addWidget(self.chart_label)
+        self.chart_layout.addWidget(self.chart_label)
         
         self.chart_scene = QtWidgets.QGraphicsScene()
         self.chart_view = QtWidgets.QGraphicsView(self.chart_scene)
         self.chart_view.setRenderHint(QtGui.QPainter.Antialiasing)
-        self.chart_view.setMinimumHeight(200)
-        self.vert.addWidget(self.chart_view)
+        self.chart_view.setMinimumHeight(200) # Enforce some height
+        self.chart_layout.addWidget(self.chart_view)
 
-        # Line 6: Chart Controls
+        # Chart Controls
         self.hbox_bottom = QtWidgets.QHBoxLayout()
         
         self.chart_type_label = QtWidgets.QLabel("Chart Type:")
@@ -94,15 +135,14 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.btnSaveChart.clicked.connect(self.save_chart)
         self.hbox_bottom.addWidget(self.btnSaveChart)
         
-        self.vert.addLayout(self.hbox_bottom)
+        self.chart_layout.addLayout(self.hbox_bottom)
         
-        self.vert.addLayout(add_standard_form_buttons(self, 'distribution-analysis'))
-        
-        # Initial Population
-        self.current_distribution_data = None
-        self.populate_scope()
-        self.populate_dce()
+        self.main_layout.addWidget(self.chart_container, 1) # Give chart all remaining space
 
+    # -------------------------------------------------------------------------
+    # Logic copied from FrmDistributionAnalysis (Dialog)
+    # -------------------------------------------------------------------------
+    
     def populate_scope(self):
         self.cmbScope.clear()
         
@@ -135,7 +175,8 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         
         self.cmbScopeFeatures.blockSignals(False)
         self.calculate_distribution()
-
+        self.update_map()
+    
     def get_scope_features(self, scope_item):
         features = []
         if isinstance(scope_item, SampleFrame):
@@ -144,25 +185,35 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
                 # All scopes (VB, AOI, SF) are SampleFrame instances in QRiS model
                 # and share sample_frame_features table
                 with sqlite3.connect(self.qris_project.project_file) as conn:
+                    # Enable row factory to access columns by name
+                    conn.row_factory = sqlite3.Row
                     cursor = conn.cursor()
                     
                     table_name = 'sample_frame_features'
                     fk_col = 'sample_frame_id'
                     
-                    # Identify name column - usually 'name' but fallback to 'id'
-                    # We can check schema but for speed just look for columns
                     cursor.execute(f"PRAGMA table_info({table_name})")
                     columns = [col[1] for col in cursor.fetchall()]
                     
-                    name_col = 'name' if 'name' in columns else 'id'
+                    # Determine Name Column
+                    if 'display_label' in columns:
+                        name_col = 'display_label'
+                    elif 'name' in columns:
+                        name_col = 'name'
+                    else:
+                        name_col = 'fid' # Fallback
+                        
+                    # Determine ID Column
+                    id_col = 'fid' if 'fid' in columns else 'id'
                     
-                    query = f"SELECT {name_col}, id FROM {table_name} WHERE {fk_col} = ?"
+                    query = f"SELECT {name_col}, {id_col} FROM {table_name} WHERE {fk_col} = ?"
                     cursor.execute(query, (scope_item.id,))
-                    features = cursor.fetchall() # list of tuples (name, id)
+                    rows = cursor.fetchall()
+                    
+                    features = [(row[0], row[1]) for row in rows]
                     
             except Exception as e:
-                # Log or print error
-                print(f"Error loading scope features: {e}")
+                QgsMessageLog.logMessage(f"Error loading scope features: {e}", 'QRiS', Qgis.Warning)
                 
         return features
 
@@ -241,6 +292,8 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
 
         if self.cmbMetric.count() > 0:
             self.calculate_distribution()
+            
+        self.update_map()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -293,6 +346,92 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.unit_label = label
         self.btnUnits.setText(f"Units: {label}")
         self.draw_chart()
+        
+    def toggle_interactive(self):
+        self.update_map()
+
+    def update_map(self):
+        if not self.chkInteractive.isChecked():
+            return
+
+        project = QgsProject.instance()
+
+        # Helper method for layer cleanup
+        def remove_layer_and_clean(layer):
+            if layer and layer.id() in project.mapLayers():
+                node = project.layerTreeRoot().findLayer(layer.id())
+                parent_grp = None
+                if node:
+                    parent = node.parent()
+                    # Check if parent is a group (not root)
+                    if parent and parent != project.layerTreeRoot():
+                         # Safely cast/assume it's a group since layers are usually in groups or root
+                         # But map_manager.remove_empty_groups expects QgsLayerTreeGroup
+                         if isinstance(parent, QgsLayerTreeGroup):
+                             parent_grp = parent
+                
+                project.removeMapLayer(layer.id())
+                
+                if parent_grp:
+                    self.map_manager.remove_empty_groups(parent_grp)
+
+        # Handle Scope Layer
+        scope_item = self.cmbScope.currentData()
+        if scope_item:
+            # Determine appropriate build method
+            layer = None
+            if isinstance(scope_item, SampleFrame):
+                if scope_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                    layer = self.map_manager.build_aoi_layer(scope_item)
+                elif scope_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                    layer = self.map_manager.build_valley_bottom_layer(scope_item)
+                else:
+                    layer = self.map_manager.build_sample_frame_layer(scope_item)
+            
+            # If we switched scopes, remove the old one IF it's different and exists
+            if self.active_scope_layer and layer and self.active_scope_layer.id() != layer.id():
+                remove_layer_and_clean(self.active_scope_layer)
+            
+            self.active_scope_layer = layer
+            
+            # Zoom to Mask (Scope) Feature Extent
+            scope_feature_id = self.cmbScopeFeatures.currentData()
+            extent = None
+            
+            if self.active_scope_layer:
+                if scope_feature_id:
+                    # Specific Feature
+                    feat = self.active_scope_layer.getFeature(scope_feature_id)
+                    if feat.isValid() and not feat.geometry().isEmpty():
+                        extent = feat.geometry().boundingBox()
+                else:
+                    # All Features (Layer Extent)
+                    extent = self.active_scope_layer.extent()
+            
+            if extent and not extent.isEmpty():
+                canvas = self.iface.mapCanvas()
+                
+                # Check for CRS mismatch
+                if self.active_scope_layer.crs() != canvas.mapSettings().destinationCrs():
+                    xform = QgsCoordinateTransform(self.active_scope_layer.crs(), canvas.mapSettings().destinationCrs(), QgsProject.instance())
+                    extent = xform.transformBoundingBox(extent)
+
+                # Expand slightly to prevent tight fit
+                extent.scale(1.1)
+                canvas.setExtent(extent)
+                canvas.refresh()
+        
+        # Handle Event Layer
+        event_layer_item = self.cmbLayer.currentData() # EventLayer
+        event = self.cmbDCE.currentData() # Event
+        
+        if event and event_layer_item:
+             layer = self.map_manager.build_event_single_layer(event, event_layer_item)
+             
+             if self.active_event_layer and layer and self.active_event_layer.id() != layer.id():
+                 remove_layer_and_clean(self.active_event_layer)
+                 
+             self.active_event_layer = layer
 
     def save_chart(self):
         if not self.chart_scene:
@@ -389,6 +528,11 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
     def calculate_distribution(self):
         self.chart_scene.clear()
         
+        if not self.qris_project:
+             return
+             
+        project_path = self.qris_project.project_file
+
         scope = self.cmbScope.currentData()
         scope_feature_id = self.cmbScopeFeatures.currentData()
         event = self.cmbDCE.currentData()
@@ -435,8 +579,6 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
                         distribution[item.name] = 0
                         # Store lookup map for value resolution
                         lookup_map[str(item.id)] = item.name
-
-        project_path = self.qris_project.project_file
         
         # Load Scope Layer
         scope_uri = f"{project_path}|layername=sample_frame_features"
@@ -454,9 +596,27 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
                 scope_geom = feat.geometry()
         else:
             req = QgsFeatureRequest().setFilterExpression(f'"sample_frame_id" = {scope.id}')
-            geoms = [f.geometry() for f in scope_layer.getFeatures(req)]
-            if geoms:
-                scope_geom = QgsGeometry.unaryUnion(geoms)
+            geoms = []
+            try:
+                # Use iterator to potentially skip massive geom loading at once, but we need them all for union
+                # Limit the max number of geometries to avoid 'Vector too long' if there are millions? 
+                # Or just catch the error.
+                for f in scope_layer.getFeatures(req):
+                    g = f.geometry()
+                    if g and not g.isEmpty():
+                        geoms.append(g)
+                
+                if geoms:
+                    if len(geoms) > 1:
+                        # Use collectGeometry instead of unaryUnion to handle massive sets without processing overhead
+                        # It creates a Multi-part geometry which works fine for intersection filtering
+                        scope_geom = QgsGeometry.collectGeometry(geoms)
+                    else:
+                        scope_geom = geoms[0]
+            except Exception as e:
+                QgsMessageLog.logMessage(f"Error creating scope geometry: {e}", "QRiS", Qgis.Warning)
+                self.chart_scene.addText(f"Error processing scope geometry: {e}")
+                return
         
         if not scope_geom or scope_geom.isEmpty():
             QgsMessageLog.logMessage("No scope geometry found.", 'QRiS', Qgis.Warning)
@@ -533,7 +693,7 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
                 # Resolve lookup value relative to label
                 if val in lookup_map:
                     val = lookup_map[val]
-                    
+
                 if val == "": val = "Null"
             
             amount = 0
@@ -590,6 +750,8 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         for key in sorted_keys:
             if key in colors:
                 key_colors[key] = colors[key]
+            elif '__default__' in colors:
+                key_colors[key] = colors['__default__']
             else:
                 fallback_h = (hash(key) % 360) / 360.0
                 key_colors[key] = QtGui.QColor.fromHsvF(fallback_h, 0.7, 0.9)
@@ -667,7 +829,3 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
                 text_item.setPos(width + 5, current_y)
                 
                 current_y += (bar_height + gap)
-    
-    def showEvent(self, event):
-        super().showEvent(event)
-        self.activateWindow()
