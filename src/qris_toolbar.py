@@ -87,6 +87,7 @@ class QRiSToolbar:
         initialize_metadata_widget()
 
         self.qproject = QgsProject.instance()
+        self.qproject.cleared.connect(self.close_project)
 
         # initialize locale
         locale = QtCore.QSettings().value('locale/userLocale')[0:2]
@@ -296,10 +297,17 @@ class QRiSToolbar:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
+        try:
+            self.qproject.cleared.disconnect(self.close_project)
+        except:
+            pass
+
         # Cleanup the main dockable window
         if self.dockwidget is not None:
             self.dockwidget.destroy_docwidget()
+            self.iface.removeDockWidget(self.dockwidget)
             self.dockwidget.close()
+            self.dockwidget.deleteLater()
 
         # Need to de-initialize the processing framework
         # QgsApplication.processingRegistry().removeProvider(self.provider)

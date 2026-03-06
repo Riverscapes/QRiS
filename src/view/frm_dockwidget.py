@@ -64,6 +64,7 @@ from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
 from .frm_distribution_analysis import FrmDistributionAnalysis
+from .frm_distribution_analysis_dockwidget import FrmDistributionAnalysisDockWidget
 from .frm_slider import FrmSlider
 from .frm_scratch_vector import FrmScratchVector
 from .frm_geospatial_metrics import FrmGeospatialMetrics
@@ -173,6 +174,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.stream_gage_doc_widget = None
         self.centerline_doc_widget = None
         self.cross_sections_doc_widget = None
+        self.distribution_dock_widget = None
 
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
@@ -374,24 +376,40 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.destroy_analysis_doc_widget()
 
         if self.slider_doc_widget is not None:
+            self.iface.removeDockWidget(self.slider_doc_widget)
             self.slider_doc_widget.close()
+            self.slider_doc_widget.deleteLater()
             self.slider_doc_widget = None
 
         if self.climate_engine_doc_widget is not None:
+            self.iface.removeDockWidget(self.climate_engine_doc_widget)
             self.climate_engine_doc_widget.close()
+            self.climate_engine_doc_widget.deleteLater()
             self.climate_engine_doc_widget = None
 
         if self.stream_gage_doc_widget is not None:
+            self.iface.removeDockWidget(self.stream_gage_doc_widget)
             self.stream_gage_doc_widget.close()
+            self.stream_gage_doc_widget.deleteLater()
             self.stream_gage_doc_widget = None
 
         if self.centerline_doc_widget is not None:
+            self.iface.removeDockWidget(self.centerline_doc_widget)
             self.centerline_doc_widget.close()
+            self.centerline_doc_widget.deleteLater()
             self.centerline_doc_widget = None
 
         if self.cross_sections_doc_widget is not None:
+            self.iface.removeDockWidget(self.cross_sections_doc_widget)
             self.cross_sections_doc_widget.close()
+            self.cross_sections_doc_widget.deleteLater()
             self.cross_sections_doc_widget = None
+
+        if self.distribution_dock_widget is not None:
+            self.iface.removeDockWidget(self.distribution_dock_widget)
+            self.distribution_dock_widget.close()
+            self.distribution_dock_widget.deleteLater()
+            self.distribution_dock_widget = None
 
         # Disconnect signals
         if self.map_manager is not None:
@@ -494,7 +512,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if len(self.qris_project.analyses) > 0:
                     self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
-                self.add_context_menu_item(self.menu, 'Distribution Analysis', 'distribution_analysis', lambda: self.distribution_analysis())
+                self.add_context_menu_item(self.menu, 'Distribution Analysis (Interactive)', 'distribution_analysis', lambda: self.open_distribution_analysis_dock())
+                self.add_context_menu_item(self.menu, 'Distribution Analysis (Dialog)', 'distribution_analysis', lambda: self.distribution_analysis())
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Explore Climate Engine Timeseries', 'refresh', lambda: self.climate_engine_explorer())
                 self.add_context_menu_item(self.menu, 'Add Climate Engine Map Layer', 'add_to_map', lambda: self.add_climate_engine_to_map())
@@ -2263,7 +2282,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def distribution_analysis(self):
         self.distribution_analysis_form = FrmDistributionAnalysis(self.iface.mainWindow(), self.qris_project, self.map_manager)
         self.distribution_analysis_form.exec_()
+
+    def open_distribution_analysis_dock(self):
+        if self.distribution_dock_widget is None:
+            self.distribution_dock_widget = FrmDistributionAnalysisDockWidget(self.iface, self.qris_project, self.map_manager)
+            # Add to iface. The allowed areas are set in Dock init, but addDockWidget sets initial area.
+            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.distribution_dock_widget)
         
+        if not self.distribution_dock_widget.isVisible():
+            self.distribution_dock_widget.show()
+        self.distribution_dock_widget.raise_()
+        self.distribution_dock_widget.activateWindow()
+
     def browse_item(self, db_item: DBItem, folder_path):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
