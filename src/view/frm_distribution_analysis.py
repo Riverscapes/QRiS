@@ -1,6 +1,9 @@
 import sqlite3
 import xml.etree.ElementTree as ET
 from PyQt5 import QtWidgets, QtCore, QtGui
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 from qgis.core import QgsVectorLayer, QgsProject, QgsField, QgsRectangle, QgsFeatureRequest, QgsGeometry, QgsCoordinateTransform, Qgis, QgsMessageLog, QgsDistanceArea
 
 from ..model.project import Project
@@ -63,11 +66,10 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.chart_label = QtWidgets.QLabel("Distribution Summary:")
         self.vert.addWidget(self.chart_label)
         
-        self.chart_scene = QtWidgets.QGraphicsScene()
-        self.chart_view = QtWidgets.QGraphicsView(self.chart_scene)
-        self.chart_view.setRenderHint(QtGui.QPainter.Antialiasing)
-        self.chart_view.setMinimumHeight(200)
-        self.vert.addWidget(self.chart_view)
+        self.figure = Figure(figsize=(5, 4), dpi=100)
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.setMinimumHeight(200)
+        self.vert.addWidget(self.canvas)
 
         # Line 6: Chart Controls
         self.hbox_bottom = QtWidgets.QHBoxLayout()
@@ -76,8 +78,8 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.hbox_bottom.addWidget(self.chart_type_label)
         
         self.cmbChartType = QtWidgets.QComboBox()
-        self.cmbChartType.addItem("Stacked Bar", "stacked")
         self.cmbChartType.addItem("Horizontal Bar", "horizontal")
+        self.cmbChartType.addItem("Stacked Bar", "stacked")
         self.cmbChartType.currentIndexChanged.connect(self.draw_chart)
         self.hbox_bottom.addWidget(self.cmbChartType)
         
@@ -295,24 +297,9 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.draw_chart()
 
     def save_chart(self):
-        if not self.chart_scene:
-            return
-            
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Chart", "", "PNG Image (*.png);;JPEG Image (*.jpg)")
         if filename:
-            # Render scene against white background
-            # Get full scene rect
-            scene_rect = self.chart_scene.sceneRect()
-            
-            image = QtGui.QImage(scene_rect.size().toSize(), QtGui.QImage.Format_ARGB32)
-            image.fill(QtCore.Qt.white)
-            
-            painter = QtGui.QPainter(image)
-            painter.setRenderHint(QtGui.QPainter.Antialiasing)
-            self.chart_scene.render(painter)
-            painter.end()
-            
-            image.save(filename)
+            self.figure.savefig(filename)
 
     def get_layer_colors(self, event_layer_item, attribute_name):
         colors = {}
@@ -387,7 +374,7 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         return colors
 
     def calculate_distribution(self):
-        self.chart_scene.clear()
+        self.figure.clear()
         
         scope = self.cmbScope.currentData()
         scope_feature_id = self.cmbScopeFeatures.currentData()
@@ -460,7 +447,8 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         
         if not scope_geom or scope_geom.isEmpty():
             QgsMessageLog.logMessage("No scope geometry found.", 'QRiS', Qgis.Warning)
-            self.chart_scene.addText("No geometric scope found (Sample Frame/AOI empty).")
+            self.figure.text(0.5, 0.5, "No geometric scope found (Sample Frame/AOI empty).", ha='center', va='center')
+            self.canvas.draw()
             return
             
         # 2. Load Data Layer
@@ -554,7 +542,8 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         if total_amount > 0:
             self.draw_chart()
         else:
-            self.chart_scene.addText("No matching features found within scope.")
+            self.figure.text(0.5, 0.5, "No matching features found within scope.", ha='center', va='center')
+            self.canvas.draw()
 
     def format_value(self, value):
         if value is None:
@@ -577,96 +566,54 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         unit = self.unit_label
         factor = self.unit_factor
 
-        self.chart_scene.clear()
+        self.figure.clear()
         chart_type = self.cmbChartType.currentData()
-        
-        view_width = self.chart_view.width() if self.chart_view.width() > 100 else 500
-        scene_width = view_width - 20
+        ax = self.figure.add_subplot(111)
         
         sorted_keys = sorted(distribution.keys())
         
         # Determine colors for all keys
-        key_colors = {}
+        mpl_colors = []
         for key in sorted_keys:
             if key in colors:
-                key_colors[key] = colors[key]
+                c = colors[key]
+            elif '__default__' in colors:
+                c = colors['__default__']
             else:
                 fallback_h = (hash(key) % 360) / 360.0
-                key_colors[key] = QtGui.QColor.fromHsvF(fallback_h, 0.7, 0.9)
+                c = QtGui.QColor.fromHsvF(fallback_h, 0.7, 0.9)
+            mpl_colors.append(c.name())
+
+        values = [distribution[key] * factor for key in sorted_keys]
 
         if chart_type == "stacked":
-            # Total height needed: One bar + Legend rows
-            # Bar chart height: 40
-            # Legend: 20 per item
+            left = 0
+            for k, v, c in zip(sorted_keys, values, mpl_colors):
+                pct = v / (total * factor) if total > 0 else 0
+                label = f"{k}: {self.format_value(v)} {unit} ({pct*100:.1f}%)"
+                ax.barh(0, v, left=left, color=c, label=label, height=0.6)
+                left += v
             
-            chart_height = 50
-            legend_start_y = chart_height + 20
-            total_height = legend_start_y + (len(distribution) * 25)
+            ax.set_yticks([])
+            ax.set_xlabel(f"Total: {self.format_value(total*factor)} {unit}")
+            # Legend
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25), ncol=2, frameon=False)
             
-            self.chart_scene.setSceneRect(0, 0, scene_width, total_height)
-            
-            rect = QtCore.QRectF(0, 0, scene_width, 40)
-            x_offset = 0
-            
-            legend_y = legend_start_y
-            
-            for key in sorted_keys:
-                amount = distribution[key] * factor
-                pct = amount / (total * factor)
-                width = rect.width() * pct
-                color = key_colors[key]
-                
-                # Draw Bar Segment
-                self.chart_scene.addRect(x_offset, 0, width, 40, 
-                                         QtGui.QPen(QtCore.Qt.white), QtGui.QBrush(color))
-                
-                # Draw Legend Item
-                self.chart_scene.addRect(0, legend_y, 15, 15, 
-                                         QtGui.QPen(QtCore.Qt.black), QtGui.QBrush(color))
-                
-                label_text = f"{key}: {self.format_value(amount)} {unit} ({pct*100:.1f}%)"
-                text_item = self.chart_scene.addText(label_text)
-                text_item.setPos(20, legend_y - 5)
-                
-                legend_y += 25
-                x_offset += width
-
         elif chart_type == "horizontal":
-            # Multi-bar horizontal chart
-            # Find max value to normalize widths
-            max_val = (max(distribution.values()) * factor) if distribution else 1
+            y_pos = range(len(sorted_keys))
+            ax.barh(y_pos, values, color=mpl_colors, align='center')
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(sorted_keys)
+            ax.invert_yaxis()
+            ax.set_xlabel(unit)
             
-            bar_height = 30
-            gap = 10
-            start_y = 10
-            
-            total_height = start_y + (len(distribution) * (bar_height + gap)) + 20
-            
-            self.chart_scene.setSceneRect(0, 0, scene_width, total_height)
-            
-            current_y = start_y
-            max_bar_width = scene_width * 0.7 # reserved mainly for bars
-            
-            for key in sorted_keys:
-                amount = distribution[key] * factor
-                pct_of_total = amount / (total * factor)
-                pct_of_max = amount / max_val
-                
-                width = max_bar_width * pct_of_max
-                color = key_colors[key]
-                
-                # Draw Bar
-                self.chart_scene.addRect(0, current_y, width, bar_height,
-                                         QtGui.QPen(QtCore.Qt.white), QtGui.QBrush(color))
-                
-                # Label
-                label_text = f"{key}: {self.format_value(amount)} {unit} ({pct_of_total*100:.1f}%)"
-                text_item = self.chart_scene.addText(label_text)
-                # Position text to right of bar? or inside? 
-                # Let's put it to the right of the bar
-                text_item.setPos(width + 5, current_y)
-                
-                current_y += (bar_height + gap)
+            # Label
+            for i, v in enumerate(values):
+                 label = f" {self.format_value(v)} {unit}"
+                 ax.text(v, i, label, va='center')
+        
+        self.figure.tight_layout()
+        self.canvas.draw()
     
     def showEvent(self, event):
         super().showEvent(event)
