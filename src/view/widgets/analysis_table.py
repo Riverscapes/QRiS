@@ -17,9 +17,9 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.layout.setContentsMargins(2,0,2,0)
-        self.layout.setSpacing(2)
+        self.hlayout = QtWidgets.QHBoxLayout(self)
+        self.hlayout.setContentsMargins(2,0,2,0)
+        self.hlayout.setSpacing(2)
         
         # Style for darker highlight on checked state
         btn_style = """
@@ -39,7 +39,7 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
         self.btn_manual.setToolTip("Edit Manual Value")
         self.btn_manual.setFixedSize(22, 22)
         self.btn_manual.clicked.connect(self.manual_clicked)
-        self.layout.addWidget(self.btn_manual)
+        self.hlayout.addWidget(self.btn_manual)
         
         # 2. Automated Button (Calculate)
         self.btn_automated = QtWidgets.QToolButton()
@@ -50,16 +50,16 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
         self.btn_automated.setToolTip("Calculate Automated Value")
         self.btn_automated.setFixedSize(22, 22)
         self.btn_automated.clicked.connect(self.automated_clicked)
-        self.layout.addWidget(self.btn_automated)
+        self.hlayout.addWidget(self.btn_automated)
         
         # 3. Warning Indicator
         self.btn_warning = QtWidgets.QToolButton()
         self.btn_warning.setFixedSize(20, 20)
         self.btn_warning.setAutoRaise(True)
         self.btn_warning.clicked.connect(self.warning_clicked)
-        self.layout.addWidget(self.btn_warning)
+        self.hlayout.addWidget(self.btn_warning)
         
-        self.layout.addStretch()
+        self.hlayout.addStretch()
 
     def update_state(self, is_manual, can_automated, feasibility, metric=None, metric_value=None):
         self.btn_manual.blockSignals(True)

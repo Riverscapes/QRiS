@@ -17,15 +17,15 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.setWindowTitle("Distribution Analysis")
         self.resize(800, 500)
         
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.vlayout = QtWidgets.QVBoxLayout(self)
         
         # Instantiate common widget
         self.widget = DistributionAnalysisWidget(iface, qris_project, map_manager, self, orientation=QtCore.Qt.Vertical)
         
-        self.layout.addWidget(self.widget)
+        self.vlayout.addWidget(self.widget)
         
         # Add buttons
-        self.layout.addLayout(add_standard_form_buttons(self, 'distribution-analysis'))
+        self.vlayout.addLayout(add_standard_form_buttons(self, 'distribution-analysis'))
         
     def showEvent(self, event):
         super().showEvent(event)
