@@ -605,8 +605,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                                 self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
                             if isinstance(model_data, Event):
                                 self.menu.addSeparator()
-                                self.add_context_menu_item(self.menu, 'Lock All Layers in DCE', 'lock', lambda: self.set_event_lock_state(model_data, True, model_item))
-                                self.add_context_menu_item(self.menu, 'Unlock All Layers in DCE', 'lock_open_right', lambda: self.set_event_lock_state(model_data, False, model_item))
+                                self.add_context_menu_item(self.menu, 'Lock All Layers in DCE', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
+                                self.add_context_menu_item(self.menu, 'Unlock All Layers in DCE', 'lock_open_right', lambda: self.set_group_lock_state(model_data, False, model_item))
                                 self.menu.addSeparator()
                         else:
                             self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
@@ -653,6 +653,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
+                    self.menu.addSeparator()
+                    self.add_context_menu_item(self.menu, 'Lock All Layers in Project', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
+                    self.add_context_menu_item(self.menu, 'Unlock All Layers in Project', 'lock_open_right', lambda: self.set_group_lock_state(model_data, False, model_item))
+                    self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.destroy_docwidget())
@@ -1373,18 +1377,47 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             
         self.map_manager.update_layer_edit_state(self.qris_project.map_guid, db_item)
 
-    def set_event_lock_state(self, event: Event, state: bool, tree_node: QtGui.QStandardItem = None):
-        """Sets the lock state of all layers in an event"""
+    def set_group_lock_state(self, group_item: DBItem, state: bool, tree_node: QtGui.QStandardItem = None):
+        """Sets the lock state of all layers within an Event or a Project"""
         
         project_key = self.qris_project.map_guid
         product_key = self.map_manager.product_key
         target_props = set()
 
+        lockable_items = []
+
+        if isinstance(group_item, Project):
+            # Iterate over known project dictionaries containing lockable DBItems
+            attributes_to_check = [
+                'valley_bottoms', 'aois', 'sample_frames', 'profiles', 'cross_sections'
+            ]
+
+            for attr in attributes_to_check:
+                db_item_dict = getattr(group_item, attr, None)
+                if db_item_dict:
+                    for item in db_item_dict.values():
+                        if isinstance(item, DBItem):
+                            lockable_items.append(item)
+
+            # Also get event layers
+            if getattr(group_item, 'events', None):
+                for event in group_item.events.values():
+                    if isinstance(event, Event) and getattr(event, 'event_layers', None):
+                        for layer in event.event_layers:
+                            if isinstance(layer, DBItem):
+                                lockable_items.append(layer)
+        elif isinstance(group_item, Event) and getattr(group_item, 'event_layers', None):
+            for layer in group_item.event_layers:
+                if isinstance(layer, DBItem):
+                    lockable_items.append(layer)
+
         # Batch update DB and collect IDs
-        for layer in event.event_layers:
-            layer.set_locked(self.qris_project.project_file, state)
+        for item in lockable_items:
+            if not getattr(item, 'set_locked', None):
+                continue
+            item.set_locked(self.qris_project.project_file, state)
             # Match format from riverscapes_map_manager.__get_custom_property
-            prop = f'{product_key}::{project_key}::{layer.db_table_name}::{layer.id}'
+            prop = f'{product_key}::{project_key}::{item.db_table_name}::{item.id}'
             target_props.add(prop)
             
         # Recursive function to update QGIS layers in one pass
@@ -1404,7 +1437,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         update_qgis_layers_recursive(root)
             
         # Update the tree UI once at the end
-        # Optimization: Only traverse the specific event node if provided, otherwise full tree
+        # Optimization: Only traverse the specific group node if provided, otherwise full tree
         node_to_update = tree_node if tree_node else self.model.invisibleRootItem()
         self.traverse_tree(node_to_update, self.set_node_text)
 
