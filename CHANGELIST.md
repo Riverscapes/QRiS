@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [1.2.3.1] Mar 10 2026
+
+### Fixed 
+- Update USGS API changes to download Stream Gage Data #982
+- Bring back StreamStats Flow Statistics #546
+
+### Changed
+- Change Climate Engine API to use Post to increase coordinate limits. #529
+
+### Added
+- Export Attribute table from DCE layers #979
+- Add to Map with Filter for DCE Layers
+- Add a Distribution Analysis #908
+- Add Lock/Unlock All Layers in  Project Node #986
+
+
 ## [1.2.3] Feb 13 2026
 
 ### Fixed
