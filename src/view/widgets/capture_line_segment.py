@@ -1,8 +1,4 @@
-"""
-"""
-from PyQt5.QtCore import Qt
-
-from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.core import Qgis, QgsWkbTypes, QgsPoint, QgsLineString
 from qgis.gui import QgsMapToolEmitPoint, QgsMapTool, QgsRubberBand
 

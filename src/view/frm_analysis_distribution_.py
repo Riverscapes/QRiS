@@ -1,7 +1,10 @@
-from PyQt5 import QtWidgets, QtCore
+
+from qgis.PyQt import QtWidgets, QtCore
+
 from ..model.project import Project
 from .utilities import add_standard_form_buttons
-from .distribution_analysis_widget import DistributionAnalysisWidget
+from .widgets.analysis_distribution_widget import DistributionAnalysisWidget
+
 try:
     from qgis.utils import iface
 except ImportError:
