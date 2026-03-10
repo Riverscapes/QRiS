@@ -1,6 +1,7 @@
-from PyQt5 import QtWidgets, QtCore
+from qgis.PyQt import QtWidgets, QtCore
+
 from ..model.project import Project
-from .distribution_analysis_widget import DistributionAnalysisWidget
+from .widgets.analysis_distribution_widget import DistributionAnalysisWidget
 
 class FrmDistributionAnalysisDockWidget(QtWidgets.QDockWidget):
     """

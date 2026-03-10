@@ -1,7 +1,10 @@
 import sqlite3
-from PyQt5 import QtWidgets, QtCore, QtGui
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+
+from qgis.PyQt import QtWidgets, QtCore, QtGui
+from qgis.PyQt.QtCore import QVariant
 from qgis.core import (
     QgsVectorLayer, 
     QgsProject, 
@@ -17,11 +20,10 @@ from qgis.core import (
     QgsFeature,
     QgsCoordinateTransformContext
 )
-from PyQt5.QtCore import QVariant
 
-from ..model.project import Project
-from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
-from ..model.sample_frame import SampleFrame
+from ...model.project import Project
+from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
+from ...model.sample_frame import SampleFrame
 
 class DistributionAnalysisWidget(QtWidgets.QWidget):
     """

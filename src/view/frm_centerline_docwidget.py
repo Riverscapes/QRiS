@@ -2,9 +2,8 @@
 Doc Widget for building centerlines
 
 """
-from PyQt5 import Qt, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-
+from qgis.PyQt import  QtWidgets
+from qgis.PyQt.QtCore import Qt, pyqtSlot, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsMarkerLineSymbolLayer, QgsSimpleMarkerSymbolLayer
 from qgis.utils import iface
@@ -16,7 +15,7 @@ from ..model.profile import Profile
 from ..model.layer import Layer
 
 from .frm_layer_picker import FrmLayerPicker
-from .capture_line_segment import LineSegmentMapTool
+from .widgets.capture_line_segment import LineSegmentMapTool
 from .utilities import add_help_button
 from .frm_save_centerline import FrmSaveCenterline
 from ..QRiS.qris_map_manager import QRisMapManager
@@ -33,7 +32,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def __init__(self, parent, project: Project, map_manager: QRisMapManager):
 
         super(FrmCenterlineDocWidget, self).__init__(parent)
-        self.setAttribute(QtCore.Qt.WA_QuitOnClose)
+        self.setAttribute(Qt.WA_QuitOnClose)
         self.setupUi()
 
         self.project = project
