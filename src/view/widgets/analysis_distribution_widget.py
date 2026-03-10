@@ -887,6 +887,22 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 
             distribution[val] = distribution.get(val, 0) + amount
             total_amount += amount
+
+        self.current_distribution_data = (
+            distribution, total_amount, event_layer, 
+            metric_field, scope_measure, measure_type
+        )
+        self.draw_chart()
+
+    def format_value(self, value):
+        if value >= 1000:
+            return f"{value:,.1f}"
+        return f"{value:.1f}"
+
+    def draw_chart(self):
+        if not self.current_distribution_data:
+            return
+
         # Unpack with backward compatibility
         data = self.current_distribution_data
         if len(data) >= 6:

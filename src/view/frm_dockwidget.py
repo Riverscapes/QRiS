@@ -63,8 +63,8 @@ from .frm_analysis_explorer import FrmAnalysisExplorer
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
-from .frm_distribution_analysis import FrmDistributionAnalysis
-from .frm_distribution_analysis_dockwidget import FrmDistributionAnalysisDockWidget
+from .frm_analysis_distribution import FrmDistributionAnalysis
+from .frm_analysis_distribution_dockwidget import FrmDistributionAnalysisDockWidget
 from .frm_slider import FrmSlider
 from .frm_scratch_vector import FrmScratchVector
 from .frm_geospatial_metrics import FrmGeospatialMetrics
