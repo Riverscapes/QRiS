@@ -1,5 +1,19 @@
 # QRiS Plugin
 
+## [1.2.3.2] Mar 12 2026
+
+### Fixed 
+- Bug fixes for analysis distribution not loading
+
+### Changed
+- Clarify StreamStats UI Download Options #996
+- Export Layer Attributes Updates #979 #997
+- Add to Map Query Logic improvements #990
+
+### Added
+- Add Analysis Over Time View #994
+
+
 ## [1.2.3.1] Mar 10 2026
 
 ### Fixed 
