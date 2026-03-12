@@ -798,12 +798,12 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.grpOptions.addButton(self.radDelineate)
 
         self.radBasin = QtWidgets.QRadioButton()
-        self.radBasin.setText('Include Basin Characteristics (additional 60 seconds)')
+        self.radBasin.setText('Catchment with Basin Characteristics (additional 60 seconds)')
         self.layoutAnalysis.addWidget(self.radBasin)
         self.grpOptions.addButton(self.radBasin)
 
         self.radFlowStats = QtWidgets.QRadioButton()
-        self.radFlowStats.setText('Include Flow Statistics (additional 60 seconds)')
+        self.radFlowStats.setText('Catchment with Basin Characteristics and Flow Statistics (additional 120 seconds)')
         self.layoutAnalysis.addWidget(self.radFlowStats)
         self.grpOptions.addButton(self.radFlowStats)
         
