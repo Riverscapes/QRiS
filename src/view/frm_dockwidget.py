@@ -1308,7 +1308,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if layer is None:
             QtWidgets.QMessageBox.warning(self, 'Export Layer Attributes', 'Unable to find the layer for this item in the map or create a temporary configuration for export.')
             return
-        frm = FrmExportLayer(self, layer)
+
+        base_name = None
+        if isinstance(db_item, EventLayer):
+             event = self.qris_project.events.get(db_item.event_id)
+             if event:
+                 base_name = f"{event.name} {db_item.name}"
+        
+        project_path = None
+        if self.qris_project and self.qris_project.project_file:
+             project_path = os.path.dirname(self.qris_project.project_file)
+
+        frm = FrmExportLayer(self, layer, base_name=base_name, project_path=project_path)
         frm.exec_()
 
     def export_project(self, project: Project):
