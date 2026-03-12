@@ -63,6 +63,7 @@ from .frm_analysis_explorer import FrmAnalysisExplorer
 from .frm_new_project import FrmNewProject
 from .frm_pour_point import FrmPourPoint
 from .frm_analysis_docwidget import FrmAnalysisDocWidget
+from .frm_analysis_over_time import FrmAnalysisOverTime
 from .frm_analysis_distribution import FrmDistributionAnalysis
 from .frm_analysis_distribution_dockwidget import FrmDistributionAnalysisDockWidget
 from .frm_slider import FrmSlider
@@ -169,6 +170,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.treeView.setModel(self.model)
 
         self.analysis_doc_widget = None
+        self.analysis_over_time_dock_widget = None
         self.slider_doc_widget = None
         self.climate_engine_doc_widget = None
         self.stream_gage_doc_widget = None
@@ -374,30 +376,35 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.map_manager.remove_all_layers(self.qris_project.map_guid)
 
         self.destroy_analysis_doc_widget()
+        self.destroy_analysis_over_time_dock_widget()
 
         if self.slider_doc_widget is not None:
-            self.iface.removeDockWidget(self.slider_doc_widget)
-            self.slider_doc_widget.close()
-            self.slider_doc_widget.deleteLater()
+            widget = self.slider_doc_widget
             self.slider_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
 
         if self.climate_engine_doc_widget is not None:
-            self.iface.removeDockWidget(self.climate_engine_doc_widget)
-            self.climate_engine_doc_widget.close()
-            self.climate_engine_doc_widget.deleteLater()
+            widget = self.climate_engine_doc_widget
             self.climate_engine_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
 
         if self.stream_gage_doc_widget is not None:
-            self.iface.removeDockWidget(self.stream_gage_doc_widget)
-            self.stream_gage_doc_widget.close()
-            self.stream_gage_doc_widget.deleteLater()
+            widget = self.stream_gage_doc_widget
             self.stream_gage_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
 
         if self.centerline_doc_widget is not None:
-            self.iface.removeDockWidget(self.centerline_doc_widget)
-            self.centerline_doc_widget.close()
-            self.centerline_doc_widget.deleteLater()
+            widget = self.centerline_doc_widget
             self.centerline_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
 
         if self.cross_sections_doc_widget is not None:
             self.iface.removeDockWidget(self.cross_sections_doc_widget)
@@ -426,9 +433,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def destroy_analysis_doc_widget(self):
         if self.analysis_doc_widget is not None:
-            # self.analysis_doc_widget.close()
-            self.iface.removeDockWidget(self.analysis_doc_widget)
+            widget = self.analysis_doc_widget
             self.analysis_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
+
+    def destroy_analysis_over_time_dock_widget(self):
+        if self.analysis_over_time_dock_widget is not None:
+            widget = self.analysis_over_time_dock_widget
+            self.analysis_over_time_dock_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
 
     @pyqtSlot(str, str, dict)
     def qris_from_qrave(self, layer_path, layer_type, metadata):
@@ -585,6 +602,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if isinstance(model_data, Analysis):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
                         self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
+                        self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis', lambda: self.open_analysis_over_time_dock(model_data))
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     elif isinstance(model_data, Attachment):
                         if model_data.attachment_type == Attachment.TYPE_FILE:
@@ -1011,6 +1029,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.analysis_doc_widget.show()
+
+    def open_analysis_over_time_dock(self, analysis: Analysis):
+        if self.analysis_over_time_dock_widget is None:
+            self.analysis_over_time_dock_widget = FrmAnalysisOverTime(self.iface, self.qris_project, self.map_manager, analysis)
+            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_over_time_dock_widget)
+        else:
+            # Update analysis context if needed
+            self.analysis_over_time_dock_widget.analysis = analysis
+            self.analysis_over_time_dock_widget.populate_data()
+            
+        if not self.analysis_over_time_dock_widget.isVisible():
+            self.analysis_over_time_dock_widget.show()
+        self.analysis_over_time_dock_widget.raise_()
+        self.analysis_over_time_dock_widget.activateWindow()
 
     def open_analysis_summary(self, analysis: Analysis=None):
 

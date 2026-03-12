@@ -47,6 +47,7 @@ class Metric(DBItem):
                         self.normalization_unit_type = 'distance'
                     else:
                         self.normalization_unit_type = 'area'
+                        self.base_unit = 'square meters'
 
     def set_metadata(self, metadata):
         super().set_metadata(metadata)
