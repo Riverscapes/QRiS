@@ -1,5 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
-import json
+from qgis.PyQt import QtWidgets
 
 from ..model.layer import Layer
 from ..model.project import Project
@@ -39,6 +38,16 @@ class FrmQueryBuilder(QtWidgets.QDialog):
         # Filter Construction Row
         self.hbox_builder = QtWidgets.QHBoxLayout()
         
+        # Logic Operator - Moved to front
+        self.cmbLogic = QtWidgets.QComboBox()
+        self.cmbLogic.addItems(["OR", "AND", "OR NOT", "AND NOT"])
+        # Initially disabled and no selection (simulate blank or just disabled)
+        # Using a blank item to simulate "nothing selected" initially
+        self.cmbLogic.insertItem(0, "")
+        self.cmbLogic.setCurrentIndex(0)
+        self.cmbLogic.setEnabled(False) 
+        self.hbox_builder.addWidget(self.cmbLogic)
+
         # Field Combo
         self.cmbField = QtWidgets.QComboBox()
         self.fields = self.layer_definition.metadata.get('fields', [])
@@ -150,9 +159,20 @@ class FrmQueryBuilder(QtWidgets.QDialog):
         
         current_text = self.txtQuery.toPlainText().strip()
         if current_text:
-            current_text += f"\nAND {clause}"
+            logic = self.cmbLogic.currentText()
+            if not logic: logic = "OR" # Fallback, though ideally handled by enabling logic
+            current_text += f"\n{logic} {clause}"
         else:
             current_text = clause
+            # Now enable logic combo for next addition
+            if self.cmbLogic.findText("OR") != -1: # Ensure we have clean items
+                 # Remove blank if present
+                 idx = self.cmbLogic.findText("")
+                 if idx != -1:
+                     self.cmbLogic.removeItem(idx)
+            
+            self.cmbLogic.setEnabled(True)
+            self.cmbLogic.setCurrentText("OR") # Default to OR
             
         self.txtQuery.setPlainText(current_text)
 
