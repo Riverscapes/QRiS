@@ -1,11 +1,18 @@
-from PyQt5 import QtWidgets, QtCore
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsFeature, QgsGeometry, Qgis
+import os
+
+from qgis.PyQt import QtWidgets, QtCore, QtGui
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsFeature, QgsField, QgsProject
+
 from .utilities import add_standard_form_buttons
+from ..QRiS.path_utilities import get_unique_file_path
 
 class FrmExportLayer(QtWidgets.QDialog):
-    def __init__(self, parent, layer: QgsVectorLayer):
+    def __init__(self, parent, layer: QgsVectorLayer, base_name: str = None, project_path: str = None):
         super(FrmExportLayer, self).__init__(parent)
         self.layer = layer
+        self.base_name = base_name or self.layer.name()
+        self.project_path = project_path
+        self.last_generated_path = None
         self.setupUi()
 
     def setupUi(self):
@@ -52,10 +59,40 @@ class FrmExportLayer(QtWidgets.QDialog):
         self.chkIncludeGeom.setChecked(False)
         self.grid.addWidget(self.chkIncludeGeom, 3, 1)
 
+        # Set default output path
+        self.update_default_path()
+
         self.vert.addStretch()
 
         # Dialog Buttons
         self.vert.addLayout(add_standard_form_buttons(self, 'export-layer-attributes'))
+
+    def update_default_path(self):
+        project_home = self.project_path or QgsProject.instance().homePath()
+        if project_home:
+            export_directory = os.path.join(project_home, 'exports')
+            if not os.path.exists(export_directory):
+                os.makedirs(export_directory, exist_ok=True)
+            
+            # Determine extension
+            ext = ".csv"
+            text = self.cmbFormat.currentText()
+            if text == "Comma Separated Values (CSV)":
+                ext = ".csv"
+            elif text == "Tab Separated Values (TSV)":
+                ext = ".tsv"
+            elif text == "JSON":
+                ext = ".json"
+            elif text == "GeoJSON":
+                ext = ".geojson"
+            elif text == "Excel":
+                ext = ".xlsx"
+            
+            # Use utility to generate unique path
+            default_path = get_unique_file_path(export_directory, self.base_name, ext)
+            default_path = os.path.normpath(default_path)  # Normalize path separators
+            self.leFile.setText(default_path)
+            self.last_generated_path = default_path
 
     def format_changed(self, text):
         current_path = self.leFile.text()
@@ -69,6 +106,12 @@ class FrmExportLayer(QtWidgets.QDialog):
         if not current_path:
             return
             
+        # If the user hasn't modified the path (or it matches the last generated one),
+        # regenerate it to ensure uniqueness and proper base name usage.
+        if current_path == self.last_generated_path:
+             self.update_default_path()
+             return
+
         import os
         base, ext = os.path.splitext(current_path)
         
@@ -102,8 +145,13 @@ class FrmExportLayer(QtWidgets.QDialog):
         elif current_format == "Excel":
             filter_str = "Excel (*.xlsx);;All Files (*.*)"
 
-        filename, selected_filter = QtWidgets.QFileDialog.getSaveFileName(self, "Select Output File", "", filter_str)
+        # Set initial directory for browse dialog
+        initial_path = self.leFile.text()
+        initial_dir = os.path.dirname(initial_path) if initial_path else ""
+
+        filename, selected_filter = QtWidgets.QFileDialog.getSaveFileName(self, "Select Output File", initial_dir, filter_str)
         if filename:
+            filename = os.path.normpath(filename)  # Normalize path separators
             self.leFile.setText(filename)
             # Update combo box if extension doesn't match
             lower_file = filename.lower()
@@ -131,7 +179,34 @@ class FrmExportLayer(QtWidgets.QDialog):
 
         if self.export_layer(out_file, self.chkIncludeGeom.isChecked()):
             super().accept()
-            QtWidgets.QMessageBox.information(self, "Success", "Layer exported successfully.")
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Export Successful")
+            msg_box.setText(f"Layer exported successfully to:\n{out_file}")
+            msg_box.setIcon(QtWidgets.QMessageBox.Information)
+
+            btn_folder = msg_box.addButton("View in Folder", QtWidgets.QMessageBox.ActionRole)
+            btn_open = msg_box.addButton("Open File", QtWidgets.QMessageBox.ActionRole)
+            btn_close = msg_box.addButton("Close", QtWidgets.QMessageBox.RejectRole)
+            
+            msg_box.exec_()
+            
+            clicked = msg_box.clickedButton()
+            if clicked == btn_folder:
+                self.open_folder(out_file)
+            elif clicked == btn_open:
+                self.open_file(out_file)
+
+    def open_folder(self, path):
+        path = os.path.normpath(path)
+        if os.name == 'nt':
+            import subprocess
+            subprocess.Popen(f'explorer /select,"{path}"')
+        else:
+            folder = os.path.dirname(path)
+            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(folder))
+
+    def open_file(self, path):
+         QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(path))
         
     def export_layer(self, out_file, include_geometries):
         driver_name = 'CSV'
@@ -156,6 +231,29 @@ class FrmExportLayer(QtWidgets.QDialog):
         if include_geometries:
             if driver_name == 'CSV':
                 layer_options.append('GEOMETRY=AS_WKT')
+            elif driver_name == 'XLSX':
+                # Create a memory layer with WKT geometry field for XLSX
+                crs = self.layer.crs().authid()
+                if not crs:
+                    crs = self.layer.crs().toWkt()
+                
+                temp_layer = QgsVectorLayer(f"None?crs={crs}", self.layer.name(), "memory")
+                temp_data = temp_layer.dataProvider()
+                
+                # Add original fields
+                temp_data.addAttributes(self.layer.fields().toList())
+                # Add geometry field
+                temp_data.addAttributes([QgsField("geometry", QtCore.QVariant.String)])
+                temp_layer.updateFields()
+                
+                features = []
+                for f in self.layer.getFeatures():
+                    feat = QgsFeature(temp_layer.fields())
+                    feat.setAttributes(f.attributes() + [f.geometry().asWkt()])
+                    features.append(feat)
+                
+                temp_data.addFeatures(features)
+                export_layer = temp_layer
         else:
             # Create a memory layer without geometry for any format when geometry is excluded
             # This handles CSV (avoiding unsupported GEOMETRY=NONE), GeoJSON, XLSX, etc. reliably
