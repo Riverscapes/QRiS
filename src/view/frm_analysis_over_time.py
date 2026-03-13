@@ -17,6 +17,7 @@ from ..lib.unit_conversion import short_unit_name, distance_units, area_units, r
 from ..model.event import DCE_EVENT_TYPE_ID
 
 from .widgets.event_library import EventLibraryWidget
+from .widgets.chart_export_widget import ChartExportWidget
 from .utilities import add_help_button
 from .frm_metric_value import FrmMetricValue
 
@@ -444,9 +445,14 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         
         hbox_controls.addSpacing(10)
 
-        self.btn_export = QtWidgets.QPushButton("Export")
-        hbox_controls.addWidget(self.btn_export)
-        self.setup_export_menu()
+        self.export_widget = ChartExportWidget(
+            self,
+            base_name="AnalysisOverTime",
+            get_data_callback=self.get_export_data,
+            get_figure_callback=lambda: self.fig,
+            project_path=self.project.project_file if self.project else None
+        )
+        hbox_controls.addWidget(self.export_widget)
         
     def setup_chart_options_menu(self):
         self.chart_options_menu = QtWidgets.QMenu(self)
@@ -471,98 +477,31 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
 
         self.btn_chart_options.setMenu(self.chart_options_menu)
 
-    def setup_export_menu(self):
-        self.export_menu = QtWidgets.QMenu(self)
-
-        self.action_export_values = QtWidgets.QAction("Export Values...", self)
-        self.action_export_values.triggered.connect(self.export_values)
-        self.export_menu.addAction(self.action_export_values)
-
-        self.action_export_chart = QtWidgets.QAction("Export Chart Image...", self)
-        self.action_export_chart.triggered.connect(self.export_chart)
-        self.export_menu.addAction(self.action_export_chart)
-
-        self.btn_export.setMenu(self.export_menu)
-
-    def export_values(self):
-        # We need the current data points displayed on the chart
-        # We can reconstruct them from self.last_plot_data if we store it in render_plot
-        # Or we can just access them from the current plot if possible, but safer to store
+    def get_export_data(self):
         if not hasattr(self, 'last_plot_data') or not self.last_plot_data:
-            QtWidgets.QMessageBox.information(self, "Export", "No data to export.")
-            return
+            return None
 
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Values", "", 
-            "CSV Files (*.csv);;Excel Files (*.xlsx);;JSON Files (*.json)"
-        )
-        
-        if not filename:
-            return
-            
         x_labels = self.last_plot_data['x']
         y_values = self.last_plot_data['y']
         y_err = self.last_plot_data['err']
         ylabel = self.last_plot_data['ylabel']
         
-        # Create a memory layer for export (no geometry)
-        vl = QgsVectorLayer("None", "AnalysisData", "memory")
-        pr = vl.dataProvider()
-        
-        # Add attributes
-        pr.addAttributes([
-            QgsField("Event", QVariant.String),
-            QgsField("Value", QVariant.Double),
-            QgsField("Unit", QVariant.String),
-            QgsField("Uncertainty", QVariant.Double)
-        ])
-        vl.updateFields()
-        
-        feats = []
+        export_list = []
         for i, label in enumerate(x_labels):
             val = y_values[i]
             if val is None: continue
             
-            err = y_err[i] if y_err and i < len(y_err) else 0.0
+            err = 0.0
+            if y_err and i < len(y_err) and y_err[i] is not None:
+                err = y_err[i]
             
-            fet = QgsFeature()
-            fet.setAttributes([label, float(val), ylabel, float(err)])
-            feats.append(fet)
-            
-        pr.addFeatures(feats)
-        vl.updateExtents()
-        
-        # Determine format/driver based on extension
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.fileEncoding = "UTF-8"
-        options.driverName = "CSV" 
-        if filename.lower().endswith(".xlsx"):
-            options.driverName = "XLSX"
-        elif filename.lower().endswith(".json"):
-            options.driverName = "GeoJSON" # Or just JSON? GeoJSON handles attributes too
-
-        error = QgsVectorFileWriter.writeAsVectorFormat(
-            vl,
-            filename,
-            options
-        )
-        
-        if error[0] == QgsVectorFileWriter.NoError:
-             QtWidgets.QMessageBox.information(self, "Export Success", "Data exported successfully.")
-        else:
-             QtWidgets.QMessageBox.warning(self, "Export Error", f"Error exporting data: {error}")
-
-    def export_chart(self):
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Chart", "", 
-            "PNG Image (*.png);;JPEG Image (*.jpg);;SVG Image (*.svg);;PDF Document (*.pdf)"
-        )
-        if filename:
-            try:
-                self.fig.savefig(filename)
-                QtWidgets.QMessageBox.information(self, "Export Success", "Chart exported successfully.")
-            except Exception as e:
-                QtWidgets.QMessageBox.warning(self, "Export Error", f"Error exporting chart: {e}")
+            export_list.append({
+                "Event": label,
+                "Value": float(val),
+                "Unit": ylabel,
+                "Uncertainty": float(err)
+            })
+        return export_list
 
     def set_chart_font(self):
         font, ok = QtWidgets.QFontDialog.getFont(self.chart_font, self, 'Select Chart Font')

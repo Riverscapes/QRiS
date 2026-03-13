@@ -24,6 +24,7 @@ from qgis.core import (
 from ...model.project import Project
 from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ...model.sample_frame import SampleFrame
+from .chart_export_widget import ChartExportWidget
 
 class DistributionAnalysisWidget(QtWidgets.QWidget):
     """
@@ -180,14 +181,15 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         
         self.hbox_bottom.addItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         
-        self.btnSaveChart = QtWidgets.QPushButton("Save Chart")
-        self.btnSaveChart.clicked.connect(self.save_chart)
-        self.hbox_bottom.addWidget(self.btnSaveChart)
-        
-        # Export Values Button
-        self.btnExport = QtWidgets.QPushButton("Export Values")
-        self.btnExport.clicked.connect(self.export_values)
-        self.hbox_bottom.addWidget(self.btnExport)
+        # Add Export Widget
+        self.export_widget = ChartExportWidget(
+            self,
+            base_name="DistributionAnalysis",
+            get_data_callback=self.get_export_data,
+            get_figure_callback=lambda: self.figure,
+            project_path=self.qris_project.project_file if self.qris_project else None
+        )
+        self.hbox_bottom.addWidget(self.export_widget)
         
         self.chart_layout.addLayout(self.hbox_bottom)
         
@@ -521,20 +523,28 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                  
              self.active_event_layer = layer
 
-    def export_values(self):
+    def get_export_data(self):
         if not self.current_distribution_data:
-            QtWidgets.QMessageBox.information(self, "Export", "No data to export.")
-            return
+             return None
 
         # Unpack with backward compatibility
         data = self.current_distribution_data
+        
+        distribution = {}
+        total_mapped = 0
+        event_layer = None
+        metric_field = None
+        scope_measure = 0
+        measure_type = 'count'
+        
         if len(data) >= 6:
-            distribution, total, event_layer, metric_field, scope_measure, measure_type = data[:6]
+            distribution, total_mapped, event_layer, metric_field, scope_measure, measure_type = data[:6]
         elif len(data) == 5:
-            distribution, total, event_layer, metric_field, scope_measure = data[:5]
+            distribution, total_mapped, event_layer, metric_field, scope_measure = data[:5]
             measure_type = 'geometry'
         else:
-             distribution, total, event_layer, metric_field = data[:4]
+             if len(data) > 0: distribution = data[0]
+             if len(data) > 1: total_mapped = data[1]
              scope_measure = 0
              measure_type = 'geometry'
         
@@ -543,86 +553,36 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         factor = self.unit_factor
         
         if measure_type == 'count':
-            unit = " Features"
+            unit = "Features"
             factor = 1.0
         elif 'percent' in measure_type:
             unit = "%"
             factor = 1.0
-        
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Values", "", 
-            "CSV Files (*.csv);;Excel Files (*.xlsx);;JSON Files (*.json)"
-        )
-        
-        if not filename:
-            return
-
-        # Prepare Data
+            
         sorted_keys = sorted(distribution.keys())
         
-        # Create a memory layer for export (no geometry)
-        vl = QgsVectorLayer("None", "Distribution", "memory")
-        pr = vl.dataProvider()
-        
-        # Add attributes
-        pr.addAttributes([
-            QgsField("Category", QVariant.String),
-            QgsField("Value", QVariant.Double),
-            QgsField("Unit", QVariant.String),
-            QgsField("Percentage", QVariant.Double)
-        ])
-        vl.updateFields()
-        
-        feats = []
+        export_list = []
         for k in sorted_keys:
             raw_val = distribution[k]
             
-            val = 0
+            val = 0.0
             if measure_type == 'percent_scope' and scope_measure > 0:
                  val = (raw_val / scope_measure) * 100
-            elif measure_type == 'percent_total' and total > 0:
-                 val = (raw_val / total) * 100
+            elif measure_type == 'percent_total' and total_mapped > 0:
+                 val = (raw_val / total_mapped) * 100
             else:
                  val = raw_val * factor
 
-            pct = (raw_val / total) * 100 if total > 0 else 0
+            pct = (raw_val / total_mapped * 100) if total_mapped > 0 else 0.0
             
-            fet = QgsFeature()
-            fet.setAttributes([k, float(val), unit, float(pct)])
-            feats.append(fet)
+            export_list.append({
+                "Category": k,
+                "Value": float(val),
+                "Unit": unit,
+                "Percentage": float(pct)
+            })
             
-        pr.addFeatures(feats)
-        vl.updateExtents()
-        
-        # Determine format/driver based on extension
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.fileEncoding = "UTF-8"
-        
-        context = QgsCoordinateTransformContext()
-        context.readXml(QgsProject.instance().transformContext().writeXml())
-
-        lower_file = filename.lower()
-        if lower_file.endswith(".acc") or lower_file.endswith(".xlsx"):
-            options.driverName = "XLSX"
-        elif lower_file.endswith(".json"):
-            options.driverName = "GeoJSON" # GeoJSON handles attributes fine even without geometry usually
-        else:
-            options.driverName = "CSV"
-        
-        error = QgsVectorFileWriter.writeAsVectorFormatV3(vl, filename, context, options)
-        
-        if error[0] != QgsVectorFileWriter.NoError:
-             # Match result structure (Error, NewFile, NewLayer, ErrorMsg) from older QGIS versions or V3
-             # Safely get message if available
-             msg = error[1] if len(error) < 4 else error[3]
-             QtWidgets.QMessageBox.warning(self, "Export Error", f"Failed to export data: {msg}")
-        else:
-             QtWidgets.QMessageBox.information(self, "Export Success", "Data exported successfully.")
-
-    def save_chart(self):
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Chart", "", "PNG Image (*.png);;JPEG Image (*.jpg)")
-        if filename:
-            self.figure.savefig(filename)
+        return export_list
 
     def get_layer_colors(self, event_layer_item, attribute_name):
         colors = {}
