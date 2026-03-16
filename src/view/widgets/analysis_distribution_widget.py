@@ -63,20 +63,56 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
 
     def setupUi(self):
         # Main Layout
+        self.splitter = None
         if self.orientation == QtCore.Qt.Horizontal:
             self.main_layout = QtWidgets.QHBoxLayout(self)
+            self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+            self.main_layout.addWidget(self.splitter)
         else:
             self.main_layout = QtWidgets.QVBoxLayout(self)
         
         # --- Left Side: Inputs ---
         self.input_container = QtWidgets.QWidget()
         if self.orientation == QtCore.Qt.Horizontal:
-            self.input_container.setFixedWidth(300) # Constrain width only for horizontal split
+            self.input_container.setMinimumWidth(300)
             
         # Use a QVBox for the left side to allow pushing items to top
         self.left_layout = QtWidgets.QVBoxLayout(self.input_container)
         self.left_layout.setContentsMargins(0, 0, 0, 0)
         
+        # Tabs
+        self.tabs = QtWidgets.QTabWidget()
+        self.left_layout.addWidget(self.tabs)
+
+        # Tab 1: Chart Inputs
+        self.tab_inputs = QtWidgets.QWidget()
+        self.layout_inputs = QtWidgets.QVBoxLayout(self.tab_inputs)
+        self.layout_inputs.setContentsMargins(5, 5, 5, 5)
+
+        # Tab 2: Attributes
+        self.tab_attributes = QtWidgets.QWidget()
+        self.layout_attributes = QtWidgets.QVBoxLayout(self.tab_attributes)
+        self.layout_attributes.setContentsMargins(5, 5, 5, 5)
+        
+        self.lstAttributes = QtWidgets.QListWidget()
+        self.lstAttributes.itemChanged.connect(self.on_attributes_changed)
+        self.layout_attributes.addWidget(self.lstAttributes)
+
+        # Attribute Selection Buttons
+        self.hbox_attr_buttons = QtWidgets.QHBoxLayout()
+        self.hbox_attr_buttons.addStretch() # Push buttons to the right
+        
+        self.btnSelectAll = QtWidgets.QPushButton("Select All")
+        self.btnSelectAll.clicked.connect(self.select_all_attributes)
+        self.btnSelectNone = QtWidgets.QPushButton("Select None")
+        self.btnSelectNone.clicked.connect(self.select_none_attributes)
+        self.hbox_attr_buttons.addWidget(self.btnSelectAll)
+        self.hbox_attr_buttons.addWidget(self.btnSelectNone)
+        self.layout_attributes.addLayout(self.hbox_attr_buttons)
+        
+        self.tabs.addTab(self.tab_inputs, "Chart Inputs")
+        self.tabs.addTab(self.tab_attributes, "Attributes")
+
         # Form Layout for fields
         self.form_layout = QtWidgets.QFormLayout()
         
@@ -133,11 +169,14 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             
         self.form_layout.addRow("", self.chkInteractive)
         
-        self.left_layout.addLayout(self.form_layout)
+        self.layout_inputs.addLayout(self.form_layout)
         if self.orientation == QtCore.Qt.Horizontal:
-            self.left_layout.addStretch() # Push inputs to top
+            self.layout_inputs.addStretch() # Push inputs to top
         
-        self.main_layout.addWidget(self.input_container)
+        if self.splitter:
+            self.splitter.addWidget(self.input_container)
+        else:
+            self.main_layout.addWidget(self.input_container)
 
         # --- Right Side: Chart ---
         self.chart_container = QtWidgets.QWidget()
@@ -192,6 +231,12 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.hbox_bottom.addWidget(self.export_widget)
         
         self.chart_layout.addLayout(self.hbox_bottom)
+        
+        if self.splitter:
+            self.splitter.addWidget(self.chart_container)
+            self.splitter.setStretchFactor(1, 1) # Give chart all remaining space
+        else:
+            self.main_layout.addWidget(self.chart_container, 1) # Give chart all remaining space
         
         self.main_layout.addWidget(self.chart_container, 1) # Give chart all remaining space
     
@@ -656,6 +701,51 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
 
         return colors
 
+    def on_attributes_changed(self, item=None):
+        # item parameter is passed by itemChanged signal
+        self.draw_chart()
+
+    def select_all_attributes(self):
+        self.set_attributes_check_state(QtCore.Qt.Checked)
+
+    def select_none_attributes(self):
+        self.set_attributes_check_state(QtCore.Qt.Unchecked)
+
+    def set_attributes_check_state(self, state):
+        self.lstAttributes.blockSignals(True)
+        for i in range(self.lstAttributes.count()):
+            item = self.lstAttributes.item(i)
+            item.setCheckState(state)
+        self.lstAttributes.blockSignals(False)
+        self.draw_chart()
+
+    def populate_attributes_list(self, keys):
+        # Preserve unchecked state if keys persist (e.g. changing measure type)
+        current_unchecked = set()
+        if self.lstAttributes.count() > 0:
+            for i in range(self.lstAttributes.count()):
+                item = self.lstAttributes.item(i)
+                if item.checkState() == QtCore.Qt.Unchecked:
+                    current_unchecked.add(item.text())
+        
+        self.lstAttributes.blockSignals(True)
+        self.lstAttributes.clear()
+        
+        sorted_keys = sorted(keys)
+        for key in sorted_keys:
+            # Create Checkbox Item
+            item = QtWidgets.QListWidgetItem(str(key))
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            
+            if str(key) in current_unchecked:
+                item.setCheckState(QtCore.Qt.Unchecked)
+            else:
+                item.setCheckState(QtCore.Qt.Checked)
+            
+            self.lstAttributes.addItem(item)
+            
+        self.lstAttributes.blockSignals(False)
+
     def calculate_distribution(self):
         self.figure.clear()
         
@@ -852,6 +942,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             distribution, total_amount, event_layer, 
             metric_field, scope_measure, measure_type
         )
+        self.populate_attributes_list(distribution.keys())
         self.draw_chart()
 
     def format_value(self, value):
@@ -895,7 +986,16 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         # Apply font settings
         font_settings = {'family': self.chart_font_family, 'size': self.chart_font_size}
         
-        sorted_keys = sorted(distribution.keys())
+        # Filter Keys based on Attributes List
+        if self.lstAttributes.count() > 0:
+            checked_keys = set()
+            for i in range(self.lstAttributes.count()):
+                item = self.lstAttributes.item(i)
+                if item.checkState() == QtCore.Qt.Checked:
+                    checked_keys.add(item.text())
+            sorted_keys = sorted([k for k in distribution.keys() if k in checked_keys])
+        else:
+            sorted_keys = sorted(distribution.keys())
         
         # Determine colors
         mpl_colors = []
