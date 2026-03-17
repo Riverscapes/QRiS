@@ -1,4 +1,5 @@
 from qgis.PyQt import QtWidgets
+import json
 
 from ..model.layer import Layer
 from ..model.project import Project
@@ -131,6 +132,11 @@ class FrmQueryBuilder(QtWidgets.QDialog):
         field_id = self.cmbField.currentData()
         operator = self.cmbOperator.currentText()
         
+        # Check Field Type
+        field_def = next((f for f in self.fields if f['id'] == field_id), None)
+        is_numeric = field_def and field_def.get('type') in ['integer', 'float']
+        is_multi_list = field_def and field_def.get('type') == 'list' and field_def.get('allow_multiple_values')
+        
         # Get Value
         if self.stkValue.currentWidget() == self.cmbValue:
             value = self.cmbValue.currentData()
@@ -143,17 +149,33 @@ class FrmQueryBuilder(QtWidgets.QDialog):
         # json_extract(metadata, '$.attributes.<field_id>')
         attr_expr = f"json_extract(metadata, '$.attributes.{field_id}')"
         
-        # Quote string values
-        # For strings, numbers might need handling but SQLite is flexible.
-        # JSON values are typically strings or numbers.
-        # If user picked from lookup, use that ID.
-        # Ideally we know the type.
-        
         sql_val = str(value)
-        if isinstance(value, str):
-             # Escape single quotes
-             safe_val = value.replace("'", "''")
-             sql_val = f"'{safe_val}'"
+
+        if is_numeric:
+            try:
+                float(value)
+                sql_val = str(value)
+            except (ValueError, TypeError):
+                 if isinstance(value, str):
+                     safe_val = value.replace("'", "''")
+                     sql_val = f"'{safe_val}'"
+                 else:
+                     sql_val = f"'{str(value)}'"
+
+        elif is_multi_list and operator in ['=', '!=']:
+             try:
+                 js_val = json.dumps(value)
+                 safe_js_val = js_val.replace("'", "''")
+                 sql_val = f"'%{safe_js_val}%'"
+                 operator = 'LIKE' if operator == '=' else 'NOT LIKE' 
+             except:
+                 safe_val = str(value).replace("'", "''")
+                 sql_val = f"'{safe_val}'"
+        else:
+            if isinstance(value, str):
+                # Escape single quotes
+                safe_val = value.replace("'", "''")
+                sql_val = f"'{safe_val}'"
         
         clause = f"{attr_expr} {operator} {sql_val}"
         
