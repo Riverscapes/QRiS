@@ -1,5 +1,17 @@
 # QRiS Plugin
 
+## [1.2.3.3] Mar 17 2026
+
+### Fixed
+- Make sure QGIS vector edits are flushed to db #1008
+
+### Changed
+- Refactor chart and value exports to use common widget #1000
+- Refactored Analysis Distribution to use same splitter widget as Analysis over Time
+
+### Added
+- Distribution Analysis: Included Tab with Attribute checklist to help reduce chart clutter #1001
+
 ## [1.2.3.2] Mar 12 2026
 
 ### Fixed 
