@@ -605,12 +605,11 @@ class RiverscapesMapManager(QObject):
             feature_layer.setEditFormConfig(form_config)
 
     def set_table_as_layer_variable(self, feature_layer: QgsVectorLayer, database: str, table: str):
-        conn = sqlite3.connect(database)
-        curs = conn.cursor()
-        curs.execute("SELECT * FROM {};".format(table))
-        lookup_collection = curs.fetchall()
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(database) as conn:
+            curs = conn.cursor()
+            curs.execute("SELECT * FROM {};".format(table))
+            lookup_collection = curs.fetchall()
+            conn.commit()
         QgsExpressionContextUtils.setLayerVariable(feature_layer, table, json.dumps(lookup_collection))
 
     def set_value_map(self, feature_layer: QgsVectorLayer, field_name: str, database: str, lookup_table_name: str, field_alias: str, parent_container=None, display_index=None, expression=None) -> None:
@@ -619,12 +618,12 @@ class RiverscapesMapManager(QObject):
         value_position = 0
         reuse_last = True
         """Will set a Value Map widget drop down list from the lookup database table"""
-        conn = sqlite3.connect(database)
-        curs = conn.cursor()
-        curs.execute("SELECT * FROM {};".format(lookup_table_name))
-        lookup_collection = curs.fetchall()
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(database) as conn:
+            curs = conn.cursor()
+            curs.execute("SELECT * FROM {};".format(lookup_table_name))
+            lookup_collection = curs.fetchall()
+            conn.commit()
+
         # make a dictionary from the returned values
         lookup_list = []
         for row in lookup_collection:

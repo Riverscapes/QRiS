@@ -62,6 +62,13 @@ class QRisMapManager(RiverscapesMapManager):
             'QRiS Base Maps',
             BASEMAP_MACHINE_CODE]
 
+    def stop_edits(self):
+        super().stop_edits()
+        
+        # Flush the changes to the geopackage
+        if self.project:
+            self.project.flush(vacuum=False)
+
     def get_layer_for_export(self, db_item: DBItem, add_to_map: bool = False) -> QgsVectorLayer:
         """
         Returns a configured QgsVectorLayer for the given DBItem suitable for export.

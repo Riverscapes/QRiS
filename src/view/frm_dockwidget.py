@@ -373,7 +373,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
         if remove_layers is True:
             if self.map_manager is not None and self.qris_project is not None:
-                self.map_manager.remove_all_layers(self.qris_project.map_guid)
+                self.map_manager.remove_all_layers(self.qris_project.map_guid)                
+        # If layers are removed, attempt a VACUUM and Flush to ensure the WAL is cleared.
+        if self.qris_project and self.qris_project.project_file:
+            self.qris_project.flush(vacuum=True)
 
         self.destroy_analysis_doc_widget()
         self.destroy_analysis_over_time_dock_widget()
@@ -1333,10 +1336,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Refrfesh the map canvas to ensure all layers are flushed to disk before copying
         self.iface.mapCanvas().refreshAllLayers()
 
+        # Force a checkpoint on the project GeoPackage to flush WAL changes to the main file
+        if self.qris_project:
+            self.qris_project.flush(vacuum=True)
+
         QtWidgets.QMessageBox.information(
             self,
             'Export Project',
-            'Exporting a QRiS project will create a new copy of the project.\n\nTo ensure all data is included, it is recommended that you restart QGIS before exporting if you have made any edits or changes to this project.',
+            'Exporting a QRiS project will create a new copy of the project.\n\nTo ensure all data is included, the project has been flushed to disk. However, if you encounter missing data, please try restarting QGIS before exporting.',
             QtWidgets.QMessageBox.Ok
         )
 
