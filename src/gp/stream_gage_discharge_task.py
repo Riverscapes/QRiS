@@ -99,30 +99,30 @@ class StreamGageDischargeTask(QgsTask):
                 else:
                     sql_data = []
 
-                conn = sqlite3.connect(self.db_path)
-                curs = conn.cursor()
+                with sqlite3.connect(self.db_path) as conn:
+                    curs = conn.cursor()
 
-                count_before = self.get_discharge_record_count(curs)
+                    count_before = self.get_discharge_record_count(curs)
 
-                curs.executemany("""
-                INSERT INTO stream_gage_discharges (
-                    stream_gage_id,
-                    measurement_date,
-                    discharge,
-                    discharge_code,
-                    gage_height,
-                    gage_height_code)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT (stream_gage_id, measurement_date)
-                DO UPDATE SET
-                    discharge = excluded.discharge,
-                    discharge_code = excluded.discharge_code,
-                    gage_height = excluded.gage_height,
-                    gage_height_code = excluded.gage_height_code""", sql_data)
+                    curs.executemany("""
+                    INSERT INTO stream_gage_discharges (
+                        stream_gage_id,
+                        measurement_date,
+                        discharge,
+                        discharge_code,
+                        gage_height,
+                        gage_height_code)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (stream_gage_id, measurement_date)
+                    DO UPDATE SET
+                        discharge = excluded.discharge,
+                        discharge_code = excluded.discharge_code,
+                        gage_height = excluded.gage_height,
+                        gage_height_code = excluded.gage_height_code""", sql_data)
 
-                conn.commit()
+                    conn.commit()
 
-                count_after = self.get_discharge_record_count(curs)
+                    count_after = self.get_discharge_record_count(curs)
 
                 self.inserted_discharge_records = count_after - count_before
 

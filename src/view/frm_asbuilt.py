@@ -275,11 +275,12 @@ class FrmAsBuilt(FrmEvent):
 
 def add_checkbox_widgets(parent_widget, db_path, table_name):
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = dict_factory
-    curs = conn.cursor()
-    curs.execute(f'SELECT * FROM {table_name}')
-    data = {row['id']: row['name'] for row in curs.fetchall()}
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = dict_factory
+        curs = conn.cursor()
+        curs.execute(f'SELECT * FROM {table_name}')
+        data = {row['id']: row['name'] for row in curs.fetchall()}
+    
     widget_list = []
     for id, name in data.items():
         widget = QtWidgets.QCheckBox(parent_widget)

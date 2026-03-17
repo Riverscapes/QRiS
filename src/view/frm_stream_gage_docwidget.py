@@ -120,11 +120,12 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         }
 
         site_id, site_code = lst_item.data(QtCore.Qt.UserRole)
-        conn = sqlite3.connect(self.project.project_file)
-        conn.row_factory = dict_factory
-        curs = conn.cursor()
-        curs.execute('SELECT {} FROM stream_gages where fid = ?'.format(','.join(fields.keys())), [site_id])
-        row = curs.fetchone()
+        with sqlite3.connect(self.project.project_file) as conn:
+            conn.row_factory = dict_factory
+            curs = conn.cursor()
+            curs.execute('SELECT {} FROM stream_gages where fid = ?'.format(','.join(fields.keys())), [site_id])
+            row = curs.fetchone()
+        
         metadata_values = [(val, row[key]) for key, val in fields.items()]
         self.metadata_model = BasinCharsTableModel(metadata_values, ['Name', 'Value'])
         self.tableMeta.setModel(self.metadata_model)
@@ -141,13 +142,14 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         start = date(self.dtStart.date().year(), self.dtStart.date().month(), self.dtStart.date().day())
         end = date(self.dtEnd.date().year(), self.dtEnd.date().month(), self.dtEnd.date().day())
 
-        conn = sqlite3.connect(self.project.project_file)
-        curs = conn.cursor()
-        curs.execute('SELECT measurement_date, discharge FROM stream_gage_discharges WHERE (stream_gage_id = ?) AND (measurement_date >= ?) AND (measurement_date < ?) ORDER BY measurement_date',
-                     [site_id, start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')])
+        with sqlite3.connect(self.project.project_file) as conn:
+            curs = conn.cursor()
+            curs.execute('SELECT measurement_date, discharge FROM stream_gage_discharges WHERE (stream_gage_id = ?) AND (measurement_date >= ?) AND (measurement_date < ?) ORDER BY measurement_date',
+                        [site_id, start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')])
 
-        data = [(row[0], row[1]) for row in curs.fetchall()]
+            data = [(row[0], row[1]) for row in curs.fetchall()]
         return data
+
 
     def load_discharge_plot(self):
 

@@ -51,21 +51,21 @@ class NewProjectTask(QgsTask):
 
             self.project_create_schema.emit()
             # Run the schema DDL migrations to create lookup tables and relationships
-            conn = sqlite3.connect(self.output_gpkg)
-            conn.execute('PRAGMA foreign_keys = ON;')
-            curs = conn.cursor()
+            with sqlite3.connect(self.output_gpkg) as conn:
+                conn.execute('PRAGMA foreign_keys = ON;')
+                curs = conn.cursor()
 
-            schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
-            schema_file = open(schema_path, 'r')
-            sql_commands = schema_file.read()
-            curs.executescript(sql_commands)
+                schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
+                schema_file = open(schema_path, 'r')
+                sql_commands = schema_file.read()
+                curs.executescript(sql_commands)
 
-            # Create the project
-            description = self.project_description if len(self.project_description) > 0 else None
-            metadata = json.dumps(self.metadata) if self.metadata is not None else None
-            curs.execute('INSERT INTO projects (name, description, map_guid, metadata) VALUES (?, ?, ?, ?)', [self.project_name, description, self.map_guid, metadata])
-            conn.commit()
-            conn.close()
+                # Create the project
+                description = self.project_description if len(self.project_description) > 0 else None
+                metadata = json.dumps(self.metadata) if self.metadata is not None else None
+                curs.execute('INSERT INTO projects (name, description, map_guid, metadata) VALUES (?, ?, ?, ?)', [self.project_name, description, self.map_guid, metadata])
+                conn.commit()
+            
             schema_file.close()
             return True
 

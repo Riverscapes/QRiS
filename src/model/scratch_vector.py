@@ -60,13 +60,23 @@ class ScratchVector(DBItem):
             try:
                 layer_count = 1
                 with sqlite3.connect(gpkg_path) as conn:
+                    # Flush any pending transactions before inspecting/deleting
+                    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                    
                     curs = conn.cursor()
-                    curs.execute('SELECT count(*) from gpkg_contents')
+                    curs.execute("SELECT count(*) FROM gpkg_contents WHERE data_type = 'features'")
                     layer_count = curs.fetchone()[0]
 
                 # Connection must be closed to delete
                 if layer_count < 1:
-                    os.remove(gpkg_path)
+                    if os.path.exists(gpkg_path):
+                        os.remove(gpkg_path)
+                    
+                    # Also try to remove WAL/SHM files if they persist
+                    if os.path.exists(gpkg_path + '-wal'):
+                        os.remove(gpkg_path + '-wal')
+                    if os.path.exists(gpkg_path + '-shm'):
+                        os.remove(gpkg_path + '-shm')
 
                 # Remove scratch folder if empty
                 if len(os.listdir(os.path.dirname(gpkg_path))) == 0:

@@ -1,7 +1,6 @@
 import os
 import json
 import sqlite3
-from sqlite3 import Connection
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
@@ -460,6 +459,25 @@ class Project(DBItem, QObject):
             conn.rollback()
             raise Exception(f"Error refreshing spatial views: {ex}") from ex
 
+    def flush(self, vacuum: bool = False) -> None:
+        """
+        Flushes the project database to disk.
+        WAL changes are merged to the main file and the WAL file is truncated.
+        If vacuum is True, the database is compacted before flushing.
+        """
+        try:
+            # Use isolation_level=None to allow VACUUM/Journal Mode changes
+            with sqlite3.connect(self.project_file, isolation_level=None) as conn:
+                if vacuum:
+                    conn.execute("VACUUM")
+                # Checkpoint Mode: TRUNCATE - writes all transactions to DB and cuts WAL to 0 length
+                # We execute this even after VACUUM because VACUUM in WAL mode can inflate the WAL file.
+                # TRUNCATE is the only reliable way to reset the WAL size to 0 without locking issues.
+                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            
+            # QgsMessageLog.logMessage(f"Project flushed successfully (Vacuum={vacuum}).", 'QRiS', Qgis.Info)
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Failed to flush changes to QRiS project: {str(e)}", 'QRiS', Qgis.Warning)
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
     """
@@ -488,65 +506,65 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
 
 
 def apply_db_migrations(db_path: str):
-    conn: Connection = spatialite_connect(db_path)
-    conn.execute('PRAGMA foreign_keys = ON;')
-    conn.execute('SELECT EnableGpkgMode();')
-    curs = conn.cursor()
+    with spatialite_connect(db_path) as conn:
+        conn.execute('PRAGMA foreign_keys = ON;')
+        conn.execute('SELECT EnableGpkgMode();')
+        curs = conn.cursor()
 
-    existing_layers = [layer[0] for layer in curs.execute('SELECT table_name, data_type FROM gpkg_contents WHERE data_type = "features"').fetchall()]
-    existing_layers = existing_layers + migrated_layers
+        existing_layers = [layer[0] for layer in curs.execute('SELECT table_name, data_type FROM gpkg_contents WHERE data_type = "features"').fetchall()]
+        existing_layers = existing_layers + migrated_layers
 
-    for fc_name, layer_name, geometry_type in project_layers:
-        if fc_name not in existing_layers:
-            features_path = '{}|layername={}'.format(db_path, layer_name)
-            create_geopackage_table(geometry_type, fc_name, db_path, features_path, None)
-            yield f'Applying QRiS Database Migrations: create feature class {layer_name}'
+        for fc_name, layer_name, geometry_type in project_layers:
+            if fc_name not in existing_layers:
+                features_path = '{}|layername={}'.format(db_path, layer_name)
+                create_geopackage_table(geometry_type, fc_name, db_path, features_path, None)
+                yield f'Applying QRiS Database Migrations: create feature class {layer_name}'
 
-    try:
-        curs.execute('SELECT name FROM sqlite_master WHERE type="view"')
-        views = curs.fetchall()
-        for view in views:
-            view_name = view[0]
-            if view_name.startswith('vw_aoi') or view_name.startswith('vw_valley_bottom'):
-                curs.execute(f'PRAGMA table_info({view_name})')
-                columns = curs.fetchall()
-                mask_column_name = 'mask_id' if view_name.startswith('vw_aoi') else 'valley_bottom_id'
-                mask_id_column = next((column for column in columns if column[1] == mask_column_name), None)
-                if mask_id_column is not None:
-                    mask_id = curs.execute(f'SELECT {mask_column_name} FROM {view_name} LIMIT 1').fetchone()
-                    if mask_id is not None:
+        try:
+            curs.execute('SELECT name FROM sqlite_master WHERE type="view"')
+            views = curs.fetchall()
+            for view in views:
+                view_name = view[0]
+                if view_name.startswith('vw_aoi') or view_name.startswith('vw_valley_bottom'):
+                    curs.execute(f'PRAGMA table_info({view_name})')
+                    columns = curs.fetchall()
+                    mask_column_name = 'mask_id' if view_name.startswith('vw_aoi') else 'valley_bottom_id'
+                    mask_id_column = next((column for column in columns if column[1] == mask_column_name), None)
+                    if mask_id_column is not None:
+                        mask_id = curs.execute(f'SELECT {mask_column_name} FROM {view_name} LIMIT 1').fetchone()
+                        if mask_id is not None:
+                            conn.execute('BEGIN')
+                            curs.execute(f'DROP VIEW IF EXISTS {view_name}')
+                            curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}') 
+                            yield f'Applying QRiS Database Migrations: updated view {view_name}'
+                            conn.commit()
+        except Exception as ex:
+            conn.rollback()
+            raise ex
+
+        try:
+            migrations_dir = os.path.join(os.path.dirname(__file__), '..', 'db', 'migrations')
+            migration_files = os.listdir(migrations_dir)
+            sorted_migration_files = sorted(migration_files)
+            for migration_file in sorted_migration_files:
+                curs.execute('SELECT * FROM migrations WHERE file_name LIKE ?', [migration_file])
+                migration_row = curs.fetchone()
+                if migration_row is None:
+                    try:
+                        migration_path = os.path.join(migrations_dir, migration_file)
+                        yield f'Applying QRiS Database Migrations: {migration_file}'
+                        with open(migration_path, 'r') as f:
+                            sql_commands = f.read()
                         conn.execute('BEGIN')
-                        curs.execute(f'DROP VIEW IF EXISTS {view_name}')
-                        curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}') 
-                        yield f'Applying QRiS Database Migrations: updated view {view_name}'
+                        curs.executescript(sql_commands)
+                        curs.execute('INSERT INTO migrations (file_name) VALUES (?)', [migration_file])
                         conn.commit()
-    except Exception as ex:
-        conn.rollback()
-        raise ex
-
-    try:
-        migrations_dir = os.path.join(os.path.dirname(__file__), '..', 'db', 'migrations')
-        migration_files = os.listdir(migrations_dir)
-        sorted_migration_files = sorted(migration_files)
-        for migration_file in sorted_migration_files:
-            curs.execute('SELECT * FROM migrations WHERE file_name LIKE ?', [migration_file])
-            migration_row = curs.fetchone()
-            if migration_row is None:
-                try:
-                    migration_path = os.path.join(migrations_dir, migration_file)
-                    yield f'Applying QRiS Database Migrations: {migration_file}'
-                    with open(migration_path, 'r') as f:
-                        sql_commands = f.read()
-                    conn.execute('BEGIN')
-                    curs.executescript(sql_commands)
-                    curs.execute('INSERT INTO migrations (file_name) VALUES (?)', [migration_file])
-                    conn.commit()
-                except Exception as ex:
-                    conn.rollback()
-                    raise ex
-    except Exception as ex:
-        conn.rollback()
-        raise ex
+                    except Exception as ex:
+                        conn.rollback()
+                        raise ex
+        except Exception as ex:
+            conn.rollback()
+            raise ex
 
 def test_project(db_path: str) -> bool:
     """ Tests if the given database path is a valid QRiS project database """
