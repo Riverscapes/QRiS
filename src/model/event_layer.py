@@ -1,6 +1,5 @@
 import sqlite3
 
-
 from qgis.core import QgsVectorLayer
 
 from .layer import Layer
@@ -21,8 +20,7 @@ class EventLayer(DBItemSpatial):
         self.layer = layer
         self.icon = 'layer'
 
-        self.view_name = f'vw_{self.layer.layer_id}_{self.event_id}'
-
+        self.view_name = f'vw_{self.layer.layer_id}_event_{self.event_id}_event_layer_{self.id}'
         if self.layer.geom_type == 'Point':
             self.icon = 'point'
         elif self.layer.geom_type == 'Linestring':

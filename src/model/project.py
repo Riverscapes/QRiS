@@ -439,21 +439,44 @@ class Project(DBItem, QObject):
         #     yield dbitem
 
     def refresh_spatial_views(self) -> None:
-        """Recreate all spatial views in the project."""
+        """Recreate all spatial views in the project and clean up orphaned views."""
         try:
             with sqlite3.connect(self.project_file) as conn:
+                conn.row_factory = dict_factory
                 curs = conn.cursor()
+                
+                # Keep track of expected views to clean up orphans later
+                expected_views = set()
+
                 for dbitem in self.get_vector_dbitems():
                     if not isinstance(dbitem, DBItemSpatial):
                         continue
                     dbitem.create_spatial_view(curs)
+                    expected_views.add(dbitem.view_name)
                     if isinstance(dbitem, PourPoint):
                         dbitem.catchment.create_spatial_view(curs)
+                        expected_views.add(dbitem.catchment.view_name)
+
                 for analysis in self.analyses.values():
                     analysis.create_spatial_view(curs)
+                    expected_views.add(analysis.view_name)
+
                 for event in self.events.values():
                     for event_layer in event.event_layers:
                         event_layer.create_spatial_view(curs)
+                        expected_views.add(event_layer.view_name)
+                
+                # Find orphaned views (starting with vw_) that are not in expected_views
+                curs.execute("SELECT name FROM sqlite_master WHERE type='view' AND name LIKE 'vw_%'")
+                existing_views = {row['name'] for row in curs.fetchall()}
+                
+                orphaned_views = existing_views - expected_views
+                
+                for view_name in orphaned_views:
+                    curs.execute(f"DROP VIEW IF EXISTS {view_name}")
+                    curs.execute("DELETE FROM gpkg_contents WHERE table_name = ?", (view_name,))
+                    curs.execute("DELETE FROM gpkg_geometry_columns WHERE table_name = ?", (view_name,))
+
                 conn.commit()
         except Exception as ex:
             conn.rollback()
