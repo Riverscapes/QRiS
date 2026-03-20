@@ -376,10 +376,14 @@ class RSProject:
             # prepare the datasets
             geopackage_layers = []
             layer: EventLayer = None
+            added_layer_ids = set()
             for layer in event.event_layers:
                 fc_name = Layer.DCE_LAYER_NAMES.get(layer.layer.geom_type, None)
                 if fc_name is None:
                     continue
+                if layer.view_name in added_layer_ids:
+                    continue
+                added_layer_ids.add(layer.view_name)
                 layer_metadata_values = self.get_db_item_metadata(layer.layer)
                 gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=layer.view_name,
                                                 name=layer.name,
