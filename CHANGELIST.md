@@ -1,5 +1,11 @@
 # QRiS Plugin
 
+## [1.2.3.4] Mar 20 2026
+
+### Fixed
+- Fix Query Builder to support Numeric and Multilist type fields #990
+- Project XML sometimes created with duplicate spatial views #1015
+
 ## [1.2.3.3] Mar 17 2026
 
 ### Fixed
