@@ -1,7 +1,7 @@
 import os
 import json
 import datetime
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsProject, QgsVectorLayer, QgsRasterLayer
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsProject, QgsVectorLayer, QgsRasterLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import Project
@@ -46,7 +46,8 @@ class ZonalMetricsTask(QgsTask):
                     layer_def['type'] = 'raster'
                     self.map_layers.append(layer_def)
                 elif isinstance(layer, QgsVectorLayer):
-                    if layer.featureCount() > 0:
+                    # Skip non-spatial tables (e.g., attribute-only layers) that cannot be transformed.
+                    if layer.wkbType() != QgsWkbTypes.NoGeometry and layer.featureCount() > 0:
                         layer_def['type'] = 'vector'
                         self.map_layers.append(layer_def)
 
