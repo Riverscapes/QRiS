@@ -8,6 +8,7 @@ from qgis.PyQt.QtCore import QVariant
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
 
 from ..model.project import Project
 from ..model.analysis import Analysis
@@ -610,6 +611,10 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
             self.ax.set_xticks(x_indices)
             wrapped_labels = [textwrap.fill(lbl, width=15) for lbl in x_labels]
             self.ax.set_xticklabels(wrapped_labels, rotation=45, ha='right', fontsize=font_size*0.8, fontname=font_family)
+            # Avoid matplotlib's tiny default no-data y-range (+/- 0.05).
+            self.ax.set_ylim(-1.0, 1.0)
+            self.ax.set_yticks([-1.0, 0.0, 1.0])
+            self.ax.set_ylabel(ylabel, fontsize=font_size, fontname=font_family)
             self.canvas.draw()
             return
             
@@ -657,6 +662,29 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
             self.ax.errorbar(np.array(x_indices)[mask], np.array(y_plot)[mask], 
                             yerr=np.array(y_err_plot)[mask] if y_err else None, 
                             fmt='o', capsize=5, ecolor='red')
+
+        finite_values = np.array(y_plot)[np.isfinite(y_plot)]
+        if finite_values.size > 0:
+            finite_indices = np.where(np.isfinite(y_plot))[0]
+            finite_errors = np.array([y_err_plot[i] for i in finite_indices], dtype=float)
+
+            y_low = float(np.min(finite_values - finite_errors))
+            y_high = float(np.max(finite_values + finite_errors))
+            center = (y_low + y_high) / 2.0
+            span = y_high - y_low
+
+            # Keep scale readable when values are identical or very similar.
+            min_span = max(1.0, abs(center) * 0.02)
+            target_span = max(span, min_span)
+            padding = max(target_span * 0.10, 0.05)
+            half_range = (target_span / 2.0) + padding
+
+            if np.allclose(finite_values, 0.0):
+                self.ax.set_ylim(-1.0, 1.0)
+                self.ax.set_yticks([-1.0, 0.0, 1.0])
+            else:
+                self.ax.set_ylim(center - half_range, center + half_range)
+                self.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
 
         # Trendline - only use valid points
         if getattr(self, "action_chk_trendline", None) and self.action_chk_trendline.isChecked():
