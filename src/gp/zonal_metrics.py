@@ -91,7 +91,9 @@ class ZonalMetrics:
         metrics = {}
         for layer in self.layers:
             if layer['type'] == 'vector':
-                metrics[layer['name']] = self.process_vector(layer)
+                metric = self.process_vector(layer)
+                if metric is not None:
+                    metrics[layer['name']] = metric
             else:
                 metric = self.process_raster(layer)
                 if metric is not None:
@@ -109,7 +111,12 @@ class ZonalMetrics:
         else:
             ds = ogr.Open(layer_def['url'])
             layer = ds.GetLayer(0)
+        if layer is None:
+            return None
+
         src_srs = layer.GetSpatialRef()
+        if src_srs is None:
+            return None
 
         dst_srs = osr.SpatialReference()
         dst_srs.ImportFromEPSG(self.utm_epsg)
