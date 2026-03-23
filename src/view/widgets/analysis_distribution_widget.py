@@ -45,6 +45,8 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.active_scope_layer = None
         self.active_event_layer = None
         self.current_distribution_data = None
+        self.current_attribute_feature_counts = {}
+        self.attribute_sort_mode = "alpha"
         
         # Chart Settings
         self.chart_font_family = "Sans Serif"
@@ -100,12 +102,24 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
 
         # Attribute Selection Buttons
         self.hbox_attr_buttons = QtWidgets.QHBoxLayout()
-        self.hbox_attr_buttons.addStretch() # Push buttons to the right
+        self.hbox_attr_buttons.setSpacing(6)
+
+        self.btnSortAlpha = QtWidgets.QPushButton("Sort Alphabetical (A-Z)")
+        self.btnSortAlpha.clicked.connect(self.sort_attributes_alphabetical)
+        self.btnSortByCount = QtWidgets.QPushButton("Sort By Feature Count (Desc.)")
+        self.btnSortByCount.clicked.connect(self.sort_attributes_by_count_desc)
+        self.hbox_attr_buttons.addWidget(self.btnSortAlpha)
+        self.hbox_attr_buttons.addWidget(self.btnSortByCount)
+
+        self.hbox_attr_buttons.addStretch() # Keep sort buttons left and select buttons right
         
+        self.btnSelectNonEmpty = QtWidgets.QPushButton("Select Non-Empty")
+        self.btnSelectNonEmpty.clicked.connect(self.select_non_empty_attributes)
         self.btnSelectAll = QtWidgets.QPushButton("Select All")
         self.btnSelectAll.clicked.connect(self.select_all_attributes)
         self.btnSelectNone = QtWidgets.QPushButton("Select None")
         self.btnSelectNone.clicked.connect(self.select_none_attributes)
+        self.hbox_attr_buttons.addWidget(self.btnSelectNonEmpty)
         self.hbox_attr_buttons.addWidget(self.btnSelectAll)
         self.hbox_attr_buttons.addWidget(self.btnSelectNone)
         self.layout_attributes.addLayout(self.hbox_attr_buttons)
@@ -711,12 +725,46 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
     def select_none_attributes(self):
         self.set_attributes_check_state(QtCore.Qt.Unchecked)
 
+    def select_non_empty_attributes(self):
+        self.lstAttributes.blockSignals(True)
+        for i in range(self.lstAttributes.count()):
+            item = self.lstAttributes.item(i)
+            key = item.data(QtCore.Qt.UserRole)
+            if key is None:
+                key = item.text()
+            feature_count = self.current_attribute_feature_counts.get(str(key), 0)
+            state = QtCore.Qt.Checked if feature_count > 0 else QtCore.Qt.Unchecked
+            item.setCheckState(state)
+        self.lstAttributes.blockSignals(False)
+        self.draw_chart()
+
     def set_attributes_check_state(self, state):
         self.lstAttributes.blockSignals(True)
         for i in range(self.lstAttributes.count()):
             item = self.lstAttributes.item(i)
             item.setCheckState(state)
         self.lstAttributes.blockSignals(False)
+        self.draw_chart()
+
+    def get_sorted_attribute_keys(self, keys):
+        key_texts = [str(k) for k in keys]
+
+        if self.attribute_sort_mode == "count_desc":
+            return sorted(
+                key_texts,
+                key=lambda k: (-self.current_attribute_feature_counts.get(k, 0), k.lower())
+            )
+
+        return sorted(key_texts, key=lambda k: k.lower())
+
+    def sort_attributes_alphabetical(self):
+        self.attribute_sort_mode = "alpha"
+        self.populate_attributes_list(self.current_attribute_feature_counts.keys())
+        self.draw_chart()
+
+    def sort_attributes_by_count_desc(self):
+        self.attribute_sort_mode = "count_desc"
+        self.populate_attributes_list(self.current_attribute_feature_counts.keys())
         self.draw_chart()
 
     def populate_attributes_list(self, keys):
@@ -726,18 +774,24 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             for i in range(self.lstAttributes.count()):
                 item = self.lstAttributes.item(i)
                 if item.checkState() == QtCore.Qt.Unchecked:
-                    current_unchecked.add(item.text())
+                    key = item.data(QtCore.Qt.UserRole)
+                    if key is None:
+                        key = item.text()
+                    current_unchecked.add(str(key))
         
         self.lstAttributes.blockSignals(True)
         self.lstAttributes.clear()
         
-        sorted_keys = sorted(keys)
+        sorted_keys = self.get_sorted_attribute_keys(keys)
         for key in sorted_keys:
             # Create Checkbox Item
-            item = QtWidgets.QListWidgetItem(str(key))
+            key_text = str(key)
+            feature_count = self.current_attribute_feature_counts.get(key_text, 0)
+            item = QtWidgets.QListWidgetItem(f"{key_text} ({feature_count})")
+            item.setData(QtCore.Qt.UserRole, key_text)
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
             
-            if str(key) in current_unchecked:
+            if key_text in current_unchecked:
                 item.setCheckState(QtCore.Qt.Unchecked)
             else:
                 item.setCheckState(QtCore.Qt.Checked)
@@ -774,6 +828,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             
         # Initialize distribution with known categories (values/lookup)
         distribution = {}
+        feature_counts = {}
         lookup_map = {} # ID (str) -> Label
         
         # Find field definition
@@ -789,6 +844,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             if 'values' in field_def:
                 for val in field_def['values']:
                     distribution[str(val)] = 0
+                    feature_counts[str(val)] = 0
             
             # 2. Check 'lookup' table
             elif 'lookup' in field_def:
@@ -799,6 +855,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     lkp = self.qris_project.lookup_tables[lookup_name]
                     for item in lkp.values():
                         distribution[item.name] = 0
+                        feature_counts[item.name] = 0
                         # Store lookup map for value resolution
                         lookup_map[str(item.id)] = item.name
         
@@ -936,8 +993,10 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                      amount = da.measureArea(intersection)
                 
             distribution[val] = distribution.get(val, 0) + amount
+            feature_counts[val] = feature_counts.get(val, 0) + 1
             total_amount += amount
 
+        self.current_attribute_feature_counts = feature_counts
         self.current_distribution_data = (
             distribution, total_amount, event_layer, 
             metric_field, scope_measure, measure_type
@@ -992,7 +1051,10 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             for i in range(self.lstAttributes.count()):
                 item = self.lstAttributes.item(i)
                 if item.checkState() == QtCore.Qt.Checked:
-                    checked_keys.add(item.text())
+                    key = item.data(QtCore.Qt.UserRole)
+                    if key is None:
+                        key = item.text()
+                    checked_keys.add(str(key))
             sorted_keys = sorted([k for k in distribution.keys() if k in checked_keys])
         else:
             sorted_keys = sorted(distribution.keys())
