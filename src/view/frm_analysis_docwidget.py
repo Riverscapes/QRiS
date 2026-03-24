@@ -26,7 +26,7 @@ import os
 import traceback
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
-from qgis.core import Qgis, QgsMessageLog
+from qgis.core import Qgis, QgsMessageLog, QgsApplication
 from qgis.gui import QgisInterface
 
 from ..model.project import Project
@@ -42,11 +42,12 @@ from ..model.metric_value import MetricValue, load_metric_values
 from ..lib.unit_conversion import short_unit_name
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError
+from ..gp.analysis_metrics_task import AnalysisMetricsTask
 from ..QRiS.path_utilities import parse_posix_path
 
 from .utilities import add_help_button
 from .frm_metric_value import FrmMetricValue
-from .frm_calculate_all_metrics import FrmCalculateAllMetrics
+from .frm_metric_calculate_all import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_analysis_units import FrmAnalysisUnits
@@ -68,6 +69,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.resize(500, 1000)
 
         self.frmMetricValue = None
+        self.metrics_task = None
+        self.metrics_task_context = None
+        self._calculate_button_default_text = 'Calculate...'
 
         self.destroyed.connect(self.cleanup_connections)
 
@@ -124,80 +128,85 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         if result == QtWidgets.QDialog.Accepted:
             sample_frame_features = [self.cboSampleFrame.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(QtCore.Qt.UserRole)]
             data_capture_events = [self.cboEvent.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboEvent.count())] if frm.rdoAllDCE.isChecked() else [self.cboEvent.currentData(QtCore.Qt.UserRole)]
+            sample_frame_ids = [sf.id for sf in sample_frame_features if sf is not None]
+            event_ids = [event.id for event in data_capture_events if event is not None]
+            metric_ids = list(self.analysis.analysis_metrics.keys())
 
-            errors = False
-            missing_data = False
-            analysis_params = {}
-            centerline = self.analysis.metadata.get('centerline', None)
-            if centerline is not None and centerline in self.qris_project.profiles:
-                analysis_params['centerline'] = self.qris_project.profiles[centerline]
-            dem = self.analysis.metadata.get('dem', None)
-            if dem is not None and dem in self.qris_project.rasters:
-                analysis_params['dem'] = self.qris_project.rasters[dem]
-            valley_bottom = self.analysis.metadata.get('valley_bottom', None)
-            if valley_bottom is not None and valley_bottom in self.qris_project.valley_bottoms: 
-                analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[valley_bottom]
+            if len(sample_frame_ids) < 1 or len(event_ids) < 1 or len(metric_ids) < 1:
+                self.iface.messageBar().pushMessage('Metrics', 'Nothing selected to calculate.', level=Qgis.Warning)
+                return
 
-            for sample_frame_feature in sample_frame_features:
-                for data_capture_event in data_capture_events:
-                    metric_values = load_metric_values(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, self.qris_project.metrics)
-                    for analysis_metric in self.analysis.analysis_metrics.values():
-                        metric: Metric = analysis_metric.metric
-                        metric_value: MetricValue = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
-                        if metric_value.automated_value is not None and not frm.chkOverwrite.isChecked():
-                            continue
-                        if metric.metric_function is None:
-                            # Metric is not defined in database. continue
-                            continue
-                        if metric.can_calculate_automated(self.qris_project, data_capture_event.id, self.analysis.id) is False:
-                            QgsMessageLog.logMessage(f'Unable to calculate metric {metric.name} for {data_capture_event.name} due to missing required layer in the data capture event.', 'QRiS_Metrics', Qgis.Warning)
-                            continue
-                        try:
-                            metric_calculation = getattr(analysis_metrics, metric.metric_function)
-                            result = metric_calculation(self.qris_project.project_file, sample_frame_feature.id, data_capture_event.id, metric.metric_params, analysis_params)
-                            metric_value.automated_value = result
-                            if frm.chkForceActive.isChecked():
-                                metric_value.is_manual = False
-                            
-                            # Clear any previous errors
-                            if metric_value.metadata is None:
-                                metric_value.metadata = {}
-                            metric_value.metadata.pop('calculation_error', None)
-                            
-                            metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
-                            QgsMessageLog.logMessage(f'Successfully calculated metric {metric.name} for {data_capture_event.name} sample frame {sample_frame_feature.id}', 'QRiS_Metrics', Qgis.Info)
-                        except MetricInputMissingError as ex:
-                            missing_data = True
-                            QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
-                            
-                            # Persist Error
-                            if metric_value.metadata is None:
-                                metric_value.metadata = {}
-                            metric_value.metadata['calculation_error'] = str(ex)
-                            metric_value.automated_value = None
-                            metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
-                            
-                            continue
-                        except Exception as ex:
-                            errors = True
-                            QgsMessageLog.logMessage(f'Error calculating metric {metric.name}: {ex}', 'QRiS_Metrics', Qgis.Warning)
+            if self.metrics_task is not None:
+                self.iface.messageBar().pushMessage('Metrics', 'A metric calculation task is already running.', level=Qgis.Warning)
+                return
 
-                            # Persist Error
-                            if metric_value.metadata is None:
-                                metric_value.metadata = {}
-                            metric_value.metadata['calculation_error'] = str(ex)
-                            metric_value.automated_value = None
-                            metric_value.save(self.qris_project.project_file, self.analysis, data_capture_event, sample_frame_feature.id, metric.default_unit_id)
+            self.metrics_task = AnalysisMetricsTask(
+                self.qris_project,
+                self.analysis,
+                sample_frame_ids,
+                event_ids,
+                metric_ids,
+                overwrite_existing=frm.chkOverwrite.isChecked(),
+                force_active=frm.chkForceActive.isChecked(),
+            )
+            self.metrics_task_context = {'mode': 'bulk'}
+            self.metrics_task.on_complete.connect(self.on_metrics_task_complete)
+            self.metrics_task.progressChanged.connect(self.on_metrics_task_progress)
 
-                            continue
-            if errors is False and missing_data is False:
-                self.iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
-            else:
-                if missing_data is True:
-                    self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to missing data requirements. See log for details.', level=Qgis.Success)
-                if errors is True:
-                    self.iface.messageBar().pushMessage('Metrics', 'Onr or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
+            self.cmdCalculate.setEnabled(False)
+            self.cmdCalculate.setText('Calculating... 0%')
+            self.iface.messageBar().pushMessage('Metrics', 'Metric calculation started in the background.', level=Qgis.Info)
+            QgsApplication.taskManager().addTask(self.metrics_task)
+
+    def on_metrics_task_progress(self, progress: float):
+        if self.metrics_task is not None and (self.metrics_task_context or {}).get('mode') == 'bulk':
+            self.cmdCalculate.setText(f'Calculating... {int(progress)}%')
+
+    def on_metrics_task_complete(self, summary: dict):
+
+        for message in summary.get('messages', []):
+            QgsMessageLog.logMessage(message['text'], 'QRiS_Metrics', message['level'])
+
+        task_context = self.metrics_task_context or {'mode': 'bulk'}
+        self.metrics_task_context = None
+        self.metrics_task = None
+        self.cmdCalculate.setEnabled(True)
+        self.cmdCalculate.setText(self._calculate_button_default_text)
+
+        if summary.get('canceled', False):
+            self.iface.messageBar().pushMessage('Metrics', 'Metric calculation canceled.', level=Qgis.Warning)
             self.load_table_values()
+            return
+
+        if summary.get('exception', None) is not None:
+            self.iface.messageBar().pushMessage('Metrics', 'Metric calculation ended with an error. See log for details.', level=Qgis.Warning)
+            self.load_table_values()
+            return
+
+        if task_context.get('mode') == 'single':
+            has_missing = summary.get('missing_data', 0) > 0
+            has_errors = summary.get('errors', 0) > 0
+            if not has_missing and not has_errors:
+                self.iface.messageBar().pushMessage('Metrics', 'Metric successfully calculated.', level=Qgis.Success)
+            else:
+                if has_missing:
+                    self.iface.messageBar().pushMessage('Metrics', 'Metric was not calculated due to missing data requirements. See log for details.', level=Qgis.Warning)
+                if has_errors:
+                    self.iface.messageBar().pushMessage('Metrics', 'Metric was not calculated due to a processing error. See log for details.', level=Qgis.Warning)
+            self.load_table_values()
+            return
+
+        has_missing = summary.get('missing_data', 0) > 0
+        has_errors = summary.get('errors', 0) > 0
+        if not has_missing and not has_errors:
+            self.iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
+        else:
+            if has_missing:
+                self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to missing data requirements. See log for details.', level=Qgis.Success)
+            if has_errors:
+                self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
+
+        self.load_table_values()
 
     def export_table(self):
 
@@ -233,61 +242,33 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
-        
-        if metric_value is None:
-             # Create new metric value instance (in memory, will be saved)
-             metric = analysis_metric.metric
-             metric_value = MetricValue(metric, None, None, False, None, '', None, None)
-        
-        if analysis_metric.metric.metric_function is None:
-             return
 
-        # Gathering params 
-        metric_params: dict = analysis_metric.metric.metric_params
-        analysis_params = {}
-        centerline = self.analysis.metadata.get('centerline', None)
-        if centerline is not None and centerline in self.qris_project.profiles:
-            analysis_params['centerline'] = self.qris_project.profiles[centerline]
-        dem = self.analysis.metadata.get('dem', None)
-        if dem is not None and dem in self.qris_project.rasters:
-            analysis_params['dem'] = self.qris_project.rasters[dem]
-        valley_bottom = self.analysis.metadata.get('valley_bottom', None)
-        if valley_bottom is not None and valley_bottom in self.qris_project.valley_bottoms: 
-            analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[valley_bottom]
-        
-        metric_calculation = getattr(analysis_metrics, analysis_metric.metric.metric_function)
-        
-        try:
-            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-            
-            result = metric_calculation(self.qris_project.project_file, mask_feature.id, event.id, metric_params, analysis_params)
-            metric_value.automated_value = result
-            metric_value.is_manual = False 
-            
-            # Clear any previous errors
-            if metric_value.metadata is None:
-                metric_value.metadata = {}
-            metric_value.metadata.pop('calculation_error', None)
-            
-            metric_value.save(self.qris_project.project_file, self.analysis, event, mask_feature.id)
-            
-            QtWidgets.QApplication.restoreOverrideCursor()
-            
-            self.load_table_values()
-            
-        except Exception as ex:
-            # Persist Error
-            if metric_value.metadata is None:
-                metric_value.metadata = {}
-            metric_value.metadata['calculation_error'] = str(ex)
-            metric_value.automated_value = None
-            metric_value.save(self.qris_project.project_file, self.analysis, event, mask_feature.id)
-            
-            QtWidgets.QApplication.restoreOverrideCursor()
-            # QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
-            QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)
-            
-            self.load_table_values()
+        if event is None or mask_feature is None:
+            return
+
+        metric = analysis_metric.metric
+        if metric.metric_function is None:
+            return
+
+        if self.metrics_task is not None:
+            self.iface.messageBar().pushMessage('Metrics', 'A metric calculation task is already running.', level=Qgis.Warning)
+            return
+
+        self.metrics_task = AnalysisMetricsTask(
+            self.qris_project,
+            self.analysis,
+            [mask_feature.id],
+            [event.id],
+            [metric.id],
+            overwrite_existing=True,
+            force_active=True,
+        )
+        self.metrics_task_context = {'mode': 'single', 'metric_id': metric.id}
+        self.metrics_task.on_complete.connect(self.on_metrics_task_complete)
+        self.metrics_task.progressChanged.connect(self.on_metrics_task_progress)
+
+        self.cmdCalculate.setEnabled(False)
+        QgsApplication.taskManager().addTask(self.metrics_task)
 
     def resizeEvent(self, event):
         try:
@@ -301,6 +282,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         super().resizeEvent(event)
 
     def closeEvent(self, event):
+        if self.metrics_task is not None:
+            self.metrics_task.cancel()
         self.closing.emit()
         for signal in list(self.connections.keys()):
             signal.disconnect(self.connections.pop(signal))
