@@ -2,10 +2,10 @@ import traceback
 import json
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import Qgis, QgsMessageLog, QgsUnitTypes
+from qgis.core import Qgis, QgsMessageLog, QgsUnitTypes, QgsApplication
 
 from ..model.project import Project
-from ..model.metric_value import MetricValue
+from ..model.metric_value import MetricValue, load_metric_values
 from ..model.metric import Metric
 from ..model.analysis import Analysis, format_feasibility_text
 from ..model.event import Event
@@ -14,7 +14,7 @@ from .utilities import add_standard_form_buttons
 from .frm_layer_metric_details import FrmLayerMetricDetails
 from .widgets.metadata import MetadataWidget
 from ..lib.unit_conversion import convert_units, convert_count_per_length, convert_count_per_area, unit_types
-from ..gp import analysis_metrics
+from ..gp.analysis_metrics_task import AnalysisMetricsTask
 
 UNCERTAINTY_NONE = 'None'
 UNCERTAINTY_PLUS_MINUS = 'Plus/Minus'
@@ -35,6 +35,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.analysis = analysis
         self.data_capture_event = event
         self.sample_frame_id = sample_frame_id
+        self.metrics_task = None
 
         if self.metric_value.metadata:
              self.metadata_widget.load_json(json.dumps(self.metric_value.metadata))
@@ -281,6 +282,10 @@ class FrmMetricValue(QtWidgets.QDialog):
 
     def accept(self):
 
+        if self.metrics_task is not None:
+            QtWidgets.QMessageBox.warning(self, 'Metric Calculation In Progress', 'Please wait for calculation to complete before saving.')
+            return
+
         # Save Manual Value (Convert from Display Unit back to Base SI)
         # self.valManual.value() is in self.current_unit
         display_val = self.valManual.value()
@@ -377,37 +382,75 @@ class FrmMetricValue(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', 'No metric calculation function defined.')
             return
 
-        # modify metric params as needed.
-        metric_params: dict = self.metric_value.metric.metric_params
-        analysis_params = {}
-        centerline = self.analysis.metadata.get('centerline', None)
-        if centerline is not None and centerline in self.qris_project.profiles:
-            analysis_params['centerline'] = self.qris_project.profiles[centerline]
-        dem = self.analysis.metadata.get('dem', None)
-        if dem is not None and dem in self.qris_project.rasters:
-            analysis_params['dem'] = self.qris_project.rasters[dem]
-        valley_bottom = self.analysis.metadata.get('valley_bottom', None)
-        if valley_bottom is not None and valley_bottom in self.qris_project.valley_bottoms: 
-            analysis_params['valley_bottom'] = self.qris_project.valley_bottoms[valley_bottom]
+        if self.metrics_task is not None:
+            QtWidgets.QMessageBox.information(self, 'Metric Calculation', 'A metric calculation task is already running.')
+            return
 
-        metric_calculation = getattr(analysis_metrics, self.metric_value.metric.metric_function)
-        try:
-            # Result IS SI (Base Units)
-            result = metric_calculation(self.qris_project.project_file, self.sample_frame_id, self.data_capture_event.id, metric_params, analysis_params)
-            self.metric_value.automated_value = result
-        except Exception as ex:
-            QtWidgets.QMessageBox.warning(self, f'Error Calculating Metric', f'{ex}\n\nSee log for additional details.')
-            QgsMessageLog.logMessage(str(traceback.format_exc()), f'QRiS_Metrics', level=Qgis.Warning)
-            self.txtAutomated.setText(None)
+        self.actionCalculate.setEnabled(False)
+        self.txtAutomated.setText('Calculating...')
+
+        self.metrics_task = AnalysisMetricsTask(
+            self.qris_project,
+            self.analysis,
+            [self.sample_frame_id],
+            [self.data_capture_event.id],
+            [self.metric_value.metric.id],
+            overwrite_existing=True,
+            force_active=True,
+        )
+        self.metrics_task.on_complete.connect(self.on_metrics_task_complete)
+        self.metrics_task.progressChanged.connect(self.on_metrics_task_progress)
+        QgsApplication.taskManager().addTask(self.metrics_task)
+
+    def on_metrics_task_progress(self, progress: float):
+        if self.metrics_task is not None:
+            self.txtAutomated.setText(f'Calculating... {int(progress)}%')
+
+    def on_metrics_task_complete(self, summary: dict):
+        self.metrics_task = None
+        self.actionCalculate.setEnabled(True)
+
+        for message in summary.get('messages', []):
+            QgsMessageLog.logMessage(message['text'], 'QRiS_Metrics', message['level'])
+
+        if summary.get('canceled', False):
+            self.txtAutomated.setText('')
+            return
+
+        if summary.get('exception', None) is not None or summary.get('errors', 0) > 0:
+            QtWidgets.QMessageBox.warning(self, 'Error Calculating Metric', 'Metric calculation failed. See log for additional details.')
+            self.txtAutomated.setText('')
             self.rdoManual.setChecked(True)
             self.rdoAutomated.setEnabled(False)
             return
 
-        # Display result formatted to current display unit
-        self.update_automated_text(result)
-        
+        refreshed_values = load_metric_values(
+            self.qris_project.project_file,
+            self.analysis,
+            self.data_capture_event,
+            self.sample_frame_id,
+            self.qris_project.metrics,
+        )
+        refreshed_metric_value = refreshed_values.get(self.metric_value.metric.id, None)
+
+        if refreshed_metric_value is None or refreshed_metric_value.automated_value is None:
+            self.txtAutomated.setText('')
+            self.rdoManual.setChecked(True)
+            self.rdoAutomated.setEnabled(False)
+            return
+
+        self.metric_value.automated_value = refreshed_metric_value.automated_value
+        self.metric_value.metadata = refreshed_metric_value.metadata
+        self.metric_value.is_manual = refreshed_metric_value.is_manual
+
+        self.update_automated_text(self.metric_value.automated_value)
         self.rdoAutomated.setChecked(True)
         self.rdoAutomated.setEnabled(True)
+
+    def closeEvent(self, event):
+        if self.metrics_task is not None:
+            self.metrics_task.cancel()
+        super().closeEvent(event)
 
     def setupUi(self):
 
