@@ -119,15 +119,26 @@ def get_clipped_input_geom(project_file, sample_frame_feature_id, db_item: DBIte
 
     return clipped_geom
 
-def get_dce_layer_source(project_file: str, machine_code: str) -> tuple[str, int]:
+def get_dce_layer_source(project_file: str, machine_code: str, event_id: int = None) -> tuple[str, int]:
 
     with sqlite3.connect(project_file, timeout=10.0) as conn:
         c = conn.cursor()
-        c.execute(f"SELECT id, geom_type FROM layers WHERE fc_name = '{machine_code}'")
-        layer_data = c.fetchone()
+        layer_data = None
+        if event_id is not None:
+            # Scope lookup to the specific event's layer assignments — always accurate
+            c.execute("""
+                SELECT l.id, l.geom_type
+                FROM event_layers el
+                JOIN layers l ON l.id = el.layer_id
+                WHERE el.event_id = ? AND l.fc_name = ?
+            """, (event_id, machine_code))
+            layer_data = c.fetchone()
+        if layer_data is None:
+            # Fallback: unscoped lookup (used when event_id not supplied)
+            c.execute('SELECT id, geom_type FROM layers WHERE fc_name = ?', (machine_code,))
+            layer_data = c.fetchone()
         if layer_data is None:
             return None, None
-            # raise MetricInputMissingError(f'Required Layer {machine_code} not found in project.')
         layer_id = layer_data[0]
         geom_type = layer_data[1]
         layer_source = Layer.DCE_LAYER_NAMES[geom_type]
@@ -168,7 +179,7 @@ def get_metric_layer_features(
             layer: ogr.Layer = ds.GetLayerByName(db_item.fc_name)
             layer.SetAttributeFilter(f"{db_item.fc_id_column_name} = {db_item.id}")
         else:
-            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'])
+            layer_id, layer_name = get_dce_layer_source(project_file, metric_layer['layer_id_ref'], event_id)
             if layer_id is None:
                 return None
             ds: ogr.DataSource = ogr.Open(project_file)
