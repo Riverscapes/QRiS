@@ -92,7 +92,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 selected_events = analysis.metadata.get('selected_events', None)
                 if selected_events is not None:
                     # Create ordered list of events
-                    all_events = [e for e in self.qris_project.events.values() if e.event_type.id == DCE_EVENT_TYPE_ID]
+                    all_events = [e for e in self.qris_project.events.values() if e.event_type.id in [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]]
                     event_map = {e.id: e for e in all_events}
                     
                     ordered_events = []
