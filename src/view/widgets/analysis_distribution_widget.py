@@ -1,4 +1,7 @@
+import re
+import json
 import sqlite3
+import xml.etree.ElementTree as ET
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -13,12 +16,7 @@ from qgis.core import (
     QgsMessageLog, 
     QgsDistanceArea, 
     QgsGeometry, 
-    QgsFeatureRequest, 
-    QgsLayerTreeGroup,
-    QgsVectorFileWriter,
-    QgsField,
-    QgsFeature,
-    QgsCoordinateTransformContext
+    QgsFeatureRequest
 )
 
 from ...model.project import Project
@@ -493,7 +491,35 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.draw_chart()
 
     def toggle_interactive(self):
+        # If interactive mode is turned off, remove active layers and clean empty groups.
+        if not self.chkInteractive.isChecked():
+            self.cleanup_interactive_layers()
+
         self.update_map()
+
+    def cleanup_interactive_layers(self):
+        project = QgsProject.instance()
+
+        for layer in [self.active_scope_layer, self.active_event_layer]:
+            if layer and layer.id() in project.mapLayers():
+                node = project.layerTreeRoot().findLayer(layer.id())
+                parent_grp = node.parent() if node else None
+                project.removeMapLayer(layer.id())
+                if parent_grp and self.map_manager and hasattr(self.map_manager, 'remove_empty_groups'):
+                    self.map_manager.remove_empty_groups(parent_grp)
+
+        self.active_scope_layer = None
+        self.active_event_layer = None
+
+    def hideEvent(self, event):
+        # Ensure transient interactive map layers/groups are removed when widget is hidden.
+        self.cleanup_interactive_layers()
+        super().hideEvent(event)
+
+    def closeEvent(self, event):
+        # Ensure transient interactive map layers/groups are removed when widget is closed.
+        self.cleanup_interactive_layers()
+        super().closeEvent(event)
 
     def update_map(self):
         # Allow enabling/disabling via checkbox
@@ -516,10 +542,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 project.removeMapLayer(layer.id())
                 
                 if parent_grp:
-                    # Clean up empty group if name matches pattern (optional safety)
-                    if not parent_grp.children() and parent_grp != project.layerTreeRoot():
-                         # We don't remove groups aggressively here to be safe
-                         pass
+                    # Remove any now-empty parent/ancestor groups for layers added by map_manager.
+                    if self.map_manager and hasattr(self.map_manager, 'remove_empty_groups'):
+                        self.map_manager.remove_empty_groups(parent_grp)
         
         # Handle Scope Layer
         scope_item = self.cmbScope.currentData()
@@ -645,73 +670,156 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
 
     def get_layer_colors(self, event_layer_item, attribute_name):
         colors = {}
-        
-        # User requested QML as source of truth
+
         if not self.map_manager:
-             return colors
+            return colors
 
         qml_path = self.map_manager.get_symbology_qml(event_layer_item.layer.qml)
         if not qml_path or not QtCore.QFile.exists(qml_path):
-             return colors
+            return colors
+
+        def parse_qgis_color(value_str):
+            """Parse a QGIS color string to QColor. Handles three formats:
+              - "R,G,B,A"  (QGIS 3 mid-era, e.g. "43,131,186,255")
+              - "R,G,B,A,rgb:r,g,b,a"  (QGIS 3 newer, extended form)
+              - legacy prop format "R,G,B,A" from <prop k="color"> elements
+            Returns QColor or None if not parseable or fully transparent."""
+            # Strip any trailing rgb:/hsv: extended portion (starts after the 4th comma)
+            raw = value_str.split('rgb:')[0].split('hsv:')[0].split('hsl:')[0].rstrip(',')
+            parts = raw.split(',')
+            if len(parts) >= 4:
+                try:
+                    r, g, b, a = int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3])
+                    if a > 0:
+                        return QtGui.QColor(r, g, b, a)
+                except (ValueError, IndexError):
+                    pass
+            return None
 
         try:
-             # Load QML into a temporary memory layer to parse style safely
-            geom_type = event_layer_item.layer.geom_type
-            if geom_type == 'Linestring': geom_type = 'LineString'
-            
-            temp_layer = QgsVectorLayer(f"{geom_type}?crs=epsg:4326", "temp_loader", "memory")
-            if not temp_layer.isValid():
+            tree = ET.parse(qml_path)
+            qml_root = tree.getroot()
+
+            renderer_el = qml_root.find('.//renderer-v2')
+            if renderer_el is None:
                 return colors
-                
-            # Load style (only renderer needed)
-            temp_layer.loadNamedStyle(qml_path)
-            
-            renderer = temp_layer.renderer()
-            if not renderer:
-                return colors
-                
-            # Handle Categorized
-            if renderer.type() == 'categorizedSymbol':
-                # Check attribute match (case insensitive, strip quotes)
-                r_attr = renderer.classAttribute().replace('"', '').replace("'", "")
-                
-                # Check if attributes match OR if we should just trust the categories if the attribute is empty 
-                # (sometimes happens with expressions)
-                if r_attr.lower() != attribute_name.lower():
-                    QgsMessageLog.logMessage(f"Symbology attribute '{r_attr}' does not match metric '{attribute_name}' - attempting to use colors anyway.", "QRiS", Qgis.Info)
 
-                for cat in renderer.categories():
-                    val = str(cat.value())
-                    lbl = cat.label()
-                    
-                    # Store color by Value AND Label to catch all cases
-                    colors[val] = cat.symbol().color()
-                    if lbl:
-                        colors[lbl] = cat.symbol().color()
+            renderer_type = renderer_el.get('type')
 
-            # Handle Single Symbol (apply to all)
-            elif renderer.type() == 'singleSymbol':
-                color = renderer.symbol().color()
-                colors['__default__'] = color
+            # Build symbol id -> QColor map from the <symbols> block.
+            # Each symbol has stacked marker/line/fill layers; layers may be transparent
+            # placeholders. We search only within the direct <Option type="Map"> properties
+            # block of each layer — NOT recursively — to avoid picking up colors from effects
+            # or data_defined_properties sub-elements.
+            # Two sub-formats exist across QGIS versions:
+            #   Modern:  layer > <Option type="Map"> > <Option name="color" value="R,G,B,A[,rgb:...]"/>
+            #   Legacy:  layer > <prop k="color" v="R,G,B,A"/>
 
-            # Handle RuleBased - Try to match labels to values
-            elif renderer.type() == 'RuleRenderer':
-                root = renderer.rootRule()
-                # Recursively get rules from groups
-                def get_rules(parent_rule):
-                    rules = []
-                    for child in parent_rule.children():
-                         if child.symbol(): # It's a drawing rule
-                             rules.append(child)
-                         # Recurse for groups
-                         rules.extend(get_rules(child))
-                    return rules
+            def layer_prop_color(layer_el, key):
+                """Return parse_qgis_color for `key` from a layer's direct property Map.
+                Checks modern <Option type="Map"> children first, then legacy <prop> elements.
+                Returns None if not found or fully transparent."""
+                opt_map = layer_el.find('Option[@type="Map"]')
+                if opt_map is not None:
+                    opt = opt_map.find(f'Option[@name="{key}"]')
+                    if opt is not None:
+                        return parse_qgis_color(opt.get('value', ''))
+                for prop in layer_el.findall('prop'):
+                    if prop.get('k') == key:
+                        return parse_qgis_color(prop.get('v', ''))
+                return None
 
-                for rule in get_rules(root):
-                     colors[rule.label()] = rule.symbol().color()
+            symbol_colors = {}
+            for sym_el in renderer_el.findall('.//symbols/symbol'):
+                sym_name = sym_el.get('name')
+                sym_type = (sym_el.get('type') or '').lower()
+                color = None
+
+                if sym_type == 'line':
+                    # Line symbols often have a wide casing layer plus a thinner colored
+                    # core layer. Pick line_color from the thinnest layer so the category
+                    # hue is used rather than the white/neutral casing.
+                    thinnest_width = None
+                    thinnest_color = None
+                    for layer_el in sym_el.findall('layer'):
+                        lc = layer_prop_color(layer_el, 'line_color')
+                        lw_str = None
+                        opt_map = layer_el.find('Option[@type="Map"]')
+                        if opt_map is not None:
+                            lw_opt = opt_map.find('Option[@name="line_width"]')
+                            if lw_opt is not None:
+                                lw_str = lw_opt.get('value')
+                        if lw_str is None:
+                            for prop in layer_el.findall('prop'):
+                                if prop.get('k') == 'line_width':
+                                    lw_str = prop.get('v')
+                        if lc is not None:
+                            try:
+                                lw = float(lw_str) if lw_str is not None else 999999.0
+                            except (TypeError, ValueError):
+                                lw = 999999.0
+                            if thinnest_width is None or lw < thinnest_width:
+                                thinnest_width = lw
+                                thinnest_color = lc
+                    color = thinnest_color or layer_prop_color(sym_el.find('layer') or sym_el, 'color')
+
+                else:
+                    # Marker and fill symbols: find the first stacked layer whose main
+                    # 'color' property is opaque. Layer 0 is often a transparent glow/casing;
+                    # layer 1 is the visible fill color.
+                    for layer_el in sym_el.findall('layer'):
+                        color = layer_prop_color(layer_el, 'color')
+                        if color:
+                            break
+
+                if color and sym_name is not None:
+                    symbol_colors[sym_name] = color
+
+            if renderer_type == 'categorizedSymbol':
+                for cat_el in renderer_el.findall('.//categories/category'):
+                    val = cat_el.get('value', '')
+                    lbl = cat_el.get('label', '')
+                    sym_ref = cat_el.get('symbol')
+                    color = symbol_colors.get(sym_ref)
+                    if color:
+                        colors[val] = color
+                        if lbl:
+                            colors[lbl] = color
+
+            elif renderer_type == 'singleSymbol':
+                if symbol_colors:
+                    colors['__default__'] = next(iter(symbol_colors.values()))
+
+            elif renderer_type == 'RuleRenderer':
+                def parse_rules(rules_el):
+                    for rule_el in rules_el:
+                        if rule_el.tag != 'rule':
+                            continue
+                        sym_ref = rule_el.get('symbol')
+                        label = rule_el.get('label', '')
+                        filter_expr = rule_el.get('filter', '')
+                        color = symbol_colors.get(sym_ref) if sym_ref is not None else None
+
+                        if color:
+                            # Store by label (works for geomorphic-style rules where label == data value)
+                            if label:
+                                colors[label] = color
+                            # Also extract individual string literals from the filter expression.
+                            # This handles grouped rules like structure points/lines where the label
+                            # is a category name (e.g. "BDA") but the filter lists all member values
+                            # (e.g. "Structure Type" = 'Primary BDA' OR ... = 'Secondary BDA' OR ...)
+                            for match in re.findall(r"=\s*'([^']*)'", filter_expr):
+                                colors[match] = color
+
+                        # Recurse into child rules (nested rule groups)
+                        parse_rules(rule_el)
+
+                rules_el = renderer_el.find('rules')
+                if rules_el is not None:
+                    parse_rules(rules_el)
 
         except Exception as e:
-            QgsMessageLog.logMessage(f"Error loading QML style: {e}", "QRiS", Qgis.Warning)
+            QgsMessageLog.logMessage(f"Error parsing QML style '{qml_path}': {e}", "QRiS", Qgis.Warning)
 
         return colors
 
@@ -958,7 +1066,6 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     if metadata_idx != -1:
                         md_str = feat[metadata_idx]
                         if md_str:
-                            import json
                             md_json = json.loads(md_str)
                             # Attributes stored in 'attributes' key
                             val = md_json.get('attributes', {}).get(metric_field)
