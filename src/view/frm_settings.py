@@ -1,9 +1,6 @@
-import sqlite3
-import json
-
-from PyQt5.QtCore import QSettings, Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QTableWidget, QTableWidgetItem, QLineEdit
+from qgis.PyQt.QtCore import QSettings, Qt
+from qgis.PyQt.QtGui import QIcon, QFont
+from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QFontDialog
 
 from ..model.project import Project
 
@@ -14,8 +11,27 @@ REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
 
 LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
 SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
+DEFAULT_CHART_FONT = 'default_chart_font'
 
 default_dock_widget_location = 'right'
+
+
+def get_default_chart_font(settings: QSettings) -> QFont:
+    font_text = settings.value(DEFAULT_CHART_FONT, '', type=str)
+
+    if font_text:
+        font = QFont()
+        if font.fromString(font_text):
+            if font.pointSize() <= 0:
+                font.setPointSize(10)
+            return font
+
+    return QFont('Sans Serif', 10)
+
+
+def set_default_chart_font(font: QFont, settings: QSettings):
+    if font:
+        settings.setValue(DEFAULT_CHART_FONT, font.toString())
 
 class FrmSettings(QDialog):
     def __init__(self, settings: QSettings, qris_project: Project):
@@ -50,6 +66,9 @@ class FrmSettings(QDialog):
         self.chkShowExperimentalProtocols.setChecked(show_experimental_protocols)
         self.chkShowExperimentalProtocols.stateChanged.connect(self.on_show_experimental_changed)
 
+        self.default_chart_font = get_default_chart_font(self.settings)
+        self.update_chart_font_button_text()
+
     def accept(self):
 
         if self.left_radio.isChecked():
@@ -73,6 +92,7 @@ class FrmSettings(QDialog):
             self.settings.setValue(LOCAL_PROTOCOL_FOLDER, '')
 
         self.settings.setValue(SHOW_EXPERIMENTAL_PROTOCOLS, self.chkShowExperimentalProtocols.isChecked())
+        set_default_chart_font(self.default_chart_font, self.settings)
 
         super().accept()
 
@@ -89,6 +109,15 @@ class FrmSettings(QDialog):
     def on_show_experimental_changed(self, state):
         if state == Qt.Checked:
             QMessageBox.warning(self, "Experimental Protocols", "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.")
+
+    def select_chart_font(self):
+        font, ok = QFontDialog.getFont(self.default_chart_font, self, 'Select Default Chart Font')
+        if ok:
+            self.default_chart_font = font
+            self.update_chart_font_button_text()
+
+    def update_chart_font_button_text(self):
+        self.btn_chart_font.setText(f"{self.default_chart_font.family()} {self.default_chart_font.pointSize()}pt")
 
     def setup_ui(self):
 
@@ -119,6 +148,19 @@ class FrmSettings(QDialog):
         btn_clear_path_export = QPushButton("Clear")
         btn_clear_path_export.clicked.connect(lambda: self.txt_path_export.setText(''))
         horiz_export_path.addWidget(btn_clear_path_export)
+
+        horiz_chart_font = QHBoxLayout()
+        self.vertGeneral.addLayout(horiz_chart_font)
+
+        lbl_chart_font = QLabel("Default Chart Font")
+        horiz_chart_font.addWidget(lbl_chart_font)
+
+        self.btn_chart_font = QPushButton()
+        self.btn_chart_font.setToolTip("Software default for chart text. Individual charts can override this setting.")
+        self.btn_chart_font.clicked.connect(self.select_chart_font)
+        horiz_chart_font.addWidget(self.btn_chart_font)
+
+        horiz_chart_font.addStretch(1)
 
         self.chk_remove_layers_on_close = QCheckBox("Remove QRiS Project map layers on project close")
         self.chk_remove_layers_on_close.setToolTip("Check this box to remove all layers from the project when it is closed.")
