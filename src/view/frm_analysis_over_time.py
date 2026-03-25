@@ -21,6 +21,7 @@ from .widgets.event_library import EventLibraryWidget
 from .widgets.chart_export_widget import ChartExportWidget
 from .utilities import add_help_button
 from .frm_metric_value import FrmMetricValue
+from .frm_settings import get_default_chart_font
 
 class FrmAnalysisOverTime(QtWidgets.QDockWidget):
     """
@@ -400,7 +401,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         super().__init__(parent)
         self.project = project
         self.analysis = analysis
-        self.chart_font = QtGui.QFont("Sans Serif", 10)
+        self.chart_font = get_default_chart_font(QtCore.QSettings('Riverscapes', 'QRiS'))
         self.setup_ui()
         if self.analysis:
             self.setup_units_menu()

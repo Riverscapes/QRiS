@@ -7,7 +7,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from qgis.PyQt import QtWidgets, QtCore, QtGui
-from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtCore import QSettings
 from qgis.core import (
     QgsVectorLayer, 
     QgsProject, 
@@ -23,6 +23,7 @@ from ...model.project import Project
 from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ...model.sample_frame import SampleFrame
 from .chart_export_widget import ChartExportWidget
+from ..frm_settings import get_default_chart_font
 
 class DistributionAnalysisWidget(QtWidgets.QWidget):
     """
@@ -47,9 +48,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.attribute_sort_mode = "alpha"
         
         # Chart Settings
-        self.chart_font_family = "Sans Serif"
-        self.chart_font_size = 10
-        self.chart_font = QtGui.QFont(self.chart_font_family, self.chart_font_size)
+        self.chart_font = get_default_chart_font(QSettings('Riverscapes', 'QRiS'))
+        self.chart_font_family = self.chart_font.family()
+        self.chart_font_size = self.chart_font.pointSize()
         
         self.chart_show_pct = False
         self.chart_pct_basis = 'mapped'
