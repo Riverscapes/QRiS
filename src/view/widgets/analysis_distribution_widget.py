@@ -764,13 +764,21 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     color = thinnest_color or layer_prop_color(sym_el.find('layer') or sym_el, 'color')
 
                 else:
-                    # Marker and fill symbols: find the first stacked layer whose main
-                    # 'color' property is opaque. Layer 0 is often a transparent glow/casing;
-                    # layer 1 is the visible fill color.
-                    for layer_el in sym_el.findall('layer'):
-                        color = layer_prop_color(layer_el, 'color')
-                        if color:
-                            break
+                    # Marker symbols can be composites where the first SimpleMarker color is a
+                    # scaffold/stroke and the actual category color is in a later FontMarker.
+                    # Prefer FontMarker color first, then fall back to first opaque layer color.
+                    if sym_type == 'marker':
+                        for layer_el in sym_el.findall('layer'):
+                            if (layer_el.get('class') or '') == 'FontMarker':
+                                color = layer_prop_color(layer_el, 'color')
+                                if color:
+                                    break
+                    if color is None:
+                        # Marker/fill fallback: first layer with opaque main color.
+                        for layer_el in sym_el.findall('layer'):
+                            color = layer_prop_color(layer_el, 'color')
+                            if color:
+                                break
 
                 if color and sym_name is not None:
                     symbol_colors[sym_name] = color
