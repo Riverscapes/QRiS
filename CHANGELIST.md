@@ -1,5 +1,24 @@
 # QRiS Plugin
 
+## [1.2.4] Mar 26 2026
+
+### Fixed
+- Zonal Statistics error with non-spatial tables in Map #938
+- Designs and Asbuilts missing in Analysis Properties #1005
+- As-Builts Not Calculating Metrics #1006
+- Incorrect symbology for Analysis Distribution chart #1007
+- Fix compound marker (channel junctions) symbology in Distribution Analysis #1002
+
+### Changed
+- Improved Y-axis for Analysis over Time #1003, #1004
+- Change Calculate Metrics to QTask with Progress Bar #1014
+- Force gpkg to flush changes on all db write operations #1008
+
+### Added
+- Distribution Analysis enhancements for  "Non-Empty" features #1013
+- Default chart fonts in settings #1012
+
+
 ## [1.2.3.4] Mar 20 2026
 
 ### Fixed
