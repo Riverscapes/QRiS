@@ -134,6 +134,9 @@ class StreamGageTask(QgsTask):
         src_dataset = None
         dst_dataset = None
 
+        with sqlite3.connect(self.db_path, isolation_level=None) as conn:
+            conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
     def finished(self, result: bool):
         """
         This function is automatically called when the task has completed (successfully or not).

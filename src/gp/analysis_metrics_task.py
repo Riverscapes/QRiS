@@ -122,6 +122,10 @@ class AnalysisMetricsTask(QgsTask):
             metric_value.description,
         ))
 
+    def _checkpoint_wal(self):
+        with sqlite3.connect(self.qris_project.project_file, isolation_level=None) as conn:
+            conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
     def run(self):
         try:
             selected_analysis_metrics = [
@@ -268,6 +272,8 @@ class AnalysisMetricsTask(QgsTask):
                                     self._flush_pending_rows(conn, pending_rows)
 
                 self._flush_pending_rows(conn, pending_rows)
+
+            self._checkpoint_wal()
 
             self.setProgress(100)
             return True

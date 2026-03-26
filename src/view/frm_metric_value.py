@@ -446,6 +446,8 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.update_automated_text(self.metric_value.automated_value)
         self.rdoAutomated.setChecked(True)
         self.rdoAutomated.setEnabled(True)
+        # AnalysisMetricsTask writes directly to SQLite; notify project change so WAL is checkpointed.
+        self.qris_project.project_changed.emit()
 
     def closeEvent(self, event):
         if self.metrics_task is not None:

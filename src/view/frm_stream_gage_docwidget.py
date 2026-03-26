@@ -198,6 +198,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         if success:
             self.iface.messageBar().pushMessage('Stream Discharges Downloaded', f'{rowsAffected} discharge records downloaded.', level=Qgis.Info, duration=5)
+            self.project.project_changed.emit()
         else:
             self.iface.messageBar().pushMessage('Stream Discharges Download Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
@@ -226,6 +227,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
                 self.iface.messageBar().pushMessage('Stream Gages Downloaded', f'{rowsDownloaded} stream gage locations found, however none were new.', level=Qgis.Info, duration=5)
             else:
                 self.iface.messageBar().pushMessage('Stream Gages Downloaded', f'{rowsSaved} new stream gage locations were downloaded and saved to the project.', level=Qgis.Success, duration=5)
+            self.project.project_changed.emit()
         else:
             self.iface.messageBar().pushMessage('Stream Gage Download Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
@@ -280,6 +282,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         
         # let the user know
         self.iface.messageBar().pushMessage('Stream Gage Deleted', f'Stream Gage {site_code} and associated discharge data deleted.', level=Qgis.Info, duration=5)
+        self.project.project_changed.emit()
         
         self.load_stream_gages()
         # clear the plot and metadata

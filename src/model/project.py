@@ -1,8 +1,9 @@
 import os
 import json
 import sqlite3
+import time
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 
 from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
 from qgis.utils import spatialite_connect
@@ -63,6 +64,7 @@ class Project(DBItem, QObject):
     def __init__(self, project_file: str):
         DBItem.__init__(self, 'projects', 1, 'Placeholder')
         QObject.__init__(self)
+        self._flush_pending = False
 
         self.project_file = parse_posix_path(project_file)
         with sqlite3.connect(self.project_file) as conn:
@@ -103,6 +105,7 @@ class Project(DBItem, QObject):
             self.units = load_units(curs)
         
         # attempt to update protocols 
+        protocol_writes_on_open = False
         try:
             current_protocols = load_protocol_definitions(os.path.dirname(self.project_file), show_experimental=True, show_deprecated=True)
             if current_protocols:
@@ -111,6 +114,7 @@ class Project(DBItem, QObject):
                         updated = False
                         protocol_id = [protocol.id for protocol in self.protocols.values() if protocol.machine_code == current_protocol.machine_code][0]
                         # update existing protocol
+                        protocol_writes_on_open = True
                         new_metadata = update_protocol(self.project_file, protocol_id, current_protocol)
                         
                         # Update in-memory object
@@ -304,6 +308,10 @@ class Project(DBItem, QObject):
                             QgsMessageLog.logMessage(f"Protocol '{current_protocol.machine_code}' updated.", "QRiS", Qgis.Info)
         except Exception as e:
             QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
+
+        # Protocol sync can write to the gpkg during project open; flush so uploads/copies see those writes immediately.
+        if protocol_writes_on_open:
+            self.request_flush()
         
 
     def analysis_masks(self) -> Dict[int, SampleFrame]:
@@ -493,14 +501,42 @@ class Project(DBItem, QObject):
             with sqlite3.connect(self.project_file, isolation_level=None) as conn:
                 if vacuum:
                     conn.execute("VACUUM")
-                # Checkpoint Mode: TRUNCATE - writes all transactions to DB and cuts WAL to 0 length
-                # We execute this even after VACUUM because VACUUM in WAL mode can inflate the WAL file.
-                # TRUNCATE is the only reliable way to reset the WAL size to 0 without locking issues.
-                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                # Checkpoint Mode: TRUNCATE - writes transactions to DB and attempts to shrink WAL to 0 bytes.
+                # TRUNCATE can return busy when other handles are still active, so retry a few times.
+                busy = 0
+                for _ in range(5):
+                    busy, _log, _checkpointed = conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+                    if busy == 0:
+                        break
+                    time.sleep(0.15)
+
+                if busy != 0:
+                    QgsMessageLog.logMessage(
+                        'Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.',
+                        'QRiS',
+                        Qgis.Warning
+                    )
             
             # QgsMessageLog.logMessage(f"Project flushed successfully (Vacuum={vacuum}).", 'QRiS', Qgis.Info)
         except Exception as e:
             QgsMessageLog.logMessage(f"Failed to flush changes to QRiS project: {str(e)}", 'QRiS', Qgis.Warning)
+
+    def request_flush(self) -> None:
+        """Request a two-pass flush to improve WAL truncation when short-lived write handles are still active."""
+        if self._flush_pending:
+            return
+
+        self._flush_pending = True
+        self.flush()
+
+        def _delayed_flush():
+            try:
+                self.flush()
+            finally:
+                self._flush_pending = False
+
+        # A short delay helps when providers/OGR release locks just after create/update operations return.
+        QTimer.singleShot(800, _delayed_flush)
 
 def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
     """

@@ -337,6 +337,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 curs.execute('DELETE FROM sample_frame_time_series WHERE time_series_id = ?', (time_series_id,))
                 curs.execute('DELETE FROM time_series WHERE time_series_id = ?', (time_series_id,))
                 conn.commit()
+                self.qris_project.project_changed.emit()
                 QtWidgets.QMessageBox.information(self, 'Delete Time Series', 'Time series deleted successfully.')
             except Exception as e:
                 conn.rollback()
