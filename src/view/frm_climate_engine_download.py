@@ -196,6 +196,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
     def on_download_complete(self, status):
         if status is True:
             self.lblStatus.setText('Timeseries retrieved successfully')
+            self.qris_project.project_changed.emit()
             QtWidgets.QMessageBox.information(self, 'Climate Engine Download', 'Climate Engine Timeseries retrieved successfully')
             self.btn_close.setText('Close')
             if self.chkCloseWindow.isChecked():

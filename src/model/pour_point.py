@@ -1,5 +1,6 @@
 import json
 import sqlite3
+import time
 from osgeo import ogr
 from typing import Dict
 
@@ -7,6 +8,15 @@ from .db_item_spatial import DBItemSpatial
 
 POUR_POINTS_MACHINE_CODE = 'Pour Points'
 CATCHMENTS_MACHINE_CODE = 'CATCHMENTS'
+
+
+def checkpoint_wal(db_path: str) -> None:
+    with sqlite3.connect(db_path, isolation_level=None) as conn:
+        for _ in range(5):
+            busy, _log, _checkpointed = conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+            if busy == 0:
+                break
+            time.sleep(0.15)
 
 
 class PourPoint(DBItemSpatial):
@@ -62,6 +72,8 @@ class PourPoint(DBItemSpatial):
         src_layer = None
         src_dataset = None
 
+        checkpoint_wal(db_path)
+
     def update_stats(self, db_path: str, basin_chars: dict, flow_stats: dict, metadata: dict = None) -> None:
         """ Updates the basin characteristics, flow stats, and optionally metadata JSON fields. """
         src_dataset = ogr.Open(db_path, 1)
@@ -89,6 +101,8 @@ class PourPoint(DBItemSpatial):
         feature = None
         src_layer = None
         src_dataset = None
+
+        checkpoint_wal(db_path)
 
     def drop_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Drop the spatial views for the pour point and its catchment."""
@@ -160,6 +174,13 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     outFeature.SetField('pour_point_id', pour_point_id)
     layer.CreateFeature(outFeature)
 
+    # Release OGR handles before running a SQLite checkpoint.
+    layer = None
+    outFeature = None
+    polygon = None
+    point = None
+    dataset = None
+
     pour_point = PourPoint(pour_point_id, name, latitude, longitude, description, json.dumps(basin_chars), json.dumps(flow_stats), json.dumps(metadata))
     
     try:
@@ -168,6 +189,7 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
             pour_point.create_spatial_view(curs)
             pour_point.catchment.create_spatial_view(curs)
             conn.commit()
+        checkpoint_wal(project_file)
     except Exception as ex:
         raise Exception(f"Error creating spatial views for pour point {pour_point_id}: {ex}") from ex
 

@@ -121,6 +121,7 @@ class StreamGageDischargeTask(QgsTask):
                         gage_height_code = excluded.gage_height_code""", sql_data)
 
                     conn.commit()
+                    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
                     count_after = self.get_discharge_record_count(curs)
 

@@ -150,6 +150,9 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
                 current_step += 1
                 self.setProgress(100 * current_step / steps)
 
+            with sqlite3.connect(self.qris_project.project_file, isolation_level=None) as conn:
+                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
             return True
         
         except requests.exceptions.HTTPError as e:

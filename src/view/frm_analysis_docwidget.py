@@ -206,6 +206,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             if has_errors:
                 self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
 
+        # Metrics task writes directly to SQLite; notify project change so WAL is checkpointed to the gpkg main file.
+        self.qris_project.project_changed.emit()
         self.load_table_values()
 
     def export_table(self):

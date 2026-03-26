@@ -1,5 +1,6 @@
 import json
 import sqlite3
+import time
 from typing import Dict
 
 from .db_item_spatial import DBItemSpatial
@@ -8,6 +9,15 @@ from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
+
+
+def checkpoint_wal(db_path: str) -> None:
+    with sqlite3.connect(db_path, isolation_level=None) as conn:
+        for _ in range(5):
+            busy, _log, _checkpointed = conn.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+            if busy == 0:
+                break
+            time.sleep(0.15)
 
 class Analysis(DBItemSpatial):
 
@@ -37,6 +47,7 @@ class Analysis(DBItemSpatial):
                 self.description = description
                 self.analysis_metrics = analysis_metrics
                 self.set_metadata(metadata)
+                checkpoint_wal(db_path)
 
             except Exception as ex:
                 conn.rollback()
@@ -310,6 +321,7 @@ def insert_analysis(db_path: str, name: str, description: str, sample_frame: Sam
             analysis.analysis_metrics = analysis_metrics
             analysis.create_spatial_view(curs)
             conn.commit()
+            checkpoint_wal(db_path)
         except Exception as ex:
             conn.rollback()
             raise Exception(f"Error inserting analysis {name}: {ex}") from ex

@@ -207,6 +207,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # RS Project
         self.rs_project = RSProject(self.qris_project)
         self.qris_project.project_changed.connect(self.rs_project.write)
+        # Keep the .gpkg main file in sync (not just WAL) so external copy/upload while QGIS is open includes recent edits.
+        self.qris_project.project_changed.connect(self.qris_project.request_flush)
         self.rs_project.write() # Ensure the RS project file is created if missing, or update it on opening the project.
         
         # Map Manager
@@ -1957,7 +1959,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(pour_point, PourPoint):
             self.iface.messageBar().pushMessage('Stream Stats Complete', f'Catchment delineation successful for {pour_point.name}.', level=Qgis.Info, duration=5)
-            self.qris_project.pour_points[pour_point.id] = pour_point
+            # Registering via project API emits project_changed, which triggers RS project write and gpkg flush.
+            self.qris_project.add_db_item(pour_point)
 
             rootNode = self.model.invisibleRootItem()
             project_node = self.add_child_to_project_tree(rootNode, self.qris_project)
