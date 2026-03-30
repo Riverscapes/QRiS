@@ -3,24 +3,18 @@ title: Install
 sidebar_position: 3
 description: QRiS Installation process
 ---
-To install QRiS, you'll first need to set up [QGIS](https://qgis.org/), a free and open-source Geographic Information Systems (GIS) software. QRiS functions as a [QGIS Plugin](https://plugins.qgis.org/), meaning it relies on QGIS to run.
 
+QRiS runs as a plugin within [QGIS](https://qgis.org/), so you’ll need to install QGIS first.
 
-QGIS is compatible with a variety of operating systems, including **Windows, macOS, Linux, and Android**. When choosing a QGIS version, you'll see two main types: Experimental (latest) Releases and Long Term Releases (LTR). LTR versions are generally more stable, while Experimental Releases offer the latest features.
+[QGIS](https://qgis.org/) is free, open-source, and available on Windows, macOS, Linux, and Android. Two release types are available:
+- Long Term Release (LTR): more stable, recommended for most users
+- Experimental: newer features, less tested (Don't use these!)
 
-QRiS is compatible with QGIS versions 3.34.0 to 3.40.0, so be sure to install those versions from the ***Downloads List Page*** (see below). If a specific QGIS version is required for a particular QRiS release, this information will be provided in the [release notes](https://github.com/Riverscapes/QRiS/releases) or as a pop-up within the QGIS Plugin Manager.
+:::tip
+Do not use the latest QGIS releases, nor QGIS 4.0. QRiS is currently compatible with QGIS versions 3.34.0–3.40.0. Please install one of these versions from the downloads page below. If a specific version is required for a QRiS release, it will be noted in the release notes or within the QGIS Plugin Manager. Note, you can have multiple versions of QGIS installed on your machine.
+:::
 
-<ToolsWrapper
-    cardsize="lg"
-    cards={[
-        {
-        title: "QRiS Downloads List Page",
-        description: "List of all current and preivous QGIS releases.",
-        logoUrl: "https://docs.riverscapes.net/img/tools/qgis-logo_anita02.png",
-        toolUrl: "https://www.qgis.org/downloads-list/",
-       },
-    ]}
-    />
+#### Recommended downloads (For Windows):
 <ToolsWrapper
     cardsize="sm"
     cards={[
@@ -45,8 +39,24 @@ QRiS is compatible with QGIS versions 3.34.0 to 3.40.0, so be sure to install th
     ]}
     />
 
+#### Recommended downloads (For macOS):
+
+
+<ToolsWrapper
+    cardsize="lg"
+    cards={[
+        {
+        title: "QGIS 3.42.1",
+        description: "macOS version to use",
+        logoUrl: "https://www.qgis.org/downloads/macos/pr/qgis_pr_final-3_42_1_20250324_153321.dmg",
+        toolUrl: "https://www.qgis.org/downloads/macos/pr/qgis_pr_final-3_42_1_20250324_153321.dmg",
+       },
+    ]}
+    />
+
+
 :::warning
-**MacOS Users:** There are currently no builds available for QGIS LTR 3.40 on macOS. If you're using a Mac, please install [this version of QGIS 3.42.1 instead](https://www.qgis.org/downloads/macos/pr/qgis_pr_final-3_42_1_20250324_153321.dmg). Windows and Linux users are unaffected and should proceed with installing QGIS LTR 3.40 as usual.
+**MacOS Users:** We recommend nstall [this version of QGIS 3.42.1 instead](https://www.qgis.org/downloads/macos/pr/qgis_pr_final-3_42_1_20250324_153321.dmg). 
 :::
 
 There are lots of resources on QGIS if you are new to GIS or QGIS. We have some Knowledge Base articles and tutorials available [here](https://riverscapes.freshdesk.com/support/solutions/folders/153000173894) to help you get started.
