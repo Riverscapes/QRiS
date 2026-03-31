@@ -25,15 +25,55 @@ Expand the **Context** folder in the QRiS project tree and right click on the **
 
 Click on the map at the location of the pour point. It's vital that you click precisely on the center of the river. Missing the river even slightly will result in the delineation of a catchment that represents the hillslope of the valley rather than the entire watershed. If you miss the river, you can click the **Clear** button in the toolbar and try again.
 
-A form will appear for you to provide a name and description for the watershed. You can also request the basin characteristics for the pour point location. These are regional statistics for the watershed that StreamStats makes available for driving streamflow calculations. The statistics available vary by region. Click **OK** to continue.
+A form will appear for you to provide a name and an optional description or metadata for the watershed. During the inital download of the catchment, you have the following options:
+- **Delineate Catchment Only**: This option will only delineate the catchment polygon geometry and pour point location. This option takes the shortest amount of time to run.
+- **Catchment with Basin Characteristics**: This option will delineate the catchment polygon geometry and pour point location, as well as retrieve the basin characteristics for the catchment. These are regional statistics for the watershed that StreamStats makes available for driving streamflow calculations. The statistics available vary by region. This option takes a moderate amount of time (approximately 1-3 minutes) to run.
+- **Catchment with Basin Characteristics and Flow Statistics**: This option will delineate the catchment polygon geometry and pour point location, as well as retrieve the basin characteristics and streamflow statistics for the catchment. The streamflow statistics are calculated using regional curves that relate basin characteristics to streamflow statistics. This option takes the longest amount of time to run (approximately 2-5 minutes).
+
+Basin Characteristics and Flow Statistics can be always be downloaded at a later time, even if you initially choose to only download the catchment geometry. 
+
+Click **OK** to continue.
 
 ![catchment form](/images/software-help/watershed-catchments/watershed-catchment.png)
 
 A progress bar will appear in the bottom right corner of the screen. The tool will take a few minutes to run. When it is finished, the catchment will be displayed on the map.
 
-### Edit a Catchment
+### Catchment Properties, Basin Characteristics and Flow Statistics
 
-You can edit the properties of the catchment by right clicking on the catchment in the QRiS project tree and selecting **Edit Catchment Properties**. This will open the same form that you used to create the catchment. You can change the name and description of the catchment. Click **OK** to save your changes.
+You can edit the properties of the catchment or view the Basin Characteristics and Flow Statistics by right clicking on the catchment in the QRiS project tree and selecting **Edit Catchment Properties**. This will open the same form that you used to create the catchment. You can change the name and description of the catchment. Click **OK** to save your changes.
+
+![edit catchment form](/images/software-help/watershed-catchments/watershed-catchment-properties.png)
+
+**Basin Characteristics Tab** The Basin Characteristics will be displayed in a table on the Basin Characteristics tab:
+- Name: The name of the basin characteristic
+- Code: The USGS code for the basin characteristic used accross the StreamStats API
+- Units: The units for the basin characteristic
+- USGS Value: The value for the basin characteristic provided by StreamStats
+- User Override Value: A value that you can input to override the USGS value for the basin characteristic. If a user override value is provided, it will be used in place of the USGS value for Flow Statistics calculations.
+
+Right clicking on a row in the table will give you the following options:
+- Details: This will open a dialog with more details about the basin characteristic, including a description of the characteristic and how it is used in StreamStats calculations.
+- Copy Value: This will copy the USGS value for the basin characteristic to your clipboard so that you can paste it into another application.
+- Copy Value with Units: This will copy the USGS value and units for the basin characteristic to your clipboard so that you can paste it into another application.
+
+Below the table is **Download Basin Characteristics** button. Clicking this button will download the basin characteristics for the catchment from StreamStats. This is useful if you initially chose to only download the catchment geometry but later want to get the basin characteristics without having to re-delineate the catchment. 
+
+On the lower right corner of the tab is a "Export Table" button. Clicking this button will allow the user to export the basin characteristics table as a CSV, JSON, or Excel file.
+
+**Flow Statistics Tab** The Flow Statistics will be displayed in a table on the Flow Statistics tab:
+- Statistic: The name of the flow statistic
+- Value: The value  (with units) for the flow statistic calculated by StreamStats using the basin characteristics and regional curves.
+- Scenario: the scenario that the statistic belongs to.
+- Region: The region that the statistic belongs to.
+
+Right clicking on a row in the table will give you the following options:
+- Details: This will open a dialog with more details about the flow statistic, including a the equation and Basin Characteristics used to calculate the statistic.
+- Copy Value: This will copy the value for the flow statistic to your clipboard so that you can paste it into another application.
+- Copy Value with Units: This will copy the value and units for the flow statistic to your clipboard so that you can paste it into another application.
+
+Below the table is a **Recalculate Flow Statistics** button. Clicking this button will recalculate the flow statistics for the catchment using the basin characteristics and regional curves. This is useful if you have provided user override values for any of the basin characteristics and want to see how that affects the flow statistics.
+
+On the lower right corner of the tab is a "Export Table" button. Clicking this button will allow the user to export the flow statistics table as a CSV, JSON, or Excel file.
 
 ### Promote to AOI
 
