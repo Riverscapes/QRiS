@@ -1,0 +1,46 @@
+---
+title: Distribution Analysis
+sidebar_position: 12
+description: Analyzing the distribution of river health attributes for a data capture event layer
+---
+
+Distribution analyses allow you to analyze the distribution of a Data Capture Event layer's categorical attribute of interest across a sample frame or AOI/Valley Bottom mask. Two versions of this tool are currently availalbe, as a simple form (Dialog) or an interactive dockable widget that controls the map for visulizing the distirbution spatially.
+
+## Opening the Distribution Analysis Tool
+
+Right click on the Analysis node in the QRiS project tree and select either Distribution Analysis (Dialog) or Distribution Analysis (Interactive). The dialog version will open a simple form where you can select the Data Capture Event layer, the attribute of interest, and the sample frame or AOI/Valley Bottom mask. The interactive version will open a dockable widget that allows you to select the same options as the dialog version, but also allows you to interact with the map to visualize the distribution spatially.
+
+### Chart Inputs and Attributes
+
+When the tool is open, the Chart Inputs and Attributes tabs allow you to select the data to display in the distribution chart.
+
+![Distribution Analysis Chart Inputs](/images/software-help/analyses/analysis-distribution-chart-inputs.png)
+
+***Chart Inputs:***
+- Analysis Mask: This is the sample frame or AOI/Valley Bottom mask that you want to use for the analysis. 
+- Mask Feature: This is the specific feature within the sample frame or AOI/Valley Bottom mask that you want to use for the analysis. If you want to analyze the distribution across all features in the mask, select "All Features". (Note: only Sample Frames will have multiple features to choose from, AOI/Valley Bottom masks will only have the All Features option)
+- Event: This is the Data Capture Event that contains the layer you want to analyze.
+- Event Layer: This is the specific layer within the Data Capture Event that contains the attribute you want to analyze. 
+- Measure: 
+   - Geometry: Area or lenght of the feature in the mask that falls within each category of the attribute of interest.
+   - Feature Count: The number of features in the event layer that fall within each category of the attribute of interest for each feature in the mask.
+   - Percent of Sample Frame: The percentage of the area of the sample frame that falls within each category of the attribute of interest. This option is only available if the Analysis Mask is a Sample Frame and the Measure is Geometry.
+   - Percent of Total Mapped: The percentage of the total area of the attribute of interest that falls within each category for each feature in the mask. 
+- Attribute/Metric: This is the categorical attribute of interest that you want to analyze the distribution of.
+
+For the dockable panel (interactive) version of the tool, there is also an "Interactive Map" checkbox that allows the tool to automatically add and zoom to the features in the mask as you select them. This allows you to visualize the distribution of the attribute of interest spatially across the sample frame or AOI/Valley Bottom mask.
+
+The **Attributes** tab allows you to select which attributes from the event layer you want to include in the output table. By default, all attributes are included, but you can uncheck any attributes that you don't want to include in the output table (especially helpful for layers with a large number of attribute values). Below the attribute list are buttons that allow you to Sort the list aphabetically or by the Feature count for each attribute value, as well as buttons to Select All non-empty attributes, all, or none. 
+
+![Distribution Analysis Attributes](/images/software-help/analyses/analysis-distribution-attributes.png)
+
+## Distribution Chart
+
+Below the Chart Inputs and Attributes tabs (or to the right in the interactive version) is the distribution chart. This chart will update automatically as you change the inputs in the Chart Inputs tab. The chart shows the distribution of the attribute of interest across the categories of that attribute for each feature in the mask. The specific values shown in the chart depend on the Measure selected in the Chart Inputs tab. The chart will use the same symbology colors as the event layer for each category of the attribute of interest, and will display the values for each category on the bars. 
+
+![Distribution Analysis Chart](/images/software-help/analyses/analysis-distribution-chart.png)
+
+Below the chart are controls that allow you to change the chart type (Horizontal Bar or Stacked Bar), as well buttons to change chart Settings and Units. Clicking on the Settings button will open a window where you can change the Chart Font, and Show Percent Axis. The Units button will display a list of available units and update the chart values and axis labels accordingly. 
+
+In the lower right corner of the chart is a button to Export the chart as an image or values. Exporting the chart as an image will allow you to save the chart in png, jpeg, or svg format. Exporting the chart values will allow you to save the underlying data in csv, json, or excel format.
+
