@@ -8,6 +8,21 @@ Users, please visit [QRiS website](https://qris.riverscapes.net) for help, docum
 * `Workspaces\RIPTOSXDev copy.code-workspace`
 * `Workspaces\RIPTWindowsDev.code-workspace`
 
+## Local Docs Dev Server (Docusaurus)
+
+Run these commands from the `docs` folder:
+
+```powershell
+npm run start:local
+```
+
+The `start:local` command handles the local setup steps needed for this repo and then starts the docs site on port 3000.
+
+In VS Code you can also use tasks:
+
+* `Docs: Start Local Server`
+* `Docs: Stop Local Server`
+
 ## Development resources
 
 * [PyQGIS Developer Cookbook](https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/index.html) - This should be the go-to for all your basic plugin development needs

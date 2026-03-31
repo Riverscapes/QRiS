@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Docs: Start Local Server",
+      "type": "shell",
+      "command": "npm run start:local",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Docs: Stop Local Server",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$connections = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if ($connections) { $connections | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Host 'Stopped process(es) on port 3000.' } else { Write-Host 'No process listening on port 3000.' }"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
