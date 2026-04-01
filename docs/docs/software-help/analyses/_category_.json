@@ -1,0 +1,9 @@
+{
+  "label": "Analyses",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "slug": "analyses",
+    "description": "These pages describe all the features of QRiS and how to use the software."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "label": "Plugin & Toolbar",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "slug": "plugin",
+    "description": "These pages describe the overall plugin, toolbar configuration and project settings."
+  }
+}
