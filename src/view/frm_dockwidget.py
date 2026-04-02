@@ -89,6 +89,11 @@ from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from .frm_layer_type import FrmLayerTypeDialog
 from .frm_settings import REMOVE_LAYERS_ON_CLOSE
+from .frm_map_template_picker import FrmMapTemplatePicker
+from .frm_save_layout_to_project import FrmSaveLayoutToProject
+
+from qgis.core import QgsPrintLayout, QgsReadWriteContext, QgsLayoutItemMap
+from qgis.PyQt.QtXml import QDomDocument
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 from ..lib.map import get_zoom_level, get_map_center
@@ -674,6 +679,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True, model_item))
 
                 if isinstance(model_data, Project):
+                    template_menu = self.menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/gis'), 'Map Layouts/Reports')
+                    self.add_context_menu_item(template_menu, 'New from Template / Load from Project', 'new', lambda: self.load_map_template())
+                    self.add_context_menu_item(template_menu, 'Save Open Layout to Project', 'save', lambda: self.save_open_layout_to_project())
+                    self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
                     self.menu.addSeparator()
@@ -1354,6 +1363,62 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if result == QtWidgets.QDialog.Accepted:
             self.iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
+
+    def save_open_layout_to_project(self):
+        frm = FrmSaveLayoutToProject(self, self.qris_project.project_file)
+        if frm.exec_() == QtWidgets.QDialog.Accepted:
+            self.iface.messageBar().pushMessage('Save Layout', 'Layout saved successfully to project.', level=Qgis.Success, duration=5)
+
+    def load_map_template(self):
+        frm = FrmMapTemplatePicker(self, self.qris_project.project_file)
+        if frm.exec_() == QtWidgets.QDialog.Accepted:
+            template_type, template_content = frm.get_template()
+            if template_content:
+                project = QgsProject.instance()
+                layout = QgsPrintLayout(project)
+                layout.initializeDefaults()
+                
+                doc = QDomDocument()
+                if template_type == 'file':
+                    with open(template_content, 'r') as f:
+                        template_content_str = f.read()
+                    doc.setContent(template_content_str)
+                    base_name = os.path.splitext(os.path.basename(template_content))[0]
+                else: # xml
+                    doc.setContent(template_content)
+                    base_name = frm.selected_name if hasattr(frm, 'selected_name') else "Project Layout"
+
+                layout.loadFromTemplate(doc, QgsReadWriteContext())
+                
+                # Check for duplicate names
+                layout_name = base_name
+                
+                # Check if layout already exists in QGIS project
+                existing_layout = project.layoutManager().layoutByName(layout_name)
+                if existing_layout:
+                     # If it exists, open it instead of creating a new one
+                     self.iface.openLayoutDesigner(existing_layout)
+                     return
+
+                counter = 1
+                while project.layoutManager().layoutByName(layout_name):
+                    layout_name = f"{base_name} ({counter})"
+                    counter += 1
+                    
+                layout.setName(layout_name)
+                project.layoutManager().addLayout(layout)
+                
+                # Set map extent for all map items to match canvas
+                canvas_extent = self.iface.mapCanvas().extent()
+                for item in layout.items():
+                    if isinstance(item, QgsLayoutItemMap):
+                        item.zoomToExtent(canvas_extent)
+                        item.refresh()
+                        
+                self.iface.openLayoutDesigner(layout)
+            else:
+                 QtWidgets.QMessageBox.warning(self, "QRiS", "Template selection invalid.")
+
 
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
