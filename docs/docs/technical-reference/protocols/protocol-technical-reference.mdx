@@ -73,7 +73,7 @@ Protocol B has just been released, and includes its own version of a BEAVER DAM 
 At any time, a protocol author can delete a protocol, or make it “deprecated”. The protocol and it’s layers will not show up in the DCE layer picker, but any existing DCE layers that used the protocol will persist and never be altered.
 
 ## Publishing and Sharing Protocols
-Anyone can author a protocol by creating or editing a protocol XML file and submitting it for review as a pull request to the Riverscapes XML repository. The Riverscapes Consortium development team will get pull request notifications and action them in a timely manner.
+Anyone can author a protocol by creating or editing a protocol XML file and submitting it for review as a pull request to the Riverscapes XML repository. The Riverscapes Consortium development team will get pull request notifications and action them in a timely manner. See the [contributing protocols](#contributing-protocols) section below for more information on how to contribute a protocol.
 
 QViewer (a prerequisite to running QRiS) synchronizes resources (symbology, business logic and protocols) daily or upon request by the user. QRiS will always read the latest protocol XML files currently residing on the local computer whenever the user wants to add a layer to a data capture event.
 
@@ -187,7 +187,16 @@ A protocol can contain one or more metrics. Each metric is defined by a `Metric`
         - `Value`: (one or more) value to filter by
 
 
-----
+## Contributing Protocols
+
+Users can contribute protocols by making a copy of the Riverscapes XML repository and submitting a pull request with the new protocol XML file. The QRiS development team will review the pull request and provide feedback as needed. Once the pull request is approved, the new protocol will be available to all QRiS users after the next synchronization of resources.
+
+1. Protocol author forks the RiverscapesXML repository into their own GitHub account and creates a new branch for the protocol development. See the "Fork" button in the top right corner of the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML). Here is a [video tutorial](https://www.youtube.com/watch?v=nT8KGYVurIU).
+2. Author creates or edits a protocol XML file in the `QRiS/protocols` directory of their forked repository, following the protocol XML schema defined above.
+3. Author submits a pull request to the main RiverscapesXML repository with a description of the new protocol and any relevant information for the review process.
+4. The QRiS development team reviews the pull request, provides feedback, and requests changes if necessary. The author can make changes to the protocol XML file based on the feedback and update the pull request until it is approved.
+5. Once the pull request is approved, the new protocol XML file will be merged into the main RiverscapesXML repository and will be available to all QRiS users after the next synchronization of resources.
+
 ## Protocol Documentation
 The [QRiS Development Team](https://qris.riverscapes.net/About#development-team) will not approve a pull-request for a new protocol to deploy with QRiS without appropriate documentation. In addition to submitting a pull request to the [RiverscapesXML repository](https://github.com/Riverscapes/RiverscapesXML), a pull request for a `*.mdx` protocol page to be found under the [QRiS Protocol Library](https://qris.riverscapes.net/protocols/protocol-library) part of this website.  
 
