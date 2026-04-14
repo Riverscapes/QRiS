@@ -27,7 +27,9 @@ The name of the project is the top level of the project tree. The project node c
 
 - **Browse Containing Folder**: This will open the folder containing the project file in the file explorer.
 - **Browse Data Exchange Projects**: This will open the Riverscapes Data Exchange in your web browser, allowing you to browse and download other projects that are located within your map area extent.
-- **Export Project to Riverscapes Project**: This will export the project to a Riverscapes compatible project. This is useful for sharing the project with other Riverscapes users or uploading the project to the Riverscapes Data Exchange.
+- **Lock All Layers in Project**: This will lock all layers in the project, preventing them from being modified. You can also lock individual layers under DCEs, designs, or as-builts. This is useful for preventing accidental changes or deletions to the data in the project.
+- **Unlock All Layers in Project**: This will unlock all layers in the project, allowing them to be modified. You can also unlock individual layers under DCEs, designs, or as-builts. This is useful for making changes to the data in the project.
+- **Export as a New Project**: This will export a copy of the QRiS project to a new location. By default, all inputs, DCEs, analyses, and attachments will be exported excluding `Surfaces` due to potentially large file sizes (e.g., orthomosaics). However, users can choose to export `Surfaces` by checking the appropriate box.
 - **Close Project**: This will close the project and remove it from the project tree. This will not delete the project file from the file system.
 
 ### Inputs
@@ -49,6 +51,10 @@ QRiS projects can include several different types of layers for contextualizing 
 ### Analyses
 
 The [Analyses](/software-help/analyses/) Node stores the projects analyses. This node provides the ability to create new analyses and export the results of all analyses to a table.
+
+### Attachments
+
+The [Attachments](/software-help/attachments/) Node stores files or links related to your project. This is useful for storing web links, documents, images, videos, or other files relevant to your project but are not spatial data.
 
 ## Basemaps
 
