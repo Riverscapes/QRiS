@@ -1,0 +1,8 @@
+CREATE TABLE layouts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    layout_xml TEXT NOT NULL,
+    created_on DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT
+);

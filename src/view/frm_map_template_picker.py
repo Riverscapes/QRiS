@@ -66,26 +66,53 @@ class FrmMapTemplatePicker(QtWidgets.QDialog):
 
     def load_system_templates(self):
         self.list_system.clear()
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        plugin_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-        self.protocols_dir = os.path.join(plugin_root, 'resources', 'protocols')
+        directories = self._candidate_template_dirs()
+        seen_paths = set()
 
-        if os.path.exists(self.protocols_dir):
-            files = [f for f in os.listdir(self.protocols_dir) if f.lower().endswith('.qpt')]
-            for f in files:
-                item = QtWidgets.QListWidgetItem(f)
-                full_path = os.path.join(self.protocols_dir, f)
+        for source_label, directory in directories:
+            if directory is None or not os.path.isdir(directory):
+                continue
+            for filename in sorted(os.listdir(directory)):
+                if not filename.lower().endswith('.qpt'):
+                    continue
+
+                full_path = os.path.join(directory, filename)
+                norm_path = os.path.normcase(os.path.normpath(full_path))
+                if norm_path in seen_paths:
+                    continue
+                seen_paths.add(norm_path)
+
+                item = QtWidgets.QListWidgetItem(filename)
                 item.setData(QtCore.Qt.UserRole, full_path)
                 self.list_system.addItem(item)
-        else:
-            print(f"Protocol directory not found: {self.protocols_dir}")
+
+    def _candidate_template_dirs(self):
+        """Return only the currently open project directory for .qpt discovery."""
+        dirs = []
+        if self.project_file:
+            project_dir = os.path.dirname(self.project_file)
+            dirs.append(('Project', project_dir))
+
+        # Preserve order while removing duplicate directories.
+        deduped = []
+        seen = set()
+        for label, directory in dirs:
+            if not directory:
+                continue
+            norm = os.path.normcase(os.path.normpath(directory))
+            if norm in seen:
+                continue
+            seen.add(norm)
+            deduped.append((label, directory))
+
+        return deduped
 
     def load_project_layouts(self):
         self.list_project.clear()
         layouts = get_project_layouts(self.project_file)
         for layout in layouts:
-            item = QtWidgets.QListWidgetItem(layout['name'])
-            item.setData(QtCore.Qt.UserRole, layout['id'])
+            item = QtWidgets.QListWidgetItem(layout.name)
+            item.setData(QtCore.Qt.UserRole, layout.id)
             self.list_project.addItem(item)
 
     def selection_changed(self):
