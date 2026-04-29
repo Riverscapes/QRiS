@@ -11,7 +11,7 @@ from qgis.utils import spatialite_connect
 from .analysis import Analysis, load_analyses
 from .sample_frame import SampleFrame, load_sample_frames
 from .layer import Layer, load_layers, update_layer
-from .protocol import Protocol, load as load_protocols, update_protocol
+from .protocol import Protocol, load as load_protocols, update_protocol, insert_protocol
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
 from .planning_container import PlanningContainer, load as load_planning_containers
@@ -32,6 +32,8 @@ from ..QRiS.protocol_parser import load_protocol_definitions
 from typing import Generator, Dict
 
 PROJECT_MACHINE_CODE = 'Project'
+SYSTEM_PROTOCOL_TYPE = 'system'
+INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE = 'RIVERSCAPE_SYSTEM_PROTOCOL'
 
 # all spatial layers
 # feature class, layer name, geometry
@@ -57,6 +59,74 @@ migrated_layers = [
     'mask_features',
     'valley_bottom_features'
 ]
+
+
+def validate_protocol_metric_dependencies(protocol_definitions) -> list:
+    """Validate cross-metric dependency rules across protocol definitions.
+
+    Rules:
+    - A protocol can depend on metrics in the same protocol.
+    - Any protocol can depend on metrics in the intrinsic system protocol.
+    - Cross-user-protocol dependencies are not allowed.
+    - System protocol metrics cannot depend on user protocol metrics.
+    """
+
+    errors = []
+    system_protocols = []
+    for p in protocol_definitions:
+        protocol_type = str(getattr(p, 'protocol_type', '')).strip().lower()
+        protocol_status = str(getattr(p, 'status', '')).strip().lower()
+        # Backward compatibility for drafts that still mark status=system.
+        if protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE:
+            system_protocols.append(p.machine_code)
+
+    if len(system_protocols) > 1:
+        errors.append(
+            f"Only one system protocol is supported, found: {', '.join(system_protocols)}"
+        )
+    elif len(system_protocols) == 1 and system_protocols[0] != INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
+        errors.append(
+            f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols[0]}'"
+        )
+
+    for protocol in protocol_definitions:
+        protocol_machine_code = protocol.machine_code
+        protocol_type = str(getattr(protocol, 'protocol_type', '')).strip().lower()
+        protocol_status = str(getattr(protocol, 'status', '')).strip().lower()
+        # Backward compatibility for drafts that still mark status=system.
+        is_system_protocol = (protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE)
+
+        for metric in getattr(protocol, 'metrics', []):
+            metric_params = metric.parameters or {}
+            dependencies = metric_params.get('metric_dependencies', [])
+
+            for dep in dependencies:
+                referenced_metric = dep.get('metric_id_ref')
+                referenced_protocol = dep.get('protocol_machine_code_ref', protocol_machine_code)
+
+                if not referenced_metric:
+                    errors.append(
+                        f"{protocol_machine_code}.{metric.id}: dependency is missing metric_id_ref"
+                    )
+                    continue
+
+                if referenced_protocol == protocol_machine_code:
+                    continue
+
+                if referenced_protocol == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
+                    continue
+
+                if is_system_protocol:
+                    errors.append(
+                        f"System protocol '{protocol_machine_code}' metric '{metric.id}' cannot reference user protocol '{referenced_protocol}'"
+                    )
+                    continue
+
+                errors.append(
+                    f"{protocol_machine_code}.{metric.id}: cross-user-protocol dependency to '{referenced_protocol}' is not allowed"
+                )
+
+    return errors
 
 class Project(DBItem, QObject):
     project_changed = pyqtSignal()
@@ -108,6 +178,9 @@ class Project(DBItem, QObject):
         protocol_writes_on_open = False
         try:
             current_protocols = load_protocol_definitions(os.path.dirname(self.project_file), show_experimental=True, show_deprecated=True)
+            dependency_errors = validate_protocol_metric_dependencies(current_protocols)
+            if dependency_errors:
+                raise ValueError('Invalid protocol metric dependencies: ' + ' | '.join(dependency_errors))
             if current_protocols:
                 for current_protocol in current_protocols:
                     if current_protocol.machine_code in [protocol.machine_code for protocol in self.protocols.values()]:
@@ -306,6 +379,16 @@ class Project(DBItem, QObject):
                                     )
                         if updated == True:
                             QgsMessageLog.logMessage(f"Protocol '{current_protocol.machine_code}' updated.", "QRiS", Qgis.Info)
+                    else:
+                        protocol_writes_on_open = True
+                        protocol_obj, new_metrics = insert_protocol(self.project_file, current_protocol)
+                        self.protocols[protocol_obj.id] = protocol_obj
+                        self.metrics.update(new_metrics)
+                        QgsMessageLog.logMessage(
+                            f"Protocol '{current_protocol.machine_code}' inserted from protocol definitions.",
+                            "QRiS",
+                            Qgis.Info,
+                        )
         except Exception as e:
             QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
 

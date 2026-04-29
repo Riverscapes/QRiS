@@ -5,13 +5,25 @@ from ..model.metric import Metric
 from ..model.project import Project
 
 class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
-    def __init__(self, parent, project: Project, metric: Metric, analysis_metadata: dict = None, highlight_dce_id: int = None, limit_dces: List = None):
+    def __init__(
+        self,
+        parent,
+        project: Project,
+        metric: Metric,
+        analysis_metadata: dict = None,
+        highlight_dce_id: int = None,
+        limit_dces: List = None,
+        analysis=None,
+        selected_analysis_metrics: Dict = None,
+    ):
         super().__init__(parent)
         self.qris_project = project
         self.metric = metric
         self.analysis_metadata = analysis_metadata or {}
         self.highlight_dce_id = highlight_dce_id
         self.limit_dces = limit_dces
+        self.analysis = analysis
+        self.selected_analysis_metrics = selected_analysis_metrics
         
         # DEBUG
         # from qgis.core import QgsMessageLog, Qgis
@@ -133,6 +145,28 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                 tooltip_text += f"\nRequired Filter: {attr_filter.get('field_id_ref')} IN {attr_filter.get('values')}"
             
             columns_info.append(('dce_layer', ref, final_header, tooltip_text))
+
+        # 3. Metric Dependencies
+        metric_dependencies = self.metric.metric_params.get('metric_dependencies', [])
+        for dep in metric_dependencies:
+            dep_machine = dep.get('metric_id_ref', 'Unknown Metric')
+            dep_protocol = dep.get('protocol_machine_code_ref', self.metric.protocol_machine_code)
+            dep_version = dep.get('version')
+            usage = dep.get('usage')
+
+            dep_label = f"{dep_protocol}.{dep_machine}"
+            if dep_version is not None:
+                dep_label += f" v{dep_version}"
+            if usage:
+                dep_label += f" ({usage})"
+
+            tooltip_text = f"Metric Dependency: {dep_protocol}.{dep_machine}"
+            if dep_version is not None:
+                tooltip_text += f"\nVersion: {dep_version}"
+            if usage:
+                tooltip_text += f"\nUsage: {usage}"
+
+            columns_info.append(('metric_dependency', dep, dep_label, tooltip_text))
 
         # Determine Rows (DCEs)
         if self.limit_dces:
@@ -302,6 +336,52 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          else:
                              status_item.setText("Layer Not Added to DCE")
                              status_item.setBackground(QtGui.QColor("#f8d7da"))
+
+                elif c_type == 'metric_dependency':
+                     dep = ref
+                     dep_machine = dep.get('metric_id_ref')
+                     dep_protocol = dep.get('protocol_machine_code_ref', self.metric.protocol_machine_code)
+                     dep_version = dep.get('version')
+
+                     selected_metrics = {}
+                     if self.selected_analysis_metrics:
+                         selected_metrics = self.selected_analysis_metrics
+                     elif self.analysis and self.analysis.analysis_metrics:
+                         selected_metrics = self.analysis.analysis_metrics
+
+                     selected_metric_objs = [am.metric for am in selected_metrics.values()] if selected_metrics else []
+                     selected_by_exact = {
+                         f"{m.protocol_machine_code}::{m.machine_name}::{m.version}": m
+                         for m in selected_metric_objs
+                     }
+                     selected_by_loose = {}
+                     for m in selected_metric_objs:
+                         key = f"{m.protocol_machine_code}::{m.machine_name}"
+                         selected_by_loose.setdefault(key, []).append(m)
+
+                     if not dep_machine:
+                         status_item.setText("Invalid Dependency")
+                         status_item.setBackground(QtGui.QColor("#f8d7da"))
+                     elif dep_version is not None:
+                         dep_key = f"{dep_protocol}::{dep_machine}::{dep_version}"
+                         if dep_key in selected_by_exact:
+                             status_item.setText("Selected")
+                             status_item.setBackground(QtGui.QColor("#d4edda"))
+                         else:
+                             status_item.setText("Dependency Not Selected")
+                             status_item.setBackground(QtGui.QColor("#f8d7da"))
+                     else:
+                         dep_key = f"{dep_protocol}::{dep_machine}"
+                         matches = selected_by_loose.get(dep_key, [])
+                         if len(matches) == 1:
+                             status_item.setText("Selected")
+                             status_item.setBackground(QtGui.QColor("#d4edda"))
+                         elif len(matches) > 1:
+                             status_item.setText("Dependency Ambiguous")
+                             status_item.setBackground(QtGui.QColor("#f8d7da"))
+                         else:
+                             status_item.setText("Dependency Not Selected")
+                             status_item.setBackground(QtGui.QColor("#f8d7da"))
                 
                 self.table.setItem(row_idx, col_idx + 1, status_item)
             
@@ -333,30 +413,46 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                          inputs_ok = False
                          missing_inputs.append(str(input_ref))
             
-            # DCE Layers logic (handled by metric object)
-            # Already calculated dce_ok above
-            
-            is_fully_available = inputs_ok and dce_ok
+            # Dependency + DCE feasibility summary
+            if self.analysis is not None:
+                original_metadata = self.analysis.metadata
+                original_metrics = self.analysis.analysis_metrics
+                try:
+                    self.analysis.metadata = self.analysis_metadata
+                    if self.selected_analysis_metrics is not None:
+                        self.analysis.analysis_metrics = self.selected_analysis_metrics
+                    feasibility = self.analysis.check_metric_feasibility(self.metric, self.qris_project, event)
+                    is_fully_available = feasibility.get('status') in ['FEASIBLE', 'FEASIBLE_EMPTY']
+                    tool_tip_lines = [f"Status: {feasibility.get('status', 'NOT_FEASIBLE')}"]
+                    for reason in feasibility.get('reasons', []):
+                        tool_tip_lines.append(reason)
+                finally:
+                    self.analysis.metadata = original_metadata
+                    self.analysis.analysis_metrics = original_metrics
+            else:
+                is_fully_available = inputs_ok and dce_ok
+                tool_tip_lines = []
 
             summary_item = QtWidgets.QTableWidgetItem()
-            tool_tip_lines = []
             if is_fully_available:
                 summary_item.setText("YES")
                 if has_empty_features:
                     summary_item.setBackground(QtGui.QColor("#fff3cd")) # Yellow
                     summary_item.setForeground(QtGui.QColor("black"))
-                    tool_tip_lines.append("Metric can be calculated, but one or more layers have no features.")
+                    if len(tool_tip_lines) < 1:
+                        tool_tip_lines.append("Metric can be calculated, but one or more layers have no features.")
                 else:
                     summary_item.setBackground(QtGui.QColor("#28a745")) # Green
                     summary_item.setForeground(QtGui.QColor("white"))
-                    tool_tip_lines.append("Metric can be calculated for this DCE.")
+                    if len(tool_tip_lines) < 1:
+                        tool_tip_lines.append("Metric can be calculated for this DCE.")
             else:
                 summary_item.setText("NO")
                 summary_item.setBackground(QtGui.QColor("#dc3545")) # Red
                 summary_item.setForeground(QtGui.QColor("white"))
-                if not inputs_ok:
+                if len(tool_tip_lines) < 1 and not inputs_ok:
                     tool_tip_lines.append(f"Missing Inputs: {', '.join(missing_inputs)}")
-                if not dce_ok:
+                if len(tool_tip_lines) < 1 and not dce_ok:
                     tool_tip_lines.append("One or more required DCE layers (or usage groups) are missing or incomplete.")
             
             summary_item.setToolTip("\n".join(tool_tip_lines))

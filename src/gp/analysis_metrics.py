@@ -5,6 +5,7 @@ import math
 import json
 import sqlite3
 from typing import Generator
+from decimal import Decimal, InvalidOperation
 
 import osgeo
 from osgeo import ogr, gdal, osr
@@ -24,7 +25,9 @@ analysis_metric_unit_type = {
     'area': 'area',
     'sinuosity': 'ratio',
     'gradient': 'ratio',
-    'area_proportion': 'ratio'
+    'area_proportion': 'ratio',
+    'proportion': 'ratio',
+    'elevation': 'distance'
 }
 
 class MetricInputMissingError(Exception):
@@ -38,6 +41,57 @@ class MetricCalculationError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
         self.message = message
+
+
+def get_dependency_value(metric_params: dict, analysis_params: dict, usage: str) -> float:
+    """Resolve a dependency value by usage alias or dependency key.
+
+    The runtime task pre-populates analysis_params['metric_dependencies'] with values keyed
+    by usage (when provided in metric_dependencies) and by protocol::metric::version keys.
+    """
+    dependency_values = analysis_params.get('metric_dependencies', {}) if analysis_params else {}
+    if usage in dependency_values:
+        return dependency_values[usage]
+
+    for dep in metric_params.get('metric_dependencies', []):
+        if dep.get('usage') != usage:
+            continue
+        machine_code = dep.get('metric_id_ref')
+        if not machine_code:
+            continue
+        protocol_code = dep.get('protocol_machine_code_ref', '')
+        version = dep.get('version')
+
+        exact_key = f'{protocol_code}::{machine_code}::{version}' if version is not None else None
+        loose_key = f'{protocol_code}::{machine_code}::'
+
+        if version is not None:
+            version_str = str(version).strip()
+            normalized_version = None
+            if version_str != '':
+                try:
+                    normalized_version = format(Decimal(version_str).normalize(), 'f')
+                    if '.' in normalized_version:
+                        normalized_version = normalized_version.rstrip('0').rstrip('.')
+                except (InvalidOperation, ValueError):
+                    normalized_version = version_str
+            if normalized_version is not None:
+                normalized_exact_key = f'{protocol_code}::{machine_code}::{normalized_version}'
+            else:
+                normalized_exact_key = None
+        else:
+            normalized_exact_key = None
+
+        if exact_key is not None and exact_key in dependency_values:
+            return dependency_values[exact_key]
+        if normalized_exact_key is not None and normalized_exact_key in dependency_values:
+            return dependency_values[normalized_exact_key]
+        if loose_key in dependency_values:
+            return dependency_values[loose_key]
+
+    raise MetricInputMissingError(
+        f"Missing dependency value for usage '{usage}'. Ensure a metric dependency provides this usage and has been computed first."
+    )
 
 def normalization_factor(project_file: str, sample_frame_feature_id: int, profile: Profile) -> float:
 
@@ -125,14 +179,18 @@ def get_dce_layer_source(project_file: str, machine_code: str, event_id: int = N
         c = conn.cursor()
         layer_data = None
         if event_id is not None:
-            # Scope lookup to the specific event's layer assignments — always accurate
-            c.execute("""
-                SELECT l.id, l.geom_type
-                FROM event_layers el
-                JOIN layers l ON l.id = el.layer_id
-                WHERE el.event_id = ? AND l.fc_name = ?
-            """, (event_id, machine_code))
-            layer_data = c.fetchone()
+            # Scope lookup to the specific event's layer assignments when available.
+            # Some older/minimal project DBs may not have event_layers yet.
+            try:
+                c.execute("""
+                    SELECT l.id, l.geom_type
+                    FROM event_layers el
+                    JOIN layers l ON l.id = el.layer_id
+                    WHERE el.event_id = ? AND l.fc_name = ?
+                """, (event_id, machine_code))
+                layer_data = c.fetchone()
+            except sqlite3.OperationalError:
+                layer_data = None
         if layer_data is None:
             # Fallback: unscoped lookup (used when event_id not supplied)
             c.execute('SELECT id, geom_type FROM layers WHERE fc_name = ?', (machine_code,))
@@ -219,6 +277,175 @@ def get_metric_layer_features(
         ds = None
 
 
+def _get_surface_raster_path(project_file: str, metric_params: dict, analysis_params: dict) -> str:
+    surface: Raster = None
+    for input_param in metric_params.get('inputs', []):
+        if input_param.get('usage', None) == 'surface':
+            surface = analysis_params.get(input_param.get('input_ref', None), None)
+            break
+    if surface is None:
+        raise MetricInputMissingError('Surface raster input is required for this metric.')
+
+    raster_layer = os.path.join(os.path.dirname(project_file), surface.path)
+    if not os.path.exists(raster_layer):
+        raise MetricInputMissingError(f'Expected raster layer {raster_layer} does not exist.')
+    return raster_layer
+
+
+def _get_metric_lines(
+    project_file: str,
+    sample_frame_feature_id: int,
+    event_id: int,
+    metric_params: dict,
+    analysis_params: dict,
+    clip_to_sample_frame: bool,
+) -> list:
+    sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+    line_geoms = []
+
+    for metric_layer in metric_layers:
+        for feature in get_metric_layer_features(project_file, metric_layer, event_id, sample_frame_geom, analysis_params):
+            if feature is None:
+                continue
+            geom: ogr.Geometry = feature.GetGeometryRef().Clone()
+            if not geom.IsValid():
+                geom = geom.MakeValid()
+
+            if clip_to_sample_frame:
+                if not geom.Intersects(sample_frame_geom):
+                    continue
+                geom = geom.Intersection(sample_frame_geom)
+
+            if geom is None or geom.IsEmpty():
+                continue
+
+            if ogr.GT_Flatten(geom.GetGeometryType()) in [ogr.wkbLineString, ogr.wkbMultiLineString]:
+                line_geoms.append(geom)
+
+    return line_geoms
+
+
+def _merge_lines(line_geoms: list) -> ogr.Geometry:
+    if len(line_geoms) < 1:
+        return None
+
+    union_geom = line_geoms[0].Clone()
+    for g in line_geoms[1:]:
+        union_geom = union_geom.Union(g)
+
+    # Try to make endpoint extraction deterministic.
+    try:
+        merged = union_geom.LineMerge()
+        if merged is not None and not merged.IsEmpty():
+            union_geom = merged
+    except Exception:
+        pass
+
+    if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
+        union_geom = union_geom.GetGeometryRef(0).Clone()
+
+    return union_geom
+
+
+def _line_endpoints(union_geom: ogr.Geometry) -> tuple:
+    geom_type = ogr.GT_Flatten(union_geom.GetGeometryType())
+    if geom_type == ogr.wkbLineString:
+        if union_geom.GetPointCount() < 2:
+            raise MetricCalculationError('Line geometry does not have enough points.')
+        start_pt = union_geom.GetPoint(0)
+        end_pt = union_geom.GetPoint(union_geom.GetPointCount() - 1)
+        return start_pt, end_pt
+
+    if geom_type == ogr.wkbMultiLineString:
+        if union_geom.GetGeometryCount() < 1:
+            raise MetricCalculationError('MultiLine geometry has no line parts.')
+        first_line = union_geom.GetGeometryRef(0)
+        last_line = union_geom.GetGeometryRef(union_geom.GetGeometryCount() - 1)
+        if first_line is None or last_line is None:
+            raise MetricCalculationError('Unable to read line parts for endpoint sampling.')
+        start_pt = first_line.GetPoint(0)
+        end_pt = last_line.GetPoint(last_line.GetPointCount() - 1)
+        return start_pt, end_pt
+
+    raise MetricCalculationError('Unioned geometry is not a line.')
+
+
+def _sample_raster_value(raster_path: str, x: float, y: float, point_srs: osr.SpatialReference = None) -> float:
+    ds = gdal.Open(raster_path)
+    if ds is None:
+        raise MetricCalculationError(f'Unable to open raster: {raster_path}')
+
+    raster_srs = None
+    proj_wkt = ds.GetProjection()
+    if proj_wkt:
+        raster_srs = osr.SpatialReference()
+        raster_srs.ImportFromWkt(proj_wkt)
+
+    point = ogr.Geometry(ogr.wkbPoint)
+    point.AddPoint(x, y)
+    if point_srs is not None:
+        point.AssignSpatialReference(point_srs)
+
+    if raster_srs is not None and point_srs is not None and not point_srs.IsSame(raster_srs):
+        point.TransformTo(raster_srs)
+
+    gt = ds.GetGeoTransform()
+    if gt is None:
+        raise MetricCalculationError('Raster has no geotransform.')
+    if abs(gt[2]) > 1.0e-12 or abs(gt[4]) > 1.0e-12:
+        raise MetricCalculationError('Raster rotation is not supported for endpoint sampling.')
+
+    px = int((point.GetX() - gt[0]) / gt[1])
+    py = int((point.GetY() - gt[3]) / gt[5])
+    if px < 0 or py < 0 or px >= ds.RasterXSize or py >= ds.RasterYSize:
+        raise MetricCalculationError('Sample point falls outside raster bounds.')
+
+    band = ds.GetRasterBand(1)
+    arr = band.ReadAsArray(px, py, 1, 1)
+    if arr is None:
+        raise MetricCalculationError('Unable to read raster cell value.')
+    value = float(arr[0][0])
+
+    nodata = band.GetNoDataValue()
+    if nodata is not None and value == nodata:
+        raise MetricCalculationError('Sampled raster cell is NoData.')
+
+    return value
+
+
+def _endpoint_elevations(
+    project_file: str,
+    sample_frame_feature_id: int,
+    event_id: int,
+    metric_params: dict,
+    analysis_params: dict,
+    clip_to_sample_frame: bool,
+) -> tuple:
+    line_geoms = _get_metric_lines(
+        project_file,
+        sample_frame_feature_id,
+        event_id,
+        metric_params,
+        analysis_params,
+        clip_to_sample_frame,
+    )
+    if len(line_geoms) < 1:
+        raise MetricInputMissingError('No line features found for endpoint elevation sampling.')
+
+    union_geom = _merge_lines(line_geoms)
+    if union_geom is None or union_geom.IsEmpty():
+        raise MetricInputMissingError('No valid line geometry available for endpoint elevation sampling.')
+
+    start_pt, end_pt = _line_endpoints(union_geom)
+    line_srs = union_geom.GetSpatialReference()
+    raster_path = _get_surface_raster_path(project_file, metric_params, analysis_params)
+
+    upstream = _sample_raster_value(raster_path, start_pt[0], start_pt[1], line_srs)
+    downstream = _sample_raster_value(raster_path, end_pt[0], end_pt[1], line_srs)
+    return upstream, downstream
+
+
 def count(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict) -> int:
     """Count the number of features in the specified layers that intersect the mask feature.
     
@@ -298,15 +525,20 @@ def length(project_file: str, sample_frame_feature_id: int, event_id: int, metri
             if feature is None:
                 continue
             geom: ogr.Geometry = feature.GetGeometryRef().Clone()
-            if geom.Intersects(sample_frame_geom):
+            epsg = get_utm_zone_epsg(geom.Centroid().GetX())
+            utm_srs = osr.SpatialReference()
+            utm_srs.ImportFromEPSG(epsg)
+            usage = str(metric_layer.get('usage', '')).lower()
+            clip_input_to_sample_frame = usage.startswith('sample_frame')
+            if metric_layer.get('input_ref') is not None and not clip_input_to_sample_frame:
+                # Input (riverscape/profile) metrics: default is full input geometry.
+                geom.TransformTo(utm_srs)
+                total_length += geom.Length()
+            elif geom.Intersects(sample_frame_geom):
                 clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
-                epsg = get_utm_zone_epsg(geom.Centroid().GetX())
-                utm_srs = osr.SpatialReference()
-                utm_srs.ImportFromEPSG(epsg)
                 clipped_geom.TransformTo(utm_srs)
                 total_length += clipped_geom.Length()
             geom = None
-            clipped_geom = None
 
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
@@ -328,6 +560,16 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
 
     total_area = 0
     metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
+
+    # Explicit sample-frame mode: report area of the sample-frame polygon itself.
+    if any(str(ml.get('usage', '')).lower() == 'sample_frame_area' for ml in metric_layers):
+        epsg = get_utm_zone_epsg(sample_frame_geom.Centroid().GetX())
+        utm_srs = osr.SpatialReference()
+        utm_srs.ImportFromEPSG(epsg)
+        proj_sample_frame_geom = sample_frame_geom.Clone()
+        proj_sample_frame_geom.TransformTo(utm_srs)
+        return proj_sample_frame_geom.GetArea()
+
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
             continue
@@ -337,15 +579,20 @@ def area(project_file: str, sample_frame_feature_id: int, event_id: int, metric_
             geom: ogr.Geometry = feature.GetGeometryRef().Clone()
             if not geom.IsValid():
                 geom = geom.MakeValid()
-            if geom.Intersects(sample_frame_geom):
+            epsg = get_utm_zone_epsg(geom.Centroid().GetX())
+            utm_srs = osr.SpatialReference()
+            utm_srs.ImportFromEPSG(epsg)
+            usage = str(metric_layer.get('usage', '')).lower()
+            clip_input_to_sample_frame = usage.startswith('sample_frame')
+            if metric_layer.get('input_ref') is not None and not clip_input_to_sample_frame:
+                # Input (riverscape/profile) metrics: default is full input geometry.
+                geom.TransformTo(utm_srs)
+                total_area += geom.GetArea()
+            elif geom.Intersects(sample_frame_geom):
                 clipped_geom: ogr.Geometry = geom.Intersection(sample_frame_geom)
-                epsg = get_utm_zone_epsg(geom.Centroid().GetX())
-                utm_srs = osr.SpatialReference()
-                utm_srs.ImportFromEPSG(epsg)
                 clipped_geom.TransformTo(utm_srs)
                 total_area += clipped_geom.GetArea()
             geom = None
-            clipped_geom = None
 
     for metric_layer in metric_layers:
         if metric_layer.get('usage', None) == 'normalization':
@@ -568,10 +815,20 @@ def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: i
     
 
 def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
+    metric_dependencies = metric_params.get('metric_dependencies', []) if metric_params else []
+    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', []) if metric_params else []
+
+    # If no spatial inputs are provided and metric dependencies are configured,
+    # compute the proportion directly from dependency values.
+    if len(metric_layers) == 0 and len(metric_dependencies) > 0:
+        numerator_value = get_dependency_value(metric_params, analysis_params, 'numerator')
+        denominator_value = get_dependency_value(metric_params, analysis_params, 'denominator')
+        if denominator_value == 0:
+            return 0.0
+        return numerator_value / denominator_value
     
     # Initialize the sample frame geometry
     sample_frame_geom = get_sample_frame_geom(project_file, sample_frame_feature_id)
-    metric_layers = metric_params.get('dce_layers', []) + metric_params.get('inputs', [])
     
     # Numerator Layers
     numerator_layers = [layer for layer in metric_layers if layer.get('usage', 'numerator').lower() == 'numerator']
@@ -633,3 +890,43 @@ def proportion(project_file: str, sample_frame_feature_id: int, event_id: int, m
         return 0.0
     else:
         return numerator_value / denominator_value
+
+
+def elevation(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
+    """Endpoint elevation sampler with mode encoded in centerline input usage.
+
+    Supported centerline usage values:
+    - profile_upstream / profile_downstream / profile_difference
+    - sample_frame_upstream / sample_frame_downstream / sample_frame_difference
+    """
+    mode = 'profile_difference'
+    for input_param in metric_params.get('inputs', []):
+        if input_param.get('input_ref') != 'centerline':
+            continue
+        usage = str(input_param.get('usage', '')).strip().lower()
+        if usage in {
+            'profile_upstream',
+            'profile_downstream',
+            'profile_difference',
+            'sample_frame_upstream',
+            'sample_frame_downstream',
+            'sample_frame_difference',
+        }:
+            mode = usage
+            break
+
+    clip_to_sample_frame = mode.startswith('sample_frame_')
+    upstream, downstream = _endpoint_elevations(
+        project_file,
+        sample_frame_feature_id,
+        event_id,
+        metric_params,
+        analysis_params,
+        clip_to_sample_frame,
+    )
+
+    if mode.endswith('upstream'):
+        return upstream
+    if mode.endswith('downstream'):
+        return downstream
+    return downstream - upstream

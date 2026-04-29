@@ -16,6 +16,7 @@ get_qgis_app()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from qris_dev.src.model.analysis import Analysis
+from qris_dev.src.model.analysis_metric import AnalysisMetric
 from qris_dev.src.model.metric import Metric
 from qris_dev.src.model.layer import Layer
 from qris_dev.src.model.event import Event
@@ -92,6 +93,85 @@ class TestMetricFeasibility(unittest.TestCase):
         self.analysis.metadata = {'dem_input': 123}
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         self.assertEqual(result['status'], 'FEASIBLE') # Assuming no layers required
+
+    def test_missing_metric_dependency(self):
+        """Derived metric should be not feasible when dependency metric is not selected in the analysis."""
+        derived_params = {
+            'metric_dependencies': [
+                {
+                    'metric_id_ref': 'base_metric',
+                    'protocol_machine_code_ref': 'PROTO',
+                    'version': '1.0',
+                    'usage': 'numerator'
+                }
+            ]
+        }
+        derived_metric = Metric(2, 'Derived', 'derived_metric', 'PROTO', 'Desc', 1, 'proportion', derived_params, version='1.0')
+        self.analysis.analysis_metrics = {
+            2: AnalysisMetric(derived_metric, 1)
+        }
+
+        result = self.analysis.check_metric_feasibility(derived_metric, self.project, self.event)
+        self.assertEqual(result['status'], 'NOT_FEASIBLE')
+        self.assertTrue(any('Missing Metric Dependency' in r for r in result['reasons']), f"got {result['reasons']}")
+
+    def test_present_metric_dependency(self):
+        """Derived metric should be feasible when dependency metric is selected in the analysis."""
+        base_metric = Metric(1, 'Base', 'base_metric', 'PROTO', 'Desc', 1, 'length', {'inputs': []}, version='1.0')
+        derived_params = {
+            'metric_dependencies': [
+                {
+                    'metric_id_ref': 'base_metric',
+                    'protocol_machine_code_ref': 'PROTO',
+                    'version': '1.0',
+                    'usage': 'numerator'
+                }
+            ]
+        }
+        derived_metric = Metric(2, 'Derived', 'derived_metric', 'PROTO', 'Desc', 1, 'proportion', derived_params, version='1.0')
+
+        self.analysis.analysis_metrics = {
+            1: AnalysisMetric(base_metric, 1),
+            2: AnalysisMetric(derived_metric, 1)
+        }
+
+        result = self.analysis.check_metric_feasibility(derived_metric, self.project, self.event)
+        self.assertEqual(result['status'], 'FEASIBLE')
+
+    def test_dependency_selected_but_not_feasible(self):
+        """Derived metric should be not feasible when selected dependency metric is itself not feasible."""
+        base_metric = Metric(
+            1,
+            'Base Requires Input',
+            'base_requires_input',
+            'PROTO',
+            'Desc',
+            1,
+            'length',
+            {'inputs': [{'input_ref': 'dem_input'}]},
+            version='1.0'
+        )
+        derived_params = {
+            'metric_dependencies': [
+                {
+                    'metric_id_ref': 'base_requires_input',
+                    'protocol_machine_code_ref': 'PROTO',
+                    'version': '1.0',
+                    'usage': 'numerator'
+                }
+            ]
+        }
+        derived_metric = Metric(2, 'Derived', 'derived_metric', 'PROTO', 'Desc', 1, 'proportion', derived_params, version='1.0')
+
+        self.analysis.metadata = {}
+        self.analysis.analysis_metrics = {
+            1: AnalysisMetric(base_metric, 1),
+            2: AnalysisMetric(derived_metric, 1)
+        }
+
+        result = self.analysis.check_metric_feasibility(derived_metric, self.project, self.event)
+        self.assertEqual(result['status'], 'NOT_FEASIBLE')
+        self.assertTrue(any('Dependency Not Feasible' in r for r in result['reasons']), f"got {result['reasons']}")
 
     def test_missing_layer_config_in_project(self):
         """Test layer ref not existing in project."""

@@ -58,7 +58,7 @@ class Metric(DBItem):
         self.status = self.metadata.get('status', 'active') # active, deprecated
         self.hierarchy = self.metadata.get('hierarchy', None)
 
-    def get_automation_availability(self, qris_project, analysis_metadata: dict = None, limit_dces: list = None) -> str:
+    def get_automation_availability(self, qris_project, analysis_metadata: dict = None, limit_dces: list = None, analysis=None, selected_analysis_metrics: dict = None) -> str:
         if not self.metric_params:
              return "Manual Only"
 
@@ -98,9 +98,26 @@ class Metric(DBItem):
         if total_count == 0:
             return "No DCEs (Selected)"
         
-        for event in events_to_check:
-            if self.can_calculate_for_dce(event, qris_project.protocols):
-                 supported_count += 1
+        if analysis is not None:
+            original_metadata = analysis.metadata
+            original_analysis_metrics = analysis.analysis_metrics
+            try:
+                if analysis_metadata is not None:
+                    analysis.metadata = analysis_metadata
+                if selected_analysis_metrics is not None:
+                    analysis.analysis_metrics = selected_analysis_metrics
+
+                for event in events_to_check:
+                    feasibility = analysis.check_metric_feasibility(self, qris_project, event)
+                    if feasibility.get('status') in ['FEASIBLE', 'FEASIBLE_EMPTY']:
+                        supported_count += 1
+            finally:
+                analysis.metadata = original_metadata
+                analysis.analysis_metrics = original_analysis_metrics
+        else:
+            for event in events_to_check:
+                if self.can_calculate_for_dce(event, qris_project.protocols):
+                     supported_count += 1
         
         if supported_count == 0:
             return "No Events"

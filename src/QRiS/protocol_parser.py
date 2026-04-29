@@ -92,6 +92,7 @@ class MetricDefinition:
     protocol_defintion = None
     status: str = 'active'
     hierarchy: Optional[List[str]] = None
+
 @dataclass
 class ProtocolDefinition:
     machine_code: str
@@ -287,6 +288,20 @@ def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
             dce_layers.append(dce_layer)
         if len(dce_layers) > 0:
             parameters['dce_layers'] = dce_layers
+
+        metric_dependencies = []
+        for dep_elem in metric_elem.findall('Parameters/MetricDependency'):
+            dep = {
+                'metric_id_ref': dep_elem.attrib.get('metric_id_ref'),
+                'protocol_machine_code_ref': dep_elem.attrib.get('protocol_machine_code_ref'),
+                'version': dep_elem.attrib.get('version'),
+                'usage': dep_elem.attrib.get('usage')
+            }
+            # Keep parser output clean by dropping unset optional values.
+            dep = {k: v for k, v in dep.items() if v is not None}
+            metric_dependencies.append(dep)
+        if len(metric_dependencies) > 0:
+            parameters['metric_dependencies'] = metric_dependencies
         
         # hierarchy is a list of the text of HeirarchyItem elements
         hierarchy = [h.text for h in metric_elem.findall('Hierarchy/HierarchyItem')]

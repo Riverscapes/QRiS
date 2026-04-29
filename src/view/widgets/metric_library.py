@@ -458,7 +458,7 @@ class MetricLibrary(QtWidgets.QWidget):
             item = it.value()
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric:
-                 status = metric.get_automation_availability(self.qris_project, self.analysis_metadata, self.limit_dces)
+                 status = self.get_metric_availability(metric)
                  item.setText(2, status)
             it += 1
         
@@ -469,12 +469,29 @@ class MetricLibrary(QtWidgets.QWidget):
              if metric_item:
                  metric = metric_item.data(QtCore.Qt.UserRole)
                  if metric:
-                     status = metric.get_automation_availability(self.qris_project, self.analysis_metadata, self.limit_dces)
+                     status = self.get_metric_availability(metric)
                      # Column 4 is Availability
                      avail_item = self.metricsTable.item(row, 4)
                      if avail_item:
                          avail_item.setText(status)
         self.metricsTable.setSortingEnabled(True)
+
+    def _build_selected_analysis_metrics(self):
+        selected = {}
+        for metric_id, level_id in self.current_metrics_state.items():
+            if level_id > 0 and metric_id in self.qris_project.metrics:
+                selected[metric_id] = AnalysisMetric(self.qris_project.metrics[metric_id], level_id)
+        return selected
+
+    def get_metric_availability(self, metric):
+        selected_analysis_metrics = self._build_selected_analysis_metrics()
+        return metric.get_automation_availability(
+            self.qris_project,
+            self.analysis_metadata,
+            self.limit_dces,
+            analysis=self.analysis,
+            selected_analysis_metrics=selected_analysis_metrics,
+        )
 
     def on_protocol_filter_changed(self):
         self.update_group_filter()
@@ -594,7 +611,7 @@ class MetricLibrary(QtWidgets.QWidget):
                 return False
         
         # Availability Status Check
-        status = metric.get_automation_availability(self.qris_project, self.analysis_metadata, self.limit_dces)
+        status = self.get_metric_availability(metric)
         status_lower = status.lower()
         is_manual = "manual" in status_lower
 
@@ -779,7 +796,7 @@ class MetricLibrary(QtWidgets.QWidget):
             metric_item.setFont(1, font)
 
             # Availability
-            calc_status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
+            calc_status = self.get_metric_availability(metric)
             metric_item.setText(2, calc_status)
 
             # Usage
@@ -825,7 +842,19 @@ class MetricLibrary(QtWidgets.QWidget):
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
             if metric.metric_params:
                 menu.addSeparator()
-                menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
+                menu.addAction(
+                    QtGui.QIcon(':/plugins/qris_toolbar/fact_check'),
+                    "Metric Availability",
+                    lambda: FrmMetricAvailabilityMatrix(
+                        self,
+                        self.qris_project,
+                        metric,
+                        self.analysis_metadata,
+                        limit_dces=self.limit_dces,
+                        analysis=self.analysis,
+                        selected_analysis_metrics=self._build_selected_analysis_metrics(),
+                    ).exec_(),
+                )
         elif item.childCount() > 0:
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/expand'), "Expand All Children", lambda: self.expand_tree_children(item))
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
@@ -879,7 +908,7 @@ class MetricLibrary(QtWidgets.QWidget):
             self.metricsTable.setItem(row, 3, ver_item)
 
             # Availability
-            calc_status = metric.get_automation_availability(self.qris_project, self.analysis_metadata)
+            calc_status = self.get_metric_availability(metric)
             calc_item = QtWidgets.QTableWidgetItem()
             calc_item.setText(calc_status)
             calc_item.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -929,7 +958,17 @@ class MetricLibrary(QtWidgets.QWidget):
             menu.addSeparator()
 
             action_matrix = menu.addAction("Automation Availability Matrix...")
-            action_matrix.triggered.connect(lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, self.analysis_metadata, limit_dces=self.limit_dces).exec_())
+            action_matrix.triggered.connect(
+                lambda: FrmMetricAvailabilityMatrix(
+                    self,
+                    self.qris_project,
+                    metric,
+                    self.analysis_metadata,
+                    limit_dces=self.limit_dces,
+                    analysis=self.analysis,
+                    selected_analysis_metrics=self._build_selected_analysis_metrics(),
+                ).exec_()
+            )
         
         menu.exec_(self.metricsTable.viewport().mapToGlobal(position))
 

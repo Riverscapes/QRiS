@@ -573,12 +573,9 @@ class AnalysisTable(QtWidgets.QWidget):
         self.metric_calculate_requested.emit(analysis_metric, metric_value)
         
     def _handle_warning(self, row):
-        # First check for calculation error
-        metric_value = self.table.item(row, self.column['value']).data(QtCore.Qt.UserRole)
-        if metric_value and metric_value.metadata and metric_value.metadata.get('calculation_error'):
-            QtWidgets.QMessageBox.critical(self, "Calculation Error", 
-                                           f"An error occurred while calculating this metric:\n\n{metric_value.metadata.get('calculation_error')}")
-            return
+        # Always open the availability matrix from warning clicks so users can
+        # inspect current setup requirements without being blocked by stale
+        # calculation errors from previous runs.
 
         item = self.table.item(row, self.column['metric'])
         if not item: return
@@ -599,7 +596,16 @@ class AnalysisTable(QtWidgets.QWidget):
         if not limit_dces and self.current_dce:
             limit_dces = [self.current_dce.id]
         
-        dlg = FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces)
+        dlg = FrmMetricAvailabilityMatrix(
+            self,
+            self.qris_project,
+            metric,
+            analysis_metadata,
+            highlight_dce_id=current_dce_id,
+            limit_dces=limit_dces,
+            analysis=self.analysis,
+            selected_analysis_metrics=self.analysis.analysis_metrics,
+        )
         dlg.exec_()
         
     def on_item_clicked(self, item):
@@ -639,7 +645,20 @@ class AnalysisTable(QtWidgets.QWidget):
             if not limit_dces and self.current_dce:
                 limit_dces = [self.current_dce.id]
             
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/fact_check'), "Metric Availability", lambda: FrmMetricAvailabilityMatrix(self, self.qris_project, metric, analysis_metadata, highlight_dce_id=current_dce_id, limit_dces=limit_dces).exec_())
+            menu.addAction(
+                QtGui.QIcon(':/plugins/qris_toolbar/fact_check'),
+                "Metric Availability",
+                lambda: FrmMetricAvailabilityMatrix(
+                    self,
+                    self.qris_project,
+                    metric,
+                    analysis_metadata,
+                    highlight_dce_id=current_dce_id,
+                    limit_dces=limit_dces,
+                    analysis=self.analysis,
+                    selected_analysis_metrics=self.analysis.analysis_metrics,
+                ).exec_(),
+            )
             menu.addSeparator()
 
         # Copy Value Actions

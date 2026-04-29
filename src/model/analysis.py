@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import time
+from decimal import Decimal, InvalidOperation
 from typing import Dict
 
 from .db_item_spatial import DBItemSpatial
@@ -9,6 +10,21 @@ from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
+
+
+def _normalize_version(version):
+    if version is None:
+        return None
+    version_str = str(version).strip()
+    if version_str == '':
+        return ''
+    try:
+        normalized = format(Decimal(version_str).normalize(), 'f')
+        if '.' in normalized:
+            normalized = normalized.rstrip('0').rstrip('.')
+        return normalized
+    except (InvalidOperation, ValueError):
+        return version_str
 
 
 def checkpoint_wal(db_path: str) -> None:
@@ -95,6 +111,9 @@ class Analysis(DBItemSpatial):
 
 
     def check_metric_feasibility(self, metric, project, event=None) -> Dict:
+        return self._check_metric_feasibility(metric, project, event, set())
+
+    def _check_metric_feasibility(self, metric, project, event=None, visited_metrics=None) -> Dict:
         """
         Checks if the automated metric can be calculated based on:
         1. Automation definition existence
@@ -107,6 +126,23 @@ class Analysis(DBItemSpatial):
                 'reasons': list[str]
             }
         """
+        if visited_metrics is None:
+            visited_metrics = set()
+
+        metric_identity = (
+            getattr(metric, 'protocol_machine_code', None),
+            getattr(metric, 'machine_name', None),
+            getattr(metric, 'version', None),
+        )
+        # Dependency cycles are blocked at execution planning, but this guard keeps
+        # feasibility checks safe if malformed definitions are loaded.
+        if metric_identity in visited_metrics:
+            return {
+                'status': 'FEASIBLE',
+                'reasons': []
+            }
+        visited_metrics.add(metric_identity)
+
         result = {
             'status': 'FEASIBLE',
             'reasons': []
@@ -134,6 +170,80 @@ class Analysis(DBItemSpatial):
             if not found:
                  result['status'] = 'NOT_FEASIBLE'
                  result['reasons'].append(f"Missing Input: {ref}")
+
+        # 2b. Check Metric Dependencies (selected analysis metrics)
+        metric_dependencies = metric.metric_params.get('metric_dependencies', [])
+        if metric_dependencies:
+            selected_metrics = [am.metric for am in self.analysis_metrics.values()] if self.analysis_metrics else []
+            selected_by_exact = {}
+            for m in selected_metrics:
+                raw_key = f"{m.protocol_machine_code}::{m.machine_name}::{m.version}"
+                selected_by_exact[raw_key] = m
+                normalized_version = _normalize_version(m.version)
+                if normalized_version is not None:
+                    normalized_key = f"{m.protocol_machine_code}::{m.machine_name}::{normalized_version}"
+                    selected_by_exact[normalized_key] = m
+            selected_by_loose = {}
+            for m in selected_metrics:
+                key = f"{m.protocol_machine_code}::{m.machine_name}"
+                selected_by_loose.setdefault(key, []).append(m)
+
+            for dep in metric_dependencies:
+                dep_machine = dep.get('metric_id_ref')
+                if not dep_machine:
+                    result['status'] = 'NOT_FEASIBLE'
+                    result['reasons'].append('Invalid metric dependency: missing metric_id_ref')
+                    continue
+
+                dep_protocol = dep.get('protocol_machine_code_ref', metric.protocol_machine_code)
+                dep_version = dep.get('version')
+
+                if dep_version is not None:
+                    dep_key = f"{dep_protocol}::{dep_machine}::{dep_version}"
+                    normalized_dep_version = _normalize_version(dep_version)
+                    dep_keys = [dep_key]
+                    if normalized_dep_version is not None:
+                        dep_keys.append(f"{dep_protocol}::{dep_machine}::{normalized_dep_version}")
+                    dep_metric = next((selected_by_exact.get(k) for k in dep_keys if k in selected_by_exact), None)
+                    if dep_metric is None:
+                        result['status'] = 'NOT_FEASIBLE'
+                        result['reasons'].append(
+                            f"Missing Metric Dependency: {dep_protocol}.{dep_machine} v{dep_version}"
+                        )
+                        continue
+                else:
+                    dep_key = f"{dep_protocol}::{dep_machine}"
+                    dep_matches = selected_by_loose.get(dep_key, [])
+                    if len(dep_matches) < 1:
+                        result['status'] = 'NOT_FEASIBLE'
+                        result['reasons'].append(
+                            f"Missing Metric Dependency: {dep_protocol}.{dep_machine}"
+                        )
+                    elif len(dep_matches) > 1:
+                        result['status'] = 'NOT_FEASIBLE'
+                        result['reasons'].append(
+                            f"Ambiguous Metric Dependency: {dep_protocol}.{dep_machine}"
+                        )
+                        continue
+                    dep_metric = dep_matches[0]
+
+                dep_feasibility = self._check_metric_feasibility(
+                    dep_metric,
+                    project,
+                    event,
+                    set(visited_metrics),
+                )
+                if dep_feasibility.get('status') == 'NOT_FEASIBLE':
+                    result['status'] = 'NOT_FEASIBLE'
+                    dep_reason = '; '.join(dep_feasibility.get('reasons', []))
+                    if dep_reason:
+                        result['reasons'].append(
+                            f"Dependency Not Feasible: {dep_protocol}.{dep_machine} ({dep_reason})"
+                        )
+                    else:
+                        result['reasons'].append(
+                            f"Dependency Not Feasible: {dep_protocol}.{dep_machine}"
+                        )
 
         # 3. Check DCE Layers (With Usage Grouping)
         dce_layers = metric.metric_params.get('dce_layers', [])
