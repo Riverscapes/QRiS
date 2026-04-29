@@ -1,5 +1,14 @@
 # QRiS Plugin
 
+## [1.2.4.1] Mar 29 2026
+
+### Fixed
+- wrong version in about dialog #985
+
+### Added
+- Intrinsic and RIverscape Metrics #960
+
+
 ## [1.2.4] Mar 26 2026
 
 ### Fixed
