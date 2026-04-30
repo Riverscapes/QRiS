@@ -208,21 +208,6 @@ ignore-imports=no
 
 [IMPORTS]
 
-# Deprecated modules which should not be used, separated by a comma
-deprecated-modules=regsub,TERMIOS,Bastion,rexec
-
-# Create a graph of every (i.e. internal and external) dependencies in the
-# given file (report RP0402 must not be disabled)
-import-graph=
-
-# Create a graph of external dependencies in the given file (report RP0402 must
-# not be disabled)
-ext-import-graph=
-
-# Create a graph of internal dependencies in the given file (report RP0402 must
-# not be disabled)
-int-import-graph=
-
 
 [DESIGN]
 
