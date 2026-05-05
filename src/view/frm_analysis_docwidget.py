@@ -216,10 +216,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         current_sample_frame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         current_data_capture_event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         frm = FrmExportMetrics(self, self.iface, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
-        result = frm.exec_()
-
-        if result == QtWidgets.QDialog.Accepted:
-            self.iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {frm.txtOutpath.text()}', level=Qgis.Success)
+        frm.exec_()
 
     def cmdProperties_clicked(self):
 

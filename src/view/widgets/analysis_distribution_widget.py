@@ -239,7 +239,8 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             base_name="DistributionAnalysis",
             get_data_callback=self.get_export_data,
             get_figure_callback=lambda: self.figure,
-            project_path=self.qris_project.project_file if self.qris_project else None
+            project_path=self.qris_project.project_file if self.qris_project else None,
+            export_type="distribution_analysis",
         )
         self.hbox_bottom.addWidget(self.export_widget)
         

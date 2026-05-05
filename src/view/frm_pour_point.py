@@ -1,8 +1,5 @@
 import copy
-import csv
 import json
-import os
-import pandas as pd
 
 from qgis.PyQt import QtWidgets, QtCore, QtGui
 
@@ -12,6 +9,7 @@ from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..gp.stream_stats import delineate_watershed, get_state_from_coordinates, retrieve_basin_characteristics, calculate_flow_statistics, retrieve_flow_scenarios
 from .utilities import validate_name, add_standard_form_buttons, format_superscript
 from .widgets.metadata import MetadataWidget
+from .widgets.table_export_widget import FrmTableExport
 
 
 class FrmPourPoint(QtWidgets.QDialog):
@@ -664,82 +662,74 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         super().accept()
 
-    def _export_data(self, path, headers, data, table_name):
-        if path.endswith('.json'):
-            result = []
-            for row in data:
-                result.append(dict(zip(headers, row)))
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent=4)
-        elif path.endswith('.xlsx') or path.endswith('.xls'):
-            try:
-                df = pd.DataFrame(data, columns=headers)
-                df.to_excel(path, index=False)
-            except Exception as e:
-                QtWidgets.QMessageBox.warning(self, "Excel Export Failed", f"Could not export to Excel, saving as CSV instead.\nError: {e}")
-                path = os.path.splitext(path)[0] + '.csv'
-                with open(path, 'w', newline='', encoding='utf-8') as f:
-                    writer = csv.writer(f)
-                    writer.writerow(headers)
-                    writer.writerows(data)
-        else:
-            with open(path, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                writer.writerow(headers)
-                writer.writerows(data)
+    def get_basin_export_data(self):
+        model = self.basinTable.model()
+        if model is None:
+            return []
 
-        QtWidgets.QMessageBox.information(self, "Success", f"{table_name} exported successfully.")
+        headers = []
+        for c in range(model.columnCount(QtCore.QModelIndex())):
+            header_data = model.headerData(c, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+            headers.append(str(header_data) if header_data else f'column_{c + 1}')
+
+        rows = []
+        for r in range(model.rowCount(QtCore.QModelIndex())):
+            row_dict = {}
+            for c, header in enumerate(headers):
+                val = model.data(model.index(r, c), QtCore.Qt.DisplayRole)
+                row_dict[header] = '' if val is None else val
+            rows.append(row_dict)
+
+        return rows
+
+    def get_flow_export_data(self):
+        headers = []
+        for c in range(self.tabFlow.columnCount()):
+            header_item = self.tabFlow.horizontalHeaderItem(c)
+            headers.append(header_item.text() if header_item else f'column_{c + 1}')
+
+        rows = []
+        for r in range(self.tabFlow.rowCount()):
+            row_dict = {}
+            for c, header in enumerate(headers):
+                item = self.tabFlow.item(r, c)
+                row_dict[header] = item.text() if item is not None else ''
+            rows.append(row_dict)
+
+        return rows
 
     def export_basin_table(self):
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export Basin Characteristics", "basin_characteristics.csv", "CSV Files (*.csv);;JSON Files (*.json);;Excel Files (*.xlsx *.xls)")
-        if not path:
-            return
         try:
-            model = self.basinTable.model()
-            if not model:
+            data = self.get_basin_export_data()
+            if not data:
                 return
-            
-            # Headers
-            headers = []
-            for c in range(model.columnCount(QtCore.QModelIndex())):
-                header_data = model.headerData(c, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
-                headers.append(str(header_data) if header_data else "")
-            
-            # Data
-            data = []
-            for r in range(model.rowCount(QtCore.QModelIndex())):
-                row_data = []
-                for c in range(model.columnCount(QtCore.QModelIndex())):
-                    val = model.data(model.index(r, c), QtCore.Qt.DisplayRole)
-                    row_data.append(str(val) if val is not None else "")
-                data.append(row_data)
 
-            self._export_data(path, headers, data, "Basin characteristics")
+            frm = FrmTableExport(
+                self,
+                data=data,
+                base_name='basin_characteristics',
+                project_path=self.qris_project.project_file if self.qris_project else None,
+                export_type='basin_characteristics',
+            )
+            frm.exec_()
             
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to export table:\n{e}")
 
     def export_flow_table(self):
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export Flow Statistics", "flow_statistics.csv", "CSV Files (*.csv);;JSON Files (*.json);;Excel Files (*.xlsx *.xls)")
-        if not path:
-            return
         try:
-            # Headers
-            headers = []
-            for c in range(self.tabFlow.columnCount()):
-                header_item = self.tabFlow.horizontalHeaderItem(c)
-                headers.append(header_item.text() if header_item else "")
-            
-            # Data
-            data = []
-            for r in range(self.tabFlow.rowCount()):
-                row_data = []
-                for c in range(self.tabFlow.columnCount()):
-                    item = self.tabFlow.item(r, c)
-                    row_data.append(item.text() if item is not None else "")
-                data.append(row_data)
+            data = self.get_flow_export_data()
+            if not data:
+                return
 
-            self._export_data(path, headers, data, "Flow statistics")
+            frm = FrmTableExport(
+                self,
+                data=data,
+                base_name='flow_statistics',
+                project_path=self.qris_project.project_file if self.qris_project else None,
+                export_type='flow_statistics',
+            )
+            frm.exec_()
             
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to export table:\n{e}")

@@ -18,6 +18,7 @@ from .utilities import add_help_button
 from .widgets.sample_frames import SampleFrameWidget
 from .widgets.date_range import DateRangeWidget
 from .widgets.event_library import EventLibraryWidget
+from .widgets.chart_export_widget import ChartExportWidget
 
 from ..model.project import Project
 from ..model.db_item import dict_factory
@@ -264,18 +265,20 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.load_climate_engine_metrics()
 
     def export_data(self):
+        """Backward-compatible export entry point."""
+        self.export_widget.export_values()
+
+    def get_export_data(self):
         
         # get the selected time series ids
         time_series_ids = self.lst_climate_engine.selectedIndexes()
         if time_series_ids is None or len(time_series_ids) == 0:
-            QtWidgets.QMessageBox.warning(self, 'Export Climate Change Data', 'No time series selected')
-            return
+            return None
         # need to grab the data for each checked sample frame feature
         sample_frame_feature_ids = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
 
         if len(sample_frame_feature_ids) == 0:
-            QtWidgets.QMessageBox.warning(self, 'Export Climate Change Data', 'No sample frame features selected')
-            return
+            return None
         time_series_id = time_series_ids[0].data(Qt.UserRole)
 
         # get the date range
@@ -283,6 +286,8 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         # get the data for the selected time series
         data = {}
+
+        feature_labels = {}
 
         
         with sqlite3.connect(self.qris_project.project_file) as conn:
@@ -299,24 +304,30 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
                 curs.execute('SELECT time_value, value FROM sample_frame_time_series WHERE time_series_id = ? AND sample_frame_fid = ? AND time_value BETWEEN ? AND ?',
                              (time_series_id, sample_frame_feature_id, start_date, end_date))
                 data[sample_frame_feature_id] = [(datetime.strptime(row[0], '%Y-%m-%d'), row[1]) for row in curs.fetchall()]
+                curs.execute('SELECT display_label FROM sample_frame_features WHERE fid = ?', (sample_frame_feature_id,))
+                label_row = curs.fetchone()
+                if label_row is not None and label_row[0] not in [None, '']:
+                    feature_labels[sample_frame_feature_id] = label_row[0]
+                else:
+                    feature_labels[sample_frame_feature_id] = str(sample_frame_feature_id)
 
-        # write the data to a CSV file
-        file_name = QtWidgets.QFileDialog.getSaveFileName(self, 'Export Data', f'{time_series_name}', 'CSV Files (*.csv)')[0]
-        if file_name == '':
-            return
-        with open(file_name, 'w') as file:
-            file.write('Date,')
-            for sample_frame_feature_id in sample_frame_feature_ids:
-                file.write(f'{sample_frame_feature_id},')
-            file.write('\n')
-            for i in range(len(data[sample_frame_feature_ids[0]])):
-                file.write(f'{data[sample_frame_feature_ids[0]][i][0].strftime("%Y-%m-%d")},')
-                for sample_frame_feature_id in sample_frame_feature_ids:
-                    file.write(f'{data[sample_frame_feature_id][i][1]},')
-                file.write('\n')
+        rows = []
+        for sample_frame_feature_id in sample_frame_feature_ids:
+            values = data.get(sample_frame_feature_id, [])
+            feature_name = feature_labels.get(sample_frame_feature_id, str(sample_frame_feature_id))
+            for date_value, metric_value in values:
+                rows.append({
+                    'date': date_value.strftime('%Y-%m-%d'),
+                    'sample_frame_feature_id': sample_frame_feature_id,
+                    'sample_frame_feature': feature_name,
+                    'value': metric_value,
+                    'units': metadata.get('units', ''),
+                    'dataset': metadata.get('dataset', ''),
+                    'variable': metadata.get('variable', ''),
+                    'time_series': time_series_name,
+                })
 
-        # message box
-        QtWidgets.QMessageBox.information(self, 'Export Climate Change Data', f'Data exported successfully to {file_name}')
+        return rows
 
 
     def delete_time_series(self):
@@ -481,9 +492,15 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         
         self.horiz_chart_controls.addStretch()
 
-        self.btn_export = QtWidgets.QPushButton('Export')
-        self.btn_export.clicked.connect(self.export_data)
-        self.horiz_chart_controls.addWidget(self.btn_export)
+        self.export_widget = ChartExportWidget(
+            self,
+            base_name='climate_engine_timeseries_export',
+            get_data_callback=self.get_export_data,
+            get_figure_callback=lambda: self.chart_canvas.figure,
+            project_path=self.qris_project.project_file if self.qris_project else None,
+            export_type='climate_engine_timeseries',
+        )
+        self.horiz_chart_controls.addWidget(self.export_widget)
 
         self.btn_help = add_help_button(self, 'context/climate-engine-explorer')
         self.horiz_chart_controls.addWidget(self.btn_help)

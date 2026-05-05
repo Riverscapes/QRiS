@@ -452,7 +452,8 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
             base_name="AnalysisOverTime",
             get_data_callback=self.get_export_data,
             get_figure_callback=lambda: self.fig,
-            project_path=self.project.project_file if self.project else None
+            project_path=self.project.project_file if self.project else None,
+            export_type="analysis_over_time",
         )
         hbox_controls.addWidget(self.export_widget)
         

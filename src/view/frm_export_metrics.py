@@ -1,5 +1,4 @@
-import json
-import xlwt
+import os
 
 from PyQt5 import QtWidgets
 from qgis.utils import Qgis
@@ -11,8 +10,10 @@ from ..model.analysis import Analysis
 from ..model.project import Project
 from ..model.metric import Metric
 from ..lib.unit_conversion import short_unit_name
+from ..QRiS.path_utilities import get_unique_file_path
 
 from .utilities import add_standard_form_buttons
+from .widgets.table_export_widget import FrmTableExport
 
 
 class FrmExportMetrics(QtWidgets.QDialog):
@@ -51,8 +52,29 @@ class FrmExportMetrics(QtWidgets.QDialog):
         output_format = self.combo_format.currentText()
         output_ext = "xls" if output_format == "Excel" else output_format.lower()
 
-        path = QtWidgets.QFileDialog.getSaveFileName(self, "Export Metrics Table", "", f"{output_format} Files (*.{output_ext})")[0]
+        initial = self.txtOutpath.text()
+        folder = os.path.dirname(initial) if initial else ""
+        path = QtWidgets.QFileDialog.getSaveFileName(self, "Export Metrics Table", folder, f"{output_format} Files (*.{output_ext})")[0]
         self.txtOutpath.setText(path)
+
+    def update_default_path(self):
+
+        home = self.project.project_file
+        if not home:
+            return
+
+        if os.path.isfile(home):
+            home = os.path.dirname(home)
+
+        export_dir = os.path.join(home, 'exports', 'analysis_metrics')
+        if not os.path.exists(export_dir):
+            os.makedirs(export_dir, exist_ok=True)
+
+        output_format = self.combo_format.currentText()
+        output_ext = '.xls' if output_format == 'Excel' else f'.{output_format.lower()}'
+
+        default_path = get_unique_file_path(export_dir, 'analysis_metrics', output_ext)
+        self.txtOutpath.setText(os.path.normpath(default_path))
 
     def format_change(self):
 
@@ -64,6 +86,8 @@ class FrmExportMetrics(QtWidgets.QDialog):
                 output_format = "xls"
             path = path[:path.rfind(".") + 1] + output_format.lower()
             self.txtOutpath.setText(path)
+        else:
+            self.update_default_path()
 
     def accept(self) -> None:
 
@@ -135,39 +159,24 @@ class FrmExportMetrics(QtWidgets.QDialog):
                             values.update({f'{metric_name} Uncertainty': uncertainty})
                     out_values.append(values)
 
-        if self.combo_format.currentText() == 'CSV':
-            # write csv file
-            with open(self.txtOutpath.text(), 'w') as f:
-                f.write(','.join(out_values[0].keys()) + '\n')
-                for values in out_values:
-                    f.write(','.join([str(v) for v in values.values()]) + '\n')
-        elif self.combo_format.currentText() == 'JSON':
-            # write json file
-            with open(self.txtOutpath.text(), 'w') as f:
-                json.dump(out_values, f)
-        elif self.combo_format.currentText() == 'Excel':
-            # write to excel file
-            # create workbook
-            wb = xlwt.Workbook()
-            # create worksheet
-            ws = wb.add_sheet('Metrics')
-            # write header row
-            for col, key in enumerate(out_values[0].keys()):
-                ws.write(0, col, key)
-            # write data rows
-            for row, values in enumerate(out_values):
-                for col, value in enumerate(values.values()):
-                    ws.write(row + 1, col, value)
-            # save workbook
-            wb.save(self.txtOutpath.text())
-        else:
-            raise Exception("Unsupported output format.")
+        if len(out_values) < 1:
+            QtWidgets.QMessageBox.information(self, "Export Metrics Table", "No metrics were available for export.")
+            return
 
-        # except Exception as ex:
-            # QtWidgets.QMessageBox.critical(self, "Export Metrics Table", f"Error exporting metrics table: {ex}")
-            # return
+        exporter = FrmTableExport(
+            self,
+            data=out_values,
+            base_name='analysis_metrics',
+            project_path=self.project.project_file,
+            export_type='analysis_metrics',
+        )
+        success, msg = exporter.export_table(self.txtOutpath.text())
+        if not success:
+            QtWidgets.QMessageBox.critical(self, "Export Metrics Table", f"Error exporting metrics table: {msg}")
+            return
 
-        self.iface.messageBar().pushMessage('Export Metrics', f'Exported metrics to {self.txtOutpath.text()}', level=Qgis.Success)
+        note = ' including uncertainty columns' if self.chkIncludeUncertainty.isChecked() else ''
+        self.iface.messageBar().pushMessage('Export Metrics', f'Exported metrics{note} to {self.txtOutpath.text()}', level=Qgis.Success)
         return super().accept()
 
     def setupUi(self):
@@ -246,6 +255,8 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.btn_location.setToolTip("Browse to the directory to save the exported metrics table")
         self.btn_location.clicked.connect(self.browse_path)
         self.horizOutput.addWidget(self.btn_location)
+
+        self.update_default_path()
 
         # add vertical spacer
         self.vert.addStretch()

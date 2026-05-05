@@ -20,6 +20,7 @@ from ..model.basin_characteristics_table_view import BasinCharsTableModel
 
 from ..gp.stream_gage_task import StreamGageTask
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
+from .widgets.table_export_widget import FrmTableExport
 
 # https://stackoverflow.com/questions/31406193/matplotlib-is-not-worked-with-qgis
 # https://matplotlib.org/3.1.1/gallery/user_interfaces/embedding_in_qt_sgskip.html
@@ -235,18 +236,25 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
     def export(self):
 
-        data = self.load_discharge_data()
-        if data is None:
+        data = self.get_discharge_export_data()
+        if not data:
             self.iface.messageBar().pushMessage('Discharge Export', f'No data to export.', level=Qgis.Info, duration=5)
             return
 
-        dialog_return = QtWidgets.QFileDialog.getSaveFileName(self, "Export Discharge Data", None, 'CSV Files (*.csv)')
-        if dialog_return is not None and dialog_return[0] != '':
-            with open(dialog_return[0], 'w') as f:
-                f.write('measurement_date,discharge (cfs)\n')
-                [f.write(f'{row[0]},{row[1]}\n') for row in data]
+        frm = FrmTableExport(
+            self,
+            data=data,
+            base_name='stream_gage_discharge_export',
+            project_path=self.project.project_file,
+            export_type='stream_gage_discharge',
+        )
+        frm.exec_()
 
-            self.iface.messageBar().pushMessage('Discharge Export', 'Data successfully exported to ' + dialog_return[0], level=Qgis.Info, duration=5)
+    def get_discharge_export_data(self):
+        data = self.load_discharge_data()
+        if data is None:
+            return []
+        return [{'measurement_date': row[0], 'discharge (cfs)': row[1]} for row in data]
 
     def delete_gage(self):
         

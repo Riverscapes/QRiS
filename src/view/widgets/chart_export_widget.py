@@ -1,26 +1,39 @@
 import os
+import re
 
 from qgis.PyQt import QtWidgets, QtCore, QtGui
-from qgis.PyQt.QtCore import QVariant
-from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsProject, QgsFeature
-
 from ...QRiS.path_utilities import get_unique_file_path
 from ..utilities import add_standard_form_buttons
+from .table_export_widget import FrmTableExport
+
+
+def _format_export_display_name(base_name):
+    text = str(base_name or "export")
+    text = text.replace('_', ' ').replace('-', ' ')
+    text = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
 class FrmChartExport(QtWidgets.QDialog):
-    def __init__(self, parent, mode='values', data=None, figure=None, base_name="export", project_path=None):
+    def __init__(self, parent, mode='values', data=None, figure=None, base_name="export", project_path=None, export_type=None):
         super().__init__(parent)
+        base_name_text = str(base_name).strip() if base_name is not None else ''
+        export_type_text = str(export_type).strip() if export_type is not None else ''
+
         self.mode = mode  # 'values' or 'image'
         self.data = data
         self.figure = figure
-        self.base_name = base_name
+        self.base_name = base_name_text if base_name_text else 'export'
         self.project_path = project_path
+        self.export_display_name = _format_export_display_name(self.base_name)
+        self.file_base_name = self.base_name
+        self.export_type = export_type_text if export_type_text else None
         self.last_generated_path = None
         
         self.setupUi()
         
     def setupUi(self):
-        title = "Export Chart Values" if self.mode == 'values' else "Export Chart Image"
+        title = "Export Data Table" if self.mode == 'values' else "Export Chart Image"
         self.setWindowTitle(title)
         self.setMinimumWidth(500)
         
@@ -31,7 +44,7 @@ class FrmChartExport(QtWidgets.QDialog):
         # Info
         lbl_info = QtWidgets.QLabel("Exporting:")
         self.grid.addWidget(lbl_info, 0, 0)
-        lbl_name = QtWidgets.QLabel(f"<b>{self.base_name}</b>")
+        lbl_name = QtWidgets.QLabel(f"<b>{self.export_display_name}</b>")
         self.grid.addWidget(lbl_name, 0, 1)
         
         # Format
@@ -83,18 +96,20 @@ class FrmChartExport(QtWidgets.QDialog):
         return ""
 
     def update_default_path(self):
-        home = self.project_path or QgsProject.instance().homePath()
+        home = self.project_path
         if not home: return
         
         if os.path.isfile(home):
             home = os.path.dirname(home)
             
         export_dir = os.path.join(home, 'exports')
+        if self.export_type:
+            export_dir = os.path.join(export_dir, self.export_type)
         if not os.path.exists(export_dir):
             os.makedirs(export_dir, exist_ok=True)
             
         ext = self.get_extension()
-        default_path = get_unique_file_path(export_dir, self.base_name, ext)
+        default_path = get_unique_file_path(export_dir, self.file_base_name, ext)
         self.leFile.setText(os.path.normpath(default_path))
         self.last_generated_path = self.leFile.text()
 
@@ -174,51 +189,11 @@ class FrmChartExport(QtWidgets.QDialog):
             return False, str(e)
 
     def export_values(self, filename):
-        if not self.data: return False, "No data available."
-        
-        # Convert data to QgsVectorLayer (Memory)
-        fields = list(self.data[0].keys())
-        vl = QgsVectorLayer("None", "Export", "memory")
-        pr = vl.dataProvider()
-        
-        qgs_fields = []
-        for f in fields:
-            val = self.data[0][f]
-            if isinstance(val, (int, float)):
-                 qgs_fields.append(QgsField(f, QVariant.Double))
-            else:
-                 qgs_fields.append(QgsField(f, QVariant.String))
-        
-        pr.addAttributes(qgs_fields)
-        vl.updateFields()
-        
-        feats = []
-        for row in self.data:
-            feat = QgsFeature()
-            feat.setFields(vl.fields())
-            attrs = [row.get(f.name(), None) for f in vl.fields()]
-            feat.setAttributes(attrs)
-            feats.append(feat)
-            
-        pr.addFeatures(feats)
-        vl.updateExtents()
-        
-        options = QgsVectorFileWriter.SaveVectorOptions()
-        options.fileEncoding = "UTF-8"
-        options.driverName = "CSV"
-        
-        lower = filename.lower()
-        if lower.endswith(".xlsx"): options.driverName = "XLSX"
-        elif lower.endswith(".json"): options.driverName = "GeoJSON"
-        
-        err = QgsVectorFileWriter.writeAsVectorFormatV3(vl, filename, QgsCoordinateTransformContext(), options)
-        if err[0] != QgsVectorFileWriter.NoError:
-             return False, err[1]
-             
-        return True, ""
+        dlg = FrmTableExport(self, data=self.data, base_name=self.base_name, project_path=self.project_path, export_type=self.export_type)
+        return dlg.export_table(filename)
 
 class ChartExportWidget(QtWidgets.QPushButton):
-    def __init__(self, parent=None, base_name="chart_export", get_data_callback=None, get_figure_callback=None, project_path=None):
+    def __init__(self, parent=None, base_name="chart_export", get_data_callback=None, get_figure_callback=None, project_path=None, export_type=None):
         super().__init__(parent)
         self.setText("Export")
         self.setToolTip("Export chart data or image")
@@ -227,6 +202,7 @@ class ChartExportWidget(QtWidgets.QPushButton):
         self.get_data_callback = get_data_callback
         self.get_figure_callback = get_figure_callback
         self.project_path = project_path
+        self.export_type = export_type
         
         self.setup_menu()
 
@@ -253,7 +229,7 @@ class ChartExportWidget(QtWidgets.QPushButton):
             return
         
         # Create and show dialog
-        dlg = FrmChartExport(self, mode='values', data=data, base_name=self.base_name, project_path=self.project_path)
+        dlg = FrmTableExport(self, data=data, base_name=self.base_name, project_path=self.project_path, export_type=self.export_type)
         dlg.exec_()
 
     def export_image(self):
@@ -265,5 +241,5 @@ class ChartExportWidget(QtWidgets.QPushButton):
              return
         
         # Create and show dialog
-        dlg = FrmChartExport(self, mode='image', figure=fig, base_name=self.base_name, project_path=self.project_path)
+        dlg = FrmChartExport(self, mode='image', figure=fig, base_name=self.base_name, project_path=self.project_path, export_type=self.export_type)
         dlg.exec_()
