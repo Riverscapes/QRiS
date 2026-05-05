@@ -1,9 +1,9 @@
 # dialog that sets the analysis units for the analysis
 
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QGridLayout, QLabel, QComboBox
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QGridLayout, QLabel, QComboBox
 
 from ..model.analysis import Analysis
-from ..lib.unit_conversion import distance_units, area_units, ratio_units, short_unit_name
+from ..lib.unit_conversion import distance_units, area_units, ratio_units
 from .utilities import add_standard_form_buttons
 
 class FrmAnalysisUnits(QDialog):

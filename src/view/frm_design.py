@@ -8,7 +8,6 @@ from ..model.event import Event, DESIGN_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID
 from ..model.planning_container import PlanningContainer
 
 from .frm_event import FrmEvent
-from .widgets.event_library import EventLibraryWidget
 from .widgets.planning_event_library import PlanningEventLibraryWidget
 
 class FrmDesign(FrmEvent):

@@ -29,12 +29,12 @@ from osgeo import ogr
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
-from PyQt5.QtCore import pyqtSlot, QVariant, QDate, QModelIndex, QMetaType
+from PyQt5.QtCore import pyqtSlot, QDate, QModelIndex, QMetaType
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
-from ..model.project import Project, PROJECT_MACHINE_CODE
-from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID, Event
+from ..model.project import Project
+from ..model.event import Event, EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ..model.planning_container import PlanningContainer
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
 from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis

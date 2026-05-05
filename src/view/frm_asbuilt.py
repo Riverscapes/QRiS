@@ -5,7 +5,6 @@ from qgis.PyQt import QtCore, QtWidgets
 
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.project import Project
-from ..model.layer import Layer
 from ..model.event import Event, DESIGN_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID
 from ..model.datespec import DateSpec
 

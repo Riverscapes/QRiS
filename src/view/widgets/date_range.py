@@ -1,7 +1,7 @@
 from datetime import date
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSignal, QDate
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import pyqtSignal, QDate
 
 class DateRangeWidget(QtWidgets.QWidget):
     

@@ -4,7 +4,7 @@ import json
 from textwrap import dedent
 
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import Qt, QVariant, QMetaType, pyqtSlot, pyqtSignal, QObject
+from qgis.PyQt.QtCore import QVariant, QMetaType, pyqtSignal, QObject
 from qgis.utils import iface
 
 from ..QRiS.path_utilities import is_url

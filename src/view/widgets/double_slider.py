@@ -1,8 +1,5 @@
 # Borrowed from https://stackoverflow.com/questions/42820380/use-float-for-qslider
-
-import math
-
-from PyQt5 import QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal
 
 

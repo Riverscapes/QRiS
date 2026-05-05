@@ -1,4 +1,5 @@
 from typing import Dict
+
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 from ...model.project import Project
@@ -8,7 +9,6 @@ from ...model.analysis import Analysis
 
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
-
 
 from .checkable_combo_box import CheckableComboBox
 

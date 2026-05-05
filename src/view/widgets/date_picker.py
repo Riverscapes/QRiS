@@ -1,7 +1,6 @@
-from calendar import month
 from datetime import datetime
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtWidgets
 
 from ...model.datespec import DateSpec
 

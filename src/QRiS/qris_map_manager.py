@@ -7,8 +7,8 @@ from .riverscapes_map_manager import RiverscapesMapManager
 from ..model.project import Project, PROJECT_MACHINE_CODE
 from ..model.db_item import DBItem
 from ..model.sample_frame import SampleFrame, SAMPLE_FRAME_MACHINE_CODE, AOI_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE
-from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE
-from ..model.scratch_vector import ScratchVector, SCRATCH_VECTOR_MACHINE_CODE
+from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
+from ..model.scratch_vector import ScratchVector
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.raster import Raster, BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SLIDER_MACHINE_CODE, get_raster_symbology
 from ..model.event import EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, AS_BUILT_MACHINE_CODE, AS_BUILT_EVENT_TYPE_ID, Event

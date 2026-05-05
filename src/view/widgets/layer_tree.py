@@ -1,13 +1,12 @@
 import os
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QSettings
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import QSettings
 
 from ...model.project import Project
-from ...model.event import PLANNING_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, PLANNING_MACHINE_CODE, AS_BUILT_MACHINE_CODE, DESIGN_MACHINE_CODE
+from ...model.event import AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.layer import Layer
 
-from ...QRiS.settings import Settings
 from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocol_definitions
 
 from ..frm_event_picker import FrmEventPicker

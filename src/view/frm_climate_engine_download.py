@@ -1,9 +1,7 @@
 import webbrowser
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QDate
-
-from qgis.core import QgsApplication
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import QDate
 from qgis.utils import iface
 
 from .widgets.sample_frames import SampleFrameWidget
@@ -13,7 +11,7 @@ from .utilities import add_help_button
 from ..gp.download_climate_engine_task import AREA_REDUCER, DownloadClimateEngineTimeseriesTask
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
-from ..lib.climate_engine import get_datasets, get_dataset_date_range, get_dataset_timeseries_polygon, open_climate_engine_website
+from ..lib.climate_engine import get_datasets, get_dataset_date_range, open_climate_engine_website
 
 
 date_ranges = ['1 Year', '3 Years', '5 Years', '10 Years', 'Full Data Range', 'Custom']

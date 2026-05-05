@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.utils import iface

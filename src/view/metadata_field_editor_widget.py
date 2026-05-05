@@ -1,8 +1,8 @@
 import json
 import typing
 
-from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory, QgsWidgetWrapper
-from qgis.core import QgsVectorLayer, NULL, QgsFieldConstraints
+from qgis.gui import QgsGui, QgsEditorConfigWidget, QgsEditorWidgetWrapper, QgsEditorWidgetFactory
+from qgis.core import QgsVectorLayer, NULL
 
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 from qgis.PyQt.QtWidgets import QWidget, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QComboBox, QDoubleSpinBox, QCheckBox, QSlider

@@ -1,5 +1,4 @@
-import os
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
 from .frm_geospatial_metrics_options import FrmOptions
 from .frm_geospatial_metrics_export import FrmGeospatialMetricsExport

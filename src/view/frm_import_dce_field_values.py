@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QVariant
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt.QtCore import QVariant
 
 from .utilities import add_standard_form_buttons
 

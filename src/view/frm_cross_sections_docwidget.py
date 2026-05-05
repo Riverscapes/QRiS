@@ -3,10 +3,8 @@ Doc Widget for building x-sections from centerlines
 
 """
 
-from PyQt5 import Qt, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt import Qt, QtCore, QtWidgets
+from qgis.PyQt.QtCore import pyqtSlot, pyqtSignal
 from qgis.core import QgsApplication, QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsCoordinateTransform, QgsDistanceArea
 from qgis.utils import iface
 

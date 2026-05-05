@@ -1,7 +1,4 @@
-import os
-import requests
-
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 from ..QRiS.settings import CONSTANTS
 

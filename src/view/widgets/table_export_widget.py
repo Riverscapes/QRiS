@@ -4,7 +4,9 @@ import os
 import re
 
 import xlwt
+
 from qgis.PyQt import QtCore, QtGui, QtWidgets
+
 from ...QRiS.path_utilities import get_unique_file_path
 from ..utilities import add_standard_form_buttons
 

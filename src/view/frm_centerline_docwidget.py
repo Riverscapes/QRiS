@@ -5,7 +5,7 @@ Doc Widget for building centerlines
 from qgis.PyQt import  QtWidgets
 from qgis.PyQt.QtCore import Qt, pyqtSlot, pyqtSignal
 from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsMarkerLineSymbolLayer, QgsSimpleMarkerSymbolLayer
+from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.utils import iface
 
 from ..gp.centerlines import CenterlineTask

@@ -1,8 +1,7 @@
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.core import QgsVectorLayer
 from qgis.utils import iface
-
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSignal
 
 from ...model.db_item import DBItem, DBItemModel, CheckableDBItemModel
 from ...model.project import Project
@@ -10,6 +9,7 @@ from ...model.sample_frame import SampleFrame
 from ...model.sample_frame import get_sample_frame_ids
 
 from ...QRiS.qris_map_manager import QRisMapManager
+
 
 class SampleFrameWidget(QtWidgets.QWidget):
 

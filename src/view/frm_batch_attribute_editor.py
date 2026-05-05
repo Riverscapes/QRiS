@@ -5,9 +5,9 @@ from qgis.core import QgsVectorLayer, QgsVectorLayerCache,  QgsAttributeTableCon
 from qgis.gui import QgsAttributeTableView, QgsAttributeTableModel, QgsAttributeTableFilterModel
 from qgis.utils import iface
 
-from PyQt5.QtWidgets import QWidget, QDialog, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton
-from PyQt5.QtCore import Qt, QVariant
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from qgis.PyQt.QtWidgets import QWidget, QDialog, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton
+from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 
 from .utilities import add_help_button
 

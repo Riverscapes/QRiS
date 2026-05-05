@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
-from PyQt5.QtGui import QDesktopServices
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
+from qgis.PyQt.QtGui import QDesktopServices
 from typing import Union
 
 from ..model.protocol import Protocol

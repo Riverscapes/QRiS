@@ -1,5 +1,6 @@
-from qgis.PyQt import QtWidgets
 import json
+
+from qgis.PyQt import QtWidgets
 
 from ..model.layer import Layer
 from ..model.project import Project

@@ -1,8 +1,8 @@
 import os
 import re
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication
 from qgis.gui import QgisInterface
 from qgis.utils import iface

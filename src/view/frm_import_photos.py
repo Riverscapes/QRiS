@@ -2,12 +2,12 @@ import os
 import json
 import shutil
 
-from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import Qt, QDateTime
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtCore import Qt, QDateTime
 
 from qgis import processing
-from qgis.core import QgsApplication, QgsProcessingContext, QgsProcessingFeedback, QgsProcessingAlgRunnerTask, QgsProject, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorLayerUtils
+from qgis.core import QgsProcessingContext, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorLayerUtils
 
 from ..model.event_layer import EventLayer
 from ..model.project import Project

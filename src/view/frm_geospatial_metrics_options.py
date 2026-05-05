@@ -1,13 +1,7 @@
-
-
-import os
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtWidgets
 
 from ..QRiS.units import get_areas, get_lengths
-
 from ..model.project import Project
-
-
 from .utilities import add_standard_form_buttons
 
 

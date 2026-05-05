@@ -1,9 +1,9 @@
 import os
 import json
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import pyqtSlot
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
+from qgis.PyQt.QtCore import pyqtSlot
 from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
 

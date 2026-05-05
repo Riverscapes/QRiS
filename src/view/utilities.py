@@ -1,6 +1,8 @@
-import sqlite3
 import re
-from PyQt5 import QtCore, QtGui, QtWidgets
+import sqlite3
+
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+
 from ..QRiS.settings import CONSTANTS
 
 

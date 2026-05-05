@@ -1,5 +1,5 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from ..model.db_item import DBItem, DBItemModel
+from qgis.PyQt import QtCore, QtWidgets
+from ..model.db_item import DBItemModel
 
 
 class FrmLayerPicker(QtWidgets.QDialog):

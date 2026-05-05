@@ -1,9 +1,7 @@
 import webbrowser
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QDate
-
-from qgis.core import QgsApplication
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import QDate
 from qgis.utils import iface
 
 from .widgets.date_range import DateRangeWidget

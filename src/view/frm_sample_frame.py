@@ -1,10 +1,9 @@
-import os
 import json
 import sqlite3
 
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import Qt, QSize, QVariant, QMetaType, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout,  QGridLayout, QTabWidget, QGroupBox, QTreeView, QListWidget, QListWidgetItem, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
+from qgis.PyQt.QtCore import Qt, QSize, QVariant, QMetaType, pyqtSignal
+from qgis.PyQt.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QGroupBox, QTreeView, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.gui import QgisInterface
@@ -25,7 +24,7 @@ from ..gp.import_temp_layer import ImportMapLayer
 from ..gp.sample_frame import SampleFrameTask
 
 from .widgets.metadata import MetadataWidget
-from .utilities import validate_name, validate_name_unique, add_standard_form_buttons
+from .utilities import validate_name, add_standard_form_buttons
 
 # Text constants
 flow_path = 'Flow Path' # level path

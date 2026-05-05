@@ -1,17 +1,17 @@
-import numpy as np
 import sqlite3
 from datetime import date, datetime
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib
 
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import pyqtSlot
 from qgis.core import QgsApplication, Qgis, QgsMessageLog, QgsVectorLayer, QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsRectangle
-from PyQt5.QtCore import pyqtSlot
 
 from ..QRiS.settings import CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from .utilities import add_help_button
+from .widgets.table_export_widget import FrmTableExport
 
 from ..model.project import Project
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
@@ -20,7 +20,6 @@ from ..model.basin_characteristics_table_view import BasinCharsTableModel
 
 from ..gp.stream_gage_task import StreamGageTask
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
-from .widgets.table_export_widget import FrmTableExport
 
 # https://stackoverflow.com/questions/31406193/matplotlib-is-not-worked-with-qgis
 # https://matplotlib.org/3.1.1/gallery/user_interfaces/embedding_in_qt_sgskip.html
@@ -33,10 +32,8 @@ try:
 except ImportError:
     QgsMessageLog.logMessage(f"Matplotlib is not at a sufficient version: {matplotlib.__version__}", CONSTANTS['logCategory'], level=Qgis.Critical)
 
-
 # Help on selection changed event
 # https://stackoverflow.com/questions/10156842/howto-get-the-selectionchanged-signal
-
 
 class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 

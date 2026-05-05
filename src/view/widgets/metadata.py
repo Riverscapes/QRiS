@@ -1,6 +1,6 @@
 import json
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from qgis.PyQt import QtCore, QtWidgets, QtGui
 
 
 class MetadataWidget(QtWidgets.QWidget):

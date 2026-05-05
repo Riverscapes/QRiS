@@ -1,8 +1,10 @@
 import os
 import json
 import csv
-from PyQt5 import QtCore, QtGui, QtWidgets
+
 import numpy as np
+
+from qgis.PyQt import QtCore, QtWidgets
 
 try:
     import pandas as pd

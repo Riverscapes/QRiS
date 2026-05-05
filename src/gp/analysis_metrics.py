@@ -10,8 +10,6 @@ from decimal import Decimal, InvalidOperation
 import osgeo
 from osgeo import ogr, gdal, osr
 
-from qgis.core import QgsUnitTypes
-
 from .zonal_statistics import zonal_statistics
 
 from ..model.db_item import DBItem

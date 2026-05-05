@@ -1,6 +1,6 @@
 import os
 
-from PyQt5 import QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.utils import Qgis
 from qgis.gui import QgisInterface
 

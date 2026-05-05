@@ -1,7 +1,8 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from qgis.PyQt import QtWidgets, QtCore, QtGui
+
 from .event_library import EventLibraryWidget, SortableTableWidgetItem
 from ...model.db_item import DBItemModel, DBItem
-from ...model.event import DCE_EVENT_TYPE_ID
+
 
 class PlanningEventLibraryWidget(EventLibraryWidget):
     """

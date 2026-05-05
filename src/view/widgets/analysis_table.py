@@ -1,9 +1,11 @@
 from qgis.PyQt import QtCore, QtGui, QtWidgets
+
 from ...model.metric import Metric
 from ...model.analysis import format_feasibility_text
 from ...model.metric_value import MetricValue, load_metric_values
 from ...model.analysis_metric import AnalysisMetric
 from ...lib.unit_conversion import short_unit_name, distance_units, area_units, ratio_units
+
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
 

@@ -1,12 +1,10 @@
-import traceback
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qgis.core import Qgis, QgsMessageLog, QgsUnitTypes, QgsApplication
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.core import QgsMessageLog, QgsApplication
 
 from ..model.project import Project
 from ..model.metric_value import MetricValue, load_metric_values
-from ..model.metric import Metric
 from ..model.analysis import Analysis, format_feasibility_text
 from ..model.event import Event
 

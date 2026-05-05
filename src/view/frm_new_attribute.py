@@ -1,8 +1,5 @@
-
-
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QMessageBox, QDialog, QVBoxLayout,QHBoxLayout, QGridLayout, QListWidget, QListWidgetItem, QLabel, QLineEdit, QPushButton
-
+from qgis.PyQt.QtCore import Qt, QSize
+from qgis.PyQt.QtWidgets import QMessageBox, QDialog, QVBoxLayout,QHBoxLayout, QGridLayout, QListWidget, QListWidgetItem, QLabel, QLineEdit, QPushButton
 
 from .utilities import add_standard_form_buttons
 

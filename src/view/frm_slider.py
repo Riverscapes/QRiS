@@ -1,12 +1,12 @@
-from PyQt5 import QtCore, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal
 
 from qgis.core import QgsRasterBandStats
 
 from ..model.scratch_vector import ScratchVector
-
 from ..model.raster import Raster, RASTER_SLIDER_MACHINE_CODE
 from ..model.project import Project
+
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
 from .widgets.double_slider import DoubleSlider

@@ -2,6 +2,7 @@ import os
 import re
 
 from qgis.PyQt import QtWidgets, QtCore, QtGui
+
 from ...QRiS.path_utilities import get_unique_file_path
 from ..utilities import add_standard_form_buttons
 from .table_export_widget import FrmTableExport

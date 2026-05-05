@@ -1,9 +1,8 @@
-import os
 import re
 import json
 
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt.QtCore import pyqtSlot
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.gui import QgisInterface
 

@@ -3,8 +3,7 @@ import json
 import sqlite3
 import time
 
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
-
+from qgis.PyQt.QtCore import QObject, pyqtSignal, QTimer
 from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
 from qgis.utils import spatialite_connect
 

@@ -1,8 +1,8 @@
-from PyQt5 import QtWidgets, QtCore
+from qgis.PyQt import QtWidgets, QtCore
 
-from ...model.db_item import DBItem
 from ...model.raster import Raster
 from ...model.project import Project
+
 
 class SurfaceLibraryWidget(QtWidgets.QWidget):
 # Implement a Surfaces Library grid picker, which loads surfaces in surface library, exposes their date, and type (columns) allows sorting), and has a checkbox 

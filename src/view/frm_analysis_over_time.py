@@ -3,8 +3,8 @@ import numpy as np
 
 from qgis.PyQt import QtCore, QtWidgets, QtGui
 from qgis.gui import QgisInterface
-from qgis.core import Qgis,  QgsProject, QgsCoordinateTransform, QgsMessageLog, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsFeature
-from qgis.PyQt.QtCore import QVariant
+from qgis.core import Qgis, QgsProject, QgsCoordinateTransform, QgsMessageLog
+
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -19,7 +19,6 @@ from ..model.event import DCE_EVENT_TYPE_ID
 
 from .widgets.event_library import EventLibraryWidget
 from .widgets.chart_export_widget import ChartExportWidget
-from .utilities import add_help_button
 from .frm_metric_value import FrmMetricValue
 from .frm_settings import get_default_chart_font
 

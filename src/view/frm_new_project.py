@@ -3,7 +3,7 @@ import json
 import uuid
 import sqlite3
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 from qgis.gui import QgisInterface
 from qgis.utils import iface
 from qgis.core import QgsApplication

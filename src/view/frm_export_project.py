@@ -6,7 +6,7 @@ import re
 
 from osgeo import ogr
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import QSettings
 
@@ -19,9 +19,8 @@ from ..model.cross_sections import CrossSections
 from ..model.project import Project as QRiSProject
 from ..model.raster import Raster
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
-from ..model.stream_gage import StreamGage
 from ..model.sample_frame import SampleFrame
-from ..model.attachment import Attachment, attachments_path, parse_posix_path
+from ..model.attachment import Attachment
 from ..lib.rs_project import RSProject
 
 from .utilities import add_standard_form_buttons, message_box

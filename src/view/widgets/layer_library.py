@@ -1,14 +1,13 @@
-from typing import Dict, List, Tuple
 import os
+from typing import Dict, List, Tuple
+
 from qgis.PyQt import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 
 from ...model.project import Project
 from ...model.layer import Layer
-from ...model.protocol import Protocol
-from ...model.event import Event, PLANNING_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
+from ...model.event import Event, DCE_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 
-from ...QRiS.settings import Settings
 from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocol_definitions
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from .checkable_combo_box import CheckableComboBox

@@ -1,12 +1,11 @@
-import os
 import sqlite3
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib import pyplot as plt
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import Qt
 
 from ..model.project import Project
 from ..model.db_item import DBItemModel

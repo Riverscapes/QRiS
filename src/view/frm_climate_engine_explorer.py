@@ -2,16 +2,13 @@ import json
 import sqlite3
 from datetime import datetime
 
-import matplotlib
-import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import matplotlib.ticker as ticker
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from PyQt5 import QtWidgets
-from PyQt5.QtGui import QStandardItemModel, QStandardItem, QIcon, QCursor
-from PyQt5.QtCore import Qt, QSize
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem, QIcon, QCursor
+from qgis.PyQt.QtCore import Qt, QSize
 
 from .frm_climate_engine_download import FrmClimateEngineDownload
 from .utilities import add_help_button

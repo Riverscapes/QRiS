@@ -21,36 +21,23 @@
  *                                                                         *
  ***************************************************************************/
 """
-
-import os
-import traceback
-
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog, QgsApplication
 from qgis.gui import QgisInterface
 
 from ..model.project import Project
-from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.analysis_metric import AnalysisMetric
-from ..model.db_item import DB_MODE_CREATE, DB_MODE_IMPORT, DBItem, DBItemModel
+from ..model.analysis import Analysis
+from ..model.db_item import  DBItemModel
 from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
-from ..model.raster import BASEMAP_MACHINE_CODE, Raster
 from ..model.sample_frame import get_sample_frame_ids
-from ..model.metric import Metric
-from ..model.metric_value import MetricValue, load_metric_values
 
-from ..lib.unit_conversion import short_unit_name
-from ..gp import analysis_metrics
-from ..gp.analysis_metrics import MetricInputMissingError
 from ..gp.analysis_metrics_task import AnalysisMetricsTask
-from ..QRiS.path_utilities import parse_posix_path
 
 from .utilities import add_help_button
 from .frm_metric_value import FrmMetricValue
 from .frm_metric_calculate_all import FrmCalculateAllMetrics
 from .frm_export_metrics import FrmExportMetrics
 from .frm_analysis_properties import FrmAnalysisProperties
-from .frm_analysis_units import FrmAnalysisUnits
 from .frm_analysis_explorer import FrmAnalysisExplorer
 from .widgets.analysis_table import AnalysisTable
 
