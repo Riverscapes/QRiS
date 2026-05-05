@@ -5,7 +5,7 @@ from qgis.core import QgsVectorLayer, QgsVectorLayerCache,  QgsAttributeTableCon
 from qgis.gui import QgsAttributeTableView, QgsAttributeTableModel, QgsAttributeTableFilterModel
 from qgis.utils import iface
 
-from qgis.PyQt.QtWidgets import QWidget, QDialog, QLabel, QLineEdit, QTextEdit, QTextEdit, QVBoxLayout, QGridLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton
+from qgis.PyQt.QtWidgets import QWidget, QDialog, QLabel, QLineEdit, QTextEdit, QVBoxLayout, QGridLayout, QHBoxLayout, QComboBox, QDoubleSpinBox, QPushButton
 from qgis.PyQt.QtCore import Qt, QVariant
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 

@@ -1,16 +1,9 @@
-import os
-import json
-import datetime
 from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsProject, QgsVectorLayer, QgsRasterLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
 from .zonal_metrics import ZonalMetrics
-from ..model.raster import SURFACES_PARENT_FOLDER
-from ..QRiS.qris_map_manager import QRisMapManager
-
-import webbrowser
 
 MESSAGE_CATEGORY = 'QRiS Zonal Statistics Task'
 

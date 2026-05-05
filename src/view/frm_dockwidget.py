@@ -24,7 +24,6 @@
 
 import os
 from functools import partial
-from osgeo import ogr
 
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -48,7 +47,6 @@ from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..model.attachment import Attachment, ATTACHMENT_MACHINE_CODE, attachments_path
-from .frm_query_builder import FrmQueryBuilder
 
 from .frm_design import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent

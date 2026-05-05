@@ -9,8 +9,8 @@ from qgis.utils import spatialite_connect
 
 from .analysis import Analysis, load_analyses
 from .sample_frame import SampleFrame, load_sample_frames
-from .layer import Layer, load_layers, update_layer
-from .protocol import Protocol, load as load_protocols, update_protocol, insert_protocol
+from .layer import load_layers, update_layer
+from .protocol import load as load_protocols, update_protocol, insert_protocol
 from .raster import Raster, load_rasters
 from .event import Event, load as load_events
 from .planning_container import PlanningContainer, load as load_planning_containers
@@ -18,7 +18,7 @@ from .event_layer import EventLayer
 from .metric import Metric, load_metrics, insert_metric, update_metric
 from .pour_point import PourPoint, load_pour_points
 from .scratch_vector import ScratchVector, load_scratch_vectors
-from .stream_gage import StreamGage, load_stream_gages
+from .stream_gage import load_stream_gages
 from .profile import Profile, load_profiles
 from .cross_sections import CrossSections, load_cross_sections
 from .attachment import Attachment, load_attachments

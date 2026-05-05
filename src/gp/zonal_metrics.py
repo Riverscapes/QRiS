@@ -1,12 +1,9 @@
-import os
-import json
-import numpy as np
 import math
+
 import osgeo
 from osgeo import ogr, gdal, osr
-from shapely.wkb import load, loads as wkbload, dumps as wkbdumps
-from osgeo import gdal
-from shapely.geometry import mapping
+
+from shapely.wkb import loads as wkbload
 
 from ..model.sample_frame import SampleFrame
 from .zonal_statistics import zonal_statistics

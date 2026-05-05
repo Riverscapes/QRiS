@@ -13,6 +13,7 @@ PATTERNS = [
 
 # Base URL for help docs (adjust if needed)
 BASE_URL = "https://qris.riverscapes.net/"
+REQUEST_TIMEOUT_SECONDS = 10
 
 # Find all .py files in src/view
 view_dir = os.path.join(os.path.dirname(__file__), '../src/view')
@@ -43,7 +44,7 @@ class TestHelpLinks(unittest.TestCase):
         for file_path, slug in all_slug_tuples:
             url = BASE_URL + "software-help/" + slug.lstrip('/')
             try:
-                resp = requests.get(url)
+                resp = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
                 if resp.status_code != 200:
                     errors.append(f"Invalid help URL in {os.path.basename(file_path)}: {url} (status {resp.status_code})")
             except Exception as ex:

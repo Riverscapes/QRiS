@@ -1,9 +1,8 @@
-import requests
 import csv
 import sqlite3
-from io import StringIO
-from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsTask, QgsMessageLog, Qgis
-from ..model.pour_point import save_pour_point, PourPoint
+import requests
+
+from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
 
 MESSAGE_CATEGORY = 'QRiS_StreamGageTask'

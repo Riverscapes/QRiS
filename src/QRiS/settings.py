@@ -1,11 +1,10 @@
-from genericpath import isfile
 import os
 import json
-import logging
 import html
-from .units import Units
 
 from qgis.core import QgsMessageLog, Qgis, QgsProject, QgsSettings
+
+from .units import Units
 
 with open(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json')) as cfg_file:
     cfg_json = json.load(cfg_file)

@@ -1,7 +1,7 @@
 import os
-import re
+
 from urllib.parse import urlparse
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 
 
 def get_unique_file_path(folder: str, root_name: str, extension: str) -> str:

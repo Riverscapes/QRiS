@@ -617,9 +617,6 @@ class AnalysisTable(QtWidgets.QWidget):
     def on_item_double_clicked(self, item):
         self._handle_edit(item.row())
 
-    def on_item_double_clicked(self, item):
-        self._handle_edit(item.row())
-
     def open_context_menu(self, position):
         item = self.table.itemAt(position)
         if not item: return
