@@ -1,9 +1,8 @@
 import os
-from osgeo import ogr
-import re
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject
+
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransform, QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
-from ..model.db_item import DBItem
+
 
 MESSAGE_CATEGORY = 'QRiS_CopyFeatureClassTask'
 

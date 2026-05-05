@@ -3,7 +3,7 @@ Doc Widget for building x-sections from centerlines
 
 """
 
-from qgis.PyQt import Qt, QtCore, QtWidgets
+from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot, pyqtSignal
 from qgis.core import QgsApplication, QgsProject, QgsVectorLayer, QgsFeature, QgsGeometry, QgsCoordinateTransform, QgsDistanceArea
 from qgis.utils import iface
@@ -13,6 +13,7 @@ from ..model.project import Project
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..QRiS.qris_map_manager import QRisMapManager
+
 from .utilities import add_help_button
 from .frm_cross_sections import FrmCrossSections
 from .frm_layer_picker import FrmLayerPicker

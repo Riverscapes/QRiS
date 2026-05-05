@@ -1,7 +1,7 @@
 import os
 
 from qgis.core import (
-    QgsApplication,
+    # QgsApplication,
     QgsRasterLayer,
     QgsVectorLayer,
     QgsField,
@@ -11,17 +11,17 @@ from qgis.core import (
     QgsVectorFileWriter,
     QgsVectorDataProvider, QgsTask, QgsMessageLog, Qgis,
     edit)
-from PyQt5.QtGui import *
-from qgis.PyQt.QtCore import QVariant, QMetaType, pyqtSignal
-from qgis.analysis import QgsNativeAlgorithms
+# from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtCore import QMetaType, pyqtSignal
+# from qgis.analysis import QgsNativeAlgorithms
 
 
 # Initialize QGIS Application
 from qgis import processing
-# TODO figure out processing imports
-from processing.core.Processing import Processing
-Processing.initialize()
-QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
+# TODO figure out processing imports - this is likely not required.
+# from processing.core.Processing import Processing
+# Processing.initialize()
+# QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
 # ---- processing tool parameters ----
 # simplify tolerance

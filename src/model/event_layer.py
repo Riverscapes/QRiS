@@ -3,7 +3,6 @@ import sqlite3
 from qgis.core import QgsVectorLayer
 
 from .layer import Layer
-from .db_item import DBItem
 from .db_item_spatial import DBItemSpatial
 
 

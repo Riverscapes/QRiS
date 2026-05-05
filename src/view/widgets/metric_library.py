@@ -747,9 +747,6 @@ class MetricLibrary(QtWidgets.QWidget):
         self.update_visibility()
         self.update_usage_count_label()
 
-    def load_metrics_tree(self):
-        pass # Replaced by build_metrics_tree called once
-
     def build_metrics_tree(self):
         self.metricsTree.setSortingEnabled(False)
         metrics = list(self.qris_project.metrics.values())
@@ -860,9 +857,6 @@ class MetricLibrary(QtWidgets.QWidget):
             menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
         if not menu.isEmpty():
             menu.exec_(self.metricsTree.viewport().mapToGlobal(position))
-
-    def load_metrics_table(self):
-        pass
 
     def build_metrics_table(self):
         self.metricsTable.setSortingEnabled(False)

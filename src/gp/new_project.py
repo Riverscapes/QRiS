@@ -2,8 +2,6 @@ import os
 import json
 import sqlite3
 
-from osgeo import ogr
-
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
 

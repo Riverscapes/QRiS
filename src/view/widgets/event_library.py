@@ -1,6 +1,6 @@
 from qgis.PyQt import QtWidgets, QtCore, QtGui
 
-from ...model.event import Event, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
+from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ...model.project import Project
 from .checkable_combo_box import CheckableComboBox
 

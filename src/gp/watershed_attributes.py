@@ -1,9 +1,10 @@
 import json
-import os
 import tempfile
 import webbrowser
+
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
+
 from ..QRiS.settings import CONSTANTS
 from .watershed_attribute_api import QueryMonster
 # from .report_creation.qris_report import QRiSReport

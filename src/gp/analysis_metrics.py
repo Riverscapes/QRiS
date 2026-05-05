@@ -7,7 +7,6 @@ import sqlite3
 from typing import Generator
 from decimal import Decimal, InvalidOperation
 
-import osgeo
 from osgeo import ogr, gdal, osr
 
 from .zonal_statistics import zonal_statistics

@@ -1,7 +1,7 @@
 import os
 import json
 import sqlite3
-from enum import Enum
+
 from typing import Dict
 
 from qgis.core import QgsRasterLayer

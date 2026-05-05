@@ -2,8 +2,6 @@ import json
 import sqlite3
 from typing import Dict, List
 
-from qgis.core import QgsVectorLayer
-
 from .db_item import DBItem
 from .db_item_spatial import DBItemSpatial 
 

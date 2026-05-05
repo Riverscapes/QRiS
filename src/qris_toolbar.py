@@ -28,8 +28,6 @@ from qgis.PyQt.QtCore import QSettings, pyqtSlot
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsMessageLog
 from qgis.gui import QgsMapToolEmitPoint, QgisInterface
 
-# TODO fix this
-from .gp.provider import Provider
 from .QRiS.settings import Settings
 from .QRiS.settings import CONSTANTS
 

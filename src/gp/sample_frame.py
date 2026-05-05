@@ -1,4 +1,3 @@
-from PyQt5.QtGui import *
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFeature, QgsProject, QgsCoordinateTransform
 from qgis.analysis import QgsNativeAlgorithms

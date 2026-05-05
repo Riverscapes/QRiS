@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 # from .event_layer import EventLayer
 from .db_item import DBItem, dict_factory, update_intersect_table
@@ -8,6 +8,7 @@ from .datespec import DateSpec
 from .layer import Layer
 from .event_layer import EventLayer
 from .raster import Raster
+
 EVENT_MACHINE_CODE = 'Event'
 DCE_MACHINE_CODE = 'DCE'
 DESIGN_MACHINE_CODE = 'Design'

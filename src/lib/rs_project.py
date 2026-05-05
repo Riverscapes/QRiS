@@ -7,13 +7,10 @@ import json
 import sqlite3
 from datetime import datetime
 
-from osgeo import ogr
-
 from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
 
 from ..model.project import Project
 from ..model.db_item import DBItem
-from ..model.raster import Raster
 from ..model.profile import Profile
 from ..model.pour_point import PourPoint
 from ..model.cross_sections import CrossSections

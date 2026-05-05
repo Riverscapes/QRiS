@@ -1,11 +1,10 @@
-from math import radians, cos, sin, asin, sqrt, degrees
+from math import radians, cos, sin, asin, sqrt
 
 from osgeo import gdal, osr
 
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..model.db_item import DBItem
 
 MESSAGE_CATEGORY = 'QRiS_HillshadeTask'
 

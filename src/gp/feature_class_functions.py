@@ -1,14 +1,11 @@
 import os
 
-from osgeo import ogr
-from osgeo import osr
+from osgeo import ogr, osr
 
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.core import QgsMapLayer, QgsWkbTypes, QgsVectorLayer, QgsGeometry 
-from qgis.utils import iface
 
-from ..model.db_item import DBItem
 from ..model.profile import Profile
 from ..model.project import Project
 

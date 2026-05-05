@@ -3,7 +3,7 @@ import os
 from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
 from osgeo.gdal import Warp, Translate
-from ..model.db_item import DBItem
+
 
 MESSAGE_CATEGORY = 'QRiS_CopyRasterTask'
 

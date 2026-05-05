@@ -1,5 +1,6 @@
 import math
-from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle
+
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 
 def get_zoom_level(canvas):
     # Get current extent and CRS

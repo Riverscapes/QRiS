@@ -2,8 +2,6 @@ import json
 import sqlite3
 from typing import Dict
 
-from osgeo import ogr
-
 from .db_item import DBItem
 
 STREAM_GAGE_MACHINE_CODE = 'Stream Gages'

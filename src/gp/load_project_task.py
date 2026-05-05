@@ -1,6 +1,6 @@
-from qgis.PyQt import QtWidgets
-from qgis.core import QgsTask, QgsApplication, QgsMessageLog, Qgis
 import traceback
+
+from qgis.core import QgsTask,  QgsMessageLog, Qgis
 
 from ..model.project import Project, apply_db_migrations, test_project
 

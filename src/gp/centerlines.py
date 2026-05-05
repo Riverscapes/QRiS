@@ -2,7 +2,7 @@
 Centerline geoprocessing task using QgsGeometry
 """
 
-from qgis.core import QgsApplication, QgsWkbTypes, QgsTask, QgsMessageLog, Qgis, QgsGeometry, QgsLineString, QgsPointXY
+from qgis.core import QgsWkbTypes, QgsTask, QgsMessageLog, Qgis, QgsGeometry, QgsLineString, QgsPointXY
 from qgis.PyQt.QtCore import pyqtSignal
 
 
