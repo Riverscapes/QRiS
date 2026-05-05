@@ -17,6 +17,7 @@ from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
+from ..gp.map_centroid import build_aoi_centroids_layer
 
 from .path_utilities import parse_posix_path
 
@@ -33,12 +34,15 @@ from qgis.core import (
     QgsAction,
     QgsAttributeEditorAction,
     QgsMessageLog,
-    QgsCoordinateReferenceSystem
+    QgsCoordinateReferenceSystem,
+    QgsMarkerSymbol,
+    QgsSingleSymbolRenderer
 )
 
 
-
 class QRisMapManager(RiverscapesMapManager):
+
+    AOI_CENTROIDS_MACHINE_CODE = 'AOI_CENTROIDS_TEMP'
 
     def __init__(self, project: Project) -> None:
         super().__init__('QRiS')
@@ -124,6 +128,45 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_metadata_virtual_fields(feature_layer)
 
         return feature_layer
+
+    def build_aoi_centroids_layer(self) -> QgsMapLayer:
+        """Build and add a temporary centroid layer for all AOIs."""
+
+        # Always replace the prior preview so this reflects current AOI geometry.
+        self.remove_machine_code_layer(self.project.map_guid, self.AOI_CENTROIDS_MACHINE_CODE)
+
+        centroid_layer = build_aoi_centroids_layer(
+            self.project.project_file,
+            self.project.aois.keys(),
+            layer_name='Project Location'
+        )
+        if centroid_layer is None:
+            return None
+
+        project_group = self.get_group_layer(self.project.map_guid, PROJECT_MACHINE_CODE, self.project.name, None, True)
+        aoi_group = self.get_group_layer(self.project.map_guid, AOI_MACHINE_CODE, 'AOIs', project_group, True)
+
+        layer = centroid_layer
+        layer.setName('Project Location')
+        QgsProject.instance().addMapLayer(layer, False)
+        tree_layer_node = aoi_group.addLayer(layer)
+        machine_code_prop = self._RiverscapesMapManager__get_machine_code_custom_property(
+            self.project.map_guid,
+            self.AOI_CENTROIDS_MACHINE_CODE
+        )
+        tree_layer_node.setCustomProperty(self.product_key, machine_code_prop)
+
+        # Project Location should be visually distinct and easy to spot.
+        star_symbol = QgsMarkerSymbol.createSimple({
+            'name': 'star',
+            'color': '0,0,0,255',
+            'outline_color': '0,0,0,255',
+            'size': '4'
+        })
+        layer.setRenderer(QgsSingleSymbolRenderer(star_symbol))
+        layer.triggerRepaint()
+
+        return layer
     
     def build_sample_frame_layer(self, sample_frame: SampleFrame, add_to_map: bool = True) -> QgsMapLayer:
 

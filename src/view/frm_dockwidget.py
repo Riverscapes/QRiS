@@ -569,6 +569,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT))
                     self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT_LAYER))
                     self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) AOI', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_CREATE))
+                    self.menu.addSeparator()
+                    self.add_context_menu_item(self.menu, 'Add Centroid To Map', 'add_to_map', self.add_all_aoi_centroids_to_map)
                 elif model_data == SAMPLE_FRAME_MACHINE_CODE:
                     import_sample_frame_menu = self.menu.addMenu('Import Sample Frame From ...  ')
                     self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
@@ -2071,6 +2073,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # -- PRODUCTION --
         zonal_metrics_task.on_complete.connect(self.geospatial_summary_complete)
         QgsApplication.taskManager().addTask(zonal_metrics_task)
+
+    def add_all_aoi_centroids_to_map(self):
+        layer = self.map_manager.build_aoi_centroids_layer()
+        if layer is None:
+            self.iface.messageBar().pushMessage('AOI Centroids', 'No AOI features were available to centroid.', level=Qgis.Warning, duration=5)
+            return
+        self.iface.messageBar().pushMessage('AOI Centroids', 'Temporary centroid layer added to map.', level=Qgis.Info, duration=5)
  
     def traverse_tree(self, node: QtGui.QStandardItem, func: callable):
         func(node)
