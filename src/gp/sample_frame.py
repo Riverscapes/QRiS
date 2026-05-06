@@ -1,13 +1,6 @@
 from qgis.PyQt.QtCore import pyqtSignal
-from qgis.core import QgsApplication, QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFeature, QgsProject, QgsCoordinateTransform
-from qgis.analysis import QgsNativeAlgorithms
-
-# Initialize QGIS Application
+from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFeature, QgsProject, QgsCoordinateTransform
 from qgis import processing
-# TODO figure out processing imports
-from processing.core.Processing import Processing
-Processing.initialize()
-QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
 
 
 MESSAGE_CATEGORY = 'SampleFrameTask'

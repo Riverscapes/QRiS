@@ -126,79 +126,6 @@ class QRiSToolbar:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QtCore.QCoreApplication.translate('QRiS', message)
 
-    # def add_action(
-    #         self,
-    #         icon_path,
-    #         text,
-    #         callback,
-    #         enabled_flag=True,
-    #         add_to_menu=True,
-    #         add_to_toolbar=True,
-    #         status_tip=None,
-    #         whats_this=None,
-    #         parent=None):
-    #     """Add a toolbar icon to the toolbar.
-
-    #     :param icon_path: Path to the icon for this action. Can be a resource
-    #         path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-    #     :type icon_path: str
-
-    #     :param text: Text that should be shown in menu items for this action.
-    #     :type text: str
-
-    #     :param callback: Function to be called when the action is triggered.
-    #     :type callback: function
-
-    #     :param enabled_flag: A flag indicating if the action should be enabled
-    #         by default. Defaults to True.
-    #     :type enabled_flag: bool
-
-    #     :param add_to_menu: Flag indicating whether the action should also
-    #         be added to the menu. Defaults to True.
-    #     :type add_to_menu: bool
-
-    #     :param add_to_toolbar: Flag indicating whether the action should also
-    #         be added to the toolbar. Defaults to True.
-    #     :type add_to_toolbar: bool
-
-    #     :param status_tip: Optional text to show in a popup when mouse pointer
-    #         hovers over the action.
-    #     :type status_tip: str
-
-    #     :param parent: Parent widget for the new action. Defaults None.
-    #     :type parent: QWidget
-
-    #     :param whats_this: Optional text to show in the status bar when the
-    #         mouse pointer hovers over the action.
-
-    #     :returns: The action that was created. Note that the action is also
-    #         added to self.actions list.
-    #     :rtype: QAction
-    #     """
-
-    #     icon = QtGui.QIcon(icon_path)
-    #     action = QtWidgets.QAction(icon, text, parent)
-    #     action.triggered.connect(callback)
-    #     action.setEnabled(enabled_flag)
-
-    #     if status_tip is not None:
-    #         action.setStatusTip(status_tip)
-
-    #     if whats_this is not None:
-    #         action.setWhatsThis(whats_this)
-
-    #     if add_to_toolbar:
-    #         self.toolbar.addAction(action)
-
-    #     if add_to_menu:
-    #         self.iface.addPluginToMenu(
-    #             self.menu,
-    #             action)
-
-    #     self.actions.append(action)
-
-    #     return action
-
     def initGui(self):
         """Create a single QRiS menu button with icon and text, containing Project and Help submenus."""
 
@@ -238,17 +165,6 @@ class QRiSToolbar:
 
         self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
-
-    # def add_toolbar_menu(self, label: str) -> QtWidgets.QMenu:
-
-    #     tool_button = QtWidgets.QToolButton(self.toolbar)
-    #     tool_button.setText(label)
-    #     tool_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
-    #     tool_button.setMenu(QtWidgets.QMenu())
-    #     tool_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
-    #     self.toolbar.addWidget(tool_button)
-    #     self.menus.append(tool_button)
-    #     return tool_button.menu()
 
     def add_menu_action(self, menu: QtWidgets.QMenu, icon_name: str, label: str, callback, enabled: bool, status_tip: str):
 
