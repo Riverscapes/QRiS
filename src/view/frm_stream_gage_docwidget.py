@@ -11,7 +11,7 @@ from ..QRiS.settings import CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from .utilities import add_help_button
-from .widgets.table_export_widget import FrmTableExport
+from .frm_export_table import FrmTableExport
 
 from ..model.project import Project
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE

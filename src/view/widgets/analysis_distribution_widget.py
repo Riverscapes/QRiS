@@ -22,7 +22,7 @@ from qgis.core import (
 from ...model.project import Project
 from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ...model.sample_frame import SampleFrame
-from .chart_export_widget import ChartExportWidget
+from .export_chart_widget import ChartExportWidget
 from ..frm_settings import get_default_chart_font
 
 class DistributionAnalysisWidget(QtWidgets.QWidget):

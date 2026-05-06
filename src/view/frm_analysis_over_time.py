@@ -18,7 +18,7 @@ from ..lib.unit_conversion import short_unit_name, distance_units, area_units, r
 from ..model.event import DCE_EVENT_TYPE_ID
 
 from .widgets.event_library import EventLibraryWidget
-from .widgets.chart_export_widget import ChartExportWidget
+from .widgets.export_chart_widget import ChartExportWidget
 from .frm_metric_value import FrmMetricValue
 from .frm_settings import get_default_chart_font
 

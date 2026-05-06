@@ -13,7 +13,7 @@ from ..lib.unit_conversion import short_unit_name
 from ..QRiS.path_utilities import get_unique_file_path
 
 from .utilities import add_standard_form_buttons
-from .widgets.table_export_widget import FrmTableExport
+from .frm_export_table import FrmTableExport
 
 
 class FrmExportMetrics(QtWidgets.QDialog):

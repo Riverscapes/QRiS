@@ -9,7 +9,7 @@ from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..gp.stream_stats import delineate_watershed, get_state_from_coordinates, retrieve_basin_characteristics, calculate_flow_statistics, retrieve_flow_scenarios
 from .utilities import validate_name, add_standard_form_buttons, format_superscript
 from .widgets.metadata import MetadataWidget
-from .widgets.table_export_widget import FrmTableExport
+from .frm_export_table import FrmTableExport
 
 
 class FrmPourPoint(QtWidgets.QDialog):

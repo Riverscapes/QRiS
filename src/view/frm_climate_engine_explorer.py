@@ -15,7 +15,7 @@ from .utilities import add_help_button
 from .widgets.sample_frames import SampleFrameWidget
 from .widgets.date_range import DateRangeWidget
 from .widgets.event_library import EventLibraryWidget
-from .widgets.chart_export_widget import ChartExportWidget
+from .widgets.export_chart_widget import ChartExportWidget
 
 from ..model.project import Project
 from ..model.db_item import dict_factory
