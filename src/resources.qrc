@@ -33,6 +33,7 @@
         <file alias="lock_open_right">../Images/lock_open_right.svg</file>
         <file alias="open_external">../Images/open_external.svg</file>
         <file alias="map_search">../Images/map_search.svg</file>
+        <file alias="vicinity_map">../Images/vicinity_map.svg</file>
         <file alias="metadata">../Images/metadata.png</file>
         <file alias="new">../Images/add.svg</file>
         <file alias="options">../Images/edit.svg</file>

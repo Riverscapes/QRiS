@@ -6,6 +6,7 @@ from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsP
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.pour_point import save_pour_point, PourPoint
+from ..QRiS.settings import Settings
 
 MESSAGE_CATEGORY = 'QRiS'
 
@@ -412,7 +413,7 @@ def get_state_from_coordinates(latitude: float, longitude: float):
         return None, None
 
     # Get the states layer from the resources gpkg
-    db_path = os.path.join(os.path.dirname(__file__), '..','..','resources', 'us_states.gpkg')
+    db_path = Settings().resource_path('us_states.gpkg')
 
     # Load the layer
     states_layer = QgsVectorLayer(f"{db_path}|layername=states", "states", "ogr")

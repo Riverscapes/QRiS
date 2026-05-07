@@ -4,7 +4,7 @@ from ..frm_export_map import FrmMapExport
 
 class MapExportWidget(BaseExportWidget):
     """Export widget for exporting map images (e.g., QGIS map canvas)."""
-    exportPathSelected = QtCore.pyqtSignal(str, str)
+    exportPathSelected = QtCore.pyqtSignal(str, str, object)
 
     def __init__(self, parent=None, base_name="map_export", get_map_image_callback=None, project_path=None, export_type=None):
         super().__init__(parent, base_name, project_path, export_type)
@@ -27,10 +27,11 @@ class MapExportWidget(BaseExportWidget):
 
         file_path = dlg.leFile.text() if dlg.leFile is not None else ""
         selected_format = dlg.cmbFormat.currentText() if dlg.cmbFormat is not None else ""
+        render_params = dlg.render_params
         if not file_path:
             return None
 
-        self.exportPathSelected.emit(file_path, selected_format)
+        self.exportPathSelected.emit(file_path, selected_format, render_params)
 
         # If a callback exists, perform immediate export. Otherwise caller can use dialog path in async flow.
         if not self.get_map_image_callback:

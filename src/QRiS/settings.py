@@ -112,3 +112,11 @@ class Settings(SettingsBorg):
         # Set it in the file
         self.s.setValue(key, json.dumps({"v": value}))
         self.log("SETTINGS SET: {}={} of type '{}'".format(key, value, html.escape(str(type(value)))), level=Qgis.Info)
+
+    def plugin_root_path(self):
+        """Return absolute path to the plugin root directory."""
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+    def resource_path(self, *parts):
+        """Build an absolute path under the plugin resources directory."""
+        return os.path.join(self.plugin_root_path(), 'resources', *parts)

@@ -42,6 +42,7 @@ from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHIN
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
+from .widgets.export_map_widget import MapExportWidget
 from ..model.layer import check_and_remove_unused_layers
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
@@ -100,6 +101,7 @@ from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
 from ..gp.stream_stats import StreamStats
 from ..gp.zonal_statistics_task import ZonalMetricsTask
+from ..gp.vicinity_map import VicinityMapExportTask
 
 ORGANIZATION = 'Riverscapes'
 APPNAME = 'QRiS'
@@ -681,6 +683,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, 'Unlock All Layers in Project', 'lock_open_right', lambda: self.set_group_lock_state(model_data, False, model_item))
                     self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
+                    self.add_context_menu_item(self.menu, 'Create Vicinity Map', 'vicinity_map', lambda: self.create_vicinity_map(model_data))
                     # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.destroy_docwidget())
 
@@ -1354,6 +1357,22 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if result == QtWidgets.QDialog.Accepted:
             self.iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
+
+    def create_vicinity_map(self, db_item: DBItem):
+        # Open the map export dialog and run async vicinity map export task
+        def on_export_path_selected(file_path, _selected_format, render_params):
+            task = VicinityMapExportTask(file_path, self.qris_project, render_params=render_params)
+            def on_complete(success, out_path, error):
+                if success:
+                    self.iface.messageBar().pushMessage('Vicinity Map', f'Map image saved to {out_path}', level=Qgis.Success, duration=5)
+                else:
+                    self.iface.messageBar().pushMessage('Vicinity Map', f'Failed to export map image: {error}', level=Qgis.Critical, duration=8)
+            task.on_complete.connect(on_complete)
+            QgsApplication.taskManager().addTask(task)
+
+        widget = MapExportWidget(parent=self, base_name="vicinity_map", project_path=self.qris_project.project_file)
+        widget.exportPathSelected.connect(on_export_path_selected)
+        widget.export_map_image()
 
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
