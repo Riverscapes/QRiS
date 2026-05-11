@@ -83,22 +83,42 @@ class VicinityMapExportTask(QgsTask):
 
     def _resolve_intersecting_state(self, centroid_point_wgs84: QgsPointXY) -> Tuple[str, QgsGeometry]:
         """Return (region_label, region_geometry) for the region containing the centroid point, or (None, None) if not found."""
-        db_path = Settings().resource_path('us_states.gpkg')
-        states_layer = QgsVectorLayer(f"{db_path}|layername=states", "states", "ogr")
+        states_path = Settings().resource_path('us_states_simplified.geojson')
+        states_layer = QgsVectorLayer(states_path, "states", "ogr")
         if not states_layer.isValid():
-            raise Exception('Could not load states layer from us_states.gpkg.')
+            raise Exception('Could not load states layer from us_states_simplified.geojson.')
 
-        point_geom = QgsGeometry.fromPointXY(QgsPointXY(centroid_point_wgs84.x(), centroid_point_wgs84.y()))
+        point_in_layer_crs = QgsPointXY(centroid_point_wgs84.x(), centroid_point_wgs84.y())
+        states_crs = states_layer.crs()
+        wgs84 = QgsCoordinateReferenceSystem('EPSG:4326')
+        if states_crs.isValid() and states_crs != wgs84:
+            to_states = QgsCoordinateTransform(
+                wgs84,
+                states_crs,
+                QgsProject.instance().transformContext()
+            )
+            point_in_layer_crs = to_states.transform(point_in_layer_crs)
+
+        point_geom = QgsGeometry.fromPointXY(point_in_layer_crs)
 
         states_layer.selectByRect(point_geom.boundingBox())
-        for state_feature in states_layer.selectedFeatures(): 
+        for state_feature in states_layer.selectedFeatures():
             state_geom = state_feature.geometry()
             if state_geom is None or state_geom.isEmpty() or not state_geom.intersects(point_geom):
                 continue
 
             state_name = self._extract_region_label(state_feature)
 
-            return state_name, QgsGeometry(state_geom)
+            result_geom = QgsGeometry(state_geom)
+            if states_crs.isValid() and states_crs != wgs84:
+                to_wgs84 = QgsCoordinateTransform(
+                    states_crs,
+                    wgs84,
+                    QgsProject.instance().transformContext()
+                )
+                result_geom.transform(to_wgs84)
+
+            return state_name, result_geom
 
         self.exception = Exception(
             "Project location is outside supported regions. Cannot generate vicinity map. "
