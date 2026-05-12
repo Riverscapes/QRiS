@@ -32,7 +32,7 @@ from PyQt5.QtCore import pyqtSlot, QDate, QModelIndex, QMetaType
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
-from ..model.project import Project
+from ..model.project import Project, INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE
 from ..model.event import Event, EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ..model.planning_container import PlanningContainer
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
@@ -646,6 +646,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
                     # if model_data.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
+                    self.add_context_menu_item(self.menu, 'Create Analysis', 'analysis', lambda: self.add_analysis(db_item=model_data))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -664,6 +665,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, Profile):
                     self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
+                    self.add_context_menu_item(self.menu, 'Create Analysis', 'analysis', lambda: self.add_analysis(db_item=model_data))
 
                 if isinstance(model_data, CrossSections):
                     # self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
@@ -1005,20 +1007,58 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result is not None and result != 0:
             self.add_planning_container_to_project_tree(parent_node, frm.planning_container)
 
-    def add_analysis(self, parent_node):
-
-        if len(self.qris_project.sample_frames.values()) + len(self.qris_project.aois.values()) + len(self.qris_project.valley_bottoms.values()) == 0:
-            QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No sample frames, AOIs, or valley bottoms were found in the current QRiS Project.\n\nPlease prepare a sample frame, AOI, or valley bottom before running an analysis.')
-            return
-        if len(self.qris_project.events) == 0:
-            QtWidgets.QMessageBox.information(self, 'New Analysis Error', 'No data capture events were found in the current QRiS Project.\n\nPlease prepare a data capture or design event before running an analysis.')
-            return
+    def add_analysis(self, parent_node=None, db_item=None):
 
         frm = FrmAnalysisProperties(self, self.qris_project)
+
+        if db_item is not None:
+            # Preselect the item in the appropriate combo box
+            if isinstance(db_item, SampleFrame):
+                index = frm.cboSampleFrame.findData(db_item)
+                if index >= 0:
+                    frm.cboSampleFrame.setCurrentIndex(index)
+            elif isinstance(db_item, Profile):
+                index = frm.cboCenterline.findData(db_item)
+                if index >= 0:
+                    frm.cboCenterline.setCurrentIndex(index)
+
+            # Filter protocol combo to system protocol only
+            cbo = frm.metric_selector.cbo_filter_protocol
+            for i in range(cbo.count()):
+                item = cbo.model().item(i)
+                if item.isCheckable():
+                    state = QtCore.Qt.Checked if item.data() == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE else QtCore.Qt.Unchecked
+                    item.setCheckState(state)
+            frm.metric_selector.on_protocol_filter_changed()
+            # Pre-select feasible system protocol metrics in a single bulk pass
+            states = {}
+            for metric in self.qris_project.metrics.values():
+                if not frm.metric_selector.should_show_metric(metric):
+                    continue
+                availability = frm.metric_selector.get_metric_availability(metric)
+                if not availability.lower().startswith('no'):
+                    states[metric.id] = metric.default_level_id
+            if states:
+                frm.metric_selector.apply_metric_states(states)
+
         result = frm.exec_()
         if result is not None and result != 0:
-            self.add_child_to_project_tree(parent_node, frm.analysis, False)
+            if parent_node is None:
+                parent_node = self._find_tree_node(self.model.invisibleRootItem(), ANALYSIS_MACHINE_CODE)
+            if parent_node is not None:
+                self.add_child_to_project_tree(parent_node, frm.analysis, False)
             self.open_analysis(frm.analysis)
+
+    def _find_tree_node(self, root: QtGui.QStandardItem, data_value):
+        """Recursively search the tree for a node whose UserRole data equals data_value."""
+        for i in range(root.rowCount()):
+            child = root.child(i)
+            if child.data(QtCore.Qt.UserRole) == data_value:
+                return child
+            found = self._find_tree_node(child, data_value)
+            if found is not None:
+                return found
+        return None
 
     def open_analysis(self, analysis: Analysis):
 

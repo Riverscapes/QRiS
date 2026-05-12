@@ -1035,6 +1035,59 @@ class MetricLibrary(QtWidgets.QWidget):
                      
         self.update_usage_count_label()
 
+    def apply_metric_states(self, states: dict):
+        """Bulk-apply a pre-computed {metric_id: level_id} dict in a single tree/table pass.
+        More efficient than calling on_metric_status_changed() per metric."""
+        usage_labels = ['None', 'Metric', 'Indicator']
+
+        # Update internal state
+        for metric_id, level_id in states.items():
+            self.current_metrics_state[metric_id] = level_id
+
+        # Single pass over tree
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
+        while iterator.value():
+            item = iterator.value()
+            metric = item.data(0, QtCore.Qt.UserRole)
+            if metric and metric.id in states:
+                new_idx = states[metric.id]
+                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None'
+                item.setText(3, usage_display)
+                font = self.get_metric_font(metric, new_idx)
+                item.setFont(0, font)
+                item.setFont(1, font)
+                w = self.metricsTree.itemWidget(item, 3)
+                if isinstance(w, QtWidgets.QComboBox):
+                    w.blockSignals(True)
+                    w.setCurrentIndex(new_idx)
+                    w.blockSignals(False)
+            iterator += 1
+
+        # Single pass over table
+        for row in range(self.metricsTable.rowCount()):
+            item = self.metricsTable.item(row, 0)
+            if not item:
+                continue
+            metric = item.data(QtCore.Qt.UserRole)
+            if metric and metric.id in states:
+                new_idx = states[metric.id]
+                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None'
+                usage_item = self.metricsTable.item(row, 5)
+                if usage_item:
+                    usage_item.setText(usage_display)
+                font = self.get_metric_font(metric, new_idx)
+                if self.metricsTable.item(row, 2):
+                    self.metricsTable.item(row, 2).setFont(font)
+                if self.metricsTable.item(row, 3):
+                    self.metricsTable.item(row, 3).setFont(font)
+                w = self.metricsTable.cellWidget(row, 5)
+                if isinstance(w, QtWidgets.QComboBox):
+                    w.blockSignals(True)
+                    w.setCurrentIndex(new_idx)
+                    w.blockSignals(False)
+
+        self.update_usage_count_label()
+
     def get_selected_metrics(self):
         analysis_metrics = {}
         # Iterate through project metrics or cache? 
