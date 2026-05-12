@@ -13,6 +13,7 @@ from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
 
 from .widgets.metadata import MetadataWidget
+from .widgets.stats_widget import StatsWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 from typing import Dict
@@ -33,6 +34,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         if metadata is not None:
             metadata_json = json.dumps(metadata)
         self.metadata_widget = MetadataWidget(self, metadata_json)
+        self.stats_widget = StatsWidget(db_item=cross_sections, db_path=qris_project.project_file, parent=self)
         self.setupUi()
 
         window_title = 'Create New Cross Sections layer' if self.cross_sections is None else 'Edit Cross Sections Properties'
@@ -88,9 +90,9 @@ class FrmCrossSections(QtWidgets.QDialog):
             self.txtDescription.setPlainText(cross_sections.description)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
+            self.chkStartEditSession.setVisible(False)
 
         self.setWindowTitle(window_title)
-        self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
 
     def accept(self):
@@ -242,11 +244,26 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
 
+        # Statistics Tab
+        self.stats_widget.add_stats_tab(self.tabs)
+
         # Metadata Tab
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
+
+        self.chkStartEditSession = QtWidgets.QCheckBox('Start Edit Session')
+        self.chkStartEditSession.setChecked(False)
+        self.chkAddToMap.stateChanged.connect(lambda state: (
+            self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked),
+            self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None
+        ))
+
+        add_to_map_row = QtWidgets.QHBoxLayout()
+        add_to_map_row.addWidget(self.chkAddToMap)
+        add_to_map_row.addWidget(self.chkStartEditSession)
+        add_to_map_row.addStretch()
+        self.vert.addLayout(add_to_map_row)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'inputs/cross-sections'))

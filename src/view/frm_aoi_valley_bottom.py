@@ -16,6 +16,7 @@ from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
 
 from .widgets.metadata import MetadataWidget
+from .widgets.stats_widget import StatsWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -42,6 +43,9 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
         super(FrmAOIValleyBottom, self).__init__(parent)
         metadata_json = json.dumps(sample_frame.metadata) if sample_frame is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
+
+        self.stats_widget = StatsWidget(db_item=sample_frame, db_path=qris_project.project_file, parent=self)
+
         self.setupUi()
 
         if self.sample_frame is not None:
@@ -111,6 +115,7 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
             self.txtDescription.setPlainText(sample_frame.description)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
+            self.chkStartEditSession.setVisible(False)
             
             self.chkProjectBounds.setChecked(getattr(self.sample_frame, "project_bounds", False))
         else:
@@ -319,13 +324,27 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.desc_layout.addWidget(self.txtDescription)
         self.tabs.addTab(self.tabDescription, 'Description')
+        self.stats_widget.add_stats_tab(self.tabs)
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         # Add To Map (Bottom)
         self.chkAddToMap = QtWidgets.QCheckBox()
         self.chkAddToMap.setChecked(True)
         self.chkAddToMap.setText('Add to Map')
-        self.vert.addWidget(self.chkAddToMap)
+
+        self.chkStartEditSession = QtWidgets.QCheckBox()
+        self.chkStartEditSession.setText('Start Edit Session')
+        self.chkStartEditSession.setChecked(False)
+        self.chkAddToMap.stateChanged.connect(lambda state: (
+            self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked),
+            self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None
+        ))
+
+        add_to_map_row = QtWidgets.QHBoxLayout()
+        add_to_map_row.addWidget(self.chkAddToMap)
+        add_to_map_row.addWidget(self.chkStartEditSession)
+        add_to_map_row.addStretch()
+        self.vert.addLayout(add_to_map_row)
         
         help_slug = 'inputs/aoi' if self.is_aoi else 'inputs/valley-bottoms'
         self.vert.addLayout(add_standard_form_buttons(self, help_slug))

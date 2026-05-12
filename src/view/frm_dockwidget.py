@@ -1734,6 +1734,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
+            if frm.chkStartEditSession.isChecked():
+                self._maybe_start_editing(frm.sample_frame)
 
     def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new sample frame"""
@@ -1786,12 +1788,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             sample_frame_node = self.add_child_to_project_tree(inputs_node, SAMPLE_FRAME_MACHINE_CODE)
             parent_node = sample_frame_node
 
-        frm.complete.connect(partial(self.on_sample_frame_complete, parent_node, lambda: frm.sample_frame, frm.chkAddToMap.isChecked))
+        frm.complete.connect(partial(self.on_sample_frame_complete, parent_node, lambda: frm.sample_frame, frm.chkAddToMap.isChecked, frm.chkStartEditSession.isChecked))
         frm.exec_()
 
-    def on_sample_frame_complete(self, parent_node, sample_frame_method, add_to_map_method):
+    def on_sample_frame_complete(self, parent_node, sample_frame_method, add_to_map_method, start_edit_method=None):
         add_to_map = add_to_map_method()
-        self.add_child_to_project_tree(parent_node, sample_frame_method(), add_to_map)
+        sample_frame = sample_frame_method()
+        self.add_child_to_project_tree(parent_node, sample_frame, add_to_map)
+        if start_edit_method is not None and start_edit_method():
+            self._maybe_start_editing(sample_frame)
+
+    def _maybe_start_editing(self, db_item):
+        """Start an edit session on the map layer for db_item if it exists."""
+        layer_node = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
+        if isinstance(layer_node, QgsLayerTreeLayer):
+            layer = layer_node.layer()
+            if isinstance(layer, QgsVectorLayer):
+                self.iface.setActiveLayer(layer)
+                layer.startEditing()
 
     def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new Valley Bottom"""
@@ -1836,6 +1850,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 riverscapes_node = self.add_child_to_project_tree(inputs_node, VALLEY_BOTTOM_MACHINE_CODE)
                 parent_node = riverscapes_node
             self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
+            if frm.chkStartEditSession.isChecked():
+                self._maybe_start_editing(frm.sample_frame)
         
     def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
 
@@ -1878,6 +1894,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 inputs_node = self.add_child_to_project_tree(project_node, INPUTS_NODE_TAG)
                 parent_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(parent_node, frm.profile, frm.chkAddToMap.isChecked())
+            if frm.chkStartEditSession.isChecked():
+                self._maybe_start_editing(frm.profile)
 
     def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new cross section layer"""
@@ -1913,6 +1931,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.cross_sections, frm.chkAddToMap.isChecked())
+            if frm.chkStartEditSession.isChecked():
+                self._maybe_start_editing(frm.cross_sections)
 
     def add_pour_point(self, parent_node):
 

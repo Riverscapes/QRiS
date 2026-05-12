@@ -291,7 +291,19 @@ class FrmSampleFrame(QDialog):
 
         self.chkAddToMap = QCheckBox('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.vert.addWidget(self.chkAddToMap)
+
+        self.chkStartEditSession = QCheckBox('Start Edit Session')
+        self.chkStartEditSession.setChecked(False)
+        self.chkAddToMap.stateChanged.connect(lambda state: (
+            self.chkStartEditSession.setEnabled(state == Qt.Checked),
+            self.chkStartEditSession.setChecked(False) if state != Qt.Checked else None
+        ))
+
+        add_to_map_row = QHBoxLayout()
+        add_to_map_row.addWidget(self.chkAddToMap)
+        add_to_map_row.addWidget(self.chkStartEditSession)
+        add_to_map_row.addStretch()
+        self.vert.addLayout(add_to_map_row)
 
         self.buttonBox = add_standard_form_buttons(self, 'inputs/sample-frames')
         self.vert.addLayout(self.buttonBox)

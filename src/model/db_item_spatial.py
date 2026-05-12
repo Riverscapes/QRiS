@@ -1,6 +1,6 @@
 import sqlite3
 
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsDistanceArea, QgsGeometry, QgsProject, QgsUnitTypes, QgsVectorLayer
 
 from .db_item import DBItem
 
@@ -51,6 +51,54 @@ class DBItemSpatial(DBItem):
         except Exception:
             temp_layer = self.get_temp_layer(db_path)
             return temp_layer.featureCount()
+
+    def get_spatial_stats(self, db_path: str) -> dict:
+
+        stats = {}
+        stats['feature_count'] = self.feature_count(db_path)
+
+        if self.geom_type.lower() == 'polygon':
+            temp_layer = self.get_temp_layer(db_path)
+            da = QgsDistanceArea()
+            da.setSourceCrs(temp_layer.crs(), QgsProject.instance().transformContext())
+            da.setEllipsoid(QgsProject.instance().ellipsoid())
+
+            total_area = 0.0
+            min_area = None
+            max_area = None
+            for feature in temp_layer.getFeatures():
+                area_m2 = da.convertAreaMeasurement(da.measureArea(feature.geometry()), QgsUnitTypes.AreaSquareMeters)
+                total_area += area_m2
+                min_area = area_m2 if min_area is None else min(min_area, area_m2)
+                max_area = area_m2 if max_area is None else max(max_area, area_m2)
+
+            count = stats['feature_count']
+            stats['total_area'] = total_area
+            stats['average_area'] = total_area / count if count > 0 else 0.0
+            stats['min_area'] = min_area if min_area is not None else 0.0
+            stats['max_area'] = max_area if max_area is not None else 0.0
+
+        if self.geom_type.lower() == 'linestring':
+            temp_layer = self.get_temp_layer(db_path)
+            da = QgsDistanceArea()
+            da.setSourceCrs(temp_layer.crs(), QgsProject.instance().transformContext())
+            da.setEllipsoid(QgsProject.instance().ellipsoid())
+
+            total_length = 0.0
+            total_straight_distance = 0.0
+            for feature in temp_layer.getFeatures():
+                geom = feature.geometry()
+                length = da.measureLength(geom)
+                line = geom.asPolyline() or (geom.asMultiPolyline()[0] if geom.isMultipart() else [])
+                if len(line) >= 2:
+                    straight = da.measureLine(line[0], line[-1])
+                    total_straight_distance += straight
+                total_length += length
+
+            stats['total_length'] = total_length
+            stats['sinuosity'] = total_length / total_straight_distance if total_straight_distance > 0 else 0.0
+
+        return stats
 
     def check_spatial_view_exists(self, curs: sqlite3.Cursor) -> bool:
         """Check if the spatial view exists."""

@@ -2,6 +2,8 @@ import json
 import sqlite3
 from typing import Dict
 
+from qgis.core import QgsDistanceArea, QgsProject, QgsUnitTypes
+
 from .db_item_spatial import DBItemSpatial
 
 
@@ -14,6 +16,31 @@ class CrossSections(DBItemSpatial):
         super().__init__('cross_sections', id, name, 'cross_section_features', 'cross_section_id', 'LineString', metadata=metadata)
         self.description = description
         self.icon = 'line'
+
+    def get_spatial_stats(self, db_path: str) -> dict:
+        temp_layer = self.get_temp_layer(db_path)
+        da = QgsDistanceArea()
+        da.setSourceCrs(temp_layer.crs(), QgsProject.instance().transformContext())
+        da.setEllipsoid(QgsProject.instance().ellipsoid())
+
+        total_length = 0.0
+        min_length = None
+        max_length = None
+        count = 0
+        for feature in temp_layer.getFeatures():
+            length = da.convertLengthMeasurement(da.measureLength(feature.geometry()), QgsUnitTypes.DistanceMeters)
+            total_length += length
+            min_length = length if min_length is None else min(min_length, length)
+            max_length = length if max_length is None else max(max_length, length)
+            count += 1
+
+        return {
+            'feature_count': count,
+            'total_length': total_length,
+            'average_length': total_length / count if count > 0 else 0.0,
+            'min_length': min_length if min_length is not None else 0.0,
+            'max_length': max_length if max_length is not None else 0.0,
+        }
 
 
     def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:

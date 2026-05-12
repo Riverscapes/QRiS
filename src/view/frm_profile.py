@@ -14,6 +14,7 @@ from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
 
 from .widgets.metadata import MetadataWidget
+from .widgets.stats_widget import StatsWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 
@@ -30,6 +31,7 @@ class FrmProfile(QtWidgets.QDialog):
         super(FrmProfile, self).__init__(parent)
         metadata_json = json.dumps(profile.metadata) if profile is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
+        self.stats_widget = StatsWidget(db_item=profile, db_path=qris_project.project_file, parent=self)
         self.setupUi()
 
         self.setWindowTitle(f'Create New Profile' if self.profile is None else f'Edit Profile Properties')
@@ -66,8 +68,8 @@ class FrmProfile(QtWidgets.QDialog):
             self.txtDescription.setPlainText(profile.description)
             self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
             self.chkAddToMap.setVisible(False)
+            self.chkStartEditSession.setVisible(False)
 
-        self.grid.setGeometry(QtCore.QRect(0, 0, self.width(), self.height()))
         self.txtName.setFocus()
 
     def promote_to_profile(self, db_item: DBItem):
@@ -208,12 +210,26 @@ class FrmProfile(QtWidgets.QDialog):
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
 
+        # Statistics Tab
+        self.stats_widget.add_stats_tab(self.tabs)
+
         # Metadata Tab
-        self.metadata_widget.add_attribute_tab(self.tabs, "Statistics")
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
         self.chkAddToMap.setChecked(True)
-        self.grid.addWidget(self.chkAddToMap, 4, 1, 1, 1)
+
+        self.chkStartEditSession = QtWidgets.QCheckBox('Start Edit Session')
+        self.chkStartEditSession.setChecked(False)
+        self.chkAddToMap.stateChanged.connect(lambda state: (
+            self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked),
+            self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None
+        ))
+
+        add_to_map_row = QtWidgets.QHBoxLayout()
+        add_to_map_row.addWidget(self.chkAddToMap)
+        add_to_map_row.addWidget(self.chkStartEditSession)
+        add_to_map_row.addStretch()
+        self.vert.addLayout(add_to_map_row)
 
         self.vert.addLayout(add_standard_form_buttons(self, 'inputs/profiles'))

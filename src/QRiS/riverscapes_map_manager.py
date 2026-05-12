@@ -100,7 +100,8 @@ class RiverscapesMapManager(QObject):
         # get active layer
         active_layer = iface.activeLayer()
         # set active layer to editable true
-        active_layer.setReadOnly(False)
+        if active_layer is not None:
+            active_layer.setReadOnly(False)
 
         self.edit_mode_changed.emit(True)
 
