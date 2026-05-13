@@ -422,6 +422,10 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 
         self.update_units_menu()
 
+        # Clear the attributes list so populate_attributes_list treats the
+        # upcoming population as fresh and defaults to "Select Non-Empty".
+        self.lstAttributes.clear()
+
         if self.cmbMetric.count() > 0:
             self.calculate_distribution()
             
@@ -894,9 +898,11 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.draw_chart()
 
     def populate_attributes_list(self, keys):
-        # Preserve unchecked state if keys persist (e.g. changing measure type)
+        # Preserve unchecked state if keys persist (e.g. changing measure type).
+        # On a fresh population (empty list), default to "select non-empty".
+        is_fresh = self.lstAttributes.count() == 0
         current_unchecked = set()
-        if self.lstAttributes.count() > 0:
+        if not is_fresh:
             for i in range(self.lstAttributes.count()):
                 item = self.lstAttributes.item(i)
                 if item.checkState() == QtCore.Qt.Unchecked:
@@ -904,10 +910,10 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     if key is None:
                         key = item.text()
                     current_unchecked.add(str(key))
-        
+
         self.lstAttributes.blockSignals(True)
         self.lstAttributes.clear()
-        
+
         sorted_keys = self.get_sorted_attribute_keys(keys)
         for key in sorted_keys:
             # Create Checkbox Item
@@ -916,14 +922,17 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             item = QtWidgets.QListWidgetItem(f"{key_text} ({feature_count})")
             item.setData(QtCore.Qt.UserRole, key_text)
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-            
-            if key_text in current_unchecked:
-                item.setCheckState(QtCore.Qt.Unchecked)
+
+            if is_fresh:
+                state = QtCore.Qt.Checked if feature_count > 0 else QtCore.Qt.Unchecked
+            elif key_text in current_unchecked:
+                state = QtCore.Qt.Unchecked
             else:
-                item.setCheckState(QtCore.Qt.Checked)
-            
+                state = QtCore.Qt.Checked
+            item.setCheckState(state)
+
             self.lstAttributes.addItem(item)
-            
+
         self.lstAttributes.blockSignals(False)
 
     def calculate_distribution(self):
