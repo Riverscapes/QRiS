@@ -714,6 +714,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False, model_item))
                     else:
                         self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True, model_item))
+                    parent_event = self.qris_project.events.get(model_data.event_id)
+                    if parent_event is not None and parent_event.event_type.id in [DATA_CAPTURE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]:
+                        self.menu.addSeparator()
+                        self.add_context_menu_item(self.menu, 'Open Distribution Analysis', 'distribution_analysis', lambda checked=False, evt=parent_event: self.open_distribution_analysis_dock(evt))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
@@ -2451,11 +2455,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         db_item.delete(self.qris_project.project_file)
         check_and_remove_unused_layers(self.qris_project)
 
-    def distribution_analysis(self):
+    def distribution_analysis(self, event=None):
         self.distribution_analysis_form = FrmDistributionAnalysis(self.iface.mainWindow(), self.qris_project, self.map_manager)
+        if event is not None:
+            self.distribution_analysis_form.widget.select_event(event)
         self.distribution_analysis_form.exec_()
 
-    def open_distribution_analysis_dock(self):
+    def open_distribution_analysis_dock(self, event=None):
         if self.distribution_dock_widget is None:
             self.distribution_dock_widget = FrmDistributionAnalysisDockWidget(self.iface, self.qris_project, self.map_manager)
             # Add to iface. The allowed areas are set in Dock init, but addDockWidget sets initial area.
@@ -2465,6 +2471,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.distribution_dock_widget.show()
         self.distribution_dock_widget.raise_()
         self.distribution_dock_widget.activateWindow()
+
+        if event is not None:
+            self.distribution_dock_widget.widget.select_event(event)
 
     def browse_item(self, db_item: DBItem, folder_path):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)

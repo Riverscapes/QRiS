@@ -330,6 +330,14 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 
         return features
 
+    def select_event(self, event):
+        """Pre-select the given event in the DCE combo box."""
+        for i in range(self.cmbDCE.count()):
+            item_data = self.cmbDCE.itemData(i)
+            if hasattr(item_data, 'id') and item_data.id == event.id:
+                self.cmbDCE.setCurrentIndex(i)
+                break
+
     def populate_dce(self):
         self.cmbDCE.clear()
         
