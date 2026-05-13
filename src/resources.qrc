@@ -16,6 +16,7 @@
         <file alias="clear_filter">../Images/clear_filter.svg</file>
         <file alias="collapse">../Images/collapse.svg</file>
         <file alias="close">../Images/close.svg</file>
+        <file alias="data_exchange">../Images/data_exchange.svg</file>
         <file alias="delete">../Images/delete.svg</file>
         <file alias="details">../Images/details.svg</file>
         <file alias="detrend">../Images/detrend.png</file>

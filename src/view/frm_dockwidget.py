@@ -25,10 +25,10 @@
 import os
 from functools import partial
 
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt.QtCore import pyqtSlot, QDate, QModelIndex, QMetaType
 from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
-from PyQt5 import QtCore, QtGui, QtWidgets
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
-from PyQt5.QtCore import pyqtSlot, QDate, QModelIndex, QMetaType
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
@@ -42,13 +42,13 @@ from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHIN
 from ..model.protocol import Protocol
 from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
 from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
-from .widgets.export_map_widget import MapExportWidget
 from ..model.layer import check_and_remove_unused_layers
 from ..model.event_layer import EventLayer
 from ..model.profile import Profile
 from ..model.cross_sections import CrossSections
 from ..model.attachment import Attachment, ATTACHMENT_MACHINE_CODE, attachments_path
 
+from .widgets.export_map_widget import MapExportWidget
 from .frm_design import FrmDesign
 from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
 from .frm_planning_container import FrmPlanningContainer
@@ -90,10 +90,10 @@ from .frm_layer_type import FrmLayerTypeDialog
 from .frm_settings import REMOVE_LAYERS_ON_CLOSE
 
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
-from ..lib.map import get_zoom_level, get_map_center
+from ..lib.data_exchange import browse_data_exchange
 from ..lib.rs_project import RSProject
 
-from ..QRiS.settings import Settings, CONSTANTS
+from ..QRiS.settings import Settings
 from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
 
@@ -679,7 +679,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
-                    self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'search', lambda: self.browse_data_exchange(model_data))
+                    self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'data_exchange', lambda: browse_data_exchange(self.iface.mapCanvas()))
                     self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Lock All Layers in Project', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
                     self.add_context_menu_item(self.menu, 'Unlock All Layers in Project', 'lock_open_right', lambda: self.set_group_lock_state(model_data, False, model_item))
@@ -2478,15 +2478,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def browse_item(self, db_item: DBItem, folder_path):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
-
-    def browse_data_exchange(self, db_item: DBItem):
-        # Get the center and zoom level to build the search url
-        canvas = self.iface.mapCanvas()
-        center = get_map_center(canvas)
-        zoom = get_zoom_level(canvas)
-        search_url = f"{CONSTANTS['warehouseUrl']}/s?type=Project&bounded=1&view=map&geo={center.x()}%2C{center.y()}%2C{zoom}"
-        # Open the URL in the default web browser
-        QtGui.QDesktopServices.openUrl(QtCore.QUrl(search_url))
 
     def setupUi(self):
 

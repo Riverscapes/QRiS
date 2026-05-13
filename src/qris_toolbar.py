@@ -46,6 +46,7 @@ from .view.metadata_field_editor_widget import initialize_metadata_widget
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
 from .gp.load_project_task import LoadProjectTask
+from .lib.data_exchange import browse_data_exchange as open_data_exchange
 from .gp.watershed_attributes import WatershedAttributes
 from .gp.update_metadata import update_metadata, check_metadata
 
@@ -142,6 +143,7 @@ class QRiSToolbar:
 
         # Show Panel action
         self.add_menu_action(self.qris_menu, 'qris_icon', 'Show QRiS Panel', self.toggle_widget, True, 'Show the QRiS Dockable Panel')
+        self.add_menu_action(self.qris_menu, 'data_exchange', 'Browse Data Exchange Projects', lambda: open_data_exchange(self.iface.mapCanvas()), True, 'Browse Riverscapes Data Exchange for Projects near the current map view')
 
         # Populate Help menu
         self.help_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/help'), 'Help')
@@ -181,9 +183,6 @@ class QRiSToolbar:
     def close_project(self):
         if self.dockwidget is not None:
             self.dockwidget.destroy_docwidget()
-            # self.dockwidget.close()
-            # self.iface.removeDockWidget(self.dockwidget)
-            # self.dockwidget = None
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed.
