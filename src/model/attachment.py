@@ -25,6 +25,11 @@ class Attachment(DBItem):
         self.description = description
         self.icon = 'link' if self.attachment_type == Attachment.TYPE_WEB_LINK else 'file'
 
+    def set_metadata(self, metadata: dict) -> None:
+        super().set_metadata(metadata)
+        self.date = self.system_metadata.get('date', None)
+        self.attachment_type_label = self.system_metadata.get('attachment_type_label', None)
+
     def update(self, db_path: str, display_label: str, path: str = None, description: str = None, metadata: dict = None) -> None:
         description = description if len(description) > 0 else None
         metadata_str = json.dumps(metadata) if metadata is not None else None

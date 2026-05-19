@@ -135,7 +135,8 @@ GROUP_FOLDER_LABELS = {
 
 USER_ROLES = {'date': QtCore.Qt.UserRole + 1,
               'raster_type': QtCore.Qt.UserRole + 2,
-              'node_type': QtCore.Qt.UserRole + 3,}
+              'node_type': QtCore.Qt.UserRole + 3,
+              'attachment_type': QtCore.Qt.UserRole + 4,}
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget):
@@ -544,6 +545,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
             elif model_data == ATTACHMENT_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Browse Attachments', 'folder', lambda: self.browse_item(model_data, attachments_path(self.qris_project.project_file)))
+                sort_icon = QtGui.QIcon(':/plugins/qris_toolbar/sort')
+                sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
+                self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
+                self.add_context_menu_item(sort_menu, 'Date', 'time', lambda: self.sort_children(model_item, 'date'))
+                group_icon = QtGui.QIcon(':/plugins/qris_toolbar/category')
+                group_menu = self.menu.addMenu(group_icon, 'Group By ...')
+                self.add_context_menu_item(group_menu, 'Type', 'file', lambda: self.group_children(model_item, 'attachment_type'))
+                self.add_context_menu_item(group_menu, 'None', None, lambda: self.group_children(model_item, None))
                 self.menu.addSeparator()
                 self.add_context_menu_item(self.menu, 'Add New File Attachment', 'add_file', lambda: self.add_attachment(model_item, Attachment.TYPE_FILE))
                 self.add_context_menu_item(self.menu, 'Add New Web Link Attachment', 'add_link', lambda: self.add_attachment(model_item, Attachment.TYPE_WEB_LINK))
@@ -787,6 +796,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             elif group_key == 'metadata_tag':
                 if db_item.metadata is not None and 'metadata' in db_item.metadata:
                     group_value = db_item.metadata['metadata'].get(metadata_tag, None)
+            elif group_key == 'attachment_type':
+                group_value = getattr(db_item, 'attachment_type_label', None) or 'Unclassified'
             else:                
                 group_value = None
 
@@ -863,6 +874,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             for i in range(0, tree_node.rowCount() - 1):
                 type_name = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id]
                 if tree_node.child(i).data(USER_ROLES['raster_type']) > tree_node.child(i + 1).data(USER_ROLES['raster_type']):
+                    current_order = False
+                    break
+
+        elif sort_key == 'attachment_type':
+            tree_node.model().setSortRole(USER_ROLES['attachment_type'])
+            for i in range(0, tree_node.rowCount()):
+                item = tree_node.child(i)
+                db_item = item.data(QtCore.Qt.UserRole)
+                if isinstance(db_item, str):
+                    item.setData(f'_{db_item}', USER_ROLES['attachment_type'])
+                    continue
+                type_label = getattr(db_item, 'attachment_type_label', None) or ''
+                combined = f"{type_label}|{db_item.name}"
+                item.setData(combined, USER_ROLES['attachment_type'])
+            current_order = True
+            for i in range(0, tree_node.rowCount() - 1):
+                if tree_node.child(i).data(USER_ROLES['attachment_type']) > tree_node.child(i + 1).data(USER_ROLES['attachment_type']):
                     current_order = False
                     break
 

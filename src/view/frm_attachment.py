@@ -16,6 +16,15 @@ from ..QRiS.path_utilities import parse_posix_path
 from ..model.project import Project
 from ..model.attachment import Attachment, attachments_path, insert_attachment
 
+ATTACHMENT_TYPE_LABELS = ['Figure', 'Link', 'Report', 'Table']
+
+
+class ClickableDateEdit(QtWidgets.QDateEdit):
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        if self.specialValueText() == self.text():
+            self.setDate(QtCore.QDate.currentDate())
+
 
 class FrmAttachment(QtWidgets.QDialog):
 
@@ -60,6 +69,16 @@ class FrmAttachment(QtWidgets.QDialog):
                 self.source.setVisible(False)
             else:
                 self.source.lineEdit.setText(attachment.path)
+            # Populate type label
+            if attachment.attachment_type_label:
+                idx = self.cboTypeLabel.findText(attachment.attachment_type_label)
+                if idx >= 0:
+                    self.cboTypeLabel.setCurrentIndex(idx)
+                else:
+                    self.cboTypeLabel.setEditText(attachment.attachment_type_label)
+            # Populate date
+            if attachment.date:
+                self.txtDate.setDate(QtCore.QDate.fromString(attachment.date, 'yyyy-MM-dd'))
         self.txtName.selectAll()
 
     def accept(self):
@@ -77,6 +96,7 @@ class FrmAttachment(QtWidgets.QDialog):
                 self.txtProjectPath.setFocus()
                 return
 
+        self._apply_form_to_metadata()
         metadata_json = self.metadata_widget.get_json()
         self.metadata = json.loads(metadata_json) if metadata_json is not None else None
 
@@ -113,6 +133,18 @@ class FrmAttachment(QtWidgets.QDialog):
                 self.attachment = None
                 QtWidgets.QMessageBox.warning(self, 'Error Importing Attachment', str(ex))
                 return
+
+    def _apply_form_to_metadata(self):
+        """Write date and type label from form widgets into the metadata widget."""
+        if self.txtDate.date() != self.txtDate.minimumDate():
+            self.metadata_widget.add_system_metadata('date', self.txtDate.date().toString('yyyy-MM-dd'))
+        else:
+            self.metadata_widget.remove_system_metadata('date')
+        type_label = self.cboTypeLabel.currentText().strip()
+        if type_label:
+            self.metadata_widget.add_system_metadata('attachment_type_label', type_label)
+        else:
+            self.metadata_widget.remove_system_metadata('attachment_type_label')
 
     @pyqtSlot(bool)
     def on_copy_complete(self, result: bool, error: str = None):
@@ -161,10 +193,13 @@ class FrmAttachment(QtWidgets.QDialog):
         else:
             self.txtProjectPath.setText('')
 
+    def on_clear_date_clicked(self):
+        self.txtDate.setDate(self.txtDate.minimumDate())
+
     def setupUi(self):
 
-        self.resize(500, 400)
-        self.setMinimumSize(400, 300)
+        self.resize(500, 450)
+        self.setMinimumSize(400, 350)
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
@@ -186,22 +221,54 @@ class FrmAttachment(QtWidgets.QDialog):
         self.grid.addWidget(self.source, 1, 1, 1, 1)
 
         self.lblProjectPath = QtWidgets.QLabel('Project Path')
-        self.grid.addWidget(self.lblProjectPath, 3, 0, 1, 1)
+        self.grid.addWidget(self.lblProjectPath, 2, 0, 1, 1)
 
         self.txtProjectPath = QtWidgets.QLineEdit()
         self.txtProjectPath.setReadOnly(True)
-        self.grid.addWidget(self.txtProjectPath, 3, 1, 1, 1)
+        self.grid.addWidget(self.txtProjectPath, 2, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel('Description')
-        self.lblDescription.setAlignment(QtCore.Qt.AlignTop)
-        self.grid.addWidget(self.lblDescription, 5, 0, 1, 1)
+        self.grid.addWidget(QtWidgets.QLabel('Type'), 3, 0, 1, 1)
 
-        self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription, 5, 1, 1, 1)
+        self.cboTypeLabel = QtWidgets.QComboBox()
+        self.cboTypeLabel.setEditable(True)
+        self.cboTypeLabel.setToolTip('Category of the attachment. Select from the list or type a new type.')
+        self.cboTypeLabel.addItem('')
+        for label in ATTACHMENT_TYPE_LABELS:
+            self.cboTypeLabel.addItem(label)
+        self.grid.addWidget(self.cboTypeLabel, 3, 1, 1, 1)
+
+        self.grid.addWidget(QtWidgets.QLabel('Date'), 4, 0, 1, 1)
+
+        self.horiz_date = QtWidgets.QHBoxLayout()
+        self.grid.addLayout(self.horiz_date, 4, 1, 1, 1)
+
+        self.txtDate = ClickableDateEdit()
+        self.txtDate.setToolTip('Date associated with the attachment')
+        self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
+        self.txtDate.setSpecialValueText('No Date')
+        self.txtDate.setDate(self.txtDate.minimumDate())
+        self.txtDate.setCalendarPopup(True)
+        self.horiz_date.addWidget(self.txtDate)
+
+        self.btn_clear_date = QtWidgets.QPushButton('Clear')
+        self.btn_clear_date.setToolTip('Clear the date')
+        self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))
+        self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
+        self.horiz_date.addWidget(self.btn_clear_date)
+
+        self.grid.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding), 5, 0, 1, 2)
 
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
+
+        # Description Tab
+        self.tabDescription = QtWidgets.QWidget()
+        self.tabs.addTab(self.tabDescription, 'Description')
+        self.tabDescription.setLayout(QtWidgets.QVBoxLayout())
+
+        self.txtDescription = QtWidgets.QPlainTextEdit()
+        self.tabDescription.layout().addWidget(self.txtDescription)
 
         # Metadata Tab
         self.tabs.addTab(self.metadata_widget, 'Metadata')
