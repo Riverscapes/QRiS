@@ -1,5 +1,27 @@
 # QRiS Plugin
 
+## [1.2.4.2] May 19 2026
+
+### Changed
+- Consistent Export Experience #1041
+- Updated state resources for vicinity map (geojson) and stream stats (gpkg)
+- Default Distribution Analysis Settings #1056
+- Allow Copy or Import from Existing DCEs #988
+
+### Added
+- Add AOI Centroid to Map #1053
+- Initial Vicinity Map #1055
+- Statistics for Inputs #960
+- Right click on project inputs to create new analysis #960
+- Launch Distribution Analysis From DCE Layer #1057
+- Browse Data Exchange Projects in Map Window #1058
+- Sort and Organize Attachments #1048
+
+### Removed
+- Unused imports cleaned up
+- Unused processing providers
+
+
 ## [1.2.4.1] Mar 29 2026
 
 ### Fixed
