@@ -74,6 +74,7 @@ from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
 from .frm_profile import FrmProfile
 from .frm_cross_sections import FrmCrossSections
 from .frm_import_dce_layer import FrmImportDceLayer
+from .frm_import_project_layer import FrmImportProjectLayer
 from .frm_layer_picker import FrmLayerPicker
 from .frm_layer_metric_details import FrmLayerMetricDetails
 from .frm_toc_layer_picker import FrmTOCLayerPicker
@@ -705,10 +706,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                                 self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_item, model_data))
                             # if 'validate_brat_capacity' in model_data.menu_items:
                                 # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
-                        self.add_context_menu_item(self.menu, 'Copy from Data Capture Event', 'new', lambda: self.import_dce(model_data, DB_MODE_COPY))
                         import_menu = self.menu.addMenu('Import Features From ...')
-                        self.add_context_menu_item(import_menu, 'Existing Feature Class...', 'new', lambda: self.import_dce(model_data))
-                        self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
+                        self.add_context_menu_item(import_menu, 'Existing Project or DCE Layer...', 'new', lambda: self.import_from_project_layer(model_data))
+                        self.add_context_menu_item(import_menu, 'Layer in Map...', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
+                        self.add_context_menu_item(import_menu, 'External File...', 'new', lambda: self.import_dce(model_data))
+
                         if model_data.menu_items is not None:
                             if 'copy_from_valley_bottom' in model_data.menu_items:
                                 self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
@@ -1282,7 +1284,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if mode == DB_MODE_IMPORT_LAYER:
             if mode == DB_MODE_IMPORT_LAYER:
-                import_source_path = self.get_toc_layer([layer_type])
+                import_source_path = self.get_toc_layer([layer_type], allow_project_layers=True)
             if import_source_path is None:
                 return
             import_source_layer = import_source_path
@@ -1345,6 +1347,46 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         else:
             frm = FrmImportDceLayer(self, self.qris_project, db_item, import_source_path)
+            frm.import_complete.connect(partial(self.import_dce_complete, db_item))
+            frm.exec_()
+
+    def import_from_project_layer(self, db_item: EventLayer):
+        """Show the project-layer picker then route to the correct import path."""
+
+        frm_picker = FrmImportProjectLayer(self, self.qris_project, db_item)
+        if frm_picker.exec_() != QtWidgets.QDialog.Accepted:
+            return
+        source_layer = frm_picker.source_layer
+        if source_layer is None or source_layer.featureCount() == 0:
+            QtWidgets.QMessageBox.information(
+                self, 'Import DCE', 'The selected layer contains no features.')
+            return
+
+        if frm_picker.use_direct_copy:
+            # Same-type DCE: copy features directly, updating event_id and event_layer_id
+            fc_name = Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]
+            dest_layer = QgsVectorLayer(
+                f'{self.qris_project.project_file}|layername={fc_name}')
+            existing_fids = [f.id() for f in dest_layer.getFeatures()]
+            new_fid = (max(existing_fids) + 1) if existing_fids else 1
+            feats = []
+            for feature in source_layer.getFeatures():
+                new_feature = QgsFeature()
+                new_feature.setFields(feature.fields())
+                new_feature.setGeometry(feature.geometry())
+                new_feature.setAttributes(feature.attributes())
+                new_feature.setAttribute('event_id', db_item.event_id)
+                new_feature.setAttribute('event_layer_id', db_item.layer.id)
+                new_feature.setId(new_fid)
+                new_feature['fid'] = new_fid
+                feats.append(new_feature)
+                new_fid += 1
+            dest_layer.startEditing()
+            dest_layer.addFeatures(feats)
+            result = dest_layer.commitChanges()
+            self.import_dce_complete(db_item, result)
+        else:
+            frm = FrmImportDceLayer(self, self.qris_project, db_item, source_layer)
             frm.import_complete.connect(partial(self.import_dce_complete, db_item))
             frm.exec_()
 
@@ -1746,9 +1788,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
 
-    def get_toc_layer(self, layer_types: list) -> QgsVectorLayer:
+    def get_toc_layer(self, layer_types: list, allow_project_layers: bool = False) -> QgsVectorLayer:
 
-        frm_toc = FrmTOCLayerPicker(self, "Select layer to import", layer_types, temporary_layers_only=False)
+        project_file = None if allow_project_layers else (self.qris_project.project_file if self.qris_project is not None else None)
+        frm_toc = FrmTOCLayerPicker(self, "Select layer to import", layer_types, temporary_layers_only=False, exclude_datasource_prefix=project_file, exclude_empty_layers=True)
         if not frm_toc.layer_count > 0:
             return
         result = frm_toc.exec_()
@@ -1757,11 +1800,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         out_layer: QgsVectorLayer = frm_toc.layer
         if out_layer is None:
             return
-        # check if the source path is the same as the project file. if so, reject it
-        if isinstance(out_layer, QgsVectorLayer):
-            if out_layer.dataProvider().dataSourceUri().startswith(self.qris_project.project_file):
-                QtWidgets.QMessageBox.information(self, 'Import Layer', 'The selected layer is already part of the current QRiS project.\n\nPlease select a different map layer to import.')
-                return
         return out_layer
 
     def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, import_source_path: str = None, meta: dict = None):

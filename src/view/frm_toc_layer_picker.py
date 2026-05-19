@@ -6,7 +6,7 @@ from qgis.utils import iface
 
 class FrmTOCLayerPicker(QtWidgets.QDialog):
 
-    def __init__(self, parent, label_message: str, layer_types: list = None, temporary_layers_only: bool = True):
+    def __init__(self, parent, label_message: str, layer_types: list = None, temporary_layers_only: bool = True, exclude_datasource_prefix: str = None, exclude_empty_layers: bool = False):
         super().__init__(parent)
         self.setWindowTitle("Select layer")
         self.setupUi()
@@ -22,6 +22,11 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
                     if layer.geometryType() in layer_types:
                         if temporary_layers_only and not layer.isTemporary():
                             continue
+                        if exclude_empty_layers and layer.featureCount() == 0:
+                            continue
+                        if exclude_datasource_prefix is not None:
+                            if layer.dataProvider().dataSourceUri().startswith(exclude_datasource_prefix):
+                                continue
                         item = QtGui.QStandardItem(layer.name())
                         item.setData(layer, QtCore.Qt.UserRole)
                         self.model.appendRow(item)
