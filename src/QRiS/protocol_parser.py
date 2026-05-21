@@ -1,9 +1,9 @@
 import os
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET # nosec
 from dataclasses import dataclass, field
 from typing import List, Optional, Any, Union
 
-from PyQt5.QtCore import QSettings
+from qgis.PyQt.QtCore import QSettings
 
 from .settings import Settings
 

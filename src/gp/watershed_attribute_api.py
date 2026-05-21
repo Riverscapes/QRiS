@@ -4,6 +4,9 @@ import json
 import logging
 import requests
 
+# Global timeout for API requests
+API_TIMEOUT = 30
+
 
 class QueryMonster:
     """_summary_
@@ -35,7 +38,7 @@ class QueryMonster:
         request = requests.post(self.api_url, json={
             'query': query,
             'variables': variables
-        }, headers=headers)
+        }, headers=headers, timeout=API_TIMEOUT)
 
         if request.status_code == 200:
             resp_json = request.json()

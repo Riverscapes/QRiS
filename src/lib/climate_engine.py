@@ -9,6 +9,9 @@ from qgis.core import QgsGeometry
 
 from typing import List
 
+# Global timeout for all requests
+API_TIMEOUT = 30
+
 CLIMATE_ENGINE_API = 'https://api.climateengine.org' # DEBUG: 'https://api-dev.climateengine.org'
 CLIMATE_ENGINE_URL = 'https://www.climateengine.org/'
 CLIMATE_ENGINE_MACHINE_CODE = 'Climate Engine'
@@ -37,7 +40,7 @@ def get_dataset_date_range(dataset: str) -> dict:
                'Authorization': api_key}
     
     params = {'dataset': dataset}
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.get(url, params=params, headers=headers, timeout=API_TIMEOUT)
 
     if response.status_code == 200:
         content = response.json()
@@ -73,7 +76,7 @@ def get_dataset_timeseries_polygon(dataset: str, variables: List[str], start_dat
     url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
-    response = requests.post(url, data=params, headers=headers)
+    response = requests.post(url, data=params, headers=headers, timeout=API_TIMEOUT)
 
     if response.status_code == 200:
         return response.json()
@@ -109,7 +112,7 @@ def get_dataset_zonal_stats_polygon(dataset: str, variables: List[str], start_da
     url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
     headers = {'accept': 'application/json',
                'Authorization': api_key}
-    response = requests.post(url, data=params, headers=headers)
+    response = requests.post(url, data=params, headers=headers, timeout=API_TIMEOUT)
 
     if response.status_code == 200:
         return response.json()
@@ -135,7 +138,7 @@ def get_raster_mapid(dataset: str, variable: str, temporal_statistic: str, start
 
     # Send API request
     url = f'{CLIMATE_ENGINE_API}/raster/mapid/values'
-    r = requests.get(url, params=params_1, headers=headers, verify=False)
+    r = requests.get(url, params=params_1, headers=headers, timeout=API_TIMEOUT)
     r.raise_for_status()
     if r.status_code != 200:
         return None

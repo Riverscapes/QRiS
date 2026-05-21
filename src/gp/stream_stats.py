@@ -9,6 +9,8 @@ from ..model.pour_point import save_pour_point, PourPoint
 from ..QRiS.settings import Settings
 
 MESSAGE_CATEGORY = 'QRiS'
+# Global timeout for API requests
+API_TIMEOUT = 30
 
 
 class StreamStats(QgsTask):
@@ -182,7 +184,7 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
     QgsMessageLog.logMessage(f'Delineating watershed via {url}', MESSAGE_CATEGORY, Qgis.Info)
 
     try:
-        response = requests.get(url, params=parameters)
+        response = requests.get(url, params=parameters, timeout=API_TIMEOUT)
         response.raise_for_status()
         watershed_data = response.json()
         # Response structure: {"stateAbbreviation": "RR", "bcrequest": { ... }}
@@ -231,7 +233,7 @@ def retrieve_basin_characteristics(delineation_data, file_dir=None):
     QgsMessageLog.logMessage(f'Calculating Basin Characteristics via {url}', MESSAGE_CATEGORY, Qgis.Info)
 
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=API_TIMEOUT)
         response.raise_for_status()
         basin_data = response.json()
         
@@ -287,7 +289,7 @@ def retrieve_flow_scenarios(delineation_data, basin_chars=None, file_dir=None):
                 raise Exception("Could not extract geometry from watershed feature.")
 
         QgsMessageLog.logMessage(f'Retrieving Regression Regions via {rr_url}', MESSAGE_CATEGORY, Qgis.Info)
-        rr_response = requests.post(rr_url, json=rr_payload)
+        rr_response = requests.post(rr_url, json=rr_payload, timeout=API_TIMEOUT)
         rr_response.raise_for_status()
         regression_regions = rr_response.json()
         QgsMessageLog.logMessage(f"DEBUG: regression_regions response: {json.dumps(regression_regions)}", MESSAGE_CATEGORY, Qgis.Info)
@@ -311,7 +313,7 @@ def retrieve_flow_scenarios(delineation_data, basin_chars=None, file_dir=None):
         QgsMessageLog.logMessage(f"DEBUG: Scenarios API full URL: {full_url}", MESSAGE_CATEGORY, Qgis.Info)
         QgsMessageLog.logMessage(f"DEBUG: Scenarios API params: regions={region}, regressionregions={','.join(regression_region_codes)}", MESSAGE_CATEGORY, Qgis.Info)
         try:
-            scenarios_response = requests.get(scenarios_url, params=scenarios_params)
+            scenarios_response = requests.get(scenarios_url, params=scenarios_params, timeout=API_TIMEOUT)
             QgsMessageLog.logMessage(f"DEBUG: Scenarios API response status: {scenarios_response.status_code}", MESSAGE_CATEGORY, Qgis.Info)
             scenarios_response.raise_for_status()
             scenarios_json = scenarios_response.json()
@@ -369,7 +371,7 @@ def calculate_flow_statistics(flow_scenarios: dict, basin_chars: dict, file_dir:
         payload = [scenario]
         
         try:
-            response = requests.post(estimates_url, json=payload)
+            response = requests.post(estimates_url, json=payload, timeout=API_TIMEOUT)
             response.raise_for_status()
             
             # The API returns a list; take the first one

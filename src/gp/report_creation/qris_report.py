@@ -260,7 +260,11 @@ class QRiSReport(Report):
         static_map_api += "?" + urllib.parse.urlencode(api_parameters)
         map_image_path = os.path.join(self.images_dir, "static_map.png")
         # Call Google Maps API and save image
-        urllib.request.urlretrieve(static_map_api, map_image_path)
+        # Safety check: Only allow Google Maps API URLs
+        if static_map_api.startswith("https://maps.googleapis.com/"):
+            urllib.request.urlretrieve(static_map_api, map_image_path)  # nosec
+        else:
+            raise ValueError("Unsafe URL scheme for static map download.")
 
         img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
         img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': map_image_path})
