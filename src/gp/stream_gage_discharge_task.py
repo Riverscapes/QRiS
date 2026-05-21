@@ -6,6 +6,7 @@ from qgis.core import QgsTask, QgsMessageLog, Qgis
 from qgis.PyQt.QtCore import pyqtSignal
 
 MESSAGE_CATEGORY = 'QRiS_StreamGageTask'
+DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
 # https://waterservices.usgs.gov/rest/Site-Service.html
 # https://waterservices.usgs.gov/rest/Site-Test-Tool.html
@@ -78,7 +79,7 @@ class StreamGageDischargeTask(QgsTask):
             }
 
             request_meta = REQUESTS['daily']
-            response = requests.get(request_meta['url'], params=params)
+            response = requests.get(request_meta['url'], params=params, timeout=DOWNLOAD_TIMEOUT)
 
             if response.status_code == 200:
                 csv_raw = [line for line in response.text.splitlines() if line and not line.startswith('#') and not line.startswith('5s')]

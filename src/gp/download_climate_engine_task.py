@@ -13,6 +13,8 @@ from ..model.project import Project
 
 from typing import List
 
+DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
+
 MESSAGE_CATEGORY = 'DownloadClimateEngineTask'
 
 AREA_REDUCER= {
@@ -100,7 +102,7 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
                 url = f'{CLIMATE_ENGINE_API}/timeseries/native/coordinates'
                 headers = {'accept': 'application/json',
                         'Authorization': api_key}
-                response = requests.get(url, params=params, headers=headers)
+                response = requests.get(url, params=params, headers=headers, timeout=DOWNLOAD_TIMEOUT)
                 response.raise_for_status()
                 response_content = response.json()
 

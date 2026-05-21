@@ -10,6 +10,7 @@ from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsP
 from qgis.PyQt.QtCore import pyqtSignal
 
 MESSAGE_CATEGORY = 'QRiS_StreamGageTask'
+DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
 # https://waterservices.usgs.gov/rest/Site-Service.html
 # https://waterservices.usgs.gov/rest/Site-Test-Tool.html
@@ -73,7 +74,7 @@ class StreamGageTask(QgsTask):
             'hasDataTypeCd': 'dv',
             'siteType': 'ST'
         }
-        response = requests.get(BASE_REQUEST, params=params)
+        response = requests.get(BASE_REQUEST, params=params, timeout=DOWNLOAD_TIMEOUT)
 
         if response.status_code == 200:
             csv_raw = [line for line in response.text.split('\n') if not (line.startswith('#') or line.startswith('5s'))]
@@ -214,7 +215,7 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
         "simplify": "true"
     }
 
-    response = requests.get(url, params=parameters)
+    response = requests.get(url, params=parameters, timeout=DOWNLOAD_TIMEOUT)
     watershed_data = response.json()
 
     if file_dir is not None:
@@ -226,7 +227,7 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
 def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
     basin_chars_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/parameters.json?rcode={0}&workspaceID={1}&includeparameters=true'
     url = basin_chars_url.format(rcode, workspace_id)
-    response = requests.get(url)
+    response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
     try:
         basin_data = response.json()
     except Exception as ex:
@@ -240,7 +241,7 @@ def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
 def retrieve_flow_statistics(rcode, workspace_id, file_dir=None):
     flow_stats_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/flowstatistics.json?rcode={0}&workspaceID={1}&includeflowtypes=true'
     url = flow_stats_url.format(rcode, workspace_id)
-    response = requests.get(url)
+    response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
     try:
         flow_data = response.json()
     except Exception as ex:
@@ -266,7 +267,7 @@ def get_state_from_coordinates(latitude: float, longitude: float):
         "format": "json"
     }
 
-    response = requests.get(url, params=parameters)
+    response = requests.get(url, params=parameters, timeout=DOWNLOAD_TIMEOUT)
     location_data = response.json()
 
     if location_data is None:
