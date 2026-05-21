@@ -337,7 +337,7 @@ def _merge_lines(line_geoms: list) -> ogr.Geometry:
         if merged is not None and not merged.IsEmpty():
             union_geom = merged
     except Exception:
-        pass
+        raise MetricCalculationError('Error during line merging for sinuosity calculation.')
 
     if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
         union_geom = union_geom.GetGeometryRef(0).Clone()
