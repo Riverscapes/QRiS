@@ -1,14 +1,15 @@
 import os
-import sqlite3
 import json
+import sqlite3
 from textwrap import dedent
 
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtCore import QVariant, QMetaType, pyqtSignal, QObject
 from qgis.utils import iface
 
-from ..QRiS.path_utilities import is_url
-from ..QRiS.settings import Settings, CONSTANTS
+from .path_utilities import is_url
+from .settings import Settings, CONSTANTS
+from .sql_utilities import validate_sql_identifier
 
 from ..model.db_item import DBItem
 from ..model.raster import BASEMAP_MACHINE_CODE
@@ -605,10 +606,13 @@ class RiverscapesMapManager(QObject):
             parent_container.addChildElement(editor_field)
             feature_layer.setEditFormConfig(form_config)
 
+
     def set_table_as_layer_variable(self, feature_layer: QgsVectorLayer, database: str, table: str):
+
+        safe_table = validate_sql_identifier(table)
         with sqlite3.connect(database) as conn:
             curs = conn.cursor()
-            curs.execute("SELECT * FROM {};".format(table))
+            curs.execute(f'SELECT * FROM "{safe_table}";') # nosec B608
             lookup_collection = curs.fetchall()
             conn.commit()
         QgsExpressionContextUtils.setLayerVariable(feature_layer, table, json.dumps(lookup_collection))
@@ -619,9 +623,10 @@ class RiverscapesMapManager(QObject):
         value_position = 0
         reuse_last = True
         """Will set a Value Map widget drop down list from the lookup database table"""
+        safe_lookup_table = validate_sql_identifier(lookup_table_name)
         with sqlite3.connect(database) as conn:
             curs = conn.cursor()
-            curs.execute("SELECT * FROM {};".format(lookup_table_name))
+            curs.execute(f'SELECT * FROM "{safe_lookup_table}";')  # nosec B608
             lookup_collection = curs.fetchall()
             conn.commit()
 

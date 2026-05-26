@@ -31,7 +31,7 @@ def update_metadata(project_file: str):
                 attribute_fields[layer_id].append(meta_field['label'])
         
         for layer in ['dce_points', 'dce_lines', 'dce_polygons']:
-            c.execute(f"SELECT fid, event_layer_id, metadata FROM {layer}")
+            c.execute(f"SELECT fid, event_layer_id, metadata FROM {layer}") # nosec B608
             rows = c.fetchall()
             for row in rows:
                 layer_id = row[1]
@@ -72,7 +72,7 @@ def check_metadata(project_file: str):
     with sqlite3.connect(project_file) as conn:
         c = conn.cursor()
         for layer in ['dce_points', 'dce_lines', 'dce_polygons']:
-            c.execute(f"SELECT metadata FROM {layer}")
+            c.execute(f"SELECT metadata FROM {layer}") # nosec B608
             rows = c.fetchall()
             for row in rows:
                 value = row[0]

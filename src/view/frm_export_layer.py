@@ -197,13 +197,8 @@ class FrmExportLayer(QtWidgets.QDialog):
                 self.open_file(out_file)
 
     def open_folder(self, path):
-        path = os.path.normpath(path)
-        if os.name == 'nt':
-            import subprocess
-            subprocess.Popen(f'explorer /select,"{path}"')
-        else:
-            folder = os.path.dirname(path)
-            QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(folder))
+        folder = os.path.dirname(os.path.normpath(path))
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(folder))
 
     def open_file(self, path):
          QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(path))

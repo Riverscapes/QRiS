@@ -203,9 +203,13 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
             if fc and len(fc) > 0 and isinstance(fc[0], list):
                 # Unwrap the outer list to match legacy structure of [points_obj, watershed_obj]
                 watershed_data["featurecollection"] = fc[0]
-        except Exception:
+        except Exception as ex:
             # If structure is unexpected, don't crash here - let downstream handle or fail gracefully
-            pass
+            QgsMessageLog.logMessage(
+                f'Unexpected watershed response structure: {ex}',
+                MESSAGE_CATEGORY,
+                Qgis.Warning
+            )
 
     except Exception as e:
         error_msg = f"Error in delineate_watershed: {str(e)}"
