@@ -1,5 +1,5 @@
 import os
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ET  # nosec B405
 import datetime
 from jinja2 import Template
 from uuid import uuid4

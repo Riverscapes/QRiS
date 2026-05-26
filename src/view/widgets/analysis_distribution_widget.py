@@ -1,7 +1,7 @@
 import re
 import json
 import sqlite3
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -711,7 +711,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             return None
 
         try:
-            tree = ET.parse(qml_path)
+            tree = ET.parse(qml_path)  # nosec B314 - parses local QML style files from the QGIS project; not user-supplied input; defusedxml not available in QGIS
             qml_root = tree.getroot()
 
             renderer_el = qml_root.find('.//renderer-v2')

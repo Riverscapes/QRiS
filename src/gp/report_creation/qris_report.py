@@ -1,7 +1,7 @@
 import os
 import json
 import numpy as np
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ET  # nosec B405
 from .report import Report
 from .plotting import pie_chart, bar_chart
 import urllib.request

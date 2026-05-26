@@ -145,7 +145,7 @@ def load_protocol_definitions(project_directory: str, show_experimental: bool = 
 def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
     """Load protocol from xml"""
 
-    tree = ET.parse(file_path)
+    tree = ET.parse(file_path)  # nosec B314 - parses plugin-bundled protocol XML files, not user-supplied input; defusedxml not available in QGIS
     root = tree.getroot()
     if root.tag != 'Protocol':
         return None
