@@ -21,7 +21,7 @@ def validate_name_unique(db_path: str, table: str, column: str, value: str) -> b
 
     with sqlite3.connect(db_path) as conn:
         curs = conn.cursor()
-        curs.execute(f'SELECT * FROM {table} where {column} like ?', [value])
+        curs.execute(f'SELECT * FROM {table} where {column} like ?', [value])  # nosec B608 - table and column are always hardcoded string literals passed by internal callers
         return curs.fetchone() is None
 
 

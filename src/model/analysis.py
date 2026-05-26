@@ -90,14 +90,14 @@ class Analysis(DBItemSpatial):
         # prepare sql string for each metric
         sql_metric = ", ".join(
             [f'MAX(CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END) AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
-        sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id}{event_filter} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""
+        sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id}{event_filter} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>); all other values are integer DB IDs
         if sql_metric == '':
-            sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"
+            sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"  # nosec B608 - view_name is auto-generated; sample_frame.id is an integer DB ID
         # check if the view already exists, if so, delete it
         if self.check_spatial_view_exists(curs):
-            curs.execute(f"DROP VIEW {self.view_name}")
-            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")
-            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")
+            curs.execute(f"DROP VIEW {self.view_name}")  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>)
+            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")  # nosec B608 - view_name is auto-generated
+            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")  # nosec B608 - view_name is auto-generated
         curs.execute(sql)
         # add view to geopackage
         sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
@@ -303,7 +303,7 @@ class Analysis(DBItemSpatial):
                          table_name = layer.DCE_LAYER_NAMES.get(layer.geom_type)
                          if table_name:
                              # Note: Column is event_layer_id, not layer_id (per schema.sql)
-                             curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND event_layer_id = ?", [event.id, layer.id])
+                             curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND event_layer_id = ?", [event.id, layer.id])  # nosec B608 - table_name is from DCE_LAYER_NAMES fixed dict
                              count = curs.fetchone()[0]
                              if count == 0:
                                  is_empty = True

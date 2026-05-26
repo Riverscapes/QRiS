@@ -121,7 +121,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         with sqlite3.connect(self.project.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
-            curs.execute('SELECT {} FROM stream_gages where fid = ?'.format(','.join(fields.keys())), [site_id])
+            curs.execute('SELECT {} FROM stream_gages where fid = ?'.format(','.join(fields.keys())), [site_id])  # nosec B608 - fields.keys() contains only hardcoded column name strings defined in this method
             row = curs.fetchone()
         
         metadata_values = [(val, row[key]) for key, val in fields.items()]

@@ -51,7 +51,7 @@ def rsxml_import():
                     if match:
                         target_version = match.group(1)
             except Exception:
-                pass
+                QgsMessageLog.logMessage(f'Error reading {init_path} for version info', 'QRiS', Qgis.Warning)
 
         # Find the wheel file
         if target_version:
@@ -70,7 +70,7 @@ def rsxml_import():
                     end = wheel_path.find('-', start)
                     target_version = wheel_path[start:end]
                 except:
-                    pass
+                    QgsMessageLog.logMessage(f'Error parsing version from wheel filename {wheel_path}', 'QRiS', Qgis.Warning)
             break
             
     # 2. TRY IMPORT & CHECK VERSION
@@ -102,7 +102,7 @@ def rsxml_import():
                 QgsMessageLog.logMessage(f'rsxml imported from {os.path.basename(wheel_path)}', 'QRiS', Qgis.Info)
                 return rsxml
             except ImportError:
-                pass
+                QgsMessageLog.logMessage(f'Failed to import rsxml from {wheel_path}', 'QRiS', Qgis.Warning)
 
         QgsMessageLog.logMessage('rsxml not found in system or sibling plugins', 'QRiS', Qgis.Warning)
         return None
@@ -124,7 +124,6 @@ class RSProject:
         
         if not rsxml:
             raise Exception("rsxml module not available, cannot create RSProject")
-            return
         
         self.qris_project = qris_project
         self.project_rs_xml_path = os.path.join(os.path.dirname(self.qris_project.project_file), 'project.rs.xml')
@@ -312,7 +311,7 @@ class RSProject:
             geom_type: str = None
             with sqlite3.connect(scratch_gpkg_path(self.qris_project.project_file)) as conn:
                 curs = conn.cursor()
-                curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{context_vector.fc_name}'")
+                curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{context_vector.fc_name}'")  # nosec B608
                 geom_type = curs.fetchone()[0]
             metadata_values = self.get_db_item_metadata(context_vector)
             context_layers.append(rsxml.project_xml.GeopackageLayer(summary=f'context_{geom_type.lower()}',

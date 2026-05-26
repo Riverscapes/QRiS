@@ -282,7 +282,7 @@ def add_checkbox_widgets(parent_widget, db_path, table_name):
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = dict_factory
         curs = conn.cursor()
-        curs.execute(f'SELECT * FROM {table_name}')
+        curs.execute(f'SELECT * FROM {table_name}')  # nosec B608 - table_name is always a hardcoded string literal passed by internal callers
         data = {row['id']: row['name'] for row in curs.fetchall()}
     
     widget_list = []

@@ -431,7 +431,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 geom_type: str = None
                 with sqlite3.connect(scratch_gpkg_path(self.qris_project.project_file)) as conn:
                     curs = conn.cursor()
-                    curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{context_vector.fc_name}'")
+                    curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{context_vector.fc_name}'")  # nosec B608 - fc_name is an internal attribute from a project data object, not user input
                     geom_type = curs.fetchone()[0]
                 keep_context_layers.append(context_vector.fc_name)
 

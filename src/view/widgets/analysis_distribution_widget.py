@@ -317,7 +317,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     # Determine ID Column
                     id_col = 'fid' if 'fid' in columns else 'id'
                     
-                    query = f"SELECT {name_col}, {id_col} FROM {table_name} WHERE {fk_col} = ?"
+                    query = f"SELECT {name_col}, {id_col} FROM {table_name} WHERE {fk_col} = ?"  # nosec B608 - table_name and column names are derived from protocol definitions, not user input
                     cursor.execute(query, (scope_item.id,))
                     
                     # Fetch and process

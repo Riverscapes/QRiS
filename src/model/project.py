@@ -672,11 +672,11 @@ def apply_db_migrations(db_path: str):
                     mask_column_name = 'mask_id' if view_name.startswith('vw_aoi') else 'valley_bottom_id'
                     mask_id_column = next((column for column in columns if column[1] == mask_column_name), None)
                     if mask_id_column is not None:
-                        mask_id = curs.execute(f'SELECT {mask_column_name} FROM {view_name} LIMIT 1').fetchone()
+                        mask_id = curs.execute(f'SELECT {mask_column_name} FROM {view_name} LIMIT 1').fetchone()  # nosec B608 - mask_column_name and view_name are derived from fixed schema prefixes, not user input
                         if mask_id is not None:
                             conn.execute('BEGIN')
-                            curs.execute(f'DROP VIEW IF EXISTS {view_name}')
-                            curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}') 
+                            curs.execute(f'DROP VIEW IF EXISTS {view_name}')  # nosec B608 - view_name is an internal auto-generated name
+                            curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}')  # nosec B608 - view_name is auto-generated; mask_id[0] is an integer DB ID 
                             yield f'Applying QRiS Database Migrations: updated view {view_name}'
                             conn.commit()
         except Exception as ex:

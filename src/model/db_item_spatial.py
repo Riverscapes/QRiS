@@ -46,7 +46,7 @@ class DBItemSpatial(DBItem):
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT COUNT(*) FROM {self.fc_name} WHERE {self.fc_id_column_name} = ?", (self.id,))
+                cursor.execute(f"SELECT COUNT(*) FROM {self.fc_name} WHERE {self.fc_id_column_name} = ?", (self.id,))  # nosec B608 - fc_name and fc_id_column_name are internal class attributes set to fixed schema values
                 return cursor.fetchone()[0]
         except Exception:
             temp_layer = self.get_temp_layer(db_path)
@@ -102,17 +102,17 @@ class DBItemSpatial(DBItem):
 
     def check_spatial_view_exists(self, curs: sqlite3.Cursor) -> bool:
         """Check if the spatial view exists."""
-        curs.execute(f"SELECT name FROM sqlite_master WHERE type='view' AND name='{self.view_name}'")
+        curs.execute(f"SELECT name FROM sqlite_master WHERE type='view' AND name='{self.view_name}'")  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>)
         return curs.fetchone() is not None
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Create a spatial view of the DB item features."""
-        sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM {self.fc_name} WHERE {self.fc_id_column_name} == {self.id}"
+        sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM {self.fc_name} WHERE {self.fc_id_column_name} == {self.id}"  # nosec B608 - all values are auto-generated internal names or integer IDs
             # check if the view already exists, if so, delete it
         if self.check_spatial_view_exists(curs):
-            curs.execute(f"DROP VIEW {self.view_name}")
-            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")
-            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")
+            curs.execute(f"DROP VIEW {self.view_name}")  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>)
+            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")  # nosec B608 - view_name is auto-generated
+            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")  # nosec B608 - view_name is auto-generated
         curs.execute(sql)
         # add view to geopackage
         sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
@@ -126,6 +126,6 @@ class DBItemSpatial(DBItem):
     
     def drop_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Drop the spatial view of the DB item features."""
-        curs.execute(f"DROP VIEW IF EXISTS {self.view_name}")
-        curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = ?", (self.view_name,))
-        curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = ?", (self.view_name,))
+        curs.execute(f"DROP VIEW IF EXISTS {self.view_name}")  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>)
+        curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = ?", (self.view_name,))  # nosec B608 - view_name is auto-generated
+        curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = ?", (self.view_name,))  # nosec B608 - view_name is auto-generated

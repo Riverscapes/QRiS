@@ -50,7 +50,7 @@ class DBItem():
 
             try:
                 curs = conn.cursor()
-                curs.execute(f'DELETE FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])
+                curs.execute(f'DELETE FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
                 conn.commit()
 
             except Exception as ex:
@@ -63,7 +63,7 @@ class DBItem():
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute(f'SELECT created_on FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])
+                curs.execute(f'SELECT created_on FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
                 row = curs.fetchone()
                 if row is not None:
                     created_on = row[0]
@@ -90,7 +90,7 @@ class DBItem():
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute(f'UPDATE {self.db_table_name} SET metadata = ? WHERE {self.id_column_name} = ?', 
+                curs.execute(f'UPDATE {self.db_table_name} SET metadata = ? WHERE {self.id_column_name} = ?',  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
                     [json.dumps(self.metadata), self.id])
                 conn.commit()
                 self.locked = locked
@@ -200,7 +200,7 @@ class CheckableDBItemModel(QAbstractListModel):
 
 def load_lookup_table(curs: sqlite3.Cursor, table: str) -> dict:
 
-    curs.execute('SELECT id, name FROM {}'.format(table))
+    curs.execute('SELECT id, name FROM {}'.format(table))  # nosec B608 - table is always a fixed schema table name passed by internal callers
     return {row['id']: DBItem(
         table,
         row['id'],
@@ -222,7 +222,7 @@ def get_unique_name(curs: sqlite3.Cursor, table: str, seed_name: str) -> str:
     while success is False:
         candidate_name = f"{seed_name}{ ' ' + attempts if attempts > 0 else ''}"
 
-        curs.execute(f'SELECT name FROM {table} WHERE name = ?', [candidate_name])
+        curs.execute(f'SELECT name FROM {table} WHERE name = ?', [candidate_name])  # nosec B608 - table is always a fixed schema table name passed by internal callers
         row = curs.fetchone()
         success = row is None
 
@@ -236,7 +236,7 @@ def update_intersect_table(curs: sqlite3.Cursor, table: str, parent_col_name: st
 
     # Determine if there are IDs in the database that are no longer in use (new_child_id_list)
     unused_child_ids = []
-    curs.execute(f'SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?', [str(parent_id)])
+    curs.execute(f'SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?', [str(parent_id)])  # nosec B608 - table and column names are fixed schema values passed by internal callers
 
     for row in curs.fetchall():
         if row[child_col_name] not in new_child_id_list:
@@ -244,9 +244,10 @@ def update_intersect_table(curs: sqlite3.Cursor, table: str, parent_col_name: st
 
     # Delete those records no longer in use.
     if len(unused_child_ids) > 0:
-        curs.executemany(f'DELETE FROM {table} where {parent_col_name} = ? and {child_col_name} = ?', unused_child_ids)
+        curs.executemany(f'DELETE FROM {table} where {parent_col_name} = ? and {child_col_name} = ?', unused_child_ids)  # nosec B608 - table and column names are fixed schema values passed by internal callers
 
     # Now insert all the records and use NO CONFLICT to skip and duplates that are already there!
     new_ids = [[parent_id, child_id] for child_id in new_child_id_list]
-    curs.executemany(f"""INSERT INTO {table} ({parent_col_name}, {child_col_name}) VALUES (?, ?)
-        ON CONFLICT({parent_col_name}, {child_col_name}) DO NOTHING""", new_ids)
+    insert_sql = f"""INSERT INTO {table} ({parent_col_name}, {child_col_name}) VALUES (?, ?)
+        ON CONFLICT({parent_col_name}, {child_col_name}) DO NOTHING"""  # nosec B608 - table and column names are fixed schema values passed by internal callers
+    curs.executemany(insert_sql, new_ids)

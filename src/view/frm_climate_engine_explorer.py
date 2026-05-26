@@ -84,13 +84,13 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
             placeholders = ', '.join('?' for _ in sample_frame_feature_ids)
-            curs.execute(f'SELECT DISTINCT(time_series_id) FROM sample_frame_time_series WHERE sample_frame_fid IN ({placeholders})', sample_frame_feature_ids)
+            curs.execute(f'SELECT DISTINCT(time_series_id) FROM sample_frame_time_series WHERE sample_frame_fid IN ({placeholders})', sample_frame_feature_ids)  # nosec B608 - placeholders are generated as '?,?,...' from list length, not user input
             time_series_ids = curs.fetchall()
             if len(time_series_ids) == 0:
                 return
             time_series_ids = [time_series_id[0] for time_series_id in time_series_ids]
             placeholders = ', '.join('?' for _ in time_series_ids)
-            curs.execute(f'SELECT time_series_id, name, metadata FROM time_series WHERE time_series_id IN ({placeholders})', time_series_ids)
+            curs.execute(f'SELECT time_series_id, name, metadata FROM time_series WHERE time_series_id IN ({placeholders})', time_series_ids)  # nosec B608 - placeholders are generated as '?,?,...' from list length, not user input
             time_series_rows = curs.fetchall()
 
         # load the time series names into the list view
@@ -242,7 +242,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         with sqlite3.connect(self.qris_project.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
-            curs.execute('SELECT {} FROM time_series where time_series_id = ?'.format(','.join(fields.keys())), (time_series_id,))
+            curs.execute('SELECT {} FROM time_series where time_series_id = ?'.format(','.join(fields.keys())), (time_series_id,))  # nosec B608 - fields.keys() contains only hardcoded column name strings defined in this method
             row = curs.fetchone()
             metadata_values = [(val, row[key]) for key, val in fields.items()]
             # now grab and parse the metadata json

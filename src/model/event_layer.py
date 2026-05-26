@@ -36,7 +36,7 @@ class EventLayer(DBItemSpatial):
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT COUNT(*) FROM {self.fc_name} WHERE event_layer_id = ? AND event_id = ?", (self.layer.id, self.event_id))
+                cursor.execute(f"SELECT COUNT(*) FROM {self.fc_name} WHERE event_layer_id = ? AND event_id = ?", (self.layer.id, self.event_id))  # nosec B608 - fc_name is an internal class attribute set to a fixed schema value
                 return cursor.fetchone()[0]
         except Exception:
             # Fallback for robustness
@@ -49,12 +49,12 @@ class EventLayer(DBItemSpatial):
         out_fields = '*'
         if layer_fields is not None and len(layer_fields) > 0:
             out_fields = ", ".join([f"json_extract(metadata, '$.attributes.{field['id']}') AS \"{field['label']}\"" for field in layer_fields])
-        sql = f"CREATE VIEW {self.view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {self.fc_name} WHERE event_id == {self.event_id} AND event_layer_id == {self.layer.id}"
+        sql = f"CREATE VIEW {self.view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {self.fc_name} WHERE event_id == {self.event_id} AND event_layer_id == {self.layer.id}"  # nosec B608 - view_name is auto-generated; fc_name is fixed schema; event_id and layer.id are integer DB IDs
         # check if the view already exists, if so, delete it
         if self.check_spatial_view_exists(curs):
-            curs.execute(f"DROP VIEW {self.view_name}")
-            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")
-            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")
+            curs.execute(f"DROP VIEW {self.view_name}")  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>)
+            curs.execute(f"DELETE FROM gpkg_contents WHERE table_name = '{self.view_name}'")  # nosec B608 - view_name is auto-generated
+            curs.execute(f"DELETE FROM gpkg_geometry_columns WHERE table_name = '{self.view_name}'")  # nosec B608 - view_name is auto-generated
 
         curs.execute(sql)
         # add view to geopackage

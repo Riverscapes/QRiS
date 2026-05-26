@@ -189,7 +189,7 @@ def update_layer(project_file: str, layer_id: int, layer_definition: LayerDefini
             layer_updated = True
 
         if columns_to_update:
-             sql = f"UPDATE layers SET {', '.join(columns_to_update)} WHERE id = ?"
+             sql = f"UPDATE layers SET {', '.join(columns_to_update)} WHERE id = ?"  # nosec B608 - columns_to_update contains only fixed schema column name strings, never user input
              params.append(layer_id)
              curs.execute(sql, params)
              conn.commit()
