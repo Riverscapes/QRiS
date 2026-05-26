@@ -736,7 +736,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
                 if dist < closest_dist:
                     closest_dist = dist
                     closest_point = pt
-            except:
+            except Exception:  # nosec B112 - skip points with invalid/missing coordinates without crashing the hit-test loop
                 continue
                 
         # Threshold in pixels (e.g. 10 pixels radius)

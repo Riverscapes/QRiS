@@ -212,9 +212,8 @@ class QRiSToolbar:
 
         try:
             self.qproject.cleared.disconnect(self.close_project)
-        except:
+        except Exception:  # nosec B110 - Qt signal disconnect raises if signal was never connected; safe to ignore during plugin unload
             pass
-
         # Cleanup the main dockable window
         if self.dockwidget is not None:
             self.dockwidget.destroy_docwidget()

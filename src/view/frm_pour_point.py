@@ -546,8 +546,7 @@ class FrmPourPoint(QtWidgets.QDialog):
                 new_flow_scenarios = retrieve_flow_scenarios(watershed_data, new_basin_chars)
                 self.pour_point.flow_scenarios = new_flow_scenarios
                 metadata['system']['flow_scenarios'] = new_flow_scenarios
-            except Exception:
-                # If scenarios fail, just keep the state code and basin chars
+            except Exception:  # nosec B110 - flow scenario retrieval is best-effort; failure keeps existing state code and basin chars
                 pass
 
             # Update pour point and database

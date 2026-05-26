@@ -308,7 +308,7 @@ class Analysis(DBItemSpatial):
                              if count == 0:
                                  is_empty = True
                                  empty_msg = f"{layer_name}: No features"
-                     except Exception as e:
+                     except Exception:  # nosec B110 - failure means the DCE table doesn't exist; count stays 0 and is_empty remains False
                          # Table might not exist or other error
                          pass
                 return True, None, is_empty, empty_msg

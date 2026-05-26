@@ -1096,8 +1096,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                             md_json = json.loads(md_str)
                             # Attributes stored in 'attributes' key
                             val = md_json.get('attributes', {}).get(metric_field)
-            except Exception as e:
-                # QgsMessageLog.logMessage(f"Error retrieving attribute: {e}", 'QRiS', Qgis.Warning)
+            except Exception:  # nosec B110 - metadata attribute lookup is best-effort; missing value falls through to 'Null' default below
                 pass
                 
             if val is None:

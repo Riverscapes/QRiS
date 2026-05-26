@@ -118,7 +118,7 @@ class MetricStatusWidget_Buttons(QtWidgets.QWidget):
                     if diff > tol:
                         icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation)
                         warning_tooltip = f"Manual value differs from automated value by more than tolerance ({tol}).\nManual: {metric_value.manual_value}\nAutomated: {metric_value.automated_value}"
-                except Exception:
+                except Exception:  # nosec B110 - threshold diff calculation is best-effort; non-numeric values silently skip the warning icon
                     pass
 
         if icon:

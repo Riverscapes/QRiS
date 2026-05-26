@@ -279,7 +279,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         for signal in list(self.connections.keys()):
             try:
                 signal.disconnect(self.connections.pop(signal))
-            except Exception:
+            except Exception:  # nosec B110 - Qt signal disconnect raises if already disconnected; safe to ignore during cleanup
                 pass
 
     def setupUi(self):
