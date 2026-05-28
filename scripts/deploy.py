@@ -49,6 +49,7 @@ def copy_plugin():
         ['src', '**', '*.qml'],
         ['resources', '**', 'us_states.gpkg'],
         ['resources', '**', '*.json'],
+        ['resources', '**', '*.geojson']
     ]
     files = []
     for p in keep_patterns:

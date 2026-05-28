@@ -25,7 +25,6 @@ class QRaveIntegration(QObject):
             self.plugin_instance = None
             self.symbology_folders = None
             self.qrave_map_layer = None
-            self.metric_definitions_folder = None
             self.protocol_folder = None
             self.RemoteProject = None
 
@@ -48,9 +47,13 @@ class QRaveIntegration(QObject):
                                           parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
 
                 self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..'))
-                self.metric_definitions_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'metrics'))
-                self.protocol_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'protocols'))
-                self.climate_engine_json = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..', 'QRiS', 'climate_engine_datasets.json'))
+                self.protocol_folder = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'protocols'))
+                # TODO: Currently in locally deployed qris folder, change these paths when we make the changeover.
+                local_qris_resources = parse_posix_path(os.path.join(os.path.dirname(__file__), '..', '..', 'resources'))
+                self.climate_engine_json = parse_posix_path(os.path.join(local_qris_resources, 'climate_engine_datasets.json'))
+                self.lookups_json = parse_posix_path(os.path.join(local_qris_resources, 'lookups.json'))
+                # self.climate_engine_json = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'climate_engine_datasets.json'))
+                # self.lookups_json = parse_posix_path(os.path.join(self.resources_folder, 'lookups.json'))
 
                 self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
                 self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
@@ -77,7 +80,6 @@ class QRaveIntegration(QObject):
             self.plugin_instance = None
             self.symbology_folders = None
             self.qrave_map_layer = None
-            self.metric_definitions_folder = None
             self.protocol_folder = None
 
     def qrave_add_to_map_menu_item(self, menu: QMenu, item: QStandardItem, data):

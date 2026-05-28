@@ -16,6 +16,8 @@
         "businessLogicDir": "blXML",
         "symbologyDir": "symbology",
         "protocolsDir": "protocols",
+        "climateEngineJson": "climate_engine_datasets.json",
+        "lookupsJson": "lookups.json",
         "digestSyncFreqHours": 24,
         "warehouseUrl": "https://data.riverscapes.net",
         "webUrl": "https://qris.riverscapes.net",
