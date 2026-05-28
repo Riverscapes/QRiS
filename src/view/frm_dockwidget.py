@@ -84,13 +84,14 @@ from .frm_query_builder import FrmQueryBuilder
 from .frm_event_picker import FrmEventPicker
 from .frm_export_project import FrmExportProject
 from .frm_import_photos import FrmImportPhotos
+from .frm_settings import FrmSettings
 from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
 from .frm_layer_type import FrmLayerTypeDialog
 from .frm_settings import REMOVE_LAYERS_ON_CLOSE
 
-from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
+from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE, require_api_key
 from ..lib.data_exchange import browse_data_exchange
 from ..lib.rs_project import RSProject
 
@@ -251,14 +252,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
         [self.add_child_to_project_tree(catchments_node, item) for item in self.qris_project.pour_points.values()]
 
-        climate_engine_node = self.add_child_to_project_tree(self.context_node, CLIMATE_ENGINE_MACHINE_CODE)
-
         events_node = self.add_child_to_project_tree(project_node, EVENT_MACHINE_CODE)
         [self.add_event_to_project_tree(events_node, item) for item in self.qris_project.events.values()]
         [self.add_planning_container_to_project_tree(events_node, item) for item in self.qris_project.planning_containers.values()]
 
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.qris_project.analyses.values()]
+
+        climate_engine_node = self.add_child_to_project_tree(analyses_node, CLIMATE_ENGINE_MACHINE_CODE)
 
         attachments_node = self.add_child_to_project_tree(project_node, ATTACHMENT_MACHINE_CODE)
         [self.add_child_to_project_tree(attachments_node, item) for item in self.qris_project.attachments.values()]
@@ -1152,7 +1153,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if result is not None and result != 0:
             self.add_child_to_project_tree(model_item, frm.attachment, False)
 
+    def _open_settings_climate_engine_tab(self):
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        frm = FrmSettings(settings, self.qris_project)
+        frm.tabs.setCurrentWidget(frm.tabClimateEngine)
+        frm.exec_()
+
     def climate_engine_explorer(self):
+
+        if not require_api_key(self, open_settings_callback=self._open_settings_climate_engine_tab):
+            return
 
         if len(self.qris_project.sample_frames) + len(self.qris_project.aois) + len(self.qris_project.valley_bottoms) == 0:
             QtWidgets.QMessageBox.warning(self, 'No Climate Engine layers in QRiS Project', 'No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.')
@@ -1165,7 +1176,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.climate_engine_doc_widget.show()
 
     def add_climate_engine_to_map(self):
-        
+
+        if not require_api_key(self, open_settings_callback=self._open_settings_climate_engine_tab):
+            return
+
         frm = FrmClimateEngineMapLayer(self, self.qris_project)
         result = frm.exec_()
         if result is not None and result != 0:

@@ -34,8 +34,6 @@ from .QRiS.settings import CONSTANTS
 # Initialize Qt resources from file resources.py
 from . import resources
 
-from .lib.environment import load_env_vars
-
 # Import the code for the DockWidget
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
@@ -78,9 +76,6 @@ class QRiSToolbar:
 
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-
-        # Load environment variables
-        load_env_vars()
 
         # initialize Metadata Widget
         initialize_metadata_widget()

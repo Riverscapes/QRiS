@@ -3,14 +3,18 @@ from qgis.PyQt.QtGui import QFont
 from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QFontDialog
 
 from ..model.project import Project
+from ..lib.climate_engine import CLIMATE_ENGINE_API_KEY_SETTING, open_climate_engine_website
+from ..QRiS.protocol_parser import LOCAL_PROTOCOL_FOLDER, SHOW_EXPERIMENTAL_PROTOCOLS
+from ..QRiS.settings import Settings
+from .frm_api_key import FrmApiKey
 
 from .frm_export_project import DEFAULT_EXPORT_PATH
 
 DOCK_WIDGET_LOCATION = 'dock_widget_location'
 REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
 
-LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
-SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
+# LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
+# SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
 DEFAULT_CHART_FONT = 'default_chart_font'
 
 default_dock_widget_location = 'right'
@@ -69,6 +73,8 @@ class FrmSettings(QDialog):
         self.default_chart_font = get_default_chart_font(self.settings)
         self.update_chart_font_button_text()
 
+        self._refresh_api_key_status()
+
     def accept(self):
 
         if self.left_radio.isChecked():
@@ -118,6 +124,29 @@ class FrmSettings(QDialog):
 
     def update_chart_font_button_text(self):
         self.btn_chart_font.setText(f"{self.default_chart_font.family()} {self.default_chart_font.pointSize()}pt")
+
+    def open_api_key_dialog(self):
+        dlg = FrmApiKey(self)
+        if dlg.exec_() == QDialog.Accepted:
+            self._refresh_api_key_status()
+
+    def remove_api_key(self):
+        reply = QMessageBox.question(
+            self, "Remove API Key",
+            "Are you sure you want to remove the Climate Engine API key?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            Settings().setSecureValue(CLIMATE_ENGINE_API_KEY_SETTING, None)
+            self._refresh_api_key_status()
+
+    def _refresh_api_key_status(self):
+        api_key = Settings().getSecureValue(CLIMATE_ENGINE_API_KEY_SETTING)
+        if api_key:
+            self.lbl_api_key_status.setText('<span style="color:green;">Configured &#10004;</span>')
+            self.btn_remove_api_key.setEnabled(True)
+        else:
+            self.lbl_api_key_status.setText('Not configured')
+            self.btn_remove_api_key.setEnabled(False)
 
     def setup_ui(self):
 
@@ -189,6 +218,7 @@ class FrmSettings(QDialog):
         self.tabs.addTab(self.tabSettings, "General")
         self.tabSettings.setLayout(self.vertGeneral)
 
+        # Protocools Tab
         self.protocol_layout = QVBoxLayout()
 
         self.horiz_protocol_folder = QHBoxLayout()
@@ -214,3 +244,46 @@ class FrmSettings(QDialog):
         self.tabProtocols = QWidget()
         self.tabProtocols.setLayout(self.protocol_layout)
         self.tabs.addTab(self.tabProtocols, "Protocols")
+
+        # Climate Engine Tab
+        climate_engine_layout = QVBoxLayout()
+        
+        lbl_climate_engine_text = QLabel("Climate Engine is a third-party service for accessing climate data. QRiS can connect to Climate Engine to allow you to use their data in your projects. You will need to sign up for a Climate Engine account and obtain an API key to use this feature.")
+        lbl_climate_engine_text.setWordWrap(True)
+        climate_engine_layout.addWidget(lbl_climate_engine_text)
+        
+        horiz_api_key = QHBoxLayout()
+        climate_engine_layout.addLayout(horiz_api_key)
+
+        horiz_api_key.addWidget(QLabel("API Key:"))
+
+        self.lbl_api_key_status = QLabel()
+        self.lbl_api_key_status.setTextFormat(Qt.RichText)
+        horiz_api_key.addWidget(self.lbl_api_key_status, 1)
+
+        btn_set_api_key = QPushButton("Set Key…")
+        btn_set_api_key.clicked.connect(self.open_api_key_dialog)
+        horiz_api_key.addWidget(btn_set_api_key)
+
+        self.btn_remove_api_key = QPushButton("Remove")
+        self.btn_remove_api_key.clicked.connect(self.remove_api_key)
+        horiz_api_key.addWidget(self.btn_remove_api_key)
+
+        climate_engine_layout.addStretch(1)
+
+        horiz_buttons_layout = QHBoxLayout()
+        climate_engine_layout.addLayout(horiz_buttons_layout)
+
+        btn_climate_engine_url = QPushButton("About Climate Engine")
+        btn_climate_engine_url.clicked.connect(lambda: open_climate_engine_website())
+        horiz_buttons_layout.addWidget(btn_climate_engine_url)
+
+        btn_request_api_key = QPushButton("Request API key")
+        btn_request_api_key.clicked.connect(lambda: open_climate_engine_website('/apis/requesting-an-authorization-key-token/'))
+        horiz_buttons_layout.addWidget(btn_request_api_key)
+
+        horiz_buttons_layout.addStretch(1)
+
+        self.tabClimateEngine = QWidget()
+        self.tabClimateEngine.setLayout(climate_engine_layout)
+        self.tabs.addTab(self.tabClimateEngine, "Climate Engine")

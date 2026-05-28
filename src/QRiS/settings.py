@@ -1,8 +1,9 @@
 import os
 import json
 import html
+import base64
 
-from qgis.core import QgsMessageLog, Qgis, QgsProject, QgsSettings
+from qgis.core import Qgis, QgsProject, QgsSettings, QgsMessageLog
 
 from .units import Units
 
@@ -111,7 +112,38 @@ class Settings(SettingsBorg):
         """
         # Set it in the file
         self.s.setValue(key, json.dumps({"v": value}))
-        self.log("SETTINGS SET: {}={} of type '{}'".format(key, value, html.escape(str(type(value)))), level=Qgis.Info)
+        self.log(f"SETTINGS SET: {key}={value} of type '{html.escape(str(type(value)))}'", level=Qgis.Info)
+
+    def getSecureValue(self, key: str) -> str:
+        """
+        Get a value stored with light obfuscation (base64) in QgsSettings.
+        Protected by OS user account — no QGIS master password required.
+        """
+        try:
+            self.s.beginGroup('secure')
+            raw = self.s.value(key, None)
+            self.s.endGroup()
+            if raw:
+                return base64.b64decode(raw.encode()).decode('utf-8')
+        except Exception as e:
+            self.log(f"Error getting secure setting {key}: {e}", level=Qgis.Warning)
+        return None
+
+    def setSecureValue(self, key: str, value: str):
+        """
+        Write a value with light obfuscation (base64) into QgsSettings.
+        Protected by OS user account — no QGIS master password required.
+        """
+        try:
+            self.s.beginGroup('secure')
+            if value:
+                self.s.setValue(key, base64.b64encode(value.encode()).decode('utf-8'))
+            else:
+                self.s.remove(key)
+            self.s.endGroup()
+            self.log(f"SETTINGS SET: {key}=<obfuscated>", level=Qgis.Info)
+        except Exception as e:
+            self.log(f"Error setting secure setting {key}: {e}", level=Qgis.Warning)
 
     def plugin_root_path(self):
         """Return absolute path to the plugin root directory."""

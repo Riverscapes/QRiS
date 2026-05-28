@@ -40,7 +40,6 @@ def copy_plugin():
         ['LICENSE'],
         ['config.json'],
         ['secrets.json'],
-        ['.env'],
         ['wheels', '**', '*.whl'],
         ['src', '**', '*.py'],
         ['src', '**', '*.json'],
