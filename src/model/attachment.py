@@ -94,3 +94,56 @@ def insert_attachment(db_path: str, display_label: str, path: str, attachment_ty
 def attachments_path(project_file: str) -> str:
     """Get the attachments directory path for the given project file."""
     return parse_posix_path(os.path.join(os.path.dirname(project_file), 'attachments'))
+
+
+def load_dce_attachments(db_path: str, event_id: int) -> Dict[int, tuple]:
+    """
+    Return all attachments associated with the given DCE event.
+    Returns a dict of attachment_id -> (Attachment, association_metadata dict).
+    association_metadata may include 'purpose' and any other per-association fields.
+    """
+    result = {}
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        curs = conn.cursor()
+        curs.execute('''
+            SELECT a.attachment_id, a.attachment_type, a.display_label, a.path, a.description, a.metadata,
+                   da.metadata AS assoc_metadata
+            FROM attachments a
+            JOIN dce_attachments da ON da.attachment_id = a.attachment_id
+            WHERE da.event_id = ?
+        ''', [event_id])
+        for row in curs.fetchall():
+            metadata = json.loads(row['metadata']) if row['metadata'] else {}
+            assoc_metadata = json.loads(row['assoc_metadata']) if row['assoc_metadata'] else {}
+            attachment = Attachment(
+                id=row['attachment_id'],
+                display_label=row['display_label'],
+                path=row['path'],
+                attachment_type=row['attachment_type'],
+                description=row['description'],
+                metadata=metadata
+            )
+            result[row['attachment_id']] = (attachment, assoc_metadata)
+    return result
+
+def associate_attachment_with_dce(db_path: str, event_id: int, attachment_id: int, purpose: str = None) -> None:
+    """Create (or update) an association between an attachment and a DCE event."""
+    assoc_metadata = json.dumps({'purpose': purpose}) if purpose else None
+    with sqlite3.connect(db_path) as conn:
+        curs = conn.cursor()
+        curs.execute(
+            'INSERT OR REPLACE INTO dce_attachments (event_id, attachment_id, metadata) VALUES (?, ?, ?)',
+            [event_id, attachment_id, assoc_metadata]
+        )
+        conn.commit()
+
+def disassociate_attachment_from_dce(db_path: str, event_id: int, attachment_id: int) -> None:
+    """Remove the association between an attachment and a DCE event (does not delete the attachment)."""
+    with sqlite3.connect(db_path) as conn:
+        curs = conn.cursor()
+        curs.execute(
+            'DELETE FROM dce_attachments WHERE event_id = ? AND attachment_id = ?',
+            [event_id, attachment_id]
+        )
+        conn.commit()

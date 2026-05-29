@@ -1143,7 +1143,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_attachment(self, model_item, attachment_type):
 
-        frm = FrmAttachment(self, self.iface, self.qris_project, None, attachment_type)
+        frm = FrmAttachment(self, self.qris_project, None, attachment_type)
         if attachment_type == Attachment.TYPE_FILE:
             browse_result = frm.source.browse()
             if browse_result is None or browse_result == '':
@@ -2207,7 +2207,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             layer = db_item.layer
             frm = FrmLayerMetricDetails(self, self.qris_project, layer) 
         elif isinstance(db_item, Attachment):
-            frm = FrmAttachment(self, self.iface, self.qris_project, db_item)
+            frm = FrmAttachment(self, self.qris_project, db_item)
         else:
             QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
 

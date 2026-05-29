@@ -15,6 +15,7 @@ from .widgets.metadata import MetadataWidget
 from .widgets.surface_library import SurfaceLibraryWidget
 from .widgets.event_library import EventLibraryWidget
 from .widgets.layer_library import LayerLibraryWidget
+from .widgets.attachments_library import AttachmentsLibraryWidget
 from .frm_event_picker import FrmEventPicker
 
 from datetime import datetime
@@ -48,8 +49,11 @@ class FrmEvent(QtWidgets.QDialog):
         self.surface_library = SurfaceLibraryWidget(self, qris_project)
         self.layer_widget = None
         self.event_library = None
+        self.attachments_widget = None
         if event_type_id != PLANNING_EVENT_TYPE_ID:
             self.layer_widget = LayerLibraryWidget(self, qris_project, event_type_id, dce_event)
+            if dce_event is not None:
+                self.attachments_widget = AttachmentsLibraryWidget(self, qris_project, dce_event)
         else:
             self.event_library = EventLibraryWidget(self, qris_project, [1, 4, 5])
 
@@ -352,6 +356,8 @@ class FrmEvent(QtWidgets.QDialog):
 
                 self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, None, None, self.metadata_widget.get_data())
                 check_and_remove_unused_layers(self.qris_project)
+                if self.attachments_widget is not None:
+                    self.attachments_widget.save()
                 self.qris_project.project_changed.emit()
                 super().accept()
             else:
@@ -504,6 +510,10 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.vertDescription.addWidget(self.txtDescription)
         self.tab.addTab(self.tabDescriptionWidget, 'Description')
+
+        # DCE References tab (edit mode only - requires an event_id to associate against)
+        if self.attachments_widget is not None:
+            self.tab.addTab(self.attachments_widget, 'DCE References')
 
         # Metadata
         self.tab.addTab(self.metadata_widget, 'Metadata')

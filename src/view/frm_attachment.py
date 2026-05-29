@@ -12,12 +12,14 @@ from .utilities import add_standard_form_buttons
 
 from ..gp.copy_file import FileCopyTask
 from ..QRiS.path_utilities import parse_posix_path
+from ..QRiS.settings import Settings
 
 from ..model.project import Project
 from ..model.attachment import Attachment, attachments_path, insert_attachment
 
 ATTACHMENT_TYPE_LABELS = ['Figure', 'Link', 'Report', 'Table']
 
+settings = Settings()
 
 class ClickableDateEdit(QtWidgets.QDateEdit):
     def focusInEvent(self, event):
@@ -28,9 +30,8 @@ class ClickableDateEdit(QtWidgets.QDateEdit):
 
 class FrmAttachment(QtWidgets.QDialog):
 
-    def __init__(self, parent, iface: QgisInterface, qris_project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE):
+    def __init__(self, parent, qris_project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE):
 
-        self.iface = iface
         self.qris_project = qris_project
         self.metadata = None
         self.attachment = attachment
@@ -150,9 +151,9 @@ class FrmAttachment(QtWidgets.QDialog):
     def on_copy_complete(self, result: bool, error: str = None):
 
         if result is True:
-            self.iface.messageBar().pushMessage('Feature Class Copy Complete.', f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
+            settings.msg_bar('Feature Class Copy Complete.', f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
         else:
-            self.iface.messageBar().pushMessage('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            settings.msg_bar('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
         if error:
             QgsApplication.messageLog().logMessage(f"Error copying file: {error}", "QRiS", Qgis.Critical)
         try:

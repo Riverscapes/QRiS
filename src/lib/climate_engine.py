@@ -20,6 +20,8 @@ CLIMATE_ENGINE_URL = 'https://www.climateengine.org/'
 CLIMATE_ENGINE_MACHINE_CODE = 'Climate Engine'
 CLIMATE_ENGINE_API_KEY_SETTING = 'CLIMATE_ENGINE_API_KEY'
 
+settings = Settings()
+
 def get_api_key():
 
     # Get the API key from environment variable
@@ -27,7 +29,6 @@ def get_api_key():
 
     # If not found in environment, get it from QGIS settings
     if api_key is None:
-        settings = Settings()
         api_key = settings.getSecureValue(CLIMATE_ENGINE_API_KEY_SETTING)
 
     return api_key
@@ -58,11 +59,13 @@ def check_climate_engine_api_key(api_key: str) -> bool:
     return response.status_code == 200
 
 def get_datasets() -> dict:
-    datasets_file = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', 'climate_engine_datasets.json')
-    with open(datasets_file, 'r') as f:
-        datasets = json.load(f)
-    return {dataset['datasetId']: dataset for dataset in datasets}
-    
+    datasets_json_path = settings.value('climateEngineJson', None)
+    if datasets_json_path and os.path.exists(datasets_json_path):
+        with open(datasets_json_path, 'r') as f:
+            datasets = json.load(f)
+        return {dataset['datasetId']: dataset for dataset in datasets} 
+    else:
+        return {}
 
 def get_dataset_date_range(dataset: str) -> dict:
     api_key = get_api_key()
