@@ -52,8 +52,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.attachments_widget = None
         if event_type_id != PLANNING_EVENT_TYPE_ID:
             self.layer_widget = LayerLibraryWidget(self, qris_project, event_type_id, dce_event)
-            if dce_event is not None:
-                self.attachments_widget = AttachmentsLibraryWidget(self, qris_project, dce_event)
+            self.attachments_widget = AttachmentsLibraryWidget(self, qris_project, dce_event)
         else:
             self.event_library = EventLibraryWidget(self, qris_project, [1, 4, 5])
 
@@ -377,6 +376,9 @@ class FrmEvent(QtWidgets.QDialog):
                 )
 
                 self.qris_project.add_db_item(self.dce_event)
+                if self.attachments_widget is not None:
+                    self.attachments_widget.dce_event = self.dce_event
+                    self.attachments_widget.save()
                 super().accept()
             
             #TODO Check for any unused layers and remove them from the project This is based on if they are part of any event, not by the number of features referencing the layer
@@ -511,9 +513,9 @@ class FrmEvent(QtWidgets.QDialog):
         self.vertDescription.addWidget(self.txtDescription)
         self.tab.addTab(self.tabDescriptionWidget, 'Description')
 
-        # DCE References tab (edit mode only - requires an event_id to associate against)
+        # References tab
         if self.attachments_widget is not None:
-            self.tab.addTab(self.attachments_widget, 'DCE References')
+            self.tab.addTab(self.attachments_widget, f'{self.type_name} References')
 
         # Metadata
         self.tab.addTab(self.metadata_widget, 'Metadata')

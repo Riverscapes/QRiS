@@ -129,6 +129,7 @@ def validate_protocol_metric_dependencies(protocol_definitions) -> list:
 
 class Project(DBItem, QObject):
     project_changed = pyqtSignal()
+    item_added = pyqtSignal(object)  # emits the newly added DBItem
 
     def __init__(self, project_file: str):
         DBItem.__init__(self, 'projects', 1, 'Placeholder')
@@ -443,7 +444,8 @@ class Project(DBItem, QObject):
             self.attachments[db_item.id] = db_item
         else:
             raise TypeError(f"Unsupported db_item type: {type(db_item)}")
-    
+
+        self.item_added.emit(db_item)
         self.project_changed.emit()
 
     def remove(self, db_item: DBItem) -> None:

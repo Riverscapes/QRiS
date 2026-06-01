@@ -212,6 +212,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.qris_project.project_changed.connect(self.rs_project.write)
         # Keep the .gpkg main file in sync (not just WAL) so external copy/upload while QGIS is open includes recent edits.
         self.qris_project.project_changed.connect(self.qris_project.request_flush)
+        self.qris_project.item_added.connect(self.on_item_added)
         self.rs_project.write() # Ensure the RS project file is created if missing, or update it on opening the project.
         
         # Map Manager
@@ -1094,6 +1095,63 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if found is not None:
                 return found
         return None
+
+    def on_item_added(self, db_item) -> None:
+        """Route a newly created DBItem to the correct project tree node.
+
+        Fired by Project.item_added whenever add_db_item() is called — including
+        items created as side-effects inside other forms (e.g. an Attachment added
+        from the References tab of an event form).  add_child_to_project_tree
+        deduplicates by UserRole data, so the explicit add_*_to_project_tree calls
+        that follow exec_() (needed for chkAddToMap) remain safe.
+        """
+        root = self.model.invisibleRootItem()
+
+        if isinstance(db_item, Attachment):
+            node = self._find_tree_node(root, ATTACHMENT_MACHINE_CODE)
+            if node is not None:
+                self.add_child_to_project_tree(node, db_item, False)
+
+        elif isinstance(db_item, Event):
+            node = self._find_tree_node(root, EVENT_MACHINE_CODE)
+            if node is not None:
+                self.add_event_to_project_tree(node, db_item, False)
+
+        elif isinstance(db_item, PlanningContainer):
+            node = self._find_tree_node(root, EVENT_MACHINE_CODE)
+            if node is not None:
+                self.add_planning_container_to_project_tree(node, db_item)
+
+        elif isinstance(db_item, Analysis):
+            node = self._find_tree_node(root, ANALYSIS_MACHINE_CODE)
+            if node is not None:
+                self.add_child_to_project_tree(node, db_item, False)
+
+        elif isinstance(db_item, SampleFrame):
+            if db_item.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                self.add_child_to_project_tree(self.aoi_node, db_item, False)
+            elif db_item.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
+                self.add_child_to_project_tree(self.riverscapes_node, db_item, False)
+            else:
+                self.add_child_to_project_tree(self.sample_frames_node, db_item, False)
+
+        elif isinstance(db_item, Raster):
+            node = self.context_node if db_item.is_context else self.surfaces_node
+            self.add_child_to_project_tree(node, db_item, False)
+
+        elif isinstance(db_item, ScratchVector):
+            self.add_child_to_project_tree(self.context_node, db_item, False)
+
+        elif isinstance(db_item, Profile):
+            self.add_child_to_project_tree(self.profiles_node, db_item, False)
+
+        elif isinstance(db_item, CrossSections):
+            self.add_child_to_project_tree(self.cross_sections_node, db_item, False)
+
+        elif isinstance(db_item, PourPoint):
+            node = self._find_tree_node(root, CATCHMENTS_MACHINE_CODE)
+            if node is not None:
+                self.add_child_to_project_tree(node, db_item, False)
 
     def open_analysis(self, analysis: Analysis):
 

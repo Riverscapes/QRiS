@@ -19,13 +19,13 @@ from ...model.attachment import (
 
 class AttachmentsLibraryWidget(QtWidgets.QWidget):
     """
-    Lists attachments associated with a DCE event ("DCE References") and provides:
+    Lists attachments associated with an event (DCE, Design, or As-Built) and provides:
       - Associate an existing project attachment
       - Add a new file or web-link attachment (and auto-associate it)
       - Edit the purpose of an existing association
       - Disassociate an attachment (does NOT delete the attachment)
 
-    Each association stores an optional 'purpose' in the dce_attachments.metadata JSON.
+    Each association stores an optional 'purpose' in the event_attachments.metadata JSON.
     The purpose dropdown is populated at runtime from resources/lookups.json;
     users may also type a free-form value.
     """
