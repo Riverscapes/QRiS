@@ -2,7 +2,6 @@ from qgis.PyQt import QtWidgets, QtCore, QtGui
 
 from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ...model.project import Project
-from .checkable_combo_box import CheckableComboBox
 
 class SortableTableWidgetItem(QtWidgets.QTableWidgetItem):
     def __lt__(self, other):
@@ -115,24 +114,58 @@ class EventLibraryWidget(QtWidgets.QWidget):
             types.remove("Generic Data Capture Event")
             types.insert(0, "Generic Data Capture Event")
 
-        self.cbo_filter_type.blockSignals(True)
-        self.cbo_filter_type.clear()
-        
-        if types:
-            self.cbo_filter_type.add_command_item("Select All", "SELECT_ALL")
-            self.cbo_filter_type.add_command_item("Select None", "SELECT_NONE")
+        # Rebuild the type filter menu
+        self.menu_filter_type.clear()
+        self.type_actions = {}
+
+        act_select_all = self.menu_filter_type.addAction("Select All")
+        act_select_all.triggered.connect(lambda: self._set_all_type_actions(True))
+        act_select_none = self.menu_filter_type.addAction("Select None")
+        act_select_none.triggered.connect(lambda: self._set_all_type_actions(False))
+        self.menu_filter_type.addSeparator()
 
         for t in types:
-            self.cbo_filter_type.addItem(t)
-        self.cbo_filter_type.blockSignals(False)
+            act = self.menu_filter_type.addAction(t)
+            act.setCheckable(True)
+            act.setChecked(True)
+            act.toggled.connect(self._on_type_filter_changed)
+            self.type_actions[t] = act
 
-        # Hide the filter dropdown if we are restricted to a single event type
+        # Hide the filter button if we are restricted to a single event type
         is_single_type_mode = self.limit_event_types is not None and len(self.limit_event_types) == 1
-        self.cbo_filter_type.setVisible(not is_single_type_mode)
+        self.btn_filter_type.setVisible(not is_single_type_mode)
+        self._update_filter_type_button_text()
+
+    def _set_all_type_actions(self, checked: bool):
+        for act in self.type_actions.values():
+            act.blockSignals(True)
+            act.setChecked(checked)
+            act.blockSignals(False)
+        self._on_type_filter_changed()
+
+    def _on_type_filter_changed(self, *args):
+        self._update_filter_type_button_text()
+        self.refresh_table_view()
+
+    def _update_filter_type_button_text(self):
+        total = len(self.type_actions)
+        checked = sum(1 for a in self.type_actions.values() if a.isChecked())
+        if total == 0 or checked == total:
+            self.btn_filter_type.setText("All Types")
+        elif checked == 0:
+            self.btn_filter_type.setText("No Types")
+        elif checked == 1:
+            name = next(a.text() for a in self.type_actions.values() if a.isChecked())
+            self.btn_filter_type.setText(name)
+        else:
+            self.btn_filter_type.setText(f"{checked} Types")
+
+    def _get_checked_types(self):
+        return [name for name, act in self.type_actions.items() if act.isChecked()]
 
     def refresh_table_view(self):
         search_text = self.txt_filter_search.text().lower().strip()
-        checked_types = self.cbo_filter_type.get_checked_items()
+        checked_types = self._get_checked_types()
         
         # If we have modified the table order manually (via drag/drop), we might lose that order here if we purely rebuild from all_events.
         # But syncing the list is complex. We accept reset on filter change.
@@ -267,8 +300,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
 
     def clear_filters(self):
         self.txt_filter_search.clear()
-        self.cbo_filter_type.set_all_check_state(QtCore.Qt.Checked)
-        self.refresh_table_view()
+        self._set_all_type_actions(True)
 
     def on_item_changed(self, item):
         if item.column() == 0:
@@ -361,21 +393,25 @@ class EventLibraryWidget(QtWidgets.QWidget):
     def setupUi(self):
         self.vert_layout = QtWidgets.QVBoxLayout(self)
         self.vert_layout.setContentsMargins(0, 0, 0, 0)
-        
+        self.setMinimumWidth(280)
+
         # --- Filters ---
         self.horiz_filters = QtWidgets.QHBoxLayout()
         self.vert_layout.addLayout(self.horiz_filters)
 
-        self.cbo_filter_type = CheckableComboBox()
-        self.cbo_filter_type.setPlaceholderText("All Types")
-        self.cbo_filter_type.setNoneCheckedText("No Types")
-        self.cbo_filter_type.popupClosed.connect(self.refresh_table_view)
-        # Fix width to be consistent
-        self.cbo_filter_type.setMinimumWidth(200)
-        self.horiz_filters.addWidget(self.cbo_filter_type)
+        self.btn_filter_type = QtWidgets.QToolButton()
+        self.btn_filter_type.setText("All Types")
+        self.btn_filter_type.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.btn_filter_type.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        self.btn_filter_type.setToolTip("Filter by event type")
+        self.menu_filter_type = QtWidgets.QMenu(self.btn_filter_type)
+        self.btn_filter_type.setMenu(self.menu_filter_type)
+        self.type_actions = {}
+        self.horiz_filters.addWidget(self.btn_filter_type)
         
         self.txt_filter_search = QtWidgets.QLineEdit()
         self.txt_filter_search.setPlaceholderText("Search Events...")
+        self.txt_filter_search.setMinimumWidth(100)
         self.txt_filter_search.textChanged.connect(self.refresh_table_view)
         self.horiz_filters.addWidget(self.txt_filter_search)
 

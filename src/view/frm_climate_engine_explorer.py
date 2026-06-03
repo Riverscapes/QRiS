@@ -382,10 +382,11 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.widget_left = QtWidgets.QWidget(self)
         self.widget_left.setLayout(self.vert_left)
+        self.widget_left.setMinimumWidth(300)
         self.splitter.addWidget(self.widget_left)
 
         self.tab_widget_left = QtWidgets.QTabWidget(self.widget_left)
-        size = QSize(241, 429)
+        size = QSize(300, 429)
         self.tab_widget_left.setMinimumSize(size)
         self.vert_left.addWidget(self.tab_widget_left)
 
