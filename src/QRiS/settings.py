@@ -6,6 +6,7 @@ import base64
 from qgis.core import Qgis, QgsProject, QgsSettings, QgsMessageLog
 
 from .units import Units
+from ...__version__ import __version__
 
 with open(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json')) as cfg_file:
     cfg_json = json.load(cfg_file)
@@ -148,6 +149,10 @@ class Settings(SettingsBorg):
     def plugin_root_path(self):
         """Return absolute path to the plugin root directory."""
         return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+    def version(self) -> str:
+        """Return the current QRiS plugin version."""
+        return __version__
 
     def resource_path(self, *parts):
         """Build an absolute path under the plugin resources directory."""

@@ -8,6 +8,7 @@ from qgis.core import QgsMessageLog, Qgis
 from qgis.utils import plugins
 
 from .path_utilities import parse_posix_path
+from .settings import Settings
 
 # Try to load these plugin names in priority order
 NAMES = ['riverscapes_viewer_dev', 'riverscapes_viewer']
@@ -27,6 +28,8 @@ class QRaveIntegration(QObject):
             self.qrave_map_layer = None
             self.protocol_folder = None
             self.RemoteProject = None
+            self.telemetry = None
+            self.BaseMaps = None
 
             # Attemp to find RAVE plugin using lower case names
             plugins_lower_case = {k.lower(): k for k in plugins.keys()}
@@ -42,6 +45,11 @@ class QRaveIntegration(QObject):
                     self.RemoteProject = remote_project_module.RemoteProject
                 except ImportError:
                     self.RemoteProject = None
+                try:
+                    telemetry_module = importlib.import_module(f'{self.name}.src.classes.telemetry')
+                    self.telemetry = telemetry_module.Telemetry('QRiS', Settings().version())
+                except ImportError:
+                    self.telemetry = None
 
                 self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
                                           parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
@@ -81,6 +89,7 @@ class QRaveIntegration(QObject):
             self.symbology_folders = None
             self.qrave_map_layer = None
             self.protocol_folder = None
+            self.BaseMaps = None
 
     def qrave_add_to_map_menu_item(self, menu: QMenu, item: QStandardItem, data):
         """Custom menu to show at the bottom of the QRave context menu

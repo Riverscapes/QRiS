@@ -1,20 +1,20 @@
 from qgis.PyQt.QtCore import QSettings, Qt
 from qgis.PyQt.QtGui import QFont
-from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QFontDialog
+from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QFontDialog, QSpacerItem, QSizePolicy
 
 from ..model.project import Project
 from ..lib.climate_engine import CLIMATE_ENGINE_API_KEY_SETTING, open_climate_engine_website
 from ..QRiS.protocol_parser import LOCAL_PROTOCOL_FOLDER, SHOW_EXPERIMENTAL_PROTOCOLS
 from ..QRiS.settings import Settings
+
 from .frm_api_key import FrmApiKey
+from .utilities import add_help_button
 
 from .frm_export_project import DEFAULT_EXPORT_PATH
 
 DOCK_WIDGET_LOCATION = 'dock_widget_location'
 REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
-
-# LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
-# SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
+TELEMETRY_ENABLED_KEY = 'telemetryEnabled'
 DEFAULT_CHART_FONT = 'default_chart_font'
 
 default_dock_widget_location = 'right'
@@ -70,6 +70,8 @@ class FrmSettings(QDialog):
         self.chkShowExperimentalProtocols.setChecked(show_experimental_protocols)
         self.chkShowExperimentalProtocols.stateChanged.connect(self.on_show_experimental_changed)
 
+        self.chk_telemetry.setChecked(Settings().getValue(TELEMETRY_ENABLED_KEY))
+
         self.default_chart_font = get_default_chart_font(self.settings)
         self.update_chart_font_button_text()
 
@@ -99,6 +101,8 @@ class FrmSettings(QDialog):
 
         self.settings.setValue(SHOW_EXPERIMENTAL_PROTOCOLS, self.chkShowExperimentalProtocols.isChecked())
         set_default_chart_font(self.default_chart_font, self.settings)
+
+        Settings().setValue(TELEMETRY_ENABLED_KEY, self.chk_telemetry.isChecked())
 
         super().accept()
 
@@ -158,6 +162,7 @@ class FrmSettings(QDialog):
         self.tabs = QTabWidget()
         self.vert.addWidget(self.tabs)
 
+        # General Tab
         self.vertGeneral = QVBoxLayout()
         
         horiz_export_path = QHBoxLayout()
@@ -208,11 +213,18 @@ class FrmSettings(QDialog):
         self.vertGeneral.addLayout(self.grid)
         self.vertGeneral.addStretch(1)
 
+        self.chk_telemetry = QCheckBox("Help improve the software by sharing anonymous usage data.")
+        self.vertGeneral.addWidget(self.chk_telemetry)
+
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-        self.vert.addWidget(self.button_box)
+        self.horiz_buttons = QHBoxLayout()
+        self.horiz_buttons.addWidget(add_help_button(self, 'toolbar#settings'))
+        self.horiz_buttons.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.horiz_buttons.addWidget(self.button_box)
+        self.vert.addLayout(self.horiz_buttons)
 
         self.tabSettings = QWidget()
         self.tabs.addTab(self.tabSettings, "General")

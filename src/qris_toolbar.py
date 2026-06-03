@@ -38,7 +38,7 @@ from . import resources
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
 from .view.frm_about import FrmAboutDialog
-from .view.frm_settings import FrmSettings, DOCK_WIDGET_LOCATION, default_dock_widget_location
+from .view.frm_settings import FrmSettings, DOCK_WIDGET_LOCATION, default_dock_widget_location, TELEMETRY_ENABLED_KEY
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
 from .QRiS.qrave_integration import QRaveIntegration
@@ -422,6 +422,8 @@ class QRiSToolbar:
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
             settings.sync()
+
+            self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
 
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)

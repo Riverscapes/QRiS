@@ -8,7 +8,8 @@
         "lastResourceSync": null,
         "lastBrowsePath": null,
         "pluginVersion": null,
-        "basemapRegion": "United States"
+        "basemapRegion": "United States",
+        "telemetryEnabled": true
     },
     "constants": {
         "logCategory": "QRiS",
