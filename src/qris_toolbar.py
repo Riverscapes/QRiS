@@ -422,9 +422,11 @@ class QRiSToolbar:
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
             settings.sync()
-
-            self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
-
+            try:
+                self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
+            except Exception as ex:
+                Settings().log(f"Error sending telemetry event for Load_Project: {str(ex)}", Qgis.Warning)
+        
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)
 
