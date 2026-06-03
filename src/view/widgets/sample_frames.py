@@ -81,7 +81,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
                 sample_frame_layer_tree = self.qris_map_manager.build_aoi_layer(sample_frame)
             else:
                 sample_frame_layer_tree = self.qris_map_manager.build_sample_frame_layer(sample_frame)
-            sample_frame_layer: QgsVectorLayer = sample_frame_layer_tree.layer()
+            sample_frame_layer: QgsVectorLayer = sample_frame_layer_tree.layer() if hasattr(sample_frame_layer_tree, 'layer') else sample_frame_layer_tree
             iface.setActiveLayer(sample_frame_layer)
             sample_frame_feature_ids = self.get_selected_sample_frame_feature_ids()
             sample_frame_layer.removeSelection()
