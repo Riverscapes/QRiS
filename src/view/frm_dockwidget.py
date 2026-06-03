@@ -730,7 +730,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     parent_event = self.qris_project.events.get(model_data.event_id)
                     if parent_event is not None and parent_event.event_type.id in [DATA_CAPTURE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]:
                         self.menu.addSeparator()
-                        self.add_context_menu_item(self.menu, 'Open Distribution Analysis', 'distribution_analysis', lambda checked=False, evt=parent_event: self.open_distribution_analysis_dock(evt))
+                        self.add_context_menu_item(self.menu, 'Open Distribution Analysis', 'distribution_analysis', lambda checked=False, evt=parent_event, lyr=model_data: self.open_distribution_analysis_dock(evt, lyr))
                 if isinstance(model_data, PourPoint):
                     self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
@@ -2599,7 +2599,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.distribution_analysis_form.widget.select_event(event)
         self.distribution_analysis_form.exec_()
 
-    def open_distribution_analysis_dock(self, event=None):
+    def open_distribution_analysis_dock(self, event=None, event_layer=None):
         if self.distribution_dock_widget is None:
             self.distribution_dock_widget = FrmDistributionAnalysisDockWidget(self.iface, self.qris_project, self.map_manager)
             # Add to iface. The allowed areas are set in Dock init, but addDockWidget sets initial area.
@@ -2611,7 +2611,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.distribution_dock_widget.activateWindow()
 
         if event is not None:
-            self.distribution_dock_widget.widget.select_event(event)
+            self.distribution_dock_widget.widget.select_event(event, event_layer)
 
     def browse_item(self, db_item: DBItem, folder_path):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)

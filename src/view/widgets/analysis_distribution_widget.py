@@ -330,13 +330,20 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 
         return features
 
-    def select_event(self, event):
-        """Pre-select the given event in the DCE combo box."""
+    def select_event(self, event, event_layer=None):
+        """Pre-select the given event (and optionally layer) in the combos."""
         for i in range(self.cmbDCE.count()):
             item_data = self.cmbDCE.itemData(i)
             if hasattr(item_data, 'id') and item_data.id == event.id:
                 self.cmbDCE.setCurrentIndex(i)
                 break
+
+        if event_layer is not None:
+            for i in range(self.cmbLayer.count()):
+                item_data = self.cmbLayer.itemData(i)
+                if item_data is event_layer or (hasattr(item_data, 'id') and hasattr(event_layer, 'id') and item_data.id == event_layer.id):
+                    self.cmbLayer.setCurrentIndex(i)
+                    break
 
     def populate_dce(self):
         self.cmbDCE.clear()
