@@ -33,9 +33,9 @@ class MetricLibrary(QtWidgets.QWidget):
         self.load_current_view()
 
     def apply_smart_filtering_for_existing_analysis(self):
-        # 1. Limit to In Use Metrics
-        self.act_limit_metrics.setChecked(True)
-        
+        # 1. Do NOT limit to in-use metrics by default; leave unchecked when form opens
+        # self.act_limit_metrics.setChecked(True)
+
         # 2. Check if we need to expand the universe for experimental/deprecated metrics currently in use
         enable_experimental = False
         enable_deprecated = False
