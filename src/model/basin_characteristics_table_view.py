@@ -14,9 +14,12 @@ class BasinCharsTableModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
             return self._data[index.row()][index.column()]
         elif role == QtCore.Qt.BackgroundRole:
-            code = self._data[index.row()][1]
-            val = self._data[index.row()][3]
-            override = self._data[index.row()][4] if len(self._data[index.row()]) > 4 else ''
+            row = self._data[index.row()]
+            if len(row) < 4:
+                return None
+            code = row[1]
+            val = row[3]
+            override = row[4] if len(row) > 4 else ''
             
             # Highlight missing required info in light red, evaluating overrides first
             val_str = str(override).strip() if str(override).strip() else str(val).strip()
