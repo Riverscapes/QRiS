@@ -6,6 +6,7 @@ import webbrowser
 from osgeo import ogr
 
 from qgis.core import QgsGeometry
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from ..QRiS.settings import Settings
@@ -40,9 +41,9 @@ def require_api_key(parent=None, open_settings_callback=None) -> bool:
         return True
     msg = QMessageBox(parent)
     msg.setWindowTitle('Climate Engine API Key Required')
-    msg.setText('A Climate Engine API key has not been configured.\n\n'
-                'Please set your API key in QRiS Settings \u2192 Climate Engine.')
-    msg.setIcon(QMessageBox.Warning)
+    msg.setTextFormat(Qt.PlainText)
+    msg.setText('A Climate Engine API key has not been configured.\n\nPlease set your Climate Engine API key in the QRiS Settings')
+    msg.setIcon(QMessageBox.Information)
     if open_settings_callback:
         btn_settings = msg.addButton('Open Settings', QMessageBox.ActionRole)
     msg.addButton(QMessageBox.Cancel)

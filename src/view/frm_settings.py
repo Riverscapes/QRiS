@@ -155,7 +155,7 @@ class FrmSettings(QDialog):
     def setup_ui(self):
 
         self.resize(500, 300)
-        self.setMinimumSize(300, 200)
+        self.setMinimumSize(500, 300)
 
         self.vert = QVBoxLayout(self)
         self.setLayout(self.vert)
@@ -260,7 +260,8 @@ class FrmSettings(QDialog):
         # Climate Engine Tab
         climate_engine_layout = QVBoxLayout()
         
-        lbl_climate_engine_text = QLabel("Climate Engine is a third-party service for accessing climate data. QRiS can connect to Climate Engine to allow you to use their data in your projects. You will need to sign up for a Climate Engine account and obtain an API key to use this feature.")
+        lbl_climate_engine_text = QLabel("Climate Engine is a third-party service accessing climate and Earth observation data. QRiS connects to the Climate Engine API to retrieve these data for use in your QRiS projects. Use the buttons below to request a Climate Engine API key and then set the key so QRiS can use your account when accessing Climate Engine data.")
+        lbl_climate_engine_text.setTextFormat(Qt.PlainText)
         lbl_climate_engine_text.setWordWrap(True)
         climate_engine_layout.addWidget(lbl_climate_engine_text)
         

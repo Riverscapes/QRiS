@@ -1224,7 +1224,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         if len(self.qris_project.sample_frames) + len(self.qris_project.aois) + len(self.qris_project.valley_bottoms) == 0:
-            QtWidgets.QMessageBox.warning(self, 'No Climate Engine layers in QRiS Project', 'No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.')
+            QtWidgets.QMessageBox.information(self, 'No Climate Engine layers in QRiS Project', 'No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.')
             return
 
         if self.climate_engine_doc_widget is None:
