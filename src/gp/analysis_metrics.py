@@ -430,12 +430,21 @@ def _endpoint_elevations(
     if len(line_geoms) < 1:
         raise MetricInputMissingError('No line features found for endpoint elevation sampling.')
 
+    # Capture SRS from source lines before merging, since LineMerge / Union may strip it.
+    line_srs = None
+    for g in line_geoms:
+        srs = g.GetSpatialReference()
+        if srs is not None:
+            line_srs = srs
+            break
+
     union_geom = _merge_lines(line_geoms)
     if union_geom is None or union_geom.IsEmpty():
         raise MetricInputMissingError('No valid line geometry available for endpoint elevation sampling.')
 
     start_pt, end_pt = _line_endpoints(union_geom)
-    line_srs = union_geom.GetSpatialReference()
+    if line_srs is None:
+        line_srs = union_geom.GetSpatialReference()
     raster_path = _get_surface_raster_path(project_file, metric_params, analysis_params)
 
     upstream = _sample_raster_value(raster_path, start_pt[0], start_pt[1], line_srs)
@@ -708,6 +717,14 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
     if not line_geoms:
         raise MetricInputMissingError('No line features found for gradient calculation.')
 
+    # Capture SRS from source lines before union; OGR set operations may strip SRS.
+    source_utm_srs = None
+    for g in line_geoms:
+        srs = g.GetSpatialReference()
+        if srs is not None:
+            source_utm_srs = srs
+            break
+
     # Union all line geometries
     union_geom = line_geoms[0].Clone()
     for g in line_geoms[1:]:
@@ -722,7 +739,7 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
 
     start_pt = union_geom.GetPoint(0)
     end_pt = union_geom.GetPoint(union_geom.GetPointCount() - 1)
-    utm_srs = union_geom.GetSpatialReference()
+    utm_srs = union_geom.GetSpatialReference() or source_utm_srs
     point_start = ogr.Geometry(ogr.wkbPoint)
     point_start.AssignSpatialReference(utm_srs)
     point_start.AddPoint(start_pt[0], start_pt[1])
@@ -732,6 +749,10 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
 
     buffer_start = point_start.Buffer(10)
     buffer_end = point_end.Buffer(10)
+    # Buffer may also drop SRS — re-assign to be safe before zonal stats does its own transform.
+    if utm_srs is not None:
+        buffer_start.AssignSpatialReference(utm_srs)
+        buffer_end.AssignSpatialReference(utm_srs)
 
     stats_start = zonal_statistics(raster_layer, buffer_start)
     stats_end = zonal_statistics(raster_layer, buffer_end)
