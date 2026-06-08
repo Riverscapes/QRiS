@@ -89,6 +89,23 @@ class FrmDesign(FrmEvent):
         [self.groupBoxDesignSources.layout().addWidget(widget) for widget in self.design_source_widgets]
         self.tabGrid.addWidget(self.groupBoxDesignSources, 10, 1, 1, 1)
 
+        # Objectives Tab — inserted right after Description
+        desc_tab_index = self.tab.indexOf(self.tabDescriptionWidget)
+        self.tabObjectives = QtWidgets.QWidget()
+        self.objectives_layout = QtWidgets.QVBoxLayout(self.tabObjectives)
+        self.objectives_layout.setContentsMargins(9, 9, 9, 9)
+        self.txtObjectives = QtWidgets.QPlainTextEdit()
+        self.objectives_layout.addWidget(self.txtObjectives)
+        self.tab.insertTab(desc_tab_index + 1, self.tabObjectives, 'Objectives')
+
+        # Condition Tab — inserted right after Objectives
+        self.tabCondition = QtWidgets.QWidget()
+        self.condition_layout = QtWidgets.QVBoxLayout(self.tabCondition)
+        self.condition_layout.setContentsMargins(9, 9, 9, 9)
+        self.txtCondition = QtWidgets.QPlainTextEdit()
+        self.condition_layout.addWidget(self.txtCondition)
+        self.tab.insertTab(desc_tab_index + 2, self.tabCondition, 'Condition')
+
         surface_tab_index = self.tab.indexOf(self.surfaces_widget)
         self.tab.setTabText(surface_tab_index, 'Bases for Design')
 
@@ -178,6 +195,12 @@ class FrmDesign(FrmEvent):
                 if 'percentComplete' in self.metadata_widget.metadata['system']:
                     self.sliderPercentComplete.setValue(int(self.metadata_widget.metadata['system']['percentComplete']))
 
+                if 'objectives' in self.metadata_widget.metadata['system']:
+                    self.txtObjectives.setPlainText(self.metadata_widget.metadata['system']['objectives'])
+
+                if 'condition' in self.metadata_widget.metadata['system']:
+                    self.txtCondition.setPlainText(self.metadata_widget.metadata['system']['condition'])
+
                 if 'planningContainerId' in self.metadata_widget.metadata['system']:
                     planning_container_id = self.metadata_widget.metadata['system']['planningContainerId']
                     planning_container: PlanningContainer = self.qris_project.planning_containers[planning_container_id]
@@ -258,6 +281,18 @@ class FrmDesign(FrmEvent):
 
         self.metadata_widget.add_system_metadata('status', self.cboStatus.currentData(QtCore.Qt.UserRole).name)
         self.metadata_widget.add_system_metadata('percentComplete', self.sliderPercentComplete.value())
+
+        objectives = self.txtObjectives.toPlainText().strip()
+        if objectives:
+            self.metadata_widget.add_system_metadata('objectives', objectives)
+        else:
+            self.metadata_widget.delete_item('system', 'objectives')
+
+        condition = self.txtCondition.toPlainText().strip()
+        if condition:
+            self.metadata_widget.add_system_metadata('condition', condition)
+        else:
+            self.metadata_widget.delete_item('system', 'condition')
 
         if self.rdoManual.isChecked():
             if 'planningContainerId' in self.metadata_widget.metadata['system']:

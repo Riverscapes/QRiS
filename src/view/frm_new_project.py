@@ -50,11 +50,17 @@ class FrmNewProject(QtWidgets.QDialog):
         else:
             self.setWindowTitle('Edit Project Properties')
             self.txtName.setText(qris_project.name)
+            self.txtPath.setText(parse_posix_path(qris_project.project_file))
+            self.btnBrowse.setVisible(False)
             system_meta = self.metadata_widget.metadata.get('system', {})
             if 'tags' in system_meta:
                 self.tags = system_meta['tags']
                 self.txtTags.setText(', '.join(self.tags))
             self.txtDescription.setPlainText(qris_project.description)
+            if 'objectives' in system_meta:
+                self.txtObjectives.setPlainText(system_meta['objectives'])
+            if 'condition' in system_meta:
+                self.txtCondition.setPlainText(system_meta['condition'])
 
         self.txtName.setFocus()
 
@@ -71,9 +77,8 @@ class FrmNewProject(QtWidgets.QDialog):
             self.txtPath.setText(parse_posix_path(self.root_path))
 
     def get_tags(self):
-        """Returns a list of tags from the tags text box"""
-        tags = self.txtTags.text().split(',')
-        return [tag.strip() for tag in tags]
+        """Returns a list of non-empty tags from the tags text box"""
+        return [tag.strip() for tag in self.txtTags.text().split(',') if tag.strip()]
 
     def accept(self):
 
@@ -83,12 +88,23 @@ class FrmNewProject(QtWidgets.QDialog):
         if not self.metadata_widget.validate():
             return
 
-        if self.tags is not None:
-            # add to system metadata
-            self.metadata_widget.add_system_metadata('tags', self.get_tags())
+        tags = self.get_tags()
+        if tags:
+            self.metadata_widget.add_system_metadata('tags', tags)
         else:
-            if 'system' in self.metadata_widget.metadata and 'tags' in self.metadata_widget.metadata['system']:
-                del self.metadata_widget.system_metadata['tags']
+            self.metadata_widget.delete_item('system', 'tags')
+
+        objectives = self.txtObjectives.toPlainText().strip()
+        if objectives:
+            self.metadata_widget.add_system_metadata('objectives', objectives)
+        else:
+            self.metadata_widget.delete_item('system', 'objectives')
+
+        condition = self.txtCondition.toPlainText().strip()
+        if condition:
+            self.metadata_widget.add_system_metadata('condition', condition)
+        else:
+            self.metadata_widget.delete_item('system', 'condition')
 
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
@@ -187,17 +203,37 @@ class FrmNewProject(QtWidgets.QDialog):
         self.txtTags.setToolTip("Comma separated list of tags for the project")
         self.grid.addWidget(self.txtTags, 2, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel('Description')
-        self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
-
-        self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription, 3, 1, 1, 1)
+        self.grid.setRowStretch(3, 1)
 
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, 'Project Properties')
         self.tabProperties.setLayout(self.grid)
 
-        # metadata Tab
+        # Description Tab
+        self.tabDescription = QtWidgets.QWidget()
+        self.description_layout = QtWidgets.QVBoxLayout(self.tabDescription)
+        self.description_layout.setContentsMargins(9, 9, 9, 9)
+        self.txtDescription = QtWidgets.QPlainTextEdit()
+        self.description_layout.addWidget(self.txtDescription)
+        self.tabs.addTab(self.tabDescription, 'Description')
+
+        # Objectives Tab
+        self.tabObjectives = QtWidgets.QWidget()
+        self.objectives_layout = QtWidgets.QVBoxLayout(self.tabObjectives)
+        self.objectives_layout.setContentsMargins(9, 9, 9, 9)
+        self.txtObjectives = QtWidgets.QPlainTextEdit()
+        self.objectives_layout.addWidget(self.txtObjectives)
+        self.tabs.addTab(self.tabObjectives, 'Objectives')
+
+        # Condition Tab
+        self.tabCondition = QtWidgets.QWidget()
+        self.condition_layout = QtWidgets.QVBoxLayout(self.tabCondition)
+        self.condition_layout.setContentsMargins(9, 9, 9, 9)
+        self.txtCondition = QtWidgets.QPlainTextEdit()
+        self.condition_layout.addWidget(self.txtCondition)
+        self.tabs.addTab(self.tabCondition, 'Condition')
+
+        # Metadata Tab
         self.tabs.addTab(self.metadata_widget, 'Metadata')
 
         self.vert.addLayout(add_standard_form_buttons(self, 'projects'))
