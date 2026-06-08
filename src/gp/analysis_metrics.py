@@ -24,7 +24,8 @@ analysis_metric_unit_type = {
     'gradient': 'ratio',
     'area_proportion': 'ratio',
     'proportion': 'ratio',
-    'elevation': 'distance'
+    'elevation': 'distance',
+    'manual': None,
 }
 
 class MetricInputMissingError(Exception):

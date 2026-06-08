@@ -1,11 +1,11 @@
 <Protocol machine_code="RIVERSCAPE_SYSTEM_PROTOCOL" protocol_type="system" version="1.0" status="production">
     <Label>Riverscape System Metrics Protocol</Label>
-    <Description>System protocol for shared riverscape, profile, and sample frame metrics defined from analysis inputs.</Description>
+    <Description>System protocol for shared riverscape, profile, sample frame, and intrinsic metrics defined from analysis inputs.</Description>
     <URL>https://riverscapes.net</URL>
-    <Citation>QRiS Riverscape System Metrics</Citation>
+    <Citation>QRiS Riverscape and Intrinsic System Metrics</Citation>
     <Author>QRiS Team</Author>
     <CreationDate>2026-04-27</CreationDate>
-    <UpdatedDate>2026-04-29</UpdatedDate>
+    <UpdatedDate>2026-06-04</UpdatedDate>
     <Metrics>
         <Metric id="riverscape_length" version="1.0" calculation_machine_code="length" status="active">
             <Label>Riverscape Length</Label>
@@ -236,6 +236,60 @@
             <Hierarchy>
                 <HierarchyItem>Sample Frame</HierarchyItem>
                 <HierarchyItem>Elevation</HierarchyItem>
+            </Hierarchy>
+        </Metric>
+
+        <Metric id="intrinsic_centerline_length" version="1.0" calculation_machine_code="length" status="active">
+            <Label>Intrinsic Centerline Length</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Centerline length from analysis centerline input clipped to sample frame.</Description>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="numerator" />
+            </Parameters>
+            <Hierarchy>
+                <HierarchyItem>Intrinsic</HierarchyItem>
+                <HierarchyItem>Centerline</HierarchyItem>
+            </Hierarchy>
+        </Metric>
+
+        <Metric id="intrinsic_valley_bottom_area" version="1.0" calculation_machine_code="area" status="active">
+            <Label>Intrinsic Valley Bottom Area</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Valley bottom area from analysis valley bottom input clipped to sample frame.</Description>
+            <Parameters>
+                <InputLayer input_ref="valley_bottom" usage="numerator" />
+            </Parameters>
+            <Hierarchy>
+                <HierarchyItem>Intrinsic</HierarchyItem>
+                <HierarchyItem>Riverscape</HierarchyItem>
+            </Hierarchy>
+        </Metric>
+
+        <Metric id="intrinsic_centerline_gradient" version="1.0" calculation_machine_code="gradient" status="active">
+            <Label>Intrinsic Centerline Gradient</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Gradient from centerline and DEM analysis inputs.</Description>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="numerator" />
+                <InputLayer input_ref="dem" usage="surface" />
+            </Parameters>
+            <Hierarchy>
+                <HierarchyItem>Intrinsic</HierarchyItem>
+                <HierarchyItem>Centerline</HierarchyItem>
+            </Hierarchy>
+        </Metric>
+
+        <Metric id="intrinsic_length_area_ratio" version="1.0" calculation_machine_code="proportion" status="active">
+            <Label>Intrinsic Length to Area Ratio</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Derived ratio of intrinsic centerline length to intrinsic valley bottom area.</Description>
+            <Parameters>
+                <MetricDependency metric_id_ref="intrinsic_centerline_length" protocol_machine_code_ref="RIVERSCAPE_SYSTEM_PROTOCOL" version="1.0" usage="numerator" />
+                <MetricDependency metric_id_ref="intrinsic_valley_bottom_area" protocol_machine_code_ref="RIVERSCAPE_SYSTEM_PROTOCOL" version="1.0" usage="denominator" />
+            </Parameters>
+            <Hierarchy>
+                <HierarchyItem>Intrinsic</HierarchyItem>
+                <HierarchyItem>Derived</HierarchyItem>
             </Hierarchy>
         </Metric>
     </Metrics>

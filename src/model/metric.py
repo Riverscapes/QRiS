@@ -59,7 +59,7 @@ class Metric(DBItem):
         self.hierarchy = self.metadata.get('hierarchy', None)
 
     def get_automation_availability(self, qris_project, analysis_metadata: dict = None, limit_dces: list = None, analysis=None, selected_analysis_metrics: dict = None) -> str:
-        if not self.metric_params:
+        if self.metric_function == 'manual' or not self.metric_params:
              return "Manual Only"
 
         # If analysis parameters are provided, check if the required inputs are present

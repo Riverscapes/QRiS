@@ -225,8 +225,12 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.vert_dce.addWidget(self.event_library)
 
         # Description Tab
+        self.description_tab = QtWidgets.QWidget()
+        self.description_layout = QtWidgets.QVBoxLayout(self.description_tab)
+        self.description_layout.setContentsMargins(9, 9, 9, 9)
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.tabWidget.addTab(self.txtDescription, 'Description')
+        self.description_layout.addWidget(self.txtDescription)
+        self.tabWidget.addTab(self.description_tab, 'Description')
 
         self.vert.addLayout(add_standard_form_buttons(self, 'analyses'))
 

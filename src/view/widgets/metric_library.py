@@ -9,6 +9,7 @@ from ...model.analysis import Analysis
 
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
+from ..frm_custom_metric_library import FrmCustomMetricLibrary
 
 from .checkable_combo_box import CheckableComboBox
 
@@ -23,6 +24,13 @@ class MetricLibrary(QtWidgets.QWidget):
         self.analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
         self.is_tree_view = True
         self.limit_dces = None
+        self._availability_cache: Dict[int, str] = {}
+        self._selected_analysis_metrics_cache = None
+        self._availability_compute_queue = []
+        self._availability_batch_size = 3
+        self._availability_timer = QtCore.QTimer(self)
+        self._availability_timer.setSingleShot(True)
+        self._availability_timer.timeout.connect(self._process_availability_batch)
         
         # Initialize state
         self.current_metrics_state: Dict[int, int] = {}
@@ -31,6 +39,27 @@ class MetricLibrary(QtWidgets.QWidget):
         self.setupUi()
         self.load_filters()
         self.load_current_view()
+        self.start_background_availability_refresh()
+
+    def invalidate_availability_cache(self):
+        self._availability_cache.clear()
+        self._selected_analysis_metrics_cache = None
+        self._availability_compute_queue = []
+        if self._availability_timer.isActive():
+            self._availability_timer.stop()
+
+    def should_compute_availability(self) -> bool:
+        # Compute availability when the UI is showing the Availability column,
+        # or when availability-based filters are active.
+        tree_visible = not self.metricsTree.isColumnHidden(2)
+        table_visible = not self.metricsTable.isColumnHidden(4)
+        return (
+            tree_visible or
+            table_visible or
+            self.act_limit_feasible.isChecked() or
+            self.act_limit_blocked.isChecked() or
+            self.act_limit_manual.isChecked()
+        )
 
     def apply_smart_filtering_for_existing_analysis(self):
         # 1. Do NOT limit to in-use metrics by default; leave unchecked when form opens
@@ -150,6 +179,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
     def on_metric_status_changed(self, metric_id: int, index: int):
         self.current_metrics_state[metric_id] = index
+        self.invalidate_availability_cache()
         
         # Get Font
         # We need the metric object to determine deprecated status, which we can get from the item traversal below 
@@ -270,18 +300,18 @@ class MetricLibrary(QtWidgets.QWidget):
         self.act_limit_feasible = self.menu_advanced.addAction("Automated: Ready for Calculation")
         self.act_limit_feasible.setCheckable(True)
         self.act_limit_feasible.setToolTip("Show only metrics that can be calculated automatically for at least one DCE.")
-        self.act_limit_feasible.toggled.connect(self.update_visibility)
+        self.act_limit_feasible.toggled.connect(self.on_availability_filter_toggled)
         self.type_filter_group.addAction(self.act_limit_feasible)
 
         self.act_limit_blocked = self.menu_advanced.addAction("Automated: Setup Required (Events/Inputs)")
         self.act_limit_blocked.setCheckable(True)
         self.act_limit_blocked.setToolTip("Show metrics that support automation but are missing required inputs or layers.")
-        self.act_limit_blocked.toggled.connect(self.update_visibility)
+        self.act_limit_blocked.toggled.connect(self.on_availability_filter_toggled)
         self.type_filter_group.addAction(self.act_limit_blocked)
 
         self.act_limit_manual = self.menu_advanced.addAction("Manual Entry Only")
         self.act_limit_manual.setCheckable(True)
-        self.act_limit_manual.toggled.connect(self.update_visibility)
+        self.act_limit_manual.toggled.connect(self.on_availability_filter_toggled)
         self.type_filter_group.addAction(self.act_limit_manual)
         
         self.menu_advanced.addSeparator()
@@ -329,6 +359,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.metricsTree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.metricsTree.customContextMenuRequested.connect(self.open_tree_context_menu)
         self.metricsTree.setSortingEnabled(True)
+        self.metricsTree.setColumnHidden(2, False)
         self.vboxTree.addWidget(self.metricsTree)
         
         self.stackedWidget.addWidget(self.pageTree)
@@ -370,6 +401,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.metricsTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.metricsTable.customContextMenuRequested.connect(self.open_table_context_menu)
         self.metricsTable.setSortingEnabled(True)
+        self.metricsTable.setColumnHidden(4, False)
         self.vboxTable.addWidget(self.metricsTable)
 
         self.stackedWidget.addWidget(self.pageTable)
@@ -384,6 +416,11 @@ class MetricLibrary(QtWidgets.QWidget):
 
         self.lbl_usage_count = QtWidgets.QLabel("")
         self.horiz_metric_buttons.addWidget(self.lbl_usage_count)
+
+        self.cmd_custom_metrics = QtWidgets.QPushButton('Custom Metrics...')
+        self.cmd_custom_metrics.setToolTip('Open project custom metric library (add/edit/delete custom manual metrics).')
+        self.cmd_custom_metrics.clicked.connect(self.open_custom_metric_library)
+        self.horiz_metric_buttons.addWidget(self.cmd_custom_metrics)
 
         self.horiz_metric_buttons.addStretch()
 
@@ -442,13 +479,17 @@ class MetricLibrary(QtWidgets.QWidget):
 
     def set_analysis_metadata(self, metadata: dict):
         self.analysis_metadata = metadata
-        self.refresh_availability()
+        self.invalidate_availability_cache()
+        if self.should_compute_availability():
+            self.start_background_availability_refresh()
         self.update_visibility()
 
     def set_selected_dces(self, dce_ids: list):
         self.limit_dces = dce_ids
         self.check_experimental_events(dce_ids)
-        self.refresh_availability()
+        self.invalidate_availability_cache()
+        if self.should_compute_availability():
+            self.start_background_availability_refresh()
         self.update_visibility()
 
     def refresh_availability(self):
@@ -477,21 +518,31 @@ class MetricLibrary(QtWidgets.QWidget):
         self.metricsTable.setSortingEnabled(True)
 
     def _build_selected_analysis_metrics(self):
+        if self._selected_analysis_metrics_cache is not None:
+            return self._selected_analysis_metrics_cache
+
         selected = {}
         for metric_id, level_id in self.current_metrics_state.items():
             if level_id > 0 and metric_id in self.qris_project.metrics:
                 selected[metric_id] = AnalysisMetric(self.qris_project.metrics[metric_id], level_id)
+        self._selected_analysis_metrics_cache = selected
         return selected
 
     def get_metric_availability(self, metric):
+        cached = self._availability_cache.get(metric.id)
+        if cached is not None:
+            return cached
+
         selected_analysis_metrics = self._build_selected_analysis_metrics()
-        return metric.get_automation_availability(
+        status = metric.get_automation_availability(
             self.qris_project,
             self.analysis_metadata,
             self.limit_dces,
             analysis=self.analysis,
             selected_analysis_metrics=selected_analysis_metrics,
         )
+        self._availability_cache[metric.id] = status
+        return status
 
     def on_protocol_filter_changed(self):
         self.update_group_filter()
@@ -500,6 +551,81 @@ class MetricLibrary(QtWidgets.QWidget):
     def on_universe_changed(self):
         self.load_filters()
         self.update_visibility()
+
+    def on_availability_filter_toggled(self):
+        # Ensure background availability run is active when these filters are used.
+        if self.should_compute_availability():
+            self.start_background_availability_refresh()
+        self.update_visibility()
+
+    def set_metric_availability_text(self, metric_id: int, status_text: str):
+        # Tree update
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
+        while iterator.value():
+            item = iterator.value()
+            metric = item.data(0, QtCore.Qt.UserRole)
+            if metric and metric.id == metric_id:
+                item.setText(2, status_text)
+                break
+            iterator += 1
+
+        # Table update
+        for row in range(self.metricsTable.rowCount()):
+            metric_item = self.metricsTable.item(row, 0)
+            if not metric_item:
+                continue
+            metric = metric_item.data(QtCore.Qt.UserRole)
+            if metric and metric.id == metric_id:
+                avail_item = self.metricsTable.item(row, 4)
+                if avail_item:
+                    avail_item.setText(status_text)
+                break
+
+    def start_background_availability_refresh(self):
+        if not self.should_compute_availability():
+            return
+
+        metric_ids = list(self.qris_project.metrics.keys())
+        if len(metric_ids) == 0:
+            return
+
+        # Show immediate feedback in both views; hidden columns can still be updated.
+        for metric_id in metric_ids:
+            self.set_metric_availability_text(metric_id, 'Calculating...')
+
+        self._availability_compute_queue = metric_ids
+        self._availability_timer.start(0)
+
+    def _process_availability_batch(self):
+        if len(self._availability_compute_queue) == 0:
+            return
+
+        selected_analysis_metrics = self._build_selected_analysis_metrics()
+        batch = []
+        for _ in range(min(self._availability_batch_size, len(self._availability_compute_queue))):
+            batch.append(self._availability_compute_queue.pop(0))
+
+        for metric_id in batch:
+            metric = self.qris_project.metrics.get(metric_id)
+            if metric is None:
+                continue
+
+            try:
+                status = metric.get_automation_availability(
+                    self.qris_project,
+                    self.analysis_metadata,
+                    self.limit_dces,
+                    analysis=self.analysis,
+                    selected_analysis_metrics=selected_analysis_metrics,
+                )
+            except Exception:
+                status = 'Error'
+
+            self._availability_cache[metric_id] = status
+            self.set_metric_availability_text(metric_id, status)
+
+        if len(self._availability_compute_queue) > 0:
+            self._availability_timer.start(0)
 
     def load_filters(self):
         # Gather unique protocols
@@ -610,26 +736,29 @@ class MetricLibrary(QtWidgets.QWidget):
             if self.current_metrics_state.get(metric.id, 0) == 0:
                 return False
         
-        # Availability Status Check
-        status = self.get_metric_availability(metric)
-        status_lower = status.lower()
-        is_manual = "manual" in status_lower
+        # Availability Status Check (expensive): only compute when availability-based filters are active.
+        if (self.act_limit_feasible.isChecked() or
+            self.act_limit_blocked.isChecked() or
+            self.act_limit_manual.isChecked()):
+            status = self.get_metric_availability(metric)
+            status_lower = status.lower()
+            is_manual = "manual" in status_lower
 
-        if self.act_limit_feasible.isChecked():
-            # Must contain "DCE" and NOT start with "No" to be considered "Ready"
-            # (e.g. "All 5 DCEs", "1 DCE")
-            if "dce" not in status_lower or status_lower.startswith("no"):
-                return False
+            if self.act_limit_feasible.isChecked():
+                # Must contain "DCE" and NOT start with "No" to be considered "Ready"
+                # (e.g. "All 5 DCEs", "1 DCE")
+                if "dce" not in status_lower or status_lower.startswith("no"):
+                    return False
 
-        if self.act_limit_blocked.isChecked():
-            # Must start with "No DCEs" (implies Missing Inputs or Selected or just empty)
-            # But must NOT be manual.
-            if not status_lower.startswith("no dce"):
-                return False
+            if self.act_limit_blocked.isChecked():
+                # Must start with "No DCEs" (implies Missing Inputs or Selected or just empty)
+                # But must NOT be manual.
+                if not status_lower.startswith("no dce"):
+                    return False
 
-        if self.act_limit_manual.isChecked():
-            if not is_manual:
-                return False
+            if self.act_limit_manual.isChecked():
+                if not is_manual:
+                    return False
 
         # Note: Experimental and Deprecated checks are Universe checks. 
         # If the metric is hidden by these flags, it should not be shown even if it matches search.
@@ -689,37 +818,45 @@ class MetricLibrary(QtWidgets.QWidget):
         self.update_visibility()
 
     def update_visibility(self):
-        # Update currently active view only? Or both?
-        # Better both so switching is instant.
-
         # Calculate Universe Count (Y)
         all_metrics = self.qris_project.metrics.values()
         universe_count = sum(1 for m in all_metrics if self.is_metric_in_universe(m))
-        
-        # 1. Update Tree Transparency
-        root = self.metricsTree.invisibleRootItem()
-        for i in range(root.childCount()):
-            prot_item = root.child(i)
-            prot_visible = False
-            
-            for j in range(prot_item.childCount()):
-                group_or_metric = prot_item.child(j)
-                self.update_tree_item_visibility(group_or_metric)
-                if not group_or_metric.isHidden():
-                    prot_visible = True
-            
-            prot_item.setHidden(not prot_visible)
 
-        # 2. Update Table Transparency
         visible_count = 0
-        for row in range(self.metricsTable.rowCount()):
-             item = self.metricsTable.item(row, 0)
-             metric = item.data(QtCore.Qt.UserRole)
-             if metric:
-                 show = self.should_show_metric(metric)
-                 self.metricsTable.setRowHidden(row, not show)
-                 if show:
-                     visible_count += 1
+        if self.is_tree_view:
+            # Update tree only when tree view is active.
+            root = self.metricsTree.invisibleRootItem()
+            for i in range(root.childCount()):
+                prot_item = root.child(i)
+                prot_visible = False
+
+                for j in range(prot_item.childCount()):
+                    group_or_metric = prot_item.child(j)
+                    self.update_tree_item_visibility(group_or_metric)
+                    if not group_or_metric.isHidden():
+                        prot_visible = True
+
+                prot_item.setHidden(not prot_visible)
+
+            iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
+            while iterator.value():
+                item = iterator.value()
+                metric = item.data(0, QtCore.Qt.UserRole)
+                if metric and not item.isHidden():
+                    visible_count += 1
+                iterator += 1
+        else:
+            # Update table only when table view is active.
+            for row in range(self.metricsTable.rowCount()):
+                item = self.metricsTable.item(row, 0)
+                if not item:
+                    continue
+                metric = item.data(QtCore.Qt.UserRole)
+                if metric:
+                    show = self.should_show_metric(metric)
+                    self.metricsTable.setRowHidden(row, not show)
+                    if show:
+                        visible_count += 1
         
         self.lbl_filter_count.setText(f"Viewing {visible_count} of {universe_count} Metrics")
 
@@ -746,6 +883,21 @@ class MetricLibrary(QtWidgets.QWidget):
     def load_current_view(self):
         self.update_visibility()
         self.update_usage_count_label()
+
+    def open_custom_metric_library(self):
+        frm = FrmCustomMetricLibrary(self, self.qris_project, self.analysis)
+        frm.exec_()
+        if getattr(frm, 'changed', False):
+            self.refresh_after_metric_catalog_change()
+
+    def refresh_after_metric_catalog_change(self):
+        # Rebuild state and views after protocol/metric catalog changes.
+        self.init_state()
+        self.invalidate_availability_cache()
+        self.build_metrics_tree()
+        self.build_metrics_table()
+        self.load_filters()
+        self.load_current_view()
 
     def build_metrics_tree(self):
         self.metricsTree.setSortingEnabled(False)
@@ -792,8 +944,8 @@ class MetricLibrary(QtWidgets.QWidget):
             metric_item.setText(1, f"{ver_text} ({status})")
             metric_item.setFont(1, font)
 
-            # Availability
-            calc_status = self.get_metric_availability(metric)
+            # Availability is computed lazily to keep initial form loading responsive.
+            calc_status = ""
             metric_item.setText(2, calc_status)
 
             # Usage
@@ -901,8 +1053,8 @@ class MetricLibrary(QtWidgets.QWidget):
             ver_item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.metricsTable.setItem(row, 3, ver_item)
 
-            # Availability
-            calc_status = self.get_metric_availability(metric)
+            # Availability is computed lazily to keep initial form loading responsive.
+            calc_status = ""
             calc_item = QtWidgets.QTableWidgetItem()
             calc_item.setText(calc_status)
             calc_item.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -984,6 +1136,8 @@ class MetricLibrary(QtWidgets.QWidget):
                  metrics_update_map[metric.id] = new_state
                  self.current_metrics_state[metric.id] = new_state
 
+        self.invalidate_availability_cache()
+
         # 2. Update Tree Widgets
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
         while iterator.value():
@@ -1043,6 +1197,8 @@ class MetricLibrary(QtWidgets.QWidget):
         # Update internal state
         for metric_id, level_id in states.items():
             self.current_metrics_state[metric_id] = level_id
+
+        self.invalidate_availability_cache()
 
         # Single pass over tree
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)

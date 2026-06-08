@@ -563,8 +563,12 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.gridValues.setRowStretch(4, 1)
 
         # Other Tabs
+        self.notes_tab = QtWidgets.QWidget()
+        self.notes_layout = QtWidgets.QVBoxLayout(self.notes_tab)
+        self.notes_layout.setContentsMargins(9, 9, 9, 9)
         self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.tab.addTab(self.txtDescription, 'Notes')
+        self.notes_layout.addWidget(self.txtDescription)
+        self.tab.addTab(self.notes_tab, 'Notes')
 
         self.metadata_widget = MetadataWidget(self)
         self.tab.addTab(self.metadata_widget, 'Metadata')

@@ -76,6 +76,14 @@ class TestMetricFeasibility(unittest.TestCase):
         result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
         self.assertEqual(result['status'], 'MANUAL_ONLY')
 
+    def test_manual_only_explicit_function(self):
+        """An explicit calculation_machine_code='manual' should force MANUAL_ONLY even when params are present."""
+        params = {'inputs': [{'input_ref': 'dem_input'}]}
+        metric = Metric(1, "Test Metric", "test_metric", "PROTO", "Desc", 1, "manual", params)
+        self.analysis.metadata = {'dem_input': 123}
+        result = self.analysis.check_metric_feasibility(metric, self.project, self.event)
+        self.assertEqual(result['status'], 'MANUAL_ONLY')
+
     def test_missing_input(self):
         """Test missing input in Analysis metadata."""
         params = {'inputs': [{'input_ref': 'dem_input'}]}

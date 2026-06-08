@@ -149,7 +149,7 @@ class Analysis(DBItemSpatial):
         }
         
         # 1. Check Automation Definition
-        if not metric.metric_params:
+        if metric.metric_function == 'manual' or not metric.metric_params:
             result['status'] = 'MANUAL_ONLY'
             return result
             
