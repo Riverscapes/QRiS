@@ -177,7 +177,11 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         note = ' including uncertainty columns' if self.chkIncludeUncertainty.isChecked() else ''
         self.iface.messageBar().pushMessage('Export Metrics', f'Exported metrics{note} to {self.txtOutpath.text()}', level=Qgis.Success)
-        return super().accept()
+
+        out_file = self.txtOutpath.text()
+        super().accept()
+        exporter.show_export_success(out_file)
+        return
 
     def setupUi(self):
 
