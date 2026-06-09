@@ -392,6 +392,11 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
             # Refresh the chart to show new values
             self.redraw_chart()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.chart.refresh_default_chart_font()
+        self.redraw_chart()
+
 
 class AnalysisOverTimeChart(QtWidgets.QWidget):
     chart_needs_update = QtCore.pyqtSignal()
@@ -511,6 +516,9 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         if ok:
             self.chart_font = font
             self.chart_needs_update.emit()
+
+    def refresh_default_chart_font(self):
+        self.chart_font = get_default_chart_font(QtCore.QSettings('Riverscapes', 'QRiS'))
 
     def setup_units_menu(self):
         self.units_menu = QtWidgets.QMenu(self)

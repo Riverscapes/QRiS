@@ -63,6 +63,14 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             self.populate_scope()
             self.populate_dce()
 
+    def refresh_default_chart_font(self):
+        self.chart_font = get_default_chart_font(QSettings('Riverscapes', 'QRiS'))
+        self.chart_font_family = self.chart_font.family()
+        self.chart_font_size = self.chart_font.pointSize()
+
+        if self.current_distribution_data:
+            self.draw_chart()
+
     def setupUi(self):
         # Main Layout
         self.splitter = None

@@ -29,4 +29,5 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         
     def showEvent(self, event):
         super().showEvent(event)
+        self.widget.refresh_default_chart_font()
         self.activateWindow()

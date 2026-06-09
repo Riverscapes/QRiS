@@ -21,3 +21,7 @@ class FrmDistributionAnalysisDockWidget(QtWidgets.QDockWidget):
         # Instantiate common widget
         self.widget = DistributionAnalysisWidget(iface, qris_project, map_manager, self)
         self.setWidget(self.widget)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.widget.refresh_default_chart_font()
