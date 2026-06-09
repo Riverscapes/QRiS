@@ -69,7 +69,7 @@ class FrmExportLayer(QtWidgets.QDialog):
         self.vert.addStretch()
 
         # Dialog Buttons
-        self.vert.addLayout(add_standard_form_buttons(self, 'export-layer-attributes'))
+        self.vert.addLayout(add_standard_form_buttons(self, 'exporting-data#exporting-layers-and-spatial-data'))
 
     def update_default_path(self):
         project_home = self.project_path or QgsProject.instance().homePath()

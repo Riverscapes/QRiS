@@ -12,14 +12,15 @@ class FrmChartExport(FrmBaseExport):
         self.mode = mode
         self.data = data
         self.figure = figure
+        help_slug = "exporting-data#exporting-tabular-data" if self.mode == "values" else "exporting-data#exporting-charts-and-graphs"
 
         title = "Export Data Table" if self.mode == "values" else "Export Chart Image"
         self.setWindowTitle(title)
 
         if self.mode == "values":
-            self.setup_export_ui(["Comma Separated Values (CSV)", "Excel (*.xlsx)", "JSON (*.json)"])
+            self.setup_export_ui(["Comma Separated Values (CSV)", "Excel (*.xlsx)", "JSON (*.json)"], help_slug=help_slug)
         else:
-            self.setup_export_ui(["PNG Image (*.png)", "JPEG Image (*.jpg)", "SVG Image (*.svg)", "PDF Document (*.pdf)"])
+            self.setup_export_ui(["PNG Image (*.png)", "JPEG Image (*.jpg)", "SVG Image (*.svg)", "PDF Document (*.pdf)"], help_slug=help_slug)
 
     def export_image(self, filename):
         if not self.figure:
