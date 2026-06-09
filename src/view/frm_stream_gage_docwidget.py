@@ -78,7 +78,9 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         if site_id is None:
             return
 
-        self.load_discharge_plot()
+        data = self.load_discharge_data()
+        self.load_discharge_plot(data)
+        self.load_discharge_table(data)
         self.load_metadata()
 
         map_layer_tree = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
@@ -129,9 +131,6 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.tableMeta.setModel(self.metadata_model)
 
     def load_discharge_data(self):
-
-        self._static_ax.cla()
-
         lst_item = self.stream_gage_model.itemFromIndex(self.lst_gages.currentIndex())
         if lst_item is None:
             return
@@ -149,11 +148,23 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         return data
 
 
-    def load_discharge_plot(self):
+    def load_discharge_plot(self, data=None):
 
-        data = self.load_discharge_data()
+        if data is None:
+            data = self.load_discharge_data()
         if data is None:
             return
+
+        self._static_ax.cla()
+
+        lst_item = self.stream_gage_model.itemFromIndex(self.lst_gages.currentIndex())
+        station_name = None
+        station_code = None
+        if lst_item is not None:
+            station_name = lst_item.text()
+            station_data = lst_item.data(QtCore.Qt.UserRole)
+            if station_data and len(station_data) > 1:
+                station_code = station_data[1]
 
         dates = [datetime.strptime(item[0], '%Y-%m-%d') for item in data]
         disch = [item[1] for item in data]
@@ -164,15 +175,37 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self._static_ax.plot(dates, disch, ".")
         self._static_ax.set_ylabel('Discharge (CFS)')
         self._static_ax.set_xlabel('Date')
+        if station_name and station_code:
+            self._static_ax.set_title(f"{station_name} ({station_code})")
+        elif station_name:
+            self._static_ax.set_title(station_name)
 
         self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
         self._static_ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
         self._static_ax.tick_params(axis='x', rotation=45)
-        
-        # Adjust the bottom margin
-        plt.subplots_adjust(bottom=0.75)
+
+        # Ensure rotated date labels are fully visible in embedded canvas.
+        self.static_canvas.figure.subplots_adjust(bottom=0.25)
+        self.static_canvas.figure.tight_layout(pad=1.2)
         
         self.static_canvas.draw()
+
+    def load_discharge_table(self, data=None):
+        if data is None:
+            data = self.load_discharge_data()
+
+        model = QtGui.QStandardItemModel(self)
+        model.setHorizontalHeaderLabels(['Measurement Date', 'Discharge (CFS)'])
+
+        if data:
+            for measurement_date, discharge in data:
+                date_item = QtGui.QStandardItem(str(measurement_date))
+                discharge_item = QtGui.QStandardItem('' if discharge is None else str(discharge))
+                model.appendRow([date_item, discharge_item])
+
+        self.tableDischarge.setModel(model)
+        self.tableDischarge.horizontalHeader().setStretchLastSection(True)
+        self.tableDischarge.resizeColumnsToContents()
 
     def download_discharges(self):
 
@@ -200,7 +233,9 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         else:
             self.iface.messageBar().pushMessage('Stream Discharges Download Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
 
-        self.load_discharge_plot()
+        data = self.load_discharge_data()
+        self.load_discharge_plot(data)
+        self.load_discharge_table(data)
 
     def download_stream_gages(self):
 
@@ -278,8 +313,10 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self._static_ax.cla()
         self.static_canvas.draw()
         self.tableMeta.setModel(None)
+        self.tableDischarge.setModel(None)
         
         self.load_discharge_plot()
+        self.load_discharge_table()
         self.load_metadata()
 
     def on_gage_context_menu(self, point):
@@ -369,9 +406,23 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.tableMeta = QtWidgets.QTableView(self)
         self.tableMeta.verticalHeader().hide()
 
+        self.tableDischarge = QtWidgets.QTableView(self)
+        self.tableDischarge.verticalHeader().hide()
+
+        self.discharge_tab = QtWidgets.QWidget(self)
+        self.discharge_tab_layout = QtWidgets.QVBoxLayout(self.discharge_tab)
+        self.discharge_tab_layout.setContentsMargins(9, 9, 9, 9)
+        self.discharge_tab_layout.addWidget(self.tableDischarge)
+
+        self.metadata_tab = QtWidgets.QWidget(self)
+        self.metadata_tab_layout = QtWidgets.QVBoxLayout(self.metadata_tab)
+        self.metadata_tab_layout.setContentsMargins(9, 9, 9, 9)
+        self.metadata_tab_layout.addWidget(self.tableMeta)
+
         self.tabWidget = QtWidgets.QTabWidget()
         self.right_vert.addWidget(self.tabWidget)
         self.tabWidget.addTab(self.static_canvas, 'Graphical')
-        self.tabWidget.addTab(self.tableMeta, 'Metadata')
+        self.tabWidget.addTab(self.discharge_tab, 'Discharge Data')
+        self.tabWidget.addTab(self.metadata_tab, 'Metadata')
 
         self.setWidget(self.dockWidgetContents)
