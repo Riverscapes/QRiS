@@ -11,7 +11,7 @@ from ..QRiS.settings import CONSTANTS
 from ..QRiS.qris_map_manager import QRisMapManager
 
 from .utilities import add_help_button
-from .frm_export_table import FrmTableExport
+from .widgets.export_chart_widget import ChartExportWidget
 
 from ..model.project import Project
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
@@ -231,22 +231,6 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         self.load_stream_gages()
 
-    def export(self):
-
-        data = self.get_discharge_export_data()
-        if not data:
-            self.iface.messageBar().pushMessage('Discharge Export', f'No data to export.', level=Qgis.Info, duration=5)
-            return
-
-        frm = FrmTableExport(
-            self,
-            data=data,
-            base_name='stream_gage_discharge_export',
-            project_path=self.project.project_file,
-            export_type='stream_gage_discharge',
-        )
-        frm.exec_()
-
     def get_discharge_export_data(self):
         data = self.load_discharge_data()
         if data is None:
@@ -366,10 +350,15 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.cmdDischarge.clicked.connect(self.download_discharges)
         self.button_horiz.addWidget(self.cmdDischarge)
 
-        self.cmdExport = QtWidgets.QPushButton()
-        self.cmdExport.setText('Export')
-        self.cmdExport.clicked.connect(self.export)
-        self.button_horiz.addWidget(self.cmdExport)
+        self.export_widget = ChartExportWidget(
+            self,
+            base_name='stream_gage_discharge_export',
+            get_data_callback=self.get_discharge_export_data,
+            get_figure_callback=lambda: self.static_canvas.figure,
+            project_path=self.project.project_file,
+            export_type='stream_gage_discharge',
+        )
+        self.button_horiz.addWidget(self.export_widget)
 
         self.cmdHelp = add_help_button(self, 'context/stream-gage-explorer')
         self.button_horiz.addWidget(self.cmdHelp)
