@@ -4,13 +4,17 @@ from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsFeature, QgsField, QgsProject
 
 from .utilities import add_standard_form_buttons
-from ..QRiS.path_utilities import get_unique_file_path
+from .frm_export_base import sanitize_file_base_name, get_unique_export_path
 
 class FrmExportLayer(QtWidgets.QDialog):
     def __init__(self, parent, layer: QgsVectorLayer, base_name: str = None, project_path: str = None):
         super(FrmExportLayer, self).__init__(parent)
         self.layer = layer
-        self.base_name = base_name or self.layer.name()
+        self.base_name = str(base_name).strip() if base_name is not None else ""
+        if not self.base_name:
+            self.base_name = self.layer.name()
+        self.export_display_name = self.base_name
+        self.file_base_name = sanitize_file_base_name(self.base_name)
         self.project_path = project_path
         self.last_generated_path = None
         self.setupUi()
@@ -25,9 +29,9 @@ class FrmExportLayer(QtWidgets.QDialog):
         self.vert.addLayout(self.grid)
         
         # Layer Info
-        lbl_info = QtWidgets.QLabel(f"Exporting layer:" )
+        lbl_info = QtWidgets.QLabel("Exporting:")
         self.grid.addWidget(lbl_info, 0, 0)
-        lbl_layer_name = QtWidgets.QLabel(f"<b>{self.layer.name()}</b>")
+        lbl_layer_name = QtWidgets.QLabel(f"<b>{self.export_display_name}</b>")
         self.grid.addWidget(lbl_layer_name, 0, 1)
 
         # Format Selection
@@ -70,7 +74,10 @@ class FrmExportLayer(QtWidgets.QDialog):
     def update_default_path(self):
         project_home = self.project_path or QgsProject.instance().homePath()
         if project_home:
-            export_directory = os.path.join(project_home, 'exports')
+            if os.path.isfile(project_home):
+                project_home = os.path.dirname(project_home)
+
+            export_directory = os.path.join(project_home, 'exports', self.file_base_name)
             if not os.path.exists(export_directory):
                 os.makedirs(export_directory, exist_ok=True)
             
@@ -88,8 +95,7 @@ class FrmExportLayer(QtWidgets.QDialog):
             elif text == "Excel":
                 ext = ".xlsx"
             
-            # Use utility to generate unique path
-            default_path = get_unique_file_path(export_directory, self.base_name, ext)
+            default_path = get_unique_export_path(export_directory, self.file_base_name, ext)
             default_path = os.path.normpath(default_path)  # Normalize path separators
             self.leFile.setText(default_path)
             self.last_generated_path = default_path
@@ -184,9 +190,9 @@ class FrmExportLayer(QtWidgets.QDialog):
             msg_box.setText(f"Layer exported successfully to:\n{out_file}")
             msg_box.setIcon(QtWidgets.QMessageBox.Information)
 
-            btn_folder = msg_box.addButton("View in Folder", QtWidgets.QMessageBox.ActionRole)
+            btn_folder = msg_box.addButton("Open Folder", QtWidgets.QMessageBox.ActionRole)
             btn_open = msg_box.addButton("Open File", QtWidgets.QMessageBox.ActionRole)
-            btn_close = msg_box.addButton("Close", QtWidgets.QMessageBox.RejectRole)
+            msg_box.addButton("Close", QtWidgets.QMessageBox.RejectRole)
             
             msg_box.exec_()
             

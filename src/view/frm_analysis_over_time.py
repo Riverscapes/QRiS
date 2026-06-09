@@ -448,7 +448,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
 
         self.export_widget = ChartExportWidget(
             self,
-            base_name="AnalysisOverTime",
+            base_name="Analysis Over Time",
             get_data_callback=self.get_export_data,
             get_figure_callback=lambda: self.fig,
             project_path=self.project.project_file if self.project else None,

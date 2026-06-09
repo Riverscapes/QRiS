@@ -492,7 +492,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.export_widget = ChartExportWidget(
             self,
-            base_name='climate_engine_timeseries_export',
+            base_name='Climate Engine Timeseries',
             get_data_callback=self.get_export_data,
             get_figure_callback=lambda: self.chart_canvas.figure,
             project_path=self.qris_project.project_file if self.qris_project else None,

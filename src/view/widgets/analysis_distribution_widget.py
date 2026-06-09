@@ -236,7 +236,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         # Add Export Widget
         self.export_widget = ChartExportWidget(
             self,
-            base_name="DistributionAnalysis",
+            base_name="Distribution Analysis",
             get_data_callback=self.get_export_data,
             get_figure_callback=lambda: self.figure,
             project_path=self.qris_project.project_file if self.qris_project else None,

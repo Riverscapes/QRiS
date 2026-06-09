@@ -13,42 +13,66 @@ except ImportError:
 
 from .frm_geospatial_metrics_options import FrmOptions
 from .utilities import add_help_button
+from .frm_export_base import sanitize_file_base_name, get_unique_export_path
 
 
 class FrmGeospatialMetricsExport(QtWidgets.QDialog):
     def __init__(self, parent, project, mask, polygons, metrics):
         super().__init__(parent)
         self.setWindowTitle("Export Geospatial Metrics")
+        self.project = project
+        self.base_name = "Geospatial Metrics"
+        self.file_base_name = sanitize_file_base_name(self.base_name)
+        self.last_generated_path = None
         self.metrics = metrics
         self.polygons = polygons
 
         self.setupUi()
 
     def browse_path(self):
-        
-        output_type = self.formatGroup.checkedButton().text()
-        if output_type == "JSON":
-            filter = "JSON Files (*.json)"
-        elif output_type == "CSV":
-            filter = "CSV Files (*.csv)"
-        else:
-            filter = "Excel Files (*.xlsx)"
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Export File", "", filter)
+        ext = self.get_current_extension()
+        filter = f"Current Format (*{ext});;All Files (*.*)"
+        initial = self.txtOutpath.text()
+        folder = os.path.dirname(initial) if initial else ""
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Export File", folder, filter)
         if path:
-            self.txtOutpath.setText(path)
+            self.txtOutpath.setText(os.path.normpath(path))
+
+    def get_current_extension(self):
+        if self.radioJson.isChecked():
+            return ".json"
+        if self.radioCsv.isChecked():
+            return ".csv"
+        return ".xlsx"
+
+    def update_default_path(self):
+        home = getattr(self.project, "project_file", None)
+        if not home:
+            return
+
+        if os.path.isfile(home):
+            home = os.path.dirname(home)
+
+        export_dir = os.path.join(home, "exports", self.file_base_name)
+        if not os.path.exists(export_dir):
+            os.makedirs(export_dir, exist_ok=True)
+
+        default_path = get_unique_export_path(export_dir, self.file_base_name, self.get_current_extension())
+        self.txtOutpath.setText(os.path.normpath(default_path))
+        self.last_generated_path = self.txtOutpath.text()
 
     def on_type_changed(self):
         current_path = self.txtOutpath.text()
+        if not current_path:
+            self.update_default_path()
+            return
+
+        if current_path == self.last_generated_path:
+            self.update_default_path()
+            return
+
         file, _ext = os.path.splitext(current_path)
-        if current_path:
-            # change the file extension based on the selected format
-            if self.radioJson.isChecked():
-                new_ext = ".json"
-            elif self.radioCsv.isChecked():
-                new_ext = ".csv"
-            else:
-                new_ext = ".xlsx"
-            self.txtOutpath.setText(file + new_ext)
+        self.txtOutpath.setText(file + self.get_current_extension())
 
     def export(self):
         
@@ -146,7 +170,13 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         layout.addLayout(btnLayout)
 
         # Export format
-        self.lblFormat = QtWidgets.QLabel("Select export format:")
+        info_layout = QtWidgets.QHBoxLayout()
+        info_layout.addWidget(QtWidgets.QLabel("Exporting:"))
+        info_layout.addWidget(QtWidgets.QLabel(f"<b>{self.base_name}</b>"))
+        info_layout.addStretch()
+        layout.addLayout(info_layout)
+
+        self.lblFormat = QtWidgets.QLabel("Output Format:")
         self.formatGroup = QtWidgets.QButtonGroup(self)
         self.radioJson = QtWidgets.QRadioButton("JSON")
         self.radioCsv = QtWidgets.QRadioButton("CSV")
@@ -165,17 +195,18 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         layout.addLayout(fmtLayout)
 
         horizontalLayout = QtWidgets.QHBoxLayout()
-        self.lblPath = QtWidgets.QLabel("Export Path:")
+        self.lblPath = QtWidgets.QLabel("Output Path:")
         horizontalLayout.addWidget(self.lblPath)
         self.txtOutpath = QtWidgets.QLineEdit(self)
         self.txtOutpath.setPlaceholderText("Choose export file path")
         self.txtOutpath.setReadOnly(True)
         horizontalLayout.addWidget(self.txtOutpath)
-        self.btnBrowse = QtWidgets.QPushButton("Browse")
-        self.btnBrowse.clicked.connect(lambda: self.txtOutpath.setText(
-            QtWidgets.QFileDialog.getSaveFileName(self, "Save Export File", "", "JSON Files (*.json);;CSV Files (*.csv);;Excel Files (*.xlsx)")[0]))
+        self.btnBrowse = QtWidgets.QPushButton("...")
+        self.btnBrowse.clicked.connect(self.browse_path)
         horizontalLayout.addWidget(self.btnBrowse)
         layout.addLayout(horizontalLayout)
+
+        self.update_default_path()
 
         horiz_bottom = QtWidgets.QHBoxLayout()
         layout.addLayout(horiz_bottom)

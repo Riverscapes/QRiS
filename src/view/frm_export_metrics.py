@@ -10,10 +10,10 @@ from ..model.analysis import Analysis
 from ..model.project import Project
 from ..model.metric import Metric
 from ..lib.unit_conversion import short_unit_name
-from ..QRiS.path_utilities import get_unique_file_path
 
 from .utilities import add_standard_form_buttons
 from .frm_export_table import FrmTableExport
+from .frm_export_base import sanitize_file_base_name, get_unique_export_path
 
 
 class FrmExportMetrics(QtWidgets.QDialog):
@@ -26,6 +26,9 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.analysis = analysis
         self.current_dce = current_dce
         self.current_sf = current_sf
+        self.base_name = 'Analysis Metrics'
+        self.file_base_name = sanitize_file_base_name(self.base_name)
+        self.last_generated_path = None
 
         if self.analysis is not None:
             self.analyses = {analysis: get_sample_frame_ids(self.project.project_file, self.analysis.sample_frame.id)}
@@ -66,28 +69,33 @@ class FrmExportMetrics(QtWidgets.QDialog):
         if os.path.isfile(home):
             home = os.path.dirname(home)
 
-        export_dir = os.path.join(home, 'exports', 'analysis_metrics')
+        export_dir = os.path.join(home, 'exports', self.file_base_name)
         if not os.path.exists(export_dir):
             os.makedirs(export_dir, exist_ok=True)
 
         output_format = self.combo_format.currentText()
         output_ext = '.xls' if output_format == 'Excel' else f'.{output_format.lower()}'
 
-        default_path = get_unique_file_path(export_dir, 'analysis_metrics', output_ext)
+        default_path = get_unique_export_path(export_dir, self.file_base_name, output_ext)
         self.txtOutpath.setText(os.path.normpath(default_path))
+        self.last_generated_path = self.txtOutpath.text()
 
     def format_change(self):
 
-        # if the edit_location is not empty, then change the extension to match the new format
-        if self.txtOutpath.text() != "":
-            path = self.txtOutpath.text()
-            output_format = self.combo_format.currentText()
-            if output_format == "Excel":
-                output_format = "xls"
-            path = path[:path.rfind(".") + 1] + output_format.lower()
-            self.txtOutpath.setText(path)
-        else:
+        current = self.txtOutpath.text()
+        if current == "":
             self.update_default_path()
+            return
+
+        if current == self.last_generated_path:
+            self.update_default_path()
+            return
+
+        output_format = self.combo_format.currentText()
+        if output_format == "Excel":
+            output_format = "xls"
+        path = current[:current.rfind(".") + 1] + output_format.lower()
+        self.txtOutpath.setText(path)
 
     def accept(self) -> None:
 
@@ -218,18 +226,23 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.export_grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.export_grid)
 
+        lbl_info = QtWidgets.QLabel("Exporting:")
+        self.export_grid.addWidget(lbl_info, 0, 0, 1, 1)
+        lbl_name = QtWidgets.QLabel(f"<b>{self.base_name}</b>")
+        self.export_grid.addWidget(lbl_name, 0, 1, 1, 1)
+
         # check box for including uncertainty
         self.chkIncludeUncertainty = QtWidgets.QCheckBox("Include Value Uncertainty Columns in Export")
         self.chkIncludeUncertainty.setToolTip("Include the uncertainty value for each metric in the export")
         self.chkIncludeUncertainty.setChecked(False)
-        self.export_grid.addWidget(self.chkIncludeUncertainty, 0, 0, 1, 2)
+        self.export_grid.addWidget(self.chkIncludeUncertainty, 1, 0, 1, 2)
 
         # label for export format
-        self.lbl_format = QtWidgets.QLabel("Export Format")
-        self.export_grid.addWidget(self.lbl_format, 1, 0, 1, 1)
+        self.lbl_format = QtWidgets.QLabel("Output Format:")
+        self.export_grid.addWidget(self.lbl_format, 2, 0, 1, 1)
 
         self.horiz_format = QtWidgets.QHBoxLayout()
-        self.export_grid.addLayout(self.horiz_format, 1, 1, 1, 1)
+        self.export_grid.addLayout(self.horiz_format, 2, 1, 1, 1)
 
         # drop down for export format
         self.combo_format = QtWidgets.QComboBox()
@@ -242,11 +255,11 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.horiz_format.addStretch()
 
         # label for export location
-        self.lbl_location = QtWidgets.QLabel("Export Path")
-        self.export_grid.addWidget(self.lbl_location, 2, 0, 1, 1)
+        self.lbl_location = QtWidgets.QLabel("Output Path:")
+        self.export_grid.addWidget(self.lbl_location, 3, 0, 1, 1)
 
         self.horizOutput = QtWidgets.QHBoxLayout()
-        self.export_grid.addLayout(self.horizOutput, 2, 1, 1, 1)
+        self.export_grid.addLayout(self.horizOutput, 3, 1, 1, 1)
 
         # line edit for export location
         self.txtOutpath = QtWidgets.QLineEdit()

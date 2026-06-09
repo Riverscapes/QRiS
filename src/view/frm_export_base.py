@@ -3,16 +3,23 @@ import re
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..QRiS.path_utilities import get_unique_file_path
 from .utilities import add_standard_form_buttons
 
 
-def format_export_display_name(base_name):
-    text = str(base_name or "export")
-    text = text.replace('_', ' ').replace('-', ' ')
-    text = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
+def sanitize_file_base_name(base_name):
+    text = str(base_name or "export").strip().lower()
+    text = re.sub(r'[^a-z0-9]+', '_', text)
+    text = re.sub(r'_+', '_', text).strip('_')
+    return text or "export"
+
+
+def get_unique_export_path(export_dir, file_base_name, extension):
+    ext = extension if extension.startswith('.') else f'.{extension}'
+    for i in range(1, 1000):
+        candidate = os.path.join(export_dir, f"{file_base_name}_{i:03d}{ext}")
+        if not os.path.exists(candidate):
+            return candidate
+    return os.path.join(export_dir, f"{file_base_name}_999{ext}")
 
 
 class FrmBaseExport(QtWidgets.QDialog):
@@ -25,8 +32,8 @@ class FrmBaseExport(QtWidgets.QDialog):
 
         self.base_name = base_name_text if base_name_text else "export"
         self.project_path = project_path
-        self.export_display_name = format_export_display_name(self.base_name)
-        self.file_base_name = self.base_name
+        self.export_display_name = self.base_name
+        self.file_base_name = sanitize_file_base_name(self.base_name)
         self.export_type = export_type_text if export_type_text else None
         self.last_generated_path = None
 
@@ -38,7 +45,7 @@ class FrmBaseExport(QtWidgets.QDialog):
         self.leFile = None
         self.btnBrowse = None
 
-    def setup_export_ui(self, format_items, help_slug="analysis/export"):
+    def setup_export_ui(self, format_items, help_slug="exporting-data"):
         self.setMinimumWidth(500)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -104,11 +111,12 @@ class FrmBaseExport(QtWidgets.QDialog):
         export_dir = os.path.join(home, "exports")
         if self.export_type:
             export_dir = os.path.join(export_dir, self.export_type)
+        export_dir = os.path.join(export_dir, self.file_base_name)
         if not os.path.exists(export_dir):
             os.makedirs(export_dir, exist_ok=True)
 
         ext = self.get_extension()
-        default_path = get_unique_file_path(export_dir, self.file_base_name, ext)
+        default_path = get_unique_export_path(export_dir, self.file_base_name, ext)
         self.leFile.setText(os.path.normpath(default_path))
         self.last_generated_path = self.leFile.text()
 
