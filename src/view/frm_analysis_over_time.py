@@ -15,6 +15,7 @@ from ..model.analysis import Analysis
 from ..model.sample_frame import SampleFrame, get_sample_frame_sequence
 from ..model.metric_value import load_metric_values
 from ..lib.unit_conversion import short_unit_name, distance_units, area_units, ratio_units
+from ..lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ..model.event import DCE_EVENT_TYPE_ID
 
 from .widgets.event_library import EventLibraryWidget
@@ -506,7 +507,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         return export_list
 
     def set_chart_font(self):
-        font, ok = QtWidgets.QFontDialog.getFont(self.chart_font, self, 'Select Chart Font')
+        font, ok = select_chart_font(self, self.chart_font, 'Select Chart Font')
         if ok:
             self.chart_font = font
             self.chart_needs_update.emit()
@@ -583,11 +584,12 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
 
         if metric_name:
             if val_type == "Absolute":
-                self.ax.set_title(metric_name, fontsize=font_size, fontname=font_family)
+                title_text = self.ax.set_title(metric_name, fontsize=font_size, fontname=font_family)
             else:
-                self.ax.set_title(f"{metric_name}\n{val_type}", fontsize=font_size, fontname=font_family)
+                title_text = self.ax.set_title(f"{metric_name}\n{val_type}", fontsize=font_size, fontname=font_family)
         else:
-            self.ax.set_title(val_type, fontsize=font_size, fontname=font_family)
+            title_text = self.ax.set_title(val_type, fontsize=font_size, fontname=font_family)
+        apply_qfont_to_mpl_text(title_text, self.chart_font)
         
         # Determine baseline for relative calculations before filtering None values, 
         # but only if absolute values are present. 
@@ -608,14 +610,18 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
 
         if not valid_values:
             # Even if no data, we want to show axis labels
-            self.ax.text(0.5, 0.5, "No data available", ha='center', va='center', fontsize=font_size, fontname=font_family)
+            empty_text = self.ax.text(0.5, 0.5, "No data available", ha='center', va='center', fontsize=font_size, fontname=font_family)
+            apply_qfont_to_mpl_text(empty_text, self.chart_font)
             self.ax.set_xticks(x_indices)
             wrapped_labels = [textwrap.fill(lbl, width=15) for lbl in x_labels]
             self.ax.set_xticklabels(wrapped_labels, rotation=45, ha='right', fontsize=font_size*0.8, fontname=font_family)
             # Avoid matplotlib's tiny default no-data y-range (+/- 0.05).
             self.ax.set_ylim(-1.0, 1.0)
             self.ax.set_yticks([-1.0, 0.0, 1.0])
-            self.ax.set_ylabel(ylabel, fontsize=font_size, fontname=font_family)
+            y_label_text = self.ax.set_ylabel(ylabel, fontsize=font_size, fontname=font_family)
+            apply_qfont_to_mpl_text(y_label_text, self.chart_font)
+            apply_qfont_to_mpl_texts(self.ax.get_xticklabels(), self.chart_font)
+            apply_qfont_to_mpl_texts(self.ax.get_yticklabels(), self.chart_font)
             self.canvas.draw()
             return
             
@@ -703,13 +709,10 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         wrapped_labels = [textwrap.fill(lbl, width=15) for lbl in x_labels]
         
         self.ax.set_xticklabels(wrapped_labels, rotation=45, ha='right', fontsize=font_size*0.8, fontname=font_family)
-        self.ax.set_ylabel(ylabel, fontsize=font_size, fontname=font_family)
-        
-        # Set tick label font
-        for tick in self.ax.get_xticklabels() + self.ax.get_yticklabels():
-            tick.set_fontname(font_family)
-            if tick in self.ax.get_yticklabels():
-                tick.set_fontsize(font_size)
+        y_label_text = self.ax.set_ylabel(ylabel, fontsize=font_size, fontname=font_family)
+        apply_qfont_to_mpl_text(y_label_text, self.chart_font)
+        apply_qfont_to_mpl_texts(self.ax.get_xticklabels(), self.chart_font)
+        apply_qfont_to_mpl_texts(self.ax.get_yticklabels(), self.chart_font)
 
         self.fig.tight_layout(pad=2.0)
         

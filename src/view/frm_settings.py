@@ -1,11 +1,12 @@
 from qgis.PyQt.QtCore import QSettings, Qt
 from qgis.PyQt.QtGui import QFont
-from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QFontDialog, QSpacerItem, QSizePolicy
+from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QSpacerItem, QSizePolicy
 
 from ..model.project import Project
 from ..lib.climate_engine import CLIMATE_ENGINE_API_KEY_SETTING, open_climate_engine_website
 from ..QRiS.protocol_parser import LOCAL_PROTOCOL_FOLDER, SHOW_EXPERIMENTAL_PROTOCOLS
 from ..QRiS.settings import Settings
+from ..lib.font_tools import select_chart_font, sanitize_chart_font
 
 from .frm_api_key import FrmApiKey
 from .utilities import add_help_button
@@ -28,9 +29,9 @@ def get_default_chart_font(settings: QSettings) -> QFont:
         if font.fromString(font_text):
             if font.pointSize() <= 0:
                 font.setPointSize(10)
-            return font
+            return sanitize_chart_font(font)
 
-    return QFont('Sans Serif', 10)
+    return sanitize_chart_font(QFont('Sans Serif', 10))
 
 
 def set_default_chart_font(font: QFont, settings: QSettings):
@@ -121,7 +122,7 @@ class FrmSettings(QDialog):
             QMessageBox.warning(self, "Experimental Protocols", "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.")
 
     def select_chart_font(self):
-        font, ok = QFontDialog.getFont(self.default_chart_font, self, 'Select Default Chart Font')
+        font, ok = select_chart_font(self, self.default_chart_font, 'Select Default Chart Font')
         if ok:
             self.default_chart_font = font
             self.update_chart_font_button_text()

@@ -22,6 +22,7 @@ from qgis.core import (
 from ...model.project import Project
 from ...model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ...model.sample_frame import SampleFrame
+from ...lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from .export_chart_widget import ChartExportWidget
 from ..frm_settings import get_default_chart_font
 
@@ -1244,17 +1245,21 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 left += v
             
             ax.set_yticks([])
-            ax.set_xlabel(f"Total: {self.format_value(display_total)} {unit}", **font_settings) # Use display_total
+            x_label_text = ax.set_xlabel(f"Total: {self.format_value(display_total)} {unit}", **font_settings) # Use display_total
+            apply_qfont_to_mpl_text(x_label_text, self.chart_font)
             
             # Legend below x-axis label. x-label is roughly at y=-0.1 relative to axes.
             # Move legend further down.
-            ax.legend(
+            legend = ax.legend(
                 loc='upper center', 
                 bbox_to_anchor=(0.5, -0.25), 
                 ncol=2, 
                 frameon=False, 
                 prop=font_settings
             )
+            if legend is not None:
+                apply_qfont_to_mpl_texts(legend.get_texts(), self.chart_font)
+                apply_qfont_to_mpl_text(legend.get_title(), self.chart_font)
             
         elif chart_type == "horizontal":
             # Multi-bar horizontal chart
@@ -1264,7 +1269,8 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             
             ax.set_yticklabels(sorted_keys, **font_settings)
             ax.invert_yaxis()  # labels read top-to-bottom
-            ax.set_xlabel(unit, **font_settings)
+            x_label_text = ax.set_xlabel(unit, **font_settings)
+            apply_qfont_to_mpl_text(x_label_text, self.chart_font)
             
             # Value labels on bars
             max_val = max(values) if values else 1
@@ -1274,8 +1280,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 ax.set_xlim(0, max_val * 1.35)
                 
             for i, v in enumerate(values):
-                 label = f" {self.format_value(v)} {unit}"
-                 ax.text(v, i, label, va='center', rotation=0, **font_settings)
+                label = f" {self.format_value(v)} {unit}"
+                value_text = ax.text(v, i, label, va='center', rotation=0, **font_settings)
+                apply_qfont_to_mpl_text(value_text, self.chart_font)
 
             # Second Axis (Percent) - Only if not already percent
             if self.chart_show_pct and 'percent' not in measure_type:
@@ -1296,21 +1303,13 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     ax2.set_xlim(x2_min, x2_max)
                     # Label
                     lbl = "Percent of Total Mapped (%)" if self.chart_pct_basis == 'mapped' else "Percent of Sample Frame Area (%)"
-                    ax2.set_xlabel(lbl, **font_settings)
-                    
-                    # Ensure font settings apply to ticks as well
-                    for tick in ax2.get_xticklabels():
-                         tick.set_fontname(self.chart_font_family)
-                         tick.set_fontsize(self.chart_font_size)
+                    x2_label_text = ax2.set_xlabel(lbl, **font_settings)
+                    apply_qfont_to_mpl_text(x2_label_text, self.chart_font)
+                    apply_qfont_to_mpl_texts(ax2.get_xticklabels(), self.chart_font)
 
         # Set also tick labels font
-        for tick in ax.get_xticklabels():
-            tick.set_fontname(self.chart_font_family)
-            tick.set_fontsize(self.chart_font_size)
-            
-        for tick in ax.get_yticklabels():
-            tick.set_fontname(self.chart_font_family)
-            tick.set_fontsize(self.chart_font_size)
+        apply_qfont_to_mpl_texts(ax.get_xticklabels(), self.chart_font)
+        apply_qfont_to_mpl_texts(ax.get_yticklabels(), self.chart_font)
 
         self.figure.tight_layout()
         self.canvas.draw()
@@ -1370,7 +1369,7 @@ class ChartSettingsDialog(QtWidgets.QDialog):
         self.cmbBasis.setEnabled(self.chkShowPct.isChecked())
 
     def choose_font(self):
-        font, ok = QtWidgets.QFontDialog.getFont(self.font, self, 'Select Chart Font')
+        font, ok = select_chart_font(self, self.font, 'Select Chart Font')
         if ok:
             self.font = font
             self.btnFont.setText(f'Change Font ({self.font.family()} {self.font.pointSize()}pt)')
