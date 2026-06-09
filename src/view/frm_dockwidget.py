@@ -27,7 +27,7 @@ from functools import partial
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot, QDate, QModelIndex, QMetaType
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup
+from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup, QgsRasterLayer
 from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
@@ -577,7 +577,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT_LAYER))
                     self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Valley Bottom', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_CREATE))
                 elif model_data == SURFACE_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Import Existing Raster Surface Dataset', 'new', lambda: self.add_raster(model_item, False))
+                    import_menu = self.menu.addMenu('Import Surface Raster From ...  ')
+                    self.add_context_menu_item(import_menu, 'Existing Raster Dataset', 'new', lambda: self.add_raster(model_item, False))
+                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_raster(model_item, False, DB_MODE_IMPORT_LAYER))
                 elif model_data == AOI_MACHINE_CODE:
                     import_menu = self.menu.addMenu('Import AOI From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT))
@@ -595,7 +597,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(new_sample_frame_menu, 'From QRiS Features', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_CREATE))
                 elif model_data == CONTEXT_NODE_TAG:
                     self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.qris_project.project_file))))
-                    self.add_context_menu_item(self.menu, 'Import Existing Context Raster', 'new', lambda: self.add_raster(model_item, True))
+                    import_raster_menu = self.menu.addMenu('Import Context Raster From ...  ')
+                    self.add_context_menu_item(import_raster_menu, 'Existing Raster Dataset', 'new', lambda: self.add_raster(model_item, True))
+                    self.add_context_menu_item(import_raster_menu, 'Layer in Map', 'new', lambda: self.add_raster(model_item, True, DB_MODE_IMPORT_LAYER))
                     import_menu = self.menu.addMenu('Import Context Vector From ...  ')
                     self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_context_vector(model_item))
                     self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_LAYER))
@@ -1808,6 +1812,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             import_source_path = browse_raster(self, 'Select a raster dataset to import.')
             if import_source_path is None:
                 return
+        elif import_source_path == DB_MODE_IMPORT_LAYER:
+            toc_layer = self.get_toc_raster_layer()
+            if toc_layer is None:
+                return
+            import_source_path = self.get_raster_layer_source_path(toc_layer)
+            if import_source_path is None or import_source_path == '':
+                QtWidgets.QMessageBox.warning(self, 'Import Raster', 'Unable to determine a valid source path for the selected map layer.')
+                return
 
         frm = FrmRaster(self, self.iface, self.qris_project, import_source_path, is_context, add_new_keys=False)
         if meta is not None:
@@ -1873,6 +1885,33 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if out_layer is None:
             return
         return out_layer
+
+    def get_toc_raster_layer(self) -> QgsRasterLayer:
+
+        project_file = self.qris_project.project_file if self.qris_project is not None else None
+        frm_toc = FrmTOCLayerPicker(self, "Select raster layer to import", temporary_layers_only=False, exclude_datasource_prefix=project_file, include_raster_layers=True)
+        if not frm_toc.layer_count > 0:
+            return
+        result = frm_toc.exec_()
+        if result != QtWidgets.QDialog.Accepted:
+            return
+        out_layer: QgsRasterLayer = frm_toc.layer
+        if out_layer is None:
+            return
+        return out_layer
+
+    def get_raster_layer_source_path(self, layer: QgsRasterLayer) -> str:
+        source = layer.source()
+        if source is None or source == '':
+            source = layer.dataProvider().dataSourceUri()
+
+        # Strip provider URI options when they are appended to a local file path.
+        if source is not None and '|' in source:
+            source_candidate = source.split('|')[0]
+            if os.path.exists(source_candidate):
+                return source_candidate
+
+        return source
 
     def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, import_source_path: str = None, meta: dict = None):
         """Initiates adding a new aoi"""
