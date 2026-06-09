@@ -1,5 +1,36 @@
 # QRiS Plugin
 
+## [1.2.4.3] Jun 9 2026
+
+### Fixed
+- Various Bandit security issues
+- Cannot Select Sample Frame in Climate Engine #1071
+- Stream gauge metadata error #1073
+- Fixed cluttered event library controls #1072
+- Open Distribution Analysis for Selected Layer #1061
+- No Calculation for Elevation Metrics in Riverscapes System Protocol #1068
+- Fixed missing confirmation on Analysis Table export #1060
+- Cleaned up Exports #1038
+- Ensured charts respect default font when reopened #1040
+
+### Changed
+- Reworked Climate Engine API key #1070
+- Refactored local QRiS resources
+- Updated QViewer dependency to 2.0.4
+- Updated plugin manager icon and home page link #1078
+- Changed default setting in Analysis properties #1066
+- Removed unsupported font features with matplotlib #1021
+
+### Added
+- Associate Attachments with DCEs #1052
+- User Statistics Telemetry #1037
+- Ability to specify custom manual metrics in project or protocol #987, #992, #879
+- Add Objectives and Condition fields for Projects and Designs #1076
+- Ability to Import Raster from Layer in Map #1027
+- Add ability to export discharge chart #1065
+- Add tabular display and minor chart refinements to Stream Gauge Explorer
+
+
 ## [1.2.4.2] May 19 2026
 
 ### Changed
