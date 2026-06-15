@@ -127,6 +127,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
         self.qris_project = qris_project
         self.analysis = analysis
         self.changed = False
+        self.created_metric_ids: list = []
 
         self.setWindowTitle('Custom Metric Library')
         self.setMinimumWidth(780)
@@ -300,6 +301,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
             '1.0',
         )
         self.qris_project.metrics[metric_id] = metric_obj
+        self.created_metric_ids.append(metric_id)
         self.changed = True
         self._refresh_table()
 
@@ -348,6 +350,9 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
 
         if metric.id in self.qris_project.metrics:
             del self.qris_project.metrics[metric.id]
+
+        if metric.id in self.created_metric_ids:
+            self.created_metric_ids.remove(metric.id)
 
         if self.analysis is not None and metric.id in self.analysis.analysis_metrics:
             del self.analysis.analysis_metrics[metric.id]

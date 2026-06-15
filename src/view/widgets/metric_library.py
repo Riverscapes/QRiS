@@ -887,12 +887,14 @@ class MetricLibrary(QtWidgets.QWidget):
     def open_custom_metric_library(self):
         frm = FrmCustomMetricLibrary(self, self.qris_project, self.analysis)
         frm.exec_()
-        if getattr(frm, 'changed', False):
-            self.refresh_after_metric_catalog_change()
+        if frm.changed:
+            self.refresh_after_metric_catalog_change(frm.created_metric_ids)
 
-    def refresh_after_metric_catalog_change(self):
+    def refresh_after_metric_catalog_change(self, new_metric_ids: list = None):
         # Rebuild state and views after protocol/metric catalog changes.
         self.init_state()
+        for metric_id in (new_metric_ids or []):
+            self.current_metrics_state[metric_id] = 1  # Metric
         self.invalidate_availability_cache()
         self.build_metrics_tree()
         self.build_metrics_table()
