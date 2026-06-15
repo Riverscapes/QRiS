@@ -9,7 +9,6 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
     Subclass of EventLibraryWidget that adds a 'Representation' column (ComboBox) 
     in place of the checkbox, and handles 'Select All/None' via representation buttons.
     """
-
     def __init__(self, parent: QtWidgets.QWidget, qris_project, event_types: list=None):
         # State: map event_id -> representation_id (int)
         # 0 or None means 'Not Selected' / 'None'
@@ -91,27 +90,20 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
         # Update Buttons
         # Hide the inherited 'Select All' / 'Select None' buttons instead of deleting them
         # to preserve layout integrity and avoid potential reference issues.
-        if hasattr(self, 'btnSelectAll') and self.btnSelectAll is not None:
+        if self.btnSelectAll is not None:
             self.btnSelectAll.setVisible(False)
         
-        if hasattr(self, 'btnDeselectAll') and self.btnDeselectAll is not None:
+        if self.btnDeselectAll is not None:
             self.btnDeselectAll.setVisible(False)
             
-        # Check if we already added our custom buttons (to avoid duplication if setupUi recalled)
-        if hasattr(self, 'btnSetNone') and self.btnSetNone is not None:
-             self.btnSetNone.setVisible(False)
-             self.horiz_layout.removeWidget(self.btnSetNone)
-             self.btnSetNone.deleteLater()
-             self.btnSetNone = None
-
         # Add "Set visible to:" label
         self.lblSetVisibleTo = QtWidgets.QLabel("Set visible to:") 
         self.horiz_layout.addWidget(self.lblSetVisibleTo)
 
         # Add "None" button
-        self.btnSetNone = QtWidgets.QPushButton('None')
-        self.btnSetNone.clicked.connect(lambda checked: self.batch_set_representation(0))
-        self.horiz_layout.addWidget(self.btnSetNone)
+        btn_set_none = QtWidgets.QPushButton('None')
+        btn_set_none.clicked.connect(lambda checked: self.batch_set_representation(0))
+        self.horiz_layout.addWidget(btn_set_none)
 
         # Clear any existing dynamic buttons (if setupUi is recalled)
         # We can't easily track dynamic buttons unless we stored them. 
@@ -133,7 +125,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
     def refresh_table_view(self):
         # Filter Logic (copied/adapted from parent since we need to rebuild the table completely)
         search_text = self.txt_filter_search.text().lower().strip()
-        checked_types = self.cbo_filter_type.get_checked_items()
+        checked_types = self._get_checked_types()
         
         filtered_events = []
         for e in self.all_events:
