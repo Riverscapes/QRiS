@@ -1754,14 +1754,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if collapsed is True:
                 self.treeView.collapse(parent_node.index())
 
-            if add_to_map is True and isinstance(data_item, DBItem):
-                self.add_db_item_to_map(target_node, data_item)
-
         elif isinstance(data_item, DBItem):
             self.set_node_text(target_node, data_item)
 
             # Check if the item is in the map and update its name if it is
             _layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, data_item, None)
+
+        if add_to_map is True and isinstance(data_item, DBItem):
+            self.add_db_item_to_map(target_node, data_item)
 
         return target_node
 
