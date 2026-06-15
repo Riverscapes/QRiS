@@ -47,15 +47,41 @@ class VicinityMapExportTask(QgsTask):
             return False
 
     def _resolve_centroid_point_wgs84(self) -> QgsPointXY:
-        """Build AOI centroid layer and return the first centroid point in EPSG:4326."""
-        aoi_ids = list(self.qris_project.aois.keys())
-        centroid_layer = build_aoi_centroids_layer(
-            self.qris_project.project_file,
-            aoi_ids,
-            layer_name='AOI Centroids'
-        )
+        """Build centroid from AOIs, then valley bottoms, then sample frames; return first point in EPSG:4326."""
+        centroid_layer = None
+        source_label = None
+        attempted_sources = []
+
+        centroid_sources = [
+            ('AOI', list(self.qris_project.aois.keys())),
+            ('Valley Bottom', list(self.qris_project.valley_bottoms.keys())),
+            ('Sample Frame', list(self.qris_project.sample_frames.keys())),
+        ]
+
+        for label, source_ids in centroid_sources:
+            if len(source_ids) == 0:
+                continue
+
+            attempted_sources.append(label)
+            layer = build_aoi_centroids_layer(
+                self.qris_project.project_file,
+                source_ids,
+                layer_name=f'{label} Centroids'
+            )
+            if layer is None or layer.featureCount() == 0:
+                continue
+
+            centroid_layer = layer
+            source_label = label
+            break
+
         if centroid_layer is None:
-            raise Exception('Could not generate AOI centroid layer for vicinity map export.')
+            if len(attempted_sources) == 0:
+                raise Exception('Cannot generate vicinity map centroid: no AOI, valley bottom, or sample frame polygons are available.')
+            raise Exception(
+                'Cannot generate vicinity map centroid: available geometry sources did not contain valid polygon features '
+                f'({", ".join(attempted_sources)}).'
+            )
 
         centroid_point = None
         for feature in centroid_layer.getFeatures():
@@ -65,7 +91,7 @@ class VicinityMapExportTask(QgsTask):
                 break
 
         if centroid_point is None:
-            raise Exception('AOI centroid layer did not contain a valid point geometry.')
+            raise Exception(f'{source_label} centroid layer did not contain a valid point geometry.')
 
         centroid_crs = centroid_layer.crs()
         if not centroid_crs.isValid():
