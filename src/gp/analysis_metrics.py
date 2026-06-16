@@ -332,14 +332,6 @@ def _merge_lines(line_geoms: list) -> ogr.Geometry:
     for g in line_geoms[1:]:
         union_geom = union_geom.Union(g)
 
-    # Try to make endpoint extraction deterministic.
-    try:
-        merged = union_geom.LineMerge()
-        if merged is not None and not merged.IsEmpty():
-            union_geom = merged
-    except Exception:
-        raise MetricCalculationError('Error during line merging for sinuosity calculation.')
-
     if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
         union_geom = union_geom.GetGeometryRef(0).Clone()
 
@@ -358,12 +350,29 @@ def _line_endpoints(union_geom: ogr.Geometry) -> tuple:
     if geom_type == ogr.wkbMultiLineString:
         if union_geom.GetGeometryCount() < 1:
             raise MetricCalculationError('MultiLine geometry has no line parts.')
-        first_line = union_geom.GetGeometryRef(0)
-        last_line = union_geom.GetGeometryRef(union_geom.GetGeometryCount() - 1)
-        if first_line is None or last_line is None:
+        # OGR does not guarantee sub-geometry order after Union, so we cannot rely on
+        # GetGeometryRef(0) / GetGeometryRef(-1) for digitization order.
+        # Collect all sub-line endpoints and return the pair that are furthest apart.
+        candidates = []
+        for i in range(union_geom.GetGeometryCount()):
+            part = union_geom.GetGeometryRef(i)
+            if part is None or part.GetPointCount() < 2:
+                continue
+            candidates.append(part.GetPoint(0))
+            candidates.append(part.GetPoint(part.GetPointCount() - 1))
+        if len(candidates) < 2:
             raise MetricCalculationError('Unable to read line parts for endpoint sampling.')
-        start_pt = first_line.GetPoint(0)
-        end_pt = last_line.GetPoint(last_line.GetPointCount() - 1)
+        # Pick the pair with the maximum 2D distance.
+        max_dist = -1
+        start_pt, end_pt = candidates[0], candidates[-1]
+        for i in range(len(candidates)):
+            for j in range(i + 1, len(candidates)):
+                dx = candidates[i][0] - candidates[j][0]
+                dy = candidates[i][1] - candidates[j][1]
+                d = dx * dx + dy * dy
+                if d > max_dist:
+                    max_dist = d
+                    start_pt, end_pt = candidates[i], candidates[j]
         return start_pt, end_pt
 
     raise MetricCalculationError('Unioned geometry is not a line.')
@@ -379,13 +388,18 @@ def _sample_raster_value(raster_path: str, x: float, y: float, point_srs: osr.Sp
     if proj_wkt:
         raster_srs = osr.SpatialReference()
         raster_srs.ImportFromWkt(proj_wkt)
+        # GDAL 3 / PROJ 6 changed default axis order for geographic CRS to lat/lon.
+        # Force traditional GIS order (lon/lat, easting/northing) to match geotransform coordinates.
+        raster_srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
 
     point = ogr.Geometry(ogr.wkbPoint)
     point.AddPoint(x, y)
     if point_srs is not None:
-        point.AssignSpatialReference(point_srs)
+        normalized_point_srs = point_srs.Clone()
+        normalized_point_srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+        point.AssignSpatialReference(normalized_point_srs)
 
-    if raster_srs is not None and point_srs is not None and not point_srs.IsSame(raster_srs):
+    if raster_srs is not None and point_srs is not None and not normalized_point_srs.IsSame(raster_srs):
         point.TransformTo(raster_srs)
 
     gt = ds.GetGeoTransform()
@@ -394,10 +408,13 @@ def _sample_raster_value(raster_path: str, x: float, y: float, point_srs: osr.Sp
     if abs(gt[2]) > 1.0e-12 or abs(gt[4]) > 1.0e-12:
         raise MetricCalculationError('Raster rotation is not supported for endpoint sampling.')
 
-    px = int((point.GetX() - gt[0]) / gt[1])
-    py = int((point.GetY() - gt[3]) / gt[5])
+    px = math.floor((point.GetX() - gt[0]) / gt[1])
+    py = math.floor((point.GetY() - gt[3]) / gt[5])
     if px < 0 or py < 0 or px >= ds.RasterXSize or py >= ds.RasterYSize:
-        raise MetricCalculationError('Sample point falls outside raster bounds.')
+        raise MetricCalculationError(
+            f'Sample point ({point.GetX():.4f}, {point.GetY():.4f}) falls outside raster bounds '
+            f'(cols={ds.RasterXSize}, rows={ds.RasterYSize}).'
+        )
 
     band = ds.GetRasterBand(1)
     arr = band.ReadAsArray(px, py, 1, 1)
@@ -643,33 +660,19 @@ def sinuosity(project_file: str, sample_frame_feature_id: int, event_id: int, me
                 clipped_geom.TransformTo(utm_srs)
                 line_geoms.append(clipped_geom)
 
-    # Union all line geometries
     if not line_geoms:
         return 0.0
-    union_geom = line_geoms[0].Clone()
-    for g in line_geoms[1:]:
-        union_geom = union_geom.Union(g)
 
-    # If union results in MultiLineString, convert to LineString if possible
-    if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
-        union_geom = union_geom.GetGeometryRef(0).Clone()
+    union_geom = _merge_lines(line_geoms)
+    if union_geom is None or union_geom.IsEmpty():
+        return 0.0
 
-    # Calculate sinuosity
     g_type_flat = ogr.GT_Flatten(union_geom.GetGeometryType())
     if g_type_flat not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
         return 0.0
-    
-    # Handle MultiLineString specifically for points extraction
-    if g_type_flat == ogr.wkbMultiLineString:
-        # Check if we can just take start of first and end of last?
-        pass
-
-    if union_geom.GetPointCount() < 2:
-        return 0.0
 
     length = union_geom.Length()
-    start_pt = union_geom.GetPoint(0)
-    end_pt = union_geom.GetPoint(union_geom.GetPointCount() - 1)
+    start_pt, end_pt = _line_endpoints(union_geom)
     segment_geom = ogr.Geometry(ogr.wkbLineString)
     segment_geom.AddPoint(start_pt[0], start_pt[1])
     segment_geom.AddPoint(end_pt[0], end_pt[1])
@@ -726,20 +729,13 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
             source_utm_srs = srs
             break
 
-    # Union all line geometries
-    union_geom = line_geoms[0].Clone()
-    for g in line_geoms[1:]:
-        union_geom = union_geom.Union(g)
-    if ogr.GT_Flatten(union_geom.GetGeometryType()) == ogr.wkbMultiLineString and union_geom.GetGeometryCount() == 1:
-        union_geom = union_geom.GetGeometryRef(0).Clone()
-
+    union_geom = _merge_lines(line_geoms)
+    if union_geom is None or union_geom.IsEmpty():
+        raise MetricInputMissingError('No valid line geometry available for gradient calculation.')
     if ogr.GT_Flatten(union_geom.GetGeometryType()) not in [ogr.wkbLineString, ogr.wkbMultiLineString]:
         raise MetricCalculationError('Unioned geometry is not a line.')
-    if union_geom.GetPointCount() < 2:
-        raise MetricCalculationError('Unioned geometry does not have enough points.')
 
-    start_pt = union_geom.GetPoint(0)
-    end_pt = union_geom.GetPoint(union_geom.GetPointCount() - 1)
+    start_pt, end_pt = _line_endpoints(union_geom)
     utm_srs = union_geom.GetSpatialReference() or source_utm_srs
     point_start = ogr.Geometry(ogr.wkbPoint)
     point_start.AssignSpatialReference(utm_srs)
@@ -762,7 +758,8 @@ def gradient(project_file: str, sample_frame_feature_id: int, event_id: int, met
     if length == 0:
         raise MetricCalculationError('Unioned geometry has zero length.')
 
-    return (stats_end['minimum'] - stats_start['minimum']) / length
+    # Sign reflects digitization direction: positive when start (upstream) elevation > end (downstream) elevation.
+    return (stats_start['minimum'] - stats_end['minimum']) / length
 
 
 def area_proportion(project_file: str, sample_frame_feature_id: int, event_id: int, metric_params: dict, analysis_params: dict):
