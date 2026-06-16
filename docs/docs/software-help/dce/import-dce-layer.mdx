@@ -4,11 +4,32 @@ description: Add existing features to your DCE layers
 sidebar_position: 5
 ---
 
-# Import DCE Layer
+Data Capture Event layers allow for several options for importing existing features from various data sources, including external files, map layers, and existing project layers. 
 
-The **Import DCE Layer** tool allows you to import features from an existing file or map layer into a Data Capture Event (DCE) layer.
+To begin, right click on the desired Data Capture Event Layer in the Project Tree and select **Import Features from...**, then select one of the following options:
 
-This tool facilitates the migration of existing data into your QRiS project structure. It handles geometry import, attribute mapping, and optional spatial clipping.
+### Existing Project or DCE Layer
+This option allows you to import features from an existing layer within your project, inciuding Inputs and other DCE layers of the same geometry type.
+
+When the form opens, first select the option of the type of layer you want to import from:
+- **Project Inputs**: This option allows you to import features from any of the Input layers of the same geometry type in your project.
+- **DCE Layers (Same Layer Type)**: This option allows you to import features from any other DCE layer of the same protocol and layer defintion. This allows for a quick import of features from one DCE layer to another, for example, you want to carry over existing structures froma previous DCE to a new DCE that has the same protocol and layer definition.
+- **DCE Layers (Different Layer Type)**: This option allows you to import features from any other other DCE Layer of the same geometry type, regardless of protocol or layer definition. The difference here is you will need to use the attribute mapping tool to direct the attributes from the source layer to the correct attributes in the destination layer. 
+
+### Layer in Map
+
+You can also import data into QRiS from a layer of the same geometry type that exists in your current map, including temprorary or scratch layers. The layer must be turned on and visible in the layer tree for QRiS to recognize it. A new window will pop up to select the desired layer, navigate to the correct layer and click **OK**.
+
+![temporary aoi](/images/software-help/temporary-aoi.gif)
+
+## External File
+
+This option allows you to import features from an external file, such as a shapefile or geojson. When you select this option, a file browser will open to allow you to navigate to the location of the file you want to import. Select the file and click **Open**.  The imported feature class will be copied to your project and added to the Project Tree under the selected Data Capture Event Layer.
+
+
+# DCE Layer Attribute Mapping Tool
+
+When importing features from a source that does not have the same schema as the DCE layer (e.g., different layer type, layer in map, or external file), you will be prompted to use the attribute mapping tool to map the attributes from the source layer to the correct attributes in the destination DCE layer.
 
 ## Parameters
 

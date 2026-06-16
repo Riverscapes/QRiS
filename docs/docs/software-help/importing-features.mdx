@@ -1,18 +1,27 @@
 ---
 title: Importing Features
+description: Add existing features to your project inputs
 sidebar_position: 4
 ---
-Importing features classes into your empty QRIS layers can be done a number of ways. Any Input layer or DCE layer will have two different pathways to import existing data. 
+QRiS allows you to import features from an existing file or map layer into your project inputs. This tool facilitates the migration of existing data into your QRiS project structure. 
 
-## Add From Existing Feature Class
+To import features as a new input layer, right click the desired Input folder in your QRiS Project Tree and select Import From..., then select one of the following options:
 
-To do this, right click the desired Input folder or DCE Layer within your QRiS [project](/software-help/projects). Navigate to **Import (feature type) from** and select **+ Existing Feature Class**. Browse to the location of the feature class and click **Open**. Provide a name and optional description. You can also define key/value pairs of metadata that help describe the origin of the data. Click **OK** to import and create a copy of the feature class will be added to your project. 
+## Existing Feature Class
+
+A new window will pop up to select the desired feature class, filtered to the correct geometry type. Browse to the location of the feature class and click **Open**. You will then be able to create the new instance of the Input layer by providing a name, description and other details.
 
 ![existing aoi](/images/software-help/existing-aoi.gif)
 
-## Add From Layer in Map
+## Layer in Map
 
-You can also import data into QRiS from a layer that exists in your QGIS layer tree. This can include a temporary layer or any other layer that is not associated with QRiS. The layer must be turned on and visible in the layer tree for QRiS to recognize it. The process is the same as adding an existing layer, just select **+ Layer in Map** instead. A new window will pop up to select the desired layer, navigate to the correct layer and click **OK**. A new window will pop up to give it a name, description, key/value pairs of metadata (same as importing from existing data).
+This option allows you to import features from a layer that exists in your QGIS layer tree, including temporary or scratch layers. 
+
+:::tip
+The layers must be turned on and visible in the layer tree for QRiS to recognize them. Only layers of the same geometry type as the target input layer will be available for selection.
+:::
+
+A new window will with a list of available layers. Select the desired layer and click **OK**. You will then be able to create the new instance of the Input layer by providing a name, description and other details.
 
 ![temporary aoi](/images/software-help/temporary-aoi.gif)
 
