@@ -33,13 +33,17 @@ You can browse projects on the Data Exchange by right clicking on the top level 
 
 More detailed info on this can be found by exploring [Riverscapes Viewer Integration](/software-help/riverscapes-viewer-integration/)
 
-## Export To Riverscapes Project
+## Locking/Unlocking All Layers in a Project
 
-All QRIS projects exist simultaneously as a QRIS projact and a Riverscapes Studio project. This means upon creation of a new QRIS project a project.rs.xml is also ceated withing your project folder. This makes it possible to open the project in Riverscapes Viewer, as well as upload the project to the data exchange.
+You can lock or unlock all layers in a project by right clicking on the top level of the project tree and selecting `Lock All Layers` or `Unlock All Layers`. This is a quick way to prevent accidental edits to your layers, or to allow edits to all layers in the project.
 
-However, there is also the ability to export your project directly from the QRIS plugin as either a copy or as a custom export where you have chosen what elements of the project you want included.
+To lock or unlock individual layers, navigate in the project tree to the desired layer, right click on the layer and select `Lock Layer` or `Unlock Layer`. This is useful when you want to prevent edits to a specific layer, but allow edits to other layers in the project.
 
-You can export a QRiS project to a Riverscapes Project by right clicking on the top level of the project tree and selecting `Export To Riverscapes Project`. This will create a new Riverscapes Project folder, and copy the QRiS project GeoPackage file into it.
+## Export As a New Project
+
+This option allows you to export your project directly from the QRIS plugin as either a full copy or as a custom export where you have chosen what elements of the project you want included.
+
+You can export a QRiS project to a Riverscapes Project by right clicking on the top level of the project tree and selecting `Export as a New Project`. This will create a new Riverscapes Project folder, and copy the QRiS project GeoPackage file into it.
 
 When you export a window will pop up with the following options:
 
@@ -56,6 +60,20 @@ This tab allows you to select which layers you want to export. Note that the def
 Once exported this project can be opened in the [Riverscapes Viewer](https://viewer.riverscapes.net/) and uploaded to the [Data Exchange](https://data.riverscapes.net/). 
 
 ![export-window](/images/software-help/export-project.png)
+
+## Create Vicinity Map
+
+QRiS allows you to create a vicinity map for your project, which is a small map that shows the location of your project in relation to a larger area (currently US State). This is useful for providing context for your project, and can be included in reports or presentations.
+
+The project location of the vicinity map is determined by the extent of the following project layers, in order of priority: 1) Union of all AOI layers, 2) Union of all the Valley Bottom Layers or 3) Union of all the Sample Frames. If none of these layers exist, the vicinity map will not be able to be created.
+
+To create a vicinity map, right click on the top level Project Node in the project in the Project Tree and select `Create Vicinity Map`. A new window will pop open with options for saving the vicinity map:
+- Output Format: the file format for the vicinity map (e.g., PNG, SVG).
+- Output Path: the location where the vicinity map will be saved. By default, it will be saved to the project's export folder.
+- Width, Height: the dimensions of the vicinity map in pixels.
+- DPI: the resolution of the vicinity map in dots per inch.
+
+When ready, click OK to create the vicinity map. Once the vicinity map is created, you will be prompted to open the file or folder location of your vicinity map.
 
 ## Close a Project
 
