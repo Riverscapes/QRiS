@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [1.2.4.4] Jun 16 2026
+
+### Fixed
+- Error When Creating Design #1079
+- Add to Map Not Adding Layers to Map #1080
+- Fix gradient and elevation metric bugs #1068, #1045
+- Attachments Deleted in QRiS Still Show in the Attachments Folder #1081
+
+### Changed
+- Automatically set new custom metric usage to 'metric'
+- Vicinity map to use AOI, VB, and Sample Frames as needed #1055
+- Add grid to discharge chart
+
+### Added
+- Add tab to attachments to show what it is referenced by #1049
+
+
 ## [1.2.4.3] Jun 9 2026
 
 ### Fixed
