@@ -253,7 +253,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
             import webbrowser
             webbrowser.open(attachment.path)
         else:
-            path = attachment.project_path(self.qris_project.project_file)
+            path = attachment.attachment_path(self.qris_project.project_file)
             if os.path.isfile(path):
                 QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(path))
             else:

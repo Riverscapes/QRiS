@@ -64,7 +64,7 @@ class FrmAttachment(QtWidgets.QDialog):
             self.txtDescription.setPlainText(attachment.description)
             if self.attachment_type == Attachment.TYPE_FILE:
                 self.extension = os.path.splitext(attachment.path)[1]
-                self.txtProjectPath.setText(self.attachment.project_path(self.qris_project.project_file))
+                self.txtProjectPath.setText(self.attachment.attachment_path(self.qris_project.project_file))
                 self.lblSource.setVisible(False)
                 self.source.setEnabled(False)
                 self.source.setVisible(False)
@@ -106,8 +106,8 @@ class FrmAttachment(QtWidgets.QDialog):
                 new_path = self.source.lineEdit.text() if self.attachment_type == Attachment.TYPE_WEB_LINK else os.path.basename(self.txtProjectPath.text())
                 if self.attachment_type == Attachment.TYPE_FILE:
                     # Rename the file if the name has changed
-                    if self.txtProjectPath.text() != self.attachment.project_path(self.qris_project.project_file):
-                        os.rename(self.attachment.project_path(self.qris_project.project_file), self.txtProjectPath.text())
+                    if self.txtProjectPath.text() != self.attachment.attachment_path(self.qris_project.project_file):
+                        os.rename(self.attachment.attachment_path(self.qris_project.project_file), self.txtProjectPath.text())
                 self.attachment.update(self.qris_project.project_file, self.txtName.text(), path=new_path, description=self.txtDescription.toPlainText(), metadata=self.metadata)
                 self.qris_project.project_changed.emit()
             except Exception as ex:

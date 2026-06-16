@@ -587,8 +587,8 @@ class FrmExportProject(QtWidgets.QDialog):
                     dest_attachments_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "attachments").replace("\\", "/"))
                     if not os.path.exists(dest_attachments_folder):
                         os.makedirs(dest_attachments_folder)
-                    src_path = attachment.project_path(self.qris_project.project_file)
-                    dst_path = attachment.project_path(dest_attachments_folder)
+                    src_path = attachment.attachment_path(self.qris_project.project_file)
+                    dst_path = attachment.attachment_path(dest_attachments_folder)
                     if os.path.exists(src_path):
                         shutil.copy(src_path, dst_path)
 

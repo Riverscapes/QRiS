@@ -51,11 +51,14 @@ class Attachment(DBItem):
                 conn.rollback()
                 raise ex
             
-    def project_path(self, project_file: str) -> str:
+    def attachment_path(self, project_file: str) -> str:
         attachments_dir = attachments_path(project_file)
         return parse_posix_path(os.path.join(attachments_dir, self.path))
 
     def delete(self, db_path: str) -> None:
+        # Resolve the full path before removing from the DB
+        full_path = self.attachment_path(db_path) if self.attachment_type == Attachment.TYPE_FILE else None
+
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
@@ -65,9 +68,8 @@ class Attachment(DBItem):
                 conn.rollback()
                 raise ex
 
-        # Optionally, delete the file if it exists
-        if os.path.exists(self.path):
-            os.remove(self.path)
+        if full_path is not None and os.path.exists(full_path):
+            os.remove(full_path)
 
 def load_attachments(cursor: sqlite3.Cursor) -> Dict[int, Attachment]:
     attachments = {}
