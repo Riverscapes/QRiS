@@ -184,6 +184,13 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self._static_ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
         self._static_ax.tick_params(axis='x', rotation=45)
 
+        # Match climate engine chart grid styling (major + minor grids).
+        self._static_ax.grid(True, which='both', color='lightgrey', linestyle='-', linewidth=0.5)
+        self._static_ax.minorticks_on()
+        self._static_ax.tick_params(which='both', width=1)
+        self._static_ax.tick_params(which='major', length=7)
+        self._static_ax.tick_params(which='minor', length=4, color='gray')
+
         # Ensure rotated date labels are fully visible in embedded canvas.
         self.static_canvas.figure.subplots_adjust(bottom=0.25)
         self.static_canvas.figure.tight_layout(pad=1.2)
