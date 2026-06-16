@@ -20,15 +20,19 @@ A common workflow is to import a VBET valley bottom into QRiS. You can do this e
 
 You can create a new valley bottom by manually drawing a polygon on the map. To do this, click the **Create New (Manually Digitized) Valley Bottom** menu item on the **Riverscapes** node within your QRiS [project](/software-help/projects). Provide a name and optional description and then click **OK**. Add the Valley Bottom layer to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the valley bottom on the map. Remember to stop editing and save your changes to the valley bottom feature.
 
-## Add a Valley Bottom to the Map
+
+## Working with Individual Valley Bottoms
+### View/Edit/Export a Valley Bottom in the Map
 
 You can add an Valley Bottom to the map by right-clicking on any individual Valley Bottom under the **Riverscapes** node in the QRiS project tree and selecting **Add to Map**. This will add the Valley Bottom to the map as a new layer. 
 
-## Edit a Valley Bottom
+### View/Edit a Valley Bottom Properties
 
 You can edit a Valley Bottom's properties by right-clicking on any individual Valley Bottom under the **Riverscapes** node in the QRiS project tree and selecting **Properties**. This will open the Valley Bottom properties and allow you to edit the Valley Bottom name, description and/or metadata.
 
-## Centerline tool
+In addition, you can view simple statistics about the Valley Bottom, such as the number of features and total area in the Statistics Tab. You can set the display units and export the statistics as a CSV file for use in other applications.
+
+### Centerline tool
 
 The centerline tool creates polylines down the middle of polygons. It is used specifically with valley bottom polygons to derive a valley centerline. To use the centerline tool:
 
@@ -52,9 +56,21 @@ Once you have defined an upstream and downstream transect you can click the **Ge
 
 Remember that the centerline tool is only a starting point. You will likely need to edit the centerline to make it more accurate. You can do this using the standard QGIS editing tools. Remember to stop editing and save your changes before the profile is available for use with other features.
 
-## Delete a Valley Bottom
+### Zonal Statistics
+
+See the [Zonal Statistics documentation](/software-help/analysis/zonal-statistics/) for how to calculate zonal statistics using your Valley Bottom.
+
+### Create an Analysis
+
+You can create an analysis using a Valley Bottom by right clicking on any individual Valley Bottom in the QRiS project tree and selecting **Create Analysis**. This will open the Create Analysis window with the Valley Bottom already selected as the spatial extent for the analysis. You can then select the type of analysis you want to run and provide the necessary parameters to run the analysis.
+
+### Delete a Valley Bottom
 
 You can delete a Valley Bottom by right clicking on any individual Valley Bottom under the **Riverscapes** node in the QRiS project tree and selecting **Delete**. This will remove the Valley Bottom from the QRiS project. 
+
+:::tip
+You cannot delete a Valley Bottom if it is Locked. You will need to unlock the Valley Bottom before you can delete it.
+:::
 
 ## Video demonstration
 
