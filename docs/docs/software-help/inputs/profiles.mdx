@@ -23,17 +23,28 @@ You can import an existing polyline feature class and use it as a profile. Impor
 
 You can create a new profile by drawing a polyline on the map. To do this, choose the **Create New (Manually Digitized) Profile** option from the **Profiles** folder within your QRiS [project](/software-help/projects). Provide a name and optional description and then click **OK**. Add the new profile to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the polyline on the map. Remember to stop editing and save your changes before the profile is available for use with other features.
 
-## Add a Profile to the Map
+## Working with Individual Profiles
+### View/Edit/Export a Profile in the Map
 
 You can add an profile to the map by right clicking on any individual profile in the QRiS project tree and selecting **Add to Map**. This will add the profile to the map as a new layer. 
 
-## Edit a Profile
+With the profile added to the map, you can use the standard QGIS editing tools to edit the polyline feature. Remember to stop editing and save your changes before the profile is available for use with other features.
 
-You can edit a profile by right clicking on any individual profile in the QRiS project tree and selecting **Properties**. This will open the profile in QGIS and allow you to edit the name and description. You can also add the profile to the map and use the standard QGIS editing tools to edit the polyline feature. Remember to stop editing and save your changes before the profile is available for use with other features.
+### View/Edit a Profile's Properties
 
-## Flip Profile Direction
+You can edit a profile by right clicking on any individual profile in the QRiS project tree and selecting **Properties**. This will open the profile in QGIS and allow you to edit the name and description. 
 
-## Generate Cross Sections
+In addition, you can view simple statistics about the Profile, such as the number of features and total length in the Statistics Tab. You can set the display units and export the statistics as a CSV file for use in other applications.
+
+### Flip Profile Direction
+
+You can flip the direction of a profile by right clicking on any individual profile in the QRiS project tree and selecting **Flip Direction**. This will reverse the direction of the profile polyline feature. This is useful if you want to change the upstream and downstream direction of the profile for use with other features.
+
+:::tip
+Some metrics, such as Gradient, require the profile to be oriented from upstream to downstream. If your profile is oriented in the wrong direction, you can use the Flip Direction tool to correct it.
+:::
+
+### Generate Cross Sections
 
 The cross sections tool creates cross sections along your selected profile (generally the valley bottom centerline) to use as transects and to subdivide your valley bottom into sample frames. To use the cross sections tool:
 
@@ -52,7 +63,15 @@ Once you are happy with the preview click **Save Cross Sections**. This will ope
 The cross sections will be saved under the Cross Sections node. 
 
 ![centerline transect](/images/software-help/cross-sections.gif)
- 
-## Delete a Profile
+
+### Create an Analysis
+
+You can create an analysis using a Profile by right clicking on any individual Profile in the QRiS project tree and selecting **Create Analysis**. This will open the Create Analysis window with the Profile already selected as the spatial extent for the analysis. You can then select the type of analysis you want to run and provide the necessary parameters to run the analysis.
+
+### Delete a Profile
 
 You can delete a profile by right clicking on any individual profile in the QRiS project tree and selecting **Delete**. This will remove the profile from the QRiS project.
+
+:::note[Locked Profiles]
+You cannot delete a Profile if it is locked. You will need to unlock the Profile before you can delete it.
+:::
