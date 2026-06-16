@@ -149,3 +149,27 @@ def disassociate_attachment_from_dce(db_path: str, event_id: int, attachment_id:
             [event_id, attachment_id]
         )
         conn.commit()
+
+def load_events_for_attachment(db_path: str, attachment_id: int) -> list:
+    """
+    Return a list of (event_id, event_name, purpose) tuples
+    for all DCE events that reference the given attachment.
+    """
+    results = []
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        curs = conn.cursor()
+        curs.execute('''
+            SELECT e.id, e.name, e.metadata, da.metadata AS assoc_metadata
+            FROM events e
+            JOIN dce_attachments da ON da.event_id = e.id
+            WHERE da.attachment_id = ?
+            ORDER BY e.name
+        ''', [attachment_id])
+        for row in curs.fetchall():
+            assoc_metadata = json.loads(row['assoc_metadata']) if row['assoc_metadata'] else {}
+            purpose = assoc_metadata.get('purpose', '') or ''
+
+            results.append((row['id'], row['name'], purpose))
+    return results

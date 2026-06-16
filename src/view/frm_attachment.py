@@ -2,7 +2,7 @@ import os
 import re
 import json
 
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication
@@ -15,7 +15,7 @@ from ..QRiS.path_utilities import parse_posix_path
 from ..QRiS.settings import Settings
 
 from ..model.project import Project
-from ..model.attachment import Attachment, attachments_path, insert_attachment
+from ..model.attachment import Attachment, attachments_path, insert_attachment, load_events_for_attachment
 
 ATTACHMENT_TYPE_LABELS = ['Figure', 'Link', 'Report', 'Table']
 
@@ -197,6 +197,47 @@ class FrmAttachment(QtWidgets.QDialog):
     def on_clear_date_clicked(self):
         self.txtDate.setDate(self.txtDate.minimumDate())
 
+    def _setup_referenced_by_tab(self):
+        layout = QtWidgets.QVBoxLayout(self.tab_referenced_by)
+
+        self.tbl_referenced_by = QtWidgets.QTableWidget()
+        self.tbl_referenced_by.setColumnCount(2)
+        self.tbl_referenced_by.setHorizontalHeaderLabels(['Name', 'Purpose'])
+        self.tbl_referenced_by.verticalHeader().setVisible(False)
+        self.tbl_referenced_by.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tbl_referenced_by.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tbl_referenced_by.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        hdr = self.tbl_referenced_by.horizontalHeader()
+        hdr.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        hdr.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        layout.addWidget(self.tbl_referenced_by)
+
+        self.lbl_referenced_by_summary = QtWidgets.QLabel('')
+        layout.addWidget(self.lbl_referenced_by_summary)
+
+        self._load_referenced_by()
+
+    def _load_referenced_by(self):
+        rows = load_events_for_attachment(self.qris_project.project_file, self.attachment.id)
+        self.tbl_referenced_by.setRowCount(0)
+        self.tbl_referenced_by.setRowCount(len(rows))
+
+        for i, (event_id, event_name, purpose) in enumerate(rows):
+            name_item = QtWidgets.QTableWidgetItem(event_name)
+            event = self.qris_project.events.get(event_id)
+            if event is not None:
+                name_item.setIcon(QtGui.QIcon(f':/plugins/qris_toolbar/{event.icon}'))
+            name_item.setData(QtCore.Qt.UserRole, event_id)
+            self.tbl_referenced_by.setItem(i, 0, name_item)
+
+            purpose_item = QtWidgets.QTableWidgetItem(purpose)
+            self.tbl_referenced_by.setItem(i, 1, purpose_item)
+
+        count = len(rows)
+        self.lbl_referenced_by_summary.setText(
+            f'This attachment is referenced by {count} event{"s" if count != 1 else ""}.'
+        )
+
     def setupUi(self):
 
         self.resize(500, 450)
@@ -262,6 +303,12 @@ class FrmAttachment(QtWidgets.QDialog):
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
+
+        # Referenced By Tab (only shown for existing attachments)
+        if self.attachment is not None:
+            self.tab_referenced_by = QtWidgets.QWidget()
+            self.tabs.addTab(self.tab_referenced_by, 'Referenced By')
+            self._setup_referenced_by_tab()
 
         # Description Tab
         self.tabDescription = QtWidgets.QWidget()
