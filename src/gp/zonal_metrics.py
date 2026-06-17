@@ -100,17 +100,26 @@ class ZonalMetrics:
 
     def process_vector(self, layer_def):
 
-        if '|' in layer_def['url']:
-            parts = layer_def['url'].split('|')
+        url = layer_def['url']
+
+        # Skip QGIS memory layers and other non-file sources that OGR cannot open
+        if url.startswith('memory?') or url.startswith('memory:'):
+            return None
+
+        if '|' in url:
+            parts = url.split('|')
             ds = ogr.Open(parts[0])
+            if ds is None:
+                return None
             layer_name = parts[1].replace('layername=', '')
             layer = ds.GetLayerByName(layer_name)
         else:
-            ds = ogr.Open(layer_def['url'])
+            ds = ogr.Open(url)
+            if ds is None:
+                return None
             layer = ds.GetLayer(0)
         if layer is None:
             return None
-
         src_srs = layer.GetSpatialRef()
         if src_srs is None:
             return None
