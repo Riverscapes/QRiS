@@ -14,7 +14,8 @@ In addition to the display label column, there are several fields related to top
 
 ![sample frame overview](/images/software-help/sample-frame-overview.png)
 
-## Create a New Sample Frame
+## Adding a New Sample Frame
+### Create a New Sample Frame from Scratch
 
 You can create a new sample frame by drawing a polygon on the map. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Create New Sample Frame** menu option, then **Empty Sample Frame (Manual)**. Provide a name and optional Default Flow Path Name and/or description. You may also specify Categorical Fields and attributes on the Categories Tab and Metadata on the Metadata Tab. When you have prepared the Sample Frame properties click **OK**. Add the Sample Frame to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the sample frame on the map. Remember to stop editing and save your changes before the sample frame is available for use when importing other data.
 
@@ -26,7 +27,7 @@ If you have a QRiS project with existing layers (aoi or scratch polygon, centerl
 
 ![generate sample frame](/images/software-help/generate-sample-frame.gif)
 
-## Import Sample Frame
+### Import Existing Features as a New Sample Frame
 
 You can import an existing polygon feature class and use it as a sample frame. Importing existing data is covered in **[Importing Features](/software-help/importing-features/)**.
 
@@ -44,17 +45,26 @@ Achieving mutual exclusivity can be streamlined with advanced digitizing techniq
 <YouTubeEmbed videoId="qpI9fgZX01U?si=_Wh61kViylfNMuc6&amp;start=420" caption="Advanced Digitizing"/>
 Follow the snapping settings outlined in the video to achieve mutual exclusivity.
 
-## Add a Sample Frame to the Map
+## Working with Individual Sample Frames
+### View/Edit a Sample Frame in the Map
 
 You can add a sample frame to the map by right clicking on any individual sample frame in the QRiS project tree and selecting **Add to Map**. This will add the sample frame to the map as a new layer. 
 
-## Edit an Existing Sample Frame
+Once the Sample Frame has been added to the map, you can use the standard QGIS editing tools to edit the polygons. Remember to stop editing and save your changes before the sample frame is available for use when importing other data. Layers that have already been imported using the sample frame will not be updated when you edit the sample frame. You will need to re-import the layers to see the changes.
 
-You can edit a sample frame by right clicking on any individual sample frame in the QRiS project tree and selecting **Properties**. This will open the sample frame in QGIS and allow you to edit the name, description and metadata. You can also add the it to the map and use the standard QGIS editing tools to edit the polygons. Remember to stop editing and save your changes before the sample frame is available for use when importing other data. Layers that have already been imported using the sample frame will not be updated when you edit the sample frame. You will need to re-import the layers to see the changes.
+### View/Edit an Existing Sample Frame's Properties
+
+You can edit a sample frame by right clicking on any individual sample frame in the QRiS project tree and selecting **Properties**. This will open the sample frame in QGIS and allow you to edit the name, description and metadata.
+
+In addition, you can view simple statistics about the sample frame, such as the number of features and total area in the Statistics Tab. You can set the display units and export the statistics as a CSV file for use in other applications.
 
 ## Delete a Sample Frame
 
 You can delete a sample frame by right clicking on it in the QRiS project tree and selecting **Delete**. This will remove the sample frame  from the QRiS project. You will not be able to delete a sample frame if it is being used by any [analyses](/software-help/analyses). You will need to delete any analyses that use the sample frame before you can delete it.
+
+:::note[Locked Sample Frames]
+You cannot delete a sample frame if it is locked. You will need to unlock the sample frame before you can delete it.
+:::
 
 ## Tutorials 
 

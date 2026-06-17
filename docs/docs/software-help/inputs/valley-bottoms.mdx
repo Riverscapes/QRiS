@@ -10,16 +10,20 @@ You can have as many Valley Bottoms within your project as you like.
 
 {/* ![Valley Bottom overview](/images/software-help/vb-overview.png) */}
 
-## Add an Existing Valley Bottom
+## Adding a New Valley Bottom
+### Import Existing Features as a New Valley Bottom
 
 You can import an existing polygon feature class and use it as a Valley Bottom. Importing existing data is covered in **[Importing Features](/software-help/importing-features/)**.
 
 A common workflow is to import a VBET valley bottom into QRiS. You can do this easily by following thr workflow for importing from a Riverscapes Project covered in [Riverscapes Viewer Integration](/software-help/riverscapes-viewer-integration/). Specifically you would download a VBET project and Import the Valley Bottom layer. 
 
-## Create a New Valley Bottom
+### Create a New Valley Bottom from Scratch
 
-You can create a new valley bottom by manually drawing a polygon on the map. To do this, click the **Create New (Manually Digitized) Valley Bottom** menu item on the **Riverscapes** node within your QRiS [project](/software-help/projects). Provide a name and optional description and then click **OK**. Add the Valley Bottom layer to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the valley bottom on the map. Remember to stop editing and save your changes to the valley bottom feature.
-
+You can create a new valley bottom by manually drawing a polygon on the map. To do this:
+1. Click the **Create New (Manually Digitized) Valley Bottom** menu item on the **Riverscapes** node within your QRiS [project](/software-help/projects). 
+2. Provide a name and optional description and metadata items for the new Valley Bottom. You can also specify if the Valley Bottom should be used as the Project Bounds for the project.
+3. To start digitizing the Valley Bottom right away, make sure the **Add to Map** and **Start Edit Session** checkboxes are checked.
+4. Add the Valley Bottom layer to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the valley bottom on the map. Remember to stop editing and save your changes to the valley bottom feature.
 
 ## Working with Individual Valley Bottoms
 ### View/Edit/Export a Valley Bottom in the Map
@@ -68,8 +72,8 @@ You can create an analysis using a Valley Bottom by right clicking on any indivi
 
 You can delete a Valley Bottom by right clicking on any individual Valley Bottom under the **Riverscapes** node in the QRiS project tree and selecting **Delete**. This will remove the Valley Bottom from the QRiS project. 
 
-:::tip
-You cannot delete a Valley Bottom if it is Locked. You will need to unlock the Valley Bottom before you can delete it.
+:::note[Locked Valley Bottoms]
+You cannot delete a Valley Bottom if it is locked. You will need to unlock the Valley Bottom before you can delete it.
 :::
 
 ## Video demonstration

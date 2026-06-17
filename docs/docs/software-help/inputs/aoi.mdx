@@ -9,15 +9,23 @@ You can have as many AOIs within your project as you like. And each AOI can have
 
 ![AOI overview](/images/software-help/aoi-overview.png)
 
-## Import Features as a NewAOI 
+## Adding a New AOI
+
+There are two pathways to add a new AOI to your QRiS project. You can either import an existing polygon feature class or create a new AOI from scratch.
+
+### Import Existing Features as a New AOI
 
 You can import an existing polygon feature class and use it as an AOI. Importing existing data is covered in **[Importing Features](/software-help/importing-features/)**.
 
-## Create a New AOI
+### Create a New AOI from Scratch
 
-You can create a new AOI by drawing a polygon on the map. To do this, right the **AOIs** folder within your QRIS [project](/software-help/projects). Select the **+ Create New (Manually Digitized) AOI** button. Provide a name and optional description and then click **OK**. You can now use the standard QGIS editing tools to digitize the AOI on the map. Remember to stop editing and save your changes before the AOI is available for use when importing other data.
+You can create a new AOI by drawing a polygon on the map. To do this, 
+1. Right-click on the **AOIs** folder within your QRIS [project](/software-help/projects) and select the **+ Create New (Manually Digitized) AOI** menu option. 
+2. Provide a name and optional description and metadata items for the new AOI. You can also specify if the AOI should be used as the Project Bounds for the project.
+3. To start digitizing the AOI right away, make sure the **Add to Map** and **Start Edit Session** checkboxes are checked.
+4. Click **OK** to create the new AOI. You can now use the standard QGIS editing tools to digitize the AOI on the map. Remember to stop editing and save your changes before the AOI is available for use when importing other data.
 
-## Add Centroid to the Map
+## Add Centroid of the AOIs to the Map
  
 You can add the centroid of the union of all AOI features to the map by right clicking on the **AOIs** folder within your QRiS project tree and selecting **Add Centroid to Map**. This will add a new point layer to the map with a single point feature representing the centroid of all AOI features.
 
@@ -53,6 +61,6 @@ You can create an analysis using an AOI by right clicking on any individual AOI 
 
 You can delete an AOI by right clicking on any individual AOI in the QRiS project tree and selecting **Delete**. This will remove the AOI from the QRiS project. It will not change any other data layers that used the AOI to clip the data.
 
-:::tip
+:::note[Locked AOIs]
 You cannot delete an AOI if it is Locked. You will need to unlock the AOI before you can delete it.
 :::
