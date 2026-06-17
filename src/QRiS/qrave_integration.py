@@ -56,11 +56,11 @@ class QRaveIntegration(QObject):
 
                 self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..'))
                 self.protocol_folder = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'protocols'))
+                self.climate_engine_json = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'climate_engine_datasets.json'))
+                
                 # TODO: Currently in locally deployed qris folder, change these paths when we make the changeover.
                 local_qris_resources = parse_posix_path(os.path.join(os.path.dirname(__file__), '..', '..', 'resources'))
-                self.climate_engine_json = parse_posix_path(os.path.join(local_qris_resources, 'climate_engine_datasets.json'))
                 self.lookups_json = parse_posix_path(os.path.join(local_qris_resources, 'lookups.json'))
-                # self.climate_engine_json = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'climate_engine_datasets.json'))
                 # self.lookups_json = parse_posix_path(os.path.join(self.resources_folder, 'lookups.json'))
 
                 self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
