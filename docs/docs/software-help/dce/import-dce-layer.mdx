@@ -22,45 +22,29 @@ You can also import data into QRiS from a layer of the same geometry type that e
 
 ![temporary aoi](/images/software-help/temporary-aoi.gif)
 
-## External File
+### External File
 
 This option allows you to import features from an external file, such as a shapefile or geojson. When you select this option, a file browser will open to allow you to navigate to the location of the file you want to import. Select the file and click **Open**.  The imported feature class will be copied to your project and added to the Project Tree under the selected Data Capture Event Layer.
 
-
-# DCE Layer Attribute Mapping Tool
+## Attribute Mapping
 
 When importing features from a source that does not have the same schema as the DCE layer (e.g., different layer type, layer in map, or external file), you will be prompted to use the attribute mapping tool to map the attributes from the source layer to the correct attributes in the destination DCE layer.
 
-## Parameters
+1. First specify the inputs for the layer to import:
+   * **Input Feature Class / Map Layer**: Displays the source dataset selected for import.
+   * **Data Capture Event**: Displays the QRiS event associated with the target layer.
+   * **Clip to AOI**: Select an Area of Interest (AOI) to clip the imported features, or choose "None" to retain the full dataset extent.
+   * **Target Layer**: The destination layer in the QRiS project where features will be added.
 
-### Input Selection
-* **Input Feature Class / Map Layer**: Displays the source dataset selected for import.
-* **Data Capture Event**: Displays the QRiS event associated with the target layer.
-* **Target Layer**: The destination layer in the QRiS project where features will be added.
+2. Next, choose the option **Import Fields** to include attributes or **Ignore Fields** to only import the feature geometry.
 
-### Clip to AOI
-* **Clip to AOI**: Select an Area of Interest (AOI) to clip the imported features, or choose "None" to retain the full dataset extent.
+3. If **Import Fields** is selected, a table displays the input fields and available mapping options:
+   * **Input Field**: The name of the field in the source dataset.
+   * **Data Type**: The data type of the source field.
+   * **Retain Values**: Check this to store the original attribute values within the `metadata` column of the QRiS database. This preserves source data even if it doesn't map to a standard QRiS field.
+   * **Transfer Values**: Use the "Assign..." button or the checkbox to map unique values from the input field to standard values in the destination schema. This is useful for transposing the existing attributes into the standardized attributes of the DCE layer.
+   * **Copy Values**: Use the checkbox and dropdown to copy values from the input field directly into a compatible QRiS target field.
 
-### Fields
-
-You can choose to **Import Fields** or **Ignore Fields** using the radio buttons.
-
-When **Import Fields** is selected, a table displays the input fields and available mapping options:
-
-* **Input Field**: The name of the field in the source dataset.
-* **Data Type**: The data type of the source field.
-* **Retain Values**: Check this to store the original attribute values within the `metadata` column of the QRiS database. This preserves source data even if it doesn't map to a standard QRiS field.
-* **Transfer Values**: Use the "Assign..." button or the checkbox to map unique values from the input field to standard values in the destination schema. This is useful for transposing the existing attributes into the standardized attributes of the DCE layer.
-* **Copy Values**: Use the checkbox and dropdown to copy values from the input field directly into a compatible QRiS target field.
-
-## Usage
-
-1. **Verify Inputs**: Ensure the correct Input Feature Class and Target Layer are shown.
-2. **Set Clipping**: Choose an AOI to clip to, if necessary.
-3. **Map Attributes**:
-    * Review the field list.
-    * Decide which fields to retain as metadata.
-    * Map specific values or copy fields to target columns as needed.
 4. **Run**: Click **OK** to execute the import.
 
 The tool will process the features, handling any necessary geometry conversions (e.g., exploding multi-part geometries) and report the number of features successfully imported.
