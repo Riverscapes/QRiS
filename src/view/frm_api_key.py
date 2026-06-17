@@ -3,7 +3,7 @@ from qgis.PyQt.QtWidgets import (QApplication, QDialog, QVBoxLayout,
                                   QLabel, QDialogButtonBox)
 from qgis.gui import QgsPasswordLineEdit
 
-from ..lib.climate_engine import CLIMATE_ENGINE_API_KEY_SETTING, check_climate_engine_api_key
+from ..lib.climate_engine import CLIMATE_ENGINE_CREDENTIAL_SETTING, check_climate_engine_api_key
 from ..QRiS.settings import Settings
 
 
@@ -52,7 +52,7 @@ class FrmApiKey(QDialog):
         valid = check_climate_engine_api_key(api_key)
 
         if valid:
-            Settings().setSecureValue(CLIMATE_ENGINE_API_KEY_SETTING, api_key)
+            Settings().setSecureValue(CLIMATE_ENGINE_CREDENTIAL_SETTING, api_key)
             super().accept()
         else:
             self.lbl_status.setText('<span style="color:red; font-size:14px;">&#10008; Invalid key. Please check and try again.</span>')

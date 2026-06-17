@@ -3,7 +3,7 @@ from qgis.PyQt.QtGui import QFont
 from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QSpacerItem, QSizePolicy
 
 from ..model.project import Project
-from ..lib.climate_engine import CLIMATE_ENGINE_API_KEY_SETTING, open_climate_engine_website
+from ..lib.climate_engine import clear_api_key, get_api_key, open_climate_engine_website
 from ..QRiS.protocol_parser import LOCAL_PROTOCOL_FOLDER, SHOW_EXPERIMENTAL_PROTOCOLS
 from ..QRiS.settings import Settings
 from ..lib.font_tools import select_chart_font, sanitize_chart_font
@@ -141,11 +141,11 @@ class FrmSettings(QDialog):
             "Are you sure you want to remove the Climate Engine API key?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            Settings().setSecureValue(CLIMATE_ENGINE_API_KEY_SETTING, None)
+            clear_api_key()
             self._refresh_api_key_status()
 
     def _refresh_api_key_status(self):
-        api_key = Settings().getSecureValue(CLIMATE_ENGINE_API_KEY_SETTING)
+        api_key = get_api_key()
         if api_key:
             self.lbl_api_key_status.setText('<span style="color:green;">Configured &#10004;</span>')
             self.btn_remove_api_key.setEnabled(True)

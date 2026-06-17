@@ -19,7 +19,7 @@ API_TIMEOUT = 30
 CLIMATE_ENGINE_API = 'https://api.climateengine.org' # DEBUG: 'https://api-dev.climateengine.org'
 CLIMATE_ENGINE_URL = 'https://www.climateengine.org/'
 CLIMATE_ENGINE_MACHINE_CODE = 'Climate Engine'
-CLIMATE_ENGINE_API_KEY_SETTING = 'CLIMATE_ENGINE_API_KEY'
+CLIMATE_ENGINE_CREDENTIAL_SETTING = 'CLIMATE_ENGINE_AUTH_TOKEN'
 
 
 def get_api_key():
@@ -27,11 +27,15 @@ def get_api_key():
     # Get the API key from environment variable
     api_key = None
 
-    # If not found in environment, get it from QGIS settings
+    # If not found in environment, get it from QGIS settings.
     if api_key is None:
-        api_key = Settings().getSecureValue(CLIMATE_ENGINE_API_KEY_SETTING)
+        api_key = Settings().getSecureValue(CLIMATE_ENGINE_CREDENTIAL_SETTING)
 
     return api_key
+
+
+def clear_api_key() -> None:
+    Settings().setSecureValue(CLIMATE_ENGINE_CREDENTIAL_SETTING, None)
 
 
 def require_api_key(parent=None, open_settings_callback=None) -> bool:
