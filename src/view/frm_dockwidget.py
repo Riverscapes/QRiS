@@ -713,17 +713,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             # if 'validate_brat_capacity' in model_data.menu_items:
                                 # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
                         import_menu = self.menu.addMenu('Import Features From ...')
-                        self.add_context_menu_item(import_menu, 'Existing Project or DCE Layer...', 'new', lambda: self.import_from_project_layer(model_data))
-                        self.add_context_menu_item(import_menu, 'Layer in Map...', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
-                        self.add_context_menu_item(import_menu, 'External File...', 'new', lambda: self.import_dce(model_data))
+                        self.add_context_menu_item(import_menu, 'Existing Project or DCE Layer', 'new', lambda: self.import_from_project_layer(model_data))
+                        self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
+                        self.add_context_menu_item(import_menu, 'External File', 'new', lambda: self.import_dce(model_data))
 
                         if model_data.menu_items is not None:
                             if 'copy_from_valley_bottom' in model_data.menu_items:
                                 self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
                             if 'import_brat_results' in model_data.menu_items:
-                                self.add_context_menu_item(import_menu, 'Existing SQL Brat Results...', 'new', lambda: self.import_brat_results(model_data))
+                                self.add_context_menu_item(import_menu, 'Existing SQL Brat Results', 'new', lambda: self.import_brat_results(model_data))
                             if 'export_brat' in model_data.menu_items:
-                                self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations...', 'save', lambda: self.export_brat_cis(model_data))
+                                self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations', 'save', lambda: self.export_brat_cis(model_data))
                         self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
                     self.add_context_menu_item(self.menu, 'Export Layer Attributes', 'file_copy', lambda: self.export_layer_attributes(model_data))
