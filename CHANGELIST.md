@@ -1,5 +1,13 @@
 # QRiS Plugin
 
+## [1.2.5] Jun 17 2026
+
+### Fixed
+- Fix bug with zonal stats error with in memory layer
+
+### Changed
+- Minor update to right click menu labels for DCE Layers Import
+
 ## [1.2.4.4] Jun 16 2026
 
 ### Fixed
