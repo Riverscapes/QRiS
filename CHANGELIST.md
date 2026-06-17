@@ -7,6 +7,7 @@
 
 ### Changed
 - Minor update to right click menu labels for DCE Layers Import
+- Moved Climate Engine datasets json to synced resources folder
 
 ## [1.2.4.4] Jun 16 2026
 
