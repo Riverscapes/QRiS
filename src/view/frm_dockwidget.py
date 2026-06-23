@@ -88,6 +88,7 @@ from .frm_settings import FrmSettings
 from .frm_climate_engine_explorer import FrmClimateEngineExplorer
 from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
 from .frm_batch_attribute_editor import FrmBatchAttributeEditor
+from .frm_order_by_centerline import FrmOrderByCenterline
 from .frm_layer_type import FrmLayerTypeDialog
 from .frm_settings import REMOVE_LAYERS_ON_CLOSE
 
@@ -98,6 +99,8 @@ from ..lib.rs_project import RSProject
 from ..QRiS.settings import Settings
 from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
+
+from ..gp.order_by_line_task import OrderByLineTask
 
 from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
 from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
@@ -660,9 +663,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, SampleFrame):
                     if model_data.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                         self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                    # if model_data.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
+                    if model_data.sample_frame_type == SampleFrame.SAMPLE_FRAME_TYPE:
+                        self.add_context_menu_item(self.menu, 'Set Order by Centerline', 'numeric', lambda: self.set_order_by_centerline(model_data))
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
                     self.add_context_menu_item(self.menu, 'Create Analysis', 'analysis', lambda: self.add_analysis(db_item=model_data))
+
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -685,6 +690,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, CrossSections):
                     # self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
+                    self.add_context_menu_item(self.menu, 'Set Order by Centerline', 'numeric', lambda: self.set_order_by_centerline(model_data))
                     self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
                 if any(isinstance(model_data, model_type) for model_type in [SampleFrame, Profile, CrossSections]):
@@ -2500,6 +2506,75 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return
             frm = FrmBatchAttributeEditor(layer)
             frm.exec_()
+
+    def set_order_by_centerline(self, db_item) -> None:
+
+        frm = FrmOrderByCenterline(self, self.qris_project)
+        if frm.exec_() != QtWidgets.QDialog.Accepted:
+            return
+
+        profile = frm.selected_profile()
+        cl_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={profile.fc_name}')
+        cl_layer.setSubsetString(f'profile_id = {profile.id}')
+        cl_feat = QgsFeature()
+        if not cl_layer.getFeatures().nextFeature(cl_feat):
+            QtWidgets.QMessageBox.warning(self, 'Empty Centerline',
+                                          'The selected centerline profile has no features.')
+            return
+        centerline_geom = cl_feat.geometry()
+
+        if isinstance(db_item, SampleFrame):
+            layer_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
+            filter_expression = f'sample_frame_id = {db_item.id}'
+            label_field = 'display_label' if frm.update_display_label() else None
+            chain_field = 'flows_into'
+            flow_path_field = 'flow_path'
+            flow_path_value = profile.name
+            intersecting_only = True
+        elif isinstance(db_item, CrossSections):
+            layer_path = f'{self.qris_project.project_file}|layername=cross_section_features'
+            filter_expression = f'cross_section_id = {db_item.id}'
+            label_field = 'sequence'
+            chain_field = None
+            flow_path_field = None
+            flow_path_value = None
+            intersecting_only = False
+        else:
+            return
+
+        secondary_label_field = 'display_label' if isinstance(db_item, CrossSections) and frm.update_display_label() else None
+        task = OrderByLineTask(layer_path, centerline_geom,
+                               filter_expression=filter_expression,
+                               label_field=label_field,
+                               chain_field=chain_field,
+                               secondary_label_field=secondary_label_field,
+                               flow_path_field=flow_path_field,
+                               flow_path_value=flow_path_value,
+                               intersecting_only=intersecting_only)
+        task.order_complete.connect(
+            lambda result: self.on_order_by_centerline_complete(result, db_item)
+        )
+        QgsApplication.taskManager().addTask(task)
+
+    def on_order_by_centerline_complete(self, result: bool, db_item) -> None:
+        if result:
+            # Reload the map layer so updated values are visible without re-opening
+            layer_node = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
+            if layer_node is not None:
+                layer = layer_node.layer()
+                if layer is not None:
+                    layer.dataProvider().reloadData()
+                    layer.triggerRepaint()
+            self.qris_project.project_changed.emit()
+            self.iface.messageBar().pushMessage(
+                'Order by Centerline',
+                f'Feature order updated for "{db_item.name}".',
+                level=Qgis.Success, duration=5)
+        else:
+            self.iface.messageBar().pushMessage(
+                'Order by Centerline Error',
+                f'Failed to update order for "{db_item.name}". Check the QGIS log.',
+                level=Qgis.Critical, duration=5)
 
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 

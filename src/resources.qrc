@@ -13,6 +13,7 @@
         <file alias="arrow_drop_down">../Images/arrow_drop_down.svg</file>
         <file alias="arrow_drop_up">../Images/arrow_drop_up.svg</file>
         <file alias="alpha">../Images/alpha.svg</file>
+        <file alias="numeric">../Images/numeric.svg</file>
         <file alias="calculate">../Images/calculate.svg</file>
         <file alias="category">../Images/category.svg</file>
         <file alias="clear_filter">../Images/clear_filter.svg</file>
