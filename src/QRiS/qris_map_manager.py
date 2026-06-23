@@ -186,9 +186,14 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_hidden(feature_layer, 'fid', 'Sample Frame Feature ID')
         self.set_hidden(feature_layer, 'sample_frame_id', 'Sample Frame ID')
         self.set_multiline(feature_layer, 'description', 'Description')
-        self.set_hidden(feature_layer, 'metadata', 'Metadata')
         self.set_virtual_dimension(feature_layer, 'area')
-        self.set_metadata_virtual_fields(feature_layer)
+        self.set_metadata_virtual_fields(feature_layer, SampleFrame.FEATURE_FIELD_CONFIG)
+        self.set_metadata_attribute_editor(feature_layer, 'metadata', 'Metadata', SampleFrame.FEATURE_FIELD_CONFIG)
+        column_index = feature_layer.fields().indexOf('metadata')
+        if column_index != -1:
+            layer_attr_table_config = feature_layer.attributeTableConfig()
+            layer_attr_table_config.setColumnHidden(column_index, True)
+            feature_layer.setAttributeTableConfig(layer_attr_table_config)
 
         return feature_layer
 
