@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [1.2.5.1] Jun 23 2026
+
+### Fixed
+- Intermittent Sample Frame order issue #776
+- Clean up Sample Frame Categories #965
+
+### Added
+- Objective and Conditions for Sample Frame Features #1076
+- Set Cross Section and Sample Frame order by centerline Tool #776
+
+
 ## [1.2.5] Jun 17 2026
 
 ### Fixed
