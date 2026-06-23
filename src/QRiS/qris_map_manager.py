@@ -187,8 +187,12 @@ class QRisMapManager(RiverscapesMapManager):
         self.set_hidden(feature_layer, 'sample_frame_id', 'Sample Frame ID')
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_virtual_dimension(feature_layer, 'area')
-        self.set_metadata_virtual_fields(feature_layer, SampleFrame.FEATURE_FIELD_CONFIG)
-        self.set_metadata_attribute_editor(feature_layer, 'metadata', 'Metadata', SampleFrame.FEATURE_FIELD_CONFIG)
+        # Merge system fields (Objective, Condition) with any custom category fields on this sample frame
+        system_fields = list(SampleFrame.FEATURE_FIELD_CONFIG['fields'])
+        custom_fields = sample_frame.fields or []
+        merged_config = {'fields': system_fields + custom_fields}
+        self.set_metadata_virtual_fields(feature_layer, merged_config)
+        self.set_metadata_attribute_editor(feature_layer, 'metadata', 'Metadata', merged_config)
         column_index = feature_layer.fields().indexOf('metadata')
         if column_index != -1:
             layer_attr_table_config = feature_layer.attributeTableConfig()

@@ -78,11 +78,11 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
                     # prepare a widget with checkboxes for each value
                     widget = CheckboxWidget(editor)
                     for value in field['values']:
-                        checkbox = widget.add_checkbox(value)
+                        checkbox = widget.add_checkbox(str(value))
                         checkbox.stateChanged.connect(self.onValueChanged)
                 else:
                     widget = QComboBox(editor)
-                    widget.addItems(field['values'])
+                    widget.addItems([str(v) for v in field['values']])
                     widget.currentIndexChanged.connect(self.onValueChanged)
                     if 'allow_custom_values' in field.keys() and str(field['allow_custom_values']).lower() == 'true':
                         widget.setEditable(True)
@@ -114,7 +114,7 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
 
             if 'default_value' in field.keys():
                 if isinstance(widget, QComboBox):
-                    index = widget.findText(field['default_value'])
+                    index = widget.findText(str(field['default_value']))
                     widget.setCurrentIndex(index)
                 # if integer field set the value as an integer type
                 elif field['type'] == 'integer':
@@ -322,13 +322,14 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             widget.setValue(val)
         elif isinstance(widget, QComboBox):
             if widget.isEditable():
-                widget.lineEdit().setText(val)
+                widget.lineEdit().setText('' if val is None else str(val))
             else:
-                index = widget.findText(val)
+                index = widget.findText('' if val is None else str(val))
                 widget.setCurrentIndex(index)
         elif isinstance(widget, CheckboxWidget):
             # Better clear all checkboxes first
             widget.reset_checkboxes()
+            val = [] if val is None else [str(v) for v in val]
             for checkbox in widget.findChildren(QCheckBox):
                 checkbox.setChecked(checkbox.text() in val)
     

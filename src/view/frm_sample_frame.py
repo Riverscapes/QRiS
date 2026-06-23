@@ -73,6 +73,7 @@ class FrmSampleFrame(QDialog):
             self.setWindowTitle(f'Create New Sample Frame from Existing Layers')
             
         self.tab_properties = SampleFrameProperties(self, self.sample_frame)
+        self.tab_description = SampleFrameDescription(self, self.sample_frame)
 
         metadata_json = json.dumps(sample_frame.user_metadata) if sample_frame is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
@@ -146,10 +147,10 @@ class FrmSampleFrame(QDialog):
 
         try:
             if self.sample_frame is not None:
-                self.sample_frame.update(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
+                self.sample_frame.update(self.qris_project.project_file, self.txtName.text(), self.tab_description.txtDescription.toPlainText(), out_metadata)
                 self.qris_project.project_changed.emit()
             else:
-                self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.tab_properties.txtDescription.toPlainText(), out_metadata)
+                self.sample_frame = insert_sample_frame(self.qris_project.project_file, self.txtName.text(), self.tab_description.txtDescription.toPlainText(), out_metadata)
                 self.qris_project.add_db_item(self.sample_frame)
         except Exception as ex:
             if 'unique' in str(ex).lower():
@@ -311,7 +312,8 @@ class FrmSampleFrame(QDialog):
 
         if self.tab_inputs is not None:
             self.tabs.addTab(self.tab_inputs, "Inputs")
-        self.tabs.addTab(self.tab_properties, "Basic Properties")        
+        self.tabs.addTab(self.tab_properties, "Basic Properties")
+        self.tabs.addTab(self.tab_description, "Description")
         self.tabs.addTab(self.tab_attributes, attributes_name)
         self.tabs.addTab(self.metadata_widget, "Metadata")
 
@@ -509,7 +511,6 @@ class SampleFrameProperties(QWidget):
         self.txtFlowField.setText(flow_path_field_name)
 
         if self.sample_frame is not None:
-            self.txtDescription.setText(self.sample_frame.description)
             self.txtDefaultFlowPathName.setText(self.sample_frame.default_flow_path_name)
             self.txtDefaultFlowPathName.setEnabled(False)
         else:
@@ -538,10 +539,28 @@ class SampleFrameProperties(QWidget):
         self.txtDefaultFlowPathName = QLineEdit()
         self.grid.addWidget(self.txtDefaultFlowPathName, 3, 1)
 
-        self.lblDescription = QLabel('Description')
-        self.grid.addWidget(self.lblDescription, 4, 0)
+        self.vert.addStretch()
+
+
+
+
+class SampleFrameDescription(QWidget):
+
+    def __init__(self, parent, sample_frame: SampleFrame = None):
+        super(SampleFrameDescription, self).__init__(parent)
+
+        self.setupUi()
+
+        if sample_frame is not None and sample_frame.description:
+            self.txtDescription.setPlainText(sample_frame.description)
+
+    def setupUi(self):
+
+        self.vert = QVBoxLayout(self)
+        self.setLayout(self.vert)
+
         self.txtDescription = QTextEdit()
-        self.grid.addWidget(self.txtDescription, 4, 1)
+        self.vert.addWidget(self.txtDescription)
 
 
 class SampleFrameAttributes(QWidget):
@@ -559,6 +578,8 @@ class SampleFrameAttributes(QWidget):
 
         def load_attributes(self):
                 
+            if not self.sample_frame.fields:
+                return
             # add to model
             for field in self.sample_frame.fields:
                 name = field if isinstance(field, str) else field['label']
@@ -643,9 +664,9 @@ class SampleFrameAttributes(QWidget):
             for row in range(self.model.rowCount()):
                 item = self.model.item(row)
                 field_name = item.text()
-                machine_code = field_name.lower().replace(' ', '_')
+                field_id = field_name.lower().replace(' ', '_')
                 attributes = [item.child(i).text() for i in range(item.rowCount())]
-                fields.append({'machine_code': machine_code, 'label': field_name, 'type': 'list', 'values': attributes})
+                fields.append({'id': field_id, 'label': field_name, 'type': 'list', 'values': attributes})
             return fields
 
         def setupUi(self):
@@ -709,16 +730,15 @@ class SampleFrameAttributesAddFields(QWidget):
         fields = [chk.text() for chk in self.chk_fields if chk.isChecked()]
         outfields = []
         for field in fields:
-            outfield = {'machine_code': field.replace(' ', '_').lower(), 'label': field}
+            field_id = field.replace(' ', '_').lower()
             values = []
             for feature in self.layer.getFeatures():
                 value = feature[field]
                 if isinstance(value, QVariant):
                     value = None
-                if value not in values:
-                    values.append(value)
-            outfield['values'] = values
-            outfields.append(outfield)
+                if value is not None and value not in values:
+                    values.append(str(value))
+            outfields.append({'id': field_id, 'label': field, 'type': 'list', 'values': values})
 
         return outfields
 
