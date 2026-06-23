@@ -57,8 +57,31 @@ class SampleFrame(DBItemSpatial):
         super().set_metadata(metadata)
         # special handling for sample frame items
         self.project_bounds = self.system_metadata.get('project_bounds', False)
-        self.fields = self.metadata.get('fields', None)
         self.default_flow_path_name = self.metadata.get('default_flow_path_name', None)
+
+        # Normalize category fields to canonical schema: {id, label, type, values}
+        raw_fields = self.metadata.get('fields', None)
+        if raw_fields:
+            normalized = []
+            for f in raw_fields:
+                if isinstance(f, str):
+                    # very old plain-string format
+                    normalized.append({'id': f.lower().replace(' ', '_'), 'label': f, 'type': 'list', 'values': []})
+                else:
+                    n = dict(f)
+                    # machine_code → id
+                    if 'id' not in n and 'machine_code' in n:
+                        n['id'] = n.pop('machine_code')
+                    elif 'machine_code' in n:
+                        del n['machine_code']
+                    if 'type' not in n:
+                        n['type'] = 'list'
+                    if 'values' not in n:
+                        n['values'] = []
+                    normalized.append(n)
+            self.fields = normalized
+        else:
+            self.fields = None
 
 
 def load_sample_frames(curs: sqlite3.Cursor, sample_frame_type=SampleFrame.SAMPLE_FRAME_TYPE) -> Dict[int, SampleFrame]:
