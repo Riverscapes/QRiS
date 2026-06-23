@@ -5,7 +5,7 @@ from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 from qgis.PyQt.QtCore import Qt, QSize, QVariant, QMetaType, pyqtSignal
 from qgis.PyQt.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QGroupBox, QTreeView, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
 
-from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.core import Qgis, QgsApplication, QgsFeature, QgsVectorLayer
 from qgis.gui import QgisInterface
 from qgis.utils import iface
 
@@ -21,7 +21,8 @@ from .frm_new_attribute import FrmNewAttribute
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
-from ..gp.sample_frame import SampleFrameTask
+from ..gp.sample_frame_task import SampleFrameTask
+from ..gp.order_by_line_task import OrderByLineTask
 
 from .widgets.metadata import MetadataWidget
 from .utilities import validate_name, add_standard_form_buttons
@@ -219,9 +220,17 @@ class FrmSampleFrame(QDialog):
                 cross_sections = self.tab_inputs.cboCrossSections.currentData(Qt.UserRole)
                 cross_sections_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
                 cross_sections_layer.setSubsetString(f'cross_section_id = {cross_sections.id}')
+                self.centerline_geom = None
+                centerline_profile = self.tab_inputs.cboCenterline.currentData(Qt.UserRole)
+                if centerline_profile is not None:
+                    cl_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={centerline_profile.fc_name}')
+                    cl_layer.setSubsetString(f'profile_id = {centerline_profile.id}')
+                    cl_feat = QgsFeature()
+                    if cl_layer.getFeatures().nextFeature(cl_feat):
+                        self.centerline_geom = cl_feat.geometry()
                 out_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
                 task = SampleFrameTask(polygon_layer, cross_sections_layer, out_path, self.sample_frame.id)
-                task.sample_frame_complete.connect(self.on_import_complete)
+                task.sample_frame_complete.connect(self.on_split_complete)
                 QgsApplication.taskManager().addTask(task)
                 return
             except Exception as ex:
@@ -247,6 +256,23 @@ class FrmSampleFrame(QDialog):
                 field = field_dict['label']
                 field_map.append(ImportFieldMap(field, field, parent='attributes'))
         return field_map
+
+    def on_split_complete(self, result: bool):
+        if not result:
+            self.on_import_complete(False)
+            return
+        if self.centerline_geom is not None:
+            order_task = OrderByLineTask(
+                f'{self.qris_project.project_file}|layername=sample_frame_features',
+                self.centerline_geom,
+                filter_expression=f'sample_frame_id = {self.sample_frame.id}',
+                label_field='display_label',
+                chain_field='flows_into'
+            )
+            order_task.order_complete.connect(self.on_import_complete)
+            QgsApplication.taskManager().addTask(order_task)
+        else:
+            self.on_import_complete(True)
 
     def on_import_complete(self, result):
         if result is True:
@@ -467,9 +493,6 @@ class SampleFrameInputsCreate(QWidget):
             self.cboCrossSections = QComboBox()
             self.grid.addWidget(self.cboCrossSections, 2, 1, 1, 2)
 
-            self.chkInferTopology = QCheckBox('Infer Topology from Centerline')
-            self.grid.addWidget(self.chkInferTopology, 3, 0)
-    
             self.vert.addStretch()
 
 

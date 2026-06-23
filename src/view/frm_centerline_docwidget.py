@@ -260,6 +260,17 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         else:
             self.geom_centerline = QgsGeometry(geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle))
 
+        # Orient so vertex[0] is at the start clip line (upstream end)
+        start_pts = self.geom_start.points()
+        start_mid = QgsGeometry.fromPointXY(QgsPointXY(
+            (start_pts[0].x() + start_pts[-1].x()) / 2.0,
+            (start_pts[0].y() + start_pts[-1].y()) / 2.0
+        ))
+        cl_pts = self.geom_centerline.get().points()
+        if QgsGeometry.fromPointXY(QgsPointXY(cl_pts[-1])).distance(start_mid) < \
+                QgsGeometry.fromPointXY(QgsPointXY(cl_pts[0])).distance(start_mid):
+            self.geom_centerline = QgsGeometry(QgsLineString(list(reversed(cl_pts))))
+
         self.feat_centerline = QgsFeature()
         geom = QgsGeometry(self.geom_centerline)
         self.feat_centerline.setGeometry(geom)

@@ -103,9 +103,19 @@ def get_sample_frame_ids(db_path: str, sample_frame_id: int) -> Dict[int, DBItem
             curs = conn.cursor()
             curs.execute('SELECT fid, display_label FROM sample_frame_features WHERE sample_frame_id = ?', [sample_frame_id])
             values = curs.fetchall()
+            used_names = set()
             for value in values:
-                label = value[1] if value[1] is not None and value[1] != '' else f'Feature {value[0]}'
-                labels[label] =  DBItem('None', value[0], label)
+                fid = value[0]
+                label = value[1] if value[1] is not None and value[1] != '' else f'Feature {fid}'
+
+                # Safeguard against duplicate display labels by disambiguating
+                # only the duplicates while preserving all feature IDs.
+                name = label
+                if name in used_names:
+                    name = f'{label} (Feature {fid})'
+                used_names.add(name)
+
+                labels[fid] = DBItem('None', fid, name)
     except Exception as ex:
         labels = {}
         raise ex
@@ -139,11 +149,19 @@ def get_sample_frame_sequence(db_path: str, sample_frame_id: int) -> List[DBItem
                     fid_to_next = {v[0]: v[2] for v in values}
                     fid_to_row = {v[0]: v for v in values}
                     fid = start_candidates[0]
+                    visited = set()
                     while fid is not None:
+                        if fid in visited:
+                            # Cycle detected; method 1 is invalid and we should fallback.
+                            sequence = []
+                            break
+                        visited.add(fid)
                         row = fid_to_row[fid]
                         sequence.append(DBItem('sample_frame_features', row[0], row[1]))
                         fid = fid_to_next.get(fid)
-                    return sequence
+                    if len(sequence) == len(values):
+                        return sequence
+                    sequence = []
 
             # 2. Try display_label: all must be non-null, integer, and unique
             if (
