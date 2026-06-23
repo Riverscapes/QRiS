@@ -15,6 +15,13 @@ class SampleFrame(DBItemSpatial):
     AOI_SAMPLE_FRAME_TYPE = 2
     VALLEY_BOTTOM_SAMPLE_FRAME_TYPE = 3
 
+    FEATURE_FIELD_CONFIG = {
+        'fields': [
+            {'id': 'objective', 'type': 'long_text', 'label': 'Objective'},
+            {'id': 'condition', 'type': 'long_text', 'label': 'Condition'},
+        ]
+    }
+
     def __init__(self, id: int, name: str, description: str, metadata: dict = None, sample_frame_type=SAMPLE_FRAME_TYPE):
         super().__init__('sample_frames', id, name, 'sample_frame_features', 'sample_frame_id', 'Polygon', metadata=metadata)
         

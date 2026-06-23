@@ -2469,8 +2469,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if layer.type() != QgsMapLayer.VectorLayer:
             return
 
-        event_layer_field_index = layer.fields().indexOf('event_layer_id')
-        if event_layer_field_index == -1:
+        has_event_layer = layer.fields().indexOf('event_layer_id') != -1
+        has_sample_frame = layer.fields().indexOf('sample_frame_id') != -1
+        if not has_event_layer and not has_sample_frame:
+            return
+
+        metadata_field_index = layer.fields().indexOf('metadata')
+        if metadata_field_index == -1:
+            return
+        metadata_widget_setup = layer.editorWidgetSetup(metadata_field_index)
+        if metadata_widget_setup is None or metadata_widget_setup.type() != 'MetadataFieldEdit':
             return
 
         # Prevent duplicate menu items
