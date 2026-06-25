@@ -17,7 +17,7 @@ from ..model.layer import Layer
 from .frm_layer_picker import FrmLayerPicker
 from .widgets.capture_line_segment import LineSegmentMapTool
 from .utilities import add_help_button
-from .frm_save_centerline import FrmSaveCenterline
+from .frm_profile import FrmProfile
 from ..QRiS.qris_map_manager import QRisMapManager
 
 PREVIEW_STARTLINE_MACHINE_CODE = "Startline Preview"
@@ -184,13 +184,23 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         sline_length = self.d.measureLine(QgsPointXY(geom_centerline.get().points()[0]), QgsPointXY(geom_centerline.get().points()[-1]))
         geom_length = self.d.measureLength(geom_centerline)
-        metrics = {'Length (m)': geom_length, 'Sinuosity': geom_length / sline_length}
-        frm_save_centerline = FrmSaveCenterline(self, self.project, geom_centerline, metrics, self.fields)
-        result = frm_save_centerline.exec_()
+        metrics = {'total_length': geom_length, 'sinuosity': geom_length / sline_length}
+
+        temp_layer = QgsVectorLayer(f'LineString?crs=EPSG:4326', 'centerline', 'memory')
+        feat = QgsFeature()
+        feat.setGeometry(geom_centerline)
+        temp_layer.dataProvider().addFeatures([feat])
+
+        frm_profile = FrmProfile(self, self.project, temp_layer,
+                                  profile_type=Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE,
+                                  fc_name='profile_centerlines',
+                                  system_metadata=self.fields,
+                                  metrics=metrics)
+        result = frm_profile.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
             self.centerline_setup(self.polygon_source)  # Reset the map
-            self.export_complete.emit(frm_save_centerline.profile, True)
+            self.export_complete.emit(frm_profile.profile, True)
         return
 
     def cmdReset_click(self):
