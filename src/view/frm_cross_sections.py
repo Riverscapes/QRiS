@@ -3,7 +3,7 @@ import json
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.gui import QgisInterface
 from qgis.core import QgsVectorLayer, QgsFeature
-from qgis.utils import Qgis, iface
+from qgis.utils import Qgis
 
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
@@ -15,6 +15,7 @@ from ..gp.import_temp_layer import ImportMapLayer
 from .widgets.metadata import MetadataWidget
 from .widgets.stats_widget import StatsWidget
 from .utilities import validate_name, add_standard_form_buttons
+from ..QRiS.settings import Settings
 
 from typing import Dict
 
@@ -23,7 +24,6 @@ class FrmCrossSections(QtWidgets.QDialog):
 
     def __init__(self, parent, qris_project: Project, import_source_path: str = None, cross_sections: CrossSections = None, output_features: Dict[float, QgsFeature] = None, metadata: dict = None):
 
-        self.iface: QgisInterface = iface
         self.qris_project = qris_project
         self.cross_sections = cross_sections
         self.import_source_path = import_source_path
@@ -39,14 +39,18 @@ class FrmCrossSections(QtWidgets.QDialog):
 
         window_title = 'Create New Cross Sections layer' if self.cross_sections is None else 'Edit Cross Sections Properties'
 
-        # The attribute picker is only visible when creating a new regular mask
         show_attribute_filter = import_source_path is not None
+        show_mask_clip = import_source_path is not None or output_features is not None
+
         self.lblAttribute.setVisible(show_attribute_filter)
         self.cboAttribute.setVisible(show_attribute_filter)
-
-        show_mask_clip = import_source_path is not None or output_features is not None
         self.lblMaskClip.setVisible(show_mask_clip)
         self.cboMaskClip.setVisible(show_mask_clip)
+
+        if show_mask_clip:
+            if self.tabs.indexOf(self.tabProperties) == -1:
+                self.tabs.insertTab(0, self.tabProperties, 'Basic Properties')
+            self.tabs.setCurrentIndex(0)
 
         if import_source_path is not None:
             window_title = 'Import Cross Sections'
@@ -72,15 +76,10 @@ class FrmCrossSections(QtWidgets.QDialog):
                 self.cboAttribute.setModel(self.attribute_model)
                 self.cboAttribute.setCurrentIndex(self.attribute_model.getItemIndex(self.no_attribute))
         if show_mask_clip:
-            # combine the valley bottom and aoi dicts; wwe need to adjust the keys for the aois to avoid conflicts
-            self.masks = {}
-            for key, value in  self.qris_project.valley_bottoms.items():
-                self.masks[key] = value
-            for key, value in self.qris_project.aois.items():
-                self.masks[key + 1000] = value
+            clip_items = {**self.qris_project.valley_bottoms, **self.qris_project.aois}
             no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-            self.masks[0] = no_clipping
-            self.masks_model = DBItemModel(self.masks)
+            clip_items[0] = no_clipping
+            self.masks_model = DBItemModel(clip_items)
             self.cboMaskClip.setModel(self.masks_model)
             # Default to no mask clipping
             self.cboMaskClip.setCurrentIndex(self.masks_model.getItemIndex(no_clipping))
@@ -100,8 +99,6 @@ class FrmCrossSections(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
 
@@ -109,15 +106,14 @@ class FrmCrossSections(QtWidgets.QDialog):
             try:
                 self.cross_sections.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
                 self.qris_project.project_changed.emit()
-                super(FrmCrossSections, self).accept()
             except Exception as ex:
                 if 'unique' in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A cross sections layer with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
                     self.txtName.setFocus()
                 else:
                     QtWidgets.QMessageBox.warning(self, 'Error Saving cross sections', str(ex))
-                self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
                 return
+            super(FrmCrossSections, self).accept()
 
         else:
             try:
@@ -129,7 +125,6 @@ class FrmCrossSections(QtWidgets.QDialog):
                     self.txtName.setFocus()
                 else:
                     QtWidgets.QMessageBox.warning(self, 'Error Saving cross sections', str(ex))
-                self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
                 return
             try:
                 clip_mask = None
@@ -179,9 +174,8 @@ class FrmCrossSections(QtWidgets.QDialog):
                 try:
                     self.cross_sections.delete(self.qris_project.project_file)
                 except Exception as ex_del:
-                    QtWidgets.QMessageBox.warning(self, 'Error attempting to delete cross sections after the importing of features failed.', str(ex_del))
-                QtWidgets.QMessageBox.warning(self, 'Error Importing Cross Sections Features', str(ex))
-                self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+                    Settings().msg_bar('Error attempting to delete cross sections after the importing of features failed.', str(ex_del), level=Qgis.Critical, duration=10)
+                Settings().msg_bar('Error Importing Cross Sections Features', str(ex), level=Qgis.Critical, duration=10)
                 return
 
             super(FrmCrossSections, self).accept()
@@ -189,14 +183,14 @@ class FrmCrossSections(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if not result:
-            iface.messageBar().pushMessage('Error Importing Cross Section Features', str(self.exception), level=Qgis.Critical)
+            Settings().msg_bar('Error Importing Cross Section Features', str(self.exception), level=Qgis.Critical, duration=10)
             try:
                 self.cross_sections.delete(self.qris_project.project_file)
             except Exception as ex:
-                iface.messageBar().pushMessage('Error Deleting Cross Sections on Failed Import', str(ex), level=Qgis.Critical)
+                Settings().msg_bar('Error Deleting Cross Sections on Failed Import', str(ex), level=Qgis.Critical, duration=10)
             return
         else:
-            iface.messageBar().pushMessage('Cross Section Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
+            Settings().msg_bar('Cross Section Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
             super(FrmCrossSections, self).accept()
 
     def setupUi(self):
@@ -207,42 +201,50 @@ class FrmCrossSections(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
-        self.tabs = QtWidgets.QTabWidget()
-        self.vert.addWidget(self.tabs)
 
-        self.grid = QtWidgets.QGridLayout()
-
-        self.lblName = QtWidgets.QLabel("Name")
-        self.grid.addWidget(self.lblName, 0, 0, 1, 1)
-
+        # Name (outside tabs)
+        horiz_name = QtWidgets.QHBoxLayout()
+        self.lblName = QtWidgets.QLabel('Name')
+        horiz_name.addWidget(self.lblName)
         self.txtName = QtWidgets.QLineEdit()
         self.txtName.setToolTip('Name of the cross sections layer')
         self.txtName.setMaxLength(255)
-        self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+        horiz_name.addWidget(self.txtName)
+        self.vert.addLayout(horiz_name)
+
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
+
+        # Basic Properties Tab (only inserted when clipping or attribute filter is needed)
+        self.grid = QtWidgets.QGridLayout()
 
         self.lblAttribute = QtWidgets.QLabel('Display Label Attribute')
-        self.grid.addWidget(self.lblAttribute, 1, 0, 1, 1)
+        self.grid.addWidget(self.lblAttribute, 0, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()
         self.cboAttribute.setToolTip('Attribute to use as the display label for the cross sections')
-        self.grid.addWidget(self.cboAttribute, 1, 1, 1, 1)
+        self.grid.addWidget(self.cboAttribute, 0, 1, 1, 1)
 
-        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI/Valley Bottom')
-        self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
+        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI / Valley Bottom')
+        self.grid.addWidget(self.lblMaskClip, 1, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
         self.cboMaskClip.setToolTip('Optionally clip the cross sections to the selected AOI or Valley Bottom')
-        self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
+        self.grid.addWidget(self.cboMaskClip, 1, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel('Description')
-        self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
-
-        self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription)
+        self.grid.setRowStretch(2, 1)
 
         self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
+        # tabProperties is inserted at position 0 only when clipping/attribute is available
+
+        # Description Tab
+        description_tab = QtWidgets.QWidget()
+        self.txtDescription = QtWidgets.QPlainTextEdit()
+        description_tab_layout = QtWidgets.QVBoxLayout()
+        description_tab_layout.addWidget(self.txtDescription)
+        description_tab.setLayout(description_tab_layout)
+        self.tabs.addTab(description_tab, 'Description')
 
         # Statistics Tab
         self.stats_widget.add_stats_tab(self.tabs)
