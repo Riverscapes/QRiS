@@ -75,9 +75,17 @@ class StatsWidget(QWidget):
         self.export_button.clicked.connect(self._export_table)
         bottom.addWidget(self.export_button)
 
+    def load_from_dict(self, stats: dict):
+        """Pre-populate with externally computed stats (e.g. before the record is saved)."""
+        self._raw_stats = stats
+        self._setup_units_combo(stats)
+        self._populate_table(stats)
+        self._stats_calculated = True
+        self.refresh_button.setVisible(False)
+
     def add_stats_tab(self, tab_widget, label='Statistics'):
-        """Add this widget as a tab only if a db_item exists (record already saved)."""
-        if self._db_item is None:
+        """Add this widget as a tab only if a db_item exists or pre-loaded stats are present."""
+        if self._db_item is None and not self._raw_stats:
             self.hide()
             return
         self._tab_widget = tab_widget

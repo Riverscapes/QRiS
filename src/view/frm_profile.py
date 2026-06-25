@@ -20,33 +20,38 @@ from .utilities import validate_name, add_standard_form_buttons
 
 class FrmProfile(QtWidgets.QDialog):
 
-    def __init__(self, parent, qris_project: Project, import_source_path: str, profile: Profile = None):
+    def __init__(self, parent, qris_project: Project, import_source_path, profile: Profile = None,
+                 profile_type=None, fc_name: str = 'profile_features', system_metadata: dict = None, metrics: dict = None):
 
         self.iface: QgisInterface = iface
         self.qris_project = qris_project
         self.profile = profile
         self.import_source_path = import_source_path
-        self.profile_type = Profile.ProfileTypes.GENERIC_PROFILE_TYPE  # mask_type
+        self.profile_type = profile_type if profile_type is not None else Profile.ProfileTypes.GENERIC_PROFILE_TYPE
+        self.fc_name = fc_name
+        self.metrics = metrics
 
         super(FrmProfile, self).__init__(parent)
         metadata_json = json.dumps(profile.metadata) if profile is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
+        if system_metadata is not None:
+            for key, value in system_metadata.items():
+                self.metadata_widget.add_system_metadata(key, value)
         self.stats_widget = StatsWidget(db_item=profile, db_path=qris_project.project_file, parent=self)
+        if metrics is not None:
+            self.stats_widget.load_from_dict(metrics)
         self.setupUi()
 
         self.setWindowTitle(f'Create New Profile' if self.profile is None else f'Edit Profile Properties')
 
-        # Masks (filtered to just AOI)
-        self.aois = {id: aoi for id, aoi in self.qris_project.aois.items()}
+        # Masks (AOIs and valley bottoms)
+        clip_items = {**self.qris_project.aois, **self.qris_project.valley_bottoms}
         no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
-        self.aois[0] = no_clipping
-        self.aoi_model = DBItemModel(self.aois)
-        self.cboMaskClip.setModel(self.aoi_model)
+        clip_items[0] = no_clipping
+        self.clip_model = DBItemModel(clip_items)
+        self.cboMaskClip.setModel(self.clip_model)
         # Default to no mask clipping
-        self.cboMaskClip.setCurrentIndex(self.aoi_model.getItemIndex(no_clipping))
-
-        self.cboMaskClip.setVisible(False)
-        self.lblMaskClip.setVisible(False)
+        self.cboMaskClip.setCurrentIndex(self.clip_model.getItemIndex(no_clipping))
 
         if import_source_path is not None:
             if isinstance(import_source_path, QgsVectorLayer):
@@ -60,8 +65,9 @@ class FrmProfile(QtWidgets.QDialog):
             self.txtName.setText(self.layer_name)
             self.txtName.selectAll()
 
-            self.lblMaskClip.setVisible(True)
-            self.cboMaskClip.setVisible(True)
+            if self.tabs.indexOf(self.tabProperties) == -1:
+                self.tabs.insertTab(0, self.tabProperties, 'Basic Properties')
+            self.tabs.setCurrentIndex(0)
 
         if self.profile is not None:
             self.txtName.setText(profile.name)
@@ -87,8 +93,9 @@ class FrmProfile(QtWidgets.QDialog):
         self.import_source_path = f'{db_path}|layername={layer_name}'
         self.attribute_filter = f'{id_field} = {db_item.id}' if id_field is not None else None
 
-        self.lblMaskClip.setVisible(True)
-        self.cboMaskClip.setVisible(True)
+        if self.tabs.indexOf(self.tabProperties) == -1:
+            self.tabs.insertTab(0, self.tabProperties, 'Basic Properties')
+        self.tabs.setCurrentIndex(0)
 
         self.basepath, self.layer_name, self.layer_id = layer_path_parser(self.import_source_path)
 
@@ -118,6 +125,11 @@ class FrmProfile(QtWidgets.QDialog):
 
         else:
             try:
+                if self.metrics is not None:
+                    for key, value in self.metrics.items():
+                        self.metadata_widget.add_attribute_metadata(key, value)
+                    metadata_json = self.metadata_widget.get_json()
+                    metadata = json.loads(metadata_json) if metadata_json is not None else None
                 self.profile = insert_profile(self.qris_project.project_file, self.txtName.text(), self.profile_type, self.txtDescription.toPlainText(), metadata)
                 self.qris_project.add_db_item(self.profile)
             except Exception as ex:
@@ -130,7 +142,7 @@ class FrmProfile(QtWidgets.QDialog):
 
             if self.import_source_path is not None:
                 try:
-                    fc_path = f'{self.qris_project.project_file}|layername=profile_features'
+                    fc_path = f'{self.qris_project.project_file}|layername={self.fc_name}'
                     
                     clip_mask = None
                     clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
@@ -143,7 +155,7 @@ class FrmProfile(QtWidgets.QDialog):
                         task.import_complete.connect(self.on_import_complete)
                         QgsApplication.taskManager().addTask(task)
                     else:
-                        import_existing(self.import_source_path, self.qris_project.project_file, 'profile_features', self.profile.id, 'profile_id', clip_mask=clip_mask)
+                        import_existing(self.import_source_path, self.qris_project.project_file, self.fc_name, self.profile.id, 'profile_id', clip_mask=clip_mask)
                         super(FrmProfile, self).accept()
                 except Exception as ex:
                     try:
@@ -180,35 +192,43 @@ class FrmProfile(QtWidgets.QDialog):
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.vert = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vert)
-        self.tabs = QtWidgets.QTabWidget()
-        self.vert.addWidget(self.tabs)
 
-        self.grid = QtWidgets.QGridLayout()
-
+        # Name
+        horiz_name = QtWidgets.QHBoxLayout()
         self.lblName = QtWidgets.QLabel('Name')
-        self.grid.addWidget(self.lblName, 0, 0, 1, 1)
-
+        horiz_name.addWidget(self.lblName)
         self.txtName = QtWidgets.QLineEdit()
         self.txtName.setToolTip('The name of the profile')
         self.txtName.setMaxLength(255)
-        self.grid.addWidget(self.txtName, 0, 1, 1, 1)
+        horiz_name.addWidget(self.txtName)
+        self.vert.addLayout(horiz_name)
 
-        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI')
-        self.grid.addWidget(self.lblMaskClip, 2, 0, 1, 1)
+        self.tabs = QtWidgets.QTabWidget()
+        self.vert.addWidget(self.tabs)
+
+        # Properties Tab
+        self.grid = QtWidgets.QGridLayout()
+
+        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI / Valley Bottom')
+        self.grid.addWidget(self.lblMaskClip, 0, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
-        self.cboMaskClip.setToolTip('Optionally clip the profile to the selected AOI')
-        self.grid.addWidget(self.cboMaskClip, 2, 1, 1, 1)
+        self.cboMaskClip.setToolTip('Optionally clip the profile to the selected AOI or valley bottom')
+        self.grid.addWidget(self.cboMaskClip, 0, 1, 1, 1)
 
-        self.lblDescription = QtWidgets.QLabel('Description')
-        self.grid.addWidget(self.lblDescription, 3, 0, 1, 1)
-
-        self.txtDescription = QtWidgets.QPlainTextEdit()
-        self.grid.addWidget(self.txtDescription)
+        self.grid.setRowStretch(1, 1)
 
         self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Basic Properties')
         self.tabProperties.setLayout(self.grid)
+        # tabProperties is inserted at position 0 only when clipping is available
+
+        # Description Tab
+        description_tab = QtWidgets.QWidget()
+        self.txtDescription = QtWidgets.QPlainTextEdit()
+        description_tab_layout = QtWidgets.QVBoxLayout()
+        description_tab_layout.addWidget(self.txtDescription)
+        description_tab.setLayout(description_tab_layout)
+        self.tabs.addTab(description_tab, 'Description')
 
         # Statistics Tab
         self.stats_widget.add_stats_tab(self.tabs)
@@ -219,6 +239,7 @@ class FrmProfile(QtWidgets.QDialog):
         self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
         self.chkAddToMap.setChecked(True)
 
+        # Add to Map and Start Edit Session checkboxes
         self.chkStartEditSession = QtWidgets.QCheckBox('Start Edit Session')
         self.chkStartEditSession.setChecked(False)
         self.chkAddToMap.stateChanged.connect(lambda state: (
