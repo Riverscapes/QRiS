@@ -49,7 +49,7 @@ class FrmCrossSections(QtWidgets.QDialog):
 
         if show_mask_clip:
             if self.tabs.indexOf(self.tabProperties) == -1:
-                self.tabs.insertTab(0, self.tabProperties, 'Basic Properties')
+                self.tabs.insertTab(0, self.tabProperties, 'Inputs')
             self.tabs.setCurrentIndex(0)
 
         if import_source_path is not None:
@@ -58,8 +58,6 @@ class FrmCrossSections(QtWidgets.QDialog):
                 window_title = 'Import Cross Sections from Temporary Layer'
                 self.layer_name = import_source_path.name()
                 self.layer_id = 'memory'
-                # show_attribute_filter = False
-                # show_mask_clip = False
             else:
                 # find if import_source_path is shapefile, geopackage, or other
                 self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
@@ -218,7 +216,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         # Basic Properties Tab (only inserted when clipping or attribute filter is needed)
         self.grid = QtWidgets.QGridLayout()
 
-        self.lblAttribute = QtWidgets.QLabel('Display Label Attribute')
+        self.lblAttribute = QtWidgets.QLabel('Load Labels from Field (Optional)')
         self.grid.addWidget(self.lblAttribute, 0, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()

@@ -3,7 +3,7 @@ import sqlite3
 
 from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 from qgis.PyQt.QtCore import Qt, QSize, QVariant, QMetaType, pyqtSignal
-from qgis.PyQt.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QGroupBox, QTreeView, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton
+from qgis.PyQt.QtWidgets import QWidget, QDialog, QMessageBox, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QGroupBox, QTreeView, QComboBox, QLabel, QTextEdit, QLineEdit, QCheckBox, QPushButton, QRadioButton
 
 from qgis.core import Qgis, QgsApplication, QgsFeature, QgsVectorLayer
 from qgis.gui import QgisInterface
@@ -30,7 +30,7 @@ from .utilities import validate_name, add_standard_form_buttons
 # Text constants
 flow_path = 'Flow Path' # level path
 attributes_name = 'Categories'
-default_flow_path_name = 'unknown'
+default_flow_path_name = ''
 flow_path_field_name = 'flow_path'
 flows_into_field_name = 'flows_into'
 label_field_name = 'display_label'
@@ -174,7 +174,11 @@ class FrmSampleFrame(QDialog):
                         if self.tab_inputs.cboFlowPathField.currentIndex() > 0:
                             out_field_map.append(ImportFieldMap(self.tab_inputs.cboFlowPathField.currentText(), 'flow_path', direct_copy=True))
                         if self.tab_inputs.cboTopologyField.currentIndex() > 0:
-                            out_field_map.append(ImportFieldMap(self.tab_inputs.cboTopologyField.currentText(), 'topology', direct_copy=True))
+                            out_field_map.append(ImportFieldMap(self.tab_inputs.cboTopologyField.currentText(), 'source_topology'))
+                            if self.tab_inputs.rdoFlowsInto.isChecked():
+                                # Also capture the source feature's own fid so we can build the
+                                # source_fid → dest_fid lookup in post-processing
+                                out_field_map.append(ImportFieldMap('fid', 'source_fid'))
 
                 clip_mask = None
                 if self.tab_inputs is not None:
@@ -277,6 +281,9 @@ class FrmSampleFrame(QDialog):
 
     def on_import_complete(self, result):
         if result is True:
+            if self.tab_inputs is not None and isinstance(self.tab_inputs, SampleFrameInputs):
+                if self.tab_inputs.cboTopologyField.currentIndex() > 0:
+                    self._resolve_topology()
             self.iface.messageBar().pushMessage(f'Sample Frame Imported', f'Sample Frame "{self.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
             self.complete.emit(True)
             super(FrmSampleFrame, self).accept()
@@ -289,6 +296,85 @@ class FrmSampleFrame(QDialog):
                 self.iface.messageBar().pushMessage(f'Error Deleting sample frame', str(ex), level=Qgis.Critical, duration=5)
                 super(FrmSampleFrame, self).accept()
             return
+
+    def _resolve_topology(self):
+        """Post-process: resolve source_topology values stored in metadata to flows_into fids.
+
+        Sequence mode   : source_topology is an integer sequence number. Features are sorted
+                          by that value and wired into a downstream chain via flows_into.
+        Flows Into mode : source_topology is the source fid of the downstream feature.
+                          The chain order is derived by graph traversal, then wired the same way.
+        """
+        is_sequence = self.tab_inputs.rdoSequence.isChecked()
+        try:
+            with sqlite3.connect(self.qris_project.project_file) as conn:
+                curs = conn.cursor()
+                curs.execute('SELECT fid, metadata FROM sample_frame_features WHERE sample_frame_id = ?', [self.sample_frame.id])
+                rows = curs.fetchall()
+
+                # Parse metadata for all features
+                feature_meta = {}
+                for fid, metadata_json in rows:
+                    meta = json.loads(metadata_json) if metadata_json else {}
+                    feature_meta[fid] = meta
+
+                if is_sequence:
+                    # Order directly from integer sequence values
+                    ordered = sorted(
+                        ((fid, int(meta['source_topology'])) for fid, meta in feature_meta.items()
+                         if meta.get('source_topology') is not None),
+                        key=lambda x: x[1]
+                    )
+                else:
+                    # Derive order by traversing the source topology chain
+                    # Build source_fid → dest_fid lookup
+                    source_fid_to_dest = {
+                        str(meta['source_fid']): fid
+                        for fid, meta in feature_meta.items()
+                        if meta.get('source_fid') is not None
+                    }
+                    # Build source_fid → downstream source_fid map
+                    src_to_next = {
+                        str(meta['source_fid']): str(meta['source_topology'])
+                        for meta in feature_meta.values()
+                        if meta.get('source_fid') is not None and meta.get('source_topology') is not None
+                    }
+                    # Find the root: the source_fid not referenced as a downstream by anyone
+                    all_source_fids = set(source_fid_to_dest.keys())
+                    all_downstream = set(src_to_next.values())
+                    roots = all_source_fids - all_downstream
+                    if len(roots) != 1:
+                        self.iface.messageBar().pushMessage(
+                            'Topology Warning', 'Topology chain is not linear — flows_into not set.',
+                            level=Qgis.Warning, duration=5)
+                        return
+
+                    # Traverse the chain to get ordered dest fids
+                    ordered = []
+                    current = next(iter(roots))
+                    visited = set()
+                    while current is not None:
+                        if current in visited:
+                            self.iface.messageBar().pushMessage(
+                                'Topology Warning', 'Cycle detected in topology chain — flows_into not set.',
+                                level=Qgis.Warning, duration=5)
+                            return
+                        visited.add(current)
+                        dest_fid = source_fid_to_dest.get(current)
+                        if dest_fid is not None:
+                            ordered.append((dest_fid, len(ordered) + 1))
+                        current = src_to_next.get(current)
+
+                if not ordered:
+                    return
+
+                # Wire up flows_into chain — same for both modes
+                for i, (fid, _) in enumerate(ordered):
+                    next_fid = ordered[i + 1][0] if i < len(ordered) - 1 else None
+                    curs.execute('UPDATE sample_frame_features SET flows_into = ? WHERE fid = ?', [next_fid, fid])
+                conn.commit()
+        except Exception as ex:
+            self.iface.messageBar().pushMessage('Error resolving topology', str(ex), level=Qgis.Warning, duration=5)
 
     def setupUi(self):
 
@@ -378,13 +464,13 @@ class SampleFrameInputs(QWidget):
                         self.cboTopologyField.addItem(field.name())
 
     def load_clip_to_aoi(self):
-        # get the aoi from the project
+        # get the aoi and valley bottoms from the project
         self.cboClipToAOI.clear()
 
-        aois = {id: mask for id, mask in self.qris_project.aois.items()}
+        clip_items = {**self.qris_project.valley_bottoms, **self.qris_project.aois}
         no_aoi = DBItem('None', 0, 'None - Retain full dataset extent')
-        aois[0] = no_aoi
-        aoi_model = DBItemModel(aois)
+        clip_items[0] = no_aoi
+        aoi_model = DBItemModel(clip_items)
         self.cboClipToAOI.setModel(aoi_model)
 
 
@@ -396,7 +482,7 @@ class SampleFrameInputs(QWidget):
         self.grid = QGridLayout(self)
         self.vert.addLayout(self.grid)
 
-        self.lblImport = QLabel('Import Path')
+        self.lblImport = QLabel('Import Features From')
         self.grid.addWidget(self.lblImport, 0, 0)
         self.txtImport = QLineEdit()
         self.txtImport.setEnabled(False)
@@ -405,29 +491,52 @@ class SampleFrameInputs(QWidget):
         # self.cmdImport.clicked.connect(self.cmdImport_clicked)
         # self.grid.addWidget(self.cmdImport, 0, 2)
 
-        self.lblName = QLabel('Display Labels Field')
-        self.grid.addWidget(self.lblName, 1, 0)
+        self.lblClipToAOI = QLabel('Clip to AOI / Valley Bottom')
+        self.grid.addWidget(self.lblClipToAOI, 1, 0)
+        self.cboClipToAOI = QComboBox()
+        self.cboClipToAOI.setToolTip('Optionally clip the sample frame to the selected AOI or valley bottom')
+        self.grid.addWidget(self.cboClipToAOI, 1, 1, 1, 2)
+
+        self.grid.setRowMinimumHeight(2, 8)
+
+        # Optional fields group box
+        self.grpOptional = QGroupBox('Specify Fields to Import (Optional)')
+        grp_grid = QGridLayout()
+        self.grpOptional.setLayout(grp_grid)
+        self.grid.addWidget(self.grpOptional, 3, 0, 1, 3)
+
+        self.lblName = QLabel('Sample Frame Labels')
+        grp_grid.addWidget(self.lblName, 0, 0)
         self.cboDisplayLabel = QComboBox()
         self.cboDisplayLabel.setToolTip('Field to use for display labels.')
-        self.grid.addWidget(self.cboDisplayLabel, 1, 1, 1, 2)
-        
-        self.lblFlowPathField = QLabel(f'{flow_path} Field')
-        self.grid.addWidget(self.lblFlowPathField, 2, 0)
+        grp_grid.addWidget(self.cboDisplayLabel, 0, 1, 1, 2)
+
+        self.lblFlowPathField = QLabel(f'{flow_path}')
+        grp_grid.addWidget(self.lblFlowPathField, 1, 0)
         self.cboFlowPathField = QComboBox()
         self.cboFlowPathField.setToolTip('Field to specify unique flow path names.')
-        self.grid.addWidget(self.cboFlowPathField, 2, 1, 1, 2)
+        grp_grid.addWidget(self.cboFlowPathField, 1, 1, 1, 2)
 
-        self.lblTopologyField = QLabel('Topology Field')
-        self.grid.addWidget(self.lblTopologyField, 3, 0)
+        self.lblTopologyField = QLabel('Topology')
+        grp_grid.addWidget(self.lblTopologyField, 2, 0)
         self.cboTopologyField = QComboBox()
-        self.cboTopologyField.setToolTip('Field to use for topology inference. Should be an integer field with unique ordered values.')
-        self.grid.addWidget(self.cboTopologyField, 3, 1, 1, 2)
+        self.cboTopologyField.setToolTip('Field to use for topology inference. Value should ref.')
+        grp_grid.addWidget(self.cboTopologyField, 2, 1, 1, 2)
 
-        self.lblClipToAOI = QLabel('Clip to AOI')
-        self.grid.addWidget(self.lblClipToAOI, 4, 0)
-        self.cboClipToAOI = QComboBox()
-        self.cboClipToAOI.setToolTip('Optionally clip the sample frame to the selected AOI')
-        self.grid.addWidget(self.cboClipToAOI, 4, 1, 1, 2)
+        self.rdoSequence = QRadioButton('Sequence')
+        self.rdoFlowsInto = QRadioButton('Flows Into Reference')
+        self.rdoSequence.setChecked(True)
+        topology_type_layout = QHBoxLayout()
+        topology_type_layout.addWidget(self.rdoSequence)
+        topology_type_layout.addWidget(self.rdoFlowsInto)
+        topology_type_layout.addStretch()
+        topology_type_widget = QWidget()
+        topology_type_widget.setLayout(topology_type_layout)
+        grp_grid.addWidget(QLabel('Topology Represents'), 3, 0)
+        grp_grid.addWidget(topology_type_widget, 3, 1, 1, 2)
+        topology_type_widget.setEnabled(False)
+        self.cboTopologyField.currentIndexChanged.connect(
+            lambda idx: topology_type_widget.setEnabled(idx > 0))
 
         self.vert.addStretch()
 
@@ -524,19 +633,24 @@ class SampleFrameProperties(QWidget):
 
         self.lblLabelField = QLabel('Labels Field Name')
         self.grid.addWidget(self.lblLabelField, 1, 0)
+        self.lblLabelField.setVisible(False)
         self.txtLabelField = QLineEdit()
         self.txtLabelField.setEnabled(False)
         self.grid.addWidget(self.txtLabelField, 1, 1)
+        self.txtLabelField.setVisible(False)
 
         self.lblFlowField = QLabel('Flow Into Field Name')
         self.grid.addWidget(self.lblFlowField, 2, 0)
+        self.lblFlowField.setVisible(False)
         self.txtFlowField = QLineEdit()
         self.txtFlowField.setEnabled(False)
         self.grid.addWidget(self.txtFlowField, 2, 1)
+        self.txtFlowField.setVisible(False)
 
         self.lblDefaultFlowPathName = QLabel(f'Default {flow_path} Name')
         self.grid.addWidget(self.lblDefaultFlowPathName, 3, 0)
         self.txtDefaultFlowPathName = QLineEdit()
+        self.txtDefaultFlowPathName.setPlaceholderText('Not specified')
         self.grid.addWidget(self.txtDefaultFlowPathName, 3, 1)
 
         self.vert.addStretch()
