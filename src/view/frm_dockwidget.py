@@ -2529,7 +2529,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             label_field = 'display_label' if frm.update_display_label() else None
             chain_field = 'flows_into'
             flow_path_field = 'flow_path'
-            flow_path_value = profile.name
+            flow_path_value = db_item.default_flow_path_name or profile.name
             intersecting_only = True
         elif isinstance(db_item, CrossSections):
             layer_path = f'{self.qris_project.project_file}|layername=cross_section_features'

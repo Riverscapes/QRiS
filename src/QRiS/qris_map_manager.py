@@ -185,6 +185,10 @@ class QRisMapManager(RiverscapesMapManager):
         # setup fields
         self.set_hidden(feature_layer, 'fid', 'Sample Frame Feature ID')
         self.set_hidden(feature_layer, 'sample_frame_id', 'Sample Frame ID')
+        self.set_hidden(feature_layer, 'flow_path', 'Flow Path', hide_in_attribute_table=True)
+        if sample_frame.default_flow_path_name:
+            fp_idx = feature_layer.fields().indexOf('flow_path')
+            feature_layer.setDefaultValueDefinition(fp_idx, QgsDefaultValue(f"'{sample_frame.default_flow_path_name}'"))
         self.set_multiline(feature_layer, 'description', 'Description')
         self.set_virtual_dimension(feature_layer, 'area')
         # Merge system fields (Objective, Condition) with any custom category fields on this sample frame
