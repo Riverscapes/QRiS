@@ -82,6 +82,9 @@ class FrmSampleFrame(QDialog):
         if sample_frame is not None:
             self.setWindowTitle(f'Sample Frame Properties')
             self.txtName.setText(self.sample_frame.name)
+            self.chkAddToMap.setCheckState(Qt.Unchecked)
+            self.chkAddToMap.setVisible(False)
+            self.chkStartEditSession.setVisible(False)
         else:
             self.txtName.setFocus()
 
@@ -654,9 +657,6 @@ class SampleFrameProperties(QWidget):
         self.grid.addWidget(self.txtDefaultFlowPathName, 3, 1)
 
         self.vert.addStretch()
-
-
-
 
 class SampleFrameDescription(QWidget):
 
