@@ -57,6 +57,7 @@ class SampleFrame(DBItemSpatial):
         super().set_metadata(metadata)
         # special handling for sample frame items
         self.project_bounds = self.system_metadata.get('project_bounds', False)
+        self.corridor_type = self.system_metadata.get('corridor_type', None)
         self.default_flow_path_name = self.metadata.get('default_flow_path_name', None)
 
         # Normalize category fields to canonical schema: {id, label, type, values}
