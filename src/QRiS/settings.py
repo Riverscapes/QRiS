@@ -157,3 +157,24 @@ class Settings(SettingsBorg):
     def resource_path(self, *parts):
         """Build an absolute path under the plugin resources directory."""
         return os.path.join(self.plugin_root_path(), 'resources', *parts)
+
+    def _load_lookups(self) -> dict:
+        """Load lookups JSON from configured path; return empty dict when unavailable."""
+        lookups_json_path = self.getValue('lookupsJson')
+        if not lookups_json_path or not os.path.exists(lookups_json_path):
+            return {}
+
+        try:
+            with open(lookups_json_path, 'r', encoding='utf-8') as fh:
+                data = json.load(fh)
+            return data if isinstance(data, dict) else {}
+        except Exception as e:
+            self.log(f"Error loading lookups JSON: {e}", level=Qgis.Warning)
+            return {}
+
+    def get_lookup_values(self, section: str, key: str) -> list:
+        """Return lookup values from lookups.json section/key as a list of strings."""
+        values = self._load_lookups().get(section, {}).get(key, [])
+        if not isinstance(values, list):
+            return []
+        return [str(value) for value in values if value is not None]
