@@ -1,6 +1,3 @@
-import json
-import os
-
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 from ..frm_attachment import FrmAttachment
@@ -35,7 +32,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
 
         self.qris_project = qris_project
         self.dce_event = dce_event
-        self._purposes = self._load_purposes()
+        self._purposes = Settings().get_lookup_values('attachments', 'purpose')
         # dict: attachment_id -> (Attachment, assoc_metadata)
         self._dce_attachments: dict = {}
         # ids that were associated when the form opened — used to diff on save()
@@ -66,18 +63,6 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-
-    def _load_purposes(self) -> list:
-        """Load the purpose list from the lookups JSON file. Returns empty list if missing."""
-        lookups_json_path = Settings().getValue('lookupsJson')
-        if not lookups_json_path or not os.path.exists(lookups_json_path):
-            return []
-        try:
-            with open(lookups_json_path, 'r') as fh:
-                data = json.load(fh)
-            return [str(p) for p in data.get('attachments', {}).get('purpose', [])]
-        except Exception:
-            return []
 
     def _load_attachments(self):
         if self.dce_event is None:
