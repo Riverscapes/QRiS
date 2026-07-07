@@ -97,6 +97,7 @@ from ..lib.data_exchange import browse_data_exchange
 from ..lib.rs_project import RSProject
 
 from ..QRiS.settings import Settings
+from ..QRiS.qrave_integration import QRaveIntegration
 from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
 
@@ -187,7 +188,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
 
-        self.qrave = None
+        self.qrave: QRaveIntegration = None
 
         ltv: QgsLayerTreeView = self.iface.layerTreeView()
         # workaround for QGIS < 3.32
@@ -701,6 +702,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
+                    self.menu.addSeparator()
+                    self.add_context_menu_item(self.menu, 'Share Project with Data Exchange', 'data_exchange', lambda: self.share_project_with_data_exchange(self.qris_project))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'data_exchange', lambda: browse_data_exchange(self.iface.mapCanvas()))
                     self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Lock All Layers in Project', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
@@ -2738,6 +2741,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def browse_item(self, db_item: DBItem, folder_path):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
+
+    def share_project_with_data_exchange(self, project: Project):
+        rs_project = self.qrave.riverscapes_project_module.Project(project.project_xml_file)
+        rs_project.load()
+
+        if not rs_project.loadable or rs_project.project is None:
+            Settings().log(
+                'Unable to load the Riverscapes project metadata required for upload.',
+                level=Qgis.Critical
+            )
+            return
+        
+        frm_upload = self.qrave.ProjectUploadDialog(self, rs_project)
+        frm_upload.exec_()
 
     def setupUi(self):
 
