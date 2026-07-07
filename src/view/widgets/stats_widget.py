@@ -21,7 +21,7 @@ STAT_LABELS = {
     'average_length': 'Average Length',
     'min_length': 'Min Length',
     'max_length': 'Max Length',
-    'sinuosity': 'Sinuosity',
+    'sinuosity': 'Planform Sinuosity',
 }
 
 
@@ -83,7 +83,7 @@ class StatsWidget(QWidget):
         self._stats_calculated = True
         self.refresh_button.setVisible(False)
 
-    def add_stats_tab(self, tab_widget, label='Statistics'):
+    def add_stats_tab(self, tab_widget, label='Geometry'):
         """Add this widget as a tab only if a db_item exists or pre-loaded stats are present."""
         if self._db_item is None and not self._raw_stats:
             self.hide()
@@ -93,7 +93,7 @@ class StatsWidget(QWidget):
         tab_widget.currentChanged.connect(self._on_parent_tab_changed)
 
     def _on_parent_tab_changed(self, index):
-        if self._tab_widget and self._tab_widget.tabText(index) == 'Statistics':
+        if self._tab_widget and self._tab_widget.tabText(index) == 'Geometry':
             self.load_stats()
 
     def set_db_item(self, db_item, db_path: str):

@@ -25,6 +25,7 @@ from ..gp.sample_frame_task import SampleFrameTask
 from ..gp.order_by_line_task import OrderByLineTask
 
 from .widgets.metadata import MetadataWidget
+from .widgets.stats_widget import StatsWidget
 from .utilities import validate_name, add_standard_form_buttons
 
 # Text constants
@@ -77,6 +78,7 @@ class FrmSampleFrame(QDialog):
 
         metadata_json = json.dumps(sample_frame.user_metadata) if sample_frame is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
+        self.stats_widget = StatsWidget(db_item=sample_frame, db_path=qris_project.project_file, parent=self)
 
         self.setupUi()
         if sample_frame is not None:
@@ -404,6 +406,7 @@ class FrmSampleFrame(QDialog):
         self.tabs.addTab(self.tab_properties, "Basic Properties")
         self.tabs.addTab(self.tab_description, "Description")
         self.tabs.addTab(self.tab_attributes, attributes_name)
+        self.stats_widget.add_stats_tab(self.tabs)
         self.tabs.addTab(self.metadata_widget, "Metadata")
 
         self.chkAddToMap = QCheckBox('Add to Map')
