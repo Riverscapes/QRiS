@@ -28,6 +28,7 @@
         <file alias="file">../Images/file.svg</file>
         <file alias="file_copy">../Images/file_copy.svg</file>
         <file alias="folder">../Images/folder.svg</file>
+        <file alias="globe">../Images/globe.svg</file>
         <file alias="help">../Images/help.svg</file>
         <file alias="influence">../Images/influence.png</file>
         <file alias="json">../Images/json.png</file>

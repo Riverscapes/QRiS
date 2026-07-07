@@ -434,20 +434,34 @@ class QRiSToolbar:
         # Set the map canvas to the project SRS
         default_crs = QSettings().value('Projections/layerDefaultCrs')
         default_crs_behavior = QSettings().value('app/projections/newProjectCrsBehavior')
-        project_srs = self.dockwidget.qris_project.metadata.get('project_srs', None)
+        metadata = self.dockwidget.qris_project.metadata or {}
+        system_metadata = metadata.get('system', {}) if isinstance(metadata.get('system', {}), dict) else {}
+        project_srs = system_metadata.get('project_srs', None)
+
         trigger_repaint = False
         try:
             if project_srs is not None:
-                QSettings().setValue('Projections/layerDefaultCrs', project_srs)
-                QSettings().setValue('app/projections/newProjectCrsBehavior', 'usePresetCrs')
-                # get map crs from project_sRS id
-                crs = QgsCoordinateReferenceSystem(project_srs)
-                if crs is not None:
-                    self.iface.mapCanvas().setDestinationCrs(crs)
+                project_srs = str(project_srs).strip()
+                current_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+                current_srs = current_crs.authid()
+
+                # Use robust CRS parsing for AUTHID strings like EPSG:xxxx and ESRI:xxxx.
+                crs = QgsCoordinateReferenceSystem.fromOgcWmsCrs(project_srs)
+                if not crs.isValid():
+                    crs = QgsCoordinateReferenceSystem()
+                    crs.createFromUserInput(project_srs)
+
+                if crs.isValid() and current_srs != crs.authid():
+                    QSettings().setValue('Projections/layerDefaultCrs', project_srs)
+                    QSettings().setValue('app/projections/newProjectCrsBehavior', 'usePresetCrs')
                     self.qproject.setCrs(crs)
+                    self.iface.mapCanvas().setDestinationCrs(crs)
                     self.iface.mapCanvas().refresh()
+                    self.iface.mapCanvas().refreshAllLayers()
                     self.iface.messageBar().pushMessage('QRiS', f'Map CRS set to {crs.description()}')
                     trigger_repaint = True
+                elif not crs.isValid():
+                    QgsMessageLog.logMessage(f'Unable to resolve project_srs "{project_srs}" from project system metadata.', 'QRiS', Qgis.Warning)
 
             # Add basemap to ToC if empty
             if len(QgsProject.instance().mapLayers().values()) == 0:
