@@ -711,7 +711,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
                     self.add_context_menu_item(self.menu, 'Create Vicinity Map', 'vicinity_map', lambda: self.create_vicinity_map(model_data))
-                    # self.add_context_menu_item(self.menu, 'Set Project SRS', 'gis', lambda: self.set_project_srs(model_data))
+                    self.add_context_menu_item(self.menu, 'Save Current SRS to Project', 'globe', lambda: self.save_project_srs(show_feedback=True))
                     self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.destroy_docwidget())
 
                 if isinstance(model_data, EventLayer):
@@ -1011,30 +1011,43 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
                 self.add_tree_group_to_map(child_item, features_only)
 
-    def set_project_srs(self, project: Project):
+    def save_project_srs(self, show_feedback: bool = True) -> bool:
+        """Persist the current map CRS auth id to project system metadata."""
+        if self.qris_project is None:
+            return False
 
-        # Get the current map CRS
-        canvas = self.iface.mapCanvas()
-        map_crs = canvas.mapSettings().destinationCrs()
+        map_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
         map_crs_id = map_crs.authid()
+        if map_crs_id is None or map_crs_id == '':
+            if show_feedback:
+                QtWidgets.QMessageBox.warning(self, 'QRiS Project SRS', 'Could not determine the current map SRS. Nothing was saved.')
+            return False
 
-        # Get the project srs from metadata, if it exists
-        project_srs = self.qris_project.metadata.get('project_srs', None)
+        metadata = self.qris_project.metadata or {}
+        system_metadata = metadata.get('system', {}) if isinstance(metadata.get('system', {}), dict) else {}
+        existing_srs = system_metadata.get('project_srs', None)
+        if existing_srs == map_crs_id:
+            if show_feedback:
+                QtWidgets.QMessageBox.information(self, 'QRiS Project SRS', f'Project SRS is already set to {map_crs_id}.')
+            return False
 
-        if map_crs_id == project_srs:
-            QtWidgets.QMessageBox.information(self, 'Qris Project SRS', f'The current map SRS is the same as the Qris project SRS.\n\nCurrent Map SRS: {map_crs_id}\n\nCurrent Qris Project SRS: {project_srs}')
-            return
+        system_metadata['project_srs'] = map_crs_id
+        metadata['system'] = system_metadata
+        # Remove non-system duplicates so project_srs has one canonical location.
+        if 'project_srs' in metadata:
+            del metadata['project_srs']
+        if isinstance(metadata.get('metadata'), dict) and 'project_srs' in metadata['metadata']:
+            del metadata['metadata']['project_srs']
 
-        # prompt the user if they want to change the project srs to the map srs
-        result = QtWidgets.QMessageBox.question(self, 'Set Qris Project SRS', f'Would you like to set the change the Qris project SRS?\n\nCurrent Map SRS: {map_crs_id}\n\nCurrent Qris Project SRS: {project_srs}\n\nOr click "Reset" to clear the Qris project SRS.',
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Reset, QtWidgets.QMessageBox.No)
-        if result == QtWidgets.QMessageBox.Yes:
-            self.qris_project.metadata['project_srs'] = map_crs_id
-            self.qris_project.update_metadata()
+        self.qris_project.metadata = metadata
+        self.qris_project.update_metadata()
+        if show_feedback:
+            QtWidgets.QMessageBox.information(self, 'QRiS Project SRS', f'Saved project SRS: {map_crs_id}')
+        return True
 
-        if result == QtWidgets.QMessageBox.Reset:
-            self.qris_project.metadata['project_srs'] = None
-            self.qris_project.update_metadata()
+    def set_project_srs(self, project: Project):
+        """Backward-compatible wrapper for legacy calls."""
+        self.save_project_srs(show_feedback=True)
 
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""

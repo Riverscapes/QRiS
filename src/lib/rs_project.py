@@ -6,6 +6,7 @@ from glob import glob
 import json
 import sqlite3
 from datetime import datetime
+import xml.etree.ElementTree as ET
 
 from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
 
@@ -120,6 +121,33 @@ DEFAULT_EXPORT_PATH = 'default_export_path'
 
 class RSProject:
 
+    @staticmethod
+    def _local_tag(tag: str) -> str:
+        return tag.split('}', 1)[-1] if tag else ''
+
+    @classmethod
+    def _load_existing_warehouse_id(cls, rsxml_path: str):
+        if not os.path.isfile(rsxml_path):
+            return None
+
+        try:
+            root = ET.parse(rsxml_path).getroot()
+        except Exception as ex:
+            QgsMessageLog.logMessage(f'Unable to parse RS XML for warehouse lookup: {str(ex)}', 'QRiS', Qgis.Warning)
+            return None
+
+        # Warehouse may be represented as either a Project attribute or child element.
+        for attr_key in ('warehouse', 'Warehouse'):
+            attr_val = root.attrib.get(attr_key)
+            if attr_val not in (None, ''):
+                return attr_val
+
+        for node in root.iter():
+            if cls._local_tag(node.tag) == 'Warehouse' and node.text and node.text.strip():
+                return node.text.strip()
+
+        return None
+
     def __init__(self, qris_project: Project):
         
         if not rsxml:
@@ -130,9 +158,7 @@ class RSProject:
         self.warehouse_id = None
         # if the project file already exists, we need to see if it has a warehouse id
         if os.path.exists(self.project_rs_xml_path):
-
-            rs_project_existing = rsxml.project_xml.Project.load_project(self.project_rs_xml_path)
-            self.warehouse_id = rs_project_existing.warehouse
+            self.warehouse_id = self._load_existing_warehouse_id(self.project_rs_xml_path)
         self.out_name = 'qris.gpkg'  # os.path.split(self.qris_project.project_file)[1]
         self.qris_version = ".".join(installed_qris_version.split(".")[:3])
 
@@ -190,23 +216,43 @@ class RSProject:
 
     def build_project(self):
 
-        metadata_values = [rsxml.project_xml.Meta('QRiS Project Name', self.qris_project.name),
-                           rsxml.project_xml.Meta('QRiS Project Description', self.qris_project.description),
-                           rsxml.project_xml.Meta('ModelVersion', '1'),
-                           rsxml.project_xml.Meta('Project Updated', self.project_updated.strftime("%Y-%m-%dT%H:%M:%S"))
-                           ]
-        for key, value in self.qris_project.metadata.items():
-            # if tags are empty, skip
-            if key == "tags":
+        metadata_values = []
+        seen_names = set()
+
+        def add_meta(name, value):
+            if value in (None, ""):
+                return
+            name = str(name)
+            if name in seen_names:
+                return
+            metadata_values.append(rsxml.project_xml.Meta(name, value))
+            seen_names.add(name)
+
+        # Base project metadata
+        add_meta('QRiS Project Name', self.qris_project.name)
+        add_meta('QRiS Project Description', self.qris_project.description)
+        add_meta('ModelVersion', '1')
+        add_meta('Project Updated', self.project_updated.strftime("%Y-%m-%dT%H:%M:%S"))
+
+        project_metadata = self.qris_project.metadata or {}
+
+        # User metadata follows the standard metadata dictionary convention.
+        user_metadata = project_metadata.get('metadata', {})
+        if isinstance(user_metadata, dict):
+            for key, value in user_metadata.items():
+                add_meta(key, value)
+
+        # System metadata follows the standard "<key> (System)" export convention.
+        system_metadata = project_metadata.get('system', {})
+        if isinstance(system_metadata, dict):
+            for key, value in system_metadata.items():
+                add_meta(f'{key} (System)', f'{value}')
+
+        # Preserve any additional top-level metadata keys, excluding known containers.
+        for key, value in project_metadata.items():
+            if key in ('tags', 'metadata', 'system'):
                 continue
-            if value == "":
-                continue
-            if key == "metadata":
-                dict_metadata: dict = value
-                for k, v in dict_metadata.items():
-                    metadata_values.append(rsxml.project_xml.Meta(k, v))
-            else:
-                metadata_values.append(rsxml.project_xml.Meta(key, value))
+            add_meta(key, value)
 
         project_bounds = self.get_project_bounds()
 
