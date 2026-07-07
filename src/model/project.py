@@ -137,6 +137,7 @@ class Project(DBItem, QObject):
         self._flush_pending = False
 
         self.project_file = parse_posix_path(project_file)
+        self.project_xml_file = os.path.join(os.path.dirname(self.project_file), 'project.rs.xml')
         with sqlite3.connect(self.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()

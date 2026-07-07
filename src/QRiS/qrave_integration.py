@@ -1,10 +1,11 @@
 import os
 import importlib
+import traceback
 
 from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QIcon
 from qgis.PyQt.QtWidgets import QMenu
-from qgis.core import QgsMessageLog, Qgis
+from qgis.core import Qgis
 from qgis.utils import plugins
 
 from .path_utilities import parse_posix_path
@@ -19,17 +20,18 @@ class QRaveIntegration(QObject):
 
     def __init__(self, parent):
         super(QRaveIntegration, self).__init__(parent)
+        self.name = None
+        self.plugin_instance = None
+        self.symbology_folders = None
+        self.qrave_map_layer = None
+        self.protocol_folder = None
+        self.RemoteProject = None
+        self.telemetry = None
+        self.BaseMaps = None
+        self.ProjectUploadDialog = None
+
         try:
             # from https://gis.stackexchange.com/questions/403501/using-qgis-plugin-from-another-plugin
-
-            self.name = None
-            self.plugin_instance = None
-            self.symbology_folders = None
-            self.qrave_map_layer = None
-            self.protocol_folder = None
-            self.RemoteProject = None
-            self.telemetry = None
-            self.BaseMaps = None
 
             # Attemp to find RAVE plugin using lower case names
             plugins_lower_case = {k.lower(): k for k in plugins.keys()}
@@ -69,7 +71,13 @@ class QRaveIntegration(QObject):
                 self.BaseMaps = self.basemaps_module.BaseMaps()
                 self.BaseMaps.load()
 
-                QgsMessageLog.logMessage(f"Riverscapes Viewer plugin '{self.name}' loaded successfully.", "QRiS", Qgis.Info)
+                # Uploader
+                self.riverscapes_project_module = importlib.import_module(f'{self.name}.src.classes.project')
+                self.project_upload_module = importlib.import_module(f'{self.name}.src.project_upload_dialog')
+                self.ProjectUploadDialog = self.project_upload_module.ProjectUploadDialog
+
+                # Successfully loaded the plugin, log a message
+                Settings().log(f"Riverscapes Viewer plugin '{self.name}' loaded successfully.", Qgis.Info)
                 
                 if self.plugin_instance.dockwidget:
                     # Check if the signal is already connected
@@ -79,11 +87,7 @@ class QRaveIntegration(QObject):
 
         except Exception as ex:
 
-            QgsMessageLog.logMessage(
-                f"Error initializing QRaveIntegration: {str(ex)}",
-                "QRiS",
-                Qgis.Critical
-            )
+            Settings().log(f"Error initializing QRaveIntegration: {str(ex)}\n{traceback.format_exc()}", Qgis.Critical)
             self.name = None
             self.plugin_instance = None
             self.symbology_folders = None
