@@ -1002,13 +1002,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # Reverse the order of children
             for row in reversed(range(0, model_item.rowCount())):
                 child_item = model_item.child(row)
-                if features_only is True and isinstance(child_item.data(QtCore.Qt.UserRole), EventLayer):
-                    event_layer: EventLayer = child_item.data(QtCore.Qt.UserRole)
-                    fc_name = Layer.DCE_LAYER_NAMES[event_layer.layer.geom_type]
-                    temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}', 'temp', 'ogr')
-                    if temp_layer.featureCount() == 0:
-                        continue
-                self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
+                child_data = child_item.data(QtCore.Qt.UserRole)
+
+                if features_only is True:
+                    # In features-only mode, recurse through container nodes without calling
+                    # broad add paths (for example, Event) that include empty child layers.
+                    if isinstance(child_data, EventLayer):
+                        event_layer: EventLayer = child_data
+                        fc_name = Layer.DCE_LAYER_NAMES[event_layer.layer.geom_type]
+                        temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}', 'temp', 'ogr')
+                        if temp_layer.featureCount() == 0:
+                            self.add_tree_group_to_map(child_item, features_only)
+                            continue
+                        self.add_db_item_to_map(child_item, child_data)
+                    elif not isinstance(child_data, (str, Project, Event, PlanningContainer)):
+                        self.add_db_item_to_map(child_item, child_data)
+                else:
+                    self.add_db_item_to_map(child_item, child_data)
+
                 self.add_tree_group_to_map(child_item, features_only)
 
     def save_project_srs(self, show_feedback: bool = True) -> bool:
