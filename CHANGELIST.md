@@ -1,5 +1,21 @@
 # QRiS Plugin
 
+## [1.2.5.2] Jul 8 2026
+
+### Fixed
+- Make sure Add to Map checkbox does not appear on form for existing Sample Frames
+- Bug with Adding All Layers With Features from DCE Parent Node #1022
+
+### Changed
+- Cosmetic and functional updates to Profile, Cross Section and Sample Frame Forms #963, #964
+- Minor changes to Geometry Statistics Tab for Inputs
+- Include Designs & As-Builts in Analysis Over Time View #1042
+
+### Added
+- QViewer Uploader in QRiS #945
+- Store And Use SRS in the QRiS project #225
+
+
 ## [1.2.5.1] Jun 23 2026
 
 ### Fixed
