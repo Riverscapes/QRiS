@@ -2774,7 +2774,57 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         qurl = QtCore.QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
 
+    def _has_upload_blocking_state(self):
+        """Return (True, reason) when upload should be blocked due to mutable project state."""
+
+        # Active edit sessions can leave pending in-memory changes that are not ready for upload.
+        if self.map_manager is not None and self.map_manager.get_edit_mode():
+            return True, 'One or more QRiS layers are currently in edit mode. Please save/stop editing before uploading.'
+
+        # Also guard against vector layers put in edit mode outside map_manager wiring.
+        for layer in QgsProject.instance().mapLayers().values():
+            if isinstance(layer, QgsVectorLayer) and layer.isEditable():
+                return True, 'A vector layer is currently in edit mode. Please save/stop editing before uploading.'
+
+        task_manager = QgsApplication.taskManager()
+        if task_manager is not None:
+            active_tasks = task_manager.activeTasks()
+            write_risk_descriptions = (
+                'Order Features by Line Task',
+                'QRiS Zonal Statistics Task',
+                'Stream Stats API Request',
+            )
+            for task in active_tasks:
+                description = task.description() if task is not None else ''
+                if any(marker in description for marker in write_risk_descriptions):
+                    return True, f'An active data task is still running ({description}). Please wait for it to finish before uploading.'
+
+        return False, None
+
     def share_project_with_data_exchange(self, project: Project):
+        blocked, reason = self._has_upload_blocking_state()
+        if blocked:
+            QtWidgets.QMessageBox.warning(self, 'Data Exchange Upload Blocked', reason)
+            return
+
+        # Final sync pass before handing off to QRave upload.
+        # This reduces stale rs.xml / gpkg state during immediate upload after edits.
+        try:
+            if self.rs_project is not None:
+                self.rs_project.write()
+            project.flush(vacuum=False)
+        except Exception as ex:
+            Settings().log(
+                f'Unable to complete final project sync before upload: {str(ex)}',
+                level=Qgis.Critical
+            )
+            QtWidgets.QMessageBox.warning(
+                self,
+                'Data Exchange Upload Blocked',
+                'Unable to finalize local project files before upload. Check QRiS logs and try again.'
+            )
+            return
+
         rs_project = self.qrave.riverscapes_project_module.Project(project.project_xml_file)
         rs_project.load()
 
@@ -2782,6 +2832,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             Settings().log(
                 'Unable to load the Riverscapes project metadata required for upload.',
                 level=Qgis.Critical
+            )
+            QtWidgets.QMessageBox.warning(
+                self,
+                'Data Exchange Upload Blocked',
+                'Unable to load the Riverscapes project metadata required for upload. Check QRave logs for details.'
             )
             return
         
