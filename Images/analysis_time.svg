@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="24px"
+   viewBox="0 -960 960 960"
+   width="24px"
+   fill="#1f1f1f"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="analysis_time.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="34.625"
+     inkscape:cx="11.98556"
+     inkscape:cy="12"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     d="m296-320 122-122 80 80 142-141v63h80v-200H520v80h63l-85 85-80-80-178 179 56 56Zm-96 200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"
+     id="path1" />
+  <path
+     style="fill:#4dcbdc;stroke-width:0.0288809"
+     d="M 5.0108303,12 V 5.0108303 H 12 18.98917 V 12 18.98917 H 12 5.0108303 Z m 6.4188997,1.956808 c 0.544144,0.543972 1.000144,0.98904 1.013335,0.98904 0.01319,0 0.812399,-0.779408 1.776019,-1.732019 l 1.752035,-1.73202 0.0077,0.764511 0.0077,0.76451 h 1.010359 1.010358 V 10.498195 7.9855596 H 15.494585 12.981949 V 8.9963899 10.00722 h 0.786856 0.786855 l -1.053853,1.05415 -1.053853,1.054149 -1.003794,-1.003487 -1.003795,-1.003487 -0.5869449,0.591937 c -0.3228202,0.325565 -1.3262562,1.336401 -2.229858,2.246301 l -1.6429124,1.654364 0.7062649,0.706707 0.7062649,0.706706 1.5235994,-1.523396 1.5235991,-1.523396 z"
+     id="path2"
+     transform="matrix(40,0,0,40,0,-960)" />
+</svg>

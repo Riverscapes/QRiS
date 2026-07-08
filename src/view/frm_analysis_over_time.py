@@ -16,7 +16,7 @@ from ..model.sample_frame import SampleFrame, get_sample_frame_sequence
 from ..model.metric_value import load_metric_values
 from ..lib.unit_conversion import short_unit_name, distance_units, area_units, ratio_units
 from ..lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
-from ..model.event import DCE_EVENT_TYPE_ID
+from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 
 from .widgets.event_library import EventLibraryWidget
 from .widgets.export_chart_widget import ChartExportWidget
@@ -28,7 +28,7 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
     Dockable widget for performing analysis over time. Allows users to select a sample frame and pour point, and then runs the analysis.
     """
 
-    def __init__(self, iface: QgisInterface, project: Project, map_manager, analysis: Analysis):
+    def __init__(self, iface: QgisInterface, project: Project, map_manager, analysis: Analysis = None):
         super().__init__("Analysis Over Time", iface.mainWindow())
         self.setObjectName("AnalysisOverTimeDock")
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.TopDockWidgetArea)
@@ -65,6 +65,11 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
         self.chart.action_chk_uncertainty.triggered.connect(self.redraw_chart)
         self.chart.chart_needs_update.connect(self.redraw_chart)
         self.chart.metric_data_clicked.connect(self.edit_metric_value)
+
+        # If no analysis was provided, default to the first available analysis in the combo.
+        if self.analysis is None and self.analysis_combo.count() > 0:
+            self.on_analysis_changed()
+
         self.update_map()
         self.redraw_chart()
 
@@ -82,6 +87,8 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
                 idx = self.analysis_combo.findData(self.analysis.id)
                 if idx >= 0:
                     self.analysis_combo.setCurrentIndex(idx)
+            elif self.analysis_combo.count() > 0:
+                self.analysis_combo.setCurrentIndex(0)
         
         self.analysis_combo.blockSignals(False)
 
@@ -161,33 +168,28 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
                 
         self.sample_frame_combo.blockSignals(False)
             
-        # 3. Populate DCE Event Library Widget and Select Settings
+        # 3. Populate event library widget and selected settings
         # Enable dragging/reordering and filter on existing events
         self.event_library.allow_reorder = True
+        allowed_event_types = [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]
 
-        # Load in the previously selected DCEs from the analysis metadata if present
+        # Load only selected events when analysis metadata specifies them (hard filter).
         if self.analysis and self.analysis.metadata and 'selected_events' in self.analysis.metadata:
             selected_event_ids = self.analysis.metadata.get('selected_events', [])
             
-            # Create ordered list of events
-            all_events = [e for e in self.project.events.values() if e.event_type.id == DCE_EVENT_TYPE_ID]
+            # Build event lookup and preserve saved order for valid IDs.
+            all_events = [e for e in self.project.events.values() if e.event_type.id in allowed_event_types]
             event_map = {e.id: e for e in all_events}
 
             ordered_events = []
-            # Add selected events in order
             for eid in selected_event_ids:
                 if eid in event_map:
                     ordered_events.append(event_map[eid])
 
-            # Add remaining events (unselected)
-            for e in all_events:
-                if e.id not in selected_event_ids:
-                    ordered_events.append(e)
-
             self.event_library.load_events(ordered_events)
             self.event_library.set_selected_event_ids(selected_event_ids)
         else:
-            all_events = [e for e in self.project.events.values() if e.event_type.id == DCE_EVENT_TYPE_ID]
+            all_events = [e for e in self.project.events.values() if e.event_type.id in allowed_event_types]
             self.event_library.load_events(all_events)
             self.event_library.select_all()
 
