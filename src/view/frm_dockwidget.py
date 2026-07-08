@@ -540,10 +540,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if model_data == ANALYSIS_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
                 if len(self.qris_project.analyses) > 0:
+                    self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
+                    self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis_time', lambda: self.open_analysis_over_time_dock())
+                    self.add_context_menu_item(self.menu, 'Distribution Analysis (Interactive)', 'distribution_analysis', lambda: self.open_distribution_analysis_dock())
+                    self.add_context_menu_item(self.menu, 'Distribution Analysis (Dialog)', 'distribution_analysis', lambda: self.distribution_analysis())
+                    self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
-                self.add_context_menu_item(self.menu, 'Distribution Analysis (Interactive)', 'distribution_analysis', lambda: self.open_distribution_analysis_dock())
-                self.add_context_menu_item(self.menu, 'Distribution Analysis (Dialog)', 'distribution_analysis', lambda: self.distribution_analysis())
+
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
                 self.add_context_menu_item(self.menu, 'Explore Climate Engine Timeseries', 'refresh', lambda: self.climate_engine_explorer())
                 self.add_context_menu_item(self.menu, 'Add Climate Engine Map Layer', 'add_to_map', lambda: self.add_climate_engine_to_map())
@@ -628,8 +632,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, DBItem):
                     if isinstance(model_data, Analysis):
                         self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
+                        self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
+                        self.menu.addSeparator()
                         self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
-                        self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis', lambda: self.open_analysis_over_time_dock(model_data))
+                        self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis_time', lambda: self.open_analysis_over_time_dock(model_data))
+                        self.menu.addSeparator()
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     elif isinstance(model_data, Attachment):
                         if model_data.attachment_type == Attachment.TYPE_FILE:
@@ -658,7 +665,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 else:
                     raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
 
-                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, SampleFrame, Profile, CrossSections, PourPoint, ScratchVector, Analysis, PlanningContainer, Attachment]):
+                if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, SampleFrame, Profile, CrossSections, PourPoint, ScratchVector, PlanningContainer, Attachment]):
                     self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
 
                 if isinstance(model_data, SampleFrame):
@@ -1208,14 +1215,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.analysis_doc_widget.show()
 
-    def open_analysis_over_time_dock(self, analysis: Analysis):
+    def open_analysis_over_time_dock(self, analysis: Analysis = None):
         if self.analysis_over_time_dock_widget is None:
             self.analysis_over_time_dock_widget = FrmAnalysisOverTime(self.iface, self.qris_project, self.map_manager, analysis)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_over_time_dock_widget)
         else:
             # Update analysis context if needed
-            self.analysis_over_time_dock_widget.analysis = analysis
-            self.analysis_over_time_dock_widget.populate_data()
+            if analysis is not None:
+                self.analysis_over_time_dock_widget.analysis = analysis
+                self.analysis_over_time_dock_widget.populate_data()
             
         if not self.analysis_over_time_dock_widget.isVisible():
             self.analysis_over_time_dock_widget.show()
