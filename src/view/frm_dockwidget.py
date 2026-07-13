@@ -710,7 +710,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(model_data, Project):
                     self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Share Project with Data Exchange', 'data_exchange', lambda: self.share_project_with_data_exchange(self.qris_project))
+                    data_exchange_label = 'Update Project on Data Exchange' if RSProject.has_warehouse_tag(model_data.project_file) else 'Upload Project to Data Exchange'
+                    self.add_context_menu_item(self.menu, data_exchange_label, 'data_exchange', lambda: self.share_project_with_data_exchange(self.qris_project))
                     self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'data_exchange', lambda: browse_data_exchange(self.iface.mapCanvas()))
                     self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, 'Lock All Layers in Project', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
