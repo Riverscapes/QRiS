@@ -126,7 +126,7 @@ class RSProject:
         return tag.split('}', 1)[-1] if tag else ''
 
     @classmethod
-    def _load_existing_warehouse_id(cls, rsxml_path: str):
+    def _read_existing_warehouse_attrs(cls, rsxml_path: str):
         if not os.path.isfile(rsxml_path):
             return None
 
@@ -136,17 +136,37 @@ class RSProject:
             QgsMessageLog.logMessage(f'Unable to parse RS XML for warehouse lookup: {str(ex)}', 'QRiS', Qgis.Warning)
             return None
 
-        # Warehouse may be represented as either a Project attribute or child element.
-        for attr_key in ('warehouse', 'Warehouse'):
-            attr_val = root.attrib.get(attr_key)
-            if attr_val not in (None, ''):
-                return attr_val
-
         for node in root.iter():
-            if cls._local_tag(node.tag) == 'Warehouse' and node.text and node.text.strip():
-                return node.text.strip()
+            if cls._local_tag(node.tag).lower() == 'warehouse':
+                return dict(node.attrib)
 
         return None
+
+    @classmethod
+    def _restore_warehouse_attributes(cls, rsxml_path: str, attrs: dict):
+        if not attrs or not os.path.isfile(rsxml_path):
+            return
+
+        try:
+            tree = ET.parse(rsxml_path)
+            root = tree.getroot()
+        except Exception:
+            return
+
+        warehouse_node = None
+        for node in root.iter():
+            if cls._local_tag(node.tag).lower() == 'warehouse':
+                warehouse_node = node
+                break
+
+        if warehouse_node is None:
+            warehouse_node = ET.SubElement(root, 'Warehouse')
+
+        warehouse_node.attrib.clear()
+        for key, value in attrs.items():
+            warehouse_node.set(key, value)
+
+        tree.write(rsxml_path, encoding='utf-8', xml_declaration=True)
 
     def __init__(self, qris_project: Project):
         
@@ -155,10 +175,10 @@ class RSProject:
         
         self.qris_project = qris_project
         self.project_rs_xml_path = os.path.join(os.path.dirname(self.qris_project.project_file), 'project.rs.xml')
-        self.warehouse_id = None
+        self.warehouse_attrs = None
         # if the project file already exists, we need to see if it has a warehouse id
         if os.path.exists(self.project_rs_xml_path):
-            self.warehouse_id = self._load_existing_warehouse_id(self.project_rs_xml_path)
+            self.warehouse_attrs = self._read_existing_warehouse_attrs(self.project_rs_xml_path)
         self.out_name = 'qris.gpkg'  # os.path.split(self.qris_project.project_file)[1]
         self.qris_version = ".".join(installed_qris_version.split(".")[:3])
 
@@ -256,11 +276,19 @@ class RSProject:
 
         project_bounds = self.get_project_bounds()
 
+        warehouse_obj = None
+        if self.warehouse_attrs:
+            warehouse_id = self.warehouse_attrs.get('id')
+            if warehouse_id:
+                warehouse_obj = rsxml.project_xml.Warehouse(
+                    warehouse_id,
+                    self.warehouse_attrs.get('apiUrl', 'https://api.data.riverscapes.net'))
+
         out_project = rsxml.project_xml.Project(name=self.qris_project.name,
                                 proj_path=self.project_rs_xml_path,
                                 project_type=PROJECT_MACHINE_NAME,
                                 meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                                warehouse=self.warehouse_id,
+                                warehouse=warehouse_obj,
                                 description=self.qris_project.description,
                                 bounds=project_bounds)
         return out_project
@@ -582,6 +610,12 @@ class RSProject:
 
         if not rsxml:
             return
+
+        # 1) Find and read existing Warehouse tag attributes from disk.
+        existing_attrs = self._read_existing_warehouse_attrs(self.project_rs_xml_path)
+        if existing_attrs:
+            self.warehouse_attrs = existing_attrs
+
         self.rs_project = self.build_project()
         
         raster_datasets = self.build_rasters()
@@ -623,3 +657,6 @@ class RSProject:
         self.rs_project.realizations.append(attachments_realizations)
 
         self.rs_project.write()
+        # 3) Include the same Warehouse attributes in the rewritten XML.
+        if self.warehouse_attrs:
+            self._restore_warehouse_attributes(self.project_rs_xml_path, self.warehouse_attrs)
