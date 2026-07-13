@@ -143,6 +143,11 @@ class RSProject:
         return None
 
     @classmethod
+    def has_warehouse_tag(cls, project_file: str) -> bool:
+        rsxml_path = os.path.join(os.path.dirname(project_file), 'project.rs.xml')
+        return cls._read_existing_warehouse_attrs(rsxml_path) is not None
+
+    @classmethod
     def _restore_warehouse_attributes(cls, rsxml_path: str, attrs: dict):
         if not attrs or not os.path.isfile(rsxml_path):
             return
