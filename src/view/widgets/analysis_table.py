@@ -156,8 +156,11 @@ class AnalysisTable(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Create Header Layout for Filters
+        # Group all filter controls so callers can hide/show them as one unit.
+        self.filter_tools_widget = QtWidgets.QWidget(self)
         self.header_layout_filters = QtWidgets.QHBoxLayout()
+        self.header_layout_filters.setContentsMargins(0, 0, 0, 0)
+        self.filter_tools_widget.setLayout(self.header_layout_filters)
         
         self.cbo_filter_protocol = CheckableComboBox()
         self.cbo_filter_protocol.setPlaceholderText("All Protocols")
@@ -182,7 +185,7 @@ class AnalysisTable(QtWidgets.QWidget):
         self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.header_layout_filters.addWidget(self.btn_advanced)
 
-        self.main_layout.addLayout(self.header_layout_filters)
+        self.main_layout.addWidget(self.filter_tools_widget)
 
         # Create Table Widget
         self.table = QtWidgets.QTableWidget()
@@ -219,6 +222,9 @@ class AnalysisTable(QtWidgets.QWidget):
         self.table.customContextMenuRequested.connect(self.open_context_menu)
 
         self.main_layout.addWidget(self.table)
+
+    def set_filter_tools_visible(self, visible: bool):
+        self.filter_tools_widget.setVisible(visible)
 
 
     def connect_signals(self):
@@ -513,7 +519,13 @@ class AnalysisTable(QtWidgets.QWidget):
         self.current_dce = event
         self.mask_feature_id = mask_feature_id
 
-        if event is not None and mask_feature_id is not None and self.qris_project is not None:
+        can_load = (
+            mask_feature_id is not None
+            and self.qris_project is not None
+            and (event is not None or (self.analysis is not None and self.analysis.is_simple_intrinsic_mode()))
+        )
+
+        if can_load:
             # Load latest metric values from DB
             metric_values = load_metric_values(self.qris_project.project_file, self.analysis, event, mask_feature_id, self.qris_project.metrics)
 

@@ -77,20 +77,26 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         valid_event_types = [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]
         events = {event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id in valid_event_types}
 
-        # Filter events if selected_events metadata exists, but only keep those that still exist
-        selected_event_ids = self.analysis.metadata.get('selected_events')
-        if selected_event_ids:
-            valid_event_ids = [eid for eid in selected_event_ids if eid in events]
-            events = {eid: evt for eid, evt in events.items() if eid in valid_event_ids}
-            # Optionally, update the analysis metadata to remove missing event IDs
-            if len(valid_event_ids) != len(selected_event_ids):
-                self.analysis.metadata['selected_events'] = valid_event_ids
+        # Hide event controls for intrinsic analyses; no events to select.
+        if analysis.is_simple_intrinsic_mode():
+            self.lblEvent.setVisible(False)
+            self.cboEvent.setVisible(False)
+        else:
+            # Filter events if selected_events metadata exists, but only keep those that still exist
+            selected_event_ids = self.analysis.metadata.get('selected_events')
+            if selected_event_ids:
+                valid_event_ids = [eid for eid in selected_event_ids if eid in events]
+                events = {eid: evt for eid, evt in events.items() if eid in valid_event_ids}
+                # Optionally, update the analysis metadata to remove missing event IDs
+                if len(valid_event_ids) != len(selected_event_ids):
+                    self.analysis.metadata['selected_events'] = valid_event_ids
 
         self.events_model = DBItemModel(events)
         self.cboEvent.setModel(self.events_model)
 
         # Configure the table
         self.table.configure(project, analysis)
+        self.table.set_filter_tools_visible(not analysis.is_simple_intrinsic_mode())
         self.table.build_table() # Default to all metrics
         self.load_table_values()
 
@@ -100,8 +106,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.load_table_values()
 
     def load_table_values(self):
-        # Delegate to table widget
-        event = self.cboEvent.currentData(QtCore.Qt.UserRole)
+        # Delegate to table widget. Intrinsic analyses pass event=None.
+        event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature_id = self.cboSampleFrame.currentData(QtCore.Qt.UserRole).id
         self.table.load_values(event, mask_feature_id)
 
@@ -119,7 +125,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             event_ids = [event.id for event in data_capture_events if event is not None]
             metric_ids = list(self.analysis.analysis_metrics.keys())
 
-            if len(sample_frame_ids) < 1 or len(event_ids) < 1 or len(metric_ids) < 1:
+            if len(sample_frame_ids) < 1 or (len(event_ids) < 1 and not self.analysis.is_simple_intrinsic_mode()) or len(metric_ids) < 1:
                 self.iface.messageBar().pushMessage('Metrics', 'Nothing selected to calculate.', level=Qgis.Warning)
                 return
 
@@ -201,7 +207,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         # open modal dialog to select export file
         current_sample_frame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
-        current_data_capture_event = self.cboEvent.currentData(QtCore.Qt.UserRole)
+        current_data_capture_event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(QtCore.Qt.UserRole)
         frm = FrmExportMetrics(self, self.iface, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
         frm.exec_()
 
@@ -216,7 +222,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def edit_metric_value(self, metric_value):
 
-        event = self.cboEvent.currentData(QtCore.Qt.UserRole)
+        event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
 
         frm = FrmMetricValue(self, self.qris_project, self.analysis, event, mask_feature.id, metric_value)
@@ -229,7 +235,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         event = self.cboEvent.currentData(QtCore.Qt.UserRole)
         mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
 
-        if event is None or mask_feature is None:
+        # Intrinsic analyses have no real events; pass a synthetic event_id=0.
+        is_intrinsic = self.analysis.is_simple_intrinsic_mode()
+        if (event is None and not is_intrinsic) or mask_feature is None:
             return
 
         metric = analysis_metric.metric
@@ -244,7 +252,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             self.qris_project,
             self.analysis,
             [mask_feature.id],
-            [event.id],
+            [event.id] if not is_intrinsic else [],
             [metric.id],
             overwrite_existing=True,
             force_active=True,

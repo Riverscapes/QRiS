@@ -72,9 +72,17 @@ class DBItem():
         return created_on
 
     def set_metadata(self, metadata: dict):
-        self.metadata:dict = metadata or {}
-        self.user_metadata:dict = self.metadata.get('metadata', {})
-        self.system_metadata:dict = self.metadata.get('system', {})
+        # Normalize metadata container and ensure standard top-level sections.
+        # This keeps behavior consistent across DBItem subclasses and avoids
+        # detached dict mutations when a section is missing.
+        self.metadata: dict = metadata if isinstance(metadata, dict) else {}
+
+        for key in ['metadata', 'system', 'attributes']:
+            if key not in self.metadata or not isinstance(self.metadata.get(key), dict):
+                self.metadata[key] = {}
+
+        self.user_metadata:dict = self.metadata['metadata']
+        self.system_metadata:dict = self.metadata['system']
         self.locked: bool = self.system_metadata.get('locked', False)
 
 

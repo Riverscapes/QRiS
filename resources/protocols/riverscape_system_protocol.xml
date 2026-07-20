@@ -183,6 +183,33 @@
             </Hierarchy>
         </Metric>
 
+        <Metric id="sample_frame_integrated_width" version="1.0" calculation_machine_code="proportion" status="active">
+            <Label>Sample Frame Integrated Width</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Derived integrated corridor width computed as sample frame area divided by sample frame corridor length.</Description>
+            <Parameters>
+                <MetricDependency metric_id_ref="sample_frame_area" protocol_machine_code_ref="RIVERSCAPE_SYSTEM_PROTOCOL" version="1.0" usage="numerator" />
+                <MetricDependency metric_id_ref="sample_frame_corridor_length" protocol_machine_code_ref="RIVERSCAPE_SYSTEM_PROTOCOL" version="1.0" usage="denominator" />
+            </Parameters>
+            <Hierarchy>
+                <HierarchyItem>Sample Frame</HierarchyItem>
+                <HierarchyItem>Corridor</HierarchyItem>
+            </Hierarchy>
+        </Metric>
+
+        <Metric id="sample_frame_sinuosity_planform" version="1.0" calculation_machine_code="sinuosity" status="active">
+            <Label>Sample Frame Sinuosity (Planform)</Label>
+            <DefaultLevel>Metric</DefaultLevel>
+            <Description>Planform sinuosity of the centerline segment within the current sample frame.</Description>
+            <Parameters>
+                <InputLayer input_ref="centerline" usage="sample_frame_sinuosity" />
+            </Parameters>
+            <Hierarchy>
+                <HierarchyItem>Sample Frame</HierarchyItem>
+                <HierarchyItem>Corridor</HierarchyItem>
+            </Hierarchy>
+        </Metric>
+
         <Metric id="sample_frame_gradient" version="1.0" calculation_machine_code="gradient" status="active">
             <Label>Sample Frame Gradient</Label>
             <DefaultLevel>Metric</DefaultLevel>

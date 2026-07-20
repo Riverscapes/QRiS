@@ -22,6 +22,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.qris_project = project
         self.analysis = analysis
         self.analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
+        self._intrinsic_mode = bool(self.analysis is not None and self.analysis.is_simple_intrinsic_mode())
         self.is_tree_view = True
         self.limit_dces = None
         self._availability_cache: Dict[int, str] = {}
@@ -238,9 +239,12 @@ class MetricLibrary(QtWidgets.QWidget):
         self.vert_metrics.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.vert_metrics)
 
-        # Filters
+        # Group all filter controls so callers can hide/show them as one unit.
+        self.filter_tools_widget = QtWidgets.QWidget(self)
         self.horiz_filters = QtWidgets.QHBoxLayout()
-        self.vert_metrics.addLayout(self.horiz_filters)
+        self.horiz_filters.setContentsMargins(0, 0, 0, 0)
+        self.filter_tools_widget.setLayout(self.horiz_filters)
+        self.vert_metrics.addWidget(self.filter_tools_widget)
 
         self.cbo_filter_protocol = CheckableComboBox()
         self.cbo_filter_protocol.setPlaceholderText("All Protocols")
@@ -463,6 +467,9 @@ class MetricLibrary(QtWidgets.QWidget):
         # Initial Stack View
         self.stackedWidget.setCurrentIndex(0 if self.is_tree_view else 1)
 
+    def set_filter_tools_visible(self, visible: bool):
+        self.filter_tools_widget.setVisible(visible)
+
     def get_toggle_text(self):
         return "Switch to Table View" if self.is_tree_view else "Switch to Tree View"
 
@@ -487,6 +494,13 @@ class MetricLibrary(QtWidgets.QWidget):
     def set_selected_dces(self, dce_ids: list):
         self.limit_dces = dce_ids
         self.check_experimental_events(dce_ids)
+        self.invalidate_availability_cache()
+        if self.should_compute_availability():
+            self.start_background_availability_refresh()
+        self.update_visibility()
+
+    def set_intrinsic_mode(self, enabled: bool):
+        self._intrinsic_mode = bool(enabled)
         self.invalidate_availability_cache()
         if self.should_compute_availability():
             self.start_background_availability_refresh()
@@ -528,19 +542,66 @@ class MetricLibrary(QtWidgets.QWidget):
         self._selected_analysis_metrics_cache = selected
         return selected
 
+    def _resolve_intrinsic_availability(self, metric) -> str:
+        if metric.metric_function == 'manual' or not metric.metric_params:
+            return "Manual Only"
+
+        # Inputs must exist in analysis metadata for intrinsic calculation.
+        inputs = metric.metric_params.get('inputs', []) if metric.metric_params else []
+        for analysis_input in inputs:
+            input_ref = analysis_input.get('input_ref')
+            if not input_ref:
+                continue
+            s_ref = str(input_ref).strip().lower()
+            found = False
+            for key in self.analysis_metadata.keys():
+                if str(key).strip().lower() == s_ref and self.analysis_metadata[key] is not None:
+                    found = True
+                    break
+            if not found:
+                return "Not Feasible (Missing Inputs)"
+
+        # Intrinsic mode is expected to include only intrinsic-capable system metrics.
+        # If an incompatible metric leaks in, downstream feasibility logic will catch it.
+
+        # If we have an analysis object, defer to unified feasibility logic.
+        if self.analysis is not None:
+            original_metadata = self.analysis.metadata
+            original_analysis_metrics = self.analysis.analysis_metrics
+            try:
+                self.analysis.metadata = self.analysis_metadata
+                self.analysis.analysis_metrics = self._build_selected_analysis_metrics()
+                feasibility = self.analysis.check_metric_feasibility(metric, self.qris_project, None)
+                status = feasibility.get('status', 'NOT_FEASIBLE')
+                if status in ['FEASIBLE', 'FEASIBLE_EMPTY']:
+                    return "Feasible"
+                if status == 'MANUAL_ONLY':
+                    return "Manual Only"
+                return "Not Feasible"
+            finally:
+                self.analysis.metadata = original_metadata
+                self.analysis.analysis_metrics = original_analysis_metrics
+
+        return "Feasible"
+
+    def _compute_availability_status(self, metric) -> str:
+        if self._intrinsic_mode:
+            return self._resolve_intrinsic_availability(metric)
+
+        return metric.get_automation_availability(
+            self.qris_project,
+            self.analysis_metadata,
+            self.limit_dces,
+            analysis=self.analysis,
+            selected_analysis_metrics=self._build_selected_analysis_metrics(),
+        )
+
     def get_metric_availability(self, metric):
         cached = self._availability_cache.get(metric.id)
         if cached is not None:
             return cached
 
-        selected_analysis_metrics = self._build_selected_analysis_metrics()
-        status = metric.get_automation_availability(
-            self.qris_project,
-            self.analysis_metadata,
-            self.limit_dces,
-            analysis=self.analysis,
-            selected_analysis_metrics=selected_analysis_metrics,
-        )
+        status = self._compute_availability_status(metric)
         self._availability_cache[metric.id] = status
         return status
 
@@ -585,7 +646,14 @@ class MetricLibrary(QtWidgets.QWidget):
         if not self.should_compute_availability():
             return
 
-        metric_ids = list(self.qris_project.metrics.keys())
+        if self._intrinsic_mode:
+            metric_ids = [
+                metric_id
+                for metric_id, metric in self.qris_project.metrics.items()
+                if metric.protocol_machine_code == 'RIVERSCAPE_SYSTEM_PROTOCOL'
+            ]
+        else:
+            metric_ids = list(self.qris_project.metrics.keys())
         if len(metric_ids) == 0:
             return
 
@@ -611,13 +679,7 @@ class MetricLibrary(QtWidgets.QWidget):
                 continue
 
             try:
-                status = metric.get_automation_availability(
-                    self.qris_project,
-                    self.analysis_metadata,
-                    self.limit_dces,
-                    analysis=self.analysis,
-                    selected_analysis_metrics=selected_analysis_metrics,
-                )
+                status = self._compute_availability_status(metric)
             except Exception:
                 status = 'Error'
 
@@ -745,16 +807,24 @@ class MetricLibrary(QtWidgets.QWidget):
             is_manual = "manual" in status_lower
 
             if self.act_limit_feasible.isChecked():
-                # Must contain "DCE" and NOT start with "No" to be considered "Ready"
-                # (e.g. "All 5 DCEs", "1 DCE")
-                if "dce" not in status_lower or status_lower.startswith("no"):
-                    return False
+                if self._intrinsic_mode:
+                    if status_lower.startswith("not feasible") or is_manual:
+                        return False
+                else:
+                    # Must contain "DCE" and NOT start with "No" to be considered "Ready"
+                    # (e.g. "All 5 DCEs", "1 DCE")
+                    if "dce" not in status_lower or status_lower.startswith("no"):
+                        return False
 
             if self.act_limit_blocked.isChecked():
-                # Must start with "No DCEs" (implies Missing Inputs or Selected or just empty)
-                # But must NOT be manual.
-                if not status_lower.startswith("no dce"):
-                    return False
+                if self._intrinsic_mode:
+                    if not status_lower.startswith("not feasible"):
+                        return False
+                else:
+                    # Must start with "No DCEs" (implies Missing Inputs or Selected or just empty)
+                    # But must NOT be manual.
+                    if not status_lower.startswith("no dce"):
+                        return False
 
             if self.act_limit_manual.isChecked():
                 if not is_manual:
