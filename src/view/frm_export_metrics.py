@@ -107,6 +107,10 @@ class FrmExportMetrics(QtWidgets.QDialog):
         out_values = []
 
         data_capture_events = list(self.project.events.values()) if self.rdoAllDCE.isChecked() else [self.current_dce]
+        # Intrinsic: current_dce is None but we want one intrinsic pass, not all events.
+        is_intrinsic = self.analysis is not None and self.analysis.is_simple_intrinsic_mode()
+        if is_intrinsic:
+            data_capture_events = [None]
         for analysis, sample_frame_ids in self.analyses.items():
             sample_frame_features = list(sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
             for sample_frame_feature in sample_frame_features:
@@ -121,9 +125,9 @@ class FrmExportMetrics(QtWidgets.QDialog):
                     values = {
                         'analysis_name': analysis.name,
                         'sample_frame_id': sample_frame_feature.id,
-                        'data_capture_event_id': data_capture_event.id,
+                        'data_capture_event_id': data_capture_event.id if data_capture_event else 'Intrinsic',
                         'sample_frame_feature_name': sample_frame_feature.name,
-                        'data_capture_event_name': data_capture_event.name
+                        'data_capture_event_name': data_capture_event.name if data_capture_event else 'Intrinsic'
                     }
                     for analysis_metric in analysis.analysis_metrics.values():
                         metric: Metric = analysis_metric.metric

@@ -391,7 +391,7 @@ class FrmMetricValue(QtWidgets.QDialog):
             self.qris_project,
             self.analysis,
             [self.sample_frame_id],
-            [self.data_capture_event.id],
+            [self.data_capture_event.id] if self.data_capture_event is not None else [],
             [self.metric_value.metric.id],
             overwrite_existing=True,
             force_active=True,

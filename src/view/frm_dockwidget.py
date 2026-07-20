@@ -32,7 +32,7 @@ from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
 
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.layer import Layer
-from ..model.project import Project, INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE
+from ..model.project import Project
 from ..model.event import Event, EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
 from ..model.planning_container import PlanningContainer
 from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
@@ -635,7 +635,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
                         self.menu.addSeparator()
                         self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
-                        self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis_time', lambda: self.open_analysis_over_time_dock(model_data))
+                        if not model_data.is_simple_intrinsic_mode():
+                            self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis_time', lambda: self.open_analysis_over_time_dock(model_data))
                         self.menu.addSeparator()
                         self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
                     elif isinstance(model_data, Attachment):
@@ -674,8 +675,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if model_data.sample_frame_type == SampleFrame.SAMPLE_FRAME_TYPE:
                         self.add_context_menu_item(self.menu, 'Set Order by Centerline', 'numeric', lambda: self.set_order_by_centerline(model_data))
                     self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
-                    self.add_context_menu_item(self.menu, 'Create Analysis', 'analysis', lambda: self.add_analysis(db_item=model_data))
-
+                    analysis_menu = self.menu.addMenu('Analysis ...')
+                    self.add_context_menu_item(analysis_menu, 'Create Analysis', 'new', lambda: self.add_analysis(db_item=model_data))
+                    self.add_context_menu_item(analysis_menu, 'Create Intrinsic Analysis', 'new', lambda: self.add_intrinsic_analysis(db_item=model_data))
+                    analysis_menu.addSeparator()
+                    # get a list of the analyses connected to this sample frame, and add them to the menu
+                    for analysis in list(self.qris_project.analyses.values()):
+                        if not isinstance(analysis, Analysis):
+                            continue
+                        if analysis.sample_frame.id == model_data.id:
+                            self.add_context_menu_item(analysis_menu, f'{analysis.name}', 'analysis', lambda _checked=False, a=analysis: self.open_analysis(a))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
                     self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
@@ -1090,6 +1099,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_analysis(self, parent_node=None, db_item=None):
 
+        valid_event_types = [DATA_CAPTURE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]
+        has_supported_events = any(
+            event.event_type.id in valid_event_types
+            for event in self.qris_project.events.values()
+        )
+        if not has_supported_events:
+            QtWidgets.QMessageBox.warning(
+                self,
+                'Missing Event',
+                'Create at least one Data Capture/Design/As-Built event before creating a standard analysis. '
+                'Use "Create Intrinsic Analysis" for eventless analysis.'
+            )
+            return
+
         frm = FrmAnalysisProperties(self, self.qris_project)
 
         if db_item is not None:
@@ -1103,24 +1126,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if index >= 0:
                     frm.cboCenterline.setCurrentIndex(index)
 
-            # Filter protocol combo to system protocol only
-            cbo = frm.metric_selector.cbo_filter_protocol
-            for i in range(cbo.count()):
-                item = cbo.model().item(i)
-                if item.isCheckable():
-                    state = QtCore.Qt.Checked if item.data() == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE else QtCore.Qt.Unchecked
-                    item.setCheckState(state)
-            frm.metric_selector.on_protocol_filter_changed()
-            # Pre-select feasible system protocol metrics in a single bulk pass
-            states = {}
-            for metric in self.qris_project.metrics.values():
-                if not frm.metric_selector.should_show_metric(metric):
-                    continue
-                availability = frm.metric_selector.get_metric_availability(metric)
-                if not availability.lower().startswith('no'):
-                    states[metric.id] = metric.default_level_id
-            if states:
-                frm.metric_selector.apply_metric_states(states)
+        result = frm.exec_()
+        if result is not None and result != 0:
+            if parent_node is None:
+                parent_node = self._find_tree_node(self.model.invisibleRootItem(), ANALYSIS_MACHINE_CODE)
+            if parent_node is not None:
+                self.add_child_to_project_tree(parent_node, frm.analysis, False)
+            self.open_analysis(frm.analysis)
+
+    def add_intrinsic_analysis(self, parent_node=None, db_item=None):
+        """Open the analysis properties form pre-configured for Simple (intrinsic) mode."""
+        frm = FrmAnalysisProperties(self, self.qris_project)
+        frm.init_as_intrinsic()
+
+        if db_item is not None:
+            if isinstance(db_item, SampleFrame):
+                index = frm.cboSampleFrame.findData(db_item)
+                if index >= 0:
+                    frm.cboSampleFrame.setCurrentIndex(index)
 
         result = frm.exec_()
         if result is not None and result != 0:

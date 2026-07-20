@@ -8,7 +8,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError
-from ..model.metric_value import MetricValue, load_metric_values
+from ..model.metric_value import MetricValue, load_metric_values, INTRINSIC_EVENT_ID
 
 
 MESSAGE_CATEGORY = 'QRiS Metrics Task'
@@ -402,7 +402,10 @@ class AnalysisMetricsTask(QgsTask):
                 self.metric_ids,
             )
 
-            total = len(self.sample_frame_ids) * len(self.event_ids) * len(selected_analysis_metrics)
+            # Intrinsic analyses have no events; use a single synthetic pass with event_id=0.
+            is_intrinsic = self.analysis.is_simple_intrinsic_mode()
+            event_ids = self.event_ids if self.event_ids and not is_intrinsic else [INTRINSIC_EVENT_ID]
+            total = len(self.sample_frame_ids) * len(event_ids) * len(selected_analysis_metrics)
             self.summary['total'] = total
             if total == 0:
                 self.setProgress(100)
@@ -419,21 +422,23 @@ class AnalysisMetricsTask(QgsTask):
                         self._flush_pending_rows(conn, pending_rows)
                         return False
 
-                    for event_id in self.event_ids:
+                    for event_id in event_ids:
                         if self.isCanceled():
                             self.summary['canceled'] = True
                             self._flush_pending_rows(conn, pending_rows)
                             return False
 
                         event = self.qris_project.events.get(event_id, None)
-                        if event is None:
+                        # Intrinsic pass: event_id=0 has no real event object, load with None.
+                        is_intrinsic_pass = is_intrinsic and event is None
+                        if event is None and not is_intrinsic_pass:
                             processed += len(selected_analysis_metrics)
                             continue
 
                         metric_values = load_metric_values(
                             self.qris_project.project_file,
                             self.analysis,
-                            event,
+                            event if not is_intrinsic_pass else None,
                             sample_frame_id,
                             self.qris_project.metrics,
                         )
@@ -470,7 +475,8 @@ class AnalysisMetricsTask(QgsTask):
                                 self.summary['skipped_no_function'] += 1
                                 continue
 
-                            if metric.can_calculate_automated(self.qris_project, event_id, self.analysis.id) is False:
+                            # Feasibility: intrinsic metrics skip DCE-layer checks (event is None).
+                            if not is_intrinsic_pass and metric.can_calculate_automated(self.qris_project, event_id, self.analysis.id) is False:
                                 self.summary['skipped_not_feasible'] += 1
                                 self._log(
                                     f'Unable to calculate metric {metric.name} for {event.name} due to missing required layer in the data capture event.',

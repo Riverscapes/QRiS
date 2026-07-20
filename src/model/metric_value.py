@@ -3,10 +3,13 @@ import sqlite3
 import json
 
 from .metric import Metric
+from .analysis import Analysis, TEMPORAL_SCOPE_INTRINSIC
 from .event import Event
-from .analysis import Analysis
 from .db_item import dict_factory
 from ..lib.unit_conversion import convert_units, convert_count_per_length, convert_count_per_area
+
+# Intrinsic metrics use event_id=0 so existing PK/UPSERT semantics work unchanged.
+INTRINSIC_EVENT_ID = 0
 
 class MetricValue():
 
@@ -49,6 +52,7 @@ class MetricValue():
         return print_uncertanty(self.uncertainty)
 
     def save(self, db_path: str, analysis: Analysis, event: Event, sample_frame_feature_id: int, unit_id: int = None):
+        event_id = event.id if event is not None else INTRINSIC_EVENT_ID
 
         with sqlite3.connect(db_path, timeout=10.0) as conn:
             curs = conn.cursor()
@@ -74,7 +78,7 @@ class MetricValue():
                         , metadata = excluded.metadata
                         , description = excluded.description""", [
                     analysis.id,
-                    event.id,
+                    event_id,
                     sample_frame_feature_id,
                     self.metric.id,
                     self.manual_value,
@@ -92,14 +96,16 @@ class MetricValue():
 
 
 def load_metric_values(db_path: str, analysis: Analysis, event: Event, sample_frame_feature_id: int, metrics: dict) -> typing.Dict[int, MetricValue]:
-    """ returns metric_id keyed to analysis_metric_value
+    """ returns metric_id keyed to analysis_metric_value.
+        Pass event=None for intrinsic analyses (uses INTRINSIC_EVENT_ID = 0).
     """
 
+    event_id = event.id if event is not None else INTRINSIC_EVENT_ID
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = dict_factory
         curs = conn.cursor()
         curs.execute('SELECT * FROM metric_values WHERE (analysis_id = ?) AND (event_id = ?) AND (sample_frame_feature_id = ?)',
-                     [analysis.id, event.id, sample_frame_feature_id])
+                     [analysis.id, event_id, sample_frame_feature_id])
         result = {}
         for row in curs.fetchall():
             metric_id = row['metric_id']

@@ -1,9 +1,9 @@
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.core import QgsVectorLayer
 
-from ..model.analysis import Analysis, insert_analysis
+from ..model.analysis import Analysis, insert_analysis, SIMPLE_INTRINSIC_MODE
 from ..model.db_item import DBItemModel, DBItem
-from ..model.project import Project
+from ..model.project import Project, INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE
 from ..model.profile import Profile
 from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
@@ -26,6 +26,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.metric_selector = MetricLibrary(self, self.qris_project, self.analysis)
         self.event_library = EventLibraryWidget(self, self.qris_project, [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID], allow_reorder=True)
         self.event_library.event_checked.connect(self.on_event_checked)
+        self._intrinsic = False
         
         self.setupUi()
 
@@ -121,8 +122,18 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             self.cboCenterline.setEnabled(False)
             self.cboDEM.setEnabled(False)
             self.cboValleyBottom.setEnabled(False)
+
+            if analysis.is_simple_intrinsic_mode():
+                self._intrinsic = True
+                self.metric_selector.set_intrinsic_mode(True)
+                self.metric_selector.set_filter_tools_visible(False)
+                self.tabWidget.setTabVisible(self.tabWidget.indexOf(self.dce_tab), False)
+                self._filter_to_system_protocol()
+                self._expand_metric_library_tree()
         else:
             self.setWindowTitle('Create New Analysis')
+            self.metric_selector.set_intrinsic_mode(False)
+            self.metric_selector.set_filter_tools_visible(True)
             # For new analysis, ensure we capture whatever is selected by default in the combo boxes
             # (since we aren't explicitly setting them to -1 like in edit mode, they default to index 0)
             self.update_metric_selector()
@@ -234,6 +245,66 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         self.vert.addLayout(add_standard_form_buttons(self, 'analyses'))
 
+    def _filter_to_system_protocol(self):
+        """Limit the metric selector to system protocol metrics only."""
+        cbo = self.metric_selector.cbo_filter_protocol
+        for i in range(cbo.count()):
+            item = cbo.model().item(i)
+            if item.isCheckable():
+                state = QtCore.Qt.Checked if item.data() == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE else QtCore.Qt.Unchecked
+                item.setCheckState(state)
+        self.metric_selector.on_protocol_filter_changed()
+
+    def init_as_intrinsic(self):
+        """Configure this form for a new Simple (intrinsic) analysis.
+        Call BEFORE exec_() to hide the event tab, filter to system protocol, and default to intrinsic mode."""
+        self._intrinsic = True
+        self.metric_selector.set_intrinsic_mode(True)
+        self.metric_selector.set_filter_tools_visible(False)
+        self.tabWidget.setTabVisible(self.tabWidget.indexOf(self.dce_tab), False)
+        self.event_library.deselect_all()
+        self._filter_to_system_protocol()
+
+        # Pre-select visible system protocol metrics so intrinsic creation works
+        # even before any DCE exists (non-feasible metrics are handled at calculate time).
+        states = {}
+        for metric in self.qris_project.metrics.values():
+            if not self.metric_selector.should_show_metric(metric):
+                continue
+            states[metric.id] = metric.default_level_id
+        if states:
+            self.metric_selector.apply_metric_states(states)
+
+        self._expand_metric_library_tree()
+
+    def _expand_metric_library_tree(self):
+        """Ensure intrinsic forms open on expanded tree view for easier discovery."""
+        self.metric_selector.is_tree_view = True
+        self.metric_selector.stackedWidget.setCurrentIndex(0)
+        self.metric_selector.cmdToggleView.setText(self.metric_selector.get_toggle_text())
+        QtCore.QTimer.singleShot(0, self.metric_selector.metricsTree.expandAll)
+
+    def _is_intrinsic(self) -> bool:
+        return getattr(self, '_intrinsic', False)
+
+    def _build_scope_metadata(self, metadata: dict, is_simple_intrinsic: bool) -> dict:
+        """Add system.scope and analysis_mode to metadata dict before save.
+        Spatial identity (sample_frame) is already a DB column, not stored in metadata."""
+        metadata.setdefault('system', {})
+        if is_simple_intrinsic:
+            metadata['system']['analysis_mode'] = SIMPLE_INTRINSIC_MODE
+            metadata['system']['scope'] = {
+                'version': 1,
+                'temporal': {'type': 'intrinsic', 'id': 0},
+            }
+        else:
+            metadata['system']['analysis_mode'] = 'advanced'
+            metadata['system']['scope'] = {
+                'version': 1,
+                'temporal': {'type': 'event', 'id': 0},
+            }
+        return metadata
+
     def accept(self):
 
         if not validate_name(self, self.txtName):
@@ -258,9 +329,16 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if valley_bottom is not None:
             metadata['valley_bottom'] = valley_bottom.id
         
-        metadata['selected_events'] = self.event_library.get_selected_event_ids()
+        # Persist scope metadata: intrinsic when init_as_intrinsic() was called.
+        is_simple = self._is_intrinsic()
+        self._build_scope_metadata(metadata, is_simple)
 
-        if len(metadata['selected_events']) < 1:
+        # Simple mode clears event selection; advanced mode requires at least one.
+        if is_simple:
+            metadata['selected_events'] = []
+        else:
+            metadata['selected_events'] = self.event_library.get_selected_event_ids()
+        if len(metadata['selected_events']) < 1 and not is_simple:
             QtWidgets.QMessageBox.warning(self, 'Missing Event', 'You must select at least one Data Capture Event.')
             self.tabWidget.setCurrentWidget(self.dce_tab)
             return
@@ -275,6 +353,14 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         # Must include at least one metric!
         analysis_metrics = self.metric_selector.get_selected_metrics()
+
+        # Intrinsic analyses are restricted to the built-in system protocol.
+        if is_simple:
+            analysis_metrics = {
+                metric_id: am
+                for metric_id, am in analysis_metrics.items()
+                if am.metric.protocol_machine_code == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE
+            }
         # analysis_metrics = {}
         # for row in range(self.metricsTable.rowCount()):
         #     metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)

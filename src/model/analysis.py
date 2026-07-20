@@ -2,7 +2,7 @@ import json
 import sqlite3
 import time
 from decimal import Decimal, InvalidOperation
-from typing import Dict
+from typing import Dict, List, Tuple
 
 from .db_item_spatial import DBItemSpatial
 from .sample_frame import SampleFrame
@@ -10,6 +10,13 @@ from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
 ANALYSIS_MACHINE_CODE = 'ANALYSIS'
 default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
+
+SCOPE_VERSION = 1
+TEMPORAL_SCOPE_EVENT = 'event'
+TEMPORAL_SCOPE_INTRINSIC = 'intrinsic'
+SPATIAL_SCOPE_SAMPLE_FRAME = 'sample_frame'
+SPATIAL_SCOPE_ANALYSIS = 'analysis'
+SIMPLE_INTRINSIC_MODE = 'simple_intrinsic'
 
 
 def _normalize_version(version):
@@ -74,6 +81,104 @@ class Analysis(DBItemSpatial):
         self.profile = self.metadata.get('centerline', None) # really just the profile id
         self.dem = self.metadata.get('dem', None)
         self.units = self.metadata.get('units', default_units)
+
+    def _default_scope(self) -> dict:
+        return {
+            'version': SCOPE_VERSION,
+            'temporal': {
+                'type': TEMPORAL_SCOPE_EVENT,
+                'id': 0,
+            },
+        }
+
+    def get_scope(self) -> dict:
+        scope = self.system_metadata.get('scope')
+        default_scope = self._default_scope()
+
+        if not isinstance(scope, dict):
+            return default_scope
+
+        temporal = scope.get('temporal', {}) if isinstance(scope.get('temporal', {}), dict) else {}
+
+        temporal_type = str(temporal.get('type', default_scope['temporal']['type'])).strip().lower()
+
+        try:
+            temporal_id = int(temporal.get('id', default_scope['temporal']['id']))
+        except (TypeError, ValueError):
+            temporal_id = default_scope['temporal']['id']
+
+        try:
+            version = int(scope.get('version', default_scope['version']))
+        except (TypeError, ValueError):
+            version = default_scope['version']
+
+        normalized = {
+            'version': version,
+            'temporal': {
+                'type': temporal_type,
+                'id': temporal_id,
+            },
+        }
+
+        valid, _errors = self.validate_scope(normalized)
+        if not valid:
+            return default_scope
+
+        return normalized
+
+    def validate_scope(self, scope: dict = None, raise_on_error: bool = False) -> Tuple[bool, List[str]]:
+        s = scope if isinstance(scope, dict) else self.get_scope()
+        errors = []
+
+        temporal = s.get('temporal', {}) if isinstance(s.get('temporal', {}), dict) else {}
+
+        temporal_type = str(temporal.get('type', '')).strip().lower()
+        temporal_id = temporal.get('id', None)
+
+        if temporal_type not in [TEMPORAL_SCOPE_EVENT, TEMPORAL_SCOPE_INTRINSIC]:
+            errors.append(f"Invalid temporal scope type '{temporal_type}'.")
+
+        if not isinstance(temporal_id, int):
+            errors.append('Temporal scope id must be an integer.')
+
+        if isinstance(temporal_id, int):
+            if temporal_type == TEMPORAL_SCOPE_INTRINSIC and temporal_id != 0:
+                errors.append('Intrinsic temporal scope id must be 0.')
+            if temporal_type == TEMPORAL_SCOPE_EVENT and temporal_id < 0:
+                errors.append('Event temporal scope id must be >= 0.')
+
+        valid = len(errors) == 0
+        if not valid and raise_on_error:
+            raise ValueError('Invalid analysis scope metadata: ' + '; '.join(errors))
+
+        return valid, errors
+
+    def set_scope(self, temporal_type: str, temporal_id: int) -> dict:
+        new_scope = {
+            'version': SCOPE_VERSION,
+            'temporal': {
+                'type': str(temporal_type).strip().lower(),
+                'id': int(temporal_id),
+            },
+        }
+
+        self.validate_scope(new_scope, raise_on_error=True)
+        self.system_metadata['scope'] = new_scope
+        self.metadata['system'] = self.system_metadata
+        return new_scope
+
+    def is_simple_intrinsic_mode(self) -> bool:
+        return str(self.system_metadata.get('analysis_mode', '')).strip().lower() == SIMPLE_INTRINSIC_MODE
+
+    def set_simple_intrinsic_mode(self, enabled: bool) -> None:
+        if enabled:
+            self.system_metadata['analysis_mode'] = SIMPLE_INTRINSIC_MODE
+            self.metadata['system'] = self.system_metadata
+            self.set_scope(TEMPORAL_SCOPE_INTRINSIC, 0)
+        else:
+            if str(self.system_metadata.get('analysis_mode', '')).strip().lower() == SIMPLE_INTRINSIC_MODE:
+                self.system_metadata.pop('analysis_mode', None)
+                self.metadata['system'] = self.system_metadata
             
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
@@ -247,6 +352,12 @@ class Analysis(DBItemSpatial):
 
         # 3. Check DCE Layers (With Usage Grouping)
         dce_layers = metric.metric_params.get('dce_layers', [])
+
+        # Intrinsic analyses: metrics that rely on DCE layers are never feasible.
+        if self.is_simple_intrinsic_mode() and dce_layers:
+            result['status'] = 'NOT_FEASIBLE'
+            result['reasons'].append('Metric requires data capture event layers — not available in intrinsic analysis.')
+            return result
         
         usage_groups = {}
         required_individual = []
