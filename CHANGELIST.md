@@ -1,5 +1,18 @@
 # QRiS Plugin
 
+## [1.2.5.3] Jul 20 2026
+
+### Fixed
+- Uploader bug: fix project.rs.xml file not retaining warehouse tag #945
+
+### Changed
+- Change menu text for project upload #945
+- updates to intrinsic metrics #960, #1074
+
+### Added
+- Update QRiS Project Settings for Selection Color #1088
+
+
 ## [1.2.5.2] Jul 8 2026
 
 ### Fixed
