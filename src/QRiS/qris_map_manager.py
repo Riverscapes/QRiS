@@ -148,6 +148,7 @@ class QRisMapManager(RiverscapesMapManager):
 
         layer = centroid_layer
         layer.setName('Project Location')
+        self.apply_selection_color_override(layer)
         QgsProject.instance().addMapLayer(layer, False)
         tree_layer_node = aoi_group.addLayer(layer)
         machine_code_prop = self._RiverscapesMapManager__get_machine_code_custom_property(
@@ -336,6 +337,7 @@ class QRisMapManager(RiverscapesMapManager):
         if point_feature_layer and not point_feature_layer.crs().isValid():
             point_feature_layer.setCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         point_feature_layer.setSubsetString('fid = ' + str(pour_point.id))
+        self.apply_selection_color_override(point_feature_layer)
         QgsProject.instance().addMapLayer(point_feature_layer, False)
         pour_point_layer_node = pour_point_group_layer.addLayer(point_feature_layer)
         qml = self.get_symbology_qml("pour_point") 
@@ -352,6 +354,7 @@ class QRisMapManager(RiverscapesMapManager):
         QgsExpressionContextUtils.setLayerVariable(catchment_feature_layer, 'pour_point_id', pour_point.id)
         qml = self.get_symbology_qml('catchment')
         catchment_feature_layer.loadNamedStyle(qml)
+        self.apply_selection_color_override(catchment_feature_layer)
         QgsProject.instance().addMapLayer(catchment_feature_layer, False)
         catchment_layer_node = pour_point_group_layer.addLayer(catchment_feature_layer)
         catchment_machine_code = f'catchment_{pour_point.id}'

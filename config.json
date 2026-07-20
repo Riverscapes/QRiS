@@ -9,7 +9,10 @@
         "lastBrowsePath": null,
         "pluginVersion": null,
         "basemapRegion": "United States",
-        "telemetryEnabled": true
+        "telemetryEnabled": true,
+        "selectionColorOverrideEnabled": true,
+        "selectionColorOverrideHex": "#ffffff",
+        "selectionColorOverrideTransparencyPercent": 70
     },
     "constants": {
         "logCategory": "QRiS",

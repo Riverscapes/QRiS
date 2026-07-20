@@ -17,6 +17,7 @@ DOCK_WIDGET_LOCATION = 'dock_widget_location'
 REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
 TELEMETRY_ENABLED_KEY = 'telemetryEnabled'
 DEFAULT_CHART_FONT = 'default_chart_font'
+SELECTION_COLOR_OVERRIDE_ENABLED = 'selectionColorOverrideEnabled'
 
 default_dock_widget_location = 'right'
 
@@ -72,6 +73,7 @@ class FrmSettings(QDialog):
         self.chkShowExperimentalProtocols.stateChanged.connect(self.on_show_experimental_changed)
 
         self.chk_telemetry.setChecked(Settings().getValue(TELEMETRY_ENABLED_KEY))
+        self.chk_selection_color_override.setChecked(Settings().getValue(SELECTION_COLOR_OVERRIDE_ENABLED))
 
         self.default_chart_font = get_default_chart_font(self.settings)
         self.update_chart_font_button_text()
@@ -104,6 +106,7 @@ class FrmSettings(QDialog):
         set_default_chart_font(self.default_chart_font, self.settings)
 
         Settings().setValue(TELEMETRY_ENABLED_KEY, self.chk_telemetry.isChecked())
+        Settings().setValue(SELECTION_COLOR_OVERRIDE_ENABLED, self.chk_selection_color_override.isChecked())
 
         super().accept()
 
@@ -200,6 +203,10 @@ class FrmSettings(QDialog):
         self.chk_remove_layers_on_close = QCheckBox("Remove QRiS Project map layers on project close")
         self.chk_remove_layers_on_close.setToolTip("Check this box to remove all layers from the project when it is closed.")
         self.vertGeneral.addWidget(self.chk_remove_layers_on_close)
+
+        self.chk_selection_color_override = QCheckBox("Override feature selection color for QRiS layers")
+        self.chk_selection_color_override.setToolTip("Uses white (#ffffff) with 30% transparency so selected features remain visible while editing.")
+        self.vertGeneral.addWidget(self.chk_selection_color_override)
         
         self.grid = QGridLayout()
 

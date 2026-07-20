@@ -17,6 +17,7 @@ from ..model.raster import BASEMAP_MACHINE_CODE
 from ..view.metadata_field_editor_widget import initialize_metadata_widget
 
 from qgis.core import (
+    Qgis,
     QgsField,
     QgsLayerTreeGroup,
     QgsLayerTreeNode,
@@ -39,6 +40,10 @@ from qgis.core import (
     QgsMapLayer
 )
 
+SELECTION_COLOR_OVERRIDE_ENABLED = 'selectionColorOverrideEnabled'
+SELECTION_COLOR_OVERRIDE_HEX = 'selectionColorOverrideHex'
+SELECTION_COLOR_OVERRIDE_TRANSPARENCY_PERCENT = 'selectionColorOverrideTransparencyPercent'
+
 
 class RiverscapesMapManager(QObject):
 
@@ -50,6 +55,7 @@ class RiverscapesMapManager(QObject):
         settings = Settings()
         self.symbology_folders: list = settings.getValue('symbologyDir')
         self.layer_order = ['Basemaps']
+        self._previous_canvas_selection_color: QColor = None
 
     def get_symbology_qml(self, symbology_key: str) -> str:
         
@@ -251,6 +257,53 @@ class RiverscapesMapManager(QObject):
         zoom = True if layer_count - count_basemaps == 0 else False
 
         return zoom
+    
+    def apply_selection_color_override(self, layer: QgsMapLayer) -> None:
+        if layer is None or layer.type() != QgsMapLayer.VectorLayer:
+            return
+
+        override_enabled = bool(Settings().getValue(SELECTION_COLOR_OVERRIDE_ENABLED))
+        canvas = Settings().iface.mapCanvas()
+
+        default_selection_color_hex = Settings().getValue(SELECTION_COLOR_OVERRIDE_HEX)
+        selection_color_hex = Settings().getValue(SELECTION_COLOR_OVERRIDE_HEX)
+        selection_transparency = Settings().getValue(SELECTION_COLOR_OVERRIDE_TRANSPARENCY_PERCENT)
+        override_color = QColor(selection_color_hex)
+        if not override_color.isValid():
+            override_color = QColor(default_selection_color_hex)
+            Settings().log(
+                f'Invalid selection color "{selection_color_hex}". Falling back to {default_selection_color_hex}.',
+                level=Qgis.Warning
+            )
+
+        transparency = max(0, min(100, selection_transparency))
+        opacity = int(round(255 * ((100 - transparency) / 100.0)))
+        override_color.setAlpha(opacity)
+
+        selection_properties = layer.selectionProperties() if hasattr(layer, 'selectionProperties') else None
+        if selection_properties is not None and hasattr(selection_properties, 'setColor'):
+            if override_enabled:
+                selection_properties.setColor(override_color)
+            elif canvas is not None:
+                selection_properties.setColor(QColor(canvas.selectionColor()))
+            return
+
+        if canvas is None:
+            return
+
+        if override_enabled:
+            if self._previous_canvas_selection_color is None:
+                self._previous_canvas_selection_color = QColor(canvas.selectionColor())
+            canvas.setSelectionColor(override_color)
+        elif self._previous_canvas_selection_color is not None:
+            canvas.setSelectionColor(self._previous_canvas_selection_color)
+            self._previous_canvas_selection_color = None
+    
+    def refresh_selection_color_overrides(self) -> None:
+        for layer_node in self.get_product_key_layers():
+            layer = layer_node.layer()
+            if layer is not None and layer.type() == QgsMapLayer.VectorLayer:
+                self.apply_selection_color_override(layer)
 
     def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str, add_to_map: bool=True, layer_name_override: str=None) -> QgsVectorLayer:
         """
@@ -280,6 +333,7 @@ class RiverscapesMapManager(QObject):
         qml = self.get_symbology_qml(symbology_key)
         if qml is not None:
             layer.loadNamedStyle(qml)
+        self.apply_selection_color_override(layer)
 
         if id_field is not None:
             # id_value = db_item.event_id if id_field == 'event_id' else db_item.id
@@ -344,6 +398,7 @@ class RiverscapesMapManager(QObject):
         qml = self.get_symbology_qml(symbology_key)
         if qml is not None:
             layer.loadNamedStyle(qml)
+        self.apply_selection_color_override(layer)
 
         # Finally add the new layer here
         tree_layer_node = parent_group.addLayer(layer)
@@ -385,6 +440,7 @@ class RiverscapesMapManager(QObject):
         qml = self.get_symbology_qml(symbology_key)
         if qml is not None:
             layer.loadNamedStyle(qml)
+        self.apply_selection_color_override(layer)
 
         # Finally add the new layer here
         tree_layer_node = parent_group.insertLayer(0, layer)
