@@ -1285,7 +1285,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         frm = FrmSettings(settings, self.qris_project)
         frm.tabs.setCurrentWidget(frm.tabClimateEngine)
-        frm.exec_()
+        result = frm.exec_()
+        if result == QtWidgets.QDialog.Accepted and self.map_manager is not None:
+            self.map_manager.refresh_selection_color_overrides()
 
     def climate_engine_explorer(self):
 
