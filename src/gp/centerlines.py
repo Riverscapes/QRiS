@@ -2,19 +2,17 @@
 Centerline geoprocessing task using QgsGeometry
 """
 
-from qgis.core import QgsWkbTypes, QgsTask, QgsMessageLog, Qgis, QgsGeometry, QgsLineString, QgsPointXY
+from qgis.core import Qgis, QgsGeometry, QgsLineString, QgsMessageLog, QgsPointXY, QgsTask, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
-
-MESSAGE_CATEGORY = 'CenterlineTask'
+MESSAGE_CATEGORY = "CenterlineTask"
 
 
 class CenterlineTask(QgsTask):
-
     centerline_complete = pyqtSignal(QgsGeometry)
 
     def __init__(self, in_polygon: QgsGeometry, start_clipline: QgsLineString, end_clipline: QgsLineString, densify_distance=None, islands: QgsGeometry = None) -> None:
-        super().__init__('Generate Centerline Task', QgsTask.CanCancel)
+        super().__init__("Generate Centerline Task", QgsTask.CanCancel)
 
         # Try to make deep copies of geometries so gui/parent changes don't cause issues?
         self.in_polygon = QgsGeometry(in_polygon)
@@ -59,7 +57,7 @@ class CenterlineTask(QgsTask):
             g_inner_endline = QgsGeometry(g_endline.intersection(g_single_main_poly))
 
             if any(geom.isMultipart() for geom in [g_inner_endline, g_inner_startline]):
-                raise Exception('Unable to find one central polygon between the clip lines. Make sure clip lines are clean across the polygon.')
+                raise Exception("Unable to find one central polygon between the clip lines. Make sure clip lines are clean across the polygon.")
 
             midpoint_start = QgsGeometry(g_inner_startline.get().interpolatePoint(g_inner_startline.get().length() / 2))
             midpoint_end = QgsGeometry(g_inner_endline.get().interpolatePoint(g_inner_endline.get().length() / 2))
@@ -88,7 +86,7 @@ class CenterlineTask(QgsTask):
             test_polygons = [g_clipped_poly0, g_clipped_poly1, g_clipping_poly]
             l_tested_polygons = list(geom_polygon for geom_polygon in test_polygons if geom_polygon.intersects(midpoint_start_buffer) and geom_polygon.intersects(midpoint_end_buffer))
             if len(l_tested_polygons) != 1:
-                raise Exception('Unable to find one central polygon between the clip lines. Make sure clip lines are clean across the polygon.')
+                raise Exception("Unable to find one central polygon between the clip lines. Make sure clip lines are clean across the polygon.")
 
             g_central_polygon = QgsGeometry(l_tested_polygons[0])
             g_clipped_poly0 = None
@@ -136,7 +134,7 @@ class CenterlineTask(QgsTask):
                 g_centerline_out = QgsGeometry(g_centerline_intersected)
 
             if g_centerline_out is None or g_centerline_out.isEmpty():
-                raise Exception('Centerline task has produced empty centerline polygon.')
+                raise Exception("Centerline task has produced empty centerline polygon.")
 
             self.centerline = QgsGeometry(g_centerline_out)
 
@@ -157,27 +155,16 @@ class CenterlineTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage(
-                'Centerline Task completed',
-                MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Centerline Task completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Centerline not successful but without '
-                    'exception (probably the task was manually '
-                    'canceled by the user)'.format(
-                        name=self.description()),
-                    MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Centerline not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
-                    f'Generate Centerline Exception: {self.exception}',
-                    MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Generate Centerline Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.centerline_complete.emit(self.centerline)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            f'Centerline Tool was canceled',
-            MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Centerline Tool was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

@@ -1,17 +1,15 @@
-from qgis.PyQt.QtCore import pyqtSignal
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsFeature, QgsProject, QgsCoordinateTransform
 from qgis import processing
+from qgis.core import Qgis, QgsCoordinateTransform, QgsFeature, QgsMessageLog, QgsProject, QgsTask, QgsVectorLayer
+from qgis.PyQt.QtCore import pyqtSignal
 
-
-MESSAGE_CATEGORY = 'SampleFrameTask'
+MESSAGE_CATEGORY = "SampleFrameTask"
 
 
 class SampleFrameTask(QgsTask):
-
     sample_frame_complete = pyqtSignal(bool)
 
     def __init__(self, polygon: QgsVectorLayer, cross_sections: QgsVectorLayer, out_path: str, id: int) -> None:
-        super().__init__('Generate Sample Frames Task', QgsTask.CanCancel)
+        super().__init__("Generate Sample Frames Task", QgsTask.CanCancel)
 
         self.polygon_layer = polygon
         self.cross_sections_layer = cross_sections
@@ -33,39 +31,30 @@ class SampleFrameTask(QgsTask):
                 return False
 
             if self.polygon_layer is None or not self.polygon_layer.isValid():
-                raise Exception('Input polygon layer is invalid.')
+                raise Exception("Input polygon layer is invalid.")
             if self.cross_sections_layer is None or not self.cross_sections_layer.isValid():
-                raise Exception('Input cross sections layer is invalid.')
+                raise Exception("Input cross sections layer is invalid.")
 
-            extend_params = {
-                'INPUT': self.cross_sections_layer,
-                'START_DISTANCE': 0.000001,
-                'END_DISTANCE': 0.000001,
-                'OUTPUT': "TEMPORARY_OUTPUT"
-            }
-            gp_extend = processing.run('native:extendlines', extend_params)
+            extend_params = {"INPUT": self.cross_sections_layer, "START_DISTANCE": 0.000001, "END_DISTANCE": 0.000001, "OUTPUT": "TEMPORARY_OUTPUT"}
+            gp_extend = processing.run("native:extendlines", extend_params)
 
             if self.isCanceled():
                 return False
 
-            split_params = {
-                'INPUT': self.polygon_layer,
-                'LINES': gp_extend['OUTPUT'],
-                'OUTPUT': "TEMPORARY_OUTPUT"
-            }
-            gp_split = processing.run('qgis:splitwithlines', split_params)
+            split_params = {"INPUT": self.polygon_layer, "LINES": gp_extend["OUTPUT"], "OUTPUT": "TEMPORARY_OUTPUT"}
+            gp_split = processing.run("qgis:splitwithlines", split_params)
 
             if self.isCanceled():
                 return False
 
             out_layer = QgsVectorLayer(self.sample_frame)
             if not out_layer.isValid():
-                raise Exception(f'Output sample frame layer is invalid: {self.sample_frame}')
+                raise Exception(f"Output sample frame layer is invalid: {self.sample_frame}")
 
             transform = QgsCoordinateTransform(self.polygon_layer.crs(), out_layer.crs(), QgsProject.instance())
 
             added = 0
-            for feat in gp_split['OUTPUT'].getFeatures():
+            for feat in gp_split["OUTPUT"].getFeatures():
                 if self.isCanceled():
                     return False
 
@@ -74,15 +63,13 @@ class SampleFrameTask(QgsTask):
                 out_feature = QgsFeature()
                 out_feature.setFields(out_layer.fields())
                 out_feature.setGeometry(geom)
-                out_feature['sample_frame_id'] = self.id
+                out_feature["sample_frame_id"] = self.id
                 if not out_layer.dataProvider().addFeature(out_feature):
-                    raise Exception('Failed to add split sample frame feature to output layer.')
+                    raise Exception("Failed to add split sample frame feature to output layer.")
                 added += 1
 
             if added == 0:
-                QgsMessageLog.logMessage(
-                    'Sample Frame split completed with zero output features.',
-                    MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Sample Frame split completed with zero output features.", MESSAGE_CATEGORY, Qgis.Warning)
 
             return True
         except Exception as ex:
@@ -101,27 +88,16 @@ class SampleFrameTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage(
-                'Sample Frame completed',
-                MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Sample Frame completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Sample Frame not successful but without '
-                    'exception (probably the task was manually '
-                    'canceled by the user)'.format(
-                        name=self.description()),
-                    MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Sample Frame not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
-                    f'Generate Sample Frame Exception: {self.exception}',
-                    MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Generate Sample Frame Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.sample_frame_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            f'Sample Frame Tool was canceled',
-            MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Sample Frame Tool was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

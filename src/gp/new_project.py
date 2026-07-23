@@ -1,13 +1,13 @@
-import os
 import json
+import os
 import sqlite3
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis
+from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import create_geopackage_table
 
-MESSAGE_CATEGORY = 'QRiS_NewProjectTask'
+MESSAGE_CATEGORY = "QRiS_NewProjectTask"
 
 
 class NewProjectTask(QgsTask):
@@ -21,7 +21,7 @@ class NewProjectTask(QgsTask):
     project_create_schema = pyqtSignal()
 
     def __init__(self, project_name: str, output_gpkg: str, description: str, map_guid: str, layers: dict, metadata=None):
-        super().__init__('New QRIS Project Task', QgsTask.CanCancel)
+        super().__init__("New QRIS Project Task", QgsTask.CanCancel)
 
         self.project_name = project_name
         self.project_description = description
@@ -42,7 +42,7 @@ class NewProjectTask(QgsTask):
             i = 1
             for fc_name, layer_name, geometry_type in self.layers:
                 self.project_create_layers.emit(i, len(self.layers))
-                features_path = '{}|layername={}'.format(self.output_gpkg, layer_name)
+                features_path = f"{self.output_gpkg}|layername={layer_name}"
                 create_geopackage_table(geometry_type, fc_name, self.output_gpkg, features_path, None)
                 i += 1
             # self.setProgress(50)
@@ -50,20 +50,20 @@ class NewProjectTask(QgsTask):
             self.project_create_schema.emit()
             # Run the schema DDL migrations to create lookup tables and relationships
             with sqlite3.connect(self.output_gpkg) as conn:
-                conn.execute('PRAGMA foreign_keys = ON;')
+                conn.execute("PRAGMA foreign_keys = ON;")
                 curs = conn.cursor()
 
-                schema_path = os.path.join(os.path.dirname(__file__), '..', 'db', 'schema.sql')
-                schema_file = open(schema_path, 'r')
+                schema_path = os.path.join(os.path.dirname(__file__), "..", "db", "schema.sql")
+                schema_file = open(schema_path)
                 sql_commands = schema_file.read()
                 curs.executescript(sql_commands)
 
                 # Create the project
                 description = self.project_description if len(self.project_description) > 0 else None
                 metadata = json.dumps(self.metadata) if self.metadata is not None else None
-                curs.execute('INSERT INTO projects (name, description, map_guid, metadata) VALUES (?, ?, ?, ?)', [self.project_name, description, self.map_guid, metadata])
+                curs.execute("INSERT INTO projects (name, description, map_guid, metadata) VALUES (?, ?, ?, ?)", [self.project_name, description, self.map_guid, metadata])
                 conn.commit()
-            
+
             schema_file.close()
             return True
 
@@ -83,18 +83,16 @@ class NewProjectTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Creation of new QRIS Project successful', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Creation of new QRIS Project successful", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Creation of new QRIS Project not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Creation of new QRIS Project not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Create New QRIS Project exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Create New QRIS Project exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.project_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Create New QRIS Project was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Create New QRIS Project was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

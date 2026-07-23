@@ -1,14 +1,14 @@
-import os
 import json
-from typing import List
+import os
+from typing import Optional
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsDataProvider, QgsVectorLayer, QgsWkbTypes, QgsField, QgsVectorFileWriter, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsFeatureRequest
-from qgis.PyQt.QtCore import pyqtSignal, QVariant, QMetaType
+from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDataProvider, QgsFeatureRequest, QgsField, QgsMessageLog, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer, QgsWkbTypes
+from qgis.PyQt.QtCore import QMetaType, QVariant, pyqtSignal
 
-from .import_feature_class import ImportFieldMap
 from ..gp.feature_class_functions import layer_path_parser
+from .import_feature_class import ImportFieldMap
 
-MESSAGE_CATEGORY = 'QRiS_ImportMapLayer'
+MESSAGE_CATEGORY = "QRiS_ImportMapLayer"
 
 
 class ImportMapLayer(QgsTask):
@@ -21,8 +21,10 @@ class ImportMapLayer(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_layer: QgsVectorLayer, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None):
-        super().__init__(f'Import Map Layer', QgsTask.CanCancel)
+    def __init__(
+        self, source_layer: QgsVectorLayer, dest_path: str, attributes: Optional[dict] = None, field_map: Optional[list[ImportFieldMap]] = None, clip_mask: Optional[tuple] = None, attribute_filter: Optional[str] = None, proj_gpkg=None
+    ):
+        super().__init__("Import Map Layer", QgsTask.CanCancel)
 
         # Instead of clone(), create a true in-memory copy
         self.source_layer = self._make_memory_copy(source_layer)
@@ -39,11 +41,7 @@ class ImportMapLayer(QgsTask):
 
     def _make_memory_copy(self, layer: QgsVectorLayer) -> QgsVectorLayer:
         """Create a true in-memory copy of the input layer."""
-        mem_layer = QgsVectorLayer(
-            f"{QgsWkbTypes.displayString(layer.wkbType())}?crs={layer.crs().authid()}",
-            "memory_copy",
-            "memory"
-        )
+        mem_layer = QgsVectorLayer(f"{QgsWkbTypes.displayString(layer.wkbType())}?crs={layer.crs().authid()}", "memory_copy", "memory")
         mem_layer_data = mem_layer.dataProvider()
         mem_layer_data.addAttributes(layer.fields())
         mem_layer.updateFields()
@@ -57,7 +55,6 @@ class ImportMapLayer(QgsTask):
         self.setProgress(0)
 
         try:
-
             dst_path, dst_layer_name, _dst_layer_id = layer_path_parser(self.dest_path)
 
             base_path = os.path.dirname(dst_path)
@@ -68,15 +65,15 @@ class ImportMapLayer(QgsTask):
             context = QgsProject.instance().transformContext()
 
             options = QgsVectorFileWriter.SaveVectorOptions()
-            options.driverName = 'GPKG'
+            options.driverName = "GPKG"
             options.layerName = dst_layer_name
 
-            epgs_4326 = QgsCoordinateReferenceSystem('EPSG:4326')
+            epgs_4326 = QgsCoordinateReferenceSystem("EPSG:4326")
             out_transform = QgsCoordinateTransform(self.source_layer.sourceCrs(), epgs_4326, QgsProject.instance().transformContext())
 
             # Logic to set the write/update mode depending on if data source and/or layers are present
             options.actionOnExistingFile = QgsVectorFileWriter.AppendToLayerNoNewFields
-            if options.driverName == 'GPKG':
+            if options.driverName == "GPKG":
                 if os.path.exists(dst_path):
                     output_layer = QgsVectorLayer(dst_path)
                     sublayers = [subLayer.split(QgsDataProvider.SUBLAYER_SEPARATOR)[1] for subLayer in output_layer.dataProvider().subLayers()]
@@ -96,8 +93,8 @@ class ImportMapLayer(QgsTask):
                 self.source_layer.updateFields()
 
             if self.clip_mask is not None:
-                clip_layer = QgsVectorLayer(f'{self.proj_gpkg}|layername={self.clip_mask[0]}')
-                clip_layer.setSubsetString(f'{self.clip_mask[1]} = {self.clip_mask[2]}') 
+                clip_layer = QgsVectorLayer(f"{self.proj_gpkg}|layername={self.clip_mask[0]}")
+                clip_layer.setSubsetString(f"{self.clip_mask[1]} = {self.clip_mask[2]}")
                 clip_transform = QgsCoordinateTransform(clip_layer.sourceCrs(), self.source_layer.sourceCrs(), QgsProject.instance().transformContext())
                 clip_feat = clip_layer.getFeatures()
                 clip_feat = next(clip_feat)
@@ -108,14 +105,14 @@ class ImportMapLayer(QgsTask):
                 self.source_layer.selectByExpression(self.attribute_filter)
 
             self.in_feats = self.source_layer.featureCount()
-            
+
             # add the metadata field to the source layer
             # Check first
-            if self.source_layer.fields().lookupField('metadata') == -1:
-                field = QgsField('metadata', int(QMetaType.QString))
+            if self.source_layer.fields().lookupField("metadata") == -1:
+                field = QgsField("metadata", int(QMetaType.QString))
                 self.source_layer.dataProvider().addAttributes([field])
                 self.source_layer.updateFields()
-            
+
             # make sure any direct copy fields are in the output layer
             if self.field_map is not None:
                 for field_map in self.field_map:
@@ -145,7 +142,7 @@ class ImportMapLayer(QgsTask):
                     for field_map in self.field_map:
                         value = feat[field_map.src_field]
                         # change empty stringd to None
-                        if value == '':
+                        if value == "":
                             value = None
                         if isinstance(value, QVariant):
                             value = value.value() if not value.isNull() else None
@@ -176,8 +173,8 @@ class ImportMapLayer(QgsTask):
                                 for dest_field, out_value in value_map.items():
                                     metadata.update({dest_field: out_value})
                     if metadata:
-                        feat['metadata'] = json.dumps(metadata)
-                
+                        feat["metadata"] = json.dumps(metadata)
+
                 geom = feat.geometry()
                 if self.clip_mask is not None:
                     geom = geom.intersection(clip_geom)
@@ -211,18 +208,16 @@ class ImportMapLayer(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Import Feature Class (from map layer) completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Import Feature Class (from map layer) completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Feature Class import (from mapy layer) not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Feature Class import (from mapy layer) not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Feature Class import (from map layer) exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Feature Class import (from map layer) exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 # raise self.exception
 
         self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Feature Class import (from map layer) was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Feature Class import (from map layer) was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

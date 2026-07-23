@@ -1,10 +1,9 @@
 import os
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateTransform, QgsProject
+from qgis.core import Qgis, QgsCoordinateTransform, QgsMessageLog, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer
 from qgis.PyQt.QtCore import pyqtSignal
 
-
-MESSAGE_CATEGORY = 'QRiS_CopyFeatureClassTask'
+MESSAGE_CATEGORY = "QRiS_CopyFeatureClassTask"
 
 
 class CopyFeatureClass(QgsTask):
@@ -18,7 +17,7 @@ class CopyFeatureClass(QgsTask):
     copy_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, mask_tuple, output_ds: str, output_fc_name: str):
-        super().__init__(f'Copy Feature Task', QgsTask.CanCancel)
+        super().__init__("Copy Feature Task", QgsTask.CanCancel)
 
         self.source_path = source_path
         self.mask_tuple = mask_tuple
@@ -47,11 +46,11 @@ class CopyFeatureClass(QgsTask):
             context = QgsProject.instance().transformContext()
 
             options = QgsVectorFileWriter.SaveVectorOptions()
-            options.driverName = 'GPKG'
+            options.driverName = "GPKG"
             options.layerName = self.output_fc_name
 
             # Logic to set the write/update mode depending on if data source and/or layers are present
-            if options.driverName == 'GPKG':
+            if options.driverName == "GPKG":
                 if os.path.exists(self.output_path):
                     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
                     if source_layer.dataProvider().subLayerCount() > 0:
@@ -64,8 +63,8 @@ class CopyFeatureClass(QgsTask):
             if self.mask_tuple is not None:
                 clip_path = self.mask_tuple[0]
                 clip_mask_id = self.mask_tuple[1]
-                clip_layer = QgsVectorLayer(f'{clip_path}|layername=sample_frame_features')
-                clip_layer.setSubsetString(f'sample_frame_id = {clip_mask_id}')
+                clip_layer = QgsVectorLayer(f"{clip_path}|layername=sample_frame_features")
+                clip_layer.setSubsetString(f"sample_frame_id = {clip_mask_id}")
                 clip_transform = QgsCoordinateTransform(clip_layer.sourceCrs(), source_layer.sourceCrs(), QgsProject.instance().transformContext())
                 clip_feat = clip_layer.getFeatures()
                 clip_feat = next(clip_feat)
@@ -114,18 +113,16 @@ class CopyFeatureClass(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Copy Feature Class completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Copy Feature Class completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Feature Class copy not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Feature Class copy not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Feature Class copy exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Feature Class copy exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.copy_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Feature Class copy was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Feature Class copy was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

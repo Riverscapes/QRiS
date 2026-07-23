@@ -1,8 +1,7 @@
 import math
 
 import osgeo
-from osgeo import ogr, gdal, osr
-
+from osgeo import gdal, ogr, osr
 from shapely.wkb import loads as wkbload
 
 from ..model.sample_frame import SampleFrame
@@ -10,10 +9,9 @@ from .zonal_statistics import zonal_statistics
 
 
 class ZonalMetrics:
+    def __init__(self, project_file: str, mask_id: int, layers: list, aoi_layer="sample_frame_features"):
 
-    def __init__(self, project_file: str, mask_id: int, layers: list, aoi_layer='sample_frame_features'):
-
-        self.config = {'vector': {}, 'raster': {}}
+        self.config = {"vector": {}, "raster": {}}
         self.project_file = project_file
         self.mask_id = mask_id
         self.layers = layers
@@ -22,12 +20,12 @@ class ZonalMetrics:
         self.polygons, self.utm_epsg = self.load_polygons(project_file, mask_id, self.mask_layer)
         # print(json.dumps(mapping(self.polygons[2]['geometry'])))
 
-    def load_polygons(self, project_file: str, aoi: SampleFrame, aoi_layer: str = 'sample_frame_features') -> dict:
+    def load_polygons(self, project_file: str, aoi: SampleFrame, aoi_layer: str = "sample_frame_features") -> dict:
 
         driver = ogr.GetDriverByName("GPKG")
         ds = driver.Open(project_file)
         layer = ds.GetLayerByName(aoi_layer)
-        layer.SetAttributeFilter(f'sample_frame_id = {aoi.id}')
+        layer.SetAttributeFilter(f"sample_frame_id = {aoi.id}")
         src_srs = layer.GetSpatialRef()
 
         # Target transform to most appropriate UTM zone
@@ -57,16 +55,13 @@ class ZonalMetrics:
             if geom.IsMeasured() > 0 or geom.Is3D() > 0:
                 geom.FlattenTo2D()
             geom.MakeValid()
-            polygons[feature.GetFID()] = {
-                'geometry': wkbload(bytes(geom.ExportToWkb())),
-                'display_label': feature.GetField('display_label') if aoi.sample_frame_type == SampleFrame.SAMPLE_FRAME_TYPE else f'AOI {aoi.name}'
-            }
+            polygons[feature.GetFID()] = {"geometry": wkbload(bytes(geom.ExportToWkb())), "display_label": feature.GetField("display_label") if aoi.sample_frame_type == SampleFrame.SAMPLE_FRAME_TYPE else f"AOI {aoi.name}"}
 
         layer = None
         ds = None
 
         if len(polygons) < 1:
-            raise Exception('Mask Feature Class is empty. No polygons loaded.')
+            raise Exception("Mask Feature Class is empty. No polygons loaded.")
 
         return polygons, epsg
 
@@ -87,31 +82,31 @@ class ZonalMetrics:
 
         metrics = {}
         for layer in self.layers:
-            if layer['type'] == 'vector':
+            if layer["type"] == "vector":
                 metric = self.process_vector(layer)
                 if metric is not None:
-                    metrics[layer['name']] = metric
+                    metrics[layer["name"]] = metric
             else:
                 metric = self.process_raster(layer)
                 if metric is not None:
-                    metrics[layer['name']] = metric
+                    metrics[layer["name"]] = metric
 
         return metrics
 
     def process_vector(self, layer_def):
 
-        url = layer_def['url']
+        url = layer_def["url"]
 
         # Skip QGIS memory layers and other non-file sources that OGR cannot open
-        if url.startswith('memory?') or url.startswith('memory:'):
+        if url.startswith("memory?") or url.startswith("memory:"):
             return None
 
-        if '|' in url:
-            parts = url.split('|')
+        if "|" in url:
+            parts = url.split("|")
             ds = ogr.Open(parts[0])
             if ds is None:
                 return None
-            layer_name = parts[1].replace('layername=', '')
+            layer_name = parts[1].replace("layername=", "")
             layer = ds.GetLayerByName(layer_name)
         else:
             ds = ogr.Open(url)
@@ -133,12 +128,12 @@ class ZonalMetrics:
 
         metrics = {}
         for polygon_id, polygon_data in self.polygons.items():
-            polygon = polygon_data['geometry']
+            polygon = polygon_data["geometry"]
             polygon_geom = ogr.CreateGeometryFromWkb(polygon.wkb)
             polygon_geom.Transform(transform_utm_to_src)
             polygon_geom.MakeValid()
 
-            polygon_metrics = {'count': 0}
+            polygon_metrics = {"count": 0}
             layer.SetSpatialFilter(polygon_geom)
             for feature in layer:
                 geom = feature.GetGeometryRef()
@@ -151,12 +146,12 @@ class ZonalMetrics:
                 shape = wkbload(bytes(geom.ExportToWkb()))
                 if polygon.intersects(shape):
                     inter = polygon.intersection(shape)
-                    polygon_metrics['count'] += 1
+                    polygon_metrics["count"] += 1
 
-                    if inter.geom_type == 'LineString' or inter.geom_type == 'MultiLineString':
-                        polygon_metrics['length (m)'] = inter.length if 'length (m)' not in polygon_metrics else inter.length + polygon_metrics['length (m)']
-                    elif inter.geom_type == 'Polygon' or inter.geom_type == 'MultiPolygon':
-                        polygon_metrics['area (m²)'] = inter.area if 'area (m²)' not in polygon_metrics else inter.area + polygon_metrics['area (m²)']
+                    if inter.geom_type == "LineString" or inter.geom_type == "MultiLineString":
+                        polygon_metrics["length (m)"] = inter.length if "length (m)" not in polygon_metrics else inter.length + polygon_metrics["length (m)"]
+                    elif inter.geom_type == "Polygon" or inter.geom_type == "MultiPolygon":
+                        polygon_metrics["area (m²)"] = inter.area if "area (m²)" not in polygon_metrics else inter.area + polygon_metrics["area (m²)"]
 
             metrics[polygon_id] = polygon_metrics
 
@@ -164,24 +159,25 @@ class ZonalMetrics:
 
     def process_raster(self, layer_def):
 
-        url = layer_def['url'].lower()
+        url = layer_def["url"].lower()
 
         # Gracefully skip known web service types and remote URLs
         if (
-            url.startswith('http://') or url.startswith('https://')
-            or 'type=xyz' in url
-            or 'type=wmts' in url
-            or 'type=wms' in url
-            or 'service=wms' in url
-            or 'service=wmts' in url
-            or 'arcgis/services' in url
-            or url.endswith('.php')  # sometimes used for dynamic map scripts
-            or 'format=image/' in url  # common in WMS requests
-            or 'url=' in url  # often a sign of a web service
+            url.startswith("http://")
+            or url.startswith("https://")
+            or "type=xyz" in url
+            or "type=wmts" in url
+            or "type=wms" in url
+            or "service=wms" in url
+            or "service=wmts" in url
+            or "arcgis/services" in url
+            or url.endswith(".php")  # sometimes used for dynamic map scripts
+            or "format=image/" in url  # common in WMS requests
+            or "url=" in url  # often a sign of a web service
         ):
             return None
-        
-        raster = gdal.Open(layer_def['url'])
+
+        raster = gdal.Open(layer_def["url"])
         if raster is None:
             return None
         src_srs = osr.SpatialReference()
@@ -203,10 +199,10 @@ class ZonalMetrics:
         results = {}
 
         for polygon_id, polygon_data in self.polygons.items():
-            polygon = polygon_data['geometry']
+            polygon = polygon_data["geometry"]
             polygon_geom = ogr.CreateGeometryFromWkb(polygon.wkb)
             polygon_geom.Transform(transform_utm_to_src)
-            results[polygon_id] = zonal_statistics(layer_def['url'], polygon_geom)
+            results[polygon_id] = zonal_statistics(layer_def["url"], polygon_geom)
 
         return results
 

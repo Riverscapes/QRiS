@@ -1,24 +1,25 @@
-import os
 import json
-from typing import List
+import os
+from typing import Optional
 
 from osgeo import ogr, osr
-
-from qgis.core import QgsTask, QgsMessageLog, Qgis
-from qgis.PyQt.QtCore import pyqtSignal, QVariant
+from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.PyQt.QtCore import QVariant, pyqtSignal
 
 from ..gp.feature_class_functions import layer_path_parser
 
-MESSAGE_CATEGORY = 'QRiS_ImportFeatureClassTask'
+MESSAGE_CATEGORY = "QRiS_ImportFeatureClassTask"
+
 
 # create a data class to store 'src_field', 'dest_field', and optional 'map' values
 class ImportFieldMap:
-    def __init__(self, src_field: str, dest_field: str=None, map: dict = None, parent=None, direct_copy=False):
+    def __init__(self, src_field: str, dest_field: Optional[str] = None, map: Optional[dict] = None, parent=None, direct_copy=False):
         self.src_field = src_field
         self.dest_field = dest_field
         self.map = map
         self.parent = parent
         self.direct_copy = direct_copy
+
 
 class ImportFeatureClass(QgsTask):
     """
@@ -28,11 +29,21 @@ class ImportFeatureClass(QgsTask):
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     import_complete = pyqtSignal(bool, int, int, int)
 
-    def __init__(self, source_path: str, dest_path: str, attributes: dict=None, field_map: List[ImportFieldMap]=None, clip_mask: tuple=None, attribute_filter: str=None, proj_gpkg=None, explode_geometries=False):
-        super().__init__(f'Import Feature Class Task', QgsTask.CanCancel)
+    def __init__(
+        self,
+        source_path: str,
+        dest_path: str,
+        attributes: Optional[dict] = None,
+        field_map: Optional[list[ImportFieldMap]] = None,
+        clip_mask: Optional[tuple] = None,
+        attribute_filter: Optional[str] = None,
+        proj_gpkg=None,
+        explode_geometries=False,
+    ):
+        super().__init__("Import Feature Class Task", QgsTask.CanCancel)
 
         self.source_path = source_path
-        self.clip_mask = clip_mask # (fc_name, field_name, feature_id)
+        self.clip_mask = clip_mask  # (fc_name, field_name, feature_id)
         self.output_path = dest_path
         self.field_map = field_map
         self.attributes = attributes
@@ -73,7 +84,7 @@ class ImportFeatureClass(QgsTask):
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
-            gpkg_driver: ogr.Driver = ogr.GetDriverByName('GPKG')
+            gpkg_driver: ogr.Driver = ogr.GetDriverByName("GPKG")
             if src_path == dst_path:
                 dst_dataset = src_dataset
             elif not os.path.exists(dst_path):
@@ -103,7 +114,7 @@ class ImportFeatureClass(QgsTask):
                 else:
                     mask_dataset = dst_dataset
                 clip_layer: ogr.Layer = mask_dataset.GetLayer(self.clip_mask[0])
-                clip_layer.SetAttributeFilter(f'{self.clip_mask[1]} = {self.clip_mask[2]}')
+                clip_layer.SetAttributeFilter(f"{self.clip_mask[1]} = {self.clip_mask[2]}")
                 # Gather all of the geoms and merge into a multipart geometry
                 clip_geom = ogr.Geometry(ogr.wkbMultiPolygon)
                 for clip_feat in clip_layer:
@@ -180,11 +191,11 @@ class ImportFeatureClass(QgsTask):
                         for field_map in self.field_map:
                             value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else src_feature.GetField(field_map.src_field)
                             # change empty stringd to None
-                            if value == '':
+                            if value == "":
                                 value = None
                             if isinstance(value, QVariant):
                                 value = value.value() if not value.isNull() else None
-                            if field_map.dest_field == 'display_label':
+                            if field_map.dest_field == "display_label":
                                 value = str(src_feature.GetFID()) if field_map.src_field == src_fid_field_name else value
                             if field_map.direct_copy is True:
                                 # we need to copy the value directly to the output field
@@ -211,7 +222,7 @@ class ImportFeatureClass(QgsTask):
                                     for dest_field, out_value in value_map.items():
                                         metadata.update({dest_field: out_value})
                         if metadata:
-                            dst_feature.SetField('metadata', json.dumps(metadata))
+                            dst_feature.SetField("metadata", json.dumps(metadata))
 
                     if copy_fields is True:
                         # copy the field values from the source layer
@@ -224,7 +235,7 @@ class ImportFeatureClass(QgsTask):
                     dst_feature = None
                     if err != 0:
                         fid = src_feature.GetFID()
-                        raise Exception(f'Error creating feature {fid}: {err}')
+                        raise Exception(f"Error creating feature {fid}: {err}")
                     else:
                         self.out_feats += 1
 
@@ -246,7 +257,8 @@ class ImportFeatureClass(QgsTask):
                 src_dataset = None
             if dst_dataset is not None:
                 dst_dataset = None
-            return result
+
+        return result
 
     def progress_callback(self, complete, message, unknown):
         self.setProgress(complete * 100)
@@ -260,21 +272,19 @@ class ImportFeatureClass(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Import Feature Class completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Import Feature Class completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
                 if self.message is not None:
                     QgsMessageLog.logMessage(self.message, MESSAGE_CATEGORY, Qgis.Warning)
                 else:
-                    QgsMessageLog.logMessage(
-                    'Feature Class Import not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                    QgsMessageLog.logMessage("Feature Class Import not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Feature Class Import exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Feature Class Import exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Feature Class Import was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Feature Class Import was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

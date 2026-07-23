@@ -1,17 +1,8 @@
 import os
 
-from qgis.core import (
-    QgsRasterLayer,
-    QgsVectorLayer,
-    QgsField,
-    QgsExpressionContext,
-    QgsExpressionContextUtils,
-    QgsExpression, QgsCoordinateTransformContext,
-    QgsVectorFileWriter,
-    QgsVectorDataProvider, QgsTask, QgsMessageLog, Qgis,
-    edit)
-from qgis.PyQt.QtCore import QMetaType, pyqtSignal
 from qgis import processing
+from qgis.core import Qgis, QgsCoordinateTransformContext, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsField, QgsMessageLog, QgsRasterLayer, QgsTask, QgsVectorDataProvider, QgsVectorFileWriter, QgsVectorLayer, edit
+from qgis.PyQt.QtCore import QMetaType, pyqtSignal
 
 # ---- processing tool parameters ----
 # simplify tolerance
@@ -29,7 +20,7 @@ from qgis import processing
 
 Path = str
 
-MESSAGE_CATEGORY = 'QRiS_VectorizeClassTask'
+MESSAGE_CATEGORY = "QRiS_VectorizeClassTask"
 
 
 class VectorizeTask(QgsTask):
@@ -41,7 +32,7 @@ class VectorizeTask(QgsTask):
     on_complete = pyqtSignal(bool)
 
     def __init__(self, raster_path: Path, out_gpkg: Path, out_layer_name: str, raster_value: float, simplify_tolerance: float = 0.00008, smoothing_offset: float = 0.25, polygon_min_size: float = 9.0, inverse: bool = False):
-        super().__init__(f'Vectorize Task', QgsTask.CanCancel)
+        super().__init__("Vectorize Task", QgsTask.CanCancel)
 
         self.raster_path = raster_path
         self.out_gpkg = out_gpkg
@@ -62,35 +53,23 @@ class VectorizeTask(QgsTask):
             ref_crs = raster_layer.crs()
 
             surface_name = os.path.splitext(os.path.basename(self.raster_path))[0]
-            threshold_type = '<=' if self.inverse is False else '>='
+            threshold_type = "<=" if self.inverse is False else ">="
 
-            gp_calc = processing.run('gdal:rastercalculator', {'INPUT_A': self.raster_path,
-                                                               'BAND_A': 1,
-                                                               'FORMULA': f'(A {threshold_type} {self.raster_value})',
-                                                               'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_calc = processing.run("gdal:rastercalculator", {"INPUT_A": self.raster_path, "BAND_A": 1, "FORMULA": f"(A {threshold_type} {self.raster_value})", "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            thresholded_raster = QgsRasterLayer(gp_calc['OUTPUT'])
+            thresholded_raster = QgsRasterLayer(gp_calc["OUTPUT"])
 
             # -- DEM to VECTOR --
-            gp_raw = processing.run("gdal:polygonize",
-                                    {'INPUT': thresholded_raster,
-                                     'BAND': 1,
-                                     'FIELD': 'DN',
-                                     'EIGHT_CONNECTEDNESS': False,
-                                     'EXTRA': '',
-                                     'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_raw = processing.run("gdal:polygonize", {"INPUT": thresholded_raster, "BAND": 1, "FIELD": "DN", "EIGHT_CONNECTEDNESS": False, "EXTRA": "", "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            raw_vector = QgsVectorLayer(
-                gp_raw['OUTPUT'], "raw_vectors", "ogr")
+            raw_vector = QgsVectorLayer(gp_raw["OUTPUT"], "raw_vectors", "ogr")
 
             # -- CALCULATE AREA --
             # create a provider
             pv = raw_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField('raw_area_m', int(QMetaType.Type.Double)),
-                              QgsField('max_elev_m', int(QMetaType.Type.Double)),
-                              QgsField('surface_name', int(QMetaType.QString))])
+            pv.addAttributes([QgsField("raw_area_m", int(QMetaType.Type.Double)), QgsField("max_elev_m", int(QMetaType.Type.Double)), QgsField("surface_name", int(QMetaType.QString))])
             raw_vector.updateFields()
 
             # Create a context and scope
@@ -102,60 +81,39 @@ class VectorizeTask(QgsTask):
             with edit(raw_vector):
                 # loop them
                 for feature in raw_vector.getFeatures():
-                    if feature['DN'] != 1:
+                    if feature["DN"] != 1:
                         delete_features.append(feature.id())
                     else:
                         context.setFeature(feature)
-                        feature['raw_area_m'] = QgsExpression('$area').evaluate(context)
-                        feature['max_elev_m'] = self.raster_value
-                        feature['surface_name'] = surface_name
+                        feature["raw_area_m"] = QgsExpression("$area").evaluate(context)
+                        feature["max_elev_m"] = self.raster_value
+                        feature["surface_name"] = surface_name
                         raw_vector.updateFeature(feature)
                 raw_vector.dataProvider().deleteFeatures(delete_features)
 
             # -- BUFFER POLYGONS --
-            gp_buffered = processing.run("native:buffer",
-                                         {'INPUT': raw_vector,
-                                          'DISTANCE': 0.000001,
-                                          'SEGMENTS': 5,
-                                          'END_CAP_STYLE': 0,
-                                          'JOIN_STYLE': 0,
-                                          'MITER_LIMIT': 2,
-                                          'DISSOLVE': False,
-                                          'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_buffered = processing.run("native:buffer", {"INPUT": raw_vector, "DISTANCE": 0.000001, "SEGMENTS": 5, "END_CAP_STYLE": 0, "JOIN_STYLE": 0, "MITER_LIMIT": 2, "DISSOLVE": False, "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            buffered_vector = gp_buffered['OUTPUT']
+            buffered_vector = gp_buffered["OUTPUT"]
 
             # -- Simplify Polygons --
-            gp_simple = processing.run("native:simplifygeometries",
-                                       {'INPUT': buffered_vector,
-                                        'METHOD': 0,
-                                        'TOLERANCE': self.simplify_tolerance,
-                                        'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_simple = processing.run("native:simplifygeometries", {"INPUT": buffered_vector, "METHOD": 0, "TOLERANCE": self.simplify_tolerance, "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            simple_vector = gp_simple['OUTPUT']
+            simple_vector = gp_simple["OUTPUT"]
 
             # -- Smooth the polygons --
-            gp_smooth = processing.run("native:smoothgeometry",
-                                       {'INPUT': simple_vector,
-                                        'ITERATIONS': 1,
-                                        'OFFSET': self.smoothing_offset,
-                                        'MAX_ANGLE': 180,
-                                        'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_smooth = processing.run("native:smoothgeometry", {"INPUT": simple_vector, "ITERATIONS": 1, "OFFSET": self.smoothing_offset, "MAX_ANGLE": 180, "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            smooth_vector = gp_smooth['OUTPUT']
+            smooth_vector = gp_smooth["OUTPUT"]
 
-            gp_multi = processing.run("native:multiparttosingleparts",
-                                      {'INPUT': smooth_vector,
-                                       'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_multi = processing.run("native:multiparttosingleparts", {"INPUT": smooth_vector, "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            multi_vector = gp_multi['OUTPUT']
+            multi_vector = gp_multi["OUTPUT"]
 
             # Fix any crossed geometry as final vector
-            gp_fix = processing.run("native:fixgeometries",
-                                    {'INPUT': multi_vector,
-                                     'OUTPUT': 'TEMPORARY_OUTPUT'})
+            gp_fix = processing.run("native:fixgeometries", {"INPUT": multi_vector, "OUTPUT": "TEMPORARY_OUTPUT"})
 
-            final_vector = gp_fix['OUTPUT']
+            final_vector = gp_fix["OUTPUT"]
 
             # Create a context and scope
             context = QgsExpressionContext()
@@ -165,7 +123,7 @@ class VectorizeTask(QgsTask):
             pv = final_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField('area_m', int(QMetaType.Int))])
+            pv.addAttributes([QgsField("area_m", int(QMetaType.Int))])
             final_vector.updateFields()
 
             # Loop through and add the areas
@@ -173,7 +131,7 @@ class VectorizeTask(QgsTask):
                 # loop them
                 for feature in final_vector.getFeatures():
                     context.setFeature(feature)
-                    feature['area_m'] = QgsExpression('$area').evaluate(context)
+                    feature["area_m"] = QgsExpression("$area").evaluate(context)
                     final_vector.updateFeature(feature)
 
             # -- Delete Unneeded Fields --
@@ -192,7 +150,7 @@ class VectorizeTask(QgsTask):
             # if the layer can have deleted features
             if caps & QgsVectorDataProvider.DeleteFeatures:
                 for feature in features:
-                    if feature['area_m'] <= self.polygon_min_size:
+                    if feature["area_m"] <= self.polygon_min_size:
                         delete_features.append(feature.id())
                 final_vector.dataProvider().deleteFeatures(delete_features)
 
@@ -202,7 +160,7 @@ class VectorizeTask(QgsTask):
 
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.layerName = self.out_layer_name
-            options.driverName = 'GPKG'
+            options.driverName = "GPKG"
             if os.path.exists(self.out_gpkg):
                 options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
                 options.EditionCapability = QgsVectorFileWriter.CanAddNewLayer
@@ -231,19 +189,17 @@ class VectorizeTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Export Polygon from Raster Complete', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Export Polygon from Raster Complete", MESSAGE_CATEGORY, Qgis.Success)
 
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Vectorize was unsuccessful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Vectorize was unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Vectorize exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Vectorize exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.on_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Vectorize polygon was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Vectorize polygon was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

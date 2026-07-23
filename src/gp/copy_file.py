@@ -3,9 +3,9 @@ from shutil import copyfile
 
 from qgis.core import QgsTask
 
-class FileCopyTask(QgsTask):
 
-    def __init__(self, source_path, dest_path, callback, mode='copy'):
+class FileCopyTask(QgsTask):
+    def __init__(self, source_path, dest_path, callback, mode="copy"):
         super().__init__("Copy Attachment File", QgsTask.CanCancel)
         self.source_path = source_path
         self.dest_path = dest_path
@@ -20,7 +20,7 @@ class FileCopyTask(QgsTask):
             dest_dir = os.path.dirname(self.dest_path)
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
-            if self.mode == 'rename':
+            if self.mode == "rename":
                 os.rename(self.source_path, self.dest_path)
             else:
                 copyfile(self.source_path, self.dest_path)
