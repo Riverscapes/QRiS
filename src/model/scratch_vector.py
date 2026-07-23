@@ -1,36 +1,36 @@
+import json
 import os
 import sqlite3
-import json
+from typing import Optional
 
-from .db_item import DBItem
 from osgeo import ogr
+from qgis.core import Qgis, QgsMessageLog
 
-from qgis.core import QgsMessageLog, Qgis
 from ..QRiS.path_utilities import parse_posix_path
+from .db_item import DBItem
 
-SCRATCH_VECTOR_MACHINE_CODE = 'Scratch Vectors'
-CONTEXT_PARENT_FOLDER = 'context'
+SCRATCH_VECTOR_MACHINE_CODE = "Scratch Vectors"
+CONTEXT_PARENT_FOLDER = "context"
 
 
 class ScratchVector(DBItem):
-
-    def __init__(self, id: int, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: dict = None):
-        super().__init__('scratch_vectors', id, name, metadata)
+    def __init__(self, id: int, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: Optional[dict] = None):
+        super().__init__("scratch_vectors", id, name, metadata)
 
         self.fc_name = fc_name
         self.gpkg_path = gpkg_path
         self.vector_type_id = vector_type_id
         self.description = description
-        self.icon = 'vector'
+        self.icon = "vector"
 
-    def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
+    def update(self, db_path: str, name: str, description: str, metadata: Optional[dict] = None) -> None:
 
         description = description if len(description) > 0 else None
         metadata_str = json.dumps(metadata) if metadata is not None else None
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE scratch_vectors SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
+                curs.execute("UPDATE scratch_vectors SET name = ?, description = ?, metadata = ? WHERE id = ?", [name, description, metadata_str, self.id])
                 conn.commit()
 
                 self.name = name
@@ -44,7 +44,7 @@ class ScratchVector(DBItem):
     def delete(self, db_path: str) -> None:
 
         gpkg_path = scratch_gpkg_path(db_path)
-        driver = ogr.GetDriverByName('GPKG')
+        driver = ogr.GetDriverByName("GPKG")
         if os.path.exists(gpkg_path):
             data_source = driver.Open(gpkg_path, 1)
 
@@ -62,7 +62,7 @@ class ScratchVector(DBItem):
                 with sqlite3.connect(gpkg_path) as conn:
                     # Flush any pending transactions before inspecting/deleting
                     conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-                    
+
                     curs = conn.cursor()
                     curs.execute("SELECT count(*) FROM gpkg_contents WHERE data_type = 'features'")
                     layer_count = curs.fetchone()[0]
@@ -71,12 +71,12 @@ class ScratchVector(DBItem):
                 if layer_count < 1:
                     if os.path.exists(gpkg_path):
                         os.remove(gpkg_path)
-                    
+
                     # Also try to remove WAL/SHM files if they persist
-                    if os.path.exists(gpkg_path + '-wal'):
-                        os.remove(gpkg_path + '-wal')
-                    if os.path.exists(gpkg_path + '-shm'):
-                        os.remove(gpkg_path + '-shm')
+                    if os.path.exists(gpkg_path + "-wal"):
+                        os.remove(gpkg_path + "-wal")
+                    if os.path.exists(gpkg_path + "-shm"):
+                        os.remove(gpkg_path + "-shm")
 
                 # Remove scratch folder if empty
                 if len(os.listdir(os.path.dirname(gpkg_path))) == 0:
@@ -84,7 +84,7 @@ class ScratchVector(DBItem):
 
             except Exception as ex:
                 # Do nothing. This is nice to have
-                QgsMessageLog.logMessage(f'Error Cleaning Vector Scratch Space: {ex}', 'QRiS', Qgis.Critical)
+                QgsMessageLog.logMessage(f"Error Cleaning Vector Scratch Space: {ex}", "QRiS", Qgis.Critical)
 
         # absolute_path = os.path.join(os.path.dirname(db_path), self.path)
 
@@ -96,7 +96,7 @@ class ScratchVector(DBItem):
 
 
 def load_scratch_vectors(curs: sqlite3.Cursor, project_file: str) -> dict:
-    """ Scratch vectors are referenced in the QRiS project but also
+    """Scratch vectors are referenced in the QRiS project but also
     must have a corresponding feature class in the scratch geopackage (if it exists)"""
 
     geopackage_path = scratch_gpkg_path(project_file)
@@ -111,30 +111,22 @@ def load_scratch_vectors(curs: sqlite3.Cursor, project_file: str) -> dict:
 
     # Only load scratch vectors that have a feature class
     scratch_vectors = {}
-    curs.execute('SELECT * FROM scratch_vectors')
+    curs.execute("SELECT * FROM scratch_vectors")
     for row in curs.fetchall():
-        if row['fc_name'] in feature_classes:
-            scratch_vectors[row['id']] = ScratchVector(
-                row['id'],
-                row['name'],
-                row['fc_name'],
-                geopackage_path,
-                row['vector_type_id'],
-                row['description'],
-                json.loads(row['metadata']) if row['metadata'] is not None else None
-            )
+        if row["fc_name"] in feature_classes:
+            scratch_vectors[row["id"]] = ScratchVector(row["id"], row["name"], row["fc_name"], geopackage_path, row["vector_type_id"], row["description"], json.loads(row["metadata"]) if row["metadata"] is not None else None)
 
     return scratch_vectors
 
 
-def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: dict = None) -> ScratchVector:
+def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str, vector_type_id: int, description: str, metadata: Optional[dict] = None) -> ScratchVector:
 
     result = None
     metadata_json = json.dumps(metadata) if metadata is not None else None
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO scratch_vectors (name, fc_name, vector_type_id, description, metadata) VALUES (?, ?, ?, ?, ?)', [name, fc_name, vector_type_id, description, metadata_json])
+            curs.execute("INSERT INTO scratch_vectors (name, fc_name, vector_type_id, description, metadata) VALUES (?, ?, ?, ?, ?)", [name, fc_name, vector_type_id, description, metadata_json])
             id = curs.lastrowid
             result = ScratchVector(id, name, fc_name, gpkg_path, vector_type_id, description, metadata)
             conn.commit()
@@ -149,7 +141,7 @@ def insert_scratch_vector(db_path: str, name: str, fc_name: str, gpkg_path: str,
 
 def scratch_gpkg_path(project_file: str) -> str:
 
-    return parse_posix_path(os.path.join(os.path.dirname(project_file), CONTEXT_PARENT_FOLDER, 'feature_classes.gpkg'))
+    return parse_posix_path(os.path.join(os.path.dirname(project_file), CONTEXT_PARENT_FOLDER, "feature_classes.gpkg"))
 
 
 def get_unique_scratch_fc_name(project_file: str, fc_seed_name: str):
@@ -168,7 +160,7 @@ def get_unique_scratch_fc_name(project_file: str, fc_seed_name: str):
             if attempts > 0:
                 fc_name = fc_seed_name + str(attempts)
 
-            curs.execute('SELECT count(*) FROM gpkg_contents WHERE table_name = ?', [fc_name])
+            curs.execute("SELECT count(*) FROM gpkg_contents WHERE table_name = ?", [fc_name])
             rows = curs.fetchone()[0]
             if rows < 1:
                 name_exists = False

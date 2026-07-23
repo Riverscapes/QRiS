@@ -1,25 +1,25 @@
-from PyQt5.QtCore import QAbstractListModel, QModelIndex
-from PyQt5.QtCore import Qt
-
-import sqlite3
 import json
+import sqlite3
+from typing import Optional
 
-DB_MODE_NEW = 'new'
-DB_MODE_CREATE = 'create'
-DB_MODE_IMPORT = 'import'
-DB_MODE_IMPORT_LAYER = 'import_map_layer'
-DB_MODE_PROMOTE = 'promote'
-DB_MODE_COPY = 'copy'
+from qgis.PyQt.QtCore import QAbstractListModel, QModelIndex, Qt
+
+DB_MODE_NEW = "new"
+DB_MODE_CREATE = "create"
+DB_MODE_IMPORT = "import"
+DB_MODE_IMPORT_LAYER = "import_map_layer"
+DB_MODE_PROMOTE = "promote"
+DB_MODE_COPY = "copy"
 
 
-class DBItem():
-    """ Base class for in-memory representations of database objects.
+class DBItem:
+    """Base class for in-memory representations of database objects.
 
     The id property tracks the primary key that uniquely identifies the object.
     The name tracks the official name (that is normally unique across all
     objects of the same type."""
 
-    def __init__(self, db_table_name: str, id: int, name: str, metadata: dict = None):
+    def __init__(self, db_table_name: str, id: int, name: str, metadata: Optional[dict] = None):
         self.db_table_name = db_table_name
         self.id = id
         self.name = name
@@ -30,27 +30,26 @@ class DBItem():
         # an ID column called "id". However, any spatial DBItem tables
         # will have a GIS generated ID column called "fid". These spatial
         # tables should override this property.
-        self.id_column_name = 'id'
+        self.id_column_name = "id"
 
         # Inherited classes should override this icon file name if they
         # need customer icon files. Code that uses this icon does so
         # using the following syntax. All icon image files should be
         # stored directly in the Images folder.
         # QIcon(f':/plugins/qris_toolbar/{db_item.name}')
-        self.icon = 'qris_icon'
+        self.icon = "qris_icon"
 
-        self.map_guid = f'qris_{db_table_name}_{id}'
+        self.map_guid = f"qris_{db_table_name}_{id}"
 
     def delete(self, db_path: str) -> None:
 
         with sqlite3.connect(db_path) as conn:
-
             # Need foreign keys to force exceptions when deleting child records
             conn.execute("PRAGMA foreign_keys = 1")
 
             try:
                 curs = conn.cursor()
-                curs.execute(f'DELETE FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
+                curs.execute(f"DELETE FROM {self.db_table_name} WHERE {self.id_column_name} = ?", [self.id])  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
                 conn.commit()
 
             except Exception as ex:
@@ -63,7 +62,7 @@ class DBItem():
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute(f'SELECT created_on FROM {self.db_table_name} WHERE {self.id_column_name} = ?', [self.id])  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
+                curs.execute(f"SELECT created_on FROM {self.db_table_name} WHERE {self.id_column_name} = ?", [self.id])  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
                 row = curs.fetchone()
                 if row is not None:
                     created_on = row[0]
@@ -77,38 +76,39 @@ class DBItem():
         # detached dict mutations when a section is missing.
         self.metadata: dict = metadata if isinstance(metadata, dict) else {}
 
-        for key in ['metadata', 'system', 'attributes']:
+        for key in ["metadata", "system", "attributes"]:
             if key not in self.metadata or not isinstance(self.metadata.get(key), dict):
                 self.metadata[key] = {}
 
-        self.user_metadata:dict = self.metadata['metadata']
-        self.system_metadata:dict = self.metadata['system']
-        self.locked: bool = self.system_metadata.get('locked', False)
-
+        self.user_metadata: dict = self.metadata["metadata"]
+        self.system_metadata: dict = self.metadata["system"]
+        self.locked: bool = self.system_metadata.get("locked", False)
 
     def set_locked(self, db_path: str, locked: bool) -> None:
         """Set the locked status of the item in the database."""
 
         metadata = self.metadata or {}
-        system_metadata = metadata.get('system', {})
-        system_metadata['locked'] = locked
-        metadata['system'] = system_metadata
+        system_metadata = metadata.get("system", {})
+        system_metadata["locked"] = locked
+        metadata["system"] = system_metadata
         self.set_metadata(metadata)
 
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute(f'UPDATE {self.db_table_name} SET metadata = ? WHERE {self.id_column_name} = ?',  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
-                    [json.dumps(self.metadata), self.id])
+                curs.execute(
+                    f"UPDATE {self.db_table_name} SET metadata = ? WHERE {self.id_column_name} = ?",  # nosec B608 - db_table_name and id_column_name are internal class attributes set to fixed schema values
+                    [json.dumps(self.metadata), self.id],
+                )
                 conn.commit()
                 self.locked = locked
             except Exception as ex:
                 conn.rollback()
                 raise ex
-        
+
 
 class DBItemModel(QAbstractListModel):
-    """ Model for any class derived from DBItem. Essentially allows for
+    """Model for any class derived from DBItem. Essentially allows for
     objects to be stored in a list and displayed in comboboxes or lists.
     Construct with dictionry of DBItem derived objects. The name property
     will be used as the display string.
@@ -130,7 +130,7 @@ class DBItemModel(QAbstractListModel):
             self._data.insert(0, (0, non_selectable_item))
             self.non_selectable_index = 0
         if include_none:
-            self._data.insert(0, (0, DBItem(None, 0, 'None')))
+            self._data.insert(0, (0, DBItem(None, 0, "None")))
 
     def sort_data_by_key(self):
         self._data.sort(key=lambda x: x[0])
@@ -169,12 +169,13 @@ class DBItemModel(QAbstractListModel):
         return len(self._data)
 
     def flags(self, index):
-        default_flags = super(DBItemModel, self).flags(index)
+        default_flags = super().flags(index)
         if self.non_selectable_index is None:
             return default_flags
-        if index.row() == self.non_selectable_index: 
+        if index.row() == self.non_selectable_index:
             return default_flags & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled
         return default_flags
+
 
 class CheckableDBItemModel(QAbstractListModel):
     def __init__(self, data: dict):
@@ -202,18 +203,15 @@ class CheckableDBItemModel(QAbstractListModel):
             self.dataChanged.emit(index, index)
             return True
         return super().setData(index, value, role)
-    
+
     def rowCount(self, index):
         return len(self._data)
 
+
 def load_lookup_table(curs: sqlite3.Cursor, table: str) -> dict:
 
-    curs.execute('SELECT id, name FROM {}'.format(table))  # nosec B608 - table is always a fixed schema table name passed by internal callers
-    return {row['id']: DBItem(
-        table,
-        row['id'],
-        row['name']
-    ) for row in curs.fetchall()}
+    curs.execute(f"SELECT id, name FROM {table}")  # nosec B608 - table is always a fixed schema table name passed by internal callers
+    return {row["id"]: DBItem(table, row["id"], row["name"]) for row in curs.fetchall()}
 
 
 def dict_factory(cursor, row):
@@ -228,9 +226,9 @@ def get_unique_name(curs: sqlite3.Cursor, table: str, seed_name: str) -> str:
     attempts = 0
     success = False
     while success is False:
-        candidate_name = f"{seed_name}{ ' ' + attempts if attempts > 0 else ''}"
+        candidate_name = f"{seed_name}{' ' + attempts if attempts > 0 else ''}"
 
-        curs.execute(f'SELECT name FROM {table} WHERE name = ?', [candidate_name])  # nosec B608 - table is always a fixed schema table name passed by internal callers
+        curs.execute(f"SELECT name FROM {table} WHERE name = ?", [candidate_name])  # nosec B608 - table is always a fixed schema table name passed by internal callers
         row = curs.fetchone()
         success = row is None
 
@@ -244,7 +242,7 @@ def update_intersect_table(curs: sqlite3.Cursor, table: str, parent_col_name: st
 
     # Determine if there are IDs in the database that are no longer in use (new_child_id_list)
     unused_child_ids = []
-    curs.execute(f'SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?', [str(parent_id)])  # nosec B608 - table and column names are fixed schema values passed by internal callers
+    curs.execute(f"SELECT {child_col_name} FROM {table} WHERE {parent_col_name} = ?", [str(parent_id)])  # nosec B608 - table and column names are fixed schema values passed by internal callers
 
     for row in curs.fetchall():
         if row[child_col_name] not in new_child_id_list:
@@ -252,7 +250,7 @@ def update_intersect_table(curs: sqlite3.Cursor, table: str, parent_col_name: st
 
     # Delete those records no longer in use.
     if len(unused_child_ids) > 0:
-        curs.executemany(f'DELETE FROM {table} where {parent_col_name} = ? and {child_col_name} = ?', unused_child_ids)  # nosec B608 - table and column names are fixed schema values passed by internal callers
+        curs.executemany(f"DELETE FROM {table} where {parent_col_name} = ? and {child_col_name} = ?", unused_child_ids)  # nosec B608 - table and column names are fixed schema values passed by internal callers
 
     # Now insert all the records and use NO CONFLICT to skip and duplates that are already there!
     new_ids = [[parent_id, child_id] for child_id in new_child_id_list]

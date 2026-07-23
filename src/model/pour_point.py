@@ -1,13 +1,14 @@
 import json
 import sqlite3
 import time
+from typing import Optional
+
 from osgeo import ogr
-from typing import Dict
 
 from .db_item_spatial import DBItemSpatial
 
-POUR_POINTS_MACHINE_CODE = 'Pour Points'
-CATCHMENTS_MACHINE_CODE = 'CATCHMENTS'
+POUR_POINTS_MACHINE_CODE = "Pour Points"
+CATCHMENTS_MACHINE_CODE = "CATCHMENTS"
 
 
 def checkpoint_wal(db_path: str) -> None:
@@ -23,8 +24,8 @@ class PourPoint(DBItemSpatial):
     """Represents points on the map that  the usser has clicked on and delineated
     upstream catchments using stream statss"""
 
-    def __init__(self, id: int, name: str, latitude: float, longitude: float, description: str, basin_chars: str, flow_stats: str, metadata: str = None):
-        super().__init__('pour_points', id, name, 'pour_points', 'fid', 'Point')
+    def __init__(self, id: int, name: str, latitude: float, longitude: float, description: str, basin_chars: str, flow_stats: str, metadata: Optional[str] = None):
+        super().__init__("pour_points", id, name, "pour_points", "fid", "Point")
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
@@ -32,35 +33,35 @@ class PourPoint(DBItemSpatial):
         self.basin_chars = json.loads(basin_chars) if basin_chars is not None else None
         self.flow_stats = json.loads(flow_stats) if flow_stats is not None else None
         self.metadata = json.loads(metadata) if metadata is not None else {}
-        self.system_metadata = self.metadata.get('system', {})
-        self.flow_scenarios = self.system_metadata.get('flow_scenarios')
-        self.state_code = self.system_metadata.get('state_code')
-        self.icon = 'watershed'
+        self.system_metadata = self.metadata.get("system", {})
+        self.flow_scenarios = self.system_metadata.get("flow_scenarios")
+        self.state_code = self.system_metadata.get("state_code")
+        self.icon = "watershed"
 
         # override the default ID column name because this is a spatial table.
-        self.id_column_name = 'fid'
+        self.id_column_name = "fid"
 
         self.catchment = Catchment(self.id)
 
-    def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
-        """ Pour point is a feature class therefore need to use ogr to edit features.
+    def update(self, db_path: str, name: str, description: str, metadata: Optional[dict] = None) -> None:
+        """Pour point is a feature class therefore need to use ogr to edit features.
         Can't use direct SQL
         """
 
         # Don't forget to include the write access modifier
         src_dataset = ogr.Open(db_path, 1)
         src_layer: ogr.Layer = src_dataset.GetLayer(self.db_table_name)
-        src_layer.SetAttributeFilter(f'fid={self.id}')
+        src_layer.SetAttributeFilter(f"fid={self.id}")
 
         feature: ogr.Feature = None
         for feature in src_layer:
-            feature.SetField('name', name)
+            feature.SetField("name", name)
             if description is None or len(description) < 1:
-                feature.SetFieldNull('description')
+                feature.SetFieldNull("description")
             else:
-                feature.SetField('description', description)
+                feature.SetField("description", description)
             if metadata is not None:
-                feature.SetField('metadata', json.dumps(metadata))
+                feature.SetField("metadata", json.dumps(metadata))
             src_layer.SetFeature(feature)
 
         self.name = name
@@ -74,29 +75,29 @@ class PourPoint(DBItemSpatial):
 
         checkpoint_wal(db_path)
 
-    def update_stats(self, db_path: str, basin_chars: dict, flow_stats: dict, metadata: dict = None) -> None:
-        """ Updates the basin characteristics, flow stats, and optionally metadata JSON fields. """
+    def update_stats(self, db_path: str, basin_chars: dict, flow_stats: dict, metadata: Optional[dict] = None) -> None:
+        """Updates the basin characteristics, flow stats, and optionally metadata JSON fields."""
         src_dataset = ogr.Open(db_path, 1)
         src_layer: ogr.Layer = src_dataset.GetLayer(self.db_table_name)
-        src_layer.SetAttributeFilter(f'fid={self.id}')
+        src_layer.SetAttributeFilter(f"fid={self.id}")
 
         feature: ogr.Feature = None
         for feature in src_layer:
             if basin_chars is not None:
-                feature.SetField('basin_characteristics', json.dumps(basin_chars))
+                feature.SetField("basin_characteristics", json.dumps(basin_chars))
             if flow_stats is not None:
-                feature.SetField('flow_statistics', json.dumps(flow_stats))
+                feature.SetField("flow_statistics", json.dumps(flow_stats))
             if metadata is not None:
-                feature.SetField('metadata', json.dumps(metadata))
+                feature.SetField("metadata", json.dumps(metadata))
             src_layer.SetFeature(feature)
 
         self.basin_chars = basin_chars
         self.flow_stats = flow_stats
         if metadata is not None:
             self.metadata = metadata
-            self.system_metadata = self.metadata.get('system', {})
-            self.flow_scenarios = self.system_metadata.get('flow_scenarios')
-            self.state_code = self.system_metadata.get('state_code')
+            self.system_metadata = self.metadata.get("system", {})
+            self.flow_scenarios = self.system_metadata.get("flow_scenarios")
+            self.state_code = self.system_metadata.get("state_code")
 
         feature = None
         src_layer = None
@@ -110,68 +111,61 @@ class PourPoint(DBItemSpatial):
         super().drop_spatial_view(curs)
 
 
-def load_pour_points(curs: sqlite3.Cursor) -> Dict[int, PourPoint]:
+def load_pour_points(curs: sqlite3.Cursor) -> dict[int, PourPoint]:
 
-    curs.execute('SELECT * FROM pour_points')
-    return {row['fid']: PourPoint(
-        row['fid'],
-        row['name'],
-        row['latitude'],
-        row['longitude'],
-        row['description'],
-        row['basin_characteristics'],
-        row['flow_statistics'],
-        row.get('metadata')
-    ) for row in curs.fetchall()}
+    curs.execute("SELECT * FROM pour_points")
+    return {row["fid"]: PourPoint(row["fid"], row["name"], row["latitude"], row["longitude"], row["description"], row["basin_characteristics"], row["flow_statistics"], row.get("metadata")) for row in curs.fetchall()}
 
 
-def save_pour_point(project_file: str, latitude: float, longitude: float, catchment: dict, name: str, description: str, basin_chars: dict, flow_stats: dict, flow_scenarios: dict = None, metadata: dict = None) -> PourPoint:
+def save_pour_point(
+    project_file: str, latitude: float, longitude: float, catchment: dict, name: str, description: str, basin_chars: dict, flow_stats: dict, flow_scenarios: Optional[dict] = None, metadata: Optional[dict] = None
+) -> PourPoint:
 
-    driver = ogr.GetDriverByName('GPKG')
+    driver = ogr.GetDriverByName("GPKG")
     dataset = driver.Open(project_file, 1)
     pour_point_id = None
 
     # Save pour point
-    layer: ogr.Layer = dataset.GetLayerByName('pour_points')
+    layer: ogr.Layer = dataset.GetLayerByName("pour_points")
     featureDefn = layer.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
     point = ogr.Geometry(ogr.wkbPoint)
     point.AddPoint(longitude, latitude)
     outFeature.SetGeometry(point)
-    outFeature.SetField('name', name)
-    outFeature.SetField('latitude', latitude)
-    outFeature.SetField('longitude', longitude)
+    outFeature.SetField("name", name)
+    outFeature.SetField("latitude", latitude)
+    outFeature.SetField("longitude", longitude)
     if description is not None and len(description) > 0:
-        outFeature.SetField('description', description)
+        outFeature.SetField("description", description)
 
     if basin_chars is not None:
-        outFeature.SetField('basin_characteristics', json.dumps(basin_chars))
+        outFeature.SetField("basin_characteristics", json.dumps(basin_chars))
 
     if flow_stats is not None:
-        outFeature.SetField('flow_statistics', json.dumps(flow_stats))
+        outFeature.SetField("flow_statistics", json.dumps(flow_stats))
 
     # Store flow_scenarios and state_code in metadata under 'system' key
     if metadata is None:
         metadata = {}
-    system_meta = metadata.get('system', {})
+    system_meta = metadata.get("system", {})
     if flow_scenarios is not None:
-        system_meta['flow_scenarios'] = flow_scenarios
+        system_meta["flow_scenarios"] = flow_scenarios
     if system_meta:
-        metadata['system'] = system_meta
-    outFeature.SetField('metadata', json.dumps(metadata))
+        metadata["system"] = system_meta
+    outFeature.SetField("metadata", json.dumps(metadata))
 
-    out = layer.CreateFeature(outFeature)
+    layer.CreateFeature(outFeature)
     pour_point_id = outFeature.GetFID()
 
     # Save catchment polygon
-    layer: ogr.Layer = dataset.GetLayerByName('catchments')
-    geojson = catchment['featurecollection'][1]['feature']['features'][0]['geometry']
+    layer: ogr.Layer = dataset.GetLayerByName("catchments")
+    geojson = catchment["featurecollection"][1]["feature"]["features"][0]["geometry"]
     polygon: ogr.Geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
     polygon = polygon.MakeValid()
     featureDefn = layer.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
     outFeature.SetGeometry(polygon)
-    outFeature.SetField('pour_point_id', pour_point_id)
+    outFeature.SetField("pour_point_id", pour_point_id)
     layer.CreateFeature(outFeature)
 
     # Release OGR handles before running a SQLite checkpoint.
@@ -182,7 +176,7 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
     dataset = None
 
     pour_point = PourPoint(pour_point_id, name, latitude, longitude, description, json.dumps(basin_chars), json.dumps(flow_stats), json.dumps(metadata))
-    
+
     try:
         with sqlite3.connect(project_file) as conn:
             curs = conn.cursor()
@@ -195,6 +189,7 @@ def save_pour_point(project_file: str, latitude: float, longitude: float, catchm
 
     return pour_point
 
+
 class Catchment(DBItemSpatial):
     def __init__(self, id: int):
-        super().__init__('catchments', id, 'Catchment', 'catchments', 'pour_point_id', 'Polygon')
+        super().__init__("catchments", id, "Catchment", "catchments", "pour_point_id", "Polygon")

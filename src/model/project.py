@@ -1,63 +1,63 @@
-import os
+from collections.abc import Generator
 import json
+import os
 import sqlite3
 import time
+from typing import Optional
 
-from qgis.PyQt.QtCore import QObject, pyqtSignal, QTimer
-from qgis.core import Qgis, QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsMessageLog
+from qgis.core import Qgis, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsVectorFileWriter, QgsVectorLayer
+from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 from qgis.utils import spatialite_connect
-
-from .analysis import Analysis, load_analyses
-from .sample_frame import SampleFrame, load_sample_frames
-from .layer import load_layers, update_layer
-from .protocol import load as load_protocols, update_protocol, insert_protocol
-from .raster import Raster, load_rasters
-from .event import Event, load as load_events
-from .planning_container import PlanningContainer, load as load_planning_containers
-from .event_layer import EventLayer
-from .metric import Metric, load_metrics, insert_metric, update_metric
-from .pour_point import PourPoint, load_pour_points
-from .scratch_vector import ScratchVector, load_scratch_vectors
-from .stream_gage import load_stream_gages
-from .profile import Profile, load_profiles
-from .cross_sections import CrossSections, load_cross_sections
-from .attachment import Attachment, load_attachments
-from .units import load_units
-from .db_item import DBItem, dict_factory, load_lookup_table
-from .db_item_spatial import DBItemSpatial
 
 from ..QRiS.path_utilities import parse_posix_path
 from ..QRiS.protocol_parser import load_protocol_definitions
-from typing import Generator, Dict
+from ..QRiS.settings import Settings
+from .analysis import Analysis, load_analyses
+from .attachment import Attachment, load_attachments
+from .cross_sections import CrossSections, load_cross_sections
+from .db_item import DBItem, dict_factory, load_lookup_table
+from .db_item_spatial import DBItemSpatial
+from .event import Event
+from .event import load as load_events
+from .event_layer import EventLayer
+from .layer import load_layers, update_layer
+from .metric import Metric, insert_metric, load_metrics, update_metric
+from .planning_container import PlanningContainer
+from .planning_container import load as load_planning_containers
+from .pour_point import PourPoint, load_pour_points
+from .profile import Profile, load_profiles
+from .protocol import insert_protocol, update_protocol
+from .protocol import load as load_protocols
+from .raster import Raster, load_rasters
+from .sample_frame import SampleFrame, load_sample_frames
+from .scratch_vector import ScratchVector, load_scratch_vectors
+from .stream_gage import load_stream_gages
+from .units import load_units
 
-PROJECT_MACHINE_CODE = 'Project'
-SYSTEM_PROTOCOL_TYPE = 'system'
-INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE = 'RIVERSCAPE_SYSTEM_PROTOCOL'
+PROJECT_MACHINE_CODE = "Project"
+SYSTEM_PROTOCOL_TYPE = "system"
+INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE = "RIVERSCAPE_SYSTEM_PROTOCOL"
 
 # all spatial layers
 # feature class, layer name, geometry
 project_layers = [
-    ('aoi_features', 'AOI Features', 'Polygon'), # Keep so the migration scripts can run
-    ('mask_features', 'Mask Features', 'Polygon'), # Keep so the migration scripts can run
-    ('sample_frame_features', 'Sample Frame Features', 'Polygon'),
-    ('pour_points', 'Pour Points', 'Point'),
-    ('catchments', 'Catchments', 'Polygon'),
-    ('stream_gages', 'Stream Gages', 'Point'),
-    ('profile_centerlines', 'Centerlines', 'Linestring'),
-    ('profile_features', 'Profiles', 'Linestring'),
-    ('cross_section_features', 'Cross Sections', 'Linestring'),
-    ('valley_bottom_features', 'Valley Bottoms', 'Polygon'), # Keep so the migration scripts can run
-    ('dce_points', 'DCE Points', 'Point'),
-    ('dce_lines', 'DCE Lines', 'Linestring'),
-    ('dce_polygons', 'DCE Polygons', 'Polygon')
+    ("aoi_features", "AOI Features", "Polygon"),  # Keep so the migration scripts can run
+    ("mask_features", "Mask Features", "Polygon"),  # Keep so the migration scripts can run
+    ("sample_frame_features", "Sample Frame Features", "Polygon"),
+    ("pour_points", "Pour Points", "Point"),
+    ("catchments", "Catchments", "Polygon"),
+    ("stream_gages", "Stream Gages", "Point"),
+    ("profile_centerlines", "Centerlines", "Linestring"),
+    ("profile_features", "Profiles", "Linestring"),
+    ("cross_section_features", "Cross Sections", "Linestring"),
+    ("valley_bottom_features", "Valley Bottoms", "Polygon"),  # Keep so the migration scripts can run
+    ("dce_points", "DCE Points", "Point"),
+    ("dce_lines", "DCE Lines", "Linestring"),
+    ("dce_polygons", "DCE Polygons", "Polygon"),
 ]
 
 # migrated layers not to be recreated
-migrated_layers = [
-    'aoi_features',
-    'mask_features',
-    'valley_bottom_features'
-]
+migrated_layers = ["aoi_features", "mask_features", "valley_bottom_features"]
 
 
 def validate_protocol_metric_dependencies(protocol_definitions) -> list:
@@ -73,40 +73,34 @@ def validate_protocol_metric_dependencies(protocol_definitions) -> list:
     errors = []
     system_protocols = []
     for p in protocol_definitions:
-        protocol_type = str(getattr(p, 'protocol_type', '')).strip().lower()
-        protocol_status = str(getattr(p, 'status', '')).strip().lower()
+        protocol_type = str(getattr(p, "protocol_type", "")).strip().lower()
+        protocol_status = str(getattr(p, "status", "")).strip().lower()
         # Backward compatibility for drafts that still mark status=system.
         if protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE:
             system_protocols.append(p.machine_code)
 
     if len(system_protocols) > 1:
-        errors.append(
-            f"Only one system protocol is supported, found: {', '.join(system_protocols)}"
-        )
+        errors.append(f"Only one system protocol is supported, found: {', '.join(system_protocols)}")
     elif len(system_protocols) == 1 and system_protocols[0] != INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
-        errors.append(
-            f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols[0]}'"
-        )
+        errors.append(f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols[0]}'")
 
     for protocol in protocol_definitions:
         protocol_machine_code = protocol.machine_code
-        protocol_type = str(getattr(protocol, 'protocol_type', '')).strip().lower()
-        protocol_status = str(getattr(protocol, 'status', '')).strip().lower()
+        protocol_type = str(getattr(protocol, "protocol_type", "")).strip().lower()
+        protocol_status = str(getattr(protocol, "status", "")).strip().lower()
         # Backward compatibility for drafts that still mark status=system.
-        is_system_protocol = (protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE)
+        is_system_protocol = protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE
 
-        for metric in getattr(protocol, 'metrics', []):
+        for metric in getattr(protocol, "metrics", []):
             metric_params = metric.parameters or {}
-            dependencies = metric_params.get('metric_dependencies', [])
+            dependencies = metric_params.get("metric_dependencies", [])
 
             for dep in dependencies:
-                referenced_metric = dep.get('metric_id_ref')
-                referenced_protocol = dep.get('protocol_machine_code_ref', protocol_machine_code)
+                referenced_metric = dep.get("metric_id_ref")
+                referenced_protocol = dep.get("protocol_machine_code_ref", protocol_machine_code)
 
                 if not referenced_metric:
-                    errors.append(
-                        f"{protocol_machine_code}.{metric.id}: dependency is missing metric_id_ref"
-                    )
+                    errors.append(f"{protocol_machine_code}.{metric.id}: dependency is missing metric_id_ref")
                     continue
 
                 if referenced_protocol == protocol_machine_code:
@@ -116,51 +110,48 @@ def validate_protocol_metric_dependencies(protocol_definitions) -> list:
                     continue
 
                 if is_system_protocol:
-                    errors.append(
-                        f"System protocol '{protocol_machine_code}' metric '{metric.id}' cannot reference user protocol '{referenced_protocol}'"
-                    )
+                    errors.append(f"System protocol '{protocol_machine_code}' metric '{metric.id}' cannot reference user protocol '{referenced_protocol}'")
                     continue
 
-                errors.append(
-                    f"{protocol_machine_code}.{metric.id}: cross-user-protocol dependency to '{referenced_protocol}' is not allowed"
-                )
+                errors.append(f"{protocol_machine_code}.{metric.id}: cross-user-protocol dependency to '{referenced_protocol}' is not allowed")
 
     return errors
+
 
 class Project(DBItem, QObject):
     project_changed = pyqtSignal()
     item_added = pyqtSignal(object)  # emits the newly added DBItem
 
     def __init__(self, project_file: str):
-        DBItem.__init__(self, 'projects', 1, 'Placeholder')
+        DBItem.__init__(self, "projects", 1, "Placeholder")
         QObject.__init__(self)
         self._flush_pending = False
 
         self.project_file = parse_posix_path(project_file)
-        self.project_xml_file = os.path.join(os.path.dirname(self.project_file), 'project.rs.xml')
+        self.project_xml_file = os.path.join(os.path.dirname(self.project_file), "project.rs.xml")
         with sqlite3.connect(self.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
 
-            curs.execute('SELECT id, name, description, map_guid, metadata, created_on FROM projects LIMIT 1')
+            curs.execute("SELECT id, name, description, map_guid, metadata, created_on FROM projects LIMIT 1")
             project_row = curs.fetchone()
-            self.name: str = project_row['name']
-            self.id: int = project_row['id']
-            self.description: str = project_row['description']
-            self.map_guid: str = project_row['map_guid']
-            metadata: dict = json.loads(project_row['metadata'] if project_row['metadata'] is not None else '{}')
-            self.created_on: str = project_row['created_on']
+            self.name: str = project_row["name"]
+            self.id: int = project_row["id"]
+            self.description: str = project_row["description"]
+            self.map_guid: str = project_row["map_guid"]
+            metadata: dict = json.loads(project_row["metadata"] if project_row["metadata"] is not None else "{}")
+            self.created_on: str = project_row["created_on"]
             self.set_metadata(metadata)
 
             # get list of lookup tables
-            lkp_tables = [row['name'] for row in curs.execute('SELECT DISTINCT name FROM lookups').fetchall()]
+            lkp_tables = [row["name"] for row in curs.execute("SELECT DISTINCT name FROM lookups").fetchall()]
             self.lookup_tables = {table: load_lookup_table(curs, table) for table in lkp_tables}
 
             self.aois = load_sample_frames(curs, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
             self.sample_frames = load_sample_frames(curs)
             self.layers = load_layers(curs)
             self.protocols = load_protocols(curs, self.layers)
-            self.rasters= load_rasters(curs)
+            self.rasters = load_rasters(curs)
             self.scratch_vectors = load_scratch_vectors(curs, self.project_file)
             self.events = load_events(curs, self.protocols, None, self.layers, self.lookup_tables, self.rasters)
             self.planning_containers = load_planning_containers(curs, self.events)
@@ -174,23 +165,23 @@ class Project(DBItem, QObject):
             self.attachments = load_attachments(curs)
 
             self.units = load_units(curs)
-        
-        # attempt to update protocols 
+
+        # attempt to update protocols
         protocol_writes_on_open = False
         try:
             current_protocols = load_protocol_definitions(os.path.dirname(self.project_file), show_experimental=True, show_deprecated=True)
             dependency_errors = validate_protocol_metric_dependencies(current_protocols)
             if dependency_errors:
-                raise ValueError('Invalid protocol metric dependencies: ' + ' | '.join(dependency_errors))
+                raise ValueError("Invalid protocol metric dependencies: " + " | ".join(dependency_errors))
             if current_protocols:
                 for current_protocol in current_protocols:
                     if current_protocol.machine_code in [protocol.machine_code for protocol in self.protocols.values()]:
                         updated = False
-                        protocol_id = [protocol.id for protocol in self.protocols.values() if protocol.machine_code == current_protocol.machine_code][0]
+                        protocol_id = next(protocol.id for protocol in self.protocols.values() if protocol.machine_code == current_protocol.machine_code)
                         # update existing protocol
                         protocol_writes_on_open = True
                         new_metadata = update_protocol(self.project_file, protocol_id, current_protocol)
-                        
+
                         # Update in-memory object
                         protocol_obj = self.protocols[protocol_id]
                         protocol_obj.name = current_protocol.label
@@ -202,15 +193,15 @@ class Project(DBItem, QObject):
                         for layer_def in current_protocol.layers:
                             # Find matching layer by machine code (layer_id) and version within the current protocol
                             existing_layer = None
-                            for l in protocol_obj.protocol_layers.values():
-                                if l.layer_id == layer_def.id:
-                                    if str(l.layer_version) == str(layer_def.version):
-                                        existing_layer = l
+                            for protocol_layer in protocol_obj.protocol_layers.values():
+                                if protocol_layer.layer_id == layer_def.id:
+                                    if str(protocol_layer.layer_version) == str(layer_def.version):
+                                        existing_layer = protocol_layer
                                         break
                                     # Try float comparison if strings don't match exactly (e.g. "1.0" vs "1")
                                     try:
-                                        if float(l.layer_version) == float(layer_def.version):
-                                            existing_layer = l
+                                        if float(protocol_layer.layer_version) == float(layer_def.version):
+                                            existing_layer = protocol_layer
                                             break
                                     except ValueError:
                                         pass
@@ -218,126 +209,136 @@ class Project(DBItem, QObject):
                             if existing_layer:
                                 # Check if update is needed before calling update_layer
                                 update_needed = False
-                                
+
                                 # Check core properties
-                                if existing_layer.name != layer_def.label: update_needed = True
-                                if existing_layer.qml != layer_def.symbology: update_needed = True
-                                if existing_layer.description != layer_def.description: update_needed = True
-                                
+                                if existing_layer.name != layer_def.label:
+                                    update_needed = True
+                                if existing_layer.qml != layer_def.symbology:
+                                    update_needed = True
+                                if existing_layer.description != layer_def.description:
+                                    update_needed = True
+
                                 # Check Metadata properties
-                                existing_hierarchy = existing_layer.metadata.get('hierarchy', [])
+                                existing_hierarchy = existing_layer.metadata.get("hierarchy", [])
                                 new_hierarchy = layer_def.hierarchy if layer_def.hierarchy is not None else []
-                                if existing_hierarchy != new_hierarchy: update_needed = True
-                                
-                                existing_menu_items = existing_layer.metadata.get('menu_items', [])
+                                if existing_hierarchy != new_hierarchy:
+                                    update_needed = True
+
+                                existing_menu_items = existing_layer.metadata.get("menu_items", [])
                                 new_menu_items = layer_def.menu_items if layer_def.menu_items is not None else []
-                                if existing_menu_items != new_menu_items: update_needed = True
+                                if existing_menu_items != new_menu_items:
+                                    update_needed = True
 
                                 if not update_needed and existing_layer.fields:
                                     for field_def in layer_def.fields:
                                         for existing_field in existing_layer.fields:
-                                            if existing_field['id'] == field_def.id:
+                                            if existing_field["id"] == field_def.id:
                                                 # Check if value_required has changed
-                                                if existing_field.get('value_required', False) != field_def.required:
+                                                if existing_field.get("value_required", False) != field_def.required:
                                                     update_needed = True
                                                     break
-                                                
+
                                                 # Check if min/max/precision has changed
-                                                if existing_field.get('min') != field_def.min:
+                                                if existing_field.get("min") != field_def.min:
                                                     update_needed = True
                                                     break
-                                                if existing_field.get('max') != field_def.max:
+                                                if existing_field.get("max") != field_def.max:
                                                     update_needed = True
                                                     break
-                                                if existing_field.get('precision') != field_def.precision:
+                                                if existing_field.get("precision") != field_def.precision:
                                                     update_needed = True
                                                     break
 
                                         if update_needed:
                                             break
-                                
+
                                 if update_needed:
                                     if update_layer(self.project_file, existing_layer.id, layer_def):
-                                         QgsMessageLog.logMessage(f"Updated fields/properties for layer '{existing_layer.name}'", "QRiS", Qgis.Info)
-                                         
-                                         # Update in-memory layer object properties
-                                         existing_layer.name = layer_def.label
-                                         existing_layer.qml = layer_def.symbology
-                                         existing_layer.description = layer_def.description
-                                         
-                                         # Update in-memory metadata
-                                         if layer_def.hierarchy:
-                                             existing_layer.metadata['hierarchy'] = layer_def.hierarchy
-                                         elif 'hierarchy' in existing_layer.metadata:
-                                             del existing_layer.metadata['hierarchy']
-                                             
-                                         if layer_def.menu_items:
-                                             existing_layer.metadata['menu_items'] = layer_def.menu_items
-                                         elif 'menu_items' in existing_layer.metadata:
-                                             del existing_layer.metadata['menu_items']
-                                         
-                                         # Also update the in-memory layer fields
-                                         for field_def in layer_def.fields:
+                                        QgsMessageLog.logMessage(f"Updated fields/properties for layer '{existing_layer.name}'", "QRiS", Qgis.Info)
+
+                                        # Update in-memory layer object properties
+                                        existing_layer.name = layer_def.label
+                                        existing_layer.qml = layer_def.symbology
+                                        existing_layer.description = layer_def.description
+
+                                        # Update in-memory metadata
+                                        if layer_def.hierarchy:
+                                            existing_layer.metadata["hierarchy"] = layer_def.hierarchy
+                                        elif "hierarchy" in existing_layer.metadata:
+                                            del existing_layer.metadata["hierarchy"]
+
+                                        if layer_def.menu_items:
+                                            existing_layer.metadata["menu_items"] = layer_def.menu_items
+                                        elif "menu_items" in existing_layer.metadata:
+                                            del existing_layer.metadata["menu_items"]
+
+                                        # Also update the in-memory layer fields
+                                        for field_def in layer_def.fields:
                                             for existing_field in existing_layer.fields:
-                                                if existing_field['id'] == field_def.id:
-                                                    existing_field['value_required'] = field_def.required
-                                                    
+                                                if existing_field["id"] == field_def.id:
+                                                    existing_field["value_required"] = field_def.required
+
                                                     # Update keys handling removal if None
-                                                    for key, val in [('min', field_def.min), ('max', field_def.max), ('precision', field_def.precision)]:
+                                                    for key, val in [("min", field_def.min), ("max", field_def.max), ("precision", field_def.precision)]:
                                                         if val is not None:
                                                             existing_field[key] = val
                                                         elif key in existing_field:
                                                             del existing_field[key]
-                                                            
-                                         # Ensure metadata dict is also sync'd (though it should be by reference)
-                                         existing_layer.metadata['fields'] = existing_layer.fields
+
+                                        # Ensure metadata dict is also sync'd (though it should be by reference)
+                                        existing_layer.metadata["fields"] = existing_layer.fields
 
                         # metrics
                         for metric in current_protocol.metrics:
                             key_tuple = (metric.id, metric.version, current_protocol.machine_code)
-                            existing_metrics = [
-                                m for m in self.metrics.values()
-                                if (m.machine_name, m.version, m.protocol_machine_code) == key_tuple
-                            ]
+                            existing_metrics = [m for m in self.metrics.values() if (m.machine_name, m.version, m.protocol_machine_code) == key_tuple]
                             if not existing_metrics:
                                 metric_metadata = {}
                                 if metric.minimum_value is not None:
-                                    metric_metadata['minimum_value'] = metric.minimum_value
+                                    metric_metadata["minimum_value"] = metric.minimum_value
                                 if metric.maximum_value is not None:
-                                    metric_metadata['maximum_value'] = metric.maximum_value
+                                    metric_metadata["maximum_value"] = metric.maximum_value
                                 if metric.precision is not None:
-                                    metric_metadata['precision'] = metric.precision
+                                    metric_metadata["precision"] = metric.precision
                                 if metric.status is not None:
-                                    metric_metadata['status'] = metric.status
+                                    metric_metadata["status"] = metric.status
                                 if metric.hierarchy is not None:
-                                    metric_metadata['hierarchy'] = metric.hierarchy
+                                    metric_metadata["hierarchy"] = metric.hierarchy
 
                                 metric_id, metric_obj = insert_metric(
-                                    self.project_file, metric.label, metric.id, current_protocol.machine_code,
-                                    metric.description, metric.default_level, metric.calculation_machine_code,
-                                    metric.parameters, None, metric.definition_url, metric_metadata, metric.version
+                                    self.project_file,
+                                    metric.label,
+                                    metric.id,
+                                    current_protocol.machine_code,
+                                    metric.description,
+                                    metric.default_level,
+                                    metric.calculation_machine_code,
+                                    metric.parameters,
+                                    None,
+                                    metric.definition_url,
+                                    metric_metadata,
+                                    metric.version,
                                 )
                                 self.metrics[metric_id] = metric_obj
-                                QgsMessageLog.logMessage(
-                                    f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.","QRiS", Qgis.Info)
+                                QgsMessageLog.logMessage(f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.", "QRiS", Qgis.Info)
                             else:
                                 existing_metric: Metric = existing_metrics[0]
                                 # Only update label, description, and metadata if changed
                                 update_needed = False
-                                new_label = metric.label if hasattr(metric, 'label') else existing_metric.name
-                                new_description = metric.description if hasattr(metric, 'description') else existing_metric.description
-                                new_status = metric.status if hasattr(metric, 'status') else existing_metric.status
-                                new_definition_url = metric.definition_url if hasattr(metric, 'definition_url') else existing_metric.definition_url
+                                new_label = metric.label if hasattr(metric, "label") else existing_metric.name
+                                new_description = metric.description if hasattr(metric, "description") else existing_metric.description
+                                new_status = metric.status if hasattr(metric, "status") else existing_metric.status
+                                new_definition_url = metric.definition_url if hasattr(metric, "definition_url") else existing_metric.definition_url
                                 # Start with a copy of the existing metadata
                                 new_metadata = dict(existing_metric.metadata) if existing_metric.metadata else {}
                                 # List of protocol attributes to check and update in metadata
                                 protocol_attrs = [
-                                    ('minimum_value', getattr(metric, 'minimum_value', None)),
-                                    ('maximum_value', getattr(metric, 'maximum_value', None)),
-                                    ('precision', getattr(metric, 'precision', None)),
-                                    ('tolerance', getattr(metric, 'tolerance', None)),
-                                    ('status', new_status),
-                                    ('hierarchy', getattr(metric, 'hierarchy', None)),
+                                    ("minimum_value", getattr(metric, "minimum_value", None)),
+                                    ("maximum_value", getattr(metric, "maximum_value", None)),
+                                    ("precision", getattr(metric, "precision", None)),
+                                    ("tolerance", getattr(metric, "tolerance", None)),
+                                    ("status", new_status),
+                                    ("hierarchy", getattr(metric, "hierarchy", None)),
                                 ]
                                 for key, value in protocol_attrs:
                                     if value is not None:
@@ -354,9 +355,7 @@ class Project(DBItem, QObject):
                                 if existing_metric.definition_url != new_definition_url:
                                     update_needed = True
                                 # Only update if metric_function and metric_params are unchanged
-                                if (existing_metric.metric_function == metric.calculation_machine_code and
-                                    existing_metric.metric_params == metric.parameters and
-                                    update_needed):
+                                if existing_metric.metric_function == metric.calculation_machine_code and existing_metric.metric_params == metric.parameters and update_needed:
                                     updated_metric = update_metric(
                                         self.project_file,
                                         existing_metric.id,
@@ -370,35 +369,34 @@ class Project(DBItem, QObject):
                                         None,
                                         new_definition_url,
                                         new_metadata,
-                                        existing_metric.version
+                                        existing_metric.version,
                                     )
                                     self.metrics[existing_metric.id] = updated_metric
                                     updated = True
-                                    QgsMessageLog.logMessage(
-                                        f"Metric '{existing_metric.name}' (ID: {existing_metric.machine_name}, Version: {existing_metric.version}) label/description/metadata/status/definition_url updated in protocol '{current_protocol.machine_code}'.",
-                                        "QRiS", Qgis.Info
+                                    Settings().log(
+                                        f"Metric '{existing_metric.name}' (ID: {existing_metric.machine_name}, Version: {existing_metric.version}) label/description/metadata/status/definition_url updated in protocol "
+                                        f"'{current_protocol.machine_code}'.",
+                                        Qgis.Info,
                                     )
-                        if updated == True:
-                            QgsMessageLog.logMessage(f"Protocol '{current_protocol.machine_code}' updated.", "QRiS", Qgis.Info)
+                        if updated:
+                            Settings.log(f"Protocol '{current_protocol.machine_code}' updated.", Qgis.Info)
                     else:
                         protocol_writes_on_open = True
                         protocol_obj, new_metrics = insert_protocol(self.project_file, current_protocol)
                         self.protocols[protocol_obj.id] = protocol_obj
                         self.metrics.update(new_metrics)
-                        QgsMessageLog.logMessage(
+                        Settings.log(
                             f"Protocol '{current_protocol.machine_code}' inserted from protocol definitions.",
-                            "QRiS",
                             Qgis.Info,
                         )
         except Exception as e:
-            QgsMessageLog.logMessage(f'Error updating protocols: {e}', 'QRiS', Qgis.Warning)
+            Settings.log(f"Error updating protocols: {e}", Qgis.Warning)
 
         # Protocol sync can write to the gpkg during project open; flush so uploads/copies see those writes immediately.
         if protocol_writes_on_open:
             self.request_flush()
-        
 
-    def analysis_masks(self) -> Dict[int, SampleFrame]:
+    def analysis_masks(self) -> dict[int, SampleFrame]:
         masks = self.sample_frames.copy()
         masks.update(self.aois)
         masks.update(self.valley_bottoms)
@@ -410,8 +408,8 @@ class Project(DBItem, QObject):
     def get_absolute_path(self, relative_path: str) -> str:
         return parse_posix_path(os.path.join(os.path.dirname(self.project_file), relative_path))
 
-    def get_safe_file_name(self, raw_name: str, ext: str = None) -> str:
-        name = raw_name.strip().replace(' ', '_').replace('__', '_')
+    def get_safe_file_name(self, raw_name: str, ext: Optional[str] = None) -> str:
+        name = raw_name.strip().replace(" ", "_").replace("__", "_")
         if ext is not None:
             name = name + ext
         return name
@@ -486,26 +484,26 @@ class Project(DBItem, QObject):
         elif isinstance(db_item, Attachment):
             self.attachments.pop(db_item.id)
         else:
-            raise Exception('Attempting to remove unhandled database type from project')
+            raise Exception("Attempting to remove unhandled database type from project")
         self.project_changed.emit()
 
-    def update_metadata(self, metadata: dict = None):
+    def update_metadata(self, metadata: Optional[dict] = None):
 
         if metadata is not None:
             self.metadata.update(metadata)
 
         with sqlite3.connect(self.project_file) as conn:
-            conn.execute('UPDATE projects SET metadata = ? WHERE id = ?', [json.dumps(self.metadata), self.id])
+            conn.execute("UPDATE projects SET metadata = ? WHERE id = ?", [json.dumps(self.metadata), self.id])
 
         self.project_changed.emit()
 
-    def scratch_rasters(self) -> Dict[int, Raster]:
-        """ Returns a dictionary of all project rasters EXCEPT basemaps"""
+    def scratch_rasters(self) -> dict[int, Raster]:
+        """Returns a dictionary of all project rasters EXCEPT basemaps"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.is_context is True}
 
-    def surface_rasters(self) -> Dict[int, Raster]:
-        """ Returns a dictionary of all project surface rasters"""
+    def surface_rasters(self) -> dict[int, Raster]:
+        """Returns a dictionary of all project surface rasters"""
 
         return {id: raster for id, raster in self.rasters.items() if raster.is_context is False}
 
@@ -537,7 +535,7 @@ class Project(DBItem, QObject):
             with sqlite3.connect(self.project_file) as conn:
                 conn.row_factory = dict_factory
                 curs = conn.cursor()
-                
+
                 # Keep track of expected views to clean up orphans later
                 expected_views = set()
 
@@ -558,13 +556,13 @@ class Project(DBItem, QObject):
                     for event_layer in event.event_layers:
                         event_layer.create_spatial_view(curs)
                         expected_views.add(event_layer.view_name)
-                
+
                 # Find orphaned views (starting with vw_) that are not in expected_views
                 curs.execute("SELECT name FROM sqlite_master WHERE type='view' AND name LIKE 'vw_%'")
-                existing_views = {row['name'] for row in curs.fetchall()}
-                
+                existing_views = {row["name"] for row in curs.fetchall()}
+
                 orphaned_views = existing_views - expected_views
-                
+
                 for view_name in orphaned_views:
                     curs.execute(f"DROP VIEW IF EXISTS {view_name}")
                     curs.execute("DELETE FROM gpkg_contents WHERE table_name = ?", (view_name,))
@@ -596,15 +594,11 @@ class Project(DBItem, QObject):
                     time.sleep(0.15)
 
                 if busy != 0:
-                    QgsMessageLog.logMessage(
-                        'Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.',
-                        'QRiS',
-                        Qgis.Warning
-                    )
-            
+                    QgsMessageLog.logMessage("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", "QRiS", Qgis.Warning)
+
             # QgsMessageLog.logMessage(f"Project flushed successfully (Vacuum={vacuum}).", 'QRiS', Qgis.Info)
         except Exception as e:
-            QgsMessageLog.logMessage(f"Failed to flush changes to QRiS project: {str(e)}", 'QRiS', Qgis.Warning)
+            QgsMessageLog.logMessage(f"Failed to flush changes to QRiS project: {e!s}", "QRiS", Qgis.Warning)
 
     def request_flush(self) -> None:
         """Request a two-pass flush to improve WAL truncation when short-lived write handles are still active."""
@@ -623,15 +617,16 @@ class Project(DBItem, QObject):
         # A short delay helps when providers/OGR release locks just after create/update operations return.
         QTimer.singleShot(800, _delayed_flush)
 
-def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: list = None):
+
+def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path: str, full_path: str, field_tuple_list: Optional[list] = None):
     """
-        Creates tables in existing or new geopackages
-        geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
-        table_name (string): Name for the new table
-        geopackage_path (string): full path to the geopackage i.e., dir/package.gpkg
-        full_path (string): full path including the layer i.e., dir/package.gpkg|layername=layer
-        field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
-        """
+    Creates tables in existing or new geopackages
+    geometry_type (string):  NoGeometry, Polygon, Linestring, Point, etc...
+    table_name (string): Name for the new table
+    geopackage_path (string): full path to the geopackage i.e., dir/package.gpkg
+    full_path (string): full path including the layer i.e., dir/package.gpkg|layername=layer
+    field_tuple_list (list): a list of tuples as field name and QVariant field types i.e., [('my_field', QVarient.Double)]
+    """
     memory_layer = QgsVectorLayer(geometry_type, "memory_layer", "memory")
     if field_tuple_list:
         fields = []
@@ -642,7 +637,7 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
         memory_layer.updateFields()
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.layerName = table_name
-    options.driverName = 'GPKG'
+    options.driverName = "GPKG"
     transform = QgsCoordinateTransformContext()
     if os.path.exists(geopackage_path):
         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
@@ -651,8 +646,8 @@ def create_geopackage_table(geometry_type: str, table_name: str, geopackage_path
 
 def apply_db_migrations(db_path: str):
     with spatialite_connect(db_path) as conn:
-        conn.execute('PRAGMA foreign_keys = ON;')
-        conn.execute('SELECT EnableGpkgMode();')
+        conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute("SELECT EnableGpkgMode();")
         curs = conn.cursor()
 
         existing_layers = [layer[0] for layer in curs.execute('SELECT table_name, data_type FROM gpkg_contents WHERE data_type = "features"').fetchall()]
@@ -660,48 +655,48 @@ def apply_db_migrations(db_path: str):
 
         for fc_name, layer_name, geometry_type in project_layers:
             if fc_name not in existing_layers:
-                features_path = '{}|layername={}'.format(db_path, layer_name)
+                features_path = f"{db_path}|layername={layer_name}"
                 create_geopackage_table(geometry_type, fc_name, db_path, features_path, None)
-                yield f'Applying QRiS Database Migrations: create feature class {layer_name}'
+                yield f"Applying QRiS Database Migrations: create feature class {layer_name}"
 
         try:
             curs.execute('SELECT name FROM sqlite_master WHERE type="view"')
             views = curs.fetchall()
             for view in views:
                 view_name = view[0]
-                if view_name.startswith('vw_aoi') or view_name.startswith('vw_valley_bottom'):
-                    curs.execute(f'PRAGMA table_info({view_name})')
+                if view_name.startswith("vw_aoi") or view_name.startswith("vw_valley_bottom"):
+                    curs.execute(f"PRAGMA table_info({view_name})")
                     columns = curs.fetchall()
-                    mask_column_name = 'mask_id' if view_name.startswith('vw_aoi') else 'valley_bottom_id'
+                    mask_column_name = "mask_id" if view_name.startswith("vw_aoi") else "valley_bottom_id"
                     mask_id_column = next((column for column in columns if column[1] == mask_column_name), None)
                     if mask_id_column is not None:
-                        mask_id = curs.execute(f'SELECT {mask_column_name} FROM {view_name} LIMIT 1').fetchone()  # nosec B608 - mask_column_name and view_name are derived from fixed schema prefixes, not user input
+                        mask_id = curs.execute(f"SELECT {mask_column_name} FROM {view_name} LIMIT 1").fetchone()  # nosec B608 - mask_column_name and view_name are derived from fixed schema prefixes, not user input
                         if mask_id is not None:
-                            conn.execute('BEGIN')
-                            curs.execute(f'DROP VIEW IF EXISTS {view_name}')  # nosec B608 - view_name is an internal auto-generated name
-                            curs.execute(f'CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}')  # nosec B608 - view_name is auto-generated; mask_id[0] is an integer DB ID 
-                            yield f'Applying QRiS Database Migrations: updated view {view_name}'
+                            conn.execute("BEGIN")
+                            curs.execute(f"DROP VIEW IF EXISTS {view_name}")  # nosec B608 - view_name is an internal auto-generated name
+                            curs.execute(f"CREATE VIEW {view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id = {mask_id[0]}")  # nosec B608 - view_name is auto-generated; mask_id[0] is an integer DB ID
+                            yield f"Applying QRiS Database Migrations: updated view {view_name}"
                             conn.commit()
         except Exception as ex:
             conn.rollback()
             raise ex
 
         try:
-            migrations_dir = os.path.join(os.path.dirname(__file__), '..', 'db', 'migrations')
+            migrations_dir = os.path.join(os.path.dirname(__file__), "..", "db", "migrations")
             migration_files = os.listdir(migrations_dir)
             sorted_migration_files = sorted(migration_files)
             for migration_file in sorted_migration_files:
-                curs.execute('SELECT * FROM migrations WHERE file_name LIKE ?', [migration_file])
+                curs.execute("SELECT * FROM migrations WHERE file_name LIKE ?", [migration_file])
                 migration_row = curs.fetchone()
                 if migration_row is None:
                     try:
                         migration_path = os.path.join(migrations_dir, migration_file)
-                        yield f'Applying QRiS Database Migrations: {migration_file}'
-                        with open(migration_path, 'r') as f:
+                        yield f"Applying QRiS Database Migrations: {migration_file}"
+                        with open(migration_path) as f:
                             sql_commands = f.read()
-                        conn.execute('BEGIN')
+                        conn.execute("BEGIN")
                         curs.executescript(sql_commands)
-                        curs.execute('INSERT INTO migrations (file_name) VALUES (?)', [migration_file])
+                        curs.execute("INSERT INTO migrations (file_name) VALUES (?)", [migration_file])
                         conn.commit()
                     except Exception as ex:
                         conn.rollback()
@@ -710,8 +705,9 @@ def apply_db_migrations(db_path: str):
             conn.rollback()
             raise ex
 
+
 def test_project(db_path: str) -> bool:
-    """ Tests if the given database path is a valid QRiS project database """
+    """Tests if the given database path is a valid QRiS project database"""
 
     if not os.path.exists(db_path):
         return False
@@ -724,4 +720,3 @@ def test_project(db_path: str) -> bool:
         if curs.fetchone() is None:
             return False
     return True
-

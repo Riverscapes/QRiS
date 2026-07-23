@@ -1,34 +1,34 @@
+from decimal import Decimal, InvalidOperation
 import json
 import sqlite3
 import time
-from decimal import Decimal, InvalidOperation
-from typing import Dict, List, Tuple
+from typing import Optional
 
+from .analysis_metric import AnalysisMetric, store_analysis_metrics
 from .db_item_spatial import DBItemSpatial
 from .sample_frame import SampleFrame
-from .analysis_metric import AnalysisMetric, store_analysis_metrics
 
-ANALYSIS_MACHINE_CODE = 'ANALYSIS'
-default_units = {'distance': 'meters', 'area': 'square meters', 'ratio': 'ratio', 'count': 'count'}
+ANALYSIS_MACHINE_CODE = "ANALYSIS"
+default_units = {"distance": "meters", "area": "square meters", "ratio": "ratio", "count": "count"}
 
 SCOPE_VERSION = 1
-TEMPORAL_SCOPE_EVENT = 'event'
-TEMPORAL_SCOPE_INTRINSIC = 'intrinsic'
-SPATIAL_SCOPE_SAMPLE_FRAME = 'sample_frame'
-SPATIAL_SCOPE_ANALYSIS = 'analysis'
-SIMPLE_INTRINSIC_MODE = 'simple_intrinsic'
+TEMPORAL_SCOPE_EVENT = "event"
+TEMPORAL_SCOPE_INTRINSIC = "intrinsic"
+SPATIAL_SCOPE_SAMPLE_FRAME = "sample_frame"
+SPATIAL_SCOPE_ANALYSIS = "analysis"
+SIMPLE_INTRINSIC_MODE = "simple_intrinsic"
 
 
 def _normalize_version(version):
     if version is None:
         return None
     version_str = str(version).strip()
-    if version_str == '':
-        return ''
+    if version_str == "":
+        return ""
     try:
-        normalized = format(Decimal(version_str).normalize(), 'f')
-        if '.' in normalized:
-            normalized = normalized.rstrip('0').rstrip('.')
+        normalized = format(Decimal(version_str).normalize(), "f")
+        if "." in normalized:
+            normalized = normalized.rstrip("0").rstrip(".")
         return normalized
     except (InvalidOperation, ValueError):
         return version_str
@@ -42,25 +42,25 @@ def checkpoint_wal(db_path: str) -> None:
                 break
             time.sleep(0.15)
 
-class Analysis(DBItemSpatial):
 
-    def __init__(self, id: int, name: str, description: str, sample_frame: SampleFrame, metadata: dict = None):
-        super().__init__('analyses', id, name, sample_frame.fc_name, 'sample_frame_id', 'Polygon', metadata=metadata)
+class Analysis(DBItemSpatial):
+    def __init__(self, id: int, name: str, description: str, sample_frame: SampleFrame, metadata: Optional[dict] = None):
+        super().__init__("analyses", id, name, sample_frame.fc_name, "sample_frame_id", "Polygon", metadata=metadata)
         self.description = description
-        self.icon = 'analysis'
+        self.icon = "analysis"
         self.sample_frame = sample_frame
         self.analysis_metrics = None
-    
-    def update(self, db_path: str, name: str, description: str, analysis_metrics: dict, metadata: dict = None) -> None:
+
+    def update(self, db_path: str, name: str, description: str, analysis_metrics: dict, metadata: Optional[dict] = None) -> None:
 
         description = description if len(description) > 0 else None
-        metadata['units'] = self.units
+        metadata["units"] = self.units
         metadata_str = json.dumps(metadata) if metadata is not None else None
 
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE analyses SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id])
+                curs.execute("UPDATE analyses SET name = ?, description = ?, metadata = ? WHERE id = ?", [name, description, metadata_str, self.id])
 
                 store_analysis_metrics(curs, self.id, analysis_metrics)
                 self.create_spatial_view(curs)
@@ -75,48 +75,48 @@ class Analysis(DBItemSpatial):
             except Exception as ex:
                 conn.rollback()
                 raise Exception(f"Error updating analysis {self.id}: {ex}") from ex
-            
+
     def set_metadata(self, metadata):
         super().set_metadata(metadata)
-        self.profile = self.metadata.get('centerline', None) # really just the profile id
-        self.dem = self.metadata.get('dem', None)
-        self.units = self.metadata.get('units', default_units)
+        self.profile = self.metadata.get("centerline", None)  # really just the profile id
+        self.dem = self.metadata.get("dem", None)
+        self.units = self.metadata.get("units", default_units)
 
     def _default_scope(self) -> dict:
         return {
-            'version': SCOPE_VERSION,
-            'temporal': {
-                'type': TEMPORAL_SCOPE_EVENT,
-                'id': 0,
+            "version": SCOPE_VERSION,
+            "temporal": {
+                "type": TEMPORAL_SCOPE_EVENT,
+                "id": 0,
             },
         }
 
     def get_scope(self) -> dict:
-        scope = self.system_metadata.get('scope')
+        scope = self.system_metadata.get("scope")
         default_scope = self._default_scope()
 
         if not isinstance(scope, dict):
             return default_scope
 
-        temporal = scope.get('temporal', {}) if isinstance(scope.get('temporal', {}), dict) else {}
+        temporal = scope.get("temporal", {}) if isinstance(scope.get("temporal", {}), dict) else {}
 
-        temporal_type = str(temporal.get('type', default_scope['temporal']['type'])).strip().lower()
-
-        try:
-            temporal_id = int(temporal.get('id', default_scope['temporal']['id']))
-        except (TypeError, ValueError):
-            temporal_id = default_scope['temporal']['id']
+        temporal_type = str(temporal.get("type", default_scope["temporal"]["type"])).strip().lower()
 
         try:
-            version = int(scope.get('version', default_scope['version']))
+            temporal_id = int(temporal.get("id", default_scope["temporal"]["id"]))
         except (TypeError, ValueError):
-            version = default_scope['version']
+            temporal_id = default_scope["temporal"]["id"]
+
+        try:
+            version = int(scope.get("version", default_scope["version"]))
+        except (TypeError, ValueError):
+            version = default_scope["version"]
 
         normalized = {
-            'version': version,
-            'temporal': {
-                'type': temporal_type,
-                'id': temporal_id,
+            "version": version,
+            "temporal": {
+                "type": temporal_type,
+                "id": temporal_id,
             },
         }
 
@@ -126,77 +126,84 @@ class Analysis(DBItemSpatial):
 
         return normalized
 
-    def validate_scope(self, scope: dict = None, raise_on_error: bool = False) -> Tuple[bool, List[str]]:
+    def validate_scope(self, scope: Optional[dict] = None, raise_on_error: bool = False) -> tuple[bool, list[str]]:
         s = scope if isinstance(scope, dict) else self.get_scope()
         errors = []
 
-        temporal = s.get('temporal', {}) if isinstance(s.get('temporal', {}), dict) else {}
+        temporal = s.get("temporal", {}) if isinstance(s.get("temporal", {}), dict) else {}
 
-        temporal_type = str(temporal.get('type', '')).strip().lower()
-        temporal_id = temporal.get('id', None)
+        temporal_type = str(temporal.get("type", "")).strip().lower()
+        temporal_id = temporal.get("id", None)
 
         if temporal_type not in [TEMPORAL_SCOPE_EVENT, TEMPORAL_SCOPE_INTRINSIC]:
             errors.append(f"Invalid temporal scope type '{temporal_type}'.")
 
         if not isinstance(temporal_id, int):
-            errors.append('Temporal scope id must be an integer.')
+            errors.append("Temporal scope id must be an integer.")
 
         if isinstance(temporal_id, int):
             if temporal_type == TEMPORAL_SCOPE_INTRINSIC and temporal_id != 0:
-                errors.append('Intrinsic temporal scope id must be 0.')
+                errors.append("Intrinsic temporal scope id must be 0.")
             if temporal_type == TEMPORAL_SCOPE_EVENT and temporal_id < 0:
-                errors.append('Event temporal scope id must be >= 0.')
+                errors.append("Event temporal scope id must be >= 0.")
 
         valid = len(errors) == 0
         if not valid and raise_on_error:
-            raise ValueError('Invalid analysis scope metadata: ' + '; '.join(errors))
+            raise ValueError("Invalid analysis scope metadata: " + "; ".join(errors))
 
         return valid, errors
 
     def set_scope(self, temporal_type: str, temporal_id: int) -> dict:
         new_scope = {
-            'version': SCOPE_VERSION,
-            'temporal': {
-                'type': str(temporal_type).strip().lower(),
-                'id': int(temporal_id),
+            "version": SCOPE_VERSION,
+            "temporal": {
+                "type": str(temporal_type).strip().lower(),
+                "id": int(temporal_id),
             },
         }
 
         self.validate_scope(new_scope, raise_on_error=True)
-        self.system_metadata['scope'] = new_scope
-        self.metadata['system'] = self.system_metadata
+        self.system_metadata["scope"] = new_scope
+        self.metadata["system"] = self.system_metadata
         return new_scope
 
     def is_simple_intrinsic_mode(self) -> bool:
-        return str(self.system_metadata.get('analysis_mode', '')).strip().lower() == SIMPLE_INTRINSIC_MODE
+        return str(self.system_metadata.get("analysis_mode", "")).strip().lower() == SIMPLE_INTRINSIC_MODE
 
     def set_simple_intrinsic_mode(self, enabled: bool) -> None:
         if enabled:
-            self.system_metadata['analysis_mode'] = SIMPLE_INTRINSIC_MODE
-            self.metadata['system'] = self.system_metadata
+            self.system_metadata["analysis_mode"] = SIMPLE_INTRINSIC_MODE
+            self.metadata["system"] = self.system_metadata
             self.set_scope(TEMPORAL_SCOPE_INTRINSIC, 0)
         else:
-            if str(self.system_metadata.get('analysis_mode', '')).strip().lower() == SIMPLE_INTRINSIC_MODE:
-                self.system_metadata.pop('analysis_mode', None)
-                self.metadata['system'] = self.system_metadata
-            
+            if str(self.system_metadata.get("analysis_mode", "")).strip().lower() == SIMPLE_INTRINSIC_MODE:
+                self.system_metadata.pop("analysis_mode", None)
+                self.metadata["system"] = self.system_metadata
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Create a spatial view of the Analysis features."""
-        
+
         # Filter by selected events if known
         event_filter = ""
-        if self.metadata and 'selected_events' in self.metadata:
-            selected_events = self.metadata['selected_events']
+        if self.metadata and "selected_events" in self.metadata:
+            selected_events = self.metadata["selected_events"]
             if selected_events:
-                 event_ids = ",".join([str(id) for id in selected_events])
-                 event_filter = f" AND metric_values.event_id IN ({event_ids})"
+                event_ids = ",".join([str(id) for id in selected_events])
+                event_filter = f" AND metric_values.event_id IN ({event_ids})"
 
         # prepare sql string for each metric
         sql_metric = ", ".join(
-            [f'MAX(CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END) AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()])
-        sql = f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values JOIN metrics ON metric_values.metric_id == metrics.id WHERE metric_values.analysis_id = {self.id}{event_filter} GROUP BY sample_frame_feature_id) AS x ON sample_frame_features.fid = x.sample_frame_feature_id"""  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>); all other values are integer DB IDs
-        if sql_metric == '':
+            [f'MAX(CASE WHEN metric_id = {metric_id} THEN (CASE WHEN is_manual = 1 THEN manual_value ELSE automated_value END) END) AS "{analysis_metric.metric.name}"' for metric_id, analysis_metric in self.analysis_metrics.items()]
+        )
+        sql = (
+            f"""CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features """
+            f"""JOIN (SELECT sample_frame_feature_id, {sql_metric} FROM metric_values """
+            f"""JOIN metrics ON metric_values.metric_id == metrics.id """
+            f"""WHERE metric_values.analysis_id = {self.id}{event_filter} """
+            f"""GROUP BY sample_frame_feature_id) AS x """
+            f"""ON sample_frame_features.fid = x.sample_frame_feature_id"""
+        )  # nosec B608 - view_name is auto-generated (vw_<table>_<int_id>); all other values are integer DB IDs
+        if sql_metric == "":
             sql = f"CREATE VIEW {self.view_name} AS SELECT * FROM sample_frame_features WHERE sample_frame_id == {self.sample_frame.id}"  # nosec B608 - view_name is auto-generated; sample_frame.id is an integer DB ID
         # check if the view already exists, if so, delete it
         if self.check_spatial_view_exists(curs):
@@ -207,24 +214,19 @@ class Analysis(DBItemSpatial):
         # add view to geopackage
         sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
         curs.execute(sql, [self.view_name, "features", self.view_name, "", self.epsg])
-        sql = (
-            "INSERT INTO gpkg_geometry_columns "
-            "(table_name, column_name, geometry_type_name, srs_id, z, m) "
-            "VALUES (?, ?, ?, ?, ?, ?)"
-        )
-        curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
+        sql = "INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES (?, ?, ?, ?, ?, ?)"
+        curs.execute(sql, [self.view_name, "geom", self.geom_type.upper(), self.epsg, 0, 0])
 
-
-    def check_metric_feasibility(self, metric, project, event=None) -> Dict:
+    def check_metric_feasibility(self, metric, project, event=None) -> dict:
         return self._check_metric_feasibility(metric, project, event, set())
 
-    def _check_metric_feasibility(self, metric, project, event=None, visited_metrics=None) -> Dict:
+    def _check_metric_feasibility(self, metric, project, event=None, visited_metrics=None) -> dict:
         """
         Checks if the automated metric can be calculated based on:
         1. Automation definition existence
         2. Required Inputs (Analysis Metadata)
         3. Required DCE Layers (Project Configuration & Event Content)
-        
+
         Returns:
             dict: {
                 'status': str ('MANUAL_ONLY', 'FEASIBLE', 'FEASIBLE_EMPTY', 'NOT_FEASIBLE'),
@@ -235,35 +237,30 @@ class Analysis(DBItemSpatial):
             visited_metrics = set()
 
         metric_identity = (
-            getattr(metric, 'protocol_machine_code', None),
-            getattr(metric, 'machine_name', None),
-            getattr(metric, 'version', None),
+            getattr(metric, "protocol_machine_code", None),
+            getattr(metric, "machine_name", None),
+            getattr(metric, "version", None),
         )
         # Dependency cycles are blocked at execution planning, but this guard keeps
         # feasibility checks safe if malformed definitions are loaded.
         if metric_identity in visited_metrics:
-            return {
-                'status': 'FEASIBLE',
-                'reasons': []
-            }
+            return {"status": "FEASIBLE", "reasons": []}
         visited_metrics.add(metric_identity)
 
-        result = {
-            'status': 'FEASIBLE',
-            'reasons': []
-        }
-        
+        result = {"status": "FEASIBLE", "reasons": []}
+
         # 1. Check Automation Definition
-        if metric.metric_function == 'manual' or not metric.metric_params:
-            result['status'] = 'MANUAL_ONLY'
+        if metric.metric_function == "manual" or not metric.metric_params:
+            result["status"] = "MANUAL_ONLY"
             return result
-            
+
         # 2. Check Inputs (Analysis Metadata)
-        inputs = metric.metric_params.get('inputs', [])
+        inputs = metric.metric_params.get("inputs", [])
         for input_item in inputs:
-            ref = input_item.get('input_ref', '')
-            if not ref: continue
-                
+            ref = input_item.get("input_ref", "")
+            if not ref:
+                continue
+
             # Check if this key exists in analysis metadata (case insensitive)
             # metadata keys are usually lowercase, but let's be safe
             found = False
@@ -271,13 +268,13 @@ class Analysis(DBItemSpatial):
                 if k.lower() == ref.lower() and v is not None:
                     found = True
                     break
-            
+
             if not found:
-                 result['status'] = 'NOT_FEASIBLE'
-                 result['reasons'].append(f"Missing Input: {ref}")
+                result["status"] = "NOT_FEASIBLE"
+                result["reasons"].append(f"Missing Input: {ref}")
 
         # 2b. Check Metric Dependencies (selected analysis metrics)
-        metric_dependencies = metric.metric_params.get('metric_dependencies', [])
+        metric_dependencies = metric.metric_params.get("metric_dependencies", [])
         if metric_dependencies:
             selected_metrics = [am.metric for am in self.analysis_metrics.values()] if self.analysis_metrics else []
             selected_by_exact = {}
@@ -294,14 +291,14 @@ class Analysis(DBItemSpatial):
                 selected_by_loose.setdefault(key, []).append(m)
 
             for dep in metric_dependencies:
-                dep_machine = dep.get('metric_id_ref')
+                dep_machine = dep.get("metric_id_ref")
                 if not dep_machine:
-                    result['status'] = 'NOT_FEASIBLE'
-                    result['reasons'].append('Invalid metric dependency: missing metric_id_ref')
+                    result["status"] = "NOT_FEASIBLE"
+                    result["reasons"].append("Invalid metric dependency: missing metric_id_ref")
                     continue
 
-                dep_protocol = dep.get('protocol_machine_code_ref', metric.protocol_machine_code)
-                dep_version = dep.get('version')
+                dep_protocol = dep.get("protocol_machine_code_ref", metric.protocol_machine_code)
+                dep_version = dep.get("version")
 
                 if dep_version is not None:
                     dep_key = f"{dep_protocol}::{dep_machine}::{dep_version}"
@@ -311,24 +308,18 @@ class Analysis(DBItemSpatial):
                         dep_keys.append(f"{dep_protocol}::{dep_machine}::{normalized_dep_version}")
                     dep_metric = next((selected_by_exact.get(k) for k in dep_keys if k in selected_by_exact), None)
                     if dep_metric is None:
-                        result['status'] = 'NOT_FEASIBLE'
-                        result['reasons'].append(
-                            f"Missing Metric Dependency: {dep_protocol}.{dep_machine} v{dep_version}"
-                        )
+                        result["status"] = "NOT_FEASIBLE"
+                        result["reasons"].append(f"Missing Metric Dependency: {dep_protocol}.{dep_machine} v{dep_version}")
                         continue
                 else:
                     dep_key = f"{dep_protocol}::{dep_machine}"
                     dep_matches = selected_by_loose.get(dep_key, [])
                     if len(dep_matches) < 1:
-                        result['status'] = 'NOT_FEASIBLE'
-                        result['reasons'].append(
-                            f"Missing Metric Dependency: {dep_protocol}.{dep_machine}"
-                        )
+                        result["status"] = "NOT_FEASIBLE"
+                        result["reasons"].append(f"Missing Metric Dependency: {dep_protocol}.{dep_machine}")
                     elif len(dep_matches) > 1:
-                        result['status'] = 'NOT_FEASIBLE'
-                        result['reasons'].append(
-                            f"Ambiguous Metric Dependency: {dep_protocol}.{dep_machine}"
-                        )
+                        result["status"] = "NOT_FEASIBLE"
+                        result["reasons"].append(f"Ambiguous Metric Dependency: {dep_protocol}.{dep_machine}")
                         continue
                     dep_metric = dep_matches[0]
 
@@ -338,61 +329,58 @@ class Analysis(DBItemSpatial):
                     event,
                     set(visited_metrics),
                 )
-                if dep_feasibility.get('status') == 'NOT_FEASIBLE':
-                    result['status'] = 'NOT_FEASIBLE'
-                    dep_reason = '; '.join(dep_feasibility.get('reasons', []))
+                if dep_feasibility.get("status") == "NOT_FEASIBLE":
+                    result["status"] = "NOT_FEASIBLE"
+                    dep_reason = "; ".join(dep_feasibility.get("reasons", []))
                     if dep_reason:
-                        result['reasons'].append(
-                            f"Dependency Not Feasible: {dep_protocol}.{dep_machine} ({dep_reason})"
-                        )
+                        result["reasons"].append(f"Dependency Not Feasible: {dep_protocol}.{dep_machine} ({dep_reason})")
                     else:
-                        result['reasons'].append(
-                            f"Dependency Not Feasible: {dep_protocol}.{dep_machine}"
-                        )
+                        result["reasons"].append(f"Dependency Not Feasible: {dep_protocol}.{dep_machine}")
 
         # 3. Check DCE Layers (With Usage Grouping)
-        dce_layers = metric.metric_params.get('dce_layers', [])
+        dce_layers = metric.metric_params.get("dce_layers", [])
 
         # Intrinsic analyses: metrics that rely on DCE layers are never feasible.
         if self.is_simple_intrinsic_mode() and dce_layers:
-            result['status'] = 'NOT_FEASIBLE'
-            result['reasons'].append('Metric requires data capture event layers — not available in intrinsic analysis.')
+            result["status"] = "NOT_FEASIBLE"
+            result["reasons"].append("Metric requires data capture event layers — not available in intrinsic analysis.")
             return result
-        
+
         usage_groups = {}
         required_individual = []
-        
+
         for lyr_def in dce_layers:
-            u = lyr_def.get('usage')
+            u = lyr_def.get("usage")
             if u:
                 usage_groups.setdefault(u, []).append(lyr_def)
             else:
                 required_individual.append(lyr_def)
-                
+
         has_empty_required_layers = False
 
         def check_single_layer(layer_def):
             # Returns (is_valid_config, failure_reason, is_empty, empty_reason)
-            ref = layer_def.get('layer_id_ref')
-            if not ref: return False, "Invalid Layer Ref", False, None
-            
+            ref = layer_def.get("layer_id_ref")
+            if not ref:
+                return False, "Invalid Layer Ref", False, None
+
             # Find Layer in Project
             # Scope to Metric Protocol if possible
-            metric_protocol = next((p for p in project.protocols.values() if p.machine_code == metric.protocol_machine_code), None) if hasattr(project, 'protocols') else None
+            metric_protocol = next((p for p in project.protocols.values() if p.machine_code == metric.protocol_machine_code), None) if hasattr(project, "protocols") else None
             layer = None
-            if metric_protocol and hasattr(metric_protocol, 'protocol_layers'):
-                 layer = next((l for l in metric_protocol.protocol_layers.values() if l.layer_id == ref), None)
-            
+            if metric_protocol and hasattr(metric_protocol, "protocol_layers"):
+                layer = next((layer for layer in metric_protocol.protocol_layers.values() if layer.layer_id == ref), None)
+
             # Fallback
             if layer is None:
-                layer = next((l for l in project.layers.values() if l.layer_id == ref), None)
-            
+                layer = next((layer for layer in project.layers.values() if layer.layer_id == ref), None)
+
             # Use display name if available, otherwise ref
             layer_name = layer.name if layer else ref
 
             if layer is None:
                 return False, f"{ref}: Not Found in Project", False, None
-            
+
             if event:
                 # Check Configuration in DCE
                 # We prioritize configuration check (is checked in setup)
@@ -402,28 +390,28 @@ class Analysis(DBItemSpatial):
                         in_dce = True
                         break
                 if not in_dce:
-                     return False, f"{layer_name}: Not added to DCE", False, None
-                
+                    return False, f"{layer_name}: Not added to DCE", False, None
+
                 # Check Feature Counts
                 is_empty = False
                 empty_msg = None
                 with sqlite3.connect(project.project_file) as conn:
-                     curs = conn.cursor()
-                     try:
-                         # dce_points/lines/polys have layer_id and event_id
-                         table_name = layer.DCE_LAYER_NAMES.get(layer.geom_type)
-                         if table_name:
-                             # Note: Column is event_layer_id, not layer_id (per schema.sql)
-                             curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND event_layer_id = ?", [event.id, layer.id])  # nosec B608 - table_name is from DCE_LAYER_NAMES fixed dict
-                             count = curs.fetchone()[0]
-                             if count == 0:
-                                 is_empty = True
-                                 empty_msg = f"{layer_name}: No features"
-                     except Exception:  # nosec B110 - failure means the DCE table doesn't exist; count stays 0 and is_empty remains False
-                         # Table might not exist or other error
-                         pass
+                    curs = conn.cursor()
+                    try:
+                        # dce_points/lines/polys have layer_id and event_id
+                        table_name = layer.DCE_LAYER_NAMES.get(layer.geom_type)
+                        if table_name:
+                            # Note: Column is event_layer_id, not layer_id (per schema.sql)
+                            curs.execute(f"SELECT COUNT(*) FROM {table_name} WHERE event_id = ? AND event_layer_id = ?", [event.id, layer.id])  # nosec B608 - table_name is from DCE_LAYER_NAMES fixed dict
+                            count = curs.fetchone()[0]
+                            if count == 0:
+                                is_empty = True
+                                empty_msg = f"{layer_name}: No features"
+                    except Exception:  # nosec B110 - failure means the DCE table doesn't exist; count stays 0 and is_empty remains False
+                        # Table might not exist or other error
+                        pass
                 return True, None, is_empty, empty_msg
-            
+
             return True, None, False, None
 
         # Check Individual Layers (Changed from AND to OR logic - at least one required)
@@ -443,23 +431,23 @@ class Analysis(DBItemSpatial):
                         indiv_empty_reasons.append(empty_reason)
                 else:
                     indiv_reasons.append(fail_reason)
-            
+
             if not any_valid:
-                result['status'] = 'NOT_FEASIBLE'
+                result["status"] = "NOT_FEASIBLE"
                 unique_reasons = sorted(list(set(indiv_reasons)))
-                result['reasons'].append("; ".join(unique_reasons))
+                result["reasons"].append("; ".join(unique_reasons))
             elif not any_non_empty:
                 has_empty_required_layers = True
                 # If we have valid layers but ALL are empty, we mark as FEASIBLE_EMPTY
-                result['reasons'].append("; ".join(indiv_empty_reasons))
+                result["reasons"].append("; ".join(indiv_empty_reasons))
 
         # Check Usage Groups (OR Logic)
-        for usage, l_defs in usage_groups.items():
+        for _usage, l_defs in usage_groups.items():
             group_valid = False
             group_non_empty = False
             group_fail_reasons = []
             group_empty_reasons = []
-            
+
             for l_def in l_defs:
                 is_valid, fail_reason, is_empty, empty_reason = check_single_layer(l_def)
                 if is_valid:
@@ -470,60 +458,55 @@ class Analysis(DBItemSpatial):
                         group_empty_reasons.append(empty_reason)
                 else:
                     group_fail_reasons.append(fail_reason)
-            
-            if not group_valid:
-                 result['status'] = 'NOT_FEASIBLE'
-                 unique_reasons = sorted(list(set(group_fail_reasons)))
-                 result['reasons'].append("; ".join(unique_reasons))
-            elif not group_non_empty:
-                 has_empty_required_layers = True
-                 result['reasons'].append("; ".join(group_empty_reasons))
 
-        if result['status'] == 'FEASIBLE' and has_empty_required_layers:
-            result['status'] = 'FEASIBLE_EMPTY'
+            if not group_valid:
+                result["status"] = "NOT_FEASIBLE"
+                unique_reasons = sorted(list(set(group_fail_reasons)))
+                result["reasons"].append("; ".join(unique_reasons))
+            elif not group_non_empty:
+                has_empty_required_layers = True
+                result["reasons"].append("; ".join(group_empty_reasons))
+
+        if result["status"] == "FEASIBLE" and has_empty_required_layers:
+            result["status"] = "FEASIBLE_EMPTY"
 
         return result
 
-def format_feasibility_text(f_status: str, f_reasons: list = None) -> str:
+
+def format_feasibility_text(f_status: str, f_reasons: Optional[list] = None) -> str:
     """Helper to generate consistent tooltip text from feasibility status and reasons."""
     if f_reasons is None:
         f_reasons = []
-    
+
     msg = ""
-    if f_status == 'NOT_FEASIBLE':
+    if f_status == "NOT_FEASIBLE":
         msg = "Automation Not Feasible:"
-    elif f_status == 'FEASIBLE_EMPTY':
+    elif f_status == "FEASIBLE_EMPTY":
         msg = "Automation Feasible (Input Data Empty):"
-    elif f_status == 'MANUAL_ONLY':
+    elif f_status == "MANUAL_ONLY":
         return "Manual Entry Only"
-    else: # FEASIBLE
+    else:  # FEASIBLE
         return "Automation Feasible"
 
     if f_reasons:
         msg += "\n" + "\n".join([f" - {r}" for r in f_reasons])
-        
+
     return msg
 
 
-def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> Dict[int, Analysis] :
+def load_analyses(curs: sqlite3.Cursor, sample_frames: dict, metrics: dict) -> dict[int, Analysis]:
 
-    curs.execute('SELECT * FROM analyses')
-    analyses = {row['id']: Analysis(
-        row['id'],
-        row['name'],
-        row['description'],
-        sample_frames[row['sample_frame_id']],
-        json.loads(row['metadata']) if row['metadata'] is not None else None
-    ) for row in curs.fetchall()}
+    curs.execute("SELECT * FROM analyses")
+    analyses = {row["id"]: Analysis(row["id"], row["name"], row["description"], sample_frames[row["sample_frame_id"]], json.loads(row["metadata"]) if row["metadata"] is not None else None) for row in curs.fetchall()}
 
     for analysis_id, analysis in analyses.items():
-        curs.execute('SELECT * FROM analysis_metrics WHERE analysis_id = ?', [analysis_id])
-        analysis.analysis_metrics = {row['metric_id']: AnalysisMetric(metrics[row['metric_id']], row['level_id']) for row in curs.fetchall() if row['metric_id'] in metrics}
+        curs.execute("SELECT * FROM analysis_metrics WHERE analysis_id = ?", [analysis_id])
+        analysis.analysis_metrics = {row["metric_id"]: AnalysisMetric(metrics[row["metric_id"]], row["level_id"]) for row in curs.fetchall() if row["metric_id"] in metrics}
 
     return analyses
 
 
-def insert_analysis(db_path: str, name: str, description: str, sample_frame: SampleFrame, analysis_metrics: dict, metadata: dict=None) -> Analysis:
+def insert_analysis(db_path: str, name: str, description: str, sample_frame: SampleFrame, analysis_metrics: dict, metadata: Optional[dict] = None) -> Analysis:
     """
     active metrics is a dictionary with metric_id keyed to metric_level_id
     """
@@ -534,8 +517,7 @@ def insert_analysis(db_path: str, name: str, description: str, sample_frame: Sam
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO analyses (name, description, sample_frame_id, metadata) VALUES (?, ?, ?, ?)', [
-                name, description if description is not None and len(description) > 0 else None, sample_frame.id, metadata_str])
+            curs.execute("INSERT INTO analyses (name, description, sample_frame_id, metadata) VALUES (?, ?, ?, ?)", [name, description if description is not None and len(description) > 0 else None, sample_frame.id, metadata_str])
             analysis_id = curs.lastrowid
             analysis = Analysis(analysis_id, name, description, sample_frame, metadata=metadata)
             store_analysis_metrics(curs, analysis_id, analysis_metrics)

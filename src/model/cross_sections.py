@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from typing import Dict
+from typing import Optional
 
 from qgis.core import QgsDistanceArea, QgsProject, QgsUnitTypes
 
@@ -8,14 +8,14 @@ from .db_item_spatial import DBItemSpatial
 
 
 class CrossSections(DBItemSpatial):
-    """ class to store cross sections database item"""
+    """class to store cross sections database item"""
 
-    CROSS_SECTIONS_MACHINE_CODE = 'Cross Sections'
+    CROSS_SECTIONS_MACHINE_CODE = "Cross Sections"
 
-    def __init__(self, id: int, name: str, description: str, metadata: dict = None):
-        super().__init__('cross_sections', id, name, 'cross_section_features', 'cross_section_id', 'LineString', metadata=metadata)
+    def __init__(self, id: int, name: str, description: str, metadata: Optional[dict] = None):
+        super().__init__("cross_sections", id, name, "cross_section_features", "cross_section_id", "LineString", metadata=metadata)
         self.description = description
-        self.icon = 'line'
+        self.icon = "line"
 
     def get_spatial_stats(self, db_path: str) -> dict:
         temp_layer = self.get_temp_layer(db_path)
@@ -35,15 +35,14 @@ class CrossSections(DBItemSpatial):
             count += 1
 
         return {
-            'feature_count': count,
-            'total_length': total_length,
-            'average_length': total_length / count if count > 0 else 0.0,
-            'min_length': min_length if min_length is not None else 0.0,
-            'max_length': max_length if max_length is not None else 0.0,
+            "feature_count": count,
+            "total_length": total_length,
+            "average_length": total_length / count if count > 0 else 0.0,
+            "min_length": min_length if min_length is not None else 0.0,
+            "max_length": max_length if max_length is not None else 0.0,
         }
 
-
-    def update(self, db_path: str, name: str, description: str, metadata: dict = None) -> None:
+    def update(self, db_path: str, name: str, description: str, metadata: Optional[dict] = None) -> None:
 
         description = description if len(description) > 0 else None
         metadata_str = json.dumps(metadata) if metadata is not None else None
@@ -51,7 +50,15 @@ class CrossSections(DBItemSpatial):
         with sqlite3.connect(db_path) as conn:
             try:
                 curs = conn.cursor()
-                curs.execute('UPDATE cross_sections SET name = ?, description = ?, metadata = ? WHERE id = ?', [name, description, metadata_str, self.id, ])
+                curs.execute(
+                    "UPDATE cross_sections SET name = ?, description = ?, metadata = ? WHERE id = ?",
+                    [
+                        name,
+                        description,
+                        metadata_str,
+                        self.id,
+                    ],
+                )
                 conn.commit()
 
                 self.name = name
@@ -63,18 +70,13 @@ class CrossSections(DBItemSpatial):
                 raise ex
 
 
-def load_cross_sections(curs: sqlite3.Cursor) -> Dict[int, CrossSections]:
+def load_cross_sections(curs: sqlite3.Cursor) -> dict[int, CrossSections]:
 
     curs.execute("""SELECT * FROM cross_sections""")
-    return {row['id']: CrossSections(
-        row['id'],
-        row['name'],
-        row['description'],
-        json.loads(row['metadata']) if row['metadata'] is not None else None
-    ) for row in curs.fetchall()}
+    return {row["id"]: CrossSections(row["id"], row["name"], row["description"], json.loads(row["metadata"]) if row["metadata"] is not None else None) for row in curs.fetchall()}
 
 
-def insert_cross_sections(db_path: str, name: str, description: str, metadata: dict = None) -> CrossSections:
+def insert_cross_sections(db_path: str, name: str, description: str, metadata: Optional[dict] = None) -> CrossSections:
 
     cross_sections = None
     description = description if len(description) > 0 else None
@@ -82,7 +84,7 @@ def insert_cross_sections(db_path: str, name: str, description: str, metadata: d
     with sqlite3.connect(db_path) as conn:
         try:
             curs = conn.cursor()
-            curs.execute('INSERT INTO cross_sections (name, description, metadata) VALUES (?, ?, ?)', [name, description, metadata_str])
+            curs.execute("INSERT INTO cross_sections (name, description, metadata) VALUES (?, ?, ?)", [name, description, metadata_str])
             id = curs.lastrowid
             cross_sections = CrossSections(id, name, description, metadata)
             cross_sections.create_spatial_view(curs)
