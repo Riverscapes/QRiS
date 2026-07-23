@@ -1,7 +1,9 @@
 from qgis.PyQt import QtWidgets
 
+
 class BaseExportWidget(QtWidgets.QPushButton):
     """Base export widget for export actions."""
+
     def __init__(self, parent=None, base_name="export", project_path=None, export_type=None):
         super().__init__(parent)
         self.base_name = base_name

@@ -1,9 +1,12 @@
 from qgis.PyQt import QtCore, QtWidgets
-from .export_widget import BaseExportWidget
+
 from ..frm_export_map import FrmMapExport
+from .export_widget import BaseExportWidget
+
 
 class MapExportWidget(BaseExportWidget):
     """Export widget for exporting map images (e.g., QGIS map canvas)."""
+
     exportPathSelected = QtCore.pyqtSignal(str, str, object)
 
     def __init__(self, parent=None, base_name="map_export", get_map_image_callback=None, project_path=None, export_type=None):

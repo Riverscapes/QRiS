@@ -1,10 +1,9 @@
+from qgis.core import QgsLineString, QgsWkbTypes
+from qgis.gui import QgsMapTool, QgsMapToolEmitPoint, QgsRubberBand
 from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.core import QgsWkbTypes, QgsLineString
-from qgis.gui import QgsMapToolEmitPoint, QgsMapTool, QgsRubberBand
 
 
 class LineSegmentMapTool(QgsMapToolEmitPoint):
-
     line_captured = pyqtSignal(QgsLineString)
 
     def __init__(self, canvas):
@@ -61,8 +60,7 @@ class LineSegmentMapTool(QgsMapToolEmitPoint):
     def linestring(self):
         if self.startPoint is None or self.endPoint is None:
             return None
-        elif (self.startPoint.x() == self.endPoint.x() or
-              self.startPoint.y() == self.endPoint.y()):
+        elif self.startPoint.x() == self.endPoint.x() or self.startPoint.y() == self.endPoint.y():
             return None
 
         return QgsLineString([self.startPoint, self.endPoint])

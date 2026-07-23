@@ -1,14 +1,15 @@
 from datetime import date
+from typing import Optional
 
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import pyqtSignal, QDate
+from qgis.PyQt.QtCore import QDate, pyqtSignal
+
 
 class DateRangeWidget(QtWidgets.QWidget):
-    
     date_range_changed = pyqtSignal()
-    
-    def __init__(self, parent=None, date_min: date = None, date_max: date = None, horizontal: bool = True):
-        super(DateRangeWidget, self).__init__(parent)
+
+    def __init__(self, parent=None, date_min: Optional[date] = None, date_max: Optional[date] = None, horizontal: bool = True):
+        super().__init__(parent)
 
         self.horizontal = horizontal
 
@@ -32,7 +33,7 @@ class DateRangeWidget(QtWidgets.QWidget):
             self.set_dates(date_min, date_max)
         else:
             self.update_range()
-    
+
     def set_dates(self, date_start: date, date_end: date):
         self.date_start.setDate(QDate(date_start))
         self.date_end.setDate(QDate(date_end))
@@ -79,7 +80,7 @@ class DateRangeWidget(QtWidgets.QWidget):
 
         self.widget_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.lbl_from = QtWidgets.QLabel('From')
+        self.lbl_from = QtWidgets.QLabel("From")
         if self.horizontal:
             self.horiz_start.addWidget(self.lbl_from)
         else:
@@ -95,7 +96,7 @@ class DateRangeWidget(QtWidgets.QWidget):
             self.widget_layout.addWidget(self.date_start, 0, 1)
             self.widget_layout.setRowStretch(2, 1)
 
-        self.lbl_to = QtWidgets.QLabel('To')
+        self.lbl_to = QtWidgets.QLabel("To")
         if self.horizontal:
             self.horiz_end.addWidget(self.lbl_to)
         else:

@@ -1,11 +1,11 @@
 import json
+from typing import Optional
 
-from qgis.PyQt import QtCore, QtWidgets, QtGui
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 
 class MetadataWidget(QtWidgets.QWidget):
-
-    def __init__(self, parent: QtWidgets.QDialog, json_meta: str = None, new_keys: list = None):
+    def __init__(self, parent: QtWidgets.QDialog, json_meta: Optional[str] = None, new_keys: Optional[list] = None):
         super().__init__(parent)
         self.json_meta = None
         self.new_keys = new_keys
@@ -17,24 +17,22 @@ class MetadataWidget(QtWidgets.QWidget):
 
         self.create_table_ui()
 
-        if json_meta is not None and json_meta != '' and json_meta != 'null':
+        if json_meta is not None and json_meta != "" and json_meta != "null":
             self.load_json(json_meta)
-
-
 
     def load_json(self, json_meta: str):
 
         self.json_meta = json_meta
-        if json_meta is not None and json_meta != '' and json_meta != 'null':
+        if json_meta is not None and json_meta != "" and json_meta != "null":
             self.metadata = json.loads(self.json_meta)
         self.check_metadata()
         self.load_table()
 
     def add_metadata(self, key: str, value: str):
-         
-        if 'metadata' not in self.metadata:
-            self.metadata['metadata'] = dict()
-        self.metadata['metadata'][key] = value
+
+        if "metadata" not in self.metadata:
+            self.metadata["metadata"] = dict()
+        self.metadata["metadata"][key] = value
 
         # add a row to the table
         # self.table.insertRow(self.table.rowCount())
@@ -44,37 +42,36 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
         label_widget = MetadataValueLabel(str(value))
         self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
-    
 
     def add_system_metadata(self, key: str, value: str):
-            
-        if 'system' not in self.metadata:
-            self.metadata['system'] = dict()
-        self.metadata['system'][key] = value
+
+        if "system" not in self.metadata:
+            self.metadata["system"] = dict()
+        self.metadata["system"][key] = value
 
     def remove_system_metadata(self, key: str):
-                
-        if 'system' in self.metadata and key in self.metadata['system']:
-            del self.metadata['system'][key]
+
+        if "system" in self.metadata and key in self.metadata["system"]:
+            del self.metadata["system"][key]
 
     def add_attribute_metadata(self, key: str, value: str):
-            
-        if 'attributes' not in self.metadata:
-            self.metadata['attributes'] = dict()
-        self.metadata['attributes'][key] = value
+
+        if "attributes" not in self.metadata:
+            self.metadata["attributes"] = dict()
+        self.metadata["attributes"][key] = value
 
     def check_metadata(self):
 
         # if none or epmty, return
         if self.metadata is None or len(self.metadata) == 0:
             return
-        
+
         # if root keys are not in ['metadata', 'system' or 'attributes'] then move the key associated values to  'metadata']
-        out_metadata = self.metadata.get('metadata', dict())
+        out_metadata = self.metadata.get("metadata", dict())
         for key, value in self.metadata.items():
-            if key not in ['metadata', 'system', 'attributes']:
+            if key not in ["metadata", "system", "attributes"]:
                 out_metadata[key] = value
-        self.metadata['metadata'] = out_metadata
+        self.metadata["metadata"] = out_metadata
 
     def create_table_ui(self):
         self.horiz = QtWidgets.QHBoxLayout()
@@ -84,7 +81,7 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table = QtWidgets.QTableWidget()
         self.table.setColumnCount(2)
         self.table.setRowCount(0)
-        self.table.setHorizontalHeaderLabels(['Key', 'Value'])
+        self.table.setHorizontalHeaderLabels(["Key", "Value"])
         self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -93,19 +90,19 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setSortingEnabled(True)
 
-        self.cmdAdd = QtWidgets.QPushButton('Add')
-        self.cmdAdd.setToolTip('Add a new key/value pair')
+        self.cmdAdd = QtWidgets.QPushButton("Add")
+        self.cmdAdd.setToolTip("Add a new key/value pair")
         self.cmdAdd.clicked.connect(self.add_row)
 
-        self.cmdDelete = QtWidgets.QPushButton('Delete')
-        self.cmdDelete.setToolTip('Delete the selected key/value pair')
+        self.cmdDelete = QtWidgets.QPushButton("Delete")
+        self.cmdDelete.setToolTip("Delete the selected key/value pair")
         self.cmdDelete.setEnabled(False)
         self.cmdDelete.clicked.connect(self.delete_row)
 
         self.chkViewSystem = QtWidgets.QCheckBox()
-        self.chkViewSystem.setText('Show Read-Only QRiS Metadata')
+        self.chkViewSystem.setText("Show Read-Only QRiS Metadata")
         self.chkViewSystem.setChecked(True)
-        self.chkViewSystem.setToolTip('Show or hide read-only QRiS system metadata')
+        self.chkViewSystem.setToolTip("Show or hide read-only QRiS system metadata")
         self.chkViewSystem.stateChanged.connect(self.toggle_system_metadata)
 
         # add buttons to layout on left side, then tables on right side
@@ -120,7 +117,6 @@ class MetadataWidget(QtWidgets.QWidget):
         self.vert_table.addWidget(self.table)
         self.vert_table.addWidget(self.chkViewSystem)
 
-
         self.horiz.addLayout(self.vert_table)
 
     def load_table(self):
@@ -130,8 +126,8 @@ class MetadataWidget(QtWidgets.QWidget):
 
         # Main metadata
         if self.metadata is not None:
-            if 'metadata' in self.metadata:
-                for key, value in self.metadata['metadata'].items():
+            if "metadata" in self.metadata:
+                for key, value in self.metadata["metadata"].items():
                     self.table.insertRow(self.table.rowCount())
                     self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
                     label_widget = MetadataValueLabel(str(value))
@@ -143,8 +139,8 @@ class MetadataWidget(QtWidgets.QWidget):
                 self.table.setItem(self.table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
 
         # Add read-only system metadata
-        if self.metadata is not None and 'system' in self.metadata:
-            for key, value in self.metadata['system'].items():
+        if self.metadata is not None and "system" in self.metadata:
+            for key, value in self.metadata["system"].items():
                 self.table.insertRow(self.table.rowCount())
                 key_item = QtWidgets.QTableWidgetItem(key)
                 key_item.setForeground(QtGui.QBrush(QtGui.QColor(102, 102, 102)))
@@ -155,11 +151,11 @@ class MetadataWidget(QtWidgets.QWidget):
                 self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
 
         # Prepare attribute metadata table if attributes exist
-        if self.metadata is not None and 'attributes' in self.metadata and self.metadata['attributes']:
+        if self.metadata is not None and "attributes" in self.metadata and self.metadata["attributes"]:
             self._attribute_table = QtWidgets.QTableWidget()
             self._attribute_table.setColumnCount(2)
             self._attribute_table.setRowCount(0)
-            self._attribute_table.setHorizontalHeaderLabels(['Attribute', 'Value'])
+            self._attribute_table.setHorizontalHeaderLabels(["Attribute", "Value"])
             self._attribute_table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
             self._attribute_table.verticalHeader().setVisible(False)
             self._attribute_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -167,7 +163,7 @@ class MetadataWidget(QtWidgets.QWidget):
             self._attribute_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
             self._attribute_table.setAlternatingRowColors(True)
             self._attribute_table.setSortingEnabled(True)
-            for key, value in self.metadata['attributes'].items():
+            for key, value in self.metadata["attributes"].items():
                 self._attribute_table.insertRow(self._attribute_table.rowCount())
                 self._attribute_table.setItem(self._attribute_table.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(key))
                 self._attribute_table.setItem(self._attribute_table.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(str(value)))
@@ -182,7 +178,7 @@ class MetadataWidget(QtWidgets.QWidget):
         Returns a QTableWidget displaying attribute metadata, or None if no attribute metadata exists.
         """
         return self._attribute_table
-    
+
     def add_attribute_tab(self, tab_widget: QtWidgets.QTabWidget, tab_name: str = "Attributes") -> bool:
         """
         Adds the attribute metadata table as a new tab to the provided QTabWidget if attribute metadata exists.
@@ -203,12 +199,12 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.insertRow(self.table.rowCount())
 
         # Create a new QTableWidgetItem for the key column
-        key_item = QtWidgets.QTableWidgetItem('')
+        key_item = QtWidgets.QTableWidgetItem("")
         key_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
         self.table.setItem(self.table.rowCount() - 1, 0, key_item)
 
         # Set the cell widget for the value column
-        self.table.setCellWidget(self.table.rowCount() - 1, 1, MetadataValueLabel(''))
+        self.table.setCellWidget(self.table.rowCount() - 1, 1, MetadataValueLabel(""))
 
         # Set the focus to edit the key
         self.table.setCurrentCell(self.table.rowCount() - 1, 0)
@@ -221,7 +217,7 @@ class MetadataWidget(QtWidgets.QWidget):
             key_item = self.table.item(row, 0)
             key = key_item.text() if key_item is not None else None
             if key:
-                self.delete_item('metadata', key)
+                self.delete_item("metadata", key)
             self.table.removeRow(row)
             self.cmdDelete.setEnabled(False)
 
@@ -247,7 +243,7 @@ class MetadataWidget(QtWidgets.QWidget):
         row = self.table.currentRow()
         if row > -1:
             widget = self.table.cellWidget(row, 1)
-            if widget is not None and getattr(widget, 'is_system', False):
+            if widget is not None and getattr(widget, "is_system", False):
                 self.cmdDelete.setEnabled(False)
             else:
                 self.cmdDelete.setEnabled(True)
@@ -259,26 +255,31 @@ class MetadataWidget(QtWidgets.QWidget):
         missing_keys = []
 
         for row in range(self.table.rowCount()):
-            if self.table.item(row, 0) is None or self.table.item(row, 0).text().strip() == '':
+            if self.table.item(row, 0) is None or self.table.item(row, 0).text().strip() == "":
                 if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
                     continue
-                QtWidgets.QMessageBox.warning(self, 'Missing Metadata Key', 'Please check the metadata table for any empty or missing keys.')
+                QtWidgets.QMessageBox.warning(self, "Missing Metadata Key", "Please check the metadata table for any empty or missing keys.")
                 return False
 
-            if self.table.cellWidget(row, 1) is None or self.table.cellWidget(row, 1).text.strip() == '':
+            if self.table.cellWidget(row, 1) is None or self.table.cellWidget(row, 1).text.strip() == "":
                 if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
                     continue
                 # if the key is in the new_keys list and the value is empty, remove it
                 if self.new_keys is not None and self.table.item(row, 0).text() in self.new_keys:
                     missing_keys.append(self.table.item(row, 0).text())
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Missing Metadata Value', 'Please check the metadata table for any empty or missing values.')
+                    QtWidgets.QMessageBox.warning(self, "Missing Metadata Value", "Please check the metadata table for any empty or missing values.")
                     return False
 
         if len(missing_keys) > 0:
-            s = 's' if len(missing_keys) > 1 else ''
-            result = QtWidgets.QMessageBox.question(self, f'Missing Metadata Value{s}', f'You have not provided a value for the following suggested metadata:\n\n{", ".join(missing_keys)}.\n\nDo you want to remove them and continue?',
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            s = "s" if len(missing_keys) > 1 else ""
+            result = QtWidgets.QMessageBox.question(
+                self,
+                f"Missing Metadata Value{s}",
+                f"You have not provided a value for the following suggested metadata:\n\n{', '.join(missing_keys)}.\n\nDo you want to remove them and continue?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No,
+            )
             if result == QtWidgets.QMessageBox.Yes:
                 for key in missing_keys:
                     for row in range(self.table.rowCount()):
@@ -292,22 +293,22 @@ class MetadataWidget(QtWidgets.QWidget):
         for row in range(self.table.rowCount()):
             for row2 in range(self.table.rowCount()):
                 if row != row2 and self.table.item(row, 0).text() == self.table.item(row2, 0).text():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Key', 'You cannot have duplicate keys.')
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Key", "You cannot have duplicate keys.")
                     return False
 
         return True
 
     def get_data(self) -> dict:
-            
+
         if self.table.rowCount() > 0:
-            if 'metadata' not in self.metadata:
-                self.metadata['metadata'] = dict()
+            if "metadata" not in self.metadata:
+                self.metadata["metadata"] = dict()
         for row in range(self.table.rowCount()):
             # if this is system metadata, then ignore it
             if self.table.cellWidget(row, 1) is not None and self.table.cellWidget(row, 1).is_system:
                 continue
-            value = self.table.cellWidget(row, 1).text if self.table.cellWidget(row, 1) is not None else ''
-            self.metadata['metadata'][self.table.item(row, 0).text()] = value
+            value = self.table.cellWidget(row, 1).text if self.table.cellWidget(row, 1) is not None else ""
+            self.metadata["metadata"][self.table.item(row, 0).text()] = value
 
         return self.metadata
 
@@ -317,6 +318,7 @@ class MetadataWidget(QtWidgets.QWidget):
 
         return json.dumps(data)
 
+
 class CustomLineEdit(QtWidgets.QLineEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -324,18 +326,19 @@ class CustomLineEdit(QtWidgets.QLineEdit):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
             self.clearFocus()  # Finish editing
-        else:   
+        else:
             super().keyPressEvent(event)
 
+
 class MetadataValueLabel(QtWidgets.QWidget):
-    def __init__(self, text: str, editable: bool=True, parent=None, is_system: bool=False):
+    def __init__(self, text: str, editable: bool = True, parent=None, is_system: bool = False):
         super().__init__(parent)
 
         self.text = text
         self.editable = editable
         self.is_system = is_system
         self.label_layout = QtWidgets.QHBoxLayout(self)
-        if any(text.startswith(v) for v in ['http://','https://', 'www.']):
+        if any(text.startswith(v) for v in ["http://", "https://", "www."]):
             self.label = QtWidgets.QLabel(f'<a href="{text}">{text}</a>', self)
             self.label.setOpenExternalLinks(True)
         else:
@@ -354,7 +357,7 @@ class MetadataValueLabel(QtWidgets.QWidget):
         else:
             self.line_edit.setReadOnly(True)
             # make the text a little darker to indicate it's not editable
-            self.label.setStyleSheet('color: #666;')
+            self.label.setStyleSheet("color: #666;")
 
     def edit(self, event=None):
         self.label.hide()
@@ -363,7 +366,7 @@ class MetadataValueLabel(QtWidgets.QWidget):
 
     def finish_editing(self):
         text = self.line_edit.text()
-        if any(text.startswith(v) for v in ['http://','https://', 'www.']):
+        if any(text.startswith(v) for v in ["http://", "https://", "www."]):
             self.label.setText(f'<a href="{text}">{text}</a>')
             self.label.setOpenExternalLinks(True)
         else:
@@ -372,6 +375,7 @@ class MetadataValueLabel(QtWidgets.QWidget):
         self.label.show()
         self.line_edit.hide()
         self.text = text
+
 
 def calculate_max_column_width(table: QtWidgets.QTableWidget) -> int:
     max_width = 0
