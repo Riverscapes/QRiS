@@ -10,7 +10,7 @@ def validate_name(parent: QtWidgets.QWidget, txtName: QtWidgets.QLineEdit) -> bo
 
     txtName.setText(txtName.text().strip())
     if len(txtName.text()) < 1:
-        QtWidgets.QMessageBox.warning(parent, 'Missing Name', 'You must provide a name to continue.')
+        QtWidgets.QMessageBox.warning(parent, "Missing Name", "You must provide a name to continue.")
         txtName.setFocus()
         return False
 
@@ -21,7 +21,7 @@ def validate_name_unique(db_path: str, table: str, column: str, value: str) -> b
 
     with sqlite3.connect(db_path) as conn:
         curs = conn.cursor()
-        curs.execute(f'SELECT * FROM {table} where {column} like ?', [value])  # nosec B608 - table and column are always hardcoded string literals passed by internal callers
+        curs.execute(f"SELECT * FROM {table} where {column} like ?", [value])  # nosec B608 - table and column are always hardcoded string literals passed by internal callers
         return curs.fetchone() is None
 
 
@@ -30,10 +30,10 @@ def add_standard_form_buttons(form: QtWidgets.QDialog, help_slug: str) -> QtWidg
     form.horiz = QtWidgets.QHBoxLayout()
 
     form.cmdHelp = QtWidgets.QPushButton()
-    form.cmdHelp.setText('Help')
-    form.cmdHelp.setToolTip('Open online help documentation in browser')
+    form.cmdHelp.setText("Help")
+    form.cmdHelp.setToolTip("Open online help documentation in browser")
     form.cmdHelp.setToolTipDuration(2000)
-    help_url = CONSTANTS['webUrl'].rstrip('/') + '/software-help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+    help_url = CONSTANTS["webUrl"].rstrip("/") + "/software-help/" + help_slug.strip("/") if help_slug is not None and len(help_slug) > 0 else CONSTANTS
     form.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
 
     form.horiz.addWidget(form.cmdHelp)
@@ -55,26 +55,27 @@ def format_superscript(text: str) -> str:
     """Replaces numeric characters following a caret '^' in a string with their superscript equivalents."""
     if not text:
         return text
-    
+
     def repl(match):
         digits = match.group(1)
         superscript_map = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
         return digits.translate(superscript_map)
-        
+
     # Match a caret followed by one or more digits
-    return re.sub(r'\^(\d+)', repl, text)
+    return re.sub(r"\^(\d+)", repl, text)
 
 
-def add_help_button(form: QtWidgets.QDialog, help_slug: str, label: str='Help') -> QtWidgets.QWidget:
+def add_help_button(form: QtWidgets.QDialog, help_slug: str, label: str = "Help") -> QtWidgets.QWidget:
 
     form.cmdHelp = QtWidgets.QPushButton()
     form.cmdHelp.setText(label)
-    form.cmdHelp.setToolTip('Open online help documentation in browser')
+    form.cmdHelp.setToolTip("Open online help documentation in browser")
     form.cmdHelp.setToolTipDuration(2000)
-    help_url = CONSTANTS['webUrl'].rstrip('/') + '/software-help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+    help_url = CONSTANTS["webUrl"].rstrip("/") + "/software-help/" + help_slug.strip("/") if help_slug is not None and len(help_slug) > 0 else CONSTANTS
     form.cmdHelp.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(help_url)))
 
     return form.cmdHelp
+
 
 def message_box(title: str, message: str):
     msg = QtWidgets.QMessageBox()

@@ -1,16 +1,17 @@
-import os
-import xml.etree.ElementTree as ET # nosec
 from dataclasses import dataclass, field
-from typing import List, Optional, Any, Union
+import os
+from typing import Any, Optional, Union
+import xml.etree.ElementTree as ET  # nosec
 
 from qgis.PyQt.QtCore import QSettings
 
 from .settings import Settings
 
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
-SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
-LOCAL_PROTOCOL_FOLDER = 'local_protocol_folder'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
+SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
+LOCAL_PROTOCOL_FOLDER = "local_protocol_folder"
+
 
 def get_float_value(elem: ET.Element, tag: str) -> Optional[float]:
     child = elem.find(tag)
@@ -21,6 +22,7 @@ def get_float_value(elem: ET.Element, tag: str) -> Optional[float]:
             return None
     return None
 
+
 def get_int_value(elem: ET.Element, tag: str) -> Optional[int]:
     child = elem.find(tag)
     if child is not None and child.text:
@@ -30,19 +32,22 @@ def get_int_value(elem: ET.Element, tag: str) -> Optional[int]:
             return None
     return None
 
+
 FIELD_TYPES = {
-    'ListField': 'list',
-    'TextField': 'text',
-    'IntegerField': 'integer',
-    'FloatField': 'float',
-    'AttachmentField': 'attachment',
+    "ListField": "list",
+    "TextField": "text",
+    "IntegerField": "integer",
+    "FloatField": "float",
+    "AttachmentField": "attachment",
 }
+
 
 @dataclass
 class MetadataItem:
     key: str
     value: str
     type: str
+
 
 @dataclass
 class FieldDefinition:
@@ -52,16 +57,17 @@ class FieldDefinition:
     required: bool = False
     allow_custom_values: bool = False
     description: Optional[str] = None
-    values: Optional[List[str]] = None
+    values: Optional[list[str]] = None
     default_value: Optional[str] = None
     visibility_field: Optional[str] = None
-    visibility_values: Optional[List[str]] = None
+    visibility_values: Optional[list[str]] = None
     allow_multiple_values: Optional[bool] = None
-    derived_values: Optional[List[str]] = None
+    derived_values: Optional[list[str]] = None
     slider: Optional[dict] = None
     min: Optional[Union[float, int]] = None
     max: Optional[Union[float, int]] = None
     precision: Optional[int] = None
+
 
 @dataclass
 class LayerDefinition:
@@ -72,9 +78,10 @@ class LayerDefinition:
     symbology: str
     description: Optional[str] = None
     hierarchy: Optional[str] = None
-    fields: List[FieldDefinition] = field(default_factory=list)
-    menu_items: Optional[List[str]] = None
+    fields: list[FieldDefinition] = field(default_factory=list)
+    menu_items: Optional[list[str]] = None
     protocol_definition = None
+
 
 @dataclass
 class MetricDefinition:
@@ -88,10 +95,11 @@ class MetricDefinition:
     minimum_value: Optional[float] = None
     maximum_value: Optional[float] = None
     precision: Optional[int] = None
-    parameters: List[Any] = None
+    parameters: list[Any] = None
     protocol_defintion = None
-    status: str = 'active'
-    hierarchy: Optional[List[str]] = None
+    status: str = "active"
+    hierarchy: Optional[list[str]] = None
+
 
 @dataclass
 class ProtocolDefinition:
@@ -106,14 +114,15 @@ class ProtocolDefinition:
     author: str
     creation_date: str
     updated_date: str
-    metadata: List[MetadataItem] = field(default_factory=list)
-    layers: List[LayerDefinition] = field(default_factory=list)
-    metrics: List[MetricDefinition] = field(default_factory=list)
+    metadata: list[MetadataItem] = field(default_factory=list)
+    layers: list[LayerDefinition] = field(default_factory=list)
+    metrics: list[MetricDefinition] = field(default_factory=list)
 
     def unique_key(self):
-        return f'{self.machine_code}::{self.version}'
+        return f"{self.machine_code}::{self.version}"
 
-def load_protocol_definitions(project_directory: str, show_experimental: bool = None, show_deprecated: bool = False) -> List[ProtocolDefinition]:
+
+def load_protocol_definitions(project_directory: str, show_experimental: Optional[bool] = None, show_deprecated: bool = False) -> list[ProtocolDefinition]:
     """Load protocol from xml"""
 
     if show_experimental is None:
@@ -122,213 +131,189 @@ def load_protocol_definitions(project_directory: str, show_experimental: bool = 
 
     directories = [project_directory]
     q_settings = QSettings(ORGANIZATION, APPNAME)
-    directories.append(q_settings.value(LOCAL_PROTOCOL_FOLDER, '', type=str))
+    directories.append(q_settings.value(LOCAL_PROTOCOL_FOLDER, "", type=str))
     settings = Settings()
-    directories.append(settings.getValue('protocolsDir'))
+    directories.append(settings.getValue("protocolsDir"))
 
     protocols = list()
     for protocol_directory in directories:
         if protocol_directory is None or not os.path.isdir(protocol_directory):
             continue
         for filename in os.listdir(protocol_directory):
-            if filename.endswith('.xml'):
+            if filename.endswith(".xml"):
                 protocol = load_protocool_from_xml(os.path.join(protocol_directory, filename))
                 if protocol is not None:
-                    if protocol.status == 'experimental' and not show_experimental:
+                    if protocol.status == "experimental" and not show_experimental:
                         continue
-                    if protocol.status == 'deprecated' and not show_deprecated:
+                    if protocol.status == "deprecated" and not show_deprecated:
                         continue
                     protocols.append(protocol)
 
     return protocols
+
 
 def load_protocool_from_xml(file_path: str) -> ProtocolDefinition:
     """Load protocol from xml"""
 
     tree = ET.parse(file_path)  # nosec B314 - parses plugin-bundled protocol XML files, not user-supplied input; defusedxml not available in QGIS
     root = tree.getroot()
-    if root.tag != 'Protocol':
+    if root.tag != "Protocol":
         return None
 
-    machine_code = root.attrib.get('machine_code')
-    protocol_type = root.attrib.get('protocol_type', None)
-    if machine_code and machine_code.upper().strip() == 'ASBUILT':
-        protocol_type = 'asbuilt'
-    elif machine_code and machine_code.upper().strip() == 'DESIGN':
-        protocol_type = 'design'
+    machine_code = root.attrib.get("machine_code")
+    protocol_type = root.attrib.get("protocol_type", None)
+    if machine_code and machine_code.upper().strip() == "ASBUILT":
+        protocol_type = "asbuilt"
+    elif machine_code and machine_code.upper().strip() == "DESIGN":
+        protocol_type = "design"
     elif protocol_type is None:
-        protocol_type = 'dce'
+        protocol_type = "dce"
 
     protocol = ProtocolDefinition(
         machine_code=machine_code,
         protocol_type=protocol_type,
-        version=root.attrib.get('version'),
-        status=root.attrib.get('status'),
-        label=root.find('Label').text,
-        description=root.find('Description').text,
-        url=root.find('URL').text,
-        citation=root.find('Citation').text,
-        author=root.find('Author').text,
-        creation_date=root.find('CreationDate').text,
-        updated_date=root.find('UpdatedDate').text,
+        version=root.attrib.get("version"),
+        status=root.attrib.get("status"),
+        label=root.find("Label").text,
+        description=root.find("Description").text,
+        url=root.find("URL").text,
+        citation=root.find("Citation").text,
+        author=root.find("Author").text,
+        creation_date=root.find("CreationDate").text,
+        updated_date=root.find("UpdatedDate").text,
     )
 
-    for layer_elem in root.findall('Layers/Layer'):
-        
+    for layer_elem in root.findall("Layers/Layer"):
         fields = []
-        for field_elem in layer_elem.findall('Fields/'):
+        for field_elem in layer_elem.findall("Fields/"):
             derived_values = None
-            if field_elem.find('DerivedValues') is not None:
+            if field_elem.find("DerivedValues") is not None:
                 derived_values = [
-                    {
-                        'output': dv.attrib.get('output'),
-                        'inputs': [{input_elem.attrib.get('field_id_ref'): input_elem.text} for input_elem in dv.findall('InputValue')]
-                    }
-                    for dv in field_elem.find('DerivedValues').findall('DerivedValue')
+                    {"output": dv.attrib.get("output"), "inputs": [{input_elem.attrib.get("field_id_ref"): input_elem.text} for input_elem in dv.findall("InputValue")]} for dv in field_elem.find("DerivedValues").findall("DerivedValue")
                 ]
             slider = None
-            if field_elem.find('Slider') is not None:
-                if FIELD_TYPES[field_elem.tag] == 'integer':
+            if field_elem.find("Slider") is not None:
+                if FIELD_TYPES[field_elem.tag] == "integer":
                     slider = {
-                        'min': int(field_elem.find('Slider').attrib.get('min')),
-                        'max': int(field_elem.find('Slider').attrib.get('max')),
-                        'step': int(field_elem.find('Slider').attrib.get('step')),
+                        "min": int(field_elem.find("Slider").attrib.get("min")),
+                        "max": int(field_elem.find("Slider").attrib.get("max")),
+                        "step": int(field_elem.find("Slider").attrib.get("step")),
                     }
                 else:
                     slider = {
-                        'min': float(field_elem.find('Slider').attrib.get('min')),
-                        'max': float(field_elem.find('Slider').attrib.get('max')),
-                        'step': float(field_elem.find('Slider').attrib.get('step')),
+                        "min": float(field_elem.find("Slider").attrib.get("min")),
+                        "max": float(field_elem.find("Slider").attrib.get("max")),
+                        "step": float(field_elem.find("Slider").attrib.get("step")),
                     }
 
             field_type = FIELD_TYPES[field_elem.tag]
             min_val = None
             max_val = None
 
-            if field_type == 'integer':
-                min_val = get_int_value(field_elem, 'MinimumValue')
-                max_val = get_int_value(field_elem, 'MaximumValue')
+            if field_type == "integer":
+                min_val = get_int_value(field_elem, "MinimumValue")
+                max_val = get_int_value(field_elem, "MaximumValue")
             else:
-                min_val = get_float_value(field_elem, 'MinimumValue')
-                max_val = get_float_value(field_elem, 'MaximumValue')
+                min_val = get_float_value(field_elem, "MinimumValue")
+                max_val = get_float_value(field_elem, "MaximumValue")
 
             field = FieldDefinition(
-                    id=field_elem.attrib.get('id'),
-                    type=field_type,
-                    label=field_elem.find('Label').text,
-                    required=field_elem.attrib.get('value_required') == 'true',
-                    allow_custom_values=field_elem.find('Values').attrib.get('allow_custom_values') == 'true' if field_elem.find('Values') is not None else False,
-                    description=field_elem.find('Description').text if field_elem.find('Description') is not None else None,
-                    values=[v.text for v in field_elem.find('Values').findall('Value')] if field_elem.find('Values') is not None else None,
-                    default_value=str(field_elem.find('DefaultValue').text) if field_elem.find('DefaultValue') is not None else None,
-                    visibility_field=field_elem.find('Visibility').attrib.get('field_id_ref') if field_elem.find('Visibility') is not None else None,
-                    visibility_values=[v.text for v in field_elem.find('Visibility').find('Values').findall('Value')] if field_elem.find('Visibility') is not None else None,
-                    allow_multiple_values=field_elem.find('Values').attrib.get('allow_multiple_values') == 'true' if field_elem.find('Values') is not None else None,
-                    derived_values=derived_values,
-                    slider=slider,
-                    min=min_val,
-                    max=max_val,
-                    precision=get_int_value(field_elem, 'Precision')
-                )
+                id=field_elem.attrib.get("id"),
+                type=field_type,
+                label=field_elem.find("Label").text,
+                required=field_elem.attrib.get("value_required") == "true",
+                allow_custom_values=field_elem.find("Values").attrib.get("allow_custom_values") == "true" if field_elem.find("Values") is not None else False,
+                description=field_elem.find("Description").text if field_elem.find("Description") is not None else None,
+                values=[v.text for v in field_elem.find("Values").findall("Value")] if field_elem.find("Values") is not None else None,
+                default_value=str(field_elem.find("DefaultValue").text) if field_elem.find("DefaultValue") is not None else None,
+                visibility_field=field_elem.find("Visibility").attrib.get("field_id_ref") if field_elem.find("Visibility") is not None else None,
+                visibility_values=[v.text for v in field_elem.find("Visibility").find("Values").findall("Value")] if field_elem.find("Visibility") is not None else None,
+                allow_multiple_values=field_elem.find("Values").attrib.get("allow_multiple_values") == "true" if field_elem.find("Values") is not None else None,
+                derived_values=derived_values,
+                slider=slider,
+                min=min_val,
+                max=max_val,
+                precision=get_int_value(field_elem, "Precision"),
+            )
             fields.append(field)
 
         # hierarchy is a list of the text of HeirarchyItem elements
-        hierarchy = [h.text for h in layer_elem.findall('Hierarchy/HierarchyItem')]
+        hierarchy = [h.text for h in layer_elem.findall("Hierarchy/HierarchyItem")]
 
         layer = LayerDefinition(
-            id=layer_elem.attrib.get('id'),
-            version=layer_elem.attrib.get('version'),
-            geom_type=layer_elem.attrib.get('geom_type'),
-            label=layer_elem.find('Label').text,
-            symbology=layer_elem.find('Symbology').text,
-            description=layer_elem.find('Description').text if layer_elem.find('Description') is not None else None,
+            id=layer_elem.attrib.get("id"),
+            version=layer_elem.attrib.get("version"),
+            geom_type=layer_elem.attrib.get("geom_type"),
+            label=layer_elem.find("Label").text,
+            symbology=layer_elem.find("Symbology").text,
+            description=layer_elem.find("Description").text if layer_elem.find("Description") is not None else None,
             hierarchy=hierarchy,
             fields=fields,
-            menu_items=[m.text for m in layer_elem.find('MenuItems').findall('MenuItem')] if layer_elem.find('MenuItems') is not None else None
+            menu_items=[m.text for m in layer_elem.find("MenuItems").findall("MenuItem")] if layer_elem.find("MenuItems") is not None else None,
         )
         protocol.layers.append(layer)
 
-    for metric_elem in root.findall('Metrics/Metric'):
-
+    for metric_elem in root.findall("Metrics/Metric"):
         parameters = {}
         inputs = []
-        for input_elem in metric_elem.findall('Parameters/InputLayer'):
-            input = {
-                'input_ref': input_elem.attrib.get('input_ref'),
-                'usage': input_elem.attrib.get('usage')
-            }
+        for input_elem in metric_elem.findall("Parameters/InputLayer"):
+            input = {"input_ref": input_elem.attrib.get("input_ref"), "usage": input_elem.attrib.get("usage")}
             inputs.append(input)
         if len(inputs) > 0:
-            parameters['inputs'] = inputs
+            parameters["inputs"] = inputs
 
         dce_layers = []
-        for dce_elem in metric_elem.findall('Parameters/DCELayer'):
-            dce_layer = {
-                'layer_id_ref': dce_elem.attrib.get('layer_id_ref')
-            }
-            attribute_filter_elem = dce_elem.find('AttributeFilter')
+        for dce_elem in metric_elem.findall("Parameters/DCELayer"):
+            dce_layer = {"layer_id_ref": dce_elem.attrib.get("layer_id_ref")}
+            attribute_filter_elem = dce_elem.find("AttributeFilter")
             if attribute_filter_elem is not None:
-                attribute_filter = {
-                    'field_id_ref': attribute_filter_elem.attrib.get('field_id_ref'),
-                    'values': [v.text for v in attribute_filter_elem.findall('Value')]
-                }
-                dce_layer['attribute_filter'] = attribute_filter
-            count_fields_elem = dce_elem.find('CountFields')
+                attribute_filter = {"field_id_ref": attribute_filter_elem.attrib.get("field_id_ref"), "values": [v.text for v in attribute_filter_elem.findall("Value")]}
+                dce_layer["attribute_filter"] = attribute_filter
+            count_fields_elem = dce_elem.find("CountFields")
             if count_fields_elem is not None:
                 count_fields = []
-                for count_field_elem in count_fields_elem.findall('CountField'):
-                    count_field = {
-                        'field_id_ref': count_field_elem.attrib.get('field_id_ref')
-                    }
+                for count_field_elem in count_fields_elem.findall("CountField"):
+                    count_field = {"field_id_ref": count_field_elem.attrib.get("field_id_ref")}
                     count_fields.append(count_field)
-                dce_layer['count_fields'] = count_fields
-            usage_elem = dce_elem.find('Usage')
+                dce_layer["count_fields"] = count_fields
+            usage_elem = dce_elem.find("Usage")
             if usage_elem is not None:
-                dce_layer['usage'] = usage_elem.text
+                dce_layer["usage"] = usage_elem.text
             dce_layers.append(dce_layer)
         if len(dce_layers) > 0:
-            parameters['dce_layers'] = dce_layers
+            parameters["dce_layers"] = dce_layers
 
         metric_dependencies = []
-        for dep_elem in metric_elem.findall('Parameters/MetricDependency'):
-            dep = {
-                'metric_id_ref': dep_elem.attrib.get('metric_id_ref'),
-                'protocol_machine_code_ref': dep_elem.attrib.get('protocol_machine_code_ref'),
-                'version': dep_elem.attrib.get('version'),
-                'usage': dep_elem.attrib.get('usage')
-            }
+        for dep_elem in metric_elem.findall("Parameters/MetricDependency"):
+            dep = {"metric_id_ref": dep_elem.attrib.get("metric_id_ref"), "protocol_machine_code_ref": dep_elem.attrib.get("protocol_machine_code_ref"), "version": dep_elem.attrib.get("version"), "usage": dep_elem.attrib.get("usage")}
             # Keep parser output clean by dropping unset optional values.
             dep = {k: v for k, v in dep.items() if v is not None}
             metric_dependencies.append(dep)
         if len(metric_dependencies) > 0:
-            parameters['metric_dependencies'] = metric_dependencies
-        
+            parameters["metric_dependencies"] = metric_dependencies
+
         # hierarchy is a list of the text of HeirarchyItem elements
-        hierarchy = [h.text for h in metric_elem.findall('Hierarchy/HierarchyItem')]
+        hierarchy = [h.text for h in metric_elem.findall("Hierarchy/HierarchyItem")]
 
         metric = MetricDefinition(
-            id=metric_elem.attrib.get('id'),
-            version=metric_elem.attrib.get('version'),
-            calculation_machine_code=metric_elem.attrib.get('calculation_machine_code'),
-            label=metric_elem.find('Label').text,
-            default_level=metric_elem.find('DefaultLevel').text,
-            description=metric_elem.find('Description').text if metric_elem.find('Description') is not None else None,
-            definition_url=metric_elem.find('DefinitionURL').text if metric_elem.find('DefinitionURL') is not None else None,
-            minimum_value=get_float_value(metric_elem, 'MinimumValue'),
-            maximum_value=get_float_value(metric_elem, 'MaximumValue'),
-            precision=get_int_value(metric_elem, 'Precision'),
+            id=metric_elem.attrib.get("id"),
+            version=metric_elem.attrib.get("version"),
+            calculation_machine_code=metric_elem.attrib.get("calculation_machine_code"),
+            label=metric_elem.find("Label").text,
+            default_level=metric_elem.find("DefaultLevel").text,
+            description=metric_elem.find("Description").text if metric_elem.find("Description") is not None else None,
+            definition_url=metric_elem.find("DefinitionURL").text if metric_elem.find("DefinitionURL") is not None else None,
+            minimum_value=get_float_value(metric_elem, "MinimumValue"),
+            maximum_value=get_float_value(metric_elem, "MaximumValue"),
+            precision=get_int_value(metric_elem, "Precision"),
             parameters=parameters if len(parameters) > 0 else None,
-            status=metric_elem.attrib.get('status', 'active'),
-            hierarchy=hierarchy if len(hierarchy) > 0 else None
+            status=metric_elem.attrib.get("status", "active"),
+            hierarchy=hierarchy if len(hierarchy) > 0 else None,
         )
         protocol.metrics.append(metric)
 
-    for metadata_elem in root.findall('Metadata/MetadataItem'):
-        metadata = MetadataItem(
-            key=metadata_elem.attrib.get('key'),
-            value=metadata_elem.text,
-            type=metadata_elem.attrib.get('type')
-        )
+    for metadata_elem in root.findall("Metadata/MetadataItem"):
+        metadata = MetadataItem(key=metadata_elem.attrib.get("key"), value=metadata_elem.text, type=metadata_elem.attrib.get("type"))
         protocol.metadata.append(metadata)
 
     return protocol

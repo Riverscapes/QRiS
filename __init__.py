@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  QRiS
@@ -22,9 +21,6 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
-import os
-import json
-
 # noinspection PyPep8Naming
 # config is where we keep our constants and configuration strings
 
@@ -37,7 +33,7 @@ def classFactory(iface):  # pylint: disable=invalid-name
     """
     # Yeah, this is annoying but QGIS needs it so....
     # pylint: disable=import-error
+    from .__version__ import __version__  # noqa: F401
     from .src.qris_toolbar import QRiSToolbar
-    from .__version__ import __version__
 
     return QRiSToolbar(iface)

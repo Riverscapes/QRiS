@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  QRiS
@@ -21,41 +20,50 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import os.path
 
+from qgis.core import (
+    Qgis,
+    QgsApplication,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsProject,
+)
+from qgis.gui import QgisInterface, QgsMapToolEmitPoint
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings, pyqtSlot
-from qgis.core import QgsApplication, QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, Qgis, QgsMessageLog
-from qgis.gui import QgsMapToolEmitPoint, QgisInterface
-
-from .QRiS.settings import Settings
-from .QRiS.settings import CONSTANTS
 
 # Initialize Qt resources from file resources.py
-from . import resources
+from . import resources  # noqa: F401  # side-effect import: registers Qt resource paths
+from .gp.load_project_task import LoadProjectTask
+from .gp.update_metadata import check_metadata, update_metadata
+from .gp.watershed_attributes import WatershedAttributes
+from .lib.data_exchange import browse_data_exchange as open_data_exchange
+from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
+from .QRiS.qrave_integration import QRaveIntegration
+from .QRiS.settings import CONSTANTS, Settings
+from .view.frm_about import FrmAboutDialog
 
 # Import the code for the DockWidget
 from .view.frm_dockwidget import QRiSDockWidget
 from .view.frm_new_project import FrmNewProject
-from .view.frm_about import FrmAboutDialog
-from .view.frm_settings import FrmSettings, DOCK_WIDGET_LOCATION, default_dock_widget_location, TELEMETRY_ENABLED_KEY
+from .view.frm_settings import (
+    DOCK_WIDGET_LOCATION,
+    TELEMETRY_ENABLED_KEY,
+    FrmSettings,
+    default_dock_widget_location,
+)
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
-from .QRiS.qrave_integration import QRaveIntegration
-from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
-from .gp.load_project_task import LoadProjectTask
-from .lib.data_exchange import browse_data_exchange as open_data_exchange
-from .gp.watershed_attributes import WatershedAttributes
-from .gp.update_metadata import update_metadata, check_metadata
-
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
-LAST_PROJECT_FOLDER = 'last_project_folder'
-RECENT_PROJECT_LIST = 'recent_projects'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
+LAST_PROJECT_FOLDER = "last_project_folder"
+RECENT_PROJECT_LIST = "recent_projects"
 
 dock_widget_locations = {
-    'left': QtCore.Qt.LeftDockWidgetArea,
-    'right': QtCore.Qt.RightDockWidgetArea,
+    "left": QtCore.Qt.LeftDockWidgetArea,
+    "right": QtCore.Qt.RightDockWidgetArea,
 }
 
 
@@ -84,8 +92,8 @@ class QRiSToolbar:
         self.qproject.cleared.connect(self.close_project)
 
         # initialize locale
-        locale = QtCore.QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(self.plugin_dir, 'i18n', 'qris_{}.qm'.format(locale))
+        locale = QtCore.QSettings().value("locale/userLocale")[0:2]
+        locale_path = os.path.join(self.plugin_dir, "i18n", f"qris_{locale}.qm")
         if os.path.exists(locale_path):
             self.translator = QtCore.QTranslator()
             self.translator.load(locale_path)
@@ -94,11 +102,11 @@ class QRiSToolbar:
         # Declare instance attributes
         self.actions = []
         self.menus = []
-        self.menu = self.tr(u'&QGIS Riverscapes Studio (QRiS)')
-        self.toolbar = self.iface.addToolBar(u'QRiS')
-        self.toolbar.setObjectName(u'QRiS')
+        self.menu = self.tr("&QGIS Riverscapes Studio (QRiS)")
+        self.toolbar = self.iface.addToolBar("QRiS")
+        self.toolbar.setObjectName("QRiS")
 
-        self.settings = Settings(iface=self.iface)
+        Settings(iface=self.iface)
 
         # Populated on load from a URL
         self.acknowledgements = None
@@ -120,7 +128,7 @@ class QRiSToolbar:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QtCore.QCoreApplication.translate('QRiS', message)
+        return QtCore.QCoreApplication.translate("QRiS", message)
 
     def initGui(self):
         """Create a single QRiS menu button with icon and text, containing Project and Help submenus."""
@@ -129,27 +137,83 @@ class QRiSToolbar:
         self.qris_menu = QtWidgets.QMenu()
 
         # Populate Project menu
-        self.project_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Project')
-        self.add_menu_action(self.project_menu, 'new', 'New QRiS Project', self.create_new_project_dialog, True, 'Create a New QRiS Project')
-        self.add_menu_action(self.project_menu, 'folder', 'Open QRiS Project', self.open_existing_project, True, 'Open Existing QRiS Project')
-        self.mru_menu = self.project_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/folder'), 'Recent QRiS Projects')
-        self.add_menu_action(self.project_menu, 'close', 'Close Project', self.close_project, True, 'Close the Current QRiS Project')
+        self.project_menu = self.qris_menu.addMenu(QtGui.QIcon(":/plugins/qris_toolbar/folder"), "Project")
+        self.add_menu_action(
+            self.project_menu,
+            "new",
+            "New QRiS Project",
+            self.create_new_project_dialog,
+            True,
+            "Create a New QRiS Project",
+        )
+        self.add_menu_action(
+            self.project_menu,
+            "folder",
+            "Open QRiS Project",
+            self.open_existing_project,
+            True,
+            "Open Existing QRiS Project",
+        )
+        self.mru_menu = self.project_menu.addMenu(QtGui.QIcon(":/plugins/qris_toolbar/folder"), "Recent QRiS Projects")
+        self.add_menu_action(
+            self.project_menu,
+            "close",
+            "Close Project",
+            self.close_project,
+            True,
+            "Close the Current QRiS Project",
+        )
         self.load_mru_projects()
 
         # Show Panel action
-        self.add_menu_action(self.qris_menu, 'qris_icon', 'Show QRiS Panel', self.toggle_widget, True, 'Show the QRiS Dockable Panel')
-        self.add_menu_action(self.qris_menu, 'data_exchange', 'Browse Data Exchange Projects', lambda: open_data_exchange(self.iface.mapCanvas()), True, 'Browse Riverscapes Data Exchange for Projects near the current map view')
+        self.add_menu_action(
+            self.qris_menu,
+            "qris_icon",
+            "Show QRiS Panel",
+            self.toggle_widget,
+            True,
+            "Show the QRiS Dockable Panel",
+        )
+        self.add_menu_action(
+            self.qris_menu,
+            "data_exchange",
+            "Browse Data Exchange Projects",
+            lambda: open_data_exchange(self.iface.mapCanvas()),
+            True,
+            "Browse Riverscapes Data Exchange for Projects near the current map view",
+        )
 
         # Populate Help menu
-        self.help_menu = self.qris_menu.addMenu(QtGui.QIcon(':/plugins/qris_toolbar/help'), 'Help')
-        self.add_menu_action(self.help_menu, 'help', 'QRiS Online Help', lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://qris.riverscapes.net')), True, 'Launch QRiS Online Help in default browser')
-        self.add_menu_action(self.help_menu, 'settings', 'Settings', self.show_settings, True, 'QRiS Settings')
-        self.add_menu_action(self.help_menu, 'qris_icon', 'About QRiS', self.about_load, True, 'Show Information About QRiS')
+        self.help_menu = self.qris_menu.addMenu(QtGui.QIcon(":/plugins/qris_toolbar/help"), "Help")
+        self.add_menu_action(
+            self.help_menu,
+            "help",
+            "QRiS Online Help",
+            lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl("https://qris.riverscapes.net")),
+            True,
+            "Launch QRiS Online Help in default browser",
+        )
+        self.add_menu_action(
+            self.help_menu,
+            "settings",
+            "Settings",
+            self.show_settings,
+            True,
+            "QRiS Settings",
+        )
+        self.add_menu_action(
+            self.help_menu,
+            "qris_icon",
+            "About QRiS",
+            self.about_load,
+            True,
+            "Show Information About QRiS",
+        )
 
         # Create the toolbar button with icon and text
         self.qris_button = QtWidgets.QToolButton(self.toolbar)
-        self.qris_button.setText('  QRiS')
-        self.qris_button.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/qris_icon'))
+        self.qris_button.setText("  QRiS")
+        self.qris_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/qris_icon"))
         self.qris_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.qris_button.setMenu(self.qris_menu)
         self.qris_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)  # Clicking anywhere opens the menu
@@ -163,9 +227,21 @@ class QRiSToolbar:
         self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
 
-    def add_menu_action(self, menu: QtWidgets.QMenu, icon_name: str, label: str, callback, enabled: bool, status_tip: str):
+    def add_menu_action(
+        self,
+        menu: QtWidgets.QMenu,
+        icon_name: str,
+        label: str,
+        callback,
+        enabled: bool,
+        status_tip: str,
+    ):
 
-        action = QtWidgets.QAction(QtGui.QIcon(f':/plugins/qris_toolbar/{icon_name}'), label, self.iface.mainWindow())
+        action = QtWidgets.QAction(
+            QtGui.QIcon(f":/plugins/qris_toolbar/{icon_name}"),
+            label,
+            self.iface.mainWindow(),
+        )
         action.triggered.connect(callback)
         action.setEnabled(enabled)
 
@@ -196,11 +272,7 @@ class QRiSToolbar:
 
             self.pluginIsActive = False
         except Exception as ex:
-            QgsMessageLog.logMessage(
-                f"Error in onClosePlugin: {str(ex)}",
-                "QRiS",
-                Qgis.Critical
-            )
+            Settings().log(f"Error in onClosePlugin: {ex!s}", Qgis.Critical)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -220,9 +292,7 @@ class QRiSToolbar:
         # QgsApplication.processingRegistry().removeProvider(self.provider)
 
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&QGIS Riverscapes Studio (QRiS)'),
-                action)
+            self.iface.removePluginMenu(self.tr("&QGIS Riverscapes Studio (QRiS)"), action)
             self.iface.removeToolBarIcon(action)
 
         self.dockwidget = None
@@ -239,7 +309,7 @@ class QRiSToolbar:
         self.prepare_widget()
 
         # Only attempt to load the last used project for developers when the special text file is present.
-        load_last_project_key = os.path.join(os.path.dirname(__file__), '..', 'load_last_project.txt')
+        load_last_project_key = os.path.join(os.path.dirname(__file__), "..", "load_last_project.txt")
         if os.path.isfile(load_last_project_key):
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
             last_project_folder = settings.value(LAST_PROJECT_FOLDER)
@@ -247,7 +317,7 @@ class QRiSToolbar:
                 # find the project gpkg file in the last project folder only
                 project_file = None
                 for file in os.listdir(last_project_folder):
-                    if file.endswith('.gpkg'):
+                    if file.endswith(".gpkg"):
                         project_file = os.path.join(last_project_folder, file)
                         break
                 # project_file = os.path.join(last_project_folder, f'{os.path.basename(last_project_folder)}.gpkg')
@@ -263,18 +333,32 @@ class QRiSToolbar:
             try:
                 self.qrave = QRaveIntegration(self.toolbar)
             except Exception as ex:
-                QgsMessageLog.logMessage(f"Error initializing QRaveIntegration: {str(ex)}", "QRiS", Qgis.Critical)
+                Settings().log(
+                    f"Error initializing QRaveIntegration: {ex!s}",
+                    Qgis.Critical,
+                )
         else:
-            QgsMessageLog.logMessage("QRiS toolbar is not valid when initializing QRaveIntegration.", "QRiS", Qgis.Critical)
+            Settings().log(
+                "QRiS toolbar is not valid when initializing QRaveIntegration.",
+                Qgis.Critical,
+            )
 
         if self.qrave.name is not None:
-            self.settings.setValue('symbologyDir', self.qrave.symbology_folders)
-            self.settings.setValue('protocolsDir', self.qrave.protocol_folder)
-            self.settings.setValue('climateEngineJson', self.qrave.climate_engine_json)
-            self.settings.setValue('lookupsJson', self.qrave.lookups_json)
+            Settings().setValue("symbologyDir", self.qrave.symbology_folders)
+            Settings().setValue("protocolsDir", self.qrave.protocol_folder)
+            Settings().setValue("climateEngineJson", self.qrave.climate_engine_json)
+            Settings().setValue("lookupsJson", self.qrave.lookups_json)
         else:
-            QgsMessageLog.logMessage('Unable to load Required Riverscapes Viewer plugin. Some functions in QRiS may be disabled, including layer symbology and basemaps.', 'QRiS', Qgis.Critical)
-            self.iface.messageBar().pushMessage('QRiS Plugin Load Error', f'Unable to load Riverscapes Viewer plugin.', level=Qgis.Critical, duration=5)
+            Settings().log(
+                "Unable to load Required Riverscapes Viewer plugin. Some functions in QRiS may be disabled, including layer symbology and basemaps.",
+                Qgis.Critical,
+            )
+            self.iface.messageBar().pushMessage(
+                "QRiS Plugin Load Error",
+                "Unable to load Riverscapes Viewer plugin.",
+                level=Qgis.Critical,
+                duration=5,
+            )
             self.iface.mainWindow().repaint()
 
         # Get the dockwidget location from the settings
@@ -322,8 +406,7 @@ class QRiSToolbar:
             self.open_qris_project(qris_project_path)
 
     def project_homePathChanged(self):
-        """Trigger an event before saving the project so we have an opportunity to corrent the paths
-        """
+        """Trigger an event before saving the project so we have an opportunity to corrent the paths"""
         proj_path = self.get_project_path_settings()
         self.set_project_path_settings(proj_path)
 
@@ -340,7 +423,7 @@ class QRiSToolbar:
             # Swap all abspaths for relative ones
             project_file = safe_make_relpath(project_file, qgs_path_dir)
 
-        self.qproject.writeEntry(CONSTANTS['settingsCategory'], CONSTANTS['qris_project_path'], project_file)
+        self.qproject.writeEntry(CONSTANTS["settingsCategory"], CONSTANTS["qris_project_path"], project_file)
 
     def get_project_path_settings(self) -> str:
         """Fetch the QRiS project filepath from the QgsProject settings
@@ -351,16 +434,13 @@ class QRiSToolbar:
         """
         project_file = None
         try:
-            project_file, type_conversion_ok = self.qproject.readEntry(
-                CONSTANTS['settingsCategory'],
-                CONSTANTS['qris_project_path']
-            )
+            project_file, type_conversion_ok = self.qproject.readEntry(CONSTANTS["settingsCategory"], CONSTANTS["qris_project_path"])
 
             if type_conversion_ok is False:
                 project_file = None
 
         except Exception as e:
-            self.settings.log('Error loading project settings: {}'.format(e), Qgis.Warning)
+            Settings().log(f"Error loading project settings: {e}", Qgis.Warning)
 
         qgs_project_path = self.qproject.absoluteFilePath()
         if os.path.isfile(qgs_project_path):
@@ -379,14 +459,19 @@ class QRiSToolbar:
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         last_project_folder = settings.value(LAST_PROJECT_FOLDER)
 
-        dialog_return = QtWidgets.QFileDialog.getOpenFileName(self.dockwidget, "Open Existing QRiS Project", last_project_folder, self.tr("QRiS Project Files (*.gpkg)"))
-        if dialog_return is not None and dialog_return[0] != '' and os.path.isfile(dialog_return[0]):
+        dialog_return = QtWidgets.QFileDialog.getOpenFileName(
+            self.dockwidget,
+            "Open Existing QRiS Project",
+            last_project_folder,
+            self.tr("QRiS Project Files (*.gpkg)"),
+        )
+        if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
             self.open_qris_project(dialog_return[0])
 
     def open_qris_project(self, db_path: str):
-        
+
         if self.dockwidget is not None:
-             self.close_project()
+            self.close_project()
 
         # Disable menu and button
         self.qris_menu.setEnabled(False)
@@ -425,18 +510,21 @@ class QRiSToolbar:
             try:
                 self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
             except Exception as ex:
-                Settings().log(f"Error sending telemetry event for Load_Project: {str(ex)}", Qgis.Warning)
-        
+                Settings().log(
+                    f"Error sending telemetry event for Load_Project: {ex!s}",
+                    Qgis.Warning,
+                )
+
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)
 
     def set_map_srs(self):
         # Set the map canvas to the project SRS
-        default_crs = QSettings().value('Projections/layerDefaultCrs')
-        default_crs_behavior = QSettings().value('app/projections/newProjectCrsBehavior')
+        default_crs = QSettings().value("Projections/layerDefaultCrs")
+        default_crs_behavior = QSettings().value("app/projections/newProjectCrsBehavior")
         metadata = self.dockwidget.qris_project.metadata or {}
-        system_metadata = metadata.get('system', {}) if isinstance(metadata.get('system', {}), dict) else {}
-        project_srs = system_metadata.get('project_srs', None)
+        system_metadata = metadata.get("system", {}) if isinstance(metadata.get("system", {}), dict) else {}
+        project_srs = system_metadata.get("project_srs", None)
 
         trigger_repaint = False
         try:
@@ -452,24 +540,32 @@ class QRiSToolbar:
                     crs.createFromUserInput(project_srs)
 
                 if crs.isValid() and current_srs != crs.authid():
-                    QSettings().setValue('Projections/layerDefaultCrs', project_srs)
-                    QSettings().setValue('app/projections/newProjectCrsBehavior', 'usePresetCrs')
+                    QSettings().setValue("Projections/layerDefaultCrs", project_srs)
+                    QSettings().setValue("app/projections/newProjectCrsBehavior", "usePresetCrs")
                     self.qproject.setCrs(crs)
                     self.iface.mapCanvas().setDestinationCrs(crs)
                     self.iface.mapCanvas().refresh()
                     self.iface.mapCanvas().refreshAllLayers()
-                    self.iface.messageBar().pushMessage('QRiS', f'Map CRS set to {crs.description()}')
+                    Settings().msg_bar(
+                        "Map CRS set",
+                        f"Map CRS set to {crs.description()}",
+                        level=Qgis.Info,
+                        duration=5,
+                    )
                     trigger_repaint = True
                 elif not crs.isValid():
-                    QgsMessageLog.logMessage(f'Unable to resolve project_srs "{project_srs}" from project system metadata.', 'QRiS', Qgis.Warning)
+                    Settings().log(
+                        f'Unable to resolve project_srs "{project_srs}" from project system metadata.',
+                        Qgis.Warning,
+                    )
 
             # Add basemap to ToC if empty
             if len(QgsProject.instance().mapLayers().values()) == 0:
                 self.dockwidget.setup_blank_map(trigger_repaint=trigger_repaint)
         finally:
             # restore default crs
-            QSettings().setValue('Projections/layerDefaultCrs', default_crs)
-            QSettings().setValue('app/projections/newProjectCrsBehavior', default_crs_behavior)
+            QSettings().setValue("Projections/layerDefaultCrs", default_crs)
+            QSettings().setValue("app/projections/newProjectCrsBehavior", default_crs_behavior)
 
     def load_mru_projects(self):
 
@@ -479,7 +575,14 @@ class QRiSToolbar:
         self.mru_actions = []
         for mru in mrus:
             if os.path.exists(mru):
-                self.add_menu_action(self.mru_menu, 'qris_icon', mru, (lambda mru: lambda: self.open_qris_project(mru))(mru), True, '')
+                self.add_menu_action(
+                    self.mru_menu,
+                    "qris_icon",
+                    mru,
+                    (lambda path=mru: self.open_qris_project(path)),
+                    True,
+                    "",
+                )
 
     def add_project_to_mru_list(self, db_path: str):
 
@@ -499,7 +602,7 @@ class QRiSToolbar:
 
         self.frm_new_project = FrmNewProject(self.iface.mainWindow(), last_parent_folder)
         self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
-        result = self.frm_new_project.exec_()
+        self.frm_new_project.exec_()
 
     def on_new_project_complete(self, project_dir: str, db_path: str):
 
@@ -534,7 +637,7 @@ class QRiSToolbar:
             QgsApplication.taskManager().addTask(long_task)
 
         except Exception as ex:
-            QtWidgets.QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+            QtWidgets.QMessageBox.warning(None, "Error Retrieving Watershed Metrics", str(ex))
 
     def html_watershed_metrics(self, point, button):
         """
@@ -555,21 +658,31 @@ class QRiSToolbar:
             QgsApplication.taskManager().addTask(long_task)
 
         except Exception as ex:
-            QtWidgets.QMessageBox.warning(None, 'Error Retrieving Watershed Metrics', str(ex))
+            QtWidgets.QMessageBox.warning(None, "Error Retrieving Watershed Metrics", str(ex))
 
     @pyqtSlot(str, bool)
     def on_watershed_attributes_complete(self, output_path: str, result: bool) -> None:
 
         if result:
-            self.iface.messageBar().pushMessage(f'Watershed Attributes Complete.', f'Outputs at {output_path}', level=Qgis.Info, duration=5)
+            Settings().msg_bar(
+                "Watershed Attributes Complete.",
+                f"Outputs at {output_path}",
+                level=Qgis.Info,
+                duration=5,
+            )
         else:
-            self.iface.messageBar().pushMessage(f'Watershed Attributes Error.', 'Check the QGIS log for details.', level=Qgis.Critical, duration=5)
+            Settings().msg_bar(
+                "Watershed Attributes Error.",
+                "Check the QGIS log for details.",
+                level=Qgis.Critical,
+                duration=5,
+            )
 
     def configure_watershed_attribute_menu(self):
 
         self.wat_button = QtWidgets.QToolButton()
         self.wat_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
-        self.wat_button.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/watershed'))
+        self.wat_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/watershed"))
         self.wat_button.setMenu(QtWidgets.QMenu())
         self.wat_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
         self.toolbar.addWidget(self.wat_button)
@@ -580,11 +693,19 @@ class QRiSToolbar:
         self.wat_button.setMenu(self.wat_menu)
         self.wat_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
 
-        self.wat_html_action = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/watershed'), self.tr('Export Attributes to HTML Report'), self.iface.mainWindow())
+        self.wat_html_action = QtWidgets.QAction(
+            QtGui.QIcon(":/plugins/qris_toolbar/watershed"),
+            self.tr("Export Attributes to HTML Report"),
+            self.iface.mainWindow(),
+        )
         self.wat_html_action.triggered.connect(self.activate_html_watershed_attributes)
         self.wat_menu.addAction(self.wat_html_action)
 
-        self.wat_json_action = QtWidgets.QAction(QtGui.QIcon(':/plugins/qris_toolbar/json'), self.tr('Export Attributes to JSON'), self.iface.mainWindow())
+        self.wat_json_action = QtWidgets.QAction(
+            QtGui.QIcon(":/plugins/qris_toolbar/json"),
+            self.tr("Export Attributes to JSON"),
+            self.iface.mainWindow(),
+        )
         self.wat_json_action.triggered.connect(self.activate_json_watershed_attributes)
         self.wat_menu.addAction(self.wat_json_action)
 

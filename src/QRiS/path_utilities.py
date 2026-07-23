@@ -1,7 +1,6 @@
 import os
-
-from urllib.parse import urlparse
 from pathlib import PurePosixPath
+from urllib.parse import urlparse
 
 
 def get_unique_file_path(folder: str, root_name: str, extension: str) -> str:
@@ -23,13 +22,13 @@ def get_unique_file_path(folder: str, root_name: str, extension: str) -> str:
     # Let's interpret "remove spaces" as replace with underscore or remove?
     # Example: "Jam Count Attributes" -> "jam_count_attributes" implies replacing spaces with underscores
     # and lowercasing.
-    
-    clean_name = root_name.lower().replace(' ', '_')
-    clean_name = "".join([c for c in clean_name if c.isalnum() or c == '_'])
+
+    clean_name = root_name.lower().replace(" ", "_")
+    clean_name = "".join([c for c in clean_name if c.isalnum() or c == "_"])
 
     # Ensure extension starts with dot if not present
-    if not extension.startswith('.'):
-        extension = f'.{extension}'
+    if not extension.startswith("."):
+        extension = f".{extension}"
 
     candidate_name = f"{clean_name}{extension}"
     full_path = os.path.join(folder, candidate_name)
@@ -52,12 +51,12 @@ def parse_posix_path(path: str) -> str:
     Args:
         path ([type]): [description]
     """
-    new_path = PurePosixPath(path.replace('\\', '/'))
+    new_path = PurePosixPath(path.replace("\\", "/"))
     return str(new_path)
 
 
 def safe_make_relpath(in_path: str, cwd_path: str) -> str:
-    """ Safely create a relative path from an absolute path.
+    """Safely create a relative path from an absolute path.
     If this fails (e.g., different drives), just return the input.
     """
     if in_path and len(in_path) > 0 and os.path.isabs(in_path):
@@ -71,7 +70,7 @@ def safe_make_relpath(in_path: str, cwd_path: str) -> str:
 
 
 def safe_make_abspath(in_path: str, cwd_path: str) -> str:
-    """ Safely create an absolute path from a relative path
+    """Safely create an absolute path from a relative path
 
     if this fails then just return the input
 

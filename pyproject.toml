@@ -1,0 +1,76 @@
+# pyproject.toml — Ruff replaces pylint + autopep8 + isort + pycodestyle in one tool.
+# Run:  ruff check .      (lint)
+#       ruff format .     (format)
+#       ruff check --fix . (lint + auto-fix)
+
+[tool.ruff]
+line-length    = 240
+target-version = "py39"   # oldest Python shipped with QGIS 3.x
+
+# Paths ruff should never touch
+exclude = [
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+    "help",
+    "wheels",
+]
+
+# ── Lint ─────────────────────────────────────────────────────────────────────
+[tool.ruff.lint]
+
+select = [
+    "E",    # pycodestyle errors   (replaces pycodestyle / autopep8 checks)
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes             (undefined names, unused imports, …)
+    "I",    # isort                (replaces the isort tool)
+    "UP",   # pyupgrade            (modernise Python syntax automatically)
+    "B",    # flake8-bugbear       (likely bugs and design issues)
+    "N",    # pep8-naming          (replaces pylint naming checks)
+    "RUF",  # ruff-specific rules  (redundant noqa, mutable class vars, …)
+]
+
+ignore = [
+    # ── Naming — Qt/QGIS mandates camelCase for slots & Qt-overrides ─────────
+    "N802",   # function-name-should-be-lowercase  (initGui, setupUi, …)
+    "N803",   # argument-name-should-be-lowercase  (QRAVEDockWidgetBase, …)
+    "N806",   # variable-in-function-should-be-lowercase (QGIS API constants)
+    "N815",   # mixed-case variable in class scope
+    "N816",   # mixed-case variable in global scope
+
+    # ── Bugbear — pragmatic exceptions for plugin code ────────────────────────
+    "B904",   # raise-without-from-inside-except — existing code is consistent
+
+    # ── pyupgrade — stay compatible with Python 3.9 (QGIS 3.x) ──────────────
+    # UP007 (X | Y unions) and UP006 (list[]/dict[] generics) require 3.10+ to
+    # work at runtime WITHOUT `from __future__ import annotations`.  Every file
+    # that uses modern union syntax must have that import at the top; ruff's
+    # target-version = "py39" handles most of this automatically.
+    "UP007",
+]
+
+# ── Per-file overrides ────────────────────────────────────────────────────────
+[tool.ruff.lint.per-file-ignores]
+
+# Auto-generated Qt Designer output — do not lint naming or import order
+"src/ui/*.py" = ["N", "I", "E", "W", "UP", "B"]
+
+# Test suite — allow assert statements and relative imports
+"test/*.py" = ["S101", "F401"]
+
+# The QGIS plugin loader requires the package directory to be named after the
+# plugin (e.g. QRAVEPlugin) which violates PEP 8 module naming — suppress N999.
+"__init__.py"     = ["N999"]
+"src/__init__.py" = ["N999"]
+"test/__init__.py" = ["N999"]
+
+# ── isort ─────────────────────────────────────────────────────────────────────
+[tool.ruff.lint.isort]
+known-third-party          = ["qgis", "PyQt5", "PyQt6", "lxml"]
+force-sort-within-sections = true
+
+# ── Format (replaces autopep8) ────────────────────────────────────────────────
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending  = "lf"
