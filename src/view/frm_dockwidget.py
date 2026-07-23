@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  QRiSDockWidget
@@ -22,136 +21,146 @@
  ***************************************************************************/
 """
 
-import os
 from functools import partial
+import os
+from typing import Optional
 
+from qgis.core import (
+    Qgis,
+    QgsApplication,
+    QgsCoordinateTransformContext,
+    QgsFeature,
+    QgsField,
+    QgsLayerTreeGroup,
+    QgsLayerTreeLayer,
+    QgsLayerTreeNode,
+    QgsMapLayer,
+    QgsMessageLog,
+    QgsProject,
+    QgsRasterLayer,
+    QgsVectorFileWriter,
+    QgsVectorLayer,
+    QgsWkbTypes,
+)
+from qgis.gui import QgisInterface, QgsLayerTreeView, QgsMapToolEmitPoint
 from qgis.PyQt import QtCore, QtGui, QtWidgets
-from qgis.PyQt.QtCore import pyqtSlot, QDate, QModelIndex, QMetaType
-from qgis.core import QgsApplication, Qgis, QgsWkbTypes, QgsVectorLayer, QgsFeature, QgsVectorFileWriter, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsLayerTreeNode, QgsMapLayer, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup, QgsRasterLayer
-from qgis.gui import QgsMapToolEmitPoint, QgsLayerTreeView, QgisInterface
+from qgis.PyQt.QtCore import QDate, QMetaType, QModelIndex, pyqtSlot
 
-from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
-from ..model.layer import Layer
-from ..model.project import Project
-from ..model.event import Event, EVENT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
-from ..model.planning_container import PlanningContainer
-from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
-from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
-from ..model.db_item import DB_MODE_NEW, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_LAYER, DB_MODE_PROMOTE, DB_MODE_COPY, DBItem
-from ..model.sample_frame import SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, AOI_MACHINE_CODE, SampleFrame
-from ..model.protocol import Protocol
-from ..model.pour_point import PourPoint, CATCHMENTS_MACHINE_CODE
-from ..model.stream_gage import StreamGage, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG
-from ..model.layer import check_and_remove_unused_layers
-from ..model.event_layer import EventLayer
-from ..model.profile import Profile
-from ..model.cross_sections import CrossSections
-from ..model.attachment import Attachment, ATTACHMENT_MACHINE_CODE, attachments_path
-
-from .widgets.export_map_widget import MapExportWidget
-from .frm_design import FrmDesign
-from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
-from .frm_planning_container import FrmPlanningContainer
-from .frm_asbuilt import FrmAsBuilt
-from .frm_basemap import FrmRaster
-from .frm_aoi_valley_bottom import FrmAOIValleyBottom
-from .frm_attachment import FrmAttachment
-from .frm_sample_frame import FrmSampleFrame
-from .frm_analysis_properties import FrmAnalysisProperties
-from .frm_analysis_explorer import FrmAnalysisExplorer
-from .frm_new_project import FrmNewProject
-from .frm_pour_point import FrmPourPoint
-from .frm_analysis_docwidget import FrmAnalysisDocWidget
-from .frm_analysis_over_time import FrmAnalysisOverTime
-from .frm_analysis_distribution import FrmDistributionAnalysis
-from .frm_analysis_distribution_dockwidget import FrmDistributionAnalysisDockWidget
-from .frm_slider import FrmSlider
-from .frm_scratch_vector import FrmScratchVector
-from .frm_geospatial_metrics import FrmGeospatialMetrics
-from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
-from .frm_centerline_docwidget import FrmCenterlineDocWidget
-from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
-from .frm_profile import FrmProfile
-from .frm_cross_sections import FrmCrossSections
-from .frm_import_dce_layer import FrmImportDceLayer
-from .frm_import_project_layer import FrmImportProjectLayer
-from .frm_layer_picker import FrmLayerPicker
-from .frm_layer_metric_details import FrmLayerMetricDetails
-from .frm_toc_layer_picker import FrmTOCLayerPicker
-from .frm_export_metrics import FrmExportMetrics
-from .frm_export_layer import FrmExportLayer
-from .frm_query_builder import FrmQueryBuilder
-from .frm_event_picker import FrmEventPicker
-from .frm_export_project import FrmExportProject
-from .frm_import_photos import FrmImportPhotos
-from .frm_settings import FrmSettings
-from .frm_climate_engine_explorer import FrmClimateEngineExplorer
-from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
-from .frm_batch_attribute_editor import FrmBatchAttributeEditor
-from .frm_order_by_centerline import FrmOrderByCenterline
-from .frm_layer_type import FrmLayerTypeDialog
-from .frm_settings import REMOVE_LAYERS_ON_CLOSE
-
+from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
+from ..gp.order_by_line_task import OrderByLineTask
+from ..gp.stream_stats import StreamStats, get_state_from_coordinates, transform_geometry
+from ..gp.vicinity_map import VicinityMapExportTask
+from ..gp.zonal_statistics_task import ZonalMetricsTask
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE, require_api_key
 from ..lib.data_exchange import browse_data_exchange
 from ..lib.rs_project import RSProject
-
-from ..QRiS.settings import Settings
+from ..model.analysis import ANALYSIS_MACHINE_CODE, Analysis
+from ..model.attachment import ATTACHMENT_MACHINE_CODE, Attachment, attachments_path
+from ..model.cross_sections import CrossSections
+from ..model.db_item import DB_MODE_COPY, DB_MODE_CREATE, DB_MODE_IMPORT, DB_MODE_IMPORT_LAYER, DB_MODE_NEW, DB_MODE_PROMOTE, DBItem
+from ..model.event import AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, EVENT_MACHINE_CODE, Event
+from ..model.event_layer import EventLayer
+from ..model.layer import Layer, check_and_remove_unused_layers
+from ..model.planning_container import PlanningContainer
+from ..model.pour_point import CATCHMENTS_MACHINE_CODE, PourPoint
+from ..model.profile import Profile
+from ..model.project import Project
+from ..model.protocol import Protocol
+from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, SURFACE_MACHINE_CODE, Raster
+from ..model.sample_frame import AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, SampleFrame
+from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
+from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, StreamGage
 from ..QRiS.qrave_integration import QRaveIntegration
 from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
+from ..QRiS.settings import Settings
+from .frm_analysis_distribution import FrmDistributionAnalysis
+from .frm_analysis_distribution_dockwidget import FrmDistributionAnalysisDockWidget
+from .frm_analysis_docwidget import FrmAnalysisDocWidget
+from .frm_analysis_explorer import FrmAnalysisExplorer
+from .frm_analysis_over_time import FrmAnalysisOverTime
+from .frm_analysis_properties import FrmAnalysisProperties
+from .frm_aoi_valley_bottom import FrmAOIValleyBottom
+from .frm_asbuilt import FrmAsBuilt
+from .frm_attachment import FrmAttachment
+from .frm_basemap import FrmRaster
+from .frm_batch_attribute_editor import FrmBatchAttributeEditor
+from .frm_centerline_docwidget import FrmCenterlineDocWidget
+from .frm_climate_engine_explorer import FrmClimateEngineExplorer
+from .frm_climate_engine_map_layer import FrmClimateEngineMapLayer
+from .frm_cross_sections import FrmCrossSections
+from .frm_cross_sections_docwidget import FrmCrossSectionsDocWidget
+from .frm_design import FrmDesign
+from .frm_event import DATA_CAPTURE_EVENT_TYPE_ID, FrmEvent
+from .frm_event_picker import FrmEventPicker
+from .frm_export_layer import FrmExportLayer
+from .frm_export_metrics import FrmExportMetrics
+from .frm_export_project import FrmExportProject
+from .frm_geospatial_metrics import FrmGeospatialMetrics
+from .frm_import_dce_layer import FrmImportDceLayer
+from .frm_import_photos import FrmImportPhotos
+from .frm_import_project_layer import FrmImportProjectLayer
+from .frm_layer_metric_details import FrmLayerMetricDetails
+from .frm_layer_picker import FrmLayerPicker
+from .frm_layer_type import FrmLayerTypeDialog
+from .frm_new_project import FrmNewProject
+from .frm_order_by_centerline import FrmOrderByCenterline
+from .frm_planning_container import FrmPlanningContainer
+from .frm_pour_point import FrmPourPoint
+from .frm_profile import FrmProfile
+from .frm_query_builder import FrmQueryBuilder
+from .frm_sample_frame import FrmSampleFrame
+from .frm_scratch_vector import FrmScratchVector
+from .frm_settings import REMOVE_LAYERS_ON_CLOSE, FrmSettings
+from .frm_slider import FrmSlider
+from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
+from .frm_toc_layer_picker import FrmTOCLayerPicker
+from .widgets.export_map_widget import MapExportWidget
 
-from ..gp.order_by_line_task import OrderByLineTask
-
-from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
-from ..gp.stream_stats import transform_geometry, get_state_from_coordinates
-from ..gp.stream_stats import StreamStats
-from ..gp.zonal_statistics_task import ZonalMetricsTask
-from ..gp.vicinity_map import VicinityMapExportTask
-
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
-LAST_PROJECT_FOLDER = 'last_project_folder'
-CONTEXT_NODE_TAG = 'CONTEXT'
-INPUTS_NODE_TAG = 'INPUTS'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
+LAST_PROJECT_FOLDER = "last_project_folder"
+CONTEXT_NODE_TAG = "CONTEXT"
+INPUTS_NODE_TAG = "INPUTS"
 
 # Name of the icon PNG file used for group folders in the QRiS project tree
 # /Images/folder.png
-FOLDER_ICON = 'folder'
+FOLDER_ICON = "folder"
 
 # These are the labels used for displaying the group nodes in the QRiS project tree
 GROUP_FOLDER_LABELS = {
-    INPUTS_NODE_TAG: 'Inputs',
-    VALLEY_BOTTOM_MACHINE_CODE: 'Riverscapes',
-    SURFACE_MACHINE_CODE: 'Surfaces',
-    AOI_MACHINE_CODE: 'AOIs',
-    SAMPLE_FRAME_MACHINE_CODE: 'Sample Frames',
-    EVENT_MACHINE_CODE: 'Data Capture Events',
-    BASEMAP_MACHINE_CODE: 'Basemaps',
-    PROTOCOL_BASEMAP_MACHINE_CODE: 'Basemaps',
-    ANALYSIS_MACHINE_CODE: 'Analyses',
-    ATTACHMENT_MACHINE_CODE: 'Attachments',
-    CATCHMENTS_MACHINE_CODE: 'Catchment Delineations',
-    CONTEXT_NODE_TAG: 'Context',
-    STREAM_GAGE_MACHINE_CODE: 'Stream Gages',
-    CLIMATE_ENGINE_MACHINE_CODE: 'Climate Engine',
-    Profile.PROFILE_MACHINE_CODE: 'Profiles',
-    CrossSections.CROSS_SECTIONS_MACHINE_CODE: 'Cross Sections'
+    INPUTS_NODE_TAG: "Inputs",
+    VALLEY_BOTTOM_MACHINE_CODE: "Riverscapes",
+    SURFACE_MACHINE_CODE: "Surfaces",
+    AOI_MACHINE_CODE: "AOIs",
+    SAMPLE_FRAME_MACHINE_CODE: "Sample Frames",
+    EVENT_MACHINE_CODE: "Data Capture Events",
+    BASEMAP_MACHINE_CODE: "Basemaps",
+    PROTOCOL_BASEMAP_MACHINE_CODE: "Basemaps",
+    ANALYSIS_MACHINE_CODE: "Analyses",
+    ATTACHMENT_MACHINE_CODE: "Attachments",
+    CATCHMENTS_MACHINE_CODE: "Catchment Delineations",
+    CONTEXT_NODE_TAG: "Context",
+    STREAM_GAGE_MACHINE_CODE: "Stream Gages",
+    CLIMATE_ENGINE_MACHINE_CODE: "Climate Engine",
+    Profile.PROFILE_MACHINE_CODE: "Profiles",
+    CrossSections.CROSS_SECTIONS_MACHINE_CODE: "Cross Sections",
 }
 
-USER_ROLES = {'date': QtCore.Qt.UserRole + 1,
-              'raster_type': QtCore.Qt.UserRole + 2,
-              'node_type': QtCore.Qt.UserRole + 3,
-              'attachment_type': QtCore.Qt.UserRole + 4,}
+USER_ROLES = {
+    "date": QtCore.Qt.UserRole + 1,
+    "raster_type": QtCore.Qt.UserRole + 2,
+    "node_type": QtCore.Qt.UserRole + 3,
+    "attachment_type": QtCore.Qt.UserRole + 4,
+}
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget):
-
     closingPlugin = QtCore.pyqtSignal()
 
     def __init__(self, iface: QgisInterface, parent=None):
         """Constructor."""
-        super(QRiSDockWidget, self).__init__(parent)
+        super().__init__(parent)
         # Set up the user interface from Designer.
         # After setupUI you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots - see
@@ -165,7 +174,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.qris_project = None
         self.rs_project = None
         self.map_manager = None
-        self.basemap_manager = RiverscapesMapManager('Basemaps')
+        self.basemap_manager = RiverscapesMapManager("Basemaps")
         self.menu = QtWidgets.QMenu()
 
         self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -192,7 +201,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         ltv: QgsLayerTreeView = self.iface.layerTreeView()
         # workaround for QGIS < 3.32
-        if hasattr(ltv, 'contextMenuAboutToShow'):
+        if hasattr(ltv, "contextMenuAboutToShow"):
             try:
                 ltv.contextMenuAboutToShow.disconnect(self.add_context_batch_edit_attributes)
             except TypeError:
@@ -202,23 +211,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             version = Qgis.QGIS_VERSION
             QgsMessageLog().logMessage(
-                f'The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.',
-                'QRiS', level=Qgis.Warning)
+                f"The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.",
+                "QRiS",
+                level=Qgis.Warning,
+            )
 
     def build_tree_view(self, qris_project: Project, new_item=None):
         """
         Builds the project tree from scratch for the first time
         """
         self.qris_project = qris_project
-        
+
         # RS Project
         self.rs_project = RSProject(self.qris_project)
         self.qris_project.project_changed.connect(self.rs_project.write)
         # Keep the .gpkg main file in sync (not just WAL) so external copy/upload while QGIS is open includes recent edits.
         self.qris_project.project_changed.connect(self.qris_project.request_flush)
         self.qris_project.item_added.connect(self.on_item_added)
-        self.rs_project.write() # Ensure the RS project file is created if missing, or update it on opening the project.
-        
+        self.rs_project.write()  # Ensure the RS project file is created if missing, or update it on opening the project.
+
         # Map Manager
         self.map_manager = QRisMapManager(self.qris_project)
         self.map_manager.edit_mode_changed.connect(lambda *args: self.traverse_tree(self.model.invisibleRootItem(), self.set_edit_text))
@@ -251,7 +262,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         [self.add_child_to_project_tree(self.context_node, item) for item in self.qris_project.rasters.values() if item.is_context is True]
         [self.add_child_to_project_tree(self.context_node, item) for item in self.qris_project.scratch_vectors.values()]
 
-        gage_node = self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
+        self.add_child_to_project_tree(self.context_node, STREAM_GAGE_MACHINE_CODE)
         # [self.add_child_to_project_tree(gage_node, item) for item in self.project.stream_gages.values()]
 
         catchments_node = self.add_child_to_project_tree(self.context_node, CATCHMENTS_MACHINE_CODE)
@@ -264,12 +275,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         analyses_node = self.add_child_to_project_tree(project_node, ANALYSIS_MACHINE_CODE)
         [self.add_child_to_project_tree(analyses_node, item) for item in self.qris_project.analyses.values()]
 
-        climate_engine_node = self.add_child_to_project_tree(analyses_node, CLIMATE_ENGINE_MACHINE_CODE)
+        self.add_child_to_project_tree(analyses_node, CLIMATE_ENGINE_MACHINE_CODE)
 
         attachments_node = self.add_child_to_project_tree(project_node, ATTACHMENT_MACHINE_CODE)
         [self.add_child_to_project_tree(attachments_node, item) for item in self.qris_project.attachments.values()]
 
-        for node in [project_node, inputs_node, self.riverscapes_node, self.surfaces_node, self.aoi_node, self.sample_frames_node, self.profiles_node, self.cross_sections_node, catchments_node, self.context_node, events_node, analyses_node]:
+        for node in [
+            project_node,
+            inputs_node,
+            self.riverscapes_node,
+            self.surfaces_node,
+            self.aoi_node,
+            self.sample_frames_node,
+            self.profiles_node,
+            self.cross_sections_node,
+            catchments_node,
+            self.context_node,
+            events_node,
+            analyses_node,
+        ]:
             self.treeView.expand(self.model.indexFromItem(node))
 
         self.add_basemap_nodes()
@@ -292,24 +316,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Uncollapse basemaps if present
         if self.qrave is not None and self.qrave.BaseMaps is not None:
-            region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
+            region = self.qrave.plugin_instance.settings.getValue("basemapRegion")
             basemap_node = self.qrave.BaseMaps.regions.get(region)
             if basemap_node is not None:
                 self.treeView.expand(self.model.indexFromItem(basemap_node))
         return
-    
+
     def add_basemap_nodes(self):
         if self.qrave is not None and self.qrave.BaseMaps is not None:
-            region = self.qrave.plugin_instance.settings.getValue('basemapRegion')
+            region = self.qrave.plugin_instance.settings.getValue("basemapRegion")
             # Check if basemap node already exists, if it does, move it to the bottom
-            root = self.model.invisibleRootItem()      
+            root = self.model.invisibleRootItem()
             for row in range(root.rowCount()):
                 child = root.child(row)
-                if child.text() == 'Basemaps':
+                if child.text() == "Basemaps":
                     basemap = root.takeRow(row)[0]
                     root.appendRow(basemap)
                     return
-                
+
             self.model.appendRow(self.qrave.BaseMaps.regions[region])
             self.treeView.expand(self.model.indexFromItem(self.qrave.BaseMaps.regions[region]))
             self.treeView.expanded.connect(self.expand_tree_item)
@@ -369,7 +393,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.qrave is not None:
             if self.qrave.BaseMaps is not None:
                 # add the first basemap to the basemap manager
-                region = self.settings.getValue('basemapRegion')
+                region = self.settings.getValue("basemapRegion")
                 data = self.qrave.BaseMaps.regions[region].child(0).child(0).data(QtCore.Qt.UserRole)
                 self.add_basemap_to_map(data, trigger_repaint=trigger_repaint)
                 self.iface.mapCanvas().refresh()
@@ -383,7 +407,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
         if remove_layers is True:
             if self.map_manager is not None and self.qris_project is not None:
-                self.map_manager.remove_all_layers(self.qris_project.map_guid)                
+                self.map_manager.remove_all_layers(self.qris_project.map_guid)
         # If layers are removed, attempt a VACUUM and Flush to ensure the WAL is cleared.
         if self.qris_project and self.qris_project.project_file:
             self.qris_project.flush(vacuum=True)
@@ -438,7 +462,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.qris_project is not None and self.rs_project is not None:
             if self.qris_project.receivers(self.qris_project.project_changed) > 0:
                 self.qris_project.project_changed.disconnect()
-        
+
         self.clear_project_node()
         self.rs_project = None
         self.qris_project = None
@@ -463,42 +487,42 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     @pyqtSlot(str, str, dict)
     def qris_from_qrave(self, layer_path, layer_type, metadata):
 
-        if layer_type == 'raster':
-            frm = FrmLayerTypeDialog(['Surface Raster', 'Context Raster'])
+        if layer_type == "raster":
+            frm = FrmLayerTypeDialog(["Surface Raster", "Context Raster"])
             result = frm.exec_()
             selected_type = frm.selected_type()
             if result == QtWidgets.QDialog.Rejected or selected_type is None:
                 return
-            elif selected_type == 'Surface Raster':
+            elif selected_type == "Surface Raster":
                 is_context = False
                 node = self.surfaces_node
             else:
                 is_context = True
                 node = self.context_node
             self.add_raster(node, is_context, layer_path, meta=metadata)
-        elif layer_type == 'polygon':
-            frm = FrmLayerTypeDialog(['Riverscape (Valley Bottom)', 'AOI', 'Sample Frame', 'Context Vector'])
+        elif layer_type == "polygon":
+            frm = FrmLayerTypeDialog(["Riverscape (Valley Bottom)", "AOI", "Sample Frame", "Context Vector"])
             result = frm.exec_()
             selected_type = frm.selected_type()
             if result == QtWidgets.QDialog.Rejected or selected_type is None:
                 return
-            elif selected_type == 'Riverscape (Valley Bottom)':
+            elif selected_type == "Riverscape (Valley Bottom)":
                 self.add_valley_bottom(self.riverscapes_node, DB_MODE_IMPORT, layer_path, meta=metadata)
-            elif selected_type == 'AOI':
+            elif selected_type == "AOI":
                 self.add_aoi(self.aoi_node, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT, layer_path, meta=metadata)
-            elif selected_type == 'Sample Frame':
+            elif selected_type == "Sample Frame":
                 self.add_sample_frame(self.sample_frames_node, DB_MODE_IMPORT, layer_path, meta=metadata)
             else:
                 self.add_context_vector(self.context_node, layer_path, meta=metadata)
-        elif layer_type == 'line':
-            frm = FrmLayerTypeDialog(['Profile/Centerline', 'Cross Sections', 'Context Vector'])
+        elif layer_type == "line":
+            frm = FrmLayerTypeDialog(["Profile/Centerline", "Cross Sections", "Context Vector"])
             result = frm.exec_()
             selected_type = frm.selected_type()
             if result == QtWidgets.QDialog.Rejected or selected_type is None:
                 return
-            elif selected_type == 'Profile/Centerline':
+            elif selected_type == "Profile/Centerline":
                 self.add_profile(self.profiles_node, DB_MODE_IMPORT, layer_path, meta=metadata)
-            elif selected_type == 'Cross Sections':
+            elif selected_type == "Cross Sections":
                 self.add_cross_sections(self.cross_sections_node, DB_MODE_IMPORT, layer_path, meta=metadata)
             else:
                 self.add_context_vector(self.context_node, layer_path, meta=metadata)
@@ -522,258 +546,274 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(model_data, str):
             if model_data not in [STREAM_GAGE_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE]:
-                self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
-                self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
+                self.add_context_menu_item(self.menu, "View Child Nodes", "collapse", lambda: self.collapse_tree_children(idx))
+                self.add_context_menu_item(self.menu, "Expand All Child Nodes", "expand", lambda: self.expand_tree_children(idx))
                 self.menu.addSeparator()
             if model_data in [EVENT_MACHINE_CODE, SURFACE_MACHINE_CODE]:
-                sort_icon = QtGui.QIcon(':/plugins/qris_toolbar/sort')
+                sort_icon = QtGui.QIcon(":/plugins/qris_toolbar/sort")
                 if model_data == SURFACE_MACHINE_CODE:
-                    group_icon = QtGui.QIcon(':/plugins/qris_toolbar/category')
-                    group_menu = self.menu.addMenu(group_icon, 'Group By ...')
-                    self.add_context_menu_item(group_menu, 'Raster Type', 'raster', lambda: self.group_children(model_item, 'raster_type'))
-                    self.add_context_menu_item(group_menu, 'Metadata Tag', 'metadata', lambda: self.group_children(model_item, 'metadata_tag'))
-                    self.add_context_menu_item(group_menu, 'None', None, lambda: self.group_children(model_item, None))
-                sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
-                self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
-                self.add_context_menu_item(sort_menu, 'Date', 'time', lambda: self.sort_children(model_item, 'date'))
+                    group_icon = QtGui.QIcon(":/plugins/qris_toolbar/category")
+                    group_menu = self.menu.addMenu(group_icon, "Group By ...")
+                    self.add_context_menu_item(group_menu, "Raster Type", "raster", lambda: self.group_children(model_item, "raster_type"))
+                    self.add_context_menu_item(group_menu, "Metadata Tag", "metadata", lambda: self.group_children(model_item, "metadata_tag"))
+                    self.add_context_menu_item(group_menu, "None", None, lambda: self.group_children(model_item, None))
+                sort_menu = self.menu.addMenu(sort_icon, "Sort By ...")
+                self.add_context_menu_item(sort_menu, "Name", "alpha", lambda: self.sort_children(model_item, "name"))
+                self.add_context_menu_item(sort_menu, "Date", "time", lambda: self.sort_children(model_item, "date"))
                 self.menu.addSeparator()
             if model_data == ANALYSIS_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Create New Analysis', 'new', lambda: self.add_analysis(model_item))
+                self.add_context_menu_item(self.menu, "Create New Analysis", "new", lambda: self.add_analysis(model_item))
                 if len(self.qris_project.analyses) > 0:
                     self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary())
-                    self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis_time', lambda: self.open_analysis_over_time_dock())
-                    self.add_context_menu_item(self.menu, 'Distribution Analysis (Interactive)', 'distribution_analysis', lambda: self.open_distribution_analysis_dock())
-                    self.add_context_menu_item(self.menu, 'Distribution Analysis (Dialog)', 'distribution_analysis', lambda: self.distribution_analysis())
+                    self.add_context_menu_item(self.menu, "Analysis Summary", "analysis_summary", lambda: self.open_analysis_summary())
+                    self.add_context_menu_item(self.menu, "Analysis Over Time", "analysis_time", lambda: self.open_analysis_over_time_dock())
+                    self.add_context_menu_item(self.menu, "Distribution Analysis (Interactive)", "distribution_analysis", lambda: self.open_distribution_analysis_dock())
+                    self.add_context_menu_item(self.menu, "Distribution Analysis (Dialog)", "distribution_analysis", lambda: self.distribution_analysis())
                     self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Export All Analyses to Table', 'table', lambda: self.export_analysis_table())
+                    self.add_context_menu_item(self.menu, "Export All Analyses to Table", "table", lambda: self.export_analysis_table())
 
             elif model_data == CLIMATE_ENGINE_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Explore Climate Engine Timeseries', 'refresh', lambda: self.climate_engine_explorer())
-                self.add_context_menu_item(self.menu, 'Add Climate Engine Map Layer', 'add_to_map', lambda: self.add_climate_engine_to_map())
+                self.add_context_menu_item(self.menu, "Explore Climate Engine Timeseries", "refresh", lambda: self.climate_engine_explorer())
+                self.add_context_menu_item(self.menu, "Add Climate Engine Map Layer", "add_to_map", lambda: self.add_climate_engine_to_map())
             elif model_data == STREAM_GAGE_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Add Stream Gages To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
-                self.add_context_menu_item(self.menu, 'Explore Stream Gages', 'refresh', lambda: self.stream_gage_explorer())
+                self.add_context_menu_item(self.menu, "Add Stream Gages To The Map", "add_to_map", lambda: self.add_tree_group_to_map(model_item))
+                self.add_context_menu_item(self.menu, "Explore Stream Gages", "refresh", lambda: self.stream_gage_explorer())
             elif model_data == ATTACHMENT_MACHINE_CODE:
-                self.add_context_menu_item(self.menu, 'Browse Attachments', 'folder', lambda: self.browse_item(model_data, attachments_path(self.qris_project.project_file)))
-                sort_icon = QtGui.QIcon(':/plugins/qris_toolbar/sort')
-                sort_menu = self.menu.addMenu(sort_icon, 'Sort By ...')
-                self.add_context_menu_item(sort_menu, 'Name', 'alpha', lambda: self.sort_children(model_item, 'name'))
-                self.add_context_menu_item(sort_menu, 'Date', 'time', lambda: self.sort_children(model_item, 'date'))
-                group_icon = QtGui.QIcon(':/plugins/qris_toolbar/category')
-                group_menu = self.menu.addMenu(group_icon, 'Group By ...')
-                self.add_context_menu_item(group_menu, 'Type', 'file', lambda: self.group_children(model_item, 'attachment_type'))
-                self.add_context_menu_item(group_menu, 'None', None, lambda: self.group_children(model_item, None))
+                self.add_context_menu_item(self.menu, "Browse Attachments", "folder", lambda: self.browse_item(model_data, attachments_path(self.qris_project.project_file)))
+                sort_icon = QtGui.QIcon(":/plugins/qris_toolbar/sort")
+                sort_menu = self.menu.addMenu(sort_icon, "Sort By ...")
+                self.add_context_menu_item(sort_menu, "Name", "alpha", lambda: self.sort_children(model_item, "name"))
+                self.add_context_menu_item(sort_menu, "Date", "time", lambda: self.sort_children(model_item, "date"))
+                group_icon = QtGui.QIcon(":/plugins/qris_toolbar/category")
+                group_menu = self.menu.addMenu(group_icon, "Group By ...")
+                self.add_context_menu_item(group_menu, "Type", "file", lambda: self.group_children(model_item, "attachment_type"))
+                self.add_context_menu_item(group_menu, "None", None, lambda: self.group_children(model_item, None))
                 self.menu.addSeparator()
-                self.add_context_menu_item(self.menu, 'Add New File Attachment', 'add_file', lambda: self.add_attachment(model_item, Attachment.TYPE_FILE))
-                self.add_context_menu_item(self.menu, 'Add New Web Link Attachment', 'add_link', lambda: self.add_attachment(model_item, Attachment.TYPE_WEB_LINK))
+                self.add_context_menu_item(self.menu, "Add New File Attachment", "add_file", lambda: self.add_attachment(model_item, Attachment.TYPE_FILE))
+                self.add_context_menu_item(self.menu, "Add New Web Link Attachment", "add_link", lambda: self.add_attachment(model_item, Attachment.TYPE_WEB_LINK))
             else:
-                self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item))
-                if all(model_data != data_type for data_type in [SURFACE_MACHINE_CODE, CONTEXT_NODE_TAG, CATCHMENTS_MACHINE_CODE, INPUTS_NODE_TAG, STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE, Profile.PROFILE_MACHINE_CODE, CrossSections.CROSS_SECTIONS_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE]):
-                    self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
+                self.add_context_menu_item(self.menu, "Add All Layers To The Map", "add_to_map", lambda: self.add_tree_group_to_map(model_item))
+                if all(
+                    model_data != data_type
+                    for data_type in [
+                        SURFACE_MACHINE_CODE,
+                        CONTEXT_NODE_TAG,
+                        CATCHMENTS_MACHINE_CODE,
+                        INPUTS_NODE_TAG,
+                        STREAM_GAGE_MACHINE_CODE,
+                        STREAM_GAGE_NODE_TAG,
+                        AOI_MACHINE_CODE,
+                        SAMPLE_FRAME_MACHINE_CODE,
+                        CLIMATE_ENGINE_MACHINE_CODE,
+                        Profile.PROFILE_MACHINE_CODE,
+                        CrossSections.CROSS_SECTIONS_MACHINE_CODE,
+                        VALLEY_BOTTOM_MACHINE_CODE,
+                    ]
+                ):
+                    self.add_context_menu_item(self.menu, "Add All Layers with Features To The Map", "add_to_map", lambda: self.add_tree_group_to_map(model_item, True))
                 if model_data == EVENT_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Add New Data Capture Event', 'new', lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
-                    ltpbr_menu = QtWidgets.QMenu('Low-Tech Process-Based Restoration', self)
-                    ltpbr_menu.setIcon(QtGui.QIcon(':/plugins/qris_toolbar/new'))
-                    self.add_context_menu_item(ltpbr_menu, 'Add New Planning Container', 'plan', lambda: self.add_planning_container(model_item))
-                    self.add_context_menu_item(ltpbr_menu, 'Add New Design', 'design', lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
-                    self.add_context_menu_item(ltpbr_menu, 'Add New As-Built Survey', 'as-built', lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
+                    self.add_context_menu_item(self.menu, "Add New Data Capture Event", "new", lambda: self.add_event(model_item, DATA_CAPTURE_EVENT_TYPE_ID))
+                    ltpbr_menu = QtWidgets.QMenu("Low-Tech Process-Based Restoration", self)
+                    ltpbr_menu.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/new"))
+                    self.add_context_menu_item(ltpbr_menu, "Add New Planning Container", "plan", lambda: self.add_planning_container(model_item))
+                    self.add_context_menu_item(ltpbr_menu, "Add New Design", "design", lambda: self.add_event(model_item, DESIGN_EVENT_TYPE_ID))
+                    self.add_context_menu_item(ltpbr_menu, "Add New As-Built Survey", "as-built", lambda: self.add_event(model_item, AS_BUILT_EVENT_TYPE_ID))
                     self.menu.addMenu(ltpbr_menu)
                 elif model_data == VALLEY_BOTTOM_MACHINE_CODE:
-                    import_menu = self.menu.addMenu('Import Valley Bottom From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT_LAYER))
-                    self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Valley Bottom', 'new', lambda: self.add_valley_bottom(model_item, DB_MODE_CREATE))
+                    import_menu = self.menu.addMenu("Import Valley Bottom From ...  ")
+                    self.add_context_menu_item(import_menu, "Existing Feature Class", "new", lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.add_valley_bottom(model_item, DB_MODE_IMPORT_LAYER))
+                    self.add_context_menu_item(self.menu, "Create New (Manually Digitized) Valley Bottom", "new", lambda: self.add_valley_bottom(model_item, DB_MODE_CREATE))
                 elif model_data == SURFACE_MACHINE_CODE:
-                    import_menu = self.menu.addMenu('Import Surface Raster From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Raster Dataset', 'new', lambda: self.add_raster(model_item, False))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_raster(model_item, False, DB_MODE_IMPORT_LAYER))
+                    import_menu = self.menu.addMenu("Import Surface Raster From ...  ")
+                    self.add_context_menu_item(import_menu, "Existing Raster Dataset", "new", lambda: self.add_raster(model_item, False))
+                    self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.add_raster(model_item, False, DB_MODE_IMPORT_LAYER))
                 elif model_data == AOI_MACHINE_CODE:
-                    import_menu = self.menu.addMenu('Import AOI From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT_LAYER))
-                    self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) AOI', 'new', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_CREATE))
+                    import_menu = self.menu.addMenu("Import AOI From ...  ")
+                    self.add_context_menu_item(import_menu, "Existing Feature Class", "new", lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_IMPORT_LAYER))
+                    self.add_context_menu_item(self.menu, "Create New (Manually Digitized) AOI", "new", lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_CREATE))
                     self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Add Centroid To Map', 'add_to_map', self.add_all_aoi_centroids_to_map)
+                    self.add_context_menu_item(self.menu, "Add Centroid To Map", "add_to_map", self.add_all_aoi_centroids_to_map)
                 elif model_data == SAMPLE_FRAME_MACHINE_CODE:
-                    import_sample_frame_menu = self.menu.addMenu('Import Sample Frame From ...  ')
-                    self.add_context_menu_item(import_sample_frame_menu, 'Feature Class', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_sample_frame_menu, 'Layer in Map', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_LAYER))
+                    import_sample_frame_menu = self.menu.addMenu("Import Sample Frame From ...  ")
+                    self.add_context_menu_item(import_sample_frame_menu, "Feature Class", "new", lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_sample_frame_menu, "Layer in Map", "new", lambda: self.add_sample_frame(model_item, DB_MODE_IMPORT_LAYER))
                     # self.add_context_menu_item(import_sample_frame_menu, 'QRiS Project', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_COPY), False)
-                    new_sample_frame_menu = self.menu.addMenu('Create New Sample Frame ...  ')
-                    self.add_context_menu_item(new_sample_frame_menu, 'Empty Sample Frame (Manual)', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_NEW))   
-                    self.add_context_menu_item(new_sample_frame_menu, 'From QRiS Features', 'new', lambda: self.add_sample_frame(model_item, DB_MODE_CREATE))
+                    new_sample_frame_menu = self.menu.addMenu("Create New Sample Frame ...  ")
+                    self.add_context_menu_item(new_sample_frame_menu, "Empty Sample Frame (Manual)", "new", lambda: self.add_sample_frame(model_item, DB_MODE_NEW))
+                    self.add_context_menu_item(new_sample_frame_menu, "From QRiS Features", "new", lambda: self.add_sample_frame(model_item, DB_MODE_CREATE))
                 elif model_data == CONTEXT_NODE_TAG:
-                    self.add_context_menu_item(self.menu, 'Browse Scratch Space', 'folder', lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.qris_project.project_file))))
-                    import_raster_menu = self.menu.addMenu('Import Context Raster From ...  ')
-                    self.add_context_menu_item(import_raster_menu, 'Existing Raster Dataset', 'new', lambda: self.add_raster(model_item, True))
-                    self.add_context_menu_item(import_raster_menu, 'Layer in Map', 'new', lambda: self.add_raster(model_item, True, DB_MODE_IMPORT_LAYER))
-                    import_menu = self.menu.addMenu('Import Context Vector From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_context_vector(model_item))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_LAYER))
+                    self.add_context_menu_item(self.menu, "Browse Scratch Space", "folder", lambda: self.browse_item(model_data, os.path.dirname(scratch_gpkg_path(self.qris_project.project_file))))
+                    import_raster_menu = self.menu.addMenu("Import Context Raster From ...  ")
+                    self.add_context_menu_item(import_raster_menu, "Existing Raster Dataset", "new", lambda: self.add_raster(model_item, True))
+                    self.add_context_menu_item(import_raster_menu, "Layer in Map", "new", lambda: self.add_raster(model_item, True, DB_MODE_IMPORT_LAYER))
+                    import_menu = self.menu.addMenu("Import Context Vector From ...  ")
+                    self.add_context_menu_item(import_menu, "Existing Feature Class", "new", lambda: self.add_context_vector(model_item))
+                    self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.add_context_vector(model_item, DB_MODE_IMPORT_LAYER))
                 elif model_data == CATCHMENTS_MACHINE_CODE:
-                    self.add_context_menu_item(self.menu, 'Run USGS StreamStats (US Only)', 'new', lambda: self.add_pour_point(model_item))
+                    self.add_context_menu_item(self.menu, "Run USGS StreamStats (US Only)", "new", lambda: self.add_pour_point(model_item))
                 elif model_data == Profile.PROFILE_MACHINE_CODE:
-                    import_menu = self.menu.addMenu('Import Profile From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_profile(model_item, DB_MODE_IMPORT_LAYER))
-                    self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Profile', 'new', lambda: self.add_profile(model_item, DB_MODE_CREATE))
+                    import_menu = self.menu.addMenu("Import Profile From ...  ")
+                    self.add_context_menu_item(import_menu, "Existing Feature Class", "new", lambda: self.add_profile(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.add_profile(model_item, DB_MODE_IMPORT_LAYER))
+                    self.add_context_menu_item(self.menu, "Create New (Manually Digitized) Profile", "new", lambda: self.add_profile(model_item, DB_MODE_CREATE))
                 elif model_data == CrossSections.CROSS_SECTIONS_MACHINE_CODE:
-                    import_menu = self.menu.addMenu('Import Cross Sections From ...  ')
-                    self.add_context_menu_item(import_menu, 'Existing Feature Class', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT))
-                    self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT_LAYER))
-                    self.add_context_menu_item(self.menu, 'Create New (Manually Digitized) Cross Sections', 'new', lambda: self.add_cross_sections(model_item, DB_MODE_CREATE))
+                    import_menu = self.menu.addMenu("Import Cross Sections From ...  ")
+                    self.add_context_menu_item(import_menu, "Existing Feature Class", "new", lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT))
+                    self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.add_cross_sections(model_item, DB_MODE_IMPORT_LAYER))
+                    self.add_context_menu_item(self.menu, "Create New (Manually Digitized) Cross Sections", "new", lambda: self.add_cross_sections(model_item, DB_MODE_CREATE))
                 else:
-                    f'Unhandled group folder clicked in QRiS project tree: {model_data}'
+                    f"Unhandled group folder clicked in QRiS project tree: {model_data}"
         else:
             if self.qrave is not None and isinstance(model_data, self.qrave.ProjectTreeData):
-                self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_basemap_to_map(model_data))
+                self.add_context_menu_item(self.menu, "Add To Map", "add_to_map", lambda: self.add_basemap_to_map(model_data))
             else:
                 if isinstance(model_data, DBItem):
                     if isinstance(model_data, Analysis):
-                        self.add_context_menu_item(self.menu, 'Open Analysis', 'analysis', lambda: self.open_analysis(model_data))
-                        self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
+                        self.add_context_menu_item(self.menu, "Open Analysis", "analysis", lambda: self.open_analysis(model_data))
+                        self.add_context_menu_item(self.menu, "Properties", "options", lambda: self.edit_item(model_item, model_data))
                         self.menu.addSeparator()
-                        self.add_context_menu_item(self.menu, 'Analysis Summary', 'analysis_summary', lambda: self.open_analysis_summary(model_data))
+                        self.add_context_menu_item(self.menu, "Analysis Summary", "analysis_summary", lambda: self.open_analysis_summary(model_data))
                         if not model_data.is_simple_intrinsic_mode():
-                            self.add_context_menu_item(self.menu, 'Analysis Over Time', 'analysis_time', lambda: self.open_analysis_over_time_dock(model_data))
+                            self.add_context_menu_item(self.menu, "Analysis Over Time", "analysis_time", lambda: self.open_analysis_over_time_dock(model_data))
                         self.menu.addSeparator()
-                        self.add_context_menu_item(self.menu, 'Export Analysis Table', 'table', lambda: self.export_analysis_table(model_data))
+                        self.add_context_menu_item(self.menu, "Export Analysis Table", "table", lambda: self.export_analysis_table(model_data))
                     elif isinstance(model_data, Attachment):
                         if model_data.attachment_type == Attachment.TYPE_FILE:
-                            self.add_context_menu_item(self.menu, 'Open Attachment', 'open_external', lambda: self.browse_item(model_data, model_data.attachment_path(self.qris_project.project_file)))
+                            self.add_context_menu_item(self.menu, "Open Attachment", "open_external", lambda: self.browse_item(model_data, model_data.attachment_path(self.qris_project.project_file)))
                         else:
-                            self.add_context_menu_item(self.menu, 'Open Web Link', 'open_external', lambda: self.browse_item(model_data, model_data.path))
+                            self.add_context_menu_item(self.menu, "Open Web Link", "open_external", lambda: self.browse_item(model_data, model_data.path))
                     elif isinstance(model_data, EventLayer):
-                        self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
-                        self.add_context_menu_item(self.menu, 'Add To Map with Filter...', 'add_to_map_filtered', lambda: self.add_event_layer_to_map_with_filter(model_item, model_data))
+                        self.add_context_menu_item(self.menu, "Add To Map", "add_to_map", lambda: self.add_db_item_to_map(model_item, model_data))
+                        self.add_context_menu_item(self.menu, "Add To Map with Filter...", "add_to_map_filtered", lambda: self.add_event_layer_to_map_with_filter(model_item, model_data))
                         self.menu.addSeparator()
                     else:
                         if any(isinstance(model_data, model_type) for model_type in [Project, Event, PlanningContainer]):
-                            self.add_context_menu_item(self.menu, 'View Child Nodes', 'collapse', lambda: self.collapse_tree_children(idx))
-                            self.add_context_menu_item(self.menu, 'Expand All Child Nodes', 'expand', lambda: self.expand_tree_children(idx))
+                            self.add_context_menu_item(self.menu, "View Child Nodes", "collapse", lambda: self.collapse_tree_children(idx))
+                            self.add_context_menu_item(self.menu, "Expand All Child Nodes", "expand", lambda: self.expand_tree_children(idx))
                             self.menu.addSeparator()
-                            self.add_context_menu_item(self.menu, 'Add All Layers To The Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                            self.add_context_menu_item(self.menu, "Add All Layers To The Map", "add_to_map", lambda: self.add_db_item_to_map(model_item, model_data))
                             if any(isinstance(model_data, model_type) for model_type in [Event, PlanningContainer]):
-                                self.add_context_menu_item(self.menu, 'Add All Layers with Features To The Map', 'add_to_map', lambda: self.add_tree_group_to_map(model_item, True))
+                                self.add_context_menu_item(self.menu, "Add All Layers with Features To The Map", "add_to_map", lambda: self.add_tree_group_to_map(model_item, True))
                             if isinstance(model_data, Event):
                                 self.menu.addSeparator()
-                                self.add_context_menu_item(self.menu, 'Lock All Layers in DCE', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
-                                self.add_context_menu_item(self.menu, 'Unlock All Layers in DCE', 'lock_open_right', lambda: self.set_group_lock_state(model_data, False, model_item))
+                                self.add_context_menu_item(self.menu, "Lock All Layers in DCE", "lock", lambda: self.set_group_lock_state(model_data, True, model_item))
+                                self.add_context_menu_item(self.menu, "Unlock All Layers in DCE", "lock_open_right", lambda: self.set_group_lock_state(model_data, False, model_item))
                                 self.menu.addSeparator()
                         else:
-                            self.add_context_menu_item(self.menu, 'Add To Map', 'add_to_map', lambda: self.add_db_item_to_map(model_item, model_data))
+                            self.add_context_menu_item(self.menu, "Add To Map", "add_to_map", lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
-                    raise Exception('Unhandled group folder clicked in QRiS project tree: {}'.format(model_data))
+                    raise Exception(f"Unhandled group folder clicked in QRiS project tree: {model_data}")
 
                 if any(isinstance(model_data, model_type) for model_type in [Project, Event, Raster, SampleFrame, Profile, CrossSections, PourPoint, ScratchVector, PlanningContainer, Attachment]):
-                    self.add_context_menu_item(self.menu, 'Properties', 'options', lambda: self.edit_item(model_item, model_data))
+                    self.add_context_menu_item(self.menu, "Properties", "options", lambda: self.edit_item(model_item, model_data))
 
                 if isinstance(model_data, SampleFrame):
                     if model_data.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
-                        self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
+                        self.add_context_menu_item(self.menu, "Generate Centerline", "gis", lambda: self.generate_centerline(model_data))
                     if model_data.sample_frame_type == SampleFrame.SAMPLE_FRAME_TYPE:
-                        self.add_context_menu_item(self.menu, 'Set Order by Centerline', 'numeric', lambda: self.set_order_by_centerline(model_data))
-                    self.add_context_menu_item(self.menu, 'Zonal Statistics', 'gis', lambda: self.geospatial_summary(model_item, model_data))
-                    analysis_menu = self.menu.addMenu('Analysis ...')
-                    self.add_context_menu_item(analysis_menu, 'Create Analysis', 'new', lambda: self.add_analysis(db_item=model_data))
-                    self.add_context_menu_item(analysis_menu, 'Create Intrinsic Analysis', 'new', lambda: self.add_intrinsic_analysis(db_item=model_data))
+                        self.add_context_menu_item(self.menu, "Set Order by Centerline", "numeric", lambda: self.set_order_by_centerline(model_data))
+                    self.add_context_menu_item(self.menu, "Zonal Statistics", "gis", lambda: self.geospatial_summary(model_item, model_data))
+                    analysis_menu = self.menu.addMenu("Analysis ...")
+                    self.add_context_menu_item(analysis_menu, "Create Analysis", "new", lambda: self.add_analysis(db_item=model_data))
+                    self.add_context_menu_item(analysis_menu, "Create Intrinsic Analysis", "new", lambda: self.add_intrinsic_analysis(db_item=model_data))
                     analysis_menu.addSeparator()
                     # get a list of the analyses connected to this sample frame, and add them to the menu
                     for analysis in list(self.qris_project.analyses.values()):
                         if not isinstance(analysis, Analysis):
                             continue
                         if analysis.sample_frame.id == model_data.id:
-                            self.add_context_menu_item(analysis_menu, f'{analysis.name}', 'analysis', lambda _checked=False, a=analysis: self.open_analysis(a))
+                            self.add_context_menu_item(analysis_menu, f"{analysis.name}", "analysis", lambda _checked=False, a=analysis: self.open_analysis(a))
 
                 if isinstance(model_data, Raster):  # and model_data.raster_type_id != RASTER_TYPE_BASEMAP:
-                    self.add_context_menu_item(self.menu, 'Raster Slider', 'slider', lambda: self.raster_slider(model_data))
+                    self.add_context_menu_item(self.menu, "Raster Slider", "slider", lambda: self.raster_slider(model_data))
 
                 if isinstance(model_data, ScratchVector):
-                    if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.PolygonGeometry:
+                    if QgsVectorLayer(f"{model_data.gpkg_path}|layername={model_data.fc_name}").geometryType() == QgsWkbTypes.PolygonGeometry:
                         # self.add_context_menu_item(self.menu, 'Generate Centerline', 'gis', lambda: self.generate_centerline(model_data))
-                        promote_menu = self.menu.addMenu('Promote to ...')
-                        self.add_context_menu_item(promote_menu, 'AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE))
-                        self.add_context_menu_item(promote_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.add_valley_bottom(model_item, DB_MODE_PROMOTE))
-                        self.add_context_menu_item(promote_menu, 'Sample Frame', 'mask_regular', lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
-                    if QgsVectorLayer(f'{model_data.gpkg_path}|layername={model_data.fc_name}').geometryType() == QgsWkbTypes.LineGeometry:
-                        promote_menu = self.menu.addMenu('Promote to ...')
-                        self.add_context_menu_item(promote_menu, 'Profile', 'gis', lambda: self.add_profile(model_item, DB_MODE_PROMOTE))
+                        promote_menu = self.menu.addMenu("Promote to ...")
+                        self.add_context_menu_item(promote_menu, "AOI", "mask", lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(promote_menu, "Riverscape Valley Bottom", "valley_bottom", lambda: self.add_valley_bottom(model_item, DB_MODE_PROMOTE))
+                        self.add_context_menu_item(promote_menu, "Sample Frame", "mask_regular", lambda: self.add_sample_frame(model_item, DB_MODE_PROMOTE))
+                    if QgsVectorLayer(f"{model_data.gpkg_path}|layername={model_data.fc_name}").geometryType() == QgsWkbTypes.LineGeometry:
+                        promote_menu = self.menu.addMenu("Promote to ...")
+                        self.add_context_menu_item(promote_menu, "Profile", "gis", lambda: self.add_profile(model_item, DB_MODE_PROMOTE))
 
                 if isinstance(model_data, Profile):
-                    self.add_context_menu_item(self.menu, 'Flip Profile Direction', 'gis', lambda: self.flip_line(model_data))
-                    self.add_context_menu_item(self.menu, 'Generate Cross Sections', 'gis', lambda: self.generate_xsections(model_data))
-                    self.add_context_menu_item(self.menu, 'Create Analysis', 'analysis', lambda: self.add_analysis(db_item=model_data))
+                    self.add_context_menu_item(self.menu, "Flip Profile Direction", "gis", lambda: self.flip_line(model_data))
+                    self.add_context_menu_item(self.menu, "Generate Cross Sections", "gis", lambda: self.generate_xsections(model_data))
+                    self.add_context_menu_item(self.menu, "Create Analysis", "analysis", lambda: self.add_analysis(db_item=model_data))
 
                 if isinstance(model_data, CrossSections):
                     # self.add_context_menu_item(self.menu, 'Transect Profile', 'gis', lambda: self.generate_transect(model_data))
-                    self.add_context_menu_item(self.menu, 'Set Order by Centerline', 'numeric', lambda: self.set_order_by_centerline(model_data))
-                    self.add_context_menu_item(self.menu, 'Generate Sample Frame', 'gis', lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
+                    self.add_context_menu_item(self.menu, "Set Order by Centerline", "numeric", lambda: self.set_order_by_centerline(model_data))
+                    self.add_context_menu_item(self.menu, "Generate Sample Frame", "gis", lambda: self.add_sample_frame(model_data, DB_MODE_CREATE))
 
                 if any(isinstance(model_data, model_type) for model_type in [SampleFrame, Profile, CrossSections]):
-                     if model_data.locked:
-                        self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False, model_item))
-                     else:
-                        self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True, model_item))
+                    if model_data.locked:
+                        self.add_context_menu_item(self.menu, "Unlock Layer", "lock_open_right", lambda: self.set_db_item_lock_state(model_data, False, model_item))
+                    else:
+                        self.add_context_menu_item(self.menu, "Lock Layer", "lock", lambda: self.set_db_item_lock_state(model_data, True, model_item))
 
                 if isinstance(model_data, Project):
-                    self.add_context_menu_item(self.menu, 'Browse Containing Folder', 'folder', lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
+                    self.add_context_menu_item(self.menu, "Browse Containing Folder", "folder", lambda: self.browse_item(model_data, os.path.dirname(self.qris_project.project_file)))
                     self.menu.addSeparator()
-                    data_exchange_label = 'Update Project on Data Exchange' if RSProject.has_warehouse_tag(model_data.project_file) else 'Upload Project to Data Exchange'
-                    self.add_context_menu_item(self.menu, data_exchange_label, 'data_exchange', lambda: self.share_project_with_data_exchange(self.qris_project))
-                    self.add_context_menu_item(self.menu, 'Browse Data Exchange Projects', 'data_exchange', lambda: browse_data_exchange(self.iface.mapCanvas()))
+                    data_exchange_label = "Update Project on Data Exchange" if RSProject.has_warehouse_tag(model_data.project_file) else "Upload Project to Data Exchange"
+                    self.add_context_menu_item(self.menu, data_exchange_label, "data_exchange", lambda: self.share_project_with_data_exchange(self.qris_project))
+                    self.add_context_menu_item(self.menu, "Browse Data Exchange Projects", "data_exchange", lambda: browse_data_exchange(self.iface.mapCanvas()))
                     self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Lock All Layers in Project', 'lock', lambda: self.set_group_lock_state(model_data, True, model_item))
-                    self.add_context_menu_item(self.menu, 'Unlock All Layers in Project', 'lock_open_right', lambda: self.set_group_lock_state(model_data, False, model_item))
+                    self.add_context_menu_item(self.menu, "Lock All Layers in Project", "lock", lambda: self.set_group_lock_state(model_data, True, model_item))
+                    self.add_context_menu_item(self.menu, "Unlock All Layers in Project", "lock_open_right", lambda: self.set_group_lock_state(model_data, False, model_item))
                     self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Export as a New Project', 'project_export', lambda: self.export_project(model_data))
-                    self.add_context_menu_item(self.menu, 'Create Vicinity Map', 'vicinity_map', lambda: self.create_vicinity_map(model_data))
-                    self.add_context_menu_item(self.menu, 'Save Current SRS to Project', 'globe', lambda: self.save_project_srs(show_feedback=True))
-                    self.add_context_menu_item(self.menu, 'Close Project', 'close', lambda: self.destroy_docwidget())
+                    self.add_context_menu_item(self.menu, "Export as a New Project", "project_export", lambda: self.export_project(model_data))
+                    self.add_context_menu_item(self.menu, "Create Vicinity Map", "vicinity_map", lambda: self.create_vicinity_map(model_data))
+                    self.add_context_menu_item(self.menu, "Save Current SRS to Project", "globe", lambda: self.save_project_srs(show_feedback=True))
+                    self.add_context_menu_item(self.menu, "Close Project", "close", lambda: self.destroy_docwidget())
 
                 if isinstance(model_data, EventLayer):
                     if not model_data.locked:
                         if model_data.menu_items is not None:
-                            if 'import_photos' in model_data.menu_items:
-                                self.add_context_menu_item(self.menu, 'Import Photos', 'camera', lambda: self.import_photos(model_item, model_data))
+                            if "import_photos" in model_data.menu_items:
+                                self.add_context_menu_item(self.menu, "Import Photos", "camera", lambda: self.import_photos(model_item, model_data))
                             # if 'validate_brat_capacity' in model_data.menu_items:
-                                # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
-                        import_menu = self.menu.addMenu('Import Features From ...')
-                        self.add_context_menu_item(import_menu, 'Existing Project or DCE Layer', 'new', lambda: self.import_from_project_layer(model_data))
-                        self.add_context_menu_item(import_menu, 'Layer in Map', 'new', lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
-                        self.add_context_menu_item(import_menu, 'External File', 'new', lambda: self.import_dce(model_data))
+                            # self.add_context_menu_item(self.menu, 'Validate Brat Capacity...', None, lambda: self.validate_brat_cis(model_data))
+                        import_menu = self.menu.addMenu("Import Features From ...")
+                        self.add_context_menu_item(import_menu, "Existing Project or DCE Layer", "new", lambda: self.import_from_project_layer(model_data))
+                        self.add_context_menu_item(import_menu, "Layer in Map", "new", lambda: self.import_dce(model_data, DB_MODE_IMPORT_LAYER))
+                        self.add_context_menu_item(import_menu, "External File", "new", lambda: self.import_dce(model_data))
 
                         if model_data.menu_items is not None:
-                            if 'copy_from_valley_bottom' in model_data.menu_items:
-                                self.add_context_menu_item(import_menu, 'Riverscape Valley Bottom', 'valley_bottom', lambda: self.copy_valley_bottom(model_data))
-                            if 'import_brat_results' in model_data.menu_items:
-                                self.add_context_menu_item(import_menu, 'Existing SQL Brat Results', 'new', lambda: self.import_brat_results(model_data))
-                            if 'export_brat' in model_data.menu_items:
-                                self.add_context_menu_item(self.menu, 'Export BRAT CIS Obeservations', 'save', lambda: self.export_brat_cis(model_data))
+                            if "copy_from_valley_bottom" in model_data.menu_items:
+                                self.add_context_menu_item(import_menu, "Riverscape Valley Bottom", "valley_bottom", lambda: self.copy_valley_bottom(model_data))
+                            if "import_brat_results" in model_data.menu_items:
+                                self.add_context_menu_item(import_menu, "Existing SQL Brat Results", "new", lambda: self.import_brat_results(model_data))
+                            if "export_brat" in model_data.menu_items:
+                                self.add_context_menu_item(self.menu, "Export BRAT CIS Obeservations", "save", lambda: self.export_brat_cis(model_data))
                         self.menu.addSeparator()
-                    self.add_context_menu_item(self.menu, 'Layer Details', 'details', lambda: self.edit_item(model_item, model_data))
-                    self.add_context_menu_item(self.menu, 'Export Layer Attributes', 'file_copy', lambda: self.export_layer_attributes(model_data))
+                    self.add_context_menu_item(self.menu, "Layer Details", "details", lambda: self.edit_item(model_item, model_data))
+                    self.add_context_menu_item(self.menu, "Export Layer Attributes", "file_copy", lambda: self.export_layer_attributes(model_data))
                     if model_data.locked:
-                        self.add_context_menu_item(self.menu, 'Unlock Layer', 'lock_open_right', lambda: self.set_db_item_lock_state(model_data, False, model_item))
+                        self.add_context_menu_item(self.menu, "Unlock Layer", "lock_open_right", lambda: self.set_db_item_lock_state(model_data, False, model_item))
                     else:
-                        self.add_context_menu_item(self.menu, 'Lock Layer', 'lock', lambda: self.set_db_item_lock_state(model_data, True, model_item))
+                        self.add_context_menu_item(self.menu, "Lock Layer", "lock", lambda: self.set_db_item_lock_state(model_data, True, model_item))
                     parent_event = self.qris_project.events.get(model_data.event_id)
                     if parent_event is not None and parent_event.event_type.id in [DATA_CAPTURE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]:
                         self.menu.addSeparator()
-                        self.add_context_menu_item(self.menu, 'Open Distribution Analysis', 'distribution_analysis', lambda checked=False, evt=parent_event, lyr=model_data: self.open_distribution_analysis_dock(evt, lyr))
+                        self.add_context_menu_item(self.menu, "Open Distribution Analysis", "distribution_analysis", lambda checked=False, evt=parent_event, lyr=model_data: self.open_distribution_analysis_dock(evt, lyr))
                 if isinstance(model_data, PourPoint):
-                    self.add_context_menu_item(self.menu, 'Promote to AOI', 'mask', lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
+                    self.add_context_menu_item(self.menu, "Promote to AOI", "mask", lambda: self.add_aoi(model_item, SampleFrame.AOI_SAMPLE_FRAME_TYPE, DB_MODE_PROMOTE), True)
 
                 if not isinstance(model_data, Project):
                     # if an event is under a planning container node, then do not show the delete option
                     if not (isinstance(model_data, Event) and isinstance(model_item.parent().data(QtCore.Qt.UserRole), PlanningContainer)):
                         if not model_data.locked:
-                            self.add_context_menu_item(self.menu, 'Delete', 'delete', lambda: self.delete_item(model_item, model_data))
+                            self.add_context_menu_item(self.menu, "Delete", "delete", lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
     def add_context_menu_item(self, menu: QtWidgets.QMenu, menu_item_text: str, icon_file_name, slot: QtCore.pyqtSlot = None, enabled=True):
-        action = menu.addAction(QtGui.QIcon(f':/plugins/qris_toolbar/{icon_file_name}'), menu_item_text)
+        action = menu.addAction(QtGui.QIcon(f":/plugins/qris_toolbar/{icon_file_name}"), menu_item_text)
         action.setEnabled(enabled)
 
         if slot is not None:
@@ -786,8 +826,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         original_children = []
         # Collect all children, including those nested within group nodes
         original_children = self.collect_all_children(tree_node)
-        
-        if group_key == 'metadata_tag':
+
+        if group_key == "metadata_tag":
             # iterate through the original children, grab all the metadata keys
             metadata_tags = set()
             for child in original_children:
@@ -795,25 +835,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if isinstance(db_item, str):
                     continue
                 if db_item.metadata is not None:
-                    if 'metadata' in db_item.metadata:
-                        metadata_tags.update(db_item.metadata['metadata'].keys())
+                    if "metadata" in db_item.metadata:
+                        metadata_tags.update(db_item.metadata["metadata"].keys())
 
             if len(metadata_tags) == 0:
                 return
             # open a dialog to select the metadata tag to group by
             metadata_tag, ok = QtWidgets.QInputDialog.getItem(self, "Select Metadata Tag", "Group by:", metadata_tags, 0, False)
             if not ok:
-                return  
+                return
 
         # Remove all nodes
-        for i in range(tree_node.rowCount()):
+        for _node in range(tree_node.rowCount()):
             tree_node.removeRow(0)
 
         # If group_key is None, remove groups and return to ungrouped state
         if group_key is None:
             # Re-add the original children to the root level
             for child in original_children:
-                if not child.data(QtCore.Qt.UserRole) == 'group_node':
+                if not child.data(QtCore.Qt.UserRole) == "group_node":
                     tree_node.appendRow(child)
             return
 
@@ -825,14 +865,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             # Get the value of the group key for the child
             db_item = child.data(QtCore.Qt.UserRole)
-            if group_key == 'raster_type':
-                group_value = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
-            elif group_key == 'metadata_tag':
-                if db_item.metadata is not None and 'metadata' in db_item.metadata:
-                    group_value = db_item.metadata['metadata'].get(metadata_tag, None)
-            elif group_key == 'attachment_type':
-                group_value = getattr(db_item, 'attachment_type_label', None) or 'Unclassified'
-            else:                
+            if group_key == "raster_type":
+                group_value = self.qris_project.lookup_tables["lkp_raster_types"][db_item.raster_type_id].name
+            elif group_key == "metadata_tag":
+                if db_item.metadata is not None and "metadata" in db_item.metadata:
+                    group_value = db_item.metadata["metadata"].get(metadata_tag, None)
+            elif group_key == "attachment_type":
+                group_value = getattr(db_item, "attachment_type_label", None) or "Unclassified"
+            else:
                 group_value = None
 
             if group_value is None:
@@ -843,7 +883,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # If the group does not exist, create it
             if group_value not in groups:
                 group_item = QtGui.QStandardItem(group_value)
-                icon = QtGui.QIcon(f':/plugins/qris_toolbar/{FOLDER_ICON}')
+                icon = QtGui.QIcon(f":/plugins/qris_toolbar/{FOLDER_ICON}")
                 group_item.setIcon(icon)
                 group_item.setData("group_node", QtCore.Qt.UserRole)
                 groups[group_value] = group_item
@@ -853,7 +893,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             groups[group_value].appendRow(child.clone())
 
         # Sort the groups folders to the top please
-        self.sort_children(tree_node, 'node_type')
+        self.sort_children(tree_node, "node_type")
 
     def collect_all_children(self, tree_node: QtGui.QStandardItem):
         """Recursively collect all children of a tree node, including nested children."""
@@ -865,66 +905,66 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         return children
 
     def sort_children(self, tree_node: QtGui.QStandardItem, sort_key: str):
-        if sort_key == 'name':
+        if sort_key == "name":
             tree_node.model().setSortRole(QtCore.Qt.DisplayRole)
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
                 if tree_node.child(i).text() > tree_node.child(i + 1).text():
                     current_order = False
                     break
-        elif sort_key == 'date':
-            tree_node.model().setSortRole(USER_ROLES['date'])
+        elif sort_key == "date":
+            tree_node.model().setSortRole(USER_ROLES["date"])
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
                 db_item = item.data(QtCore.Qt.UserRole)
                 if isinstance(db_item, str):
                     continue
-                item.setData(db_item.date, USER_ROLES['date'])
+                item.setData(db_item.date, USER_ROLES["date"])
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
-                if (tree_node.child(i).data(USER_ROLES['date']) or QtCore.QDate()) > (tree_node.child(i + 1).data(USER_ROLES['date']) or QtCore.QDate()):
+                if (tree_node.child(i).data(USER_ROLES["date"]) or QtCore.QDate()) > (tree_node.child(i + 1).data(USER_ROLES["date"]) or QtCore.QDate()):
                     current_order = False
                     break
-        elif sort_key == 'node_type':
-            tree_node.model().setSortRole(USER_ROLES['node_type'])
+        elif sort_key == "node_type":
+            tree_node.model().setSortRole(USER_ROLES["node_type"])
             current_order = True
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
                 db_item = item.data(QtCore.Qt.UserRole)
                 if isinstance(db_item, str):
-                    item.setData(f'_{db_item}', USER_ROLES['node_type'])
+                    item.setData(f"_{db_item}", USER_ROLES["node_type"])
                 else:
-                    item.setData(db_item.name, USER_ROLES['node_type'])
-        
-        elif sort_key == 'raster_type':
-            tree_node.model().setSortRole(USER_ROLES['raster_type'])
+                    item.setData(db_item.name, USER_ROLES["node_type"])
+
+        elif sort_key == "raster_type":
+            tree_node.model().setSortRole(USER_ROLES["raster_type"])
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
                 db_item = item.data(QtCore.Qt.UserRole)
-                type_name = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id].name
+                type_name = self.qris_project.lookup_tables["lkp_raster_types"][db_item.raster_type_id].name
                 combined = f"{type_name}|{db_item.name}"
-                item.setData(combined, USER_ROLES['raster_type'])
+                item.setData(combined, USER_ROLES["raster_type"])
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
-                type_name = self.qris_project.lookup_tables['lkp_raster_types'][db_item.raster_type_id]
-                if tree_node.child(i).data(USER_ROLES['raster_type']) > tree_node.child(i + 1).data(USER_ROLES['raster_type']):
+                type_name = self.qris_project.lookup_tables["lkp_raster_types"][db_item.raster_type_id]
+                if tree_node.child(i).data(USER_ROLES["raster_type"]) > tree_node.child(i + 1).data(USER_ROLES["raster_type"]):
                     current_order = False
                     break
 
-        elif sort_key == 'attachment_type':
-            tree_node.model().setSortRole(USER_ROLES['attachment_type'])
+        elif sort_key == "attachment_type":
+            tree_node.model().setSortRole(USER_ROLES["attachment_type"])
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
                 db_item = item.data(QtCore.Qt.UserRole)
                 if isinstance(db_item, str):
-                    item.setData(f'_{db_item}', USER_ROLES['attachment_type'])
+                    item.setData(f"_{db_item}", USER_ROLES["attachment_type"])
                     continue
-                type_label = getattr(db_item, 'attachment_type_label', None) or ''
+                type_label = getattr(db_item, "attachment_type_label", None) or ""
                 combined = f"{type_label}|{db_item.name}"
-                item.setData(combined, USER_ROLES['attachment_type'])
+                item.setData(combined, USER_ROLES["attachment_type"])
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
-                if tree_node.child(i).data(USER_ROLES['attachment_type']) > tree_node.child(i + 1).data(USER_ROLES['attachment_type']):
+                if tree_node.child(i).data(USER_ROLES["attachment_type"]) > tree_node.child(i + 1).data(USER_ROLES["attachment_type"]):
                     current_order = False
                     break
 
@@ -944,11 +984,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.map_manager.build_raster_layer(db_item)
             # find 'hillshade_raster_id' in metadata or system metadata and add to map if it exists
             if db_item.metadata is not None:
-                if 'hillshade_raster_id' in db_item.metadata:
-                    self.map_manager.build_raster_layer(self.qris_project.rasters[db_item.metadata['hillshade_raster_id']])
-                elif 'system' in db_item.metadata:
-                    if 'hillshade_raster_id' in db_item.metadata['system']:
-                        self.map_manager.build_raster_layer(self.qris_project.rasters[db_item.metadata['system']['hillshade_raster_id']])
+                if "hillshade_raster_id" in db_item.metadata:
+                    self.map_manager.build_raster_layer(self.qris_project.rasters[db_item.metadata["hillshade_raster_id"]])
+                elif "system" in db_item.metadata:
+                    if "hillshade_raster_id" in db_item.metadata["system"]:
+                        self.map_manager.build_raster_layer(self.qris_project.rasters[db_item.metadata["system"]["hillshade_raster_id"]])
         elif isinstance(db_item, Event):
             [self.map_manager.build_event_single_layer(db_item, layer) for layer in db_item.event_layers]
             [self.map_manager.build_raster_layer(raster) for raster in db_item.rasters]
@@ -999,19 +1039,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # this is a group node, do nothing
             pass
         else:
-            self.iface.messageBar().pushMessage('Error', f'Unable to load qris data type: {type(db_item)} to the map', level=Qgis.Warning)
+            self.iface.messageBar().pushMessage("Error", f"Unable to load qris data type: {type(db_item)} to the map", level=Qgis.Warning)
 
     def add_basemap_to_map(self, model_item, trigger_repaint=False):
-
         basemap_name = model_item.data.label
         basemap_uri = model_item.data.layer_uri
-        basemap_provider = 'wms'  # model_item.data.tile_type
-        raster_layer = self.basemap_manager.create_basemap_raster_layer(basemap_name, basemap_uri, basemap_provider)
-        # if trigger_repaint is True:
+        basemap_provider = "wms"  # model_item.data.tile_type
+        self.basemap_manager.create_basemap_raster_layer(basemap_name, basemap_uri, basemap_provider)
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem, features_only=False):
-        """Add all children of a group node to the map ToC
-        """
+        """Add all children of a group node to the map ToC"""
         machine_code = model_item.data(QtCore.Qt.UserRole)
         if machine_code == STREAM_GAGE_MACHINE_CODE:
             self.map_manager.build_stream_gage_layer()
@@ -1027,7 +1064,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if isinstance(child_data, EventLayer):
                         event_layer: EventLayer = child_data
                         fc_name = Layer.DCE_LAYER_NAMES[event_layer.layer.geom_type]
-                        temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}', 'temp', 'ogr')
+                        temp_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {event_layer.layer.id} AND event_id = {event_layer.event_id}", "temp", "ogr")
                         if temp_layer.featureCount() == 0:
                             self.add_tree_group_to_map(child_item, features_only)
                             continue
@@ -1046,36 +1083,35 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         map_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
         map_crs_id = map_crs.authid()
-        if map_crs_id is None or map_crs_id == '':
+        if map_crs_id is None or map_crs_id == "":
             if show_feedback:
-                QtWidgets.QMessageBox.warning(self, 'QRiS Project SRS', 'Could not determine the current map SRS. Nothing was saved.')
+                QtWidgets.QMessageBox.warning(self, "QRiS Project SRS", "Could not determine the current map SRS. Nothing was saved.")
             return False
 
         metadata = self.qris_project.metadata or {}
-        system_metadata = metadata.get('system', {}) if isinstance(metadata.get('system', {}), dict) else {}
-        existing_srs = system_metadata.get('project_srs', None)
+        system_metadata = metadata.get("system", {}) if isinstance(metadata.get("system", {}), dict) else {}
+        existing_srs = system_metadata.get("project_srs", None)
         if existing_srs == map_crs_id:
             if show_feedback:
-                QtWidgets.QMessageBox.information(self, 'QRiS Project SRS', f'Project SRS is already set to {map_crs_id}.')
+                QtWidgets.QMessageBox.information(self, "QRiS Project SRS", f"Project SRS is already set to {map_crs_id}.")
             return False
 
-        system_metadata['project_srs'] = map_crs_id
-        metadata['system'] = system_metadata
+        system_metadata["project_srs"] = map_crs_id
+        metadata["system"] = system_metadata
         # Remove non-system duplicates so project_srs has one canonical location.
-        if 'project_srs' in metadata:
-            del metadata['project_srs']
-        if isinstance(metadata.get('metadata'), dict) and 'project_srs' in metadata['metadata']:
-            del metadata['metadata']['project_srs']
+        if "project_srs" in metadata:
+            del metadata["project_srs"]
+        if isinstance(metadata.get("metadata"), dict) and "project_srs" in metadata["metadata"]:
+            del metadata["metadata"]["project_srs"]
 
         self.qris_project.metadata = metadata
         self.qris_project.update_metadata()
         if show_feedback:
-            QtWidgets.QMessageBox.information(self, 'QRiS Project SRS', f'Saved project SRS: {map_crs_id}')
+            QtWidgets.QMessageBox.information(self, "QRiS Project SRS", f"Saved project SRS: {map_crs_id}")
         return True
 
     def set_project_srs(self, project: Project):
         """Backward-compatible wrapper for legacy calls."""
-        self.save_project_srs(show_feedback=True)
 
     def add_event(self, parent_node, event_type_id: int):
         """Initiates adding a new data capture event"""
@@ -1100,17 +1136,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_analysis(self, parent_node=None, db_item=None):
 
         valid_event_types = [DATA_CAPTURE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]
-        has_supported_events = any(
-            event.event_type.id in valid_event_types
-            for event in self.qris_project.events.values()
-        )
+        has_supported_events = any(event.event_type.id in valid_event_types for event in self.qris_project.events.values())
         if not has_supported_events:
-            QtWidgets.QMessageBox.warning(
-                self,
-                'Missing Event',
-                'Create at least one Data Capture/Design/As-Built event before creating a standard analysis. '
-                'Use "Create Intrinsic Analysis" for eventless analysis.'
-            )
+            QtWidgets.QMessageBox.warning(self, "Missing Event", 'Create at least one Data Capture/Design/As-Built event before creating a standard analysis. Use "Create Intrinsic Analysis" for eventless analysis.')
             return
 
         frm = FrmAnalysisProperties(self, self.qris_project)
@@ -1225,9 +1253,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         sample_frame: SampleFrame = analysis.sample_frame
         fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
-        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
+        temp_layer = QgsVectorLayer(fc_path, "temp", "ogr")
         if temp_layer.featureCount() < 1:
-            QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The sample frame for this analysis does not contain any features.\n\nPlease add features to this sample frame to proceed.')
+            QtWidgets.QMessageBox.warning(self, "Empty Sample Frame", "The sample frame for this analysis does not contain any features.\n\nPlease add features to this sample frame to proceed.")
             return
 
         if self.analysis_doc_widget is None:
@@ -1248,13 +1276,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if analysis is not None:
                 self.analysis_over_time_dock_widget.analysis = analysis
                 self.analysis_over_time_dock_widget.populate_data()
-            
+
         if not self.analysis_over_time_dock_widget.isVisible():
             self.analysis_over_time_dock_widget.show()
         self.analysis_over_time_dock_widget.raise_()
         self.analysis_over_time_dock_widget.activateWindow()
 
-    def open_analysis_summary(self, analysis: Analysis=None):
+    def open_analysis_summary(self, analysis: Analysis = None):
 
         analysis_id = None
         if analysis is not None:
@@ -1273,7 +1301,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmAttachment(self, self.qris_project, None, attachment_type)
         if attachment_type == Attachment.TYPE_FILE:
             browse_result = frm.source.browse()
-            if browse_result is None or browse_result == '':
+            if browse_result is None or browse_result == "":
                 return
         result = frm.exec_()
 
@@ -1295,13 +1323,17 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         if len(self.qris_project.sample_frames) + len(self.qris_project.aois) + len(self.qris_project.valley_bottoms) == 0:
-            QtWidgets.QMessageBox.information(self, 'No Climate Engine layers in QRiS Project', 'No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.')
+            QtWidgets.QMessageBox.information(
+                self,
+                "No Climate Engine layers in QRiS Project",
+                "No sample frames, valley bottoms, or areas of interest exist in the current QRiS project. Please create or import one of these layers before using the Climate Engine Explorer.",
+            )
             return
 
         if self.climate_engine_doc_widget is None:
             self.climate_engine_doc_widget = FrmClimateEngineExplorer(self, self.qris_project, self.map_manager)
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.climate_engine_doc_widget)
-            
+
         self.climate_engine_doc_widget.show()
 
     def add_climate_engine_to_map(self):
@@ -1312,7 +1344,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmClimateEngineMapLayer(self, self.qris_project)
         result = frm.exec_()
         if result is not None and result != 0:
-            self.map_manager.create_tile_layer(self.qris_project.map_guid, frm.map_tile_url, frm.map_tile_layer_name, CLIMATE_ENGINE_MACHINE_CODE, 'wms')
+            self.map_manager.create_tile_layer(self.qris_project.map_guid, frm.map_tile_url, frm.map_tile_layer_name, CLIMATE_ENGINE_MACHINE_CODE, "wms")
 
     def stream_gage_explorer(self):
 
@@ -1327,7 +1359,6 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # TODO find a better place for this whole mess!
         class BratCISFieldValueConverter(QgsVectorFileWriter.FieldValueConverter):
-
             def __init__(self, layer):
                 QgsVectorFileWriter.FieldValueConverter.__init__(self)
                 self.layer = layer
@@ -1336,9 +1367,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 """Sets up field definitions for output fields. Use existing if not a special case"""
                 idx = self.layer.fields().indexFromName(field.name())
                 editorWidget = self.layer.editorWidgetSetup(idx)
-                if editorWidget.type() == 'ValueMap':
+                if editorWidget.type() == "ValueMap":
                     return QgsField(field.displayName(), int(QMetaType.QString))
-                elif field.name() == 'observation_date':
+                elif field.name() == "observation_date":
                     return QgsField(field.displayName(), int(QMetaType.QString))
                 else:
                     return self.layer.fields()[idx]
@@ -1346,12 +1377,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             def convert(self, idx, value):
                 """modify the output value here"""
                 editorWidget = self.layer.editorWidgetSetup(idx)
-                if editorWidget.type() == 'ValueMap':
-                    valueMap = editorWidget.config()['map']
+                if editorWidget.type() == "ValueMap":
+                    valueMap = editorWidget.config()["map"]
                     dictValueMapWithKeyValueSwapped = {v: k for d in valueMap for k, v in d.items()}
                     return dictValueMapWithKeyValueSwapped.get(value)
                 elif isinstance(value, QDate):
-                    return value.toString('yyyy-MM-dd')
+                    return value.toString("yyyy-MM-dd")
                 else:
                     return value
 
@@ -1363,20 +1394,20 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # TODO delete file if already exists, or handle with vector file writer options...
 
         if out_csv != "":  # TODO better file name validation here
-            cis_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={event_layer.layer.layer_id}')
+            cis_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={event_layer.layer.layer_id}")
             self.map_manager.add_brat_cis(cis_layer)  # This sets up the required aliases, and lookup values
-            cis_layer.setSubsetString('event_id = ' + str(event_layer.event_id))  # filter to the capture event
+            cis_layer.setSubsetString("event_id = " + str(event_layer.event_id))  # filter to the capture event
             options = QgsVectorFileWriter.SaveVectorOptions()
             # Filter and order the fields. This does not affect the X, Y columns, which are prepended and cannot be renamed by the VectorFileWriter
             # fields = ['fid', 'streamside_veg_id', 'observer_name', 'reach_id', 'observation_date', 'reach_length', 'notes']
             # options.attributes = list(cis_layer.fields().indexFromName(name) for name in fields)
-            options.driverName = 'CSV'
+            options.driverName = "CSV"
             options.layerOptions = ["STRING_QUOTING=IF_NEEDED", "GEOMETRY=AS_XY"]
             options.fieldNameSource = QgsVectorFileWriter.FieldNameSource.PreferAlias
             converter = BratCISFieldValueConverter(cis_layer)
             options.fieldValueConverter = converter
             context = QgsCoordinateTransformContext()
-            result = QgsVectorFileWriter.writeAsVectorFormatV3(cis_layer, out_csv, context, options)
+            _result = QgsVectorFileWriter.writeAsVectorFormatV3(cis_layer, out_csv, context, options)
 
             # TODO error checking and message logging here
 
@@ -1384,19 +1415,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def import_brat_results(self, db_item: DBItem):
 
-        import_source_path = browse_vector(self, 'Select sql brat feature class to import.', QgsWkbTypes.GeometryType.LineGeometry)
+        import_source_path = browse_vector(self, "Select sql brat feature class to import.", QgsWkbTypes.GeometryType.LineGeometry)
         if import_source_path is None:
             return
 
-        attributes = {'ReachID': 'reach_id'}
-        import_existing(import_source_path, self.qris_project.project_file, db_item.layer.fc_name, db_item.id, 'event_id', attributes, None)
+        attributes = {"ReachID": "reach_id"}
+        import_existing(import_source_path, self.qris_project.project_file, db_item.layer.fc_name, db_item.id, "event_id", attributes, None)
 
         # self.add_child_to_project_tree(parent_node, db_item, True)
 
     def import_photos(self, parent_node, db_item: DBItem):
         # navigate to the folder containing the photos
-        photos_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select the folder containing the photos to import.')
-        if photos_folder is None or photos_folder == '':
+        photos_folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select the folder containing the photos to import.")
+        if photos_folder is None or photos_folder == "":
             return
 
         frm = FrmImportPhotos(self, self.qris_project, db_item, photos_folder)
@@ -1407,23 +1438,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_event_layer_to_map_with_filter(self, model_item: QtGui.QStandardItem, event_layer: EventLayer):
         dialog = FrmQueryBuilder(self, event_layer.layer, self.qris_project, layer_name=event_layer.name)
         if dialog.exec_():
-             extra_filter = dialog.query_string
-             custom_name = dialog.txtLayerName.text()
-             if extra_filter:
-                 event = self.qris_project.events.get(event_layer.event_id)
-                 self.map_manager.build_event_single_layer(event, event_layer, add_to_map=True, extra_filter=extra_filter, layer_name_override=custom_name)
+            extra_filter = dialog.query_string
+            custom_name = dialog.txtLayerName.text()
+            if extra_filter:
+                event = self.qris_project.events.get(event_layer.event_id)
+                self.map_manager.build_event_single_layer(event, event_layer, add_to_map=True, extra_filter=extra_filter, layer_name_override=custom_name)
 
     def import_dce(self, db_item: DBItem, mode: int = DB_MODE_IMPORT):
 
         layer_type = Layer.GEOMETRY_TYPES[db_item.layer.geom_type]
         fc_name = Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]
-        out_path = f'{self.qris_project.project_file}|layername={fc_name}'
+        out_path = f"{self.qris_project.project_file}|layername={fc_name}"
 
         if mode == DB_MODE_IMPORT:
-            import_source_path = browse_vector(self, 'Select feature class to import.', layer_type)
+            import_source_path = browse_vector(self, "Select feature class to import.", layer_type)
             if import_source_path is None:
                 return
-            import_source_layer = QgsVectorLayer(import_source_path, 'import_source')
+            import_source_layer = QgsVectorLayer(import_source_path, "import_source")
 
         if mode == DB_MODE_IMPORT_LAYER:
             if mode == DB_MODE_IMPORT_LAYER:
@@ -1455,7 +1486,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if result != QtWidgets.QDialog.Accepted:
                 return
             import_source_path = QgsVectorLayer(out_path)
-            import_source_path.setSubsetString(f'event_id = {frm.qris_event.id} AND event_layer_id = {db_item.layer.id}')
+            import_source_path.setSubsetString(f"event_id = {frm.qris_event.id} AND event_layer_id = {db_item.layer.id}")
             import_source_layer = import_source_path
 
         # Get feature count of import source
@@ -1463,31 +1494,30 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         import_source_crs = import_source_layer.crs().authid()
         del import_source_layer
         if import_source_count == 0:
-            QtWidgets.QMessageBox.information(self, 'Import DCE', 'No features found in the selected feature class.')
+            QtWidgets.QMessageBox.information(self, "Import DCE", "No features found in the selected feature class.")
             return
-        if import_source_crs is None or import_source_crs == '':
-            QtWidgets.QMessageBox.information(self, 'Import DCE', 'The selected feature class does not have a valid coordinate reference system.')
+        if import_source_crs is None or import_source_crs == "":
+            QtWidgets.QMessageBox.information(self, "Import DCE", "The selected feature class does not have a valid coordinate reference system.")
             return
         elif mode == DB_MODE_COPY:
             feats = []
-            source_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}')
+            source_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={fc_name}")
             new_fid = max([f.id() for f in source_layer.getFeatures()]) + 1
             for feature in import_source_path.getFeatures():
                 new_feature = QgsFeature()
                 new_feature.setFields(feature.fields())
                 new_feature.setGeometry(feature.geometry())
                 new_feature.setAttributes(feature.attributes())
-                new_feature.setAttribute('event_id', db_item.event_id)
-                new_feature.setAttribute('event_layer_id', db_item.layer.id)
+                new_feature.setAttribute("event_id", db_item.event_id)
+                new_feature.setAttribute("event_layer_id", db_item.layer.id)
                 new_feature.setId(new_fid)
-                new_feature['fid'] = new_fid
+                new_feature["fid"] = new_fid
                 feats.append(new_feature)
                 new_fid += 1
             source_layer.startEditing()
             source_layer.addFeatures(feats)
             result = source_layer.commitChanges()
             self.import_dce_complete(db_item, result)
-
         else:
             frm = FrmImportDceLayer(self, self.qris_project, db_item, import_source_path)
             frm.import_complete.connect(partial(self.import_dce_complete, db_item))
@@ -1501,15 +1531,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         source_layer = frm_picker.source_layer
         if source_layer is None or source_layer.featureCount() == 0:
-            QtWidgets.QMessageBox.information(
-                self, 'Import DCE', 'The selected layer contains no features.')
+            QtWidgets.QMessageBox.information(self, "Import DCE", "The selected layer contains no features.")
             return
 
         if frm_picker.use_direct_copy:
             # Same-type DCE: copy features directly, updating event_id and event_layer_id
             fc_name = Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]
-            dest_layer = QgsVectorLayer(
-                f'{self.qris_project.project_file}|layername={fc_name}')
+            dest_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={fc_name}")
             existing_fids = [f.id() for f in dest_layer.getFeatures()]
             new_fid = (max(existing_fids) + 1) if existing_fids else 1
             feats = []
@@ -1518,10 +1546,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 new_feature.setFields(feature.fields())
                 new_feature.setGeometry(feature.geometry())
                 new_feature.setAttributes(feature.attributes())
-                new_feature.setAttribute('event_id', db_item.event_id)
-                new_feature.setAttribute('event_layer_id', db_item.layer.id)
+                new_feature.setAttribute("event_id", db_item.event_id)
+                new_feature.setAttribute("event_layer_id", db_item.layer.id)
                 new_feature.setId(new_fid)
-                new_feature['fid'] = new_fid
+                new_feature["fid"] = new_fid
                 feats.append(new_feature)
                 new_fid += 1
             dest_layer.startEditing()
@@ -1537,7 +1565,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # check if there are any valley bottoms in the project
         if len(self.qris_project.valley_bottoms) == 0:
-            QtWidgets.QMessageBox.information(self, 'Copy Valley Bottom', 'No valley bottoms were found in the current project.')
+            QtWidgets.QMessageBox.information(self, "Copy Valley Bottom", "No valley bottoms were found in the current project.")
             return
         # now use the layer picker to select the valley bottom to copy
         valley_bottoms = [vb for vb in self.qris_project.valley_bottoms.values()]
@@ -1547,42 +1575,42 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if frm.layer is None:
                 return
             # now copy the valley bottom
-            valley_bottom_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=sample_frame_features')
-            valley_bottom_layer.setSubsetString(f'sample_frame_id = {frm.layer.id} ')
+            valley_bottom_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername=sample_frame_features")
+            valley_bottom_layer.setSubsetString(f"sample_frame_id = {frm.layer.id} ")
             feats = []
-            out_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]}')
+            out_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={Layer.DCE_LAYER_NAMES[db_item.layer.geom_type]}")
             new_fid = 1 if out_layer.featureCount() == 0 else max([f.id() for f in out_layer.getFeatures()]) + 1
             for feature in valley_bottom_layer.getFeatures():
                 new_feature = QgsFeature()
                 new_feature.setGeometry(feature.geometry())
                 new_feature.setFields(out_layer.fields())
-                new_feature.setAttribute('event_id', db_item.event_id)
-                new_feature.setAttribute('event_layer_id', db_item.layer.id)
+                new_feature.setAttribute("event_id", db_item.event_id)
+                new_feature.setAttribute("event_layer_id", db_item.layer.id)
                 new_feature.setId(new_fid)
-                new_feature['fid'] = new_fid
+                new_feature["fid"] = new_fid
                 feats.append(new_feature)
                 new_fid += 1
             out_layer.startEditing()
             out_layer.addFeatures(feats)
             out_layer.commitChanges()
-            self.import_dce_complete(db_item, True) 
+            self.import_dce_complete(db_item, True)
 
     def export_layer_attributes(self, db_item: DBItem):
         """Exports the attributes of a layer to a User Selected file"""
         layer = self.map_manager.get_layer_for_export(db_item)
         if layer is None:
-            QtWidgets.QMessageBox.warning(self, 'Export Layer Attributes', 'Unable to find the layer for this item in the map or create a temporary configuration for export.')
+            QtWidgets.QMessageBox.warning(self, "Export Layer Attributes", "Unable to find the layer for this item in the map or create a temporary configuration for export.")
             return
 
         base_name = None
         if isinstance(db_item, EventLayer):
-             event = self.qris_project.events.get(db_item.event_id)
-             if event:
-                 base_name = f"{event.name} {db_item.name}"
-        
+            event = self.qris_project.events.get(db_item.event_id)
+            if event:
+                base_name = f"{event.name} {db_item.name}"
+
         project_path = None
         if self.qris_project and self.qris_project.project_file:
-             project_path = os.path.dirname(self.qris_project.project_file)
+            project_path = os.path.dirname(self.qris_project.project_file)
 
         frm = FrmExportLayer(self, layer, base_name=base_name, project_path=project_path)
         frm.exec_()
@@ -1592,9 +1620,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # check if there is an open edit session on any layers in the map
         for layer in self.iface.mapCanvas().layers():
             if layer.isEditable():
-                QtWidgets.QMessageBox.warning(self, 'Export Project', f'Please save or discard your edits on layer "{layer.name()}" before exporting the project.')
+                QtWidgets.QMessageBox.warning(self, "Export Project", f'Please save or discard your edits on layer "{layer.name()}" before exporting the project.')
                 return
-        
+
         # Refrfesh the map canvas to ensure all layers are flushed to disk before copying
         self.iface.mapCanvas().refreshAllLayers()
 
@@ -1604,26 +1632,28 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         QtWidgets.QMessageBox.information(
             self,
-            'Export Project',
-            'Exporting a QRiS project will create a new copy of the project.\n\nTo ensure all data is included, the project has been flushed to disk. However, if you encounter missing data, please try restarting QGIS before exporting.',
-            QtWidgets.QMessageBox.Ok
+            "Export Project",
+            "Exporting a QRiS project will create a new copy of the project.\n\nTo ensure all data is included, the project has been flushed to disk. However, if you encounter missing data, please try restarting QGIS before exporting.",
+            QtWidgets.QMessageBox.Ok,
         )
 
         frm = FrmExportProject(self, self.qris_project)
         result = frm.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
-            self.iface.messageBar().pushMessage('Export Project', 'Export Complete', level=Qgis.Success, duration=5)            
+            self.iface.messageBar().pushMessage("Export Project", "Export Complete", level=Qgis.Success, duration=5)
 
     def create_vicinity_map(self, db_item: DBItem):
         # Open the map export dialog and run async vicinity map export task
         def on_export_path_selected(file_path, _selected_format, render_params):
             task = VicinityMapExportTask(file_path, self.qris_project, render_params=render_params)
+
             def on_complete(success, out_path, error):
                 if success:
-                    self.iface.messageBar().pushMessage('Vicinity Map', f'Map image saved to {out_path}', level=Qgis.Success, duration=5)
+                    self.iface.messageBar().pushMessage("Vicinity Map", f"Map image saved to {out_path}", level=Qgis.Success, duration=5)
                 else:
-                    self.iface.messageBar().pushMessage('Vicinity Map', f'Failed to export map image: {error}', level=Qgis.Critical, duration=8)
+                    self.iface.messageBar().pushMessage("Vicinity Map", f"Failed to export map image: {error}", level=Qgis.Critical, duration=8)
+
             task.on_complete.connect(on_complete)
             QgsApplication.taskManager().addTask(task)
 
@@ -1634,19 +1664,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage('Import DCE', 'Import Complete', level=Qgis.Success, duration=5)
-            QgsMessageLog.logMessage(f'Import DCE completed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}', 'QRiS', Qgis.Info)
+            self.iface.messageBar().pushMessage("Import DCE", "Import Complete", level=Qgis.Success, duration=5)
+            QgsMessageLog.logMessage(f"Import DCE completed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}", "QRiS", Qgis.Info)
             layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
             if layer is not None:
-                self.map_manager.metadata_field(layer.layer(), db_item, 'metadata')
-            
+                self.map_manager.metadata_field(layer.layer(), db_item, "metadata")
+
             # refresh map
             self.iface.mapCanvas().refreshAllLayers()
             self.iface.mapCanvas().refresh()
             self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
         else:
-            self.iface.messageBar().pushMessage('Import DCE', 'Import Failed', level=Qgis.Warning, duration=5)
-            QgsMessageLog.logMessage(f'Import DCE failed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}', 'QRiS', Qgis.Warning)
+            self.iface.messageBar().pushMessage("Import DCE", "Import Failed", level=Qgis.Warning, duration=5)
+            QgsMessageLog.logMessage(f"Import DCE failed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}", "QRiS", Qgis.Warning)
 
     def validate_brat_cis(self, db_item: DBItem):
 
@@ -1691,23 +1721,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def generate_transect(self, db_item: DBItem):
 
-        QtWidgets.QMessageBox.information(self, 'Not Implemented', 'Generating Transect Profile from Cross Sections is not yet implemented.')
+        QtWidgets.QMessageBox.information(self, "Not Implemented", "Generating Transect Profile from Cross Sections is not yet implemented.")
 
     def set_db_item_lock_state(self, db_item: DBItem, state: bool, tree_node: QtGui.QStandardItem = None):
         """Sets the lock state of a DBItem and updates the node icon accordingly"""
         db_item.set_locked(self.qris_project.project_file, state)
-        
+
         # Optimize UI update - only update this node if provided
         if tree_node:
             self.set_node_text(tree_node)
         else:
             self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
-            
+
         self.map_manager.update_layer_edit_state(self.qris_project.map_guid, db_item)
 
     def set_group_lock_state(self, group_item: DBItem, state: bool, tree_node: QtGui.QStandardItem = None):
         """Sets the lock state of all layers within an Event or a Project"""
-        
+
         project_key = self.qris_project.map_guid
         product_key = self.map_manager.product_key
         target_props = set()
@@ -1716,9 +1746,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if isinstance(group_item, Project):
             # Iterate over known project dictionaries containing lockable DBItems
-            attributes_to_check = [
-                'valley_bottoms', 'aois', 'sample_frames', 'profiles', 'cross_sections'
-            ]
+            attributes_to_check = ["valley_bottoms", "aois", "sample_frames", "profiles", "cross_sections"]
 
             for attr in attributes_to_check:
                 db_item_dict = getattr(group_item, attr, None)
@@ -1728,26 +1756,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             lockable_items.append(item)
 
             # Also get event layers
-            if getattr(group_item, 'events', None):
+            if getattr(group_item, "events", None):
                 for event in group_item.events.values():
-                    if isinstance(event, Event) and getattr(event, 'event_layers', None):
+                    if isinstance(event, Event) and getattr(event, "event_layers", None):
                         for layer in event.event_layers:
                             if isinstance(layer, DBItem):
                                 lockable_items.append(layer)
-        elif isinstance(group_item, Event) and getattr(group_item, 'event_layers', None):
+        elif isinstance(group_item, Event) and getattr(group_item, "event_layers", None):
             for layer in group_item.event_layers:
                 if isinstance(layer, DBItem):
                     lockable_items.append(layer)
 
         # Batch update DB and collect IDs
         for item in lockable_items:
-            if not getattr(item, 'set_locked', None):
+            if not getattr(item, "set_locked", None):
                 continue
             item.set_locked(self.qris_project.project_file, state)
             # Match format from riverscapes_map_manager.__get_custom_property
-            prop = f'{product_key}::{project_key}::{item.db_table_name}::{item.id}'
+            prop = f"{product_key}::{project_key}::{item.db_table_name}::{item.id}"
             target_props.add(prop)
-            
+
         # Recursive function to update QGIS layers in one pass
         def update_qgis_layers_recursive(node):
             if isinstance(node, QgsLayerTreeLayer):
@@ -1757,19 +1785,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if qgis_layer:
                         qgis_layer.setReadOnly(state)
             elif isinstance(node, QgsLayerTreeGroup):
-                 for child in node.children():
+                for child in node.children():
                     update_qgis_layers_recursive(child)
 
         # Update QGIS map layers
         root = QgsProject.instance().layerTreeRoot()
         update_qgis_layers_recursive(root)
-            
+
         # Update the tree UI once at the end
         # Optimization: Only traverse the specific group node if provided, otherwise full tree
         node_to_update = tree_node if tree_node else self.model.invisibleRootItem()
         self.traverse_tree(node_to_update, self.set_node_text)
 
-    def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False, collapsed: bool=False) -> QtGui.QStandardItem:
+    def add_child_to_project_tree(self, parent_node: QtGui.QStandardItem, data_item, add_to_map: bool = False, collapsed: bool = False) -> QtGui.QStandardItem:
         """
         Looks at all child nodes of the parent_node and returns the existing QStandardItem
         that has the DBitem attached. It will also update the existing node with the latest name
@@ -1794,27 +1822,27 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(data_item, DBItem):
                 icon = data_item.icon
             elif data_item == STREAM_GAGE_MACHINE_CODE:
-                icon = 'stream-gage'
+                icon = "stream-gage"
             elif data_item == CATCHMENTS_MACHINE_CODE:
-                icon = 'waterdrop-blue'
+                icon = "waterdrop-blue"
             elif data_item == CLIMATE_ENGINE_MACHINE_CODE:
-                icon = 'climate_engine'
+                icon = "climate_engine"
 
             print(data_item)
             # target node could be a string or a DBItem. if db_item, use data_item.name. if string, check if it exists in GROUP_FOLDER_LABELS, if not, use the string as is
             if isinstance(data_item, DBItem):
                 target_node = QtGui.QStandardItem(data_item.name)
                 # Set icon before calling set_node_text which might update it
-                target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
+                target_node.setIcon(QtGui.QIcon(f":plugins/qris_toolbar/{icon}"))
                 # IMPORTANT: Set data first so set_node_text can read the locked status
                 target_node.setData(data_item, QtCore.Qt.UserRole)
-                self.set_node_text(target_node, data_item) 
+                self.set_node_text(target_node, data_item)
             else:
                 if data_item in GROUP_FOLDER_LABELS:
                     target_node = QtGui.QStandardItem(GROUP_FOLDER_LABELS[data_item])
                 else:
                     target_node = QtGui.QStandardItem(data_item)
-                target_node.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/{icon}'))
+                target_node.setIcon(QtGui.QIcon(f":plugins/qris_toolbar/{icon}"))
                 target_node.setData(data_item, QtCore.Qt.UserRole)
 
             parent_node.appendRow(target_node)
@@ -1844,13 +1872,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         for event_id in planning_container.planning_events.keys():
             event = self.qris_project.events[event_id]
             self.add_event_to_project_tree(planning_container_node, event, False)
-        
+
         # Remove events that are no longer in the planning container
         for row in reversed(range(planning_container_node.rowCount())):
             child_node = planning_container_node.child(row)
             if child_node.data(QtCore.Qt.UserRole).id not in planning_container.planning_events.keys():
                 planning_container_node.removeRow(row)
-
 
     def add_event_to_project_tree(self, parent_node: QtGui.QStandardItem, event: Event, add_to_map: bool = False):
         """
@@ -1872,11 +1899,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         node = self.add_child_to_project_tree(node, level, add_to_map, collapsed=True)
                 self.add_child_to_project_tree(node, event_layer, add_to_map, collapsed=True)
 
-    def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: str = None, meta: dict = None):
+    def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
         """Initiates adding a new base map to the project"""
 
         if import_source_path is None:
-            import_source_path = browse_raster(self, 'Select a raster dataset to import.')
+            import_source_path = browse_raster(self, "Select a raster dataset to import.")
             if import_source_path is None:
                 return
         elif import_source_path == DB_MODE_IMPORT_LAYER:
@@ -1884,35 +1911,35 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if toc_layer is None:
                 return
             import_source_path = self.get_raster_layer_source_path(toc_layer)
-            if import_source_path is None or import_source_path == '':
-                QtWidgets.QMessageBox.warning(self, 'Import Raster', 'Unable to determine a valid source path for the selected map layer.')
+            if import_source_path is None or import_source_path == "":
+                QtWidgets.QMessageBox.warning(self, "Import Raster", "Unable to determine a valid source path for the selected map layer.")
                 return
 
         frm = FrmRaster(self, self.iface, self.qris_project, import_source_path, is_context, add_new_keys=False)
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
             if frm.hillshade is not None:
                 self.add_child_to_project_tree(parent_node, frm.hillshade, frm.chkAddToMap.isChecked())
 
-    def add_context_vector(self, parent_node: QtGui.QStandardItem, import_source_path: str = None, meta: dict = None):
+    def add_context_vector(self, parent_node: QtGui.QStandardItem, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
 
         if import_source_path is None:
-            import_source_path = browse_vector(self, 'Select a vector feature class to import.', None)
+            import_source_path = browse_vector(self, "Select a vector feature class to import.", None)
             if import_source_path is None:
                 return
         if import_source_path == DB_MODE_IMPORT_LAYER:
@@ -1922,19 +1949,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmScratchVector(self, self.iface, self.qris_project, import_source_path, None, None)
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
         result = frm.exec_()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
@@ -1969,23 +1996,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def get_raster_layer_source_path(self, layer: QgsRasterLayer) -> str:
         source = layer.source()
-        if source is None or source == '':
+        if source is None or source == "":
             source = layer.dataProvider().dataSourceUri()
 
         # Strip provider URI options when they are appended to a local file path.
-        if source is not None and '|' in source:
-            source_candidate = source.split('|')[0]
+        if source is not None and "|" in source:
+            source_candidate = source.split("|")[0]
             if os.path.exists(source_candidate):
                 return source_candidate
 
         return source
 
-    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, import_source_path: str = None, meta: dict = None):
+    def add_aoi(self, parent_node: QtGui.QStandardItem, mask_type_id: int, mode: int, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
         """Initiates adding a new aoi"""
 
         if import_source_path is None:
             if mode == DB_MODE_IMPORT:
-                import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new AOI.', QgsWkbTypes.GeometryType.PolygonGeometry)
+                import_source_path = browse_vector(self, "Select a polygon dataset to import as a new AOI.", QgsWkbTypes.GeometryType.PolygonGeometry)
                 if import_source_path is None:
                     return
             elif mode == DB_MODE_IMPORT_LAYER:
@@ -1995,19 +2022,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmAOIValleyBottom(self, self.qris_project, import_source_path, sample_frame_type=SampleFrame.AOI_SAMPLE_FRAME_TYPE)
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_sample_frame(db_item)
@@ -2025,12 +2052,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if frm.chkStartEditSession.isChecked():
                 self._maybe_start_editing(frm.sample_frame)
 
-    def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
+    def add_sample_frame(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
         """Initiates adding a new sample frame"""
 
         if import_source_path is None:
             if mode == DB_MODE_IMPORT:
-                import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Sample Frame.', QgsWkbTypes.GeometryType.PolygonGeometry)
+                import_source_path = browse_vector(self, "Select a polygon dataset to import as a new Sample Frame.", QgsWkbTypes.GeometryType.PolygonGeometry)
                 if import_source_path is None:
                     return
             elif mode == DB_MODE_IMPORT_LAYER:
@@ -2038,23 +2065,23 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if import_source_path is None:
                     return
 
-        create = True if mode == DB_MODE_CREATE else False            
+        create = True if mode == DB_MODE_CREATE else False
 
         frm = FrmSampleFrame(self, self.qris_project, import_source_path, create_sample_frame=create)
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -2095,12 +2122,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.iface.setActiveLayer(layer)
                 layer.startEditing()
 
-    def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
+    def add_valley_bottom(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
         """Initiates adding a new Valley Bottom"""
 
         if import_source_path is None:
             if mode == DB_MODE_IMPORT:
-                import_source_path = browse_vector(self, f'Select a polygon dataset to import as a new Valley Bottom.', QgsWkbTypes.GeometryType.PolygonGeometry)
+                import_source_path = browse_vector(self, "Select a polygon dataset to import as a new Valley Bottom.", QgsWkbTypes.GeometryType.PolygonGeometry)
                 if import_source_path is None:
                     return
             elif mode == DB_MODE_IMPORT_LAYER:
@@ -2110,24 +2137,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmAOIValleyBottom(self, self.qris_project, import_source_path, sample_frame_type=SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE)
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
             frm.promote_to_sample_frame(db_item)
-            
+
         result = frm.exec_()
         if result != 0:
             if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
@@ -2140,12 +2167,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
             if frm.chkStartEditSession.isChecked():
                 self._maybe_start_editing(frm.sample_frame)
-        
-    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
+
+    def add_profile(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
 
         if import_source_path is None:
             if mode == DB_MODE_IMPORT:
-                import_source_path = browse_vector(self, 'Select a line dataset to import as a new profile.', QgsWkbTypes.GeometryType.LineGeometry)
+                import_source_path = browse_vector(self, "Select a line dataset to import as a new profile.", QgsWkbTypes.GeometryType.LineGeometry)
                 if import_source_path is None:
                     return
             elif mode == DB_MODE_IMPORT_LAYER:
@@ -2155,19 +2182,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmProfile(self, self.qris_project, import_source_path)
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         if mode == DB_MODE_PROMOTE:
             db_item = parent_node.data(QtCore.Qt.UserRole)
@@ -2185,13 +2212,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if frm.chkStartEditSession.isChecked():
                 self._maybe_start_editing(frm.profile)
 
-    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: str = None, meta: dict = None):
+    def add_cross_sections(self, parent_node: QtGui.QStandardItem, mode: int, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
         """Initiates adding a new cross section layer"""
 
         if import_source_path is None:
             if mode == DB_MODE_IMPORT:
-                import_source_path = browse_vector(self, 'Select a line dataset to import as a new cross section layer.', QgsWkbTypes.GeometryType.LineGeometry)
-                import_source_path = None if import_source_path == '' else import_source_path
+                import_source_path = browse_vector(self, "Select a line dataset to import as a new cross section layer.", QgsWkbTypes.GeometryType.LineGeometry)
+                import_source_path = None if import_source_path == "" else import_source_path
                 if import_source_path is None:
                     return
             elif mode == DB_MODE_IMPORT_LAYER:
@@ -2202,19 +2229,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm = FrmCrossSections(self, self.qris_project, import_source_path)
 
         if meta is not None:
-            if 'layer_label' in meta:
-                frm.metadata_widget.add_metadata('RS Layer Name', meta['layer_label'])
-                frm.txtName.setText(meta['layer_label'])
-            if 'project_metadata' in meta:
-                for key, value in meta['project_metadata'].items():
-                    key = f'Project {key}'
+            if "layer_label" in meta:
+                frm.metadata_widget.add_metadata("RS Layer Name", meta["layer_label"])
+                frm.txtName.setText(meta["layer_label"])
+            if "project_metadata" in meta:
+                for key, value in meta["project_metadata"].items():
+                    key = f"Project {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'layer_metadata' in meta:
-                for key, value in meta['layer_metadata'].items():
-                    key = f'Layer {key}'
+            if "layer_metadata" in meta:
+                for key, value in meta["layer_metadata"].items():
+                    key = f"Layer {key}"
                     frm.metadata_widget.add_metadata(key, value[0])
-            if 'symbology' in meta:
-                frm.metadata_widget.add_system_metadata('symbology', meta['symbology'])
+            if "symbology" in meta:
+                frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         result = frm.exec_()
         if result != 0:
@@ -2224,11 +2251,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_pour_point(self, parent_node):
 
-        QtWidgets.QMessageBox.information(self, 'Pour Point', 'Click on the map at the location of the desired pour point.'
-                                          '  Be sure to click on the precise stream location.'
-                                          '  \n\nA form will appear where you can provide a name and description for the point.'
-                                          '  After you click OK, the pour point location will be transmitted to Stream Stats.'
-                                          '  \n\nThis process can take from a few seconds to a few minutes depending on the size of the catchment.')
+        QtWidgets.QMessageBox.information(
+            self,
+            "Pour Point",
+            "Click on the map at the location of the desired pour point."
+            "  Be sure to click on the precise stream location."
+            "  \n\nA form will appear where you can provide a name and description for the point."
+            "  After you click OK, the pour point location will be transmitted to Stream Stats."
+            "  \n\nThis process can take from a few seconds to a few minutes depending on the size of the catchment.",
+        )
 
         canvas = self.iface.mapCanvas()
         canvas.setMapTool(self.stream_stats_tool)
@@ -2243,34 +2274,32 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         try:
             state_code, status = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
             if state_code is None:
-                QtWidgets.QMessageBox.warning(self, 'Invalid Location', 'This is a service by USGS and is only available in some US States.\n\nSee https://www.usgs.gov/streamstats/about for more information.')
+                QtWidgets.QMessageBox.warning(self, "Invalid Location", "This is a service by USGS and is only available in some US States.\n\nSee https://www.usgs.gov/streamstats/about for more information.")
                 return
-            if status != 'FULLY IMPLEMENTED':
-                if status == 'NOT IMPLEMENTED':
-                    QtWidgets.QMessageBox.warning(self, 'Stream Stats Warning', f'Stream Stats is not available in {state_code}.\n\nSee https://www.usgs.gov/streamstats/about for more information.')
+            if status != "FULLY IMPLEMENTED":
+                if status == "NOT IMPLEMENTED":
+                    QtWidgets.QMessageBox.warning(self, "Stream Stats Warning", f"Stream Stats is not available in {state_code}.\n\nSee https://www.usgs.gov/streamstats/about for more information.")
                     return
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Stream Stats Warning', f'Stream Stats is not fully implemented in {state_code} ({status}). You may attempt to run Stream Stats at the location, however results might not be available at this time.\n\nSee https://www.usgs.gov/streamstats/about for more information.')
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Stream Stats Warning",
+                        f"Stream Stats is not fully implemented in {state_code} ({status}). You may attempt to run Stream Stats at the location, however results might not be available at this time.\n\n"
+                        "See https://www.usgs.gov/streamstats/about for more information.",
+                    )
         except Exception as ex:
-            QtWidgets.QMessageBox.warning(self, 'Error Determining US State', str(ex))
+            QtWidgets.QMessageBox.warning(self, "Error Determining US State", str(ex))
             return
 
         frm = FrmPourPoint(self, self.qris_project, transformed_point.y(), transformed_point.x(), None)
         result = frm.exec_()
         if result != 0:
-            
             get_basin = frm.radBasin.isChecked() or frm.radFlowStats.isChecked()
             get_flow = frm.radFlowStats.isChecked()
-            
-            stream_stats = StreamStats(self.qris_project.project_file,
-                                       transformed_point.y(),
-                                       transformed_point.x(),
-                                       frm.txtName.text(),
-                                       frm.txtDescription.toPlainText(),
-                                       get_basin,
-                                       get_flow,
-                                       frm.chkAddToMap.isChecked(),
-                                       metadata=frm.metadata_widget.get_data())
+
+            stream_stats = StreamStats(
+                self.qris_project.project_file, transformed_point.y(), transformed_point.x(), frm.txtName.text(), frm.txtDescription.toPlainText(), get_basin, get_flow, frm.chkAddToMap.isChecked(), metadata=frm.metadata_widget.get_data()
+            )
 
             stream_stats.stream_stats_successfully_complete.connect(self.stream_stats_complete)
 
@@ -2281,11 +2310,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # Call the addTask() method to run the process asynchronously. Deploy with this method uncommented.
             QgsApplication.taskManager().addTask(stream_stats)
 
-    @ pyqtSlot(PourPoint or None, bool)
+    @pyqtSlot(PourPoint or None, bool)
     def stream_stats_complete(self, pour_point: PourPoint, add_to_map: bool):
 
         if isinstance(pour_point, PourPoint):
-            self.iface.messageBar().pushMessage('Stream Stats Complete', f'Catchment delineation successful for {pour_point.name}.', level=Qgis.Info, duration=5)
+            self.iface.messageBar().pushMessage("Stream Stats Complete", f"Catchment delineation successful for {pour_point.name}.", level=Qgis.Info, duration=5)
             # Registering via project API emits project_changed, which triggers RS project write and gpkg flush.
             self.qris_project.add_db_item(pour_point)
 
@@ -2296,9 +2325,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
             self.add_child_to_project_tree(catchments_node, pour_point, add_to_map)
         else:
-            self.iface.messageBar().pushMessage('Stream Stats Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Stream Stats Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
 
-    @ pyqtSlot(ScratchVector, bool)
+    @pyqtSlot(ScratchVector, bool)
     def raster_slider_export_complete(self, scratch_vector: ScratchVector, add_to_map: bool):
 
         if isinstance(scratch_vector, ScratchVector):
@@ -2308,9 +2337,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             self.add_child_to_project_tree(context_node, scratch_vector, add_to_map)
         else:
-            self.iface.messageBar().pushMessage('Export Polygon Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Export Polygon Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
 
-    @ pyqtSlot(Profile, bool)
+    @pyqtSlot(Profile, bool)
     def centerline_save_complete(self, centerline: Profile, add_to_map: bool):
 
         if isinstance(centerline, Profile):
@@ -2320,9 +2349,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             profile_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(profile_node, centerline, add_to_map)
         else:
-            self.iface.messageBar().pushMessage('Add Centerline to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Add Centerline to Map Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
 
-    @ pyqtSlot(DBItem, str, bool, bool)
+    @pyqtSlot(DBItem, str, bool, bool)
     def save_complete(self, item: DBItem, machine_code: str, is_input_node: bool, add_to_map: bool):
 
         if isinstance(item, DBItem):
@@ -2332,7 +2361,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             out_node = self.add_child_to_project_tree(inputs_node, machine_code)
             self.add_child_to_project_tree(out_node, item, add_to_map)
         else:
-            self.iface.messageBar().pushMessage('Add to Map Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Add to Map Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
 
     def edit_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
@@ -2369,11 +2398,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmPlanningContainer(self, self.qris_project, db_item)
         elif isinstance(db_item, EventLayer):
             layer = db_item.layer
-            frm = FrmLayerMetricDetails(self, self.qris_project, layer) 
+            frm = FrmLayerMetricDetails(self, self.qris_project, layer)
         elif isinstance(db_item, Attachment):
             frm = FrmAttachment(self, self.qris_project, db_item)
         else:
-            QtWidgets.QMessageBox.warning(self, 'Edit Item', 'Editing items is not yet implemented.')
+            QtWidgets.QMessageBox.warning(self, "Edit Item", "Editing items is not yet implemented.")
 
         if frm is not None:
             result = frm.exec_()
@@ -2404,10 +2433,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_all_aoi_centroids_to_map(self):
         layer = self.map_manager.build_aoi_centroids_layer()
         if layer is None:
-            self.iface.messageBar().pushMessage('AOI Centroids', 'No AOI features were available to centroid.', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("AOI Centroids", "No AOI features were available to centroid.", level=Qgis.Warning, duration=5)
             return
-        self.iface.messageBar().pushMessage('AOI Centroids', 'Temporary centroid layer added to map.', level=Qgis.Info, duration=5)
- 
+        self.iface.messageBar().pushMessage("AOI Centroids", "Temporary centroid layer added to map.", level=Qgis.Info, duration=5)
+
     def traverse_tree(self, node: QtGui.QStandardItem, func: callable):
         func(node)
         for row in range(0, node.rowCount()):
@@ -2424,7 +2453,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     if not isinstance(layer, QgsVectorLayer):
                         return
                     if layer.isEditable():
-                        node.setText(node.data(QtCore.Qt.UserRole).name + ' (Editing)')
+                        node.setText(node.data(QtCore.Qt.UserRole).name + " (Editing)")
                         # make the text bold
                         font = node.font()
                         font.setBold(True)
@@ -2436,7 +2465,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         feature_count = layer.featureCount()
                         if feature_count == 0:
                             # set text to italic, non-bold and gray font
-                            node.setText(node.data(QtCore.Qt.UserRole).name + ' (Empty)')
+                            node.setText(node.data(QtCore.Qt.UserRole).name + " (Empty)")
                             font = node.font()
                             font.setItalic(True)
                             font.setBold(False)
@@ -2450,7 +2479,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             font.setItalic(False)
                             node.setFont(font)
                             node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
-    
+
     def get_lock_icon(self, base_icon_name: str) -> QtGui.QIcon:
         """Generates an icon with a lock overlay on a fresh canvas"""
         target_size = 32
@@ -2458,28 +2487,28 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         final_pixmap = QtGui.QPixmap(target_size, target_size)
         final_pixmap.fill(QtCore.Qt.transparent)
         # Draw base icon
-        if ':' in base_icon_name:
+        if ":" in base_icon_name:
             base_path = base_icon_name
         else:
-            base_path = f':/plugins/qris_toolbar/{base_icon_name}'
+            base_path = f":/plugins/qris_toolbar/{base_icon_name}"
         base_icon = QtGui.QIcon(base_path)
         base_pixmap = base_icon.pixmap(target_size, target_size)
-        
+
         painter = QtGui.QPainter(final_pixmap)
         # Force scaling to fill the target size to prevent "shrinking" if the source is small
         painter.drawPixmap(QtCore.QRect(0, 0, target_size, target_size), base_pixmap)
 
         # Draw lock overlay
-        lock_icon = QtGui.QIcon(':/plugins/qris_toolbar/lock')
+        lock_icon = QtGui.QIcon(":/plugins/qris_toolbar/lock")
         # Overlay size: 50% of the base
         overlay_size = int(target_size * 0.5)
         lock_pixmap = lock_icon.pixmap(overlay_size, overlay_size)
-        
+
         x = target_size - overlay_size
         y = target_size - overlay_size
         painter.drawPixmap(x, y, lock_pixmap)
         painter.end()
-        
+
         return QtGui.QIcon(final_pixmap)
 
     def set_node_text(self, node: QtGui.QStandardItem, data_item: DBItem = None):
@@ -2487,34 +2516,34 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         data_item = node.data(QtCore.Qt.UserRole) if data_item is None else data_item
         if data_item is None:
             return
-        
+
         if isinstance(data_item, str):
             if data_item in GROUP_FOLDER_LABELS:
                 node.setText(GROUP_FOLDER_LABELS[data_item])
             else:
                 node.setText(data_item)
             return
-        
+
         if isinstance(data_item, DBItem):
             # Update Icon based on lock state
-            if hasattr(data_item, 'icon'):
+            if hasattr(data_item, "icon"):
                 if data_item.locked:
                     node.setIcon(self.get_lock_icon(data_item.icon))
                 else:
-                    node.setIcon(QtGui.QIcon(f':/plugins/qris_toolbar/{data_item.icon}'))
+                    node.setIcon(QtGui.QIcon(f":/plugins/qris_toolbar/{data_item.icon}"))
 
             name = data_item.name
             if any(isinstance(data_item, data_class) for data_class in [Project, Event, PlanningContainer, Analysis, PourPoint, Raster, StreamGage, ScratchVector, Attachment]):
                 node.setText(name)
                 return
-            
-            if isinstance(data_item, EventLayer): 
+
+            if isinstance(data_item, EventLayer):
                 fc_name = Layer.DCE_LAYER_NAMES[data_item.layer.geom_type]
-                temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}', 'temp', 'ogr')
+                temp_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={fc_name}|subset=event_layer_id = {data_item.layer.id} AND event_id = {data_item.event_id}", "temp", "ogr")
             else:
-                temp_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}', 'temp', 'ogr')                    
+                temp_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={data_item.fc_name}|subset={data_item.fc_id_column_name} = {data_item.id}", "temp", "ogr")
             if not data_item.locked and temp_layer.featureCount() == 0:
-                node.setText(name + ' (Empty)')
+                node.setText(name + " (Empty)")
                 font = node.font()
                 font.setItalic(True)
                 font.setBold(False)
@@ -2527,6 +2556,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 font.setItalic(False)
                 node.setFont(font)
                 node.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+
         return
 
     def add_context_batch_edit_attributes(self, menu: QtWidgets.QMenu) -> None:
@@ -2536,25 +2566,25 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if layer.type() != QgsMapLayer.VectorLayer:
             return
 
-        has_event_layer = layer.fields().indexOf('event_layer_id') != -1
-        has_sample_frame = layer.fields().indexOf('sample_frame_id') != -1
+        has_event_layer = layer.fields().indexOf("event_layer_id") != -1
+        has_sample_frame = layer.fields().indexOf("sample_frame_id") != -1
         if not has_event_layer and not has_sample_frame:
             return
 
-        metadata_field_index = layer.fields().indexOf('metadata')
+        metadata_field_index = layer.fields().indexOf("metadata")
         if metadata_field_index == -1:
             return
         metadata_widget_setup = layer.editorWidgetSetup(metadata_field_index)
-        if metadata_widget_setup is None or metadata_widget_setup.type() != 'MetadataFieldEdit':
+        if metadata_widget_setup is None or metadata_widget_setup.type() != "MetadataFieldEdit":
             return
 
         # Prevent duplicate menu items
         for action in menu.actions():
-            if action.text() == 'Batch Edit QRiS Attributes':
+            if action.text() == "Batch Edit QRiS Attributes":
                 return
 
         menu.addSeparator()
-        menu.addAction('Batch Edit QRiS Attributes', self.batch_edit_attributes)
+        menu.addAction("Batch Edit QRiS Attributes", self.batch_edit_attributes)
 
     def batch_edit_attributes(self) -> None:
 
@@ -2563,7 +2593,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
         if layer.type() == QgsMapLayer.VectorLayer:
             if layer.isEditable():
-                QtWidgets.QMessageBox.warning(self, 'Batch Edit QRiS Attributes', 'Please stop the editing session before proceeding.')
+                QtWidgets.QMessageBox.warning(self, "Batch Edit QRiS Attributes", "Please stop the editing session before proceeding.")
                 return
             frm = FrmBatchAttributeEditor(layer)
             frm.exec_()
@@ -2575,27 +2605,26 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         profile = frm.selected_profile()
-        cl_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={profile.fc_name}')
-        cl_layer.setSubsetString(f'profile_id = {profile.id}')
+        cl_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={profile.fc_name}")
+        cl_layer.setSubsetString(f"profile_id = {profile.id}")
         cl_feat = QgsFeature()
         if not cl_layer.getFeatures().nextFeature(cl_feat):
-            QtWidgets.QMessageBox.warning(self, 'Empty Centerline',
-                                          'The selected centerline profile has no features.')
+            QtWidgets.QMessageBox.warning(self, "Empty Centerline", "The selected centerline profile has no features.")
             return
         centerline_geom = cl_feat.geometry()
 
         if isinstance(db_item, SampleFrame):
-            layer_path = f'{self.qris_project.project_file}|layername=sample_frame_features'
-            filter_expression = f'sample_frame_id = {db_item.id}'
-            label_field = 'display_label' if frm.update_display_label() else None
-            chain_field = 'flows_into'
-            flow_path_field = 'flow_path'
+            layer_path = f"{self.qris_project.project_file}|layername=sample_frame_features"
+            filter_expression = f"sample_frame_id = {db_item.id}"
+            label_field = "display_label" if frm.update_display_label() else None
+            chain_field = "flows_into"
+            flow_path_field = "flow_path"
             flow_path_value = db_item.default_flow_path_name or profile.name
             intersecting_only = True
         elif isinstance(db_item, CrossSections):
-            layer_path = f'{self.qris_project.project_file}|layername=cross_section_features'
-            filter_expression = f'cross_section_id = {db_item.id}'
-            label_field = 'sequence'
+            layer_path = f"{self.qris_project.project_file}|layername=cross_section_features"
+            filter_expression = f"cross_section_id = {db_item.id}"
+            label_field = "sequence"
             chain_field = None
             flow_path_field = None
             flow_path_value = None
@@ -2603,18 +2632,19 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             return
 
-        secondary_label_field = 'display_label' if isinstance(db_item, CrossSections) and frm.update_display_label() else None
-        task = OrderByLineTask(layer_path, centerline_geom,
-                               filter_expression=filter_expression,
-                               label_field=label_field,
-                               chain_field=chain_field,
-                               secondary_label_field=secondary_label_field,
-                               flow_path_field=flow_path_field,
-                               flow_path_value=flow_path_value,
-                               intersecting_only=intersecting_only)
-        task.order_complete.connect(
-            lambda result: self.on_order_by_centerline_complete(result, db_item)
+        secondary_label_field = "display_label" if isinstance(db_item, CrossSections) and frm.update_display_label() else None
+        task = OrderByLineTask(
+            layer_path,
+            centerline_geom,
+            filter_expression=filter_expression,
+            label_field=label_field,
+            chain_field=chain_field,
+            secondary_label_field=secondary_label_field,
+            flow_path_field=flow_path_field,
+            flow_path_value=flow_path_value,
+            intersecting_only=intersecting_only,
         )
+        task.order_complete.connect(lambda result: self.on_order_by_centerline_complete(result, db_item))
         QgsApplication.taskManager().addTask(task)
 
     def on_order_by_centerline_complete(self, result: bool, db_item) -> None:
@@ -2627,15 +2657,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     layer.dataProvider().reloadData()
                     layer.triggerRepaint()
             self.qris_project.project_changed.emit()
-            self.iface.messageBar().pushMessage(
-                'Order by Centerline',
-                f'Feature order updated for "{db_item.name}".',
-                level=Qgis.Success, duration=5)
+            self.iface.messageBar().pushMessage("Order by Centerline", f'Feature order updated for "{db_item.name}".', level=Qgis.Success, duration=5)
         else:
-            self.iface.messageBar().pushMessage(
-                'Order by Centerline Error',
-                f'Failed to update order for "{db_item.name}". Check the QGIS log.',
-                level=Qgis.Critical, duration=5)
+            self.iface.messageBar().pushMessage("Order by Centerline Error", f'Failed to update order for "{db_item.name}". Check the QGIS log.', level=Qgis.Critical, duration=5)
 
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
@@ -2647,7 +2671,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     layer.editingStarted.connect(self.map_manager.start_edits)
                     layer.editingStopped.connect(self.map_manager.stop_edits)
 
-    def check_and_remove_event_layers(self, node: QtGui.QStandardItem, event: Event, nodes_to_remove: list = []):
+    def check_and_remove_event_layers(self, node: QtGui.QStandardItem, event: Event, nodes_to_remove: Optional[list] = None):
+        if nodes_to_remove is None:
+            nodes_to_remove = []
         i = 0
         while i < node.rowCount():
             child = node.child(i)
@@ -2665,7 +2691,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         layer = node.data(QtCore.Qt.UserRole)
         if isinstance(layer, EventLayer):
             return layer not in event.event_layers
-        
+
     def remove_empty_child_nodes(self, node: QtGui.QStandardItem):
 
         for row in range(0, node.rowCount()):
@@ -2681,19 +2707,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             else:
                 self.remove_empty_child_nodes(child_node)
 
-
-    @ pyqtSlot(bool, SampleFrame, dict or None, dict or None)
+    @pyqtSlot(bool, SampleFrame, dict or None, dict or None)
     def geospatial_summary_complete(self, result, model_data, polygons, data):
 
         if result is True:
             frm = FrmGeospatialMetrics(self, self.qris_project, model_data, polygons, data)
             frm.exec_()
         else:
-            self.iface.messageBar().pushMessage('Zonal Statistics Error', 'Check the QGIS Log for details.', level=Qgis.Warning, duration=5)
+            self.iface.messageBar().pushMessage("Zonal Statistics Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
 
     def delete_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
-        response = QtWidgets.QMessageBox.question(self, 'Confirm Delete', 'Are you sure that you want to delete the selected item?')
+        response = QtWidgets.QMessageBox.question(self, "Confirm Delete", "Are you sure that you want to delete the selected item?")
         if response == QtWidgets.QMessageBox.No:
             return
 
@@ -2714,7 +2739,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Remove the item from the project tree
         if isinstance(db_item, EventLayer):
-            event = self.qris_project.events[db_item.event_id]
+            event = self.qris_project.events.get(db_item.event_id)
             # Traverse up the tree to find the event node
             parent = model_item.parent()
             while parent.data(QtCore.Qt.UserRole) != event:
@@ -2728,7 +2753,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if db_item.event_id in planning_container.planning_events:
                     # Find the planning container node in the tree
                     root = self.model.invisibleRootItem()
-                    def find_planning_container_node(node):
+
+                    def find_planning_container_node(node, planning_container=planning_container):
                         if node.data(QtCore.Qt.UserRole) == planning_container:
                             return node
                         for i in range(node.rowCount()):
@@ -2736,6 +2762,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                             if result:
                                 return result
                         return None
+
                     pc_node = find_planning_container_node(root)
                     if pc_node:
                         # Find the event node under this planning container
@@ -2753,11 +2780,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if isinstance(db_item, Event):
                 # 1) check if the event is in any planning containers, if so, then remove the event from that planning container
                 # 2) we then need to remove the event from the planning container in the project tree, without causing a c++ wrapper error
-               for planning_container in self.qris_project.planning_containers.values():
+                for planning_container in self.qris_project.planning_containers.values():
                     if db_item.id in planning_container.planning_events:
                         # Remove the event from the planning container
                         planning_container.planning_events.pop(db_item.id)
-                        
+
                         # Remove the corresponding UI element
                         parent_item = model_item.parent()
                         if parent_item is not None:
@@ -2787,7 +2814,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.distribution_dock_widget = FrmDistributionAnalysisDockWidget(self.iface, self.qris_project, self.map_manager)
             # Add to iface. The allowed areas are set in Dock init, but addDockWidget sets initial area.
             self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.distribution_dock_widget)
-        
+
         if not self.distribution_dock_widget.isVisible():
             self.distribution_dock_widget.show()
         self.distribution_dock_widget.raise_()
@@ -2805,32 +2832,32 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Active edit sessions can leave pending in-memory changes that are not ready for upload.
         if self.map_manager is not None and self.map_manager.get_edit_mode():
-            return True, 'One or more QRiS layers are currently in edit mode. Please save/stop editing before uploading.'
+            return True, "One or more QRiS layers are currently in edit mode. Please save/stop editing before uploading."
 
         # Also guard against vector layers put in edit mode outside map_manager wiring.
         for layer in QgsProject.instance().mapLayers().values():
             if isinstance(layer, QgsVectorLayer) and layer.isEditable():
-                return True, 'A vector layer is currently in edit mode. Please save/stop editing before uploading.'
+                return True, "A vector layer is currently in edit mode. Please save/stop editing before uploading."
 
         task_manager = QgsApplication.taskManager()
         if task_manager is not None:
             active_tasks = task_manager.activeTasks()
             write_risk_descriptions = (
-                'Order Features by Line Task',
-                'QRiS Zonal Statistics Task',
-                'Stream Stats API Request',
+                "Order Features by Line Task",
+                "QRiS Zonal Statistics Task",
+                "Stream Stats API Request",
             )
             for task in active_tasks:
-                description = task.description() if task is not None else ''
+                description = task.description() if task is not None else ""
                 if any(marker in description for marker in write_risk_descriptions):
-                    return True, f'An active data task is still running ({description}). Please wait for it to finish before uploading.'
+                    return True, f"An active data task is still running ({description}). Please wait for it to finish before uploading."
 
         return False, None
 
     def share_project_with_data_exchange(self, project: Project):
         blocked, reason = self._has_upload_blocking_state()
         if blocked:
-            QtWidgets.QMessageBox.warning(self, 'Data Exchange Upload Blocked', reason)
+            QtWidgets.QMessageBox.warning(self, "Data Exchange Upload Blocked", reason)
             return
 
         # Final sync pass before handing off to QRave upload.
@@ -2840,38 +2867,24 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.rs_project.write()
             project.flush(vacuum=False)
         except Exception as ex:
-            Settings().log(
-                f'Unable to complete final project sync before upload: {str(ex)}',
-                level=Qgis.Critical
-            )
-            QtWidgets.QMessageBox.warning(
-                self,
-                'Data Exchange Upload Blocked',
-                'Unable to finalize local project files before upload. Check QRiS logs and try again.'
-            )
+            Settings().log(f"Unable to complete final project sync before upload: {ex!s}", level=Qgis.Critical)
+            QtWidgets.QMessageBox.warning(self, "Data Exchange Upload Blocked", "Unable to finalize local project files before upload. Check QRiS logs and try again.")
             return
 
         rs_project = self.qrave.riverscapes_project_module.Project(project.project_xml_file)
         rs_project.load()
 
         if not rs_project.loadable or rs_project.project is None:
-            Settings().log(
-                'Unable to load the Riverscapes project metadata required for upload.',
-                level=Qgis.Critical
-            )
-            QtWidgets.QMessageBox.warning(
-                self,
-                'Data Exchange Upload Blocked',
-                'Unable to load the Riverscapes project metadata required for upload. Check QRave logs for details.'
-            )
+            Settings().log("Unable to load the Riverscapes project metadata required for upload.", level=Qgis.Critical)
+            QtWidgets.QMessageBox.warning(self, "Data Exchange Upload Blocked", "Unable to load the Riverscapes project metadata required for upload. Check QRave logs for details.")
             return
-        
+
         frm_upload = self.qrave.ProjectUploadDialog(self, rs_project)
         frm_upload.exec_()
 
     def setupUi(self):
 
-        self.setWindowTitle('QRiS Plugin')
+        self.setWindowTitle("QRiS Plugin")
 
         self.resize(489, 536)
         # Top level layout must include parent. Widgets added to this layout do not need parent.
