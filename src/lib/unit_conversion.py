@@ -1,6 +1,6 @@
 from qgis.core import QgsUnitTypes
 
-distance_units ={
+distance_units = {
     QgsUnitTypes.toString(QgsUnitTypes.DistanceMeters): QgsUnitTypes.DistanceMeters,
     QgsUnitTypes.toString(QgsUnitTypes.DistanceKilometers): QgsUnitTypes.DistanceKilometers,
     QgsUnitTypes.toString(QgsUnitTypes.DistanceFeet): QgsUnitTypes.DistanceFeet,
@@ -37,10 +37,7 @@ volume_units = {
     QgsUnitTypes.toString(QgsUnitTypes.VolumeCubicCentimeter): QgsUnitTypes.VolumeCubicCentimeter,
 }
 
-ratio_units = {
-    "ratio": 1,
-    "percent": .01
-}
+ratio_units = {"ratio": 1, "percent": 0.01}
 
 unit_types = {
     "distance": distance_units,
@@ -49,6 +46,7 @@ unit_types = {
     "ratio": ratio_units,
     "count": {"count": 1},
 }
+
 
 def short_unit_name(unit: str) -> str:
 
@@ -66,6 +64,7 @@ def short_unit_name(unit: str) -> str:
     if unit == "count":
         return "#"
     return unit
+
 
 # subclass of QgsUnitTypes for ratios
 class RatioUnit(QgsUnitTypes):
@@ -106,15 +105,15 @@ class RatioUnit(QgsUnitTypes):
         if unit == cls.Ratio:
             return "ratio"
         return super().toStringFromUnit(value, unit)
-        
+
 
 def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = False) -> float:
     if value is None:
         return None
-    
+
     if from_unit == to_unit:
         return value
-    
+
     # check if they are ratios first
     if from_unit in ratio_units and to_unit in ratio_units:
         # Source * (SourceFactor / TargetFactor)
@@ -123,7 +122,7 @@ def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = Fal
             conversion_factor = 1 / conversion_factor
         return value * conversion_factor
 
-    # get the base unit type from 
+    # get the base unit type from
     if from_unit in distance_units:
         from_unit_type = distance_units[from_unit]
     elif from_unit in area_units:
@@ -131,8 +130,8 @@ def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = Fal
     elif from_unit in volume_units:
         from_unit_type = volume_units[from_unit]
     else:
-        raise ValueError(f'Unknown unit type: {from_unit}')
-    
+        raise ValueError(f"Unknown unit type: {from_unit}")
+
     if to_unit in distance_units:
         to_unit_type = distance_units[to_unit]
     elif to_unit in area_units:
@@ -140,14 +139,15 @@ def convert_units(value: float, from_unit: str, to_unit: str, invert: bool = Fal
     elif to_unit in volume_units:
         to_unit_type = volume_units[to_unit]
     else:
-        raise ValueError(f'Unknown unit type: {to_unit}')
-    
+        raise ValueError(f"Unknown unit type: {to_unit}")
+
     # get conversion factor
     conversion_factor = QgsUnitTypes.fromUnitToUnitFactor(from_unit_type, to_unit_type)
     if invert:
         conversion_factor = 1 / conversion_factor
 
     return value * conversion_factor
+
 
 # --- Compound unit conversion helpers ---
 def convert_count_per_length(value, from_length_unit, to_length_unit):
@@ -162,6 +162,7 @@ def convert_count_per_length(value, from_length_unit, to_length_unit):
     # factor = how many from_length_unit in one to_length_unit
     factor = QgsUnitTypes.fromUnitToUnitFactor(from_type, to_type)
     return value / factor
+
 
 def convert_count_per_area(value, from_area_unit, to_area_unit):
     """

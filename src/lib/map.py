@@ -2,6 +2,7 @@ import math
 
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 
+
 def get_zoom_level(canvas):
     # Get current extent and CRS
     extent = canvas.extent()
@@ -17,6 +18,7 @@ def get_zoom_level(canvas):
     # 40075016.68557849 is the width of the world in meters in EPSG:3857
     zoom = round(math.log(40075016.68557849 / width) / math.log(2))
     return zoom
+
 
 def get_map_center(canvas):
     # Get the center of the map in the current CRS
