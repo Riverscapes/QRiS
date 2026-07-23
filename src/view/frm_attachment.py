@@ -1,25 +1,24 @@
+import json
 import os
 import re
-import json
+from typing import Optional
 
+from qgis.core import Qgis, QgsApplication
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.gui import QgisInterface
-from qgis.core import Qgis, QgsApplication
-
-from .widgets.metadata import MetadataWidget
-from .utilities import add_standard_form_buttons
 
 from ..gp.copy_file import FileCopyTask
+from ..model.attachment import Attachment, attachments_path, insert_attachment, load_events_for_attachment
+from ..model.project import Project
 from ..QRiS.path_utilities import parse_posix_path
 from ..QRiS.settings import Settings
+from .utilities import add_standard_form_buttons
+from .widgets.metadata import MetadataWidget
 
-from ..model.project import Project
-from ..model.attachment import Attachment, attachments_path, insert_attachment, load_events_for_attachment
-
-ATTACHMENT_TYPE_LABELS = ['Figure', 'Link', 'Report', 'Table']
+ATTACHMENT_TYPE_LABELS = ["Figure", "Link", "Report", "Table"]
 
 settings = Settings()
+
 
 class ClickableDateEdit(QtWidgets.QDateEdit):
     def focusInEvent(self, event):
@@ -29,7 +28,6 @@ class ClickableDateEdit(QtWidgets.QDateEdit):
 
 
 class FrmAttachment(QtWidgets.QDialog):
-
     def __init__(self, parent, qris_project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE):
 
         self.qris_project = qris_project
@@ -39,20 +37,20 @@ class FrmAttachment(QtWidgets.QDialog):
         self.source = FileBrowseWidget() if self.attachment_type == Attachment.TYPE_FILE else WebLinkWidget()
         self.extension = None
 
-        super(FrmAttachment, self).__init__(parent)
+        super().__init__(parent)
         metadata_json = json.dumps(attachment.metadata) if attachment is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
-        self.setWindowTitle('Import File Attachment' if self.attachment is None else 'Edit Attachment Properties')
+        self.setWindowTitle("Import File Attachment" if self.attachment is None else "Edit Attachment Properties")
 
         if self.attachment_type == Attachment.TYPE_WEB_LINK:
             self.lblProjectPath.setEnabled(False)
             self.lblProjectPath.setVisible(False)
             self.txtProjectPath.setEnabled(False)
             self.txtProjectPath.setVisible(False)
-            self.lblSource.setText('Web Link')
-            self.setWindowTitle('Add Web Link Attachment' if self.attachment is None else 'Edit Web Link Properties')
+            self.lblSource.setText("Web Link")
+            self.setWindowTitle("Add Web Link Attachment" if self.attachment is None else "Edit Web Link Properties")
         else:
             self.txtName.textChanged.connect(self.on_name_changed)
 
@@ -79,21 +77,21 @@ class FrmAttachment(QtWidgets.QDialog):
                     self.cboTypeLabel.setEditText(attachment.attachment_type_label)
             # Populate date
             if attachment.date:
-                self.txtDate.setDate(QtCore.QDate.fromString(attachment.date, 'yyyy-MM-dd'))
+                self.txtDate.setDate(QtCore.QDate.fromString(attachment.date, "yyyy-MM-dd"))
         self.txtName.selectAll()
 
     def accept(self):
 
         # make sure there is not already an attachment with the same name
         if self.txtName.text() in [a.name for a in self.qris_project.attachments.values() if a.id != (self.attachment.id if self.attachment else None)]:
-            QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+            QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
             self.txtName.setFocus()
             return
-        
+
         # make sure the new file path will not result in a duplicate name
         if self.attachment_type == Attachment.TYPE_FILE:
             if self.txtProjectPath.text() in [a.path for a in self.qris_project.attachments.values() if a.id != (self.attachment.id if self.attachment else None)]:
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Path', f"An attachment with the path '{self.txtProjectPath.text()}' already exists. Please choose a unique path.")
+                QtWidgets.QMessageBox.warning(self, "Duplicate Path", f"An attachment with the path '{self.txtProjectPath.text()}' already exists. Please choose a unique path.")
                 self.txtProjectPath.setFocus()
                 return
 
@@ -111,11 +109,11 @@ class FrmAttachment(QtWidgets.QDialog):
                 self.attachment.update(self.qris_project.project_file, self.txtName.text(), path=new_path, description=self.txtDescription.toPlainText(), metadata=self.metadata)
                 self.qris_project.project_changed.emit()
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Attachment', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving Attachment", str(ex))
                 return
 
             super().accept()
@@ -132,39 +130,39 @@ class FrmAttachment(QtWidgets.QDialog):
                     super().accept()
             except Exception as ex:
                 self.attachment = None
-                QtWidgets.QMessageBox.warning(self, 'Error Importing Attachment', str(ex))
+                QtWidgets.QMessageBox.warning(self, "Error Importing Attachment", str(ex))
                 return
 
     def _apply_form_to_metadata(self):
         """Write date and type label from form widgets into the metadata widget."""
         if self.txtDate.date() != self.txtDate.minimumDate():
-            self.metadata_widget.add_system_metadata('date', self.txtDate.date().toString('yyyy-MM-dd'))
+            self.metadata_widget.add_system_metadata("date", self.txtDate.date().toString("yyyy-MM-dd"))
         else:
-            self.metadata_widget.remove_system_metadata('date')
+            self.metadata_widget.remove_system_metadata("date")
         type_label = self.cboTypeLabel.currentText().strip()
         if type_label:
-            self.metadata_widget.add_system_metadata('attachment_type_label', type_label)
+            self.metadata_widget.add_system_metadata("attachment_type_label", type_label)
         else:
-            self.metadata_widget.remove_system_metadata('attachment_type_label')
+            self.metadata_widget.remove_system_metadata("attachment_type_label")
 
     @pyqtSlot(bool)
-    def on_copy_complete(self, result: bool, error: str = None):
+    def on_copy_complete(self, result: bool, error: Optional[str] = None):
 
         if result is True:
-            settings.msg_bar('Feature Class Copy Complete.', f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
+            settings.msg_bar("Feature Class Copy Complete.", f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
         else:
-            settings.msg_bar('Feature Class Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            settings.msg_bar("Feature Class Copy Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
         if error:
             QgsApplication.messageLog().logMessage(f"Error copying file: {error}", "QRiS", Qgis.Critical)
         try:
             self.attachment = insert_attachment(self.qris_project.project_file, self.txtName.text(), os.path.basename(self.txtProjectPath.text()), self.attachment_type, self.txtDescription.toPlainText(), self.metadata)
             self.qris_project.add_db_item(self.attachment)
         except Exception as ex:
-            if 'unique' in str(ex).lower():
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
+            if "unique" in str(ex).lower():
+                QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"An attachment with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 self.txtName.setFocus()
             else:
-                QtWidgets.QMessageBox.warning(self, 'Error Saving Attachment', str(ex))
+                QtWidgets.QMessageBox.warning(self, "Error Saving Attachment", str(ex))
             return
         super().accept()
 
@@ -179,20 +177,20 @@ class FrmAttachment(QtWidgets.QDialog):
                 self.txtName.setText(file_name)
                 self.on_name_changed(file_name)
             else:
-                self.txtName.setText('')
+                self.txtName.setText("")
 
     def on_name_changed(self, new_name):
 
         # Replace spaces with underscores and remove non-alphanumeric characters
-        clean_name = re.sub('[^A-Za-z0-9_]+', '', self.txtName.text().replace(' ', '_'))
+        clean_name = re.sub("[^A-Za-z0-9_]+", "", self.txtName.text().replace(" ", "_"))
         if len(clean_name) > 0:
             parent_folder = attachments_path(self.qris_project.project_file)
-            ext = ''
+            ext = ""
             if self.attachment_type == Attachment.TYPE_FILE:
                 ext = self.extension if self.extension is not None else os.path.splitext(self.source.lineEdit.text())[1]
             self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.qris_project.get_safe_file_name(clean_name, ext))))
         else:
-            self.txtProjectPath.setText('')
+            self.txtProjectPath.setText("")
 
     def on_clear_date_clicked(self):
         self.txtDate.setDate(self.txtDate.minimumDate())
@@ -202,7 +200,7 @@ class FrmAttachment(QtWidgets.QDialog):
 
         self.tbl_referenced_by = QtWidgets.QTableWidget()
         self.tbl_referenced_by.setColumnCount(2)
-        self.tbl_referenced_by.setHorizontalHeaderLabels(['Name', 'Purpose'])
+        self.tbl_referenced_by.setHorizontalHeaderLabels(["Name", "Purpose"])
         self.tbl_referenced_by.verticalHeader().setVisible(False)
         self.tbl_referenced_by.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tbl_referenced_by.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -212,7 +210,7 @@ class FrmAttachment(QtWidgets.QDialog):
         hdr.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
         layout.addWidget(self.tbl_referenced_by)
 
-        self.lbl_referenced_by_summary = QtWidgets.QLabel('')
+        self.lbl_referenced_by_summary = QtWidgets.QLabel("")
         layout.addWidget(self.lbl_referenced_by_summary)
 
         self._load_referenced_by()
@@ -226,7 +224,7 @@ class FrmAttachment(QtWidgets.QDialog):
             name_item = QtWidgets.QTableWidgetItem(event_name)
             event = self.qris_project.events.get(event_id)
             if event is not None:
-                name_item.setIcon(QtGui.QIcon(f':/plugins/qris_toolbar/{event.icon}'))
+                name_item.setIcon(QtGui.QIcon(f":/plugins/qris_toolbar/{event.icon}"))
             name_item.setData(QtCore.Qt.UserRole, event_id)
             self.tbl_referenced_by.setItem(i, 0, name_item)
 
@@ -234,9 +232,7 @@ class FrmAttachment(QtWidgets.QDialog):
             self.tbl_referenced_by.setItem(i, 1, purpose_item)
 
         count = len(rows)
-        self.lbl_referenced_by_summary.setText(
-            f'This attachment is referenced by {count} event{"s" if count != 1 else ""}.'
-        )
+        self.lbl_referenced_by_summary.setText(f"This attachment is referenced by {count} event{'s' if count != 1 else ''}.")
 
     def setupUi(self):
 
@@ -251,49 +247,49 @@ class FrmAttachment(QtWidgets.QDialog):
 
         self.grid = QtWidgets.QGridLayout()
 
-        self.grid.addWidget(QtWidgets.QLabel('Name'), 0, 0, 1, 1)
+        self.grid.addWidget(QtWidgets.QLabel("Name"), 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
-        self.txtName.setToolTip('Name of the attachment. This must be unique within the project.')
+        self.txtName.setToolTip("Name of the attachment. This must be unique within the project.")
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblSource = QtWidgets.QLabel('Source Path')
+        self.lblSource = QtWidgets.QLabel("Source Path")
         self.grid.addWidget(self.lblSource, 1, 0, 1, 1)
         self.grid.addWidget(self.source, 1, 1, 1, 1)
 
-        self.lblProjectPath = QtWidgets.QLabel('Project Path')
+        self.lblProjectPath = QtWidgets.QLabel("Project Path")
         self.grid.addWidget(self.lblProjectPath, 2, 0, 1, 1)
 
         self.txtProjectPath = QtWidgets.QLineEdit()
         self.txtProjectPath.setReadOnly(True)
         self.grid.addWidget(self.txtProjectPath, 2, 1, 1, 1)
 
-        self.grid.addWidget(QtWidgets.QLabel('Type'), 3, 0, 1, 1)
+        self.grid.addWidget(QtWidgets.QLabel("Type"), 3, 0, 1, 1)
 
         self.cboTypeLabel = QtWidgets.QComboBox()
         self.cboTypeLabel.setEditable(True)
-        self.cboTypeLabel.setToolTip('Category of the attachment. Select from the list or type a new type.')
-        self.cboTypeLabel.addItem('')
+        self.cboTypeLabel.setToolTip("Category of the attachment. Select from the list or type a new type.")
+        self.cboTypeLabel.addItem("")
         for label in ATTACHMENT_TYPE_LABELS:
             self.cboTypeLabel.addItem(label)
         self.grid.addWidget(self.cboTypeLabel, 3, 1, 1, 1)
 
-        self.grid.addWidget(QtWidgets.QLabel('Date'), 4, 0, 1, 1)
+        self.grid.addWidget(QtWidgets.QLabel("Date"), 4, 0, 1, 1)
 
         self.horiz_date = QtWidgets.QHBoxLayout()
         self.grid.addLayout(self.horiz_date, 4, 1, 1, 1)
 
         self.txtDate = ClickableDateEdit()
-        self.txtDate.setToolTip('Date associated with the attachment')
+        self.txtDate.setToolTip("Date associated with the attachment")
         self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
-        self.txtDate.setSpecialValueText('No Date')
+        self.txtDate.setSpecialValueText("No Date")
         self.txtDate.setDate(self.txtDate.minimumDate())
         self.txtDate.setCalendarPopup(True)
         self.horiz_date.addWidget(self.txtDate)
 
-        self.btn_clear_date = QtWidgets.QPushButton('Clear')
-        self.btn_clear_date.setToolTip('Clear the date')
+        self.btn_clear_date = QtWidgets.QPushButton("Clear")
+        self.btn_clear_date.setToolTip("Clear the date")
         self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))
         self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
         self.horiz_date.addWidget(self.btn_clear_date)
@@ -301,33 +297,32 @@ class FrmAttachment(QtWidgets.QDialog):
         self.grid.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding), 5, 0, 1, 2)
 
         self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabs.addTab(self.tabProperties, "Basic Properties")
         self.tabProperties.setLayout(self.grid)
 
         # Referenced By Tab (only shown for existing attachments)
         if self.attachment is not None:
             self.tab_referenced_by = QtWidgets.QWidget()
-            self.tabs.addTab(self.tab_referenced_by, 'Referenced By')
+            self.tabs.addTab(self.tab_referenced_by, "Referenced By")
             self._setup_referenced_by_tab()
 
         # Description Tab
         self.tabDescription = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabDescription, 'Description')
+        self.tabs.addTab(self.tabDescription, "Description")
         self.tabDescription.setLayout(QtWidgets.QVBoxLayout())
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabDescription.layout().addWidget(self.txtDescription)
 
         # Metadata Tab
-        self.tabs.addTab(self.metadata_widget, 'Metadata')
+        self.tabs.addTab(self.metadata_widget, "Metadata")
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'attachments'))
+        self.vert.addLayout(add_standard_form_buttons(self, "attachments"))
 
 
 class FileBrowseWidget(QtWidgets.QWidget):
-
     def __init__(self, parent=None):
-        super(FileBrowseWidget, self).__init__(parent)
+        super().__init__(parent)
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -352,13 +347,11 @@ class FileBrowseWidget(QtWidgets.QWidget):
             self.lineEdit.setText(file_path)
             return file_path
         return None
-    
+
 
 class WebLinkWidget(QtWidgets.QWidget):
-
     def __init__(self, parent=None):
-        super(WebLinkWidget, self).__init__(parent)
-
+        super().__init__(parent)
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

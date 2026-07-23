@@ -1,40 +1,40 @@
-import os
 import json
-import uuid
+import os
 import sqlite3
+from typing import Optional
+import uuid
 
-from qgis.PyQt import QtCore, QtWidgets
-from qgis.gui import QgisInterface
-from qgis.utils import iface
 from qgis.core import QgsApplication
+from qgis.gui import QgisInterface
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.utils import iface
 
-from ..QRiS.path_utilities import parse_posix_path
-from ..model.project import Project, project_layers
-from .utilities import validate_name, add_standard_form_buttons
 from ..gp.new_project import NewProjectTask
+from ..model.project import Project, project_layers
+from ..QRiS.path_utilities import parse_posix_path
+from .utilities import add_standard_form_buttons, validate_name
 from .widgets.metadata import MetadataWidget
 
 
 class FrmNewProject(QtWidgets.QDialog):
-
     closingPlugin = QtCore.pyqtSignal()
     dataChange = QtCore.pyqtSignal(Project)
     newProjectComplete = QtCore.pyqtSignal(str, str)
 
-    def __init__(self, parent, last_parent_project: str=None, qris_project: Project = None):
-        super(FrmNewProject, self).__init__(parent)
+    def __init__(self, parent, last_parent_project: Optional[str] = None, qris_project: Project = None):
+        super().__init__(parent)
 
         self.iface: QgisInterface = iface
         metadata_json = json.dumps(qris_project.metadata) if qris_project is not None else None
-        
+
         # Pull the tags out of metadata if the exist
-        self.tags = []     
-        
+        self.tags = []
+
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
         # get a default root path
-        self.root_path = parse_posix_path(os.path.expanduser('~'))
+        self.root_path = parse_posix_path(os.path.expanduser("~"))
         self.last_project_folder = last_parent_project
         if self.last_project_folder is not None:
             if os.path.isdir(self.last_project_folder):
@@ -44,33 +44,33 @@ class FrmNewProject(QtWidgets.QDialog):
         self.qris_project = qris_project
 
         if qris_project is None:
-            self.setWindowTitle('Create New Project')
+            self.setWindowTitle("Create New Project")
             # Changes to project name change the project folder location
             self.txtName.textChanged.connect(self.update_project_folder)
         else:
-            self.setWindowTitle('Edit Project Properties')
+            self.setWindowTitle("Edit Project Properties")
             self.txtName.setText(qris_project.name)
             self.txtPath.setText(parse_posix_path(qris_project.project_file))
             self.btnBrowse.setVisible(False)
-            system_meta = self.metadata_widget.metadata.get('system', {})
-            if 'tags' in system_meta:
-                self.tags = system_meta['tags']
-                self.txtTags.setText(', '.join(self.tags))
+            system_meta = self.metadata_widget.metadata.get("system", {})
+            if "tags" in system_meta:
+                self.tags = system_meta["tags"]
+                self.txtTags.setText(", ".join(self.tags))
             self.txtDescription.setPlainText(qris_project.description)
-            if 'objectives' in system_meta:
-                self.txtObjectives.setPlainText(system_meta['objectives'])
-            if 'condition' in system_meta:
-                self.txtCondition.setPlainText(system_meta['condition'])
+            if "objectives" in system_meta:
+                self.txtObjectives.setPlainText(system_meta["objectives"])
+            if "condition" in system_meta:
+                self.txtCondition.setPlainText(system_meta["condition"])
 
         self.txtName.setFocus()
 
     def update_project_folder(self):
 
         text = self.txtName.text().strip()
-        clean_name = ''.join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
+        clean_name = "".join(e for e in text.replace(" ", "_") if e.isalnum() or e == "_")
 
         if len(clean_name) > 0:
-            self.project_folder = parse_posix_path(os.path.join(self.root_path, clean_name, 'qris.gpkg'))
+            self.project_folder = parse_posix_path(os.path.join(self.root_path, clean_name, "qris.gpkg"))
             self.txtPath.setText(self.project_folder)
         else:
             self.project_folder = None
@@ -78,7 +78,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
     def get_tags(self):
         """Returns a list of non-empty tags from the tags text box"""
-        return [tag.strip() for tag in self.txtTags.text().split(',') if tag.strip()]
+        return [tag.strip() for tag in self.txtTags.text().split(",") if tag.strip()]
 
     def accept(self):
 
@@ -90,21 +90,21 @@ class FrmNewProject(QtWidgets.QDialog):
 
         tags = self.get_tags()
         if tags:
-            self.metadata_widget.add_system_metadata('tags', tags)
+            self.metadata_widget.add_system_metadata("tags", tags)
         else:
-            self.metadata_widget.delete_item('system', 'tags')
+            self.metadata_widget.delete_item("system", "tags")
 
         objectives = self.txtObjectives.toPlainText().strip()
         if objectives:
-            self.metadata_widget.add_system_metadata('objectives', objectives)
+            self.metadata_widget.add_system_metadata("objectives", objectives)
         else:
-            self.metadata_widget.delete_item('system', 'objectives')
+            self.metadata_widget.delete_item("system", "objectives")
 
         condition = self.txtCondition.toPlainText().strip()
         if condition:
-            self.metadata_widget.add_system_metadata('condition', condition)
+            self.metadata_widget.add_system_metadata("condition", condition)
         else:
-            self.metadata_widget.delete_item('system', 'condition')
+            self.metadata_widget.delete_item("system", "condition")
 
         metadata_json = self.metadata_widget.get_json()
         metadata = json.loads(metadata_json) if metadata_json is not None else None
@@ -114,7 +114,7 @@ class FrmNewProject(QtWidgets.QDialog):
             try:
                 with sqlite3.connect(self.qris_project.project_file) as conn:
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE projects SET name = ?, description = ?, metadata = ? WHERE id = ?', [self.txtName.text(), self.txtDescription.toPlainText(), metadata_json, self.qris_project.id])
+                    cursor.execute("UPDATE projects SET name = ?, description = ?, metadata = ? WHERE id = ?", [self.txtName.text(), self.txtDescription.toPlainText(), metadata_json, self.qris_project.id])
                     conn.commit()
                 self.qris_project.name = self.txtName.text()
                 self.qris_project.description = self.txtDescription.toPlainText()
@@ -122,15 +122,14 @@ class FrmNewProject(QtWidgets.QDialog):
                 self.qris_project.project_changed.emit()
             except Exception as ex:
                 conn.rollback()
-                QtWidgets.QMessageBox.warning(self, 'Error Updating Project', str(ex))
+                QtWidgets.QMessageBox.warning(self, "Error Updating Project", str(ex))
                 return
         else:
             # Saves the new project from the dialog and creates the master geopackage
             # Create new project directory
             self.project_dir = os.path.dirname(self.txtPath.text())
-            if (os.path.isdir(self.project_dir)):
-                QtWidgets.QMessageBox.warning(self, 'Directory Already Exists',
-                                              'The specified directory already exists. Choose a different root directory or change the project name.')
+            if os.path.isdir(self.project_dir):
+                QtWidgets.QMessageBox.warning(self, "Directory Already Exists", "The specified directory already exists. Choose a different root directory or change the project name.")
                 return
 
             os.makedirs(self.project_dir)
@@ -141,7 +140,7 @@ class FrmNewProject(QtWidgets.QDialog):
             new_project_task.project_create_schema.connect(self.on_creating_schema)
 
             QgsApplication.taskManager().addTask(new_project_task)
-        super(FrmNewProject, self).accept()
+        super().accept()
 
     def on_complete(self, result):
         if result is True:
@@ -149,13 +148,14 @@ class FrmNewProject(QtWidgets.QDialog):
             self.newProjectComplete.emit(self.project_dir, self.txtPath.text())
 
     def on_creating_layers(self, layer_number, count_layers):
-        self.iface.mainWindow().statusBar().showMessage('New QRIS Project: creating layer {} of {} layers in project.'.format(layer_number, count_layers))
+        self.iface.mainWindow().statusBar().showMessage(f"New QRIS Project: creating layer {layer_number} of {count_layers} layers in project.")
+
     def on_creating_schema(self):
-        self.iface.mainWindow().statusBar().showMessage('New QRIS Project: applying project schema (this may take several moments...)')
+        self.iface.mainWindow().statusBar().showMessage("New QRIS Project: applying project schema (this may take several moments...)")
 
     def browse_root_folder(self):
 
-        browse_folder = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select an Existing Folder to create a New QRiS Project Folder in', self.root_path)
+        browse_folder = QtWidgets.QFileDialog.getExistingDirectory(self, "Select an Existing Folder to create a New QRiS Project Folder in", self.root_path)
         if browse_folder:
             self.last_project_folder = browse_folder
             self.root_path = parse_posix_path(browse_folder)
@@ -174,7 +174,7 @@ class FrmNewProject(QtWidgets.QDialog):
 
         self.grid = QtWidgets.QGridLayout()
 
-        self.lblName = QtWidgets.QLabel('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
@@ -182,7 +182,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
         self.lblPath = QtWidgets.QLabel()
-        self.lblPath.setText('Project Path')
+        self.lblPath.setText("Project Path")
         self.grid.addWidget(self.lblPath, 1, 0, 1, 1)
 
         horiz_path = QtWidgets.QHBoxLayout()
@@ -192,7 +192,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.txtPath.setReadOnly(True)
         horiz_path.addWidget(self.txtPath)
 
-        self.btnBrowse = QtWidgets.QPushButton('...')
+        self.btnBrowse = QtWidgets.QPushButton("...")
         self.btnBrowse.clicked.connect(self.browse_root_folder)
         horiz_path.addWidget(self.btnBrowse)
 
@@ -206,7 +206,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.grid.setRowStretch(3, 1)
 
         self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Project Properties')
+        self.tabs.addTab(self.tabProperties, "Project Properties")
         self.tabProperties.setLayout(self.grid)
 
         # Description Tab
@@ -215,7 +215,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.description_layout.setContentsMargins(9, 9, 9, 9)
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.description_layout.addWidget(self.txtDescription)
-        self.tabs.addTab(self.tabDescription, 'Description')
+        self.tabs.addTab(self.tabDescription, "Description")
 
         # Objectives Tab
         self.tabObjectives = QtWidgets.QWidget()
@@ -223,7 +223,7 @@ class FrmNewProject(QtWidgets.QDialog):
         self.objectives_layout.setContentsMargins(9, 9, 9, 9)
         self.txtObjectives = QtWidgets.QPlainTextEdit()
         self.objectives_layout.addWidget(self.txtObjectives)
-        self.tabs.addTab(self.tabObjectives, 'Objectives')
+        self.tabs.addTab(self.tabObjectives, "Objectives")
 
         # Condition Tab
         self.tabCondition = QtWidgets.QWidget()
@@ -231,15 +231,15 @@ class FrmNewProject(QtWidgets.QDialog):
         self.condition_layout.setContentsMargins(9, 9, 9, 9)
         self.txtCondition = QtWidgets.QPlainTextEdit()
         self.condition_layout.addWidget(self.txtCondition)
-        self.tabs.addTab(self.tabCondition, 'Condition')
+        self.tabs.addTab(self.tabCondition, "Condition")
 
         # Metadata Tab
-        self.tabs.addTab(self.metadata_widget, 'Metadata')
+        self.tabs.addTab(self.metadata_widget, "Metadata")
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'projects'))
+        self.vert.addLayout(add_standard_form_buttons(self, "projects"))
 
 
 def format_layer_name(input_text):
     """Takes raw text from an input and field and returns a GIS friendly text string suitable for naming layers"""
-    valid_text = ''.join(e for e in input_text.replace(" ", "_") if e.isalnum() or e == "_")
+    valid_text = "".join(e for e in input_text.replace(" ", "_") if e.isalnum() or e == "_")
     return valid_text

@@ -1,13 +1,14 @@
-from qgis.PyQt.QtCore import Qt, QSize
-from qgis.PyQt.QtWidgets import QMessageBox, QDialog, QVBoxLayout,QHBoxLayout, QGridLayout, QListWidget, QListWidgetItem, QLabel, QLineEdit, QPushButton
+from typing import Optional
+
+from qgis.PyQt.QtCore import QSize, Qt
+from qgis.PyQt.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QVBoxLayout
 
 from .utilities import add_standard_form_buttons
 
 
 class FrmNewAttribute(QDialog):
-
-    def __init__(self, parent, field_name: str = None, attributes: list = None, existing_fields: list = None):
-        super(FrmNewAttribute, self).__init__(parent)
+    def __init__(self, parent, field_name: Optional[str] = None, attributes: Optional[list] = None, existing_fields: Optional[list] = None):
+        super().__init__(parent)
 
         self.name = field_name
         self.attributes = attributes
@@ -18,7 +19,7 @@ class FrmNewAttribute(QDialog):
 
         self.setupUi()
 
-        self.setWindowTitle('Add New Attribute')
+        self.setWindowTitle("Add New Attribute")
 
         if self.name is not None:
             self.txtName.setText(self.name)
@@ -31,9 +32,9 @@ class FrmNewAttribute(QDialog):
 
     def addItem(self):
 
-        if self.newItemEdit.text() == '':
+        if self.newItemEdit.text() == "":
             return
-        
+
         # check for duplicates
         for i in range(self.lstAttributes.count()):
             if self.lstAttributes.item(i).text() == self.newItemEdit.text():
@@ -55,19 +56,19 @@ class FrmNewAttribute(QDialog):
         self.grid = QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblName = QLabel('Field Name')
+        self.lblName = QLabel("Field Name")
         self.grid.addWidget(self.lblName, 0, 0)
         self.txtName = QLineEdit()
         self.grid.addWidget(self.txtName, 0, 1)
-        
+
         # listbox of attribute list
-        self.lblAttributes = QLabel('Attributes')
+        self.lblAttributes = QLabel("Attributes")
         self.grid.addWidget(self.lblAttributes, 1, 0)
 
         # Line edit and button for adding items
         self.horizAttributeEdit = QHBoxLayout()
         self.newItemEdit = QLineEdit()
-        self.horizAttributeEdit.addWidget(self.newItemEdit) 
+        self.horizAttributeEdit.addWidget(self.newItemEdit)
         self.addItemButton = QPushButton("Add")
         self.addItemButton.clicked.connect(self.addItem)
         self.horizAttributeEdit.addWidget(self.addItemButton)
@@ -77,18 +78,18 @@ class FrmNewAttribute(QDialog):
         self.lstAttributes.setSelectionMode(QListWidget.MultiSelection)
         self.grid.addWidget(self.lstAttributes, 2, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'inputs/sample-frames'))
+        self.vert.addLayout(add_standard_form_buttons(self, "inputs/sample-frames"))
 
     def validate_name(self, name):
-        
-        if name == '':
-            QMessageBox.warning(self, 'Missing Field Name', 'Please enter a name for the new field.')
+
+        if name == "":
+            QMessageBox.warning(self, "Missing Field Name", "Please enter a name for the new field.")
             return False
-        
+
         if self.existing_fields is not None and name in self.existing_fields:
-            QMessageBox.warning(self, 'Duplicate Field Name', 'Please enter a unique name for the new field.')
+            QMessageBox.warning(self, "Duplicate Field Name", "Please enter a unique name for the new field.")
             return False
-        
+
         return True
 
     def accept(self):
@@ -96,11 +97,11 @@ class FrmNewAttribute(QDialog):
         name = self.txtName.text()
         if self.validate_name(name) is False:
             return
-        
+
         self.name = name
         # attributes are the checked items in the list
         self.attributes = []
         for i in range(self.lstAttributes.count()):
             if self.lstAttributes.item(i).checkState() == Qt.Checked:
                 self.attributes.append(self.lstAttributes.item(i).text())
-        super(FrmNewAttribute, self).accept()
+        super().accept()

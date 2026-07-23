@@ -1,33 +1,31 @@
-from qgis.PyQt import QtCore, QtWidgets
 from qgis.core import QgsVectorLayer
+from qgis.PyQt import QtCore, QtWidgets
 
-from ..model.analysis import Analysis, insert_analysis, SIMPLE_INTRINSIC_MODE
-from ..model.db_item import DBItemModel, DBItem
-from ..model.project import Project, INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE
+from ..model.analysis import SIMPLE_INTRINSIC_MODE, Analysis, insert_analysis
+from ..model.db_item import DBItem, DBItemModel
+from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
+from ..model.metric import Metric
 from ..model.profile import Profile
+from ..model.project import INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE, Project
 from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
-
-from ..model.metric import Metric
-from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID
-
-from .widgets.metric_library import MetricLibrary
+from .utilities import add_standard_form_buttons, validate_name
 from .widgets.event_library import EventLibraryWidget
-from .utilities import validate_name, add_standard_form_buttons
+from .widgets.metric_library import MetricLibrary
+
 
 class FrmAnalysisProperties(QtWidgets.QDialog):
-
     def __init__(self, parent, qris_project: Project, analysis: Analysis = None):
 
-        super(FrmAnalysisProperties, self).__init__(parent)
-        
+        super().__init__(parent)
+
         self.qris_project = qris_project
         self.analysis = analysis
         self.metric_selector = MetricLibrary(self, self.qris_project, self.analysis)
         self.event_library = EventLibraryWidget(self, self.qris_project, [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID], allow_reorder=True)
         self.event_library.event_checked.connect(self.on_event_checked)
         self._intrinsic = False
-        
+
         self.setupUi()
 
         # Sample Frames
@@ -56,11 +54,11 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.cboDEM.currentIndexChanged.connect(self.update_metric_selector)
 
         if analysis is not None:
-            self.setWindowTitle('Edit Analysis Properties')
+            self.setWindowTitle("Edit Analysis Properties")
 
             self.txtName.setText(analysis.name)
             self.txtDescription.setPlainText(analysis.description)
-            
+
             # Set the sample frame
             index = self.cboSampleFrame.findData(analysis.sample_frame)
             self.cboSampleFrame.setCurrentIndex(index)
@@ -71,42 +69,42 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
             if analysis.metadata is not None:
                 # Set the valley bottom
-                analysis_valley_bottom = analysis.metadata.get('valley_bottom', None)
+                analysis_valley_bottom = analysis.metadata.get("valley_bottom", None)
                 if analysis_valley_bottom is not None:
                     valley_bottom: DBItem = self.valley_bottoms[analysis_valley_bottom]
                     index = self.cboValleyBottom.findData(valley_bottom)
                     self.cboValleyBottom.setCurrentIndex(index)
                 # Set the centerline
-                anaysis_centerline = analysis.metadata.get('centerline', None)
+                anaysis_centerline = analysis.metadata.get("centerline", None)
                 if anaysis_centerline is not None:
                     centerline: Profile = self.centerlines[anaysis_centerline]
                     index = self.cboCenterline.findData(centerline)
                     self.cboCenterline.setCurrentIndex(index)
                 # set the dem
-                analysis_dem = analysis.metadata.get('dem', None)
+                analysis_dem = analysis.metadata.get("dem", None)
                 if analysis_dem is not None:
                     dem: Raster = self.dems[analysis_dem]
                     index = self.cboDEM.findData(dem)
                     self.cboDEM.setCurrentIndex(index)
 
                 # set the selected events
-                selected_events = analysis.metadata.get('selected_events', None)
+                selected_events = analysis.metadata.get("selected_events", None)
                 if selected_events is not None:
                     # Create ordered list of events
                     all_events = [e for e in self.qris_project.events.values() if e.event_type.id in [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]]
                     event_map = {e.id: e for e in all_events}
-                    
+
                     ordered_events = []
                     # Add selected events in order
                     for eid in selected_events:
                         if eid in event_map:
                             ordered_events.append(event_map[eid])
-                            
+
                     # Add remaining events (unselected)
                     for e in all_events:
                         if e.id not in selected_events:
                             ordered_events.append(e)
-                            
+
                     self.event_library.load_events(ordered_events)
                     self.event_library.set_selected_event_ids(selected_events)
                     self.metric_selector.set_selected_dces(selected_events)
@@ -114,8 +112,8 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                     self.event_library.select_all()
                     self.metric_selector.set_selected_dces(self.event_library.get_selected_event_ids())
             else:
-                 self.event_library.select_all()
-                 self.metric_selector.set_selected_dces(self.event_library.get_selected_event_ids())
+                self.event_library.select_all()
+                self.metric_selector.set_selected_dces(self.event_library.get_selected_event_ids())
 
             # User cannot reassign mask once the analysis is created!
             self.cboSampleFrame.setEnabled(False)
@@ -131,7 +129,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 self._filter_to_system_protocol()
                 self._expand_metric_library_tree()
         else:
-            self.setWindowTitle('Create New Analysis')
+            self.setWindowTitle("Create New Analysis")
             self.metric_selector.set_intrinsic_mode(False)
             self.metric_selector.set_filter_tools_visible(True)
             # For new analysis, ensure we capture whatever is selected by default in the combo boxes
@@ -142,23 +140,26 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
     def help(self, metric: Metric):
 
-        return 
+        return
         # return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
 
     def update_metric_selector(self, index=None):
         centerline = self.cboCenterline.currentData(QtCore.Qt.UserRole)
         dem = self.cboDEM.currentData(QtCore.Qt.UserRole)
         valley_bottom = self.cboValleyBottom.currentData(QtCore.Qt.UserRole)
-        
+
         metadata = {}
-        if centerline: metadata['centerline'] = centerline.id
-        if dem: metadata['dem'] = dem.id
-        if valley_bottom: metadata['valley_bottom'] = valley_bottom.id
-        
+        if centerline:
+            metadata["centerline"] = centerline.id
+        if dem:
+            metadata["dem"] = dem.id
+        if valley_bottom:
+            metadata["valley_bottom"] = valley_bottom.id
+
         self.metric_selector.set_analysis_metadata(metadata)
 
     def on_event_checked(self, event_ids):
-        metadata = self.analysis.metadata if self.analysis else {}
+        _metadata = self.analysis.metadata if self.analysis else {}
         # metadata['selected_events'] = event_ids # Don't update analysis object yet, just UI
         self.metric_selector.set_selected_dces(event_ids)
 
@@ -185,31 +186,31 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.grdLayout1 = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grdLayout1)
 
-        self.lblName = QtWidgets.QLabel('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         self.grdLayout1.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
         self.grdLayout1.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblSampleFrame = QtWidgets.QLabel('Analysis Masks (Sample Frame)')
+        self.lblSampleFrame = QtWidgets.QLabel("Analysis Masks (Sample Frame)")
         self.grdLayout1.addWidget(self.lblSampleFrame, 1, 0, 1, 1)
 
         self.cboSampleFrame = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboSampleFrame, 1, 1, 1, 1)
 
-        self.lblValleyBottom = QtWidgets.QLabel('Valley Bottom')
+        self.lblValleyBottom = QtWidgets.QLabel("Valley Bottom")
         self.grdLayout1.addWidget(self.lblValleyBottom, 2, 0, 1, 1)
 
         self.cboValleyBottom = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboValleyBottom, 2, 1, 1, 1)
 
-        self.lblCenterline = QtWidgets.QLabel('Riverscape Centerline')
+        self.lblCenterline = QtWidgets.QLabel("Riverscape Centerline")
         self.grdLayout1.addWidget(self.lblCenterline, 3, 0, 1, 1)
-        
+
         self.cboCenterline = QtWidgets.QComboBox()
         self.grdLayout1.addWidget(self.cboCenterline, 3, 1, 1, 1)
 
-        self.lblDEM = QtWidgets.QLabel('DEM')
+        self.lblDEM = QtWidgets.QLabel("DEM")
         self.grdLayout1.addWidget(self.lblDEM, 4, 0, 1, 1)
 
         self.cboDEM = QtWidgets.QComboBox()
@@ -220,16 +221,16 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         # Metrics and Indicators Tab
         self.metrics_tab = QtWidgets.QWidget()
-        self.tabWidget.addTab(self.metrics_tab, 'Metrics and Indicators')
+        self.tabWidget.addTab(self.metrics_tab, "Metrics and Indicators")
 
         self.vert_metrics = QtWidgets.QVBoxLayout(self.metrics_tab)
         self.metrics_tab.setLayout(self.vert_metrics)
-        
+
         self.vert_metrics.addWidget(self.metric_selector)
 
         # Data Capture Events Tab
         self.dce_tab = QtWidgets.QWidget()
-        self.tabWidget.addTab(self.dce_tab, 'Data Capture Events')
+        self.tabWidget.addTab(self.dce_tab, "Data Capture Events")
 
         self.vert_dce = QtWidgets.QVBoxLayout(self.dce_tab)
         self.dce_tab.setLayout(self.vert_dce)
@@ -241,9 +242,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         self.description_layout.setContentsMargins(9, 9, 9, 9)
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.description_layout.addWidget(self.txtDescription)
-        self.tabWidget.addTab(self.description_tab, 'Description')
+        self.tabWidget.addTab(self.description_tab, "Description")
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'analyses'))
+        self.vert.addLayout(add_standard_form_buttons(self, "analyses"))
 
     def _filter_to_system_protocol(self):
         """Limit the metric selector to system protocol metrics only."""
@@ -285,23 +286,23 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         QtCore.QTimer.singleShot(0, self.metric_selector.metricsTree.expandAll)
 
     def _is_intrinsic(self) -> bool:
-        return getattr(self, '_intrinsic', False)
+        return getattr(self, "_intrinsic", False)
 
     def _build_scope_metadata(self, metadata: dict, is_simple_intrinsic: bool) -> dict:
         """Add system.scope and analysis_mode to metadata dict before save.
         Spatial identity (sample_frame) is already a DB column, not stored in metadata."""
-        metadata.setdefault('system', {})
+        metadata.setdefault("system", {})
         if is_simple_intrinsic:
-            metadata['system']['analysis_mode'] = SIMPLE_INTRINSIC_MODE
-            metadata['system']['scope'] = {
-                'version': 1,
-                'temporal': {'type': 'intrinsic', 'id': 0},
+            metadata["system"]["analysis_mode"] = SIMPLE_INTRINSIC_MODE
+            metadata["system"]["scope"] = {
+                "version": 1,
+                "temporal": {"type": "intrinsic", "id": 0},
             }
         else:
-            metadata['system']['analysis_mode'] = 'advanced'
-            metadata['system']['scope'] = {
-                'version': 1,
-                'temporal': {'type': 'event', 'id': 0},
+            metadata["system"]["analysis_mode"] = "advanced"
+            metadata["system"]["scope"] = {
+                "version": 1,
+                "temporal": {"type": "event", "id": 0},
             }
         return metadata
 
@@ -312,10 +313,10 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         sample_frame: SampleFrame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
         if sample_frame is None:
-            QtWidgets.QMessageBox.warning(self, 'Missing Sample Frame', 'You must select a sample frame to continue.')
+            QtWidgets.QMessageBox.warning(self, "Missing Sample Frame", "You must select a sample frame to continue.")
             self.cboSampleFrame.setFocus()
             return
-        
+
         centerline: Profile = self.cboCenterline.currentData(QtCore.Qt.UserRole)
         dem: Raster = self.cboDEM.currentData(QtCore.Qt.UserRole)
         valley_bottom: DBItem = self.cboValleyBottom.currentData(QtCore.Qt.UserRole)
@@ -323,31 +324,31 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         # write the profile id to the analysis and analysis metadata
         metadata = self.analysis.metadata if self.analysis is not None else {}
         if centerline is not None:
-            metadata['centerline'] = centerline.id
+            metadata["centerline"] = centerline.id
         if dem is not None:
-            metadata['dem'] = dem.id
+            metadata["dem"] = dem.id
         if valley_bottom is not None:
-            metadata['valley_bottom'] = valley_bottom.id
-        
+            metadata["valley_bottom"] = valley_bottom.id
+
         # Persist scope metadata: intrinsic when init_as_intrinsic() was called.
         is_simple = self._is_intrinsic()
         self._build_scope_metadata(metadata, is_simple)
 
         # Simple mode clears event selection; advanced mode requires at least one.
         if is_simple:
-            metadata['selected_events'] = []
+            metadata["selected_events"] = []
         else:
-            metadata['selected_events'] = self.event_library.get_selected_event_ids()
-        if len(metadata['selected_events']) < 1 and not is_simple:
-            QtWidgets.QMessageBox.warning(self, 'Missing Event', 'You must select at least one Data Capture Event.')
+            metadata["selected_events"] = self.event_library.get_selected_event_ids()
+        if len(metadata["selected_events"]) < 1 and not is_simple:
+            QtWidgets.QMessageBox.warning(self, "Missing Event", "You must select at least one Data Capture Event.")
             self.tabWidget.setCurrentWidget(self.dce_tab)
             return
 
         # determine if there are any features in the mask
         fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
-        temp_layer = QgsVectorLayer(fc_path, 'temp', 'ogr')
+        temp_layer = QgsVectorLayer(fc_path, "temp", "ogr")
         if temp_layer.featureCount() < 1:
-            QtWidgets.QMessageBox.warning(self, 'Empty Sample Frame', 'The selected sample frame does not contain any features. Please select a different sample frame.')
+            QtWidgets.QMessageBox.warning(self, "Empty Sample Frame", "The selected sample frame does not contain any features. Please select a different sample frame.")
             self.cboSampleFrame.setFocus()
             return
 
@@ -356,11 +357,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
         # Intrinsic analyses are restricted to the built-in system protocol.
         if is_simple:
-            analysis_metrics = {
-                metric_id: am
-                for metric_id, am in analysis_metrics.items()
-                if am.metric.protocol_machine_code == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE
-            }
+            analysis_metrics = {metric_id: am for metric_id, am in analysis_metrics.items() if am.metric.protocol_machine_code == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}
         # analysis_metrics = {}
         # for row in range(self.metricsTable.rowCount()):
         #     metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
@@ -370,7 +367,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         #         analysis_metrics[metric.id] = AnalysisMetric(metric, level_id)
 
         if len(analysis_metrics) < 1:
-            QtWidgets.QMessageBox.warning(self, 'Missing Metric', 'You must include at least one metric to continue.')
+            QtWidgets.QMessageBox.warning(self, "Missing Metric", "You must include at least one metric to continue.")
             self.metric_selector.setFocus()
             return
 
@@ -379,22 +376,22 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 self.analysis.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics, metadata)
                 self.qris_project.project_changed.emit()
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"An analysis with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Analysis', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving Analysis", str(ex))
                 return
         else:
             try:
                 self.analysis = insert_analysis(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), sample_frame, analysis_metrics, metadata)
                 self.qris_project.add_db_item(self.analysis)
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "An analysis with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"An analysis with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Analysis', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving Analysis", str(ex))
                 return
 
-        super(FrmAnalysisProperties, self).accept()
+        super().accept()

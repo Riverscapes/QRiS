@@ -8,13 +8,13 @@ from .utilities import add_standard_form_buttons
 
 def sanitize_file_base_name(base_name):
     text = str(base_name or "export").strip().lower()
-    text = re.sub(r'[^a-z0-9]+', '_', text)
-    text = re.sub(r'_+', '_', text).strip('_')
+    text = re.sub(r"[^a-z0-9]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
     return text or "export"
 
 
 def get_unique_export_path(export_dir, file_base_name, extension):
-    ext = extension if extension.startswith('.') else f'.{extension}'
+    ext = extension if extension.startswith(".") else f".{extension}"
     for i in range(1, 1000):
         candidate = os.path.join(export_dir, f"{file_base_name}_{i:03d}{ext}")
         if not os.path.exists(candidate):

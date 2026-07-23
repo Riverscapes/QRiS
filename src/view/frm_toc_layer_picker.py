@@ -1,21 +1,24 @@
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from typing import Optional
 
 from qgis.core import QgsRasterLayer, QgsVectorLayer
-from qgis.utils import iface
+from qgis.PyQt import QtCore, QtGui, QtWidgets
+
+from ..QRiS.settings import Settings
 
 
 class FrmTOCLayerPicker(QtWidgets.QDialog):
-
     @staticmethod
     def _is_web_raster_layer(layer: QgsRasterLayer) -> bool:
-        provider = (layer.providerType() or '').lower()
-        if provider in ['wms', 'xyz', 'arcgismapserver', 'arcgisfeatureserver']:
+        provider = (layer.providerType() or "").lower()
+        if provider in ["wms", "xyz", "arcgismapserver", "arcgisfeatureserver"]:
             return True
 
-        source = ((layer.source() or '') + '|' + (layer.dataProvider().dataSourceUri() or '')).lower()
-        return 'type=xyz' in source or 'tilematrixset' in source or 'service=wms' in source
+        source = ((layer.source() or "") + "|" + (layer.dataProvider().dataSourceUri() or "")).lower()
+        return "type=xyz" in source or "tilematrixset" in source or "service=wms" in source
 
-    def __init__(self, parent, label_message: str, layer_types: list = None, temporary_layers_only: bool = True, exclude_datasource_prefix: str = None, exclude_empty_layers: bool = False, include_raster_layers: bool = False):
+    def __init__(
+        self, parent, label_message: str, layer_types: Optional[list] = None, temporary_layers_only: bool = True, exclude_datasource_prefix: Optional[str] = None, exclude_empty_layers: bool = False, include_raster_layers: bool = False
+    ):
         super().__init__(parent)
         self.setWindowTitle("Select layer")
         self.setupUi()
@@ -25,7 +28,7 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
         self.lblMessage.setText(label_message)
         self.model = QtGui.QStandardItemModel()
 
-        for layer in iface.mapCanvas().layers():
+        for layer in Settings().iface.mapCanvas().layers():
             if isinstance(layer, QgsVectorLayer):
                 if layer_types is not None and layer.geometryType() not in layer_types:
                     continue
@@ -44,7 +47,7 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
             if include_raster_layers and isinstance(layer, QgsRasterLayer):
                 if self._is_web_raster_layer(layer):
                     continue
-                if temporary_layers_only and hasattr(layer, 'isTemporary') and not layer.isTemporary():
+                if temporary_layers_only and hasattr(layer, "isTemporary") and not layer.isTemporary():
                     continue
                 if exclude_empty_layers and layer.bandCount() == 0:
                     continue
@@ -61,8 +64,12 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
         else:
             # No layers of the specified type found show messagebox and close this form
             temporary_text = "temporary " if temporary_layers_only else ""
-            
-            QtWidgets.QMessageBox.warning(self, f"No {temporary_text}Layers found", f"No {temporary_text}layers of the specified type found in the map Table of Contents. \n\nMake sure you have at least one {temporary_text}layer in the Table of Contents and that it is turned on (checked).")
+
+            QtWidgets.QMessageBox.warning(
+                self,
+                f"No {temporary_text}Layers found",
+                f"No {temporary_text}layers of the specified type found in the map Table of Contents. \n\nMake sure you have at least one {temporary_text}layer in the Table of Contents and that it is turned on (checked).",
+            )
 
     def setupUi(self):
 
@@ -91,4 +98,4 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
     def accept(self):
 
         self.layer = self.cboLayers.currentData(QtCore.Qt.UserRole)
-        super(FrmTOCLayerPicker, self).accept()
+        super().accept()

@@ -1,17 +1,15 @@
-import os
 import json
+import os
 import shutil
 
-from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtGui import QPixmap
-from qgis.PyQt.QtCore import Qt, QDateTime
-
 from qgis import processing
-from qgis.core import QgsProcessingContext, QgsMessageLog, Qgis, QgsVectorLayer, QgsVectorLayerUtils
+from qgis.core import Qgis, QgsMessageLog, QgsProcessingContext, QgsVectorLayer, QgsVectorLayerUtils
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import QDateTime, Qt
+from qgis.PyQt.QtGui import QPixmap
 
 from ..model.event_layer import EventLayer
 from ..model.project import Project
-
 from .utilities import add_standard_form_buttons
 
 
@@ -63,7 +61,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
             return
 
         # Create dce photo folder
-        dce_photo_folder = os.path.join(os.path.dirname(self.qris_project.project_file), "photos", f'dce_{str(self.event_layer.event_id).zfill(3)}')
+        dce_photo_folder = os.path.join(os.path.dirname(self.qris_project.project_file), "photos", f"dce_{str(self.event_layer.event_id).zfill(3)}")
         if not os.path.isdir(dce_photo_folder):
             os.makedirs(dce_photo_folder)
 
@@ -88,10 +86,10 @@ class FrmImportPhotos(QtWidgets.QDialog):
         # use the processing algorithm to create the photo layer
         context = QgsProcessingContext()
         params = {
-            'FOLDER': dce_photo_folder,
-            'RECURSIVE': False,
+            "FOLDER": dce_photo_folder,
+            "RECURSIVE": False,
             # 'OUTPUT': """ogr:dbname=\'D:/NAR_Data/QRIS/photo_experiment/photos.gpkg\' table="Photos" (geom)"""
-            'OUTPUT': 'memory:Photos'
+            "OUTPUT": "memory:Photos",
         }
 
         result = processing.run("native:importphotos", params)
@@ -101,10 +99,8 @@ class FrmImportPhotos(QtWidgets.QDialog):
 
     def task_finished(self, context: QgsProcessingContext, successful, results):
         if not successful:
-            QgsMessageLog.logMessage('Task finished unsucessfully',
-                                     "Import Photos Qgis Processing",
-                                     Qgis.Warning)
-        output_layer = results['OUTPUT']
+            QgsMessageLog.logMessage("Task finished unsucessfully", "Import Photos Qgis Processing", Qgis.Warning)
+        output_layer = results["OUTPUT"]
 
         if output_layer.isValid():
             working_layer: QgsVectorLayer = output_layer  # context.takeResultLayer(output_layer.id())
@@ -116,7 +112,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
             new_features = []
             for feature in working_layer.getFeatures():
                 # check if the photo already exists in the event layer
-                if os.path.basename(feature['photo']) in self.existing_photos:
+                if os.path.basename(feature["photo"]) in self.existing_photos:
                     continue
                 # take all the attributes from the working layer and turn them into a json string
                 metadata = {}
@@ -126,19 +122,19 @@ class FrmImportPhotos(QtWidgets.QDialog):
                         name = field.name()
                         if isinstance(data, QDateTime):
                             data = data.toString(Qt.ISODate)
-                        if name == 'photo':
-                            metadata['Photo Path'] = os.path.basename(data)
+                        if name == "photo":
+                            metadata["Photo Path"] = os.path.basename(data)
                             # data = data.replace('\\', '/')
                             # name = "Photo Path"
                     metadata[name] = data
-                metadata['Observation Type'] = "Photo Observation"
+                metadata["Observation Type"] = "Photo Observation"
                 metadata_json = json.dumps(metadata)
                 # create a new feature in the event layer
                 new_feature = QgsVectorLayerUtils.createFeature(out_layer)
                 new_feature.setGeometry(feature.geometry())
-                new_feature.setAttribute('event_id', self.event_layer.event_id)
-                new_feature.setAttribute('event_layer_id', self.event_layer.layer.id)
-                new_feature.setAttribute('metadata', metadata_json)
+                new_feature.setAttribute("event_id", self.event_layer.event_id)
+                new_feature.setAttribute("event_layer_id", self.event_layer.layer.id)
+                new_feature.setAttribute("metadata", metadata_json)
                 new_features.append(new_feature)
             out_layer.dataProvider().addFeatures(new_features)
             out_layer.updateExtents()
@@ -172,4 +168,4 @@ class FrmImportPhotos(QtWidgets.QDialog):
         self.lbl_preview.setAlignment(Qt.AlignCenter)
         self.grid.addWidget(self.lbl_preview, 1, 1, 1, 2)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'photos'))
+        self.vert.addLayout(add_standard_form_buttons(self, "photos"))

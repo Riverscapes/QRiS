@@ -1,16 +1,18 @@
-from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QTextBrowser
-from qgis.PyQt.QtGui import QDesktopServices
 from typing import Union
 
-from ..model.protocol import Protocol
+from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtWidgets import QDialog, QTextBrowser, QVBoxLayout
+
 from ..model.layer import Layer
 from ..model.metric import Metric
+from ..model.protocol import Protocol
 from ..QRiS.protocol_parser import LayerDefinition, MetricDefinition
+
 
 class FrmLayerMetricDetails(QDialog):
     def __init__(self, parent, qris_project, layer: Union[Layer, LayerDefinition] = None, metric: Union[Metric, MetricDefinition] = None):
         super().__init__(parent)
-        
+
         title = "Layer Details" if layer is not None else "Metric Details"
         self.setWindowTitle(title)
         self.setUI()
@@ -45,13 +47,13 @@ class FrmLayerMetricDetails(QDialog):
         metric_version = None
         metric_metadata = []
 
-        self.html_content = f"""
+        self.html_content = """
         <html>
         <head>
             <style type="text/css">
-                body {{ font-family: Arial, sans-serif; font-size: 14px; }}
-                h1 {{ color: #333; }}
-                p {{ margin: 5px 0; }}
+                body { font-family: Arial, sans-serif; font-size: 14px; }
+                h1 { color: #333; }
+                p { margin: 5px 0; }
             </style>
         </head>
         <body>"""
@@ -72,7 +74,7 @@ class FrmLayerMetricDetails(QDialog):
             if self.layer.protocol_definition.metadata:
                 for key, value in self.layer.protocol_definition.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
-        
+
             layer_name = self.layer.label
             layer_id = self.layer.id
             layer_version = self.layer.version
@@ -88,28 +90,26 @@ class FrmLayerMetricDetails(QDialog):
                 for key, value in self.layer.metadata.items():
                     layer_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
             # Protocol
-            protocol: Protocol = self.layer.get_layer_protocol(qris_project.protocols)    
+            protocol: Protocol = self.layer.get_layer_protocol(qris_project.protocols)
             protocol_name = protocol.name if protocol else "Unknown"
             protocol_machine_code = protocol.machine_code if protocol else "Unknown"
-            protocol_version = protocol.version if protocol else "Unknown"            
+            protocol_version = protocol.version if protocol else "Unknown"
             protocol_description = protocol.description if protocol else "No protocol description available."
-            protocol_url = protocol.system_metadata.get('url', 'Unknown') if protocol.system_metadata else "Unknown"
+            protocol_url = protocol.system_metadata.get("url", "Unknown") if protocol.system_metadata else "Unknown"
             # make the protocol_url clickable
             protocol_url = f'<a href="{protocol_url}">{protocol_url}</a>' if protocol_url else "Unknown"
-            protocol_citation = protocol.system_metadata.get('citation', 'Unknown') if protocol.system_metadata else "Unknown"
-            protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
-            protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
-            protocol_updated_date = protocol.system_metadata.get('updated_date', 'Unknown') if protocol.system_metadata else "Unknown"
+            protocol_citation = protocol.system_metadata.get("citation", "Unknown") if protocol.system_metadata else "Unknown"
+            protocol_author = protocol.system_metadata.get("author", "Unknown") if protocol.system_metadata else "Unknown"
+            protocol_creation_date = protocol.system_metadata.get("creation_date", "Unknown") if protocol.system_metadata else "Unknown"
+            protocol_updated_date = protocol.system_metadata.get("updated_date", "Unknown") if protocol.system_metadata else "Unknown"
             if protocol.user_metadata:
                 for key, value in protocol.metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
-        
-        elif isinstance(self.analysis_metric, MetricDefinition):
 
+        elif isinstance(self.analysis_metric, MetricDefinition):
             pass
 
         elif isinstance(self.analysis_metric, Metric):
-
             # Metric
             metric_label = self.analysis_metric.name
             metric_name = self.analysis_metric.machine_name
@@ -124,22 +124,22 @@ class FrmLayerMetricDetails(QDialog):
                     metric_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
 
             # Protocol
-            protocol: Protocol = self.analysis_metric.get_metric_protocol(self.qris_project.protocols)    
+            protocol: Protocol = self.analysis_metric.get_metric_protocol(self.qris_project.protocols)
             protocol_name = protocol.name if protocol else "Unknown"
             protocol_machine_code = protocol.machine_code if protocol else "Unknown"
-            protocol_version = protocol.version if protocol else "Unknown"            
+            protocol_version = protocol.version if protocol else "Unknown"
             protocol_description = protocol.description if protocol else "No protocol description available."
-            protocol_url = protocol.system_metadata.get('url', 'Unknown') if protocol.system_metadata else "Unknown"
+            protocol_url = protocol.system_metadata.get("url", "Unknown") if protocol.system_metadata else "Unknown"
             # make the protocol_url clickable
             protocol_url = f'<a href="{protocol_url}">{protocol_url}</a>' if protocol_url else "Unknown"
-            protocol_citation = protocol.system_metadata.get('citation', 'Unknown') if protocol.system_metadata else "Unknown"
-            protocol_author = protocol.system_metadata.get('author', 'Unknown') if protocol.system_metadata else "Unknown"
-            protocol_creation_date = protocol.system_metadata.get('creation_date', 'Unknown') if protocol.system_metadata else "Unknown"
-            protocol_updated_date = protocol.system_metadata.get('updated_date', 'Unknown') if protocol.system_metadata else "Unknown"
+            protocol_citation = protocol.system_metadata.get("citation", "Unknown") if protocol.system_metadata else "Unknown"
+            protocol_author = protocol.system_metadata.get("author", "Unknown") if protocol.system_metadata else "Unknown"
+            protocol_creation_date = protocol.system_metadata.get("creation_date", "Unknown") if protocol.system_metadata else "Unknown"
+            protocol_updated_date = protocol.system_metadata.get("updated_date", "Unknown") if protocol.system_metadata else "Unknown"
             if protocol.user_metadata:
                 for key, value in protocol.user_metadata.items():
                     protocol_metadata.append(f"<p><strong>{key}:</strong> {value}</p>")
-        
+
         else:
             self.html_content += """
             No layer or protocol information available.
@@ -157,7 +157,7 @@ class FrmLayerMetricDetails(QDialog):
                 """
             if layer_metadata:
                 self.html_content += "".join(layer_metadata)
-        
+
         if self.analysis_metric is not None:
             self.html_content += f"""
                 <h1>Metric Information</h1>
@@ -174,65 +174,66 @@ class FrmLayerMetricDetails(QDialog):
 
             if metric_params and isinstance(metric_params, dict):
                 self.html_content += "<h2>Parameters</h2>"
-                
+
                 # DCE Layers
-                if 'dce_layers' in metric_params:
+                if "dce_layers" in metric_params:
                     self.html_content += "<h3>DCE Layers</h3>"
-                    for layer in metric_params['dce_layers']:
-                        layer_ref = layer.get('layer_id_ref', 'Unknown Layer')
-                        usage = layer.get('usage', 'General')
+                    for layer in metric_params["dce_layers"]:
+                        layer_ref = layer.get("layer_id_ref", "Unknown Layer")
+                        usage = layer.get("usage", "General")
                         self.html_content += f"<p><strong>{layer_ref}</strong> ({usage})</p><ul>"
-                        
+
                         # Attribute Filters
-                        if 'attribute_filter' in layer:
-                            filters = layer['attribute_filter']
-                            if isinstance(filters, dict): # Single filter
+                        if "attribute_filter" in layer:
+                            filters = layer["attribute_filter"]
+                            if isinstance(filters, dict):  # Single filter
                                 filters = [filters]
-                            
+
                             for filter_item in filters:
-                                field = filter_item.get('field_id_ref', 'Unknown Field')
-                                values = filter_item.get('values', [])
+                                field = filter_item.get("field_id_ref", "Unknown Field")
+                                values = filter_item.get("values", [])
                                 self.html_content += f"<li>Filter: <em>{field}</em> IN {values}</li>"
 
                         # Count Fields
-                        if 'count_fields' in layer:
-                             for count_field in layer['count_fields']:
-                                 field_ref = count_field.get('field_id_ref', '')
-                                 self.html_content += f"<li>Count Field: {field_ref}</li>"
+                        if "count_fields" in layer:
+                            for count_field in layer["count_fields"]:
+                                field_ref = count_field.get("field_id_ref", "")
+                                self.html_content += f"<li>Count Field: {field_ref}</li>"
 
                         self.html_content += "</ul>"
 
                 # Inputs (Analysis Inputs)
-                if 'inputs' in metric_params:
+                if "inputs" in metric_params:
                     self.html_content += "<h3>Analysis Inputs</h3>"
-                    for input_item in metric_params['inputs']:
-                        input_ref = input_item.get('input_ref', 'Unknown Input')
-                        usage = input_item.get('usage', 'General')
+                    for input_item in metric_params["inputs"]:
+                        input_ref = input_item.get("input_ref", "Unknown Input")
+                        usage = input_item.get("usage", "General")
                         self.html_content += f"<p><strong>{input_ref}</strong> ({usage})</p>"
-                        
+
                         # Start details list if needed
                         has_details = False
                         details_html = "<ul>"
 
-                        if 'attribute_filter' in input_item:
+                        if "attribute_filter" in input_item:
                             has_details = True
-                            filters = input_item['attribute_filter']
-                            if isinstance(filters, dict): filters = [filters]
+                            filters = input_item["attribute_filter"]
+                            if isinstance(filters, dict):
+                                filters = [filters]
                             for filter_item in filters:
-                                field = filter_item.get('field_id_ref', 'Unknown Field')
-                                values = filter_item.get('values', [])
+                                field = filter_item.get("field_id_ref", "Unknown Field")
+                                values = filter_item.get("values", [])
                                 details_html += f"<li>Filter: <em>{field}</em> IN {values}</li>"
-                        
+
                         if has_details:
                             self.html_content += details_html + "</ul>"
-                        
+
             elif metric_params and isinstance(metric_params, list):
                 self.html_content += "<h2>Parameters</h2><ul>"
                 for param in metric_params:
-                    if isinstance(param, dict) and 'name' in param:
-                            self.html_content += f"<li><strong>{param.get('name', 'Unknown')} ({param.get('machine_name', '')}):</strong> {param.get('description', '')}</li>"
+                    if isinstance(param, dict) and "name" in param:
+                        self.html_content += f"<li><strong>{param.get('name', 'Unknown')} ({param.get('machine_name', '')}):</strong> {param.get('description', '')}</li>"
                     else:
-                            self.html_content += f"<li>{param}</li>"
+                        self.html_content += f"<li>{param}</li>"
                 self.html_content += "</ul>"
 
         self.html_content += f"""
@@ -247,7 +248,7 @@ class FrmLayerMetricDetails(QDialog):
             """
         if protocol_metadata:
             self.html_content += "".join(protocol_metadata)
-        
+
         self.html_content += """
         </body>
         </html>
@@ -264,7 +265,7 @@ class FrmLayerMetricDetails(QDialog):
         layout = QVBoxLayout(self)
         self.text_edit = QTextBrowser(self)  # Use QTextBrowser instead of QTextEdit
         self.text_edit.setAcceptRichText(True)
-        self.text_edit.setReadOnly(True) 
+        self.text_edit.setReadOnly(True)
         self.text_edit.setOpenExternalLinks(False)  # Disable internal opening
         self.text_edit.anchorClicked.connect(self.open_link_in_browser)
         layout.addWidget(self.text_edit)

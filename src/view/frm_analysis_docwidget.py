@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  QRiSDockWidget
@@ -21,33 +20,32 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt import QtCore, QtGui, QtWidgets
-from qgis.core import Qgis, QgsMessageLog, QgsApplication
-from qgis.gui import QgisInterface
 
-from ..model.project import Project
-from ..model.analysis import Analysis
-from ..model.db_item import  DBItemModel
-from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
-from ..model.sample_frame import get_sample_frame_ids
+from qgis.core import Qgis, QgsApplication, QgsMessageLog
+from qgis.gui import QgisInterface
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 from ..gp.analysis_metrics_task import AnalysisMetricsTask
-
-from .utilities import add_help_button
-from .frm_metric_value import FrmMetricValue
-from .frm_metric_calculate_all import FrmCalculateAllMetrics
-from .frm_export_metrics import FrmExportMetrics
-from .frm_analysis_properties import FrmAnalysisProperties
+from ..model.analysis import Analysis
+from ..model.db_item import DBItemModel
+from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
+from ..model.project import Project
+from ..model.sample_frame import get_sample_frame_ids
 from .frm_analysis_explorer import FrmAnalysisExplorer
+from .frm_analysis_properties import FrmAnalysisProperties
+from .frm_export_metrics import FrmExportMetrics
+from .frm_metric_calculate_all import FrmCalculateAllMetrics
+from .frm_metric_value import FrmMetricValue
+from .utilities import add_help_button
 from .widgets.analysis_table import AnalysisTable
 
-class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
+class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     closing = QtCore.pyqtSignal()
 
     def __init__(self, parent, iface: QgisInterface):
 
-        super(FrmAnalysisDocWidget, self).__init__(parent)
+        super().__init__(parent)
         self.iface = iface
         self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable | QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
         # Store the connections so they can be disconnected when the form is closed
@@ -58,7 +56,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.frmMetricValue = None
         self.metrics_task = None
         self.metrics_task_context = None
-        self._calculate_button_default_text = 'Calculate...'
+        self._calculate_button_default_text = "Calculate..."
 
         self.destroyed.connect(self.cleanup_connections)
 
@@ -73,7 +71,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.segments_model = DBItemModel(frame_ids)
         self.cboSampleFrame.setModel(self.segments_model)
 
-        # Events 
+        # Events
         valid_event_types = [DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID]
         events = {event_id: event for event_id, event in self.qris_project.events.items() if event.event_type.id in valid_event_types}
 
@@ -83,13 +81,13 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             self.cboEvent.setVisible(False)
         else:
             # Filter events if selected_events metadata exists, but only keep those that still exist
-            selected_event_ids = self.analysis.metadata.get('selected_events')
+            selected_event_ids = self.analysis.metadata.get("selected_events")
             if selected_event_ids:
                 valid_event_ids = [eid for eid in selected_event_ids if eid in events]
                 events = {eid: evt for eid, evt in events.items() if eid in valid_event_ids}
                 # Optionally, update the analysis metadata to remove missing event IDs
                 if len(valid_event_ids) != len(selected_event_ids):
-                    self.analysis.metadata['selected_events'] = valid_event_ids
+                    self.analysis.metadata["selected_events"] = valid_event_ids
 
         self.events_model = DBItemModel(events)
         self.cboEvent.setModel(self.events_model)
@@ -97,12 +95,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         # Configure the table
         self.table.configure(project, analysis)
         self.table.set_filter_tools_visible(not analysis.is_simple_intrinsic_mode())
-        self.table.build_table() # Default to all metrics
+        self.table.build_table()  # Default to all metrics
         self.load_table_values()
 
     def build_table(self):
         # Delegate to table widget
-        self.table.build_table() # Default, internal state managed by table now
+        self.table.build_table()  # Default, internal state managed by table now
         self.load_table_values()
 
     def load_table_values(self):
@@ -126,11 +124,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             metric_ids = list(self.analysis.analysis_metrics.keys())
 
             if len(sample_frame_ids) < 1 or (len(event_ids) < 1 and not self.analysis.is_simple_intrinsic_mode()) or len(metric_ids) < 1:
-                self.iface.messageBar().pushMessage('Metrics', 'Nothing selected to calculate.', level=Qgis.Warning)
+                self.iface.messageBar().pushMessage("Metrics", "Nothing selected to calculate.", level=Qgis.Warning)
                 return
 
             if self.metrics_task is not None:
-                self.iface.messageBar().pushMessage('Metrics', 'A metric calculation task is already running.', level=Qgis.Warning)
+                self.iface.messageBar().pushMessage("Metrics", "A metric calculation task is already running.", level=Qgis.Warning)
                 return
 
             self.metrics_task = AnalysisMetricsTask(
@@ -142,62 +140,62 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
                 overwrite_existing=frm.chkOverwrite.isChecked(),
                 force_active=frm.chkForceActive.isChecked(),
             )
-            self.metrics_task_context = {'mode': 'bulk'}
+            self.metrics_task_context = {"mode": "bulk"}
             self.metrics_task.on_complete.connect(self.on_metrics_task_complete)
             self.metrics_task.progressChanged.connect(self.on_metrics_task_progress)
 
             self.cmdCalculate.setEnabled(False)
-            self.cmdCalculate.setText('Calculating... 0%')
-            self.iface.messageBar().pushMessage('Metrics', 'Metric calculation started in the background.', level=Qgis.Info)
+            self.cmdCalculate.setText("Calculating... 0%")
+            self.iface.messageBar().pushMessage("Metrics", "Metric calculation started in the background.", level=Qgis.Info)
             QgsApplication.taskManager().addTask(self.metrics_task)
 
     def on_metrics_task_progress(self, progress: float):
-        if self.metrics_task is not None and (self.metrics_task_context or {}).get('mode') == 'bulk':
-            self.cmdCalculate.setText(f'Calculating... {int(progress)}%')
+        if self.metrics_task is not None and (self.metrics_task_context or {}).get("mode") == "bulk":
+            self.cmdCalculate.setText(f"Calculating... {int(progress)}%")
 
     def on_metrics_task_complete(self, summary: dict):
 
-        for message in summary.get('messages', []):
-            QgsMessageLog.logMessage(message['text'], 'QRiS_Metrics', message['level'])
+        for message in summary.get("messages", []):
+            QgsMessageLog.logMessage(message["text"], "QRiS_Metrics", message["level"])
 
-        task_context = self.metrics_task_context or {'mode': 'bulk'}
+        task_context = self.metrics_task_context or {"mode": "bulk"}
         self.metrics_task_context = None
         self.metrics_task = None
         self.cmdCalculate.setEnabled(True)
         self.cmdCalculate.setText(self._calculate_button_default_text)
 
-        if summary.get('canceled', False):
-            self.iface.messageBar().pushMessage('Metrics', 'Metric calculation canceled.', level=Qgis.Warning)
+        if summary.get("canceled", False):
+            self.iface.messageBar().pushMessage("Metrics", "Metric calculation canceled.", level=Qgis.Warning)
             self.load_table_values()
             return
 
-        if summary.get('exception', None) is not None:
-            self.iface.messageBar().pushMessage('Metrics', 'Metric calculation ended with an error. See log for details.', level=Qgis.Warning)
+        if summary.get("exception", None) is not None:
+            self.iface.messageBar().pushMessage("Metrics", "Metric calculation ended with an error. See log for details.", level=Qgis.Warning)
             self.load_table_values()
             return
 
-        if task_context.get('mode') == 'single':
-            has_missing = summary.get('missing_data', 0) > 0
-            has_errors = summary.get('errors', 0) > 0
+        if task_context.get("mode") == "single":
+            has_missing = summary.get("missing_data", 0) > 0
+            has_errors = summary.get("errors", 0) > 0
             if not has_missing and not has_errors:
-                self.iface.messageBar().pushMessage('Metrics', 'Metric successfully calculated.', level=Qgis.Success)
+                self.iface.messageBar().pushMessage("Metrics", "Metric successfully calculated.", level=Qgis.Success)
             else:
                 if has_missing:
-                    self.iface.messageBar().pushMessage('Metrics', 'Metric was not calculated due to missing data requirements. See log for details.', level=Qgis.Warning)
+                    self.iface.messageBar().pushMessage("Metrics", "Metric was not calculated due to missing data requirements. See log for details.", level=Qgis.Warning)
                 if has_errors:
-                    self.iface.messageBar().pushMessage('Metrics', 'Metric was not calculated due to a processing error. See log for details.', level=Qgis.Warning)
+                    self.iface.messageBar().pushMessage("Metrics", "Metric was not calculated due to a processing error. See log for details.", level=Qgis.Warning)
             self.load_table_values()
             return
 
-        has_missing = summary.get('missing_data', 0) > 0
-        has_errors = summary.get('errors', 0) > 0
+        has_missing = summary.get("missing_data", 0) > 0
+        has_errors = summary.get("errors", 0) > 0
         if not has_missing and not has_errors:
-            self.iface.messageBar().pushMessage('Metrics', 'All metrics successfully calculated.', level=Qgis.Success)
+            self.iface.messageBar().pushMessage("Metrics", "All metrics successfully calculated.", level=Qgis.Success)
         else:
             if has_missing:
-                self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to missing data requirements. See log for details.', level=Qgis.Success)
+                self.iface.messageBar().pushMessage("Metrics", "One or more metrics were not calculated due to missing data requirements. See log for details.", level=Qgis.Success)
             if has_errors:
-                self.iface.messageBar().pushMessage('Metrics', 'One or more metrics were not calculated due to processing error(s). See log for details.', level=Qgis.Warning)
+                self.iface.messageBar().pushMessage("Metrics", "One or more metrics were not calculated due to processing error(s). See log for details.", level=Qgis.Warning)
 
         # Metrics task writes directly to SQLite; notify project change so WAL is checkpointed to the gpkg main file.
         self.qris_project.project_changed.emit()
@@ -245,7 +243,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             return
 
         if self.metrics_task is not None:
-            self.iface.messageBar().pushMessage('Metrics', 'A metric calculation task is already running.', level=Qgis.Warning)
+            self.iface.messageBar().pushMessage("Metrics", "A metric calculation task is already running.", level=Qgis.Warning)
             return
 
         self.metrics_task = AnalysisMetricsTask(
@@ -257,7 +255,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             overwrite_existing=True,
             force_active=True,
         )
-        self.metrics_task_context = {'mode': 'single', 'metric_id': metric.id}
+        self.metrics_task_context = {"mode": "single", "metric_id": metric.id}
         self.metrics_task.on_complete.connect(self.on_metrics_task_complete)
         self.metrics_task.progressChanged.connect(self.on_metrics_task_progress)
 
@@ -292,7 +290,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def setupUi(self):
 
-        self.setWindowTitle('QRiS Analysis')
+        self.setWindowTitle("QRiS Analysis")
         self.dockWidgetContents = QtWidgets.QWidget(self)
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
@@ -301,7 +299,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel('Analysis')
+        self.lblName = QtWidgets.QLabel("Analysis")
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.horizName = QtWidgets.QHBoxLayout()
@@ -312,21 +310,21 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.txtName.setReadOnly(True)
         self.horizName.addWidget(self.txtName)
 
-        self.cmdProperties = QtWidgets.QPushButton('Properties')
+        self.cmdProperties = QtWidgets.QPushButton("Properties")
         self.connections[self.cmdProperties.clicked] = self.cmdProperties.clicked.connect(self.cmdProperties_clicked)
-        self.cmdProperties.setToolTip('Edit analysis properties, indcluding metrics and indicators')
+        self.cmdProperties.setToolTip("Edit analysis properties, indcluding metrics and indicators")
         self.cmdProperties.setToolTipDuration(2000)
         self.horizName.addWidget(self.cmdProperties)
 
         self.cmdOpenSummary = QtWidgets.QPushButton()
-        icon = QtGui.QIcon(':/plugins/qris_toolbar/analysis_summary')
+        icon = QtGui.QIcon(":/plugins/qris_toolbar/analysis_summary")
         self.cmdOpenSummary.setIcon(icon)
-        self.cmdOpenSummary.setToolTip('Open Analysis Summary')
+        self.cmdOpenSummary.setToolTip("Open Analysis Summary")
         self.cmdOpenSummary.setToolTipDuration(2000)
         self.connections[self.cmdOpenSummary.clicked] = self.cmdOpenSummary.clicked.connect(lambda: FrmAnalysisExplorer(self, self.qris_project, self.analysis.id).exec_())
         self.horizName.addWidget(self.cmdOpenSummary)
 
-        self.lblEvent = QtWidgets.QLabel('Data Capture Event')
+        self.lblEvent = QtWidgets.QLabel("Data Capture Event")
         self.grid.addWidget(self.lblEvent, 1, 0, 1, 1)
 
         self.horizEvent = QtWidgets.QHBoxLayout()
@@ -336,14 +334,14 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.connections[self.cboEvent.currentIndexChanged] = self.cboEvent.currentIndexChanged.connect(self.load_table_values)
         self.horizEvent.addWidget(self.cboEvent)
 
-        self.cmdCalculate = QtWidgets.QPushButton('Calculate...')
+        self.cmdCalculate = QtWidgets.QPushButton("Calculate...")
         self.connections[self.cmdCalculate.clicked] = self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
         self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self.cmdCalculate.setToolTip('Options to calculate metrics and indicators for the selected event and sample frame')
+        self.cmdCalculate.setToolTip("Options to calculate metrics and indicators for the selected event and sample frame")
         self.cmdCalculate.setToolTipDuration(2000)
         self.horizEvent.addWidget(self.cmdCalculate, 0)
 
-        self.lblSegment = QtWidgets.QLabel('Mask Polygon')
+        self.lblSegment = QtWidgets.QLabel("Mask Polygon")
         self.grid.addWidget(self.lblSegment, 2, 0, 1, 1)
 
         self.cboSampleFrame = QtWidgets.QComboBox()
@@ -365,9 +363,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horizExport = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horizExport)
 
-        self.horizExport.addWidget(add_help_button(self, 'analyses'))
+        self.horizExport.addWidget(add_help_button(self, "analyses"))
 
-        self.cmdUnits = QtWidgets.QPushButton('Display Units')
+        self.cmdUnits = QtWidgets.QPushButton("Display Units")
         self.cmdUnits.setMenu(self.table.units_menu)
         self.horizExport.addWidget(self.cmdUnits)
 
@@ -375,9 +373,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horizExport.addItem(self.spacerItem)
 
         self.cmdExport = QtWidgets.QPushButton()
-        self.cmdExport.setText('Export Metrics Table')
+        self.cmdExport.setText("Export Metrics Table")
         self.connections[self.cmdExport.clicked] = self.cmdExport.clicked.connect(self.export_table)
-        self.cmdExport.setToolTip('Export the table to a csv, json, or Excel file')
+        self.cmdExport.setToolTip("Export the table to a csv, json, or Excel file")
         self.horizExport.addWidget(self.cmdExport, 0)
 
         self.setWidget(self.dockWidgetContents)

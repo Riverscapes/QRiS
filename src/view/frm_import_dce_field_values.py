@@ -5,7 +5,6 @@ from .utilities import add_standard_form_buttons
 
 
 class FrmAssignFieldValues(QtWidgets.QDialog):
-
     # signal to send field value map to parent
     field_value_map_signal = QtCore.pyqtSignal(str, dict)
 
@@ -17,7 +16,7 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
 
         self.setupUi()
 
-        self.setWindowTitle('Assign Field Values')
+        self.setWindowTitle("Assign Field Values")
         self.txtInputField.setText(input_field)
 
         # Populate the combo box with field names
@@ -30,7 +29,7 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
             self.tblFields.setItem(i, 0, item)
 
     def add_output_field(self, field) -> None:
-        
+
         if not field:
             field = self.cmbOutputField.currentText()
         if not field:
@@ -43,7 +42,7 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
         # Add combo boxes to each row in the new column
         for i in range(self.tblFields.rowCount()):
             combo = QtWidgets.QComboBox()
-            combo.addItem('- NULL -', None)
+            combo.addItem("- NULL -", None)
             for value in self.fields.get(field, []):
                 combo.addItem(str(value), value)
             self.tblFields.setCellWidget(i, self.tblFields.columnCount() - 1, combo)
@@ -113,30 +112,30 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
         self.grid = QtWidgets.QGridLayout()
         self.vLayout.addLayout(self.grid)
 
-        self.lblInputField = QtWidgets.QLabel('Input Field')
+        self.lblInputField = QtWidgets.QLabel("Input Field")
         self.grid.addWidget(self.lblInputField, 0, 0)
 
         self.txtInputField = QtWidgets.QLineEdit()
         self.txtInputField.setReadOnly(True)
         self.grid.addWidget(self.txtInputField, 0, 1)
 
-        self.lblOutputField = QtWidgets.QLabel('Output Field')
+        self.lblOutputField = QtWidgets.QLabel("Output Field")
         self.grid.addWidget(self.lblOutputField, 1, 0)
 
         self.cmbOutputField = QtWidgets.QComboBox()
         self.grid.addWidget(self.cmbOutputField, 1, 1)
 
-        self.btnAddOutputField = QtWidgets.QPushButton('Add')
-        self.btnAddOutputField.setToolTip('Add a new output field')
+        self.btnAddOutputField = QtWidgets.QPushButton("Add")
+        self.btnAddOutputField.setToolTip("Add a new output field")
         self.grid.addWidget(self.btnAddOutputField, 1, 2)
 
-        self.btnRemoveOutputField = QtWidgets.QPushButton('Remove')
-        self.btnRemoveOutputField.setToolTip('Remove the selected output field')
+        self.btnRemoveOutputField = QtWidgets.QPushButton("Remove")
+        self.btnRemoveOutputField.setToolTip("Remove the selected output field")
         self.grid.addWidget(self.btnRemoveOutputField, 1, 3)
 
         self.tblFields = QtWidgets.QTableWidget()
         self.tblFields.setColumnCount(1)
-        self.tblFields.setHorizontalHeaderLabels(['Input Values'])
+        self.tblFields.setHorizontalHeaderLabels(["Input Values"])
         self.tblFields.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.tblFields.verticalHeader().setVisible(False)
         self.tblFields.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
@@ -144,7 +143,7 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
 
         self.vLayout.addWidget(self.tblFields)
 
-        self.vLayout.addLayout(add_standard_form_buttons(self, 'dce/import-dce-layer'))
+        self.vLayout.addLayout(add_standard_form_buttons(self, "dce/import-dce-layer"))
 
         self.btnAddOutputField.clicked.connect(self.add_output_field)
         self.btnRemoveOutputField.clicked.connect(self.remove_output_field)

@@ -1,24 +1,22 @@
 import os
 
+from qgis.gui import QgisInterface
 from qgis.PyQt import QtWidgets
 from qgis.utils import Qgis
-from qgis.gui import QgisInterface
 
-from ..model.sample_frame import get_sample_frame_ids
-from ..model.metric_value import MetricValue, load_metric_values
-from ..model.analysis import Analysis
-from ..model.project import Project
-from ..model.metric import Metric
 from ..lib.unit_conversion import short_unit_name
-
-from .utilities import add_standard_form_buttons
+from ..model.analysis import Analysis
+from ..model.metric import Metric
+from ..model.metric_value import MetricValue, load_metric_values
+from ..model.project import Project
+from ..model.sample_frame import get_sample_frame_ids
+from .frm_export_base import get_unique_export_path, sanitize_file_base_name
 from .frm_export_table import FrmTableExport
-from .frm_export_base import sanitize_file_base_name, get_unique_export_path
+from .utilities import add_standard_form_buttons
 
 
 class FrmExportMetrics(QtWidgets.QDialog):
-
-    def __init__(self, parent, iface: QgisInterface, project: Project, analysis: Analysis=None, current_dce=None, current_sf=None):
+    def __init__(self, parent, iface: QgisInterface, project: Project, analysis: Analysis = None, current_dce=None, current_sf=None):
         super().__init__(parent)
 
         self.iface = iface
@@ -26,7 +24,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.analysis = analysis
         self.current_dce = current_dce
         self.current_sf = current_sf
-        self.base_name = 'Analysis Metrics'
+        self.base_name = "Analysis Metrics"
         self.file_base_name = sanitize_file_base_name(self.base_name)
         self.last_generated_path = None
 
@@ -69,12 +67,12 @@ class FrmExportMetrics(QtWidgets.QDialog):
         if os.path.isfile(home):
             home = os.path.dirname(home)
 
-        export_dir = os.path.join(home, 'exports', self.file_base_name)
+        export_dir = os.path.join(home, "exports", self.file_base_name)
         if not os.path.exists(export_dir):
             os.makedirs(export_dir, exist_ok=True)
 
         output_format = self.combo_format.currentText()
-        output_ext = '.xls' if output_format == 'Excel' else f'.{output_format.lower()}'
+        output_ext = ".xls" if output_format == "Excel" else f".{output_format.lower()}"
 
         default_path = get_unique_export_path(export_dir, self.file_base_name, output_ext)
         self.txtOutpath.setText(os.path.normpath(default_path))
@@ -94,7 +92,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
         output_format = self.combo_format.currentText()
         if output_format == "Excel":
             output_format = "xls"
-        path = current[:current.rfind(".") + 1] + output_format.lower()
+        path = current[: current.rfind(".") + 1] + output_format.lower()
         self.txtOutpath.setText(path)
 
     def accept(self) -> None:
@@ -115,60 +113,48 @@ class FrmExportMetrics(QtWidgets.QDialog):
             sample_frame_features = list(sample_frame_ids.values()) if self.rdoAllSF.isChecked() else [self.current_sf]
             for sample_frame_feature in sample_frame_features:
                 for data_capture_event in data_capture_events:
-                    metric_values = load_metric_values(
-                        self.project.project_file,
-                        analysis,
-                        data_capture_event,
-                        sample_frame_feature.id,
-                        self.project.metrics
-                    )
+                    metric_values = load_metric_values(self.project.project_file, analysis, data_capture_event, sample_frame_feature.id, self.project.metrics)
                     values = {
-                        'analysis_name': analysis.name,
-                        'sample_frame_id': sample_frame_feature.id,
-                        'data_capture_event_id': data_capture_event.id if data_capture_event else 'Intrinsic',
-                        'sample_frame_feature_name': sample_frame_feature.name,
-                        'data_capture_event_name': data_capture_event.name if data_capture_event else 'Intrinsic'
+                        "analysis_name": analysis.name,
+                        "sample_frame_id": sample_frame_feature.id,
+                        "data_capture_event_id": data_capture_event.id if data_capture_event else "Intrinsic",
+                        "sample_frame_feature_name": sample_frame_feature.name,
+                        "data_capture_event_name": data_capture_event.name if data_capture_event else "Intrinsic",
                     }
                     for analysis_metric in analysis.analysis_metrics.values():
                         metric: Metric = analysis_metric.metric
 
                         # --- Consistent display unit logic ---
                         display_unit = analysis.units.get(metric.unit_type, None)
-                        if metric.normalized and display_unit not in [None, 'ratio', 'count']:
-                            display_unit = analysis.units['distance']
-                        display_unit_for_value = None if display_unit in ['count', 'ratio'] else display_unit
+                        if metric.normalized and display_unit not in [None, "ratio", "count"]:
+                            display_unit = analysis.units["distance"]
+                        display_unit_for_value = None if display_unit in ["count", "ratio"] else display_unit
 
                         # --- Header logic: always use metric.unit_type for numerator ---
                         # Get the actual unit string for numerator
                         unit_str_raw = analysis.units.get(metric.unit_type, None)
-                        numerator = short_unit_name(unit_str_raw) if unit_str_raw not in [None, 'count', 'ratio', 'percent'] else (
-                            '#' if unit_str_raw == 'count' else
-                            '%' if unit_str_raw == 'percent' else
-                            '')
+                        numerator = short_unit_name(unit_str_raw) if unit_str_raw not in [None, "count", "ratio", "percent"] else ("#" if unit_str_raw == "count" else "%" if unit_str_raw == "percent" else "")
 
                         # For normalized metrics, use the actual normalization unit string
-                        if metric.normalized and unit_str_raw not in [None, 'ratio']:
-                            normalization_unit_raw = analysis.units.get('distance', 'm')
+                        if metric.normalized and unit_str_raw not in [None, "ratio"]:
+                            normalization_unit_raw = analysis.units.get("distance", "m")
                             denominator = short_unit_name(normalization_unit_raw)
-                            unit_str = f'{numerator}/{denominator}' if numerator else f'/{denominator}'
+                            unit_str = f"{numerator}/{denominator}" if numerator else f"/{denominator}"
                         else:
                             unit_str = numerator
 
-                        metric_name = f'{metric.name} ({unit_str})' if unit_str else metric.name
+                        metric_name = f"{metric.name} ({unit_str})" if unit_str else metric.name
 
-                        metric_value: MetricValue = metric_values.get(
-                            metric.id,
-                            MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None)
-                        )
+                        metric_value: MetricValue = metric_values.get(metric.id, MetricValue(metric, None, None, False, None, None, metric.default_unit_id, None))
 
                         # --- Use current_value_as_string for formatting and conversion ---
                         value = metric_value.manual_value if metric_value.is_manual == 1 else metric_value.current_value_as_string(display_unit_for_value)
-                        value = value if value is not None else ''
+                        value = value if value is not None else ""
                         values.update({metric_name: value})
-                        
+
                         if self.chkIncludeUncertainty.isChecked():
                             uncertainty = metric_value.uncertainty_as_string()
-                            values.update({f'{metric_name} Uncertainty': uncertainty})
+                            values.update({f"{metric_name} Uncertainty": uncertainty})
                     out_values.append(values)
 
         if len(out_values) < 1:
@@ -178,17 +164,17 @@ class FrmExportMetrics(QtWidgets.QDialog):
         exporter = FrmTableExport(
             self,
             data=out_values,
-            base_name='analysis_metrics',
+            base_name="analysis_metrics",
             project_path=self.project.project_file,
-            export_type='analysis_metrics',
+            export_type="analysis_metrics",
         )
         success, msg = exporter.export_table(self.txtOutpath.text())
         if not success:
             QtWidgets.QMessageBox.critical(self, "Export Metrics Table", f"Error exporting metrics table: {msg}")
             return
 
-        note = ' including uncertainty columns' if self.chkIncludeUncertainty.isChecked() else ''
-        self.iface.messageBar().pushMessage('Export Metrics', f'Exported metrics{note} to {self.txtOutpath.text()}', level=Qgis.Success)
+        note = " including uncertainty columns" if self.chkIncludeUncertainty.isChecked() else ""
+        self.iface.messageBar().pushMessage("Export Metrics", f"Exported metrics{note} to {self.txtOutpath.text()}", level=Qgis.Success)
 
         out_file = self.txtOutpath.text()
         super().accept()
@@ -204,11 +190,11 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.setLayout(self.vert)
 
         # Groupbox named "Data Capture Events" with radio buttons for "just the currently active DCE" or "All Data Capture Events"
-        self.grpDCE = QtWidgets.QGroupBox('Data Capture Events')
-        self.rdoActiveDCE = QtWidgets.QRadioButton('Just the currently active Data Capture Event')
-        self.rdoActiveDCE.setToolTip('Export metrics for the only currently active Data Capture Event')
-        self.rdoAllDCE = QtWidgets.QRadioButton('All Data Capture Events')
-        self.rdoAllDCE.setToolTip('Export metrics for all Data Capture Events in the project')
+        self.grpDCE = QtWidgets.QGroupBox("Data Capture Events")
+        self.rdoActiveDCE = QtWidgets.QRadioButton("Just the currently active Data Capture Event")
+        self.rdoActiveDCE.setToolTip("Export metrics for the only currently active Data Capture Event")
+        self.rdoAllDCE = QtWidgets.QRadioButton("All Data Capture Events")
+        self.rdoAllDCE.setToolTip("Export metrics for all Data Capture Events in the project")
         self.rdoActiveDCE.setChecked(True)
         self.grpDCE.setLayout(QtWidgets.QVBoxLayout())
         self.grpDCE.layout().addWidget(self.rdoActiveDCE)
@@ -216,11 +202,11 @@ class FrmExportMetrics(QtWidgets.QDialog):
         self.vert.addWidget(self.grpDCE)
 
         # groupbox named Sampling Frames with radio buttons for "just the currently active SF" or "All Sampling Frames"
-        self.grpSF = QtWidgets.QGroupBox('Sample Frames')
-        self.rdoActiveSF = QtWidgets.QRadioButton('Just the currently active Sample Frame')
-        self.rdoActiveSF.setToolTip('Export metrics for the only currently active Sample Frame')
-        self.rdoAllSF = QtWidgets.QRadioButton('All Sample Frames')
-        self.rdoAllSF.setToolTip('Export metrics for all Sample Frames in the project')
+        self.grpSF = QtWidgets.QGroupBox("Sample Frames")
+        self.rdoActiveSF = QtWidgets.QRadioButton("Just the currently active Sample Frame")
+        self.rdoActiveSF.setToolTip("Export metrics for the only currently active Sample Frame")
+        self.rdoAllSF = QtWidgets.QRadioButton("All Sample Frames")
+        self.rdoAllSF.setToolTip("Export metrics for all Sample Frames in the project")
         self.rdoActiveSF.setChecked(True)
         self.grpSF.setLayout(QtWidgets.QVBoxLayout())
         self.grpSF.layout().addWidget(self.rdoActiveSF)

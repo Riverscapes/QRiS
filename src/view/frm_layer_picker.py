@@ -1,14 +1,14 @@
 from qgis.PyQt import QtCore, QtWidgets
+
 from ..model.db_item import DBItemModel
 
 
 class FrmLayerPicker(QtWidgets.QDialog):
-
     def __init__(self, parent, label_message: str, layers: list):
         super().__init__(parent)
         self.setupUi()
 
-        self.setWindowTitle('Select Layer')
+        self.setWindowTitle("Select Layer")
 
         self.layer = None
 
@@ -47,4 +47,4 @@ class FrmLayerPicker(QtWidgets.QDialog):
     def accept(self):
 
         self.layer = self.cboLayers.currentData(QtCore.Qt.UserRole)
-        super(FrmLayerPicker, self).accept()
+        super().accept()

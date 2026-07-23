@@ -2,18 +2,15 @@ import json
 
 from qgis.PyQt import QtWidgets
 
+from ..model.event import DCE_EVENT_TYPE_ID
 from ..model.planning_container import PlanningContainer, insert
 from ..model.project import Project
-from ..model.event import DCE_EVENT_TYPE_ID
-
+from .utilities import add_standard_form_buttons, validate_name
 from .widgets.metadata import MetadataWidget
 from .widgets.planning_event_library import PlanningEventLibraryWidget
 
-from .utilities import validate_name, add_standard_form_buttons
-
 
 class FrmPlanningContainer(QtWidgets.QDialog):
-
     def __init__(self, parent, qris_project: Project, planning_container: PlanningContainer = None):
         super().__init__(parent)
 
@@ -24,11 +21,11 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         if self.planning_container is not None and self.planning_container.metadata is not None:
             # move any keys that are not 'metadata', 'system' or 'attributes' to 'system'
             init_metadata = self.planning_container.metadata
-            if 'system' not in init_metadata:
-                init_metadata['system'] = dict()
+            if "system" not in init_metadata:
+                init_metadata["system"] = dict()
             for key in list(init_metadata.keys()):
-                if key not in ['metadata', 'system', 'attributes']:
-                    init_metadata['system'][key] = init_metadata[key]
+                if key not in ["metadata", "system", "attributes"]:
+                    init_metadata["system"][key] = init_metadata[key]
                     del init_metadata[key]
         self.metadata_widget = MetadataWidget(self, json.dumps(init_metadata))
         self.layer_widget = None
@@ -36,7 +33,7 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         self.event_library = PlanningEventLibraryWidget(self, qris_project, [DCE_EVENT_TYPE_ID])
 
         self.setupUi()
-        self.setWindowTitle(f'Create New Planning Container' if self.planning_container is None else f'Edit Planning Container')
+        self.setWindowTitle("Create New Planning Container" if self.planning_container is None else "Edit Planning Container")
         self.resize(900, 600)
 
         if self.planning_container is not None:
@@ -65,23 +62,17 @@ class FrmPlanningContainer(QtWidgets.QDialog):
                 self.qris_project.project_changed.emit()
                 super().accept()
             else:
-                self.planning_container = insert(
-                    self.qris_project.project_file,
-                    self.txtName.text(),
-                    self.txtDescription.toPlainText(),
-                    events,
-                    self.metadata_widget.get_data()
-                )
+                self.planning_container = insert(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), events, self.metadata_widget.get_data())
 
                 self.qris_project.add_db_item(self.planning_container)
                 super().accept()
 
         except Exception as ex:
-            if 'unique' in str(ex).lower():
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A data capture event with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+            if "unique" in str(ex).lower():
+                QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A data capture event with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 self.txtName.setFocus()
             else:
-                QtWidgets.QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
+                QtWidgets.QMessageBox.warning(self, "Error Saving Data Capture Event", str(ex))
 
     def setupUi(self):
 
@@ -95,11 +86,11 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
-        self.txtName.setToolTip('The name of the planning container')
+        self.txtName.setToolTip("The name of the planning container")
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
@@ -112,7 +103,7 @@ class FrmPlanningContainer(QtWidgets.QDialog):
             self.vertEvents = QtWidgets.QVBoxLayout(self.tabEvents)
             self.vertEvents.setContentsMargins(9, 9, 9, 9)
             self.vertEvents.addWidget(self.event_library)
-            self.tab.addTab(self.tabEvents, 'Associated Events')
+            self.tab.addTab(self.tabEvents, "Associated Events")
 
         # Description
         self.tabDescription = QtWidgets.QWidget()
@@ -120,10 +111,10 @@ class FrmPlanningContainer(QtWidgets.QDialog):
         self.vertDescription.setContentsMargins(9, 9, 9, 9)
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.vertDescription.addWidget(self.txtDescription)
-        self.tab.addTab(self.tabDescription, 'Description')
+        self.tab.addTab(self.tabDescription, "Description")
 
         # Metadata
-        self.tab.addTab(self.metadata_widget, 'Metadata')
+        self.tab.addTab(self.metadata_widget, "Metadata")
 
-        help_text = 'dce'
+        help_text = "dce"
         self.vert.addLayout(add_standard_form_buttons(self, help_text))

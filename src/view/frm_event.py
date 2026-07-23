@@ -1,31 +1,29 @@
+from datetime import datetime
 import json
 
 from qgis.PyQt import QtCore, QtWidgets
 
-from ..model.event import Event, PLANNING_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, insert as insert_event
-from ..model.db_item import DBItem, DBItemModel
 from ..model.datespec import DateSpec
+from ..model.db_item import DBItem, DBItemModel
+from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID, Event
+from ..model.event import insert as insert_event
+from ..model.layer import check_and_remove_unused_layers, insert_layer
 from ..model.project import Project
-from ..model.layer import insert_layer, check_and_remove_unused_layers
 from ..model.protocol import Protocol, insert_protocol
-
-from ..QRiS.protocol_parser import ProtocolDefinition, LayerDefinition
+from ..QRiS.protocol_parser import LayerDefinition, ProtocolDefinition
+from .frm_event_picker import FrmEventPicker
+from .utilities import add_standard_form_buttons, validate_name
+from .widgets.attachments_library import AttachmentsLibraryWidget
 from .widgets.date_picker import FrmDatePicker
-from .widgets.metadata import MetadataWidget
-from .widgets.surface_library import SurfaceLibraryWidget
 from .widgets.event_library import EventLibraryWidget
 from .widgets.layer_library import LayerLibraryWidget
-from .widgets.attachments_library import AttachmentsLibraryWidget
-from .frm_event_picker import FrmEventPicker
-
-from datetime import datetime
-from .utilities import validate_name, add_standard_form_buttons
+from .widgets.metadata import MetadataWidget
+from .widgets.surface_library import SurfaceLibraryWidget
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
 
 class FrmEvent(QtWidgets.QDialog):
-
     def __init__(self, parent, qris_project: Project, event_type_id: int = DATA_CAPTURE_EVENT_TYPE_ID, dce_event: Event = None):
         super().__init__(parent)
 
@@ -39,11 +37,11 @@ class FrmEvent(QtWidgets.QDialog):
         if dce_event is not None and dce_event.metadata is not None:
             # move any keys that are not 'metadata', 'system' or 'attributes' to 'system'
             init_metadata = dce_event.metadata
-            if 'system' not in init_metadata:
-                init_metadata['system'] = dict()
+            if "system" not in init_metadata:
+                init_metadata["system"] = dict()
             for key in list(init_metadata.keys()):
-                if key not in ['metadata', 'system', 'attributes']:
-                    init_metadata['system'][key] = init_metadata[key]
+                if key not in ["metadata", "system", "attributes"]:
+                    init_metadata["system"][key] = init_metadata[key]
                     del init_metadata[key]
         self.metadata_widget = MetadataWidget(self, json.dumps(init_metadata))
         self.surface_library = SurfaceLibraryWidget(self, qris_project)
@@ -66,22 +64,22 @@ class FrmEvent(QtWidgets.QDialog):
             self.type_name = "As-Built"
 
         self.setupUi()
-        dce_type = 'Data Capture' if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'Planning'
-        self.setWindowTitle(f'Create New {dce_type} Event' if dce_event is None else f'Edit {dce_type} Event')
+        dce_type = "Data Capture" if event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else "Planning"
+        self.setWindowTitle(f"Create New {dce_type} Event" if dce_event is None else f"Edit {dce_type} Event")
         self.resize(900, 600)
 
         self.platform_checkboxes = []
-        platforms = sorted(qris_project.lookup_tables['lkp_platform'].values(), key=lambda x: x.id)
+        platforms = sorted(qris_project.lookup_tables["lkp_platform"].values(), key=lambda x: x.id)
         for platform in platforms:
             chk = QtWidgets.QCheckBox(platform.name)
-            chk.setProperty('db_item', platform)
+            chk.setProperty("db_item", platform)
             self.vertPlatform.addWidget(chk)
             self.platform_checkboxes.append(chk)
 
         self.optSingleDate.toggled.connect(self.on_opt_date_change)
 
         valley_bottoms: dict = qris_project.valley_bottoms.copy()
-        valley_bottoms[0] = DBItem('', 0, 'None')
+        valley_bottoms[0] = DBItem("", 0, "None")
         self.valley_bottom_model = DBItemModel(valley_bottoms)
         self.valley_bottom_model.sort_data_by_key()
         self.cboValleyBottom.setModel(self.valley_bottom_model)
@@ -90,15 +88,15 @@ class FrmEvent(QtWidgets.QDialog):
         if dce_event is not None:
             self.txtName.setText(dce_event.name)
             self.txtDescription.setPlainText(dce_event.description)
-            
+
             platform_ids = []
-            if dce_event.metadata and 'system' in dce_event.metadata and 'platform_ids' in dce_event.metadata['system']:
-                platform_ids = dce_event.metadata['system']['platform_ids']
+            if dce_event.metadata and "system" in dce_event.metadata and "platform_ids" in dce_event.metadata["system"]:
+                platform_ids = dce_event.metadata["system"]["platform_ids"]
             elif dce_event.platform:
                 platform_ids = [dce_event.platform.id]
 
             for chk in self.platform_checkboxes:
-                item = chk.property('db_item')
+                item = chk.property("db_item")
                 if item.id in platform_ids:
                     chk.setChecked(True)
 
@@ -107,15 +105,15 @@ class FrmEvent(QtWidgets.QDialog):
             if any(date is not None for date in [dce_event.end.day, dce_event.end.year, dce_event.end.month]):
                 self.optDateRange.setChecked(True)
 
-            if self.metadata_widget.metadata is not None and 'system' in self.metadata_widget.metadata:
-                if 'valley_bottom_id' in self.metadata_widget.metadata['system']:
-                    index = self.valley_bottom_model.getItemIndexById(self.metadata_widget.metadata['system']['valley_bottom_id'])
+            if self.metadata_widget.metadata is not None and "system" in self.metadata_widget.metadata:
+                if "valley_bottom_id" in self.metadata_widget.metadata["system"]:
+                    index = self.valley_bottom_model.getItemIndexById(self.metadata_widget.metadata["system"]["valley_bottom_id"])
                     if index is not None:
                         self.cboValleyBottom.setCurrentIndex(index)
-                if 'phase' in self.metadata_widget.metadata['system']:
-                    self.txtPhase.setText(self.metadata_widget.metadata['system']['phase'])
-                if 'date_label' in self.metadata_widget.metadata['system']:
-                    self.txtDateLabel.setText(self.metadata_widget.metadata['system']['date_label'])
+                if "phase" in self.metadata_widget.metadata["system"]:
+                    self.txtPhase.setText(self.metadata_widget.metadata["system"]["phase"])
+                if "date_label" in self.metadata_widget.metadata["system"]:
+                    self.txtDateLabel.setText(self.metadata_widget.metadata["system"]["date_label"])
 
             # if self.layer_widget is not None:
             #     # Collect all layer names and geometry types
@@ -139,51 +137,50 @@ class FrmEvent(QtWidgets.QDialog):
         if self.optSingleDate.isChecked():
             self.lblEndDate.setVisible(False)
             self.uc_end.setVisible(False)
-            self.lblStartDate.setText('Date')
+            self.lblStartDate.setText("Date")
         else:
             self.lblEndDate.setVisible(True)
             self.uc_end.setVisible(True)
-            self.lblStartDate.setText('Start Date')
+            self.lblStartDate.setText("Start Date")
 
     def load_from_template(self):
         # Filter events of same type
         events = [e for e in self.qris_project.events.values() if e.event_type.id == self.event_type_id]
         if self.dce_event:
             events = [e for e in events if e.id != self.dce_event.id]
-        
+
         # Sort events by name
         events.sort(key=lambda x: x.name)
 
-        if not events:   
+        if not events:
             QtWidgets.QMessageBox.information(self, "No Templates", f"No existing {self.type_name}s found to use as a template.")
             return
 
         dlg = FrmEventPicker(self, self.qris_project, self.event_type_id, events=events, show_copy_options=True)
         dlg.setWindowTitle("Select Template " + dlg.event_name)
-        
+
         if dlg.exec_():
             source_event = dlg.qris_event
-            
+
             if dlg.chkDescription.isChecked():
                 self.txtDescription.setPlainText(source_event.description)
-                
+
             if dlg.chkBasicProps.isChecked():
-                
                 # Clear existing checks first or just set them? Usually set them.
                 for chk in self.platform_checkboxes:
                     chk.setChecked(False)
 
                 platform_ids = []
-                if source_event.metadata and 'system' in source_event.metadata and 'platform_ids' in source_event.metadata['system']:
-                    platform_ids = source_event.metadata['system']['platform_ids']
+                if source_event.metadata and "system" in source_event.metadata and "platform_ids" in source_event.metadata["system"]:
+                    platform_ids = source_event.metadata["system"]["platform_ids"]
                 elif source_event.platform:
                     platform_ids = [source_event.platform.id]
 
                 for chk in self.platform_checkboxes:
-                    item = chk.property('db_item')
+                    item = chk.property("db_item")
                     if item.id in platform_ids:
                         chk.setChecked(True)
-                
+
                 self.uc_start.set_date_spec(source_event.start)
                 self.uc_end.set_date_spec(source_event.end)
                 if any(date is not None for date in [source_event.end.day, source_event.end.year, source_event.end.month]):
@@ -193,31 +190,31 @@ class FrmEvent(QtWidgets.QDialog):
 
             if dlg.chkMetadata.isChecked() and source_event.metadata:
                 self.metadata_widget.load_json(json.dumps(source_event.metadata))
-                
+
                 meta = self.metadata_widget.metadata
-                if 'system' in meta:
-                    if 'valley_bottom_id' in meta['system']:
-                        index = self.valley_bottom_model.getItemIndexById(meta['system']['valley_bottom_id'])
+                if "system" in meta:
+                    if "valley_bottom_id" in meta["system"]:
+                        index = self.valley_bottom_model.getItemIndexById(meta["system"]["valley_bottom_id"])
                         if index is not None:
                             self.cboValleyBottom.setCurrentIndex(index)
-                    if 'phase' in meta['system']:
-                        self.txtPhase.setText(meta['system']['phase'])
-                    if 'date_label' in meta['system']:
-                        self.txtDateLabel.setText(meta['system']['date_label'])
+                    if "phase" in meta["system"]:
+                        self.txtPhase.setText(meta["system"]["phase"])
+                    if "date_label" in meta["system"]:
+                        self.txtDateLabel.setText(meta["system"]["date_label"])
 
             if dlg.chkLayers.isChecked() and self.layer_widget:
                 # Reset all
                 for key in self.layer_widget.current_layers_state:
-                     self.layer_widget.current_layers_state[key] = False
-                
+                    self.layer_widget.current_layers_state[key] = False
+
                 for event_layer in source_event.event_layers:
-                    l = event_layer.layer
-                    p = l.get_layer_protocol(self.qris_project.protocols)
+                    layer = event_layer.layer
+                    p = layer.get_layer_protocol(self.qris_project.protocols)
                     if p:
-                        key = f"{p.unique_key()}::{l.unique_key()}"
+                        key = f"{p.unique_key()}::{layer.unique_key()}"
                         if key in self.layer_widget.current_layers_state:
-                             self.layer_widget.current_layers_state[key] = True
-                
+                            self.layer_widget.current_layers_state[key] = True
+
                 self.layer_widget.full_refresh_ui()
 
     def check_surface_types(self):
@@ -232,18 +229,18 @@ class FrmEvent(QtWidgets.QDialog):
     def accept(self):
 
         if not self.check_surface_types():
-            QtWidgets.QMessageBox.warning(self, 'Invalid Surface Types', 'Only one DEM can be selected')
+            QtWidgets.QMessageBox.warning(self, "Invalid Surface Types", "Only one DEM can be selected")
             return
 
         start_date_valid, start_date_error_msg = self.uc_start.validate()
         if not start_date_valid:
-            QtWidgets.QMessageBox.warning(self, 'Invalid Start Date', start_date_error_msg)
+            QtWidgets.QMessageBox.warning(self, "Invalid Start Date", start_date_error_msg)
             self.uc_start.setFocus()
             return
 
         end_date_valid, end_date_error_msg = self.uc_end.validate()
         if not end_date_valid:
-            QtWidgets.QMessageBox.warning(self, 'Invalid End Date', end_date_error_msg)
+            QtWidgets.QMessageBox.warning(self, "Invalid End Date", end_date_error_msg)
             self.uc_end.setFocus()
             return
 
@@ -252,7 +249,7 @@ class FrmEvent(QtWidgets.QDialog):
 
         date_order_valid = check_if_date_order_valid(start_date, end_date)
         if not date_order_valid:
-            QtWidgets.QMessageBox.warning(self, 'Invalid Date Order', "Start date must be before the end date.")
+            QtWidgets.QMessageBox.warning(self, "Invalid Date Order", "Start date must be before the end date.")
             self.uc_end.setFocus()
             return
 
@@ -265,13 +262,13 @@ class FrmEvent(QtWidgets.QDialog):
         if self.layer_widget is not None:
             # New LayerSelector logic
             event_layers, selected_layer_definitions = self.layer_widget.get_selected_layer_definitions(self.qris_project.layers)
-            
+
             if len(selected_layer_definitions) < 1 and len(event_layers) < 1:
-                QtWidgets.QMessageBox.warning(self, 'No Layers Selected', 'You must select at least one layer to continue.')
+                QtWidgets.QMessageBox.warning(self, "No Layers Selected", "You must select at least one layer to continue.")
                 return
 
-        # Insert the layer and parent protocol to the project if they are not already in the project 
-        for protocol_definition, layer_definition in selected_layer_definitions: 
+        # Insert the layer and parent protocol to the project if they are not already in the project
+        for protocol_definition, layer_definition in selected_layer_definitions:
             protocol_definition: ProtocolDefinition
             layer_definition: LayerDefinition
             protocol_id = None
@@ -281,7 +278,7 @@ class FrmEvent(QtWidgets.QDialog):
                 if existing_protocol.unique_key() == protocol_definition.unique_key():
                     protocol_id = existing_id
                     break
-            
+
             if protocol_id is None:
                 new_protocol, metrics = insert_protocol(self.qris_project.project_file, protocol_definition)
                 self.qris_project.protocols[new_protocol.id] = new_protocol
@@ -304,33 +301,33 @@ class FrmEvent(QtWidgets.QDialog):
             else:
                 layer = self.qris_project.layers[layer_id]
             event_layers.append(layer)
-    
+
         surface_rasters = self.surface_library.get_selected_surfaces()
-        
-        if self.cboValleyBottom.currentText() != 'None':
-            self.metadata_widget.add_system_metadata('valley_bottom_id', self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id)
-        else:
-            self.metadata_widget.delete_item('system', 'valley_bottom_id')
 
-        if self.txtPhase.text() != '':
-            self.metadata_widget.add_system_metadata('phase', self.txtPhase.text())
+        if self.cboValleyBottom.currentText() != "None":
+            self.metadata_widget.add_system_metadata("valley_bottom_id", self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id)
         else:
-            self.metadata_widget.delete_item('system', 'phase')
+            self.metadata_widget.delete_item("system", "valley_bottom_id")
 
-        if self.txtDateLabel.text() != '':
-            self.metadata_widget.add_system_metadata('date_label', self.txtDateLabel.text())
+        if self.txtPhase.text() != "":
+            self.metadata_widget.add_system_metadata("phase", self.txtPhase.text())
         else:
-            self.metadata_widget.delete_item('system', 'date_label')
+            self.metadata_widget.delete_item("system", "phase")
+
+        if self.txtDateLabel.text() != "":
+            self.metadata_widget.add_system_metadata("date_label", self.txtDateLabel.text())
+        else:
+            self.metadata_widget.delete_item("system", "date_label")
 
         selected_platforms = []
         for chk in self.platform_checkboxes:
             if chk.isChecked():
-                selected_platforms.append(chk.property('db_item').id)
-        
+                selected_platforms.append(chk.property("db_item").id)
+
         if len(selected_platforms) > 0:
-            self.metadata_widget.add_system_metadata('platform_ids', selected_platforms)
+            self.metadata_widget.add_system_metadata("platform_ids", selected_platforms)
         else:
-             self.metadata_widget.delete_item('system', 'platform_ids')
+            self.metadata_widget.delete_item("system", "platform_ids")
 
         if not self.metadata_widget.validate():
             return
@@ -341,14 +338,14 @@ class FrmEvent(QtWidgets.QDialog):
                 if any(event_layer.layer not in selected_layer_definitions and event_layer.layer not in event_layers for event_layer in self.dce_event.event_layers):
                     response = QtWidgets.QMessageBox.question(
                         self,
-                        'Possible Data Loss',
+                        "Possible Data Loss",
                         (
                             "One or more layers that were part of this data capture event are no longer associated with the event.\n\n"
                             "Continuing might lead to the loss of geospatial data. Do you want to continue?\n\n"
                             "Click Yes to proceed and delete all data associated with layers that are no longer used by the "
                             "current data capture event protocols.\n"
                             "Click No to stop and avoid any data loss."
-                        )
+                        ),
                     )
                     if response == QtWidgets.QMessageBox.No:
                         return
@@ -366,13 +363,13 @@ class FrmEvent(QtWidgets.QDialog):
                     self.txtDescription.toPlainText(),
                     self.uc_start.get_date_spec(),
                     self.uc_end.get_date_spec(),
-                    '',
-                    self.qris_project.lookup_tables['lkp_event_types'][self.event_type_id],
+                    "",
+                    self.qris_project.lookup_tables["lkp_event_types"][self.event_type_id],
                     None,
-                    None, # self.cboRepresentation.currentData(QtCore.Qt.UserRole),
+                    None,  # self.cboRepresentation.currentData(QtCore.Qt.UserRole),
                     event_layers,
                     surface_rasters,
-                    self.metadata_widget.get_data()
+                    self.metadata_widget.get_data(),
                 )
 
                 self.qris_project.add_db_item(self.dce_event)
@@ -380,15 +377,15 @@ class FrmEvent(QtWidgets.QDialog):
                     self.attachments_widget.dce_event = self.dce_event
                     self.attachments_widget.save()
                 super().accept()
-            
-            #TODO Check for any unused layers and remove them from the project This is based on if they are part of any event, not by the number of features referencing the layer
+
+            # TODO Check for any unused layers and remove them from the project This is based on if they are part of any event, not by the number of features referencing the layer
 
         except Exception as ex:
-            if 'unique' in str(ex).lower():
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A data capture event with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+            if "unique" in str(ex).lower():
+                QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A data capture event with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 self.txtName.setFocus()
             else:
-                QtWidgets.QMessageBox.warning(self, 'Error Saving Data Capture Event', str(ex))
+                QtWidgets.QMessageBox.warning(self, "Error Saving Data Capture Event", str(ex))
 
     def setupUi(self):
 
@@ -401,7 +398,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
@@ -410,7 +407,7 @@ class FrmEvent(QtWidgets.QDialog):
 
         self.btnLoadTemplate = QtWidgets.QPushButton(f"Load Layers and Properties from Existing {self.type_name}...")
         self.btnLoadTemplate.clicked.connect(self.load_from_template)
-        
+
         self.hboxTemplate = QtWidgets.QHBoxLayout()
         self.hboxTemplate.addWidget(self.btnLoadTemplate)
         self.hboxTemplate.addStretch(1)
@@ -421,14 +418,14 @@ class FrmEvent(QtWidgets.QDialog):
 
         # Layers Tab
         if self.layer_widget is not None:
-            self.tab.addTab(self.layer_widget, 'Layers')        
+            self.tab.addTab(self.layer_widget, "Layers")
 
         # Basic Properties Tab
         self.tabGridWidget = QtWidgets.QWidget()
         self.tabGrid = QtWidgets.QGridLayout(self.tabGridWidget)
-        self.tab.addTab(self.tabGridWidget, 'Basic Properties')
+        self.tab.addTab(self.tabGridWidget, "Basic Properties")
 
-        self.lblValleyBottom = QtWidgets.QLabel('Associated Valley Bottom')
+        self.lblValleyBottom = QtWidgets.QLabel("Associated Valley Bottom")
         self.tabGrid.addWidget(self.lblValleyBottom, 0, 0, 1, 1)
 
         self.cboValleyBottom = QtWidgets.QComboBox()
@@ -436,31 +433,31 @@ class FrmEvent(QtWidgets.QDialog):
 
         # row 2: as-built associated design
 
-        self.lblPhase = QtWidgets.QLabel('Phase', self)
+        self.lblPhase = QtWidgets.QLabel("Phase", self)
         self.tabGrid.addWidget(self.lblPhase, 2, 0, 1, 1)
         self.lblPhase.setVisible(False)
 
         self.txtPhase = QtWidgets.QLineEdit(self)
-        self.txtPhase.setPlaceholderText('Phase 1, Phase 2, Pilot, Demo, Maintenance of Phase 1 etc.')
+        self.txtPhase.setPlaceholderText("Phase 1, Phase 2, Pilot, Demo, Maintenance of Phase 1 etc.")
         self.tabGrid.addWidget(self.txtPhase, 2, 1, 1, 1)
         self.txtPhase.setVisible(False)
 
-        self.optSingleDate = QtWidgets.QRadioButton('Single Point in Time')
-        self.optSingleDate.setToolTip('Select this option if the event occurred at a single point in time.')
+        self.optSingleDate = QtWidgets.QRadioButton("Single Point in Time")
+        self.optSingleDate.setToolTip("Select this option if the event occurred at a single point in time.")
         self.optSingleDate.setChecked(True)
         self.tabGrid.addWidget(self.optSingleDate, 3, 0, 1, 1)
 
-        self.optDateRange = QtWidgets.QRadioButton('Date Range')
-        self.optDateRange.setToolTip('Select this option if the event occurred over a range of dates.')
+        self.optDateRange = QtWidgets.QRadioButton("Date Range")
+        self.optDateRange.setToolTip("Select this option if the event occurred over a range of dates.")
         self.tabGrid.addWidget(self.optDateRange, 4, 0, 1, 1)
 
-        self.lblStartDate = QtWidgets.QLabel('Date')
+        self.lblStartDate = QtWidgets.QLabel("Date")
         self.tabGrid.addWidget(self.lblStartDate, 5, 0, 1, 1)
 
         self.uc_start = FrmDatePicker(self)
         self.tabGrid.addWidget(self.uc_start, 5, 1, 1, 1)
 
-        self.lblEndDate = QtWidgets.QLabel('End Date')
+        self.lblEndDate = QtWidgets.QLabel("End Date")
         self.lblEndDate.setVisible(False)
         self.tabGrid.addWidget(self.lblEndDate, 6, 0, 1, 1)
 
@@ -468,7 +465,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.uc_end.setVisible(False)
         self.tabGrid.addWidget(self.uc_end, 6, 1, 1, 1)
 
-        self.lblPlatform = QtWidgets.QLabel('Event completed at')
+        self.lblPlatform = QtWidgets.QLabel("Event completed at")
         self.lblPlatform.setAlignment(QtCore.Qt.AlignTop)
         self.tabGrid.addWidget(self.lblPlatform, 8, 0, 1, 1)
 
@@ -477,33 +474,33 @@ class FrmEvent(QtWidgets.QDialog):
         self.vertPlatform.setContentsMargins(0, 0, 0, 0)
         self.tabGrid.addWidget(self.wdgPlatform, 8, 1, 1, 1)
 
-        self.lblDateLabel = QtWidgets.QLabel('Date Label')
+        self.lblDateLabel = QtWidgets.QLabel("Date Label")
         self.tabGrid.addWidget(self.lblDateLabel, 7, 0, 1, 1)
 
         self.txtDateLabel = QtWidgets.QLineEdit()
-        self.txtDateLabel.setPlaceholderText('Optional label to express what the date represents.')
+        self.txtDateLabel.setPlaceholderText("Optional label to express what the date represents.")
         self.tabGrid.addWidget(self.txtDateLabel, 7, 1, 1, 1)
 
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.tabGrid.addItem(verticalSpacer)
 
-        self.chkAddToMap = QtWidgets.QCheckBox('Add New Layers to Map')
+        self.chkAddToMap = QtWidgets.QCheckBox("Add New Layers to Map")
         self.chkAddToMap.setChecked(False)
         self.vert.addWidget(self.chkAddToMap)
 
         # Surface Rasters
         if self.event_library is not None:
-             self.event_library_container = QtWidgets.QWidget()
-             self.vert_event_library = QtWidgets.QVBoxLayout(self.event_library_container)
-             # self.vert_event_library.setContentsMargins(0, 0, 0, 0)
-             self.vert_event_library.addWidget(self.event_library)
-             self.tab.addTab(self.event_library_container, 'Associated Events')
-        
+            self.event_library_container = QtWidgets.QWidget()
+            self.vert_event_library = QtWidgets.QVBoxLayout(self.event_library_container)
+            # self.vert_event_library.setContentsMargins(0, 0, 0, 0)
+            self.vert_event_library.addWidget(self.event_library)
+            self.tab.addTab(self.event_library_container, "Associated Events")
+
         self.surfaces_widget = QtWidgets.QWidget()
         self.vert_surfaces = QtWidgets.QVBoxLayout(self.surfaces_widget)
         self.vert_surfaces.setContentsMargins(0, 0, 0, 0)
         self.vert_surfaces.addWidget(self.surface_library)
-        self.tab.addTab(self.surfaces_widget, 'Surfaces')
+        self.tab.addTab(self.surfaces_widget, "Surfaces")
         # self.tab.addTab(self.surface_library, 'Surfaces')
 
         # Description
@@ -511,16 +508,16 @@ class FrmEvent(QtWidgets.QDialog):
         self.vertDescription = QtWidgets.QVBoxLayout(self.tabDescriptionWidget)
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.vertDescription.addWidget(self.txtDescription)
-        self.tab.addTab(self.tabDescriptionWidget, 'Description')
+        self.tab.addTab(self.tabDescriptionWidget, "Description")
 
         # References tab
         if self.attachments_widget is not None:
-            self.tab.addTab(self.attachments_widget, f'{self.type_name} References')
+            self.tab.addTab(self.attachments_widget, f"{self.type_name} References")
 
         # Metadata
-        self.tab.addTab(self.metadata_widget, 'Metadata')
+        self.tab.addTab(self.metadata_widget, "Metadata")
 
-        help_text = 'dce' if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else 'designs'
+        help_text = "dce" if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID else "designs"
         self.vert.addLayout(add_standard_form_buttons(self, help_text))
 
 

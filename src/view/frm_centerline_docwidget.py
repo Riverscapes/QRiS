@@ -2,23 +2,23 @@
 Doc Widget for building centerlines
 
 """
-from qgis.PyQt import  QtWidgets
-from qgis.PyQt.QtCore import Qt, pyqtSlot, pyqtSignal
+
+from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDistanceArea, QgsFeature, QgsGeometry, QgsLineString, QgsPointXY, QgsProject, QgsVectorLayer
+from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import Qt, pyqtSignal, pyqtSlot
 from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsApplication, QgsProject, QgsLineString, QgsVectorLayer, QgsFeature, QgsGeometry, QgsDistanceArea, QgsPointXY, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.utils import iface
 
 from ..gp.centerlines import CenterlineTask
-from ..model.project import Project
 from ..model.db_item import DBItem
-from ..model.profile import Profile
 from ..model.layer import Layer
-
-from .frm_layer_picker import FrmLayerPicker
-from .widgets.capture_line_segment import LineSegmentMapTool
-from .utilities import add_help_button
-from .frm_profile import FrmProfile
+from ..model.profile import Profile
+from ..model.project import Project
 from ..QRiS.qris_map_manager import QRisMapManager
+from .frm_layer_picker import FrmLayerPicker
+from .frm_profile import FrmProfile
+from .utilities import add_help_button
+from .widgets.capture_line_segment import LineSegmentMapTool
 
 PREVIEW_STARTLINE_MACHINE_CODE = "Startline Preview"
 PREVIEW_ENDLINE_MACHINE_CODE = "Endline Preview"
@@ -26,12 +26,11 @@ PREVIEW_CENTERTLINE_MACHINE_CODE = "Centerline Preview"
 
 
 class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
-
     export_complete = pyqtSignal(Profile or None, bool)
 
     def __init__(self, parent, project: Project, map_manager: QRisMapManager):
 
-        super(FrmCenterlineDocWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setAttribute(Qt.WA_QuitOnClose)
         self.setupUi()
 
@@ -44,7 +43,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.get_endline.line_captured.connect(self.capture_end)
 
         self.d = QgsDistanceArea()
-        self.d.setEllipsoid('WGS84')
+        self.d.setEllipsoid("WGS84")
 
     def centerline_setup(self, polygon_source: DBItem):
 
@@ -75,15 +74,15 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         # Set up the Preview Layers
         self.remove_preview_layers()
         iface.mapCanvas().refresh()
-        layer_uri = f'linestring?crs={self.polygon_crs.authid()}'
+        layer_uri = f"linestring?crs={self.polygon_crs.authid()}"
 
-        self.layer_centerline = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CENTERTLINE_MACHINE_CODE, "QRIS Centerline Preview", symbology_key='centerlines_temp', driver='memory')
-        self.layer_start_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_STARTLINE_MACHINE_CODE, "QRIS Centerline Start Preview", driver='memory')
-        self.layer_end_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_ENDLINE_MACHINE_CODE, "QRIS Centerline End Preview", driver='memory')
+        self.layer_centerline = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_CENTERTLINE_MACHINE_CODE, "QRIS Centerline Preview", symbology_key="centerlines_temp", driver="memory")
+        self.layer_start_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_STARTLINE_MACHINE_CODE, "QRIS Centerline Start Preview", driver="memory")
+        self.layer_end_line = self.map_manager.create_temporary_feature_layer(self.project.map_guid, layer_uri, PREVIEW_ENDLINE_MACHINE_CODE, "QRIS Centerline End Preview", driver="memory")
 
         # Set the symbology of the preview layers
-        self.layer_start_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
-        self.layer_end_line.renderer().symbol().symbolLayer(0).setColor(QColor('red'))
+        self.layer_start_line.renderer().symbol().symbolLayer(0).setColor(QColor("red"))
+        self.layer_end_line.renderer().symbol().symbolLayer(0).setColor(QColor("red"))
 
         self.layer_centerline.triggerRepaint()
         self.layer_start_line.triggerRepaint()
@@ -98,7 +97,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     def cmdSelectLayer_click(self):
 
-        sv_layers = list(sv for sv in self.project.scratch_vectors.values() if QgsVectorLayer(f'{sv.gpkg_path}|layername={sv.fc_name}').geometryType() == Layer.GEOMETRY_TYPES['Polygon'])
+        sv_layers = list(sv for sv in self.project.scratch_vectors.values() if QgsVectorLayer(f"{sv.gpkg_path}|layername={sv.fc_name}").geometryType() == Layer.GEOMETRY_TYPES["Polygon"])
         aoi_layers = list(layer for layer in self.project.aois.values())
         valley_bottom_layers = list(layer for layer in self.project.valley_bottoms.values())
         layers = sv_layers + aoi_layers + valley_bottom_layers
@@ -117,14 +116,14 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     def cmdCaptureStart_click(self):
         if self.geom_polygon is None:
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Select one and only one polygon feature before capturing the starting/ending locations.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Select one and only one polygon feature before capturing the starting/ending locations.")
             return
         self.layer_start_line.dataProvider().truncate()
         iface.mapCanvas().setMapTool(self.get_startline)
 
     def cmdCaptureEnd_click(self):
         if self.geom_polygon is None:
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Select one and only one polygon feature before capturing the starting/ending locations.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Select one and only one polygon feature before capturing the starting/ending locations.")
             return
         self.layer_end_line.dataProvider().truncate()
         iface.mapCanvas().setMapTool(self.get_endline)
@@ -132,16 +131,16 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def cmdGenerateCl_click(self):
 
         if self.geom_polygon is None:
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Select one and only one polygon feature before generating centerline.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Select one and only one polygon feature before generating centerline.")
             return
         if self.geom_start is None or self.geom_end is None:
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Capture the start and end of the polygon before generating centerline.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Capture the start and end of the polygon before generating centerline.")
             return
         if not all([self.geom_polygon.intersects(QgsGeometry().fromPolyline(self.geom_start)), self.geom_polygon.intersects(QgsGeometry().fromPolyline(self.geom_end))]):
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Make sure both start and stop lines intersect the polygon.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Make sure both start and stop lines intersect the polygon.")
             return
         if not self.geom_polygon.isGeosValid():
-            QtWidgets.QMessageBox.information(self, 'Centerline Tool', 'The polygon geometry is not valid. Please fix and validate the polygon before generating centerline.')
+            QtWidgets.QMessageBox.information(self, "Centerline Tool", "The polygon geometry is not valid. Please fix and validate the polygon before generating centerline.")
             return
 
         self.layer_centerline.dataProvider().truncate()
@@ -172,30 +171,26 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
     def cmdSaveCenterline_click(self):
 
         if self.feat_centerline is None:
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Generate the centerline before saving.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Generate the centerline before saving.")
             return
         geom_centerline = self.feat_centerline.geometry()
         if geom_centerline.isMultipart():
-            QtWidgets.QMessageBox.information(self, 'Centerlines Error', 'Unable to save a multipart centerline.')
+            QtWidgets.QMessageBox.information(self, "Centerlines Error", "Unable to save a multipart centerline.")
             return
 
-        transform = QgsCoordinateTransform(self.polygon_crs, QgsCoordinateReferenceSystem('EPSG:4326'), QgsProject.instance())
+        transform = QgsCoordinateTransform(self.polygon_crs, QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance())
         geom_centerline.transform(transform)
 
         sline_length = self.d.measureLine(QgsPointXY(geom_centerline.get().points()[0]), QgsPointXY(geom_centerline.get().points()[-1]))
         geom_length = self.d.measureLength(geom_centerline)
-        metrics = {'total_length': geom_length, 'sinuosity': geom_length / sline_length}
+        metrics = {"total_length": geom_length, "sinuosity": geom_length / sline_length}
 
-        temp_layer = QgsVectorLayer(f'LineString?crs=EPSG:4326', 'centerline', 'memory')
+        temp_layer = QgsVectorLayer("LineString?crs=EPSG:4326", "centerline", "memory")
         feat = QgsFeature()
         feat.setGeometry(geom_centerline)
         temp_layer.dataProvider().addFeatures([feat])
 
-        frm_profile = FrmProfile(self, self.project, temp_layer,
-                                  profile_type=Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE,
-                                  fc_name='profile_centerlines',
-                                  system_metadata=self.fields,
-                                  metrics=metrics)
+        frm_profile = FrmProfile(self, self.project, temp_layer, profile_type=Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, fc_name="profile_centerlines", system_metadata=self.fields, metrics=metrics)
         result = frm_profile.exec_()
 
         if result == QtWidgets.QDialog.Accepted:
@@ -213,20 +208,20 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         polygon_layer = self.map_manager.get_db_item_layer(self.project.map_guid, self.polygon_source, None).layer()
         if not polygon_layer or not QgsProject.instance().mapLayer(polygon_layer.id()):
             self.geom_polygon = None
-            self.txtPolygon.setText('Polygon layer is missing or has been deleted')
+            self.txtPolygon.setText("Polygon layer is missing or has been deleted")
             return
 
         features = polygon_layer.selectedFeatures()
 
         if len(features) == 1:
             self.geom_polygon = features[0].geometry()
-            self.txtPolygon.setText(f'FeatureID: {features[0].id()}')
+            self.txtPolygon.setText(f"FeatureID: {features[0].id()}")
         elif len(features) == 0:
             self.geom_polygon = None
-            self.txtPolygon.setText(f'No Features Selected')
+            self.txtPolygon.setText("No Features Selected")
         else:
             self.geom_polygon = None
-            self.txtPolygon.setText(f'Multiple Features Selected')
+            self.txtPolygon.setText("Multiple Features Selected")
 
     @pyqtSlot(QgsLineString)
     def capture_start(self, line_string):
@@ -272,13 +267,9 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         # Orient so vertex[0] is at the start clip line (upstream end)
         start_pts = self.geom_start.points()
-        start_mid = QgsGeometry.fromPointXY(QgsPointXY(
-            (start_pts[0].x() + start_pts[-1].x()) / 2.0,
-            (start_pts[0].y() + start_pts[-1].y()) / 2.0
-        ))
+        start_mid = QgsGeometry.fromPointXY(QgsPointXY((start_pts[0].x() + start_pts[-1].x()) / 2.0, (start_pts[0].y() + start_pts[-1].y()) / 2.0))
         cl_pts = self.geom_centerline.get().points()
-        if QgsGeometry.fromPointXY(QgsPointXY(cl_pts[-1])).distance(start_mid) < \
-                QgsGeometry.fromPointXY(QgsPointXY(cl_pts[0])).distance(start_mid):
+        if QgsGeometry.fromPointXY(QgsPointXY(cl_pts[-1])).distance(start_mid) < QgsGeometry.fromPointXY(QgsPointXY(cl_pts[0])).distance(start_mid):
             self.geom_centerline = QgsGeometry(QgsLineString(list(reversed(cl_pts))))
 
         self.feat_centerline = QgsFeature()
@@ -286,16 +277,16 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.feat_centerline.setGeometry(geom)
 
         self.fields = {
-            'parent_polygon_type': self.polygon_source.db_table_name,
-            'parent_polygon_id': self.polygon_source.id,
-            'parent_polygon_fid': self.txtPolygon.text(),
-            'start_line': self.geom_start.asWkt(),
-            'end_line': self.geom_start.asWkt(),
-            'densify_distance': self.densify_distance,
-            'smoothing_iterations': smoothing_iter,
-            'smoothing_offset': smoothing_offset,
-            'smoothing_min_distance': smoothing_dist,
-            'smoothing_max_angle': smoothing_angle
+            "parent_polygon_type": self.polygon_source.db_table_name,
+            "parent_polygon_id": self.polygon_source.id,
+            "parent_polygon_fid": self.txtPolygon.text(),
+            "start_line": self.geom_start.asWkt(),
+            "end_line": self.geom_start.asWkt(),
+            "densify_distance": self.densify_distance,
+            "smoothing_iterations": smoothing_iter,
+            "smoothing_offset": smoothing_offset,
+            "smoothing_min_distance": smoothing_dist,
+            "smoothing_max_angle": smoothing_angle,
         }
 
         self.layer_centerline.dataProvider().addFeature(self.feat_centerline)
@@ -323,7 +314,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridCenterline = QtWidgets.QGridLayout()
         self.tabCenterline.setLayout(self.gridCenterline)
 
-        self.lblLayer = QtWidgets.QLabel('Polygon Layer')
+        self.lblLayer = QtWidgets.QLabel("Polygon Layer")
         self.gridCenterline.addWidget(self.lblLayer, 0, 0, 1, 1)
 
         self.horizLayer = QtWidgets.QHBoxLayout()
@@ -333,12 +324,12 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.txtLayer.setReadOnly(True)
         self.horizLayer.addWidget(self.txtLayer)
 
-        self.cmdSelectLayer = QtWidgets.QPushButton('Select')
-        self.cmdSelectLayer.setToolTip('Select Polygon Layer')
+        self.cmdSelectLayer = QtWidgets.QPushButton("Select")
+        self.cmdSelectLayer.setToolTip("Select Polygon Layer")
         self.cmdSelectLayer.clicked.connect(self.cmdSelectLayer_click)
         self.horizLayer.addWidget(self.cmdSelectLayer)
 
-        self.lblPolygon = QtWidgets.QLabel('Polygon Feature')
+        self.lblPolygon = QtWidgets.QLabel("Polygon Feature")
         self.gridCenterline.addWidget(self.lblPolygon, 1, 0, 1, 1)
 
         self.horizPoly = QtWidgets.QHBoxLayout()
@@ -348,12 +339,12 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.txtPolygon.setReadOnly(True)
         self.horizPoly.addWidget(self.txtPolygon)
 
-        self.cmdPolygon = QtWidgets.QPushButton('Select')
-        self.cmdPolygon.setToolTip('Select Polygon on map')
+        self.cmdPolygon = QtWidgets.QPushButton("Select")
+        self.cmdPolygon.setToolTip("Select Polygon on map")
         self.cmdPolygon.clicked.connect(self.cmdSelectPolygon_click)
         self.horizPoly.addWidget(self.cmdPolygon)
 
-        self.lblStart = QtWidgets.QLabel('Start of Centerline')
+        self.lblStart = QtWidgets.QLabel("Start of Centerline")
         self.gridCenterline.addWidget(self.lblStart, 2, 0, 1, 1)
 
         self.horizStart = QtWidgets.QHBoxLayout()
@@ -363,12 +354,12 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.txtStart.setReadOnly(True)
         self.horizStart.addWidget(self.txtStart)
 
-        self.cmdCaptureS = QtWidgets.QPushButton('Capture')
-        self.cmdCaptureS.setToolTip('Manually capture the transect across the polygon at the start of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.')
+        self.cmdCaptureS = QtWidgets.QPushButton("Capture")
+        self.cmdCaptureS.setToolTip("Manually capture the transect across the polygon at the start of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.")
         self.cmdCaptureS.clicked.connect(self.cmdCaptureStart_click)
         self.horizStart.addWidget(self.cmdCaptureS)
 
-        self.lblEnd = QtWidgets.QLabel('End of Centerline')
+        self.lblEnd = QtWidgets.QLabel("End of Centerline")
         self.gridCenterline.addWidget(self.lblEnd, 3, 0, 1, 1)
 
         self.horizEnd = QtWidgets.QHBoxLayout()
@@ -378,13 +369,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.txtEnd.setReadOnly(True)
         self.horizEnd.addWidget(self.txtEnd)
 
-        self.cmdCaptureE = QtWidgets.QPushButton('Capture')
-        self.cmdCaptureE.setToolTip('Manually capture the transect across the polygon at the end of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.')
+        self.cmdCaptureE = QtWidgets.QPushButton("Capture")
+        self.cmdCaptureE.setToolTip("Manually capture the transect across the polygon at the end of the centerline.\n\n Start and end the transect outside of the polygon, only crossing the polygon once.")
         self.cmdCaptureE.clicked.connect(self.cmdCaptureEnd_click)
         self.horizEnd.addWidget(self.cmdCaptureE)
 
-        self.cmdReset = QtWidgets.QPushButton('Reset')
-        self.cmdReset.setToolTip('Reset the centerline tool polygon, transects, and parameters')
+        self.cmdReset = QtWidgets.QPushButton("Reset")
+        self.cmdReset.setToolTip("Reset the centerline tool polygon, transects, and parameters")
         self.cmdReset.setFixedSize(self.cmdReset.sizeHint())
         self.cmdReset.clicked.connect(self.cmdReset_click)
         self.gridCenterline.addWidget(self.cmdReset, 4, 0, 1, 1)
@@ -396,18 +387,18 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridSmoothing = QtWidgets.QGridLayout()
         self.tabSmoothing.setLayout(self.gridSmoothing)
 
-        self.lblDensity = QtWidgets.QLabel('Densify Distance')
-        self.lblDensity.setToolTip('Densify the polygon by adding regularly placed extra nodes inside each segment so that the maximum distance between any two nodes does not exceed the specified distance')
+        self.lblDensity = QtWidgets.QLabel("Densify Distance")
+        self.lblDensity.setToolTip("Densify the polygon by adding regularly placed extra nodes inside each segment so that the maximum distance between any two nodes does not exceed the specified distance")
         self.gridSmoothing.addWidget(self.lblDensity, 0, 0, 1, 1)
 
         self.dblDensity = QtWidgets.QSpinBox()
         self.dblDensity.setValue(10)
-        self.dblDensity.setSuffix(' m')
+        self.dblDensity.setSuffix(" m")
         self.dblDensity.setRange(0, 500)
         self.gridSmoothing.addWidget(self.dblDensity, 0, 1, 1, 1)
 
-        self.lblSmoothingIter = QtWidgets.QLabel('Smoothing Iterations')
-        self.lblSmoothingIter.setToolTip('number of smoothing iterations to run. More iterations results in a smoother geometry. Set to 0 for no smoothing.')
+        self.lblSmoothingIter = QtWidgets.QLabel("Smoothing Iterations")
+        self.lblSmoothingIter.setToolTip("number of smoothing iterations to run. More iterations results in a smoother geometry. Set to 0 for no smoothing.")
         self.gridSmoothing.addWidget(self.lblSmoothingIter, 1, 0, 1, 1)
 
         self.dblSmoothingIter = QtWidgets.QSpinBox()
@@ -415,8 +406,11 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.dblSmoothingIter.setRange(0, 10)
         self.gridSmoothing.addWidget(self.dblSmoothingIter, 1, 1, 1, 1)
 
-        self.lblSmoothingOffset = QtWidgets.QLabel('Smoothing Offset')
-        self.lblSmoothingOffset.setToolTip(f'fraction of line to create new vertices along, between 0 and 1.0, e.g., the default value of 0.25 will create new vertices 25% and 75% along each line segment of the geometry for each iteration. Smaller values result in “tighter” smoothing.')
+        self.lblSmoothingOffset = QtWidgets.QLabel("Smoothing Offset")
+        self.lblSmoothingOffset.setToolTip(
+            r"fraction of line to create new vertices along, between 0 and 1.0, e.g., the default value of 0.25 will create new vertices 25% and 75% along each line segment of the geometry for each iteration."
+            "Smaller values result in “tighter” smoothing."
+        )
         self.gridSmoothing.addWidget(self.lblSmoothingOffset, 2, 0, 1, 1)
 
         self.dblSmoothingOffset = QtWidgets.QDoubleSpinBox()
@@ -426,24 +420,24 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.dblSmoothingOffset.setRange(0, 1)
         self.gridSmoothing.addWidget(self.dblSmoothingOffset, 2, 1, 1, 1)
 
-        self.lblSmoothingMin = QtWidgets.QLabel('Smoothing Min Distance')
-        self.lblSmoothingMin.setToolTip('minimum segment length to apply smoothing to')
+        self.lblSmoothingMin = QtWidgets.QLabel("Smoothing Min Distance")
+        self.lblSmoothingMin.setToolTip("minimum segment length to apply smoothing to")
         self.gridSmoothing.addWidget(self.lblSmoothingMin, 3, 0, 1, 1)
 
         self.dblSmoothingMin = QtWidgets.QDoubleSpinBox()
-        self.dblSmoothingMin.setSuffix(' m')
+        self.dblSmoothingMin.setSuffix(" m")
         self.dblSmoothingMin.setDecimals(1)
         self.dblSmoothingMin.setRange(-1.0, 500.0)
         self.dblSmoothingMin.setValue(-1.0)
         self.dblSmoothingMin.setSingleStep(5)
         self.gridSmoothing.addWidget(self.dblSmoothingMin, 3, 1, 1, 1)
 
-        self.lblSmoothingAngle = QtWidgets.QLabel('Smoothing Max Angle')
-        self.lblSmoothingAngle.setToolTip('maximum angle at node (0-180) at which smoothing will be applied')
+        self.lblSmoothingAngle = QtWidgets.QLabel("Smoothing Max Angle")
+        self.lblSmoothingAngle.setToolTip("maximum angle at node (0-180) at which smoothing will be applied")
         self.gridSmoothing.addWidget(self.lblSmoothingAngle, 4, 0, 1, 1)
 
         self.dblSmoothingAngle = QtWidgets.QDoubleSpinBox()
-        self.dblSmoothingAngle.setSuffix(' degrees')
+        self.dblSmoothingAngle.setSuffix(" degrees")
         self.dblSmoothingAngle.setDecimals(1)
         self.dblSmoothingAngle.setRange(0, 180)
         self.dblSmoothingAngle.setValue(180.0)
@@ -453,18 +447,18 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
-        self.gridButtons.addWidget(add_help_button(self, 'inputs/valley-bottoms#centerline-tool'), 0, 0, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, "inputs/valley-bottoms#centerline-tool"), 0, 0, 1, 1)
 
         # include a spacer to push the buttons to the right
         self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
 
-        self.cmdGenerateCl = QtWidgets.QPushButton('Generate Centerline')
-        self.cmdGenerateCl.setToolTip('Generate a preview the centerline')
+        self.cmdGenerateCl = QtWidgets.QPushButton("Generate Centerline")
+        self.cmdGenerateCl.setToolTip("Generate a preview the centerline")
         self.cmdGenerateCl.clicked.connect(self.cmdGenerateCl_click)
         self.gridButtons.addWidget(self.cmdGenerateCl, 0, 2, 1, 1)
 
-        self.cmdSaveCl = QtWidgets.QPushButton('Save Centerline')
-        self.cmdSaveCl.setToolTip('Save the centerline to the project')
+        self.cmdSaveCl = QtWidgets.QPushButton("Save Centerline")
+        self.cmdSaveCl.setToolTip("Save the centerline to the project")
         self.cmdSaveCl.clicked.connect(self.cmdSaveCenterline_click)
         self.gridButtons.addWidget(self.cmdSaveCl, 1, 2, 1, 1)
 
