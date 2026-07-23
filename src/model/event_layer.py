@@ -1,9 +1,10 @@
 import sqlite3
+from typing import Optional
 
 from qgis.core import QgsVectorLayer
 
-from .layer import Layer
 from .db_item_spatial import DBItemSpatial
+from .layer import Layer
 
 
 class EventLayer(DBItemSpatial):
@@ -13,24 +14,24 @@ class EventLayer(DBItemSpatial):
     used for each unique layer within an event (across multiple protocols
     and methods if needed)."""
 
-    def __init__(self, id, event_id, layer: Layer, metadata: dict = None) -> None:
-        super().__init__('event_layers', id, layer.name, layer.DCE_LAYER_NAMES[layer.geom_type], 'event_layer_id', layer.geom_type, metadata=metadata)
+    def __init__(self, id, event_id, layer: Layer, metadata: Optional[dict] = None) -> None:
+        super().__init__("event_layers", id, layer.name, layer.DCE_LAYER_NAMES[layer.geom_type], "event_layer_id", layer.geom_type, metadata=metadata)
         self.event_id = event_id
         self.layer = layer
-        self.icon = 'layer'
+        self.icon = "layer"
 
-        self.view_name = f'vw_{self.layer.layer_id}_event_{self.event_id}_event_layer_{self.id}'
-        if self.layer.geom_type == 'Point':
-            self.icon = 'point'
-        elif self.layer.geom_type == 'Linestring':
-            self.icon = 'line'
-        elif self.layer.geom_type == 'Polygon':
-            self.icon = 'polygon'
-        
+        self.view_name = f"vw_{self.layer.layer_id}_event_{self.event_id}_event_layer_{self.id}"
+        if self.layer.geom_type == "Point":
+            self.icon = "point"
+        elif self.layer.geom_type == "Linestring":
+            self.icon = "line"
+        elif self.layer.geom_type == "Polygon":
+            self.icon = "polygon"
+
         self.menu_items = None
         if self.layer.metadata is not None:
-            if 'menu_items' in self.layer.metadata:
-                self.menu_items = self.layer.metadata['menu_items']
+            if "menu_items" in self.layer.metadata:
+                self.menu_items = self.layer.metadata["menu_items"]
 
     def feature_count(self, db_path: str) -> int:
         try:
@@ -40,13 +41,13 @@ class EventLayer(DBItemSpatial):
                 return cursor.fetchone()[0]
         except Exception:
             # Fallback for robustness
-            temp_layer = QgsVectorLayer(f'{db_path}|layername={self.fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
+            temp_layer = QgsVectorLayer(f"{db_path}|layername={self.fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}", "temp", "ogr")
             return temp_layer.featureCount()
 
     def create_spatial_view(self, curs: sqlite3.Cursor) -> None:
         """Create a spatial view of the Event Layer features."""
-        layer_fields: list = self.layer.metadata.get('fields', None)
-        out_fields = '*'
+        layer_fields: list = self.layer.metadata.get("fields", None)
+        out_fields = "*"
         if layer_fields is not None and len(layer_fields) > 0:
             out_fields = ", ".join([f"json_extract(metadata, '$.attributes.{field['id']}') AS \"{field['label']}\"" for field in layer_fields])
         sql = f"CREATE VIEW {self.view_name} AS SELECT fid, geom, event_id, event_layer_id, {out_fields}, metadata FROM {self.fc_name} WHERE event_id == {self.event_id} AND event_layer_id == {self.layer.id}"  # nosec B608 - view_name is auto-generated; fc_name is fixed schema; event_id and layer.id are integer DB IDs
@@ -61,15 +62,14 @@ class EventLayer(DBItemSpatial):
         sql = "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?, ?, ?, ?, ?)"
         curs.execute(sql, [self.view_name, "features", self.view_name, "", self.epsg])
         sql = "INSERT INTO gpkg_geometry_columns (table_name, column_name, geometry_type_name, srs_id, z, m) VALUES (?, ?, ?, ?, ?, ?)"
-        curs.execute(sql, [self.view_name, 'geom', self.geom_type.upper(), self.epsg, 0, 0])
-        
+        curs.execute(sql, [self.view_name, "geom", self.geom_type.upper(), self.epsg, 0, 0])
 
     def delete_event_layer_features(self, db_path: str) -> None:
         """
         Deletes all features in the event layer.
         """
         fc_name = Layer.DCE_LAYER_NAMES[self.layer.geom_type]
-        temp_layer = QgsVectorLayer(f'{db_path}|layername={fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}', 'temp', 'ogr')
+        temp_layer = QgsVectorLayer(f"{db_path}|layername={fc_name}|subset=event_layer_id = {self.layer.id} AND event_id = {self.event_id}", "temp", "ogr")
         temp_layer.startEditing()
         for feat in temp_layer.getFeatures():
             temp_layer.deleteFeature(feat.id())
