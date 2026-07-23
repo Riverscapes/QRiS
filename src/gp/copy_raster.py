@@ -1,11 +1,10 @@
 import os
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis
+from osgeo.gdal import Translate, Warp
+from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
-from osgeo.gdal import Warp, Translate
 
-
-MESSAGE_CATEGORY = 'QRiS_CopyRasterTask'
+MESSAGE_CATEGORY = "QRiS_CopyRasterTask"
 
 
 class CopyRaster(QgsTask):
@@ -17,7 +16,7 @@ class CopyRaster(QgsTask):
     copy_raster_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, mask_tuple, output_path: str):
-        super().__init__(f'Copy Raster Task', QgsTask.CanCancel)
+        super().__init__("Copy Raster Task", QgsTask.CanCancel)
 
         self.source_path = source_path
         self.mask_tuple = mask_tuple
@@ -34,27 +33,23 @@ class CopyRaster(QgsTask):
 
         es_obj = {}
 
-        kwargs = {
-            'format': 'GTiff',
-            'callback': self.progress_callback,
-            'callback_data': es_obj
-        }
+        kwargs = {"format": "GTiff", "callback": self.progress_callback, "callback_data": es_obj}
 
-        temp_path = self.output_path + '.temp'
+        temp_path = self.output_path + ".temp"
 
         if self.mask_tuple is not None:
-            kwargs['cutlineDSName'] = self.mask_tuple[0]
-            kwargs['cutlineLayer'] = 'sample_frame_features'
-            kwargs['cutlineWhere'] = 'sample_frame_id = {}'.format(self.mask_tuple[1])
-            kwargs['cropToCutline'] = True
+            kwargs["cutlineDSName"] = self.mask_tuple[0]
+            kwargs["cutlineLayer"] = "sample_frame_features"
+            kwargs["cutlineWhere"] = f"sample_frame_id = {self.mask_tuple[1]}"
+            kwargs["cropToCutline"] = True
 
-        QgsMessageLog.logMessage(f'Started copy raster request', MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Started copy raster request", MESSAGE_CATEGORY, Qgis.Info)
 
         self.setProgress(0)
 
         try:
             Warp(temp_path, self.source_path, **kwargs)
-            Translate(self.output_path, temp_path, format='GTiff', creationOptions=['COMPRESS=LZW'])
+            Translate(self.output_path, temp_path, format="GTiff", creationOptions=["COMPRESS=LZW"])
             os.remove(temp_path)
 
         except Exception as ex:
@@ -75,18 +70,16 @@ class CopyRaster(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Copy Raster completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Copy Raster completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Raster Copy not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Raster Copy not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Raster Copy Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Raster Copy Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.copy_raster_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Raster Copy was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Raster Copy was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

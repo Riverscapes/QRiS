@@ -1,11 +1,11 @@
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsProject, QgsVectorLayer, QgsRasterLayer, QgsWkbTypes
+from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsRasterLayer, QgsTask, QgsVectorLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
 from .zonal_metrics import ZonalMetrics
 
-MESSAGE_CATEGORY = 'QRiS Zonal Statistics Task'
+MESSAGE_CATEGORY = "QRiS Zonal Statistics Task"
 
 
 class ZonalMetricsTask(QgsTask):
@@ -22,32 +22,31 @@ class ZonalMetricsTask(QgsTask):
         self.polygons = {}
         self.data = {}
 
-        mask_guid = f'QRiS::{project.map_guid}::{mask.db_table_name}::{mask.id}'
+        mask_guid = f"QRiS::{project.map_guid}::{mask.db_table_name}::{mask.id}"
 
         self.map_layers = []
         for layer in QgsProject.instance().mapLayers().values():
             layer_node = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
             if layer_node.itemVisibilityChecked():
-
                 # Skip the mask being used to summarize layers
-                prop = layer_node.customProperty('QRiS')
+                prop = layer_node.customProperty("QRiS")
                 if prop is not None and isinstance(mask, SampleFrame) and prop == mask_guid:
                     continue
 
-                layer_def = {'name': layer.name(), 'url': layer.dataProvider().dataSourceUri()}
+                layer_def = {"name": layer.name(), "url": layer.dataProvider().dataSourceUri()}
                 if isinstance(layer, QgsRasterLayer):
-                    layer_def['type'] = 'raster'
+                    layer_def["type"] = "raster"
                     self.map_layers.append(layer_def)
                 elif isinstance(layer, QgsVectorLayer):
                     # Skip non-spatial tables (e.g., attribute-only layers) that cannot be transformed.
                     if layer.wkbType() != QgsWkbTypes.NoGeometry and layer.featureCount() > 0:
-                        layer_def['type'] = 'vector'
+                        layer_def["type"] = "vector"
                         self.map_layers.append(layer_def)
 
         self.project = project
         self.mask = mask
         self.config = {}
-        mask_layer = 'sample_frame_features'
+        mask_layer = "sample_frame_features"
         self.metrics = ZonalMetrics(project.project_file, mask, self.map_layers, mask_layer)
 
     def run(self):
@@ -77,7 +76,7 @@ class ZonalMetricsTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Metrics Complete', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Metrics Complete", MESSAGE_CATEGORY, Qgis.Success)
 
             # base_name = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             # output_json = os.path.join(os.path.dirname(self.project.project_file), SURFACES_PARENT_FOLDER, f'geospatial_metric_summary_{base_name}.json')
@@ -87,15 +86,13 @@ class ZonalMetricsTask(QgsTask):
 
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Geospatial Metrics unsuccessful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Geospatial Metrics unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Geospatial metrics exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Geospatial metrics exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 # raise self.exception
 
         self.on_complete.emit(result, self.mask, self.polygons, self.data)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Geospatial Metrics was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Geospatial Metrics was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

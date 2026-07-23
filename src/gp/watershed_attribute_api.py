@@ -2,6 +2,7 @@
 # from path import expanduser
 import json
 import logging
+
 import requests
 
 # Global timeout for API requests
@@ -9,8 +10,7 @@ API_TIMEOUT = 30
 
 
 class QueryMonster:
-    """_summary_
-    """
+    """_summary_"""
 
     def __init__(self, api_url=None, api_key=None):
         """_summary_
@@ -29,20 +29,17 @@ class QueryMonster:
         """
 
         if self.api_url is None:
-            raise Exception('The API URL has not been initialized. Contact the software administrator for support.')
+            raise Exception("The API URL has not been initialized. Contact the software administrator for support.")
 
         if self.api_key is None:
-            raise Exception('The API key has not been initialized. Contact the software administrator for support.')
+            raise Exception("The API key has not been initialized. Contact the software administrator for support.")
 
         headers = {"x-api-key": self.api_key}
-        request = requests.post(self.api_url, json={
-            'query': query,
-            'variables': variables
-        }, headers=headers, timeout=API_TIMEOUT)
+        request = requests.post(self.api_url, json={"query": query, "variables": variables}, headers=headers, timeout=API_TIMEOUT)
 
         if request.status_code == 200:
             resp_json = request.json()
-            if 'errors' in resp_json and len(resp_json['errors']) > 0:
+            if "errors" in resp_json and len(resp_json["errors"]) > 0:
                 logging.error(json.dumps(resp_json, indent=4, sort_keys=True))
                 raise Exception(resp_json)
             else:

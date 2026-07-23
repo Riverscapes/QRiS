@@ -1,11 +1,11 @@
 import csv
 import sqlite3
+
+from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis
-from qgis.PyQt.QtCore import pyqtSignal
-
-MESSAGE_CATEGORY = 'QRiS_StreamGageTask'
+MESSAGE_CATEGORY = "QRiS_StreamGageTask"
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
 # https://waterservices.usgs.gov/rest/Site-Service.html
@@ -17,27 +17,12 @@ DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 # a holdover from when the code was first developed.
 REQUESTS = {
     # 15 minute data
-    'quarterly': {
-        'url': 'http://waterdata.usgs.gov/nwis/uv',
-        'fields': {
-            'datetime': 'datetime',
-            'discharge': '89062_00060',
-            'discharge_code': '89062_00060_cd',
-            'gage_height': '89063_00065',
-            'gage_height_code': '89063_00065_cd'
-        }
-    },
+    "quarterly": {"url": "http://waterdata.usgs.gov/nwis/uv", "fields": {"datetime": "datetime", "discharge": "89062_00060", "discharge_code": "89062_00060_cd", "gage_height": "89063_00065", "gage_height_code": "89063_00065_cd"}},
     # daily data
-    'daily': {
-        'url': 'https://waterservices.usgs.gov/nwis/dv/',
-        'fields': {
-            'datetime': 'datetime',
-            'discharge': '84956_00060_00003',
-            'discharge_code': '84956_00060_00003_cd',
-            'gage_height': '84959_00065_00003',
-            'gage_height_code': '84959_00065_00003_cd'
-        }
-    }
+    "daily": {
+        "url": "https://waterservices.usgs.gov/nwis/dv/",
+        "fields": {"datetime": "datetime", "discharge": "84956_00060_00003", "discharge_code": "84956_00060_00003_cd", "gage_height": "84959_00065_00003", "gage_height_code": "84959_00065_00003_cd"},
+    },
 }
 
 
@@ -46,7 +31,6 @@ REQUESTS = {
 
 
 class StreamGageDischargeTask(QgsTask):
-
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     on_task_complete = pyqtSignal(bool, int)
 
@@ -55,7 +39,7 @@ class StreamGageDischargeTask(QgsTask):
     """
 
     def __init__(self, db_path: str, site_code, site_id, start_date, end_date):
-        super().__init__(f'Stream Gage Discharge API Request for {site_code}', QgsTask.CanCancel)
+        super().__init__(f"Stream Gage Discharge API Request for {site_code}", QgsTask.CanCancel)
         # self.duration = duration
         self.db_path = db_path
         self.site_code = site_code
@@ -68,34 +52,22 @@ class StreamGageDischargeTask(QgsTask):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
         Must return True or False. Raising exceptions will crash QGIS"""
 
-        QgsMessageLog.logMessage(f'Started Stream Gage Discharge API Request ', MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Started Stream Gage Discharge API Request ", MESSAGE_CATEGORY, Qgis.Info)
 
         try:
-            params = {
-                'format': 'rdb',
-                'sites': self.site_code,
-                'startDT': self.start_date.strftime('%Y-%m-%d'),
-                'endDT': self.end_date.strftime('%Y-%m-%d')
-            }
+            params = {"format": "rdb", "sites": self.site_code, "startDT": self.start_date.strftime("%Y-%m-%d"), "endDT": self.end_date.strftime("%Y-%m-%d")}
 
-            request_meta = REQUESTS['daily']
-            response = requests.get(request_meta['url'], params=params, timeout=DOWNLOAD_TIMEOUT)
+            request_meta = REQUESTS["daily"]
+            response = requests.get(request_meta["url"], params=params, timeout=DOWNLOAD_TIMEOUT)
 
             if response.status_code == 200:
-                csv_raw = [line for line in response.text.splitlines() if line and not line.startswith('#') and not line.startswith('5s')]
+                csv_raw = [line for line in response.text.splitlines() if line and not line.startswith("#") and not line.startswith("5s")]
 
-                headers = csv_raw[0].split('\t')
-                csv_data = csv.DictReader(csv_raw, delimiter='\t')
+                headers = csv_raw[0].split("\t")
+                csv_data = csv.DictReader(csv_raw, delimiter="\t")
                 # agency_cd,site_no,datetime,tz_cd,89062_00060,89062_00060_cd,89063_00065,89063_00065_cd
                 if len(headers) > 3:
-                     sql_data = [(
-                        self.site_id,
-                        row['datetime'],
-                        row[headers[3]],
-                        row[headers[4]],
-                        row[headers[5]] if len(headers) > 6 else None,
-                        row[headers[6]] if len(headers) > 7 else None
-                    ) for row in csv_data]
+                    sql_data = [(self.site_id, row["datetime"], row[headers[3]], row[headers[4]], row[headers[5]] if len(headers) > 6 else None, row[headers[6]] if len(headers) > 7 else None) for row in csv_data]
                 else:
                     sql_data = []
 
@@ -104,7 +76,8 @@ class StreamGageDischargeTask(QgsTask):
 
                     count_before = self.get_discharge_record_count(curs)
 
-                    curs.executemany("""
+                    curs.executemany(
+                        """
                     INSERT INTO stream_gage_discharges (
                         stream_gage_id,
                         measurement_date,
@@ -118,7 +91,9 @@ class StreamGageDischargeTask(QgsTask):
                         discharge = excluded.discharge,
                         discharge_code = excluded.discharge_code,
                         gage_height = excluded.gage_height,
-                        gage_height_code = excluded.gage_height_code""", sql_data)
+                        gage_height_code = excluded.gage_height_code""",
+                        sql_data,
+                    )
 
                     conn.commit()
                     conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
@@ -135,7 +110,7 @@ class StreamGageDischargeTask(QgsTask):
 
     def get_discharge_record_count(self, curs):
 
-        curs.execute('SELECT count(*) FROM stream_gage_discharges')
+        curs.execute("SELECT count(*) FROM stream_gage_discharges")
         return curs.fetchone()[0]
 
     # def get_gage_data(self):
@@ -174,26 +149,16 @@ class StreamGageDischargeTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            QgsMessageLog.logMessage('Discharge Download Complete. {self.inserted_discharge_records} records downloaded.', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Discharge Download Complete. {self.inserted_discharge_records} records downloaded.", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Stream Stats API Request "{name}" not successful but without '
-                    'exception (probably the task was manually '
-                    'canceled by the user)'.format(
-                        name=self.description()),
-                    MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
-                    'Stream Statistics API Request "{name}" Exception: {exception}'.format(
-                        name=self.description(),
-                        exception=self.exception),
-                    MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.on_task_complete.emit(result, self.inserted_discharge_records)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Stream Statistics "{name}" was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

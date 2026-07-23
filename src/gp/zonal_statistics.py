@@ -12,11 +12,11 @@ Other Resources:
 https://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_slides4.pdf
 """
 
+import numpy as np
 import osgeo
 from osgeo import gdal, ogr, osr
-import numpy as np
 
-TEMP_FEATURE_CLASS_NAME = 'temp_fc'
+TEMP_FEATURE_CLASS_NAME = "temp_fc"
 
 
 def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
@@ -29,8 +29,8 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     raster_gt = raster_ds.GetGeoTransform()
     raster_nd = raster_ds.GetRasterBand(1).GetNoDataValue()
 
-    ogr_mem_driver = ogr.GetDriverByName('MEM') or ogr.GetDriverByName('Memory')
-    gdl_mem_driver = gdal.GetDriverByName('MEM')
+    ogr_mem_driver = ogr.GetDriverByName("MEM") or ogr.GetDriverByName("Memory")
+    gdl_mem_driver = gdal.GetDriverByName("MEM")
 
     # Attempt to delete existing feature class. This now
     # throws an exception on latest QGIS. But there is no
@@ -39,11 +39,11 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     try:
         ogr_mem_driver.DeleteDataSource(TEMP_FEATURE_CLASS_NAME)
     except Exception:
-        print('Failed to delete in-memory data source')
+        print("Failed to delete in-memory data source")
 
     # Create in-memory feature class that contains the polygon
     ogr_mem_ds = ogr_mem_driver.CreateDataSource(TEMP_FEATURE_CLASS_NAME)
-    ogr_mem_lyr = ogr_mem_ds.CreateLayer('polygons', None, ogr.wkbPolygon)
+    ogr_mem_lyr = ogr_mem_ds.CreateLayer("polygons", None, ogr.wkbPolygon)
     featureDefn = ogr_mem_lyr.GetLayerDefn()
     outFeature = ogr.Feature(featureDefn)
     out_geom = geom.Clone()
@@ -62,18 +62,18 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
 
     # Convert the polygon bounding box to cell offset coordinates
     offsets = boundingBoxToOffsets(extents, raster_gt)
-    
+
     # Clamp the offsets to the raster dimensions to avoid out of bounds errors
     # on exact edge alignments
-    offsets[1] = min(offsets[1], raster_ds.RasterYSize) # row2
-    offsets[3] = min(offsets[3], raster_ds.RasterXSize) # col2
+    offsets[1] = min(offsets[1], raster_ds.RasterYSize)  # row2
+    offsets[3] = min(offsets[3], raster_ds.RasterXSize)  # col2
 
     # Calculate the new geotransform for the polygonized raster
     new_geot = geotFromOffsets(offsets[0], offsets[2], raster_gt)
 
     # Create the empty raster for the rasterized polygon in memory
     # and set the geotransform from the rasterized polygon
-    tr_ds = gdl_mem_driver.Create('', offsets[3] - offsets[2], offsets[1] - offsets[0], 1, gdal.GDT_Byte)
+    tr_ds = gdl_mem_driver.Create("", offsets[3] - offsets[2], offsets[1] - offsets[0], 1, gdal.GDT_Byte)
     tr_ds.SetGeoTransform(new_geot)
 
     # Rasterize the polygon and read it into a NumPy array
@@ -81,30 +81,18 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     tr_array = tr_ds.ReadAsArray()
 
     # read the input rasterfor the location that corresponds to the rasterized polygon
-    r_array = raster_ds.GetRasterBand(1).ReadAsArray(
-        offsets[2],
-        offsets[0],
-        offsets[3] - offsets[2],
-        offsets[1] - offsets[0])
+    r_array = raster_ds.GetRasterBand(1).ReadAsArray(offsets[2], offsets[0], offsets[3] - offsets[2], offsets[1] - offsets[0])
 
-    results = {'minimum': None, 'maximum': None, 'mean': None, 'median': None, 'std': None, 'sum': None, 'count': None}
+    results = {"minimum": None, "maximum": None, "mean": None, "median": None, "std": None, "sum": None, "count": None}
     if r_array is not None:
         maskarray = np.ma.MaskedArray(r_array, mask=np.logical_or(r_array == raster_nd, np.logical_not(tr_array)))
         if maskarray is not None:
-            results = {
-                'minimum': maskarray.min(),
-                'maximum': maskarray.max(),
-                'mean': maskarray.mean(),
-                'median': np.ma.median(maskarray),
-                'std': maskarray.std(),
-                'sum': maskarray.sum(),
-                'count': maskarray.count()
-            }
+            results = {"minimum": maskarray.min(), "maximum": maskarray.max(), "mean": maskarray.mean(), "median": np.ma.median(maskarray), "std": maskarray.std(), "sum": maskarray.sum(), "count": maskarray.count()}
 
     # Discard the in-memory datasets
     tr_ds = None
     ogr_mem_ds = None
-    raster_ds = None 
+    raster_ds = None
     return results
 
 
@@ -117,25 +105,17 @@ def boundingBoxToOffsets(bbox, geot):
 
 
 def geotFromOffsets(row_offset, col_offset, geot):
-    new_geot = [
-        geot[0] + (col_offset * geot[1]),
-        geot[1],
-        0.0,
-        geot[3] + (row_offset * geot[5]),
-        0.0,
-        geot[5]
-    ]
+    new_geot = [geot[0] + (col_offset * geot[1]), geot[1], 0.0, geot[3] + (row_offset * geot[5]), 0.0, geot[5]]
     return new_geot
 
 
-if __name__ == '__main__':
-
-    raster_path = '/Users/philip/GISData/test/dem_hillshade.tif'
-    vector_path = '/Users/philip/GISData/test/test_mask.shp'
+if __name__ == "__main__":
+    raster_path = "/Users/philip/GISData/test/dem_hillshade.tif"
+    vector_path = "/Users/philip/GISData/test/test_mask.shp"
 
     raster_ds = gdal.Open(raster_path)
     if raster_ds is None:
-        raise Exception(f'Could not open raster: {raster_path}')
+        raise Exception(f"Could not open raster: {raster_path}")
 
     raster_srs = osr.SpatialReference()
     raster_srs.ImportFromWkt(raster_ds.GetProjection())

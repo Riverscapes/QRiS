@@ -1,8 +1,9 @@
 import traceback
 
-from qgis.core import QgsTask,  QgsMessageLog, Qgis
+from qgis.core import Qgis, QgsMessageLog, QgsTask
 
 from ..model.project import Project, apply_db_migrations, test_project
+
 
 class LoadProjectTask(QgsTask):
     def __init__(self, db_path, callback):

@@ -1,12 +1,10 @@
-from math import radians, cos, sin, asin, sqrt
+from math import asin, cos, radians, sin, sqrt
 
 from osgeo import gdal, osr
-
-from qgis.core import QgsTask, QgsMessageLog, Qgis
+from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-
-MESSAGE_CATEGORY = 'QRiS_HillshadeTask'
+MESSAGE_CATEGORY = "QRiS_HillshadeTask"
 
 
 class Hillshade(QgsTask):
@@ -18,7 +16,7 @@ class Hillshade(QgsTask):
     hillshade_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, output_path: str):
-        super().__init__(f'Hillshade Task', QgsTask.CanCancel)
+        super().__init__("Hillshade Task", QgsTask.CanCancel)
 
         self.dem = source_path
         self.output_path = output_path
@@ -35,17 +33,13 @@ class Hillshade(QgsTask):
         # user defined callback object
         es_obj = {}
 
-        kwargs = {
-            'format': 'GTiff',
-            'callback': self.progress_callback,
-            'callback_data': es_obj
-        }
+        kwargs = {"format": "GTiff", "callback": self.progress_callback, "callback_data": es_obj}
 
         # set the z factor for the hillshade
         zfactor = 1
         src = gdal.Open(self.dem)
         srs = osr.SpatialReference(wkt=src.GetProjection())
-        epsg = int(srs.GetAttrValue('AUTHORITY', 1))
+        epsg = int(srs.GetAttrValue("AUTHORITY", 1))
         if epsg == 4326:
             ulx, xres, _xskew, uly, _yskew, yres = src.GetGeoTransform()
             _lrx = ulx + (src.RasterXSize * xres)
@@ -55,11 +49,11 @@ class Hillshade(QgsTask):
             zfactor = (length_km * 1000) / length_deg
         src = None
 
-        QgsMessageLog.logMessage(f'Started hillshade request', MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Started hillshade request", MESSAGE_CATEGORY, Qgis.Info)
         self.setProgress(0)
 
         try:
-            gdal.DEMProcessing(self.output_path, self.dem, 'hillshade', scale=zfactor, creationOptions=["COMPRESS=DEFLATE"], **kwargs)
+            gdal.DEMProcessing(self.output_path, self.dem, "hillshade", scale=zfactor, creationOptions=["COMPRESS=DEFLATE"], **kwargs)
         except Exception as ex:
             self.exception = ex
             return False
@@ -78,20 +72,18 @@ class Hillshade(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage('Hillshade completed', MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("Hillshade completed", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Hillshade not successful but without exception (probably the task was canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Hillshade not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(f'Hillshade Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Hillshade Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.hillshade_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Hillshade was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Hillshade was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()
 
 
@@ -114,7 +106,7 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float):
     lat1 = radians(lat1)
     lat2 = radians(lat2)
 
-    a = sin(dLat / 2)**2 + cos(lat1) * cos(lat2) * sin(dLon / 2)**2
+    a = sin(dLat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dLon / 2) ** 2
     c = 2 * asin(sqrt(a))
 
     return R * c

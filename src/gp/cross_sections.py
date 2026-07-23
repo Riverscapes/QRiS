@@ -1,19 +1,16 @@
-
 import math
 
-from qgis.core import QgsTask, QgsMessageLog, Qgis, QgsFeature, QgsGeometry, QgsPointXY, QgsLineString
+from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsLineString, QgsMessageLog, QgsPointXY, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-
-MESSAGE_CATEGORY = 'CrossSectionsTask'
+MESSAGE_CATEGORY = "CrossSectionsTask"
 
 
 class CrossSectionsTask(QgsTask):
-
     cross_sections_complete = pyqtSignal(dict)
 
     def __init__(self, in_centerline: QgsLineString, offset: float, spacing: float, extension: float, in_polygon: QgsGeometry = None) -> None:
-        super().__init__('Generate Cross Sections Task', QgsTask.CanCancel)
+        super().__init__("Generate Cross Sections Task", QgsTask.CanCancel)
 
         self.polygon = in_polygon
         self.centerline = in_centerline
@@ -40,9 +37,8 @@ class CrossSectionsTask(QgsTask):
         sequence = 0
 
         while dist < self.centerline.length():
-
             pt = self.centerline.interpolate(dist).asPoint()
-            alpha = (math.degrees(self.centerline.interpolateAngle(dist)) - 90)  # return in degree
+            alpha = math.degrees(self.centerline.interpolateAngle(dist)) - 90  # return in degree
             # create delta x and y via triangulating
             delY = math.cos(math.radians(alpha)) * self.extension
             delX = math.sin(math.radians(alpha)) * self.extension
@@ -55,7 +51,7 @@ class CrossSectionsTask(QgsTask):
             geom = QgsLineString([pt, pt1])
 
             geom.extend(self.extension, 0.0)
-            #clipped_geom = self.polygon.intersection(geom)
+            # clipped_geom = self.polygon.intersection(geom)
 
             feat.setGeometry(geom)
             self.xsections[sequence] = feat
@@ -76,27 +72,16 @@ class CrossSectionsTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage(
-                'CrossSectionsTask completed\n',
-                MESSAGE_CATEGORY, Qgis.Success)
+            QgsMessageLog.logMessage("CrossSectionsTask completed\n", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Cross Sections not successful but without '
-                    'exception (probably the task was manually '
-                    'canceled by the user)'.format(
-                        name=self.description()),
-                    MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage("Cross Sections not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
-                    f'Generate Cross Sections Exception: {self.exception}',
-                    MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f"Generate Cross Sections Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.cross_sections_complete.emit(self.xsections)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            f'Cross Sections Tool was canceled',
-            MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Cross Sections Tool was canceled", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()

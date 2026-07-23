@@ -1,24 +1,22 @@
-import os
 import csv
 import json
+import os
 import sqlite3
-import requests
 
 from osgeo import ogr
-
-from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsProject, QgsTask, QgsMessageLog, Qgis
+from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsMessageLog, QgsProject, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
+import requests
 
-MESSAGE_CATEGORY = 'QRiS_StreamGageTask'
+MESSAGE_CATEGORY = "QRiS_StreamGageTask"
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
 # https://waterservices.usgs.gov/rest/Site-Service.html
 # https://waterservices.usgs.gov/rest/Site-Test-Tool.html
-BASE_REQUEST = 'https://waterservices.usgs.gov/nwis/site/'
+BASE_REQUEST = "https://waterservices.usgs.gov/nwis/site/"
 
 
 class StreamGageTask(QgsTask):
-
     # Signal to notify when done and return the PourPoint and whether it should be added to the map
     on_task_complete = pyqtSignal(bool, int, int)
 
@@ -27,7 +25,7 @@ class StreamGageTask(QgsTask):
     """
 
     def __init__(self, db_path: str, min_lat: float, max_lat: float, min_lng: float, max_lng: float):
-        super().__init__(f'Stream Gage API Request at {min_lat}, {max_lat}, {min_lng}, {max_lng}', QgsTask.CanCancel)
+        super().__init__(f"Stream Gage API Request at {min_lat}, {max_lat}, {min_lng}, {max_lng}", QgsTask.CanCancel)
         # self.duration = duration
         self.db_path = db_path
         self.min_lat = min_lat
@@ -42,7 +40,7 @@ class StreamGageTask(QgsTask):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
         Must return True or False. Raising exceptions will crash QGIS"""
 
-        QgsMessageLog.logMessage(f'Started Stream Gage API Request ', MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage("Started Stream Gage API Request ", MESSAGE_CATEGORY, Qgis.Info)
 
         try:
             gage_data = self.get_gage_data()
@@ -68,17 +66,17 @@ class StreamGageTask(QgsTask):
 
         # url = BASE_REQUEST.format(self.min_lng, self.min_lat, self.max_lng, self.max_lat)
         params = {
-            'format': 'rdb',
-            'bBox': '{:.7f},{:.7f},{:.7f},{:.7f}'.format(self.min_lng, self.min_lat, self.max_lng, self.max_lat),
-            'siteStatus': 'active',  # 'all',
-            'hasDataTypeCd': 'dv',
-            'siteType': 'ST'
+            "format": "rdb",
+            "bBox": f"{self.min_lng:.7f},{self.min_lat:.7f},{self.max_lng:.7f},{self.max_lat:.7f}",
+            "siteStatus": "active",  # 'all',
+            "hasDataTypeCd": "dv",
+            "siteType": "ST",
         }
         response = requests.get(BASE_REQUEST, params=params, timeout=DOWNLOAD_TIMEOUT)
 
         if response.status_code == 200:
-            csv_raw = [line for line in response.text.split('\n') if not (line.startswith('#') or line.startswith('5s'))]
-            return csv.DictReader(csv_raw, delimiter='\t')
+            csv_raw = [line for line in response.text.split("\n") if not (line.startswith("#") or line.startswith("5s"))]
+            return csv.DictReader(csv_raw, delimiter="\t")
         elif response.status_code == 404:
             return []
         else:
@@ -89,13 +87,13 @@ class StreamGageTask(QgsTask):
         # Check for existing gages
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT site_code FROM stream_gages')
+            cursor.execute("SELECT site_code FROM stream_gages")
             existing_gages = [row[0] for row in cursor.fetchall()]
 
-        gpkg_driver = ogr.GetDriverByName('GPKG')
+        gpkg_driver = ogr.GetDriverByName("GPKG")
         dst_dataset = gpkg_driver.Open(self.db_path, 1)
-        dst_layer = dst_dataset.GetLayerByName('stream_gages')
-        dst_srs = dst_layer.GetSpatialRef()
+        dst_layer = dst_dataset.GetLayerByName("stream_gages")
+        _dst_srs = dst_layer.GetSpatialRef()
         dst_layer_def = dst_layer.GetLayerDefn()
 
         # transform = osr.CoordinateTransformation(src_srs, dst_srs)
@@ -103,35 +101,34 @@ class StreamGageTask(QgsTask):
         self.gages_downloaded = 0
         for gage in gage_data:
             self.gages_downloaded += 1
-            if gage['site_no'] in existing_gages:
+            if gage["site_no"] in existing_gages:
                 continue
             try:
                 geom = ogr.Geometry(ogr.wkbPoint)
-                geom.AddPoint(float(gage['dec_long_va']), float(gage['dec_lat_va']))
+                geom.AddPoint(float(gage["dec_long_va"]), float(gage["dec_lat_va"]))
 
                 dst_feature = ogr.Feature(dst_layer_def)
                 dst_feature.SetGeometry(geom)
 
                 # Store fields that we need to query in dedicated attribute columns
-                dst_feature.SetField('site_code', gage['site_no'])
-                dst_feature.SetField('site_name', gage['station_nm'])
-                dst_feature.SetField('agency', gage['agency_cd'])
-                dst_feature.SetField('huc', gage['huc_cd'])
-                dst_feature.SetField('site_datum', gage['dec_coord_datum_cd'])
-                dst_feature.SetField('latitude', float(gage['dec_lat_va']))
-                dst_feature.SetField('longitude', float(gage['dec_long_va']))
+                dst_feature.SetField("site_code", gage["site_no"])
+                dst_feature.SetField("site_name", gage["station_nm"])
+                dst_feature.SetField("agency", gage["agency_cd"])
+                dst_feature.SetField("huc", gage["huc_cd"])
+                dst_feature.SetField("site_datum", gage["dec_coord_datum_cd"])
+                dst_feature.SetField("latitude", float(gage["dec_lat_va"]))
+                dst_feature.SetField("longitude", float(gage["dec_long_va"]))
 
                 # Store the entire gage record in the metadata
-                dst_feature.SetField('metadata', json.dumps(gage))
-                err = dst_layer.CreateFeature(dst_feature)
+                dst_feature.SetField("metadata", json.dumps(gage))
+                _err = dst_layer.CreateFeature(dst_feature)
                 self.gages_saved += 1
             except Exception as ex:
-                if 'UNIQUE constraint failed: stream_gages.site_code' not in str(ex):
+                if "UNIQUE constraint failed: stream_gages.site_code" not in str(ex):
                     raise ex
 
             dst_feature = None
 
-        src_dataset = None
         dst_dataset = None
 
         with sqlite3.connect(self.db_path, isolation_level=None) as conn:
@@ -146,32 +143,22 @@ class StreamGageTask(QgsTask):
         """
         if result:
             if self.gages_downloaded == 0:
-                QgsMessageLog.logMessage('No Stream Gages found in the area.', MESSAGE_CATEGORY, Qgis.Info)
+                QgsMessageLog.logMessage("No Stream Gages found in the area.", MESSAGE_CATEGORY, Qgis.Info)
             elif self.gages_saved == 0:
-                QgsMessageLog.logMessage('No new Stream Gages saved.', MESSAGE_CATEGORY, Qgis.Info)
+                QgsMessageLog.logMessage("No new Stream Gages saved.", MESSAGE_CATEGORY, Qgis.Info)
             else:
-                QgsMessageLog.logMessage(f'Stream Gage Download Complete. {self.gages_downloaded} gages were downloaded and {self.gages_saved} new gages were saved.', MESSAGE_CATEGORY, Qgis.Success)
+                QgsMessageLog.logMessage(f"Stream Gage Download Complete. {self.gages_downloaded} gages were downloaded and {self.gages_saved} new gages were saved.", MESSAGE_CATEGORY, Qgis.Success)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(
-                    'Stream Stats API Request "{name}" not successful but without '
-                    'exception (probably the task was manually '
-                    'canceled by the user)'.format(
-                        name=self.description()),
-                    MESSAGE_CATEGORY, Qgis.Warning)
+                QgsMessageLog.logMessage(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
             else:
-                QgsMessageLog.logMessage(
-                    'Stream Statistics API Request "{name}" Exception: {exception}'.format(
-                        name=self.description(),
-                        exception=self.exception),
-                    MESSAGE_CATEGORY, Qgis.Critical)
+                QgsMessageLog.logMessage(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
                 raise self.exception
 
         self.on_task_complete.emit(result, self.gages_downloaded, self.gages_saved)
 
     def cancel(self):
-        QgsMessageLog.logMessage(
-            'Stream Statistics "{name}" was canceled'.format(name=self.description()), MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()
 
 
@@ -204,16 +191,7 @@ def get_streamstats_data(lat: float, lon: float, get_basin_characteristics: bool
 def delineate_watershed(lat, lon, rcode, file_dir=None):
     url = "https://prodweba.streamstats.usgs.gov/streamstatsservices/watershed.geojson"
 
-    parameters = {
-        "rcode": rcode,
-        "xlocation": lon,
-        "ylocation": lat,
-        "crs": "4326",
-        "includeparameters": "false",
-        "includeflowtypes": "false",
-        "includefeatures": "true",
-        "simplify": "true"
-    }
+    parameters = {"rcode": rcode, "xlocation": lon, "ylocation": lat, "crs": "4326", "includeparameters": "false", "includeflowtypes": "false", "includefeatures": "true", "simplify": "true"}
 
     response = requests.get(url, params=parameters, timeout=DOWNLOAD_TIMEOUT)
     watershed_data = response.json()
@@ -225,13 +203,13 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
 
 # Returns dictionary of river basin characteristics
 def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
-    basin_chars_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/parameters.json?rcode={0}&workspaceID={1}&includeparameters=true'
+    basin_chars_url = "https://prodweba.streamstats.usgs.gov/streamstatsservices/parameters.json?rcode={0}&workspaceID={1}&includeparameters=true"
     url = basin_chars_url.format(rcode, workspace_id)
     response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
     try:
         basin_data = response.json()
     except Exception as ex:
-        raise Exception('Error retrieving basin characteristics') from ex
+        raise Exception("Error retrieving basin characteristics") from ex
     if file_dir is not None:
         save_json(basin_data, file_dir, workspace_id + "_basin.json")
     return basin_data
@@ -239,13 +217,13 @@ def retrieve_basin_characteristics(rcode, workspace_id, file_dir=None):
 
 # Returns dictionary of river flow stats
 def retrieve_flow_statistics(rcode, workspace_id, file_dir=None):
-    flow_stats_url = 'https://prodweba.streamstats.usgs.gov/streamstatsservices/flowstatistics.json?rcode={0}&workspaceID={1}&includeflowtypes=true'
+    flow_stats_url = "https://prodweba.streamstats.usgs.gov/streamstatsservices/flowstatistics.json?rcode={0}&workspaceID={1}&includeflowtypes=true"
     url = flow_stats_url.format(rcode, workspace_id)
     response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
     try:
         flow_data = response.json()
     except Exception as ex:
-        raise Exception('Error retrieving flow statistics') from ex
+        raise Exception("Error retrieving flow statistics") from ex
 
     if file_dir is not None:
         save_json(flow_data, file_dir, workspace_id + "_flow.json")
@@ -254,30 +232,26 @@ def retrieve_flow_statistics(rcode, workspace_id, file_dir=None):
 
 # Saves dictionary to custom location
 def save_json(dict, directory, file_name):
-    with open(os.path.join(directory, file_name), 'w') as file:
+    with open(os.path.join(directory, file_name), "w") as file:
         json.dump(dict, file)
 
 
 # Uses coordinates to determine U.S. state using API
 def get_state_from_coordinates(latitude: float, longitude: float):
     url = "https://nominatim.openstreetmap.org/reverse"
-    parameters = {
-        "lat": latitude,
-        "lon": longitude,
-        "format": "json"
-    }
+    parameters = {"lat": latitude, "lon": longitude, "format": "json"}
 
     response = requests.get(url, params=parameters, timeout=DOWNLOAD_TIMEOUT)
     location_data = response.json()
 
     if location_data is None:
-        raise Exception('Unable to determine US State. No response from Open Street Map.')
-    elif 'error' in location_data:
-        if 'geocode' in location_data['error']:
+        raise Exception("Unable to determine US State. No response from Open Street Map.")
+    elif "error" in location_data:
+        if "geocode" in location_data["error"]:
             return None
         else:
-            raise Exception(location_data['error'])
+            raise Exception(location_data["error"])
     else:
         location_code = location_data["address"]["ISO3166-2-lvl4"]
         # Extracts state abbreviation from location code
-        return location_code[location_code.index("-") + 1:]
+        return location_code[location_code.index("-") + 1 :]
