@@ -1,90 +1,92 @@
-import os
-import sys
-import re
-import importlib
-from glob import glob
-import json
-import sqlite3
 from datetime import datetime
+from glob import glob
+import importlib
+import json
+import os
+import re
+import sqlite3
+import sys
 import xml.etree.ElementTree as ET
 
-from qgis.core import Qgis, QgsVectorLayer, QgsMessageLog
+from qgis.core import Qgis, QgsMessageLog, QgsVectorLayer
 
-from ..model.project import Project
-from ..model.db_item import DBItem
-from ..model.profile import Profile
-from ..model.pour_point import PourPoint
+from ...__version__ import __version__ as installed_qris_version
+from ..model.analysis import Analysis
+from ..model.attachment import Attachment
 from ..model.cross_sections import CrossSections
-from ..model.sample_frame import SampleFrame
-from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
-from ..model.event import Event, EVENT_TYPE_LOOKUP
+from ..model.db_item import DBItem
+from ..model.event import EVENT_TYPE_LOOKUP, Event
 from ..model.event_layer import EventLayer
 from ..model.layer import Layer
 from ..model.planning_container import PlanningContainer
-from ..model.analysis import Analysis
-from ..model.attachment import Attachment
+from ..model.pour_point import PourPoint
+from ..model.profile import Profile
+from ..model.project import Project
+from ..model.sample_frame import SampleFrame
+from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
+
 
 def rsxml_import():
 
-    
     target_version = None
     wheel_path = None
-    
+
     # 1. FIND THE VIEWER PLUGIN & TARGET VERSION
     # Get the plugins directory (../../..) from src/lib/rs_project.py
     this_dir = os.path.dirname(os.path.realpath(__file__))
-    plugins_dir = os.path.abspath(os.path.join(this_dir, '..', '..', '..'))
-    
+    plugins_dir = os.path.abspath(os.path.join(this_dir, "..", "..", ".."))
+
     # Look for riverscapes_viewer or riverscapes_viewer_dev
-    for viewer_dir in ['riverscapes_viewer', 'riverscapes_viewer_dev']:
+    for viewer_dir in ["riverscapes_viewer", "riverscapes_viewer_dev"]:
         plugin_path = os.path.join(plugins_dir, viewer_dir)
         if not os.path.isdir(plugin_path):
             continue
 
         # Try to read version from src/__init__.py
-        init_path = os.path.join(plugin_path, 'src', '__init__.py')
+        init_path = os.path.join(plugin_path, "src", "__init__.py")
         if os.path.isfile(init_path):
             try:
-                with open(init_path, 'r') as f:
+                with open(init_path) as f:
                     content = f.read()
                     # Look for RSXML_VERSION = '2.2.1'
                     match = re.search(r"RSXML_VERSION\s*=\s*['\"]([^'\"]+)['\"]", content)
                     if match:
                         target_version = match.group(1)
             except Exception:
-                QgsMessageLog.logMessage(f'Error reading {init_path} for version info', 'QRiS', Qgis.Warning)
+                QgsMessageLog.logMessage(f"Error reading {init_path} for version info", "QRiS", Qgis.Warning)
 
         # Find the wheel file
         if target_version:
-             wheel_pattern = os.path.join(plugin_path, 'wheels', f'rsxml-{target_version}-*.whl')
+            wheel_pattern = os.path.join(plugin_path, "wheels", f"rsxml-{target_version}-*.whl")
         else:
-             wheel_pattern = os.path.join(plugin_path, 'wheels', 'rsxml-*.whl')
+            wheel_pattern = os.path.join(plugin_path, "wheels", "rsxml-*.whl")
 
         wheels = glob(wheel_pattern)
-        
+
         if wheels:
             wheel_path = wheels[0]
             # If we didn't find the variable but found a wheel, try to get version from filename as fallback
             if not target_version:
                 try:
-                    start = wheel_path.rfind('rsxml-') + 6
-                    end = wheel_path.find('-', start)
+                    start = wheel_path.rfind("rsxml-") + 6
+                    end = wheel_path.find("-", start)
                     target_version = wheel_path[start:end]
-                except:
-                    QgsMessageLog.logMessage(f'Error parsing version from wheel filename {wheel_path}', 'QRiS', Qgis.Warning)
+                except Exception as ex:
+                    QgsMessageLog.logMessage(f"Error parsing version from wheel filename {wheel_path}: {ex!s}", "QRiS", Qgis.Warning)
             break
-            
+
     # 2. TRY IMPORT & CHECK VERSION
     try:
         import rsxml
-        loaded_version = getattr(rsxml, '__version__', None)
-        
+
+        loaded_version = getattr(rsxml, "__version__", None)
+
         # If we found a specific target version from the wheel/init, enforce it
         if target_version and loaded_version != target_version:
-             QgsMessageLog.logMessage(f'Version mismatch: Loaded {loaded_version}, Target {target_version}. Reloading...', 'QRiS', Qgis.Warning)
-             raise ImportError("Version mismatch")
-             
-        QgsMessageLog.logMessage('rsxml imported from system', 'QRiS', Qgis.Info)
+            QgsMessageLog.logMessage(f"Version mismatch: Loaded {loaded_version}, Target {target_version}. Reloading...", "QRiS", Qgis.Warning)
+            raise ImportError("Version mismatch")
+
+        QgsMessageLog.logMessage("rsxml imported from system", "QRiS", Qgis.Info)
         return rsxml
 
     except ImportError:
@@ -92,38 +94,38 @@ def rsxml_import():
         if wheel_path:
             if wheel_path not in sys.path:
                 sys.path.insert(0, wheel_path)
-            
+
             try:
-                if 'rsxml' in sys.modules:
+                if "rsxml" in sys.modules:
                     import rsxml
+
                     importlib.reload(rsxml)
                 else:
                     import rsxml
-                    
-                QgsMessageLog.logMessage(f'rsxml imported from {os.path.basename(wheel_path)}', 'QRiS', Qgis.Info)
+
+                QgsMessageLog.logMessage(f"rsxml imported from {os.path.basename(wheel_path)}", "QRiS", Qgis.Info)
                 return rsxml
             except ImportError:
-                QgsMessageLog.logMessage(f'Failed to import rsxml from {wheel_path}', 'QRiS', Qgis.Warning)
+                QgsMessageLog.logMessage(f"Failed to import rsxml from {wheel_path}", "QRiS", Qgis.Warning)
 
-        QgsMessageLog.logMessage('rsxml not found in system or sibling plugins', 'QRiS', Qgis.Warning)
+        QgsMessageLog.logMessage("rsxml not found in system or sibling plugins", "QRiS", Qgis.Warning)
         return None
 
+
 rsxml = rsxml_import()
-from ...__version__ import __version__ as installed_qris_version
 
 
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
 
-PROJECT_MACHINE_NAME = 'RiverscapesStudio'
-DEFAULT_EXPORT_PATH = 'default_export_path'
+PROJECT_MACHINE_NAME = "RiverscapesStudio"
+DEFAULT_EXPORT_PATH = "default_export_path"
 
 
 class RSProject:
-
     @staticmethod
     def _local_tag(tag: str) -> str:
-        return tag.split('}', 1)[-1] if tag else ''
+        return tag.split("}", 1)[-1] if tag else ""
 
     @classmethod
     def _read_existing_warehouse_attrs(cls, rsxml_path: str):
@@ -133,18 +135,18 @@ class RSProject:
         try:
             root = ET.parse(rsxml_path).getroot()
         except Exception as ex:
-            QgsMessageLog.logMessage(f'Unable to parse RS XML for warehouse lookup: {str(ex)}', 'QRiS', Qgis.Warning)
+            QgsMessageLog.logMessage(f"Unable to parse RS XML for warehouse lookup: {ex!s}", "QRiS", Qgis.Warning)
             return None
 
         for node in root.iter():
-            if cls._local_tag(node.tag).lower() == 'warehouse':
+            if cls._local_tag(node.tag).lower() == "warehouse":
                 return dict(node.attrib)
 
         return None
 
     @classmethod
     def has_warehouse_tag(cls, project_file: str) -> bool:
-        rsxml_path = os.path.join(os.path.dirname(project_file), 'project.rs.xml')
+        rsxml_path = os.path.join(os.path.dirname(project_file), "project.rs.xml")
         return cls._read_existing_warehouse_attrs(rsxml_path) is not None
 
     @classmethod
@@ -160,37 +162,37 @@ class RSProject:
 
         warehouse_node = None
         for node in root.iter():
-            if cls._local_tag(node.tag).lower() == 'warehouse':
+            if cls._local_tag(node.tag).lower() == "warehouse":
                 warehouse_node = node
                 break
 
         if warehouse_node is None:
-            warehouse_node = ET.SubElement(root, 'Warehouse')
+            warehouse_node = ET.SubElement(root, "Warehouse")
 
         warehouse_node.attrib.clear()
         for key, value in attrs.items():
             warehouse_node.set(key, value)
 
-        tree.write(rsxml_path, encoding='utf-8', xml_declaration=True)
+        tree.write(rsxml_path, encoding="utf-8", xml_declaration=True)
 
     def __init__(self, qris_project: Project):
-        
+
         if not rsxml:
             raise Exception("rsxml module not available, cannot create RSProject")
-        
+
         self.qris_project = qris_project
-        self.project_rs_xml_path = os.path.join(os.path.dirname(self.qris_project.project_file), 'project.rs.xml')
+        self.project_rs_xml_path = os.path.join(os.path.dirname(self.qris_project.project_file), "project.rs.xml")
         self.warehouse_attrs = None
         # if the project file already exists, we need to see if it has a warehouse id
         if os.path.exists(self.project_rs_xml_path):
             self.warehouse_attrs = self._read_existing_warehouse_attrs(self.project_rs_xml_path)
-        self.out_name = 'qris.gpkg'  # os.path.split(self.qris_project.project_file)[1]
+        self.out_name = "qris.gpkg"  # os.path.split(self.qris_project.project_file)[1]
         self.qris_version = ".".join(installed_qris_version.split(".")[:3])
 
         self.created_on = datetime.now()
         self.project_updated = self.created_on
         if self.qris_project.created_on and isinstance(self.qris_project.created_on, str):
-                self.created_on = datetime.strptime(self.qris_project.created_on, "%Y-%m-%d %H:%M:%S")
+            self.created_on = datetime.strptime(self.qris_project.created_on, "%Y-%m-%d %H:%M:%S")
 
     def get_project_bounds(self):
 
@@ -198,7 +200,7 @@ class RSProject:
         candidates = list(self.qris_project.aois.values()) + list(self.qris_project.valley_bottoms.values())
         target_frame = None
         for frame in candidates:
-            if getattr(frame, 'project_bounds', False):
+            if getattr(frame, "project_bounds", False):
                 target_frame = frame
                 break
         # If no explicit bounds found, try to find the best candidate
@@ -209,34 +211,31 @@ class RSProject:
                 vbs.sort(key=lambda x: x.id, reverse=True)
                 target_frame = vbs[0]
             else:
-                 # Try newest AOI
-                 aois = list(self.qris_project.aois.values())
-                 if aois:
-                     aois.sort(key=lambda x: x.id, reverse=True)
-                     target_frame = aois[0]
+                # Try newest AOI
+                aois = list(self.qris_project.aois.values())
+                if aois:
+                    aois.sort(key=lambda x: x.id, reverse=True)
+                    target_frame = aois[0]
         if target_frame is None:
             return None
         # get the bounds from the sample frame features
         db_path = self.qris_project.project_file
-        temp_layer = QgsVectorLayer(f'{db_path}|layername=sample_frame_features|subset=sample_frame_id = {target_frame.id}', 'temp', 'ogr')
+        temp_layer = QgsVectorLayer(f"{db_path}|layername=sample_frame_features|subset=sample_frame_id = {target_frame.id}", "temp", "ogr")
         if not (temp_layer.isValid() and temp_layer.featureCount() > 0):
-            return None    
+            return None
         output_geom = temp_layer.getFeatures().__next__().geometry()
         extent = output_geom.boundingBox()
         centroid = output_geom.centroid().asPoint()
         geojson = output_geom.asJson()
         geojson_filename = "project_bounds.geojson"
         geojson_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), geojson_filename).replace("\\", "/"))
-        with open(geojson_path, 'w') as f:
+        with open(geojson_path, "w") as f:
             f.write(geojson)
         project_bounds = rsxml.project_xml.ProjectBounds(
             centroid=rsxml.project_xml.Coords(centroid.x(), centroid.y()),
-            bounding_box=rsxml.project_xml.BoundingBox(
-                minLat=extent.yMinimum(),
-                minLng=extent.xMinimum(),
-                maxLat=extent.yMaximum(),                            
-                maxLng=extent.xMaximum()),
-            filepath=geojson_filename)
+            bounding_box=rsxml.project_xml.BoundingBox(minLat=extent.yMinimum(), minLng=extent.xMinimum(), maxLat=extent.yMaximum(), maxLng=extent.xMaximum()),
+            filepath=geojson_filename,
+        )
         return project_bounds
 
     def build_project(self):
@@ -254,28 +253,28 @@ class RSProject:
             seen_names.add(name)
 
         # Base project metadata
-        add_meta('QRiS Project Name', self.qris_project.name)
-        add_meta('QRiS Project Description', self.qris_project.description)
-        add_meta('ModelVersion', '1')
-        add_meta('Project Updated', self.project_updated.strftime("%Y-%m-%dT%H:%M:%S"))
+        add_meta("QRiS Project Name", self.qris_project.name)
+        add_meta("QRiS Project Description", self.qris_project.description)
+        add_meta("ModelVersion", "1")
+        add_meta("Project Updated", self.project_updated.strftime("%Y-%m-%dT%H:%M:%S"))
 
         project_metadata = self.qris_project.metadata or {}
 
         # User metadata follows the standard metadata dictionary convention.
-        user_metadata = project_metadata.get('metadata', {})
+        user_metadata = project_metadata.get("metadata", {})
         if isinstance(user_metadata, dict):
             for key, value in user_metadata.items():
                 add_meta(key, value)
 
         # System metadata follows the standard "<key> (System)" export convention.
-        system_metadata = project_metadata.get('system', {})
+        system_metadata = project_metadata.get("system", {})
         if isinstance(system_metadata, dict):
             for key, value in system_metadata.items():
-                add_meta(f'{key} (System)', f'{value}')
+                add_meta(f"{key} (System)", f"{value}")
 
         # Preserve any additional top-level metadata keys, excluding known containers.
         for key, value in project_metadata.items():
-            if key in ('tags', 'metadata', 'system'):
+            if key in ("tags", "metadata", "system"):
                 continue
             add_meta(key, value)
 
@@ -283,19 +282,19 @@ class RSProject:
 
         warehouse_obj = None
         if self.warehouse_attrs:
-            warehouse_id = self.warehouse_attrs.get('id')
+            warehouse_id = self.warehouse_attrs.get("id")
             if warehouse_id:
-                warehouse_obj = rsxml.project_xml.Warehouse(
-                    warehouse_id,
-                    self.warehouse_attrs.get('apiUrl', 'https://api.data.riverscapes.net'))
+                warehouse_obj = rsxml.project_xml.Warehouse(warehouse_id, self.warehouse_attrs.get("apiUrl", "https://api.data.riverscapes.net"))
 
-        out_project = rsxml.project_xml.Project(name=self.qris_project.name,
-                                proj_path=self.project_rs_xml_path,
-                                project_type=PROJECT_MACHINE_NAME,
-                                meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                                warehouse=warehouse_obj,
-                                description=self.qris_project.description,
-                                bounds=project_bounds)
+        out_project = rsxml.project_xml.Project(
+            name=self.qris_project.name,
+            proj_path=self.project_rs_xml_path,
+            project_type=PROJECT_MACHINE_NAME,
+            meta_data=rsxml.project_xml.MetaData(values=metadata_values),
+            warehouse=warehouse_obj,
+            description=self.qris_project.description,
+            bounds=project_bounds,
+        )
         return out_project
 
     def build_rasters(self):
@@ -303,32 +302,24 @@ class RSProject:
         for raster in self.qris_project.rasters.values():
             # check if raster is surface or context
             if raster.is_context:
-                raster_xml_id = f'context_{raster.id}'
+                raster_xml_id = f"context_{raster.id}"
             else:
-                raster_xml_id = f'surface_{raster.id}'
+                raster_xml_id = f"surface_{raster.id}"
             metadata_values = self.get_db_item_metadata(raster)
-            raster_datasets.append(
-                rsxml.project_xml.Dataset(
-                    xml_id=raster_xml_id,
-                    name=raster.name,
-                    path=raster.path,
-                    meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                    ds_type='Raster'))
+            raster_datasets.append(rsxml.project_xml.Dataset(xml_id=raster_xml_id, name=raster.name, path=raster.path, meta_data=rsxml.project_xml.MetaData(values=metadata_values), ds_type="Raster"))
         return raster_datasets
 
     def build_sample_frames(self, sample_frames, sample_frame_type, name):
-        
+
         out_layers = []
         sample_frame: SampleFrame = None
         for sample_frame in sample_frames:
             if not sample_frame.sample_frame_type == sample_frame_type:
                 continue
             metadata_values = self.get_db_item_metadata(sample_frame)
-            out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=sample_frame.view_name,
-                                                        name=sample_frame.name,
-                                                        ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                        meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                                                        lyr_type=name))
+            out_layers.append(
+                rsxml.project_xml.GeopackageLayer(lyr_name=sample_frame.view_name, name=sample_frame.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, meta_data=rsxml.project_xml.MetaData(values=metadata_values), lyr_type=name)
+            )
         return out_layers
 
     def build_profiles(self, profiles):
@@ -336,48 +327,37 @@ class RSProject:
         profile: Profile = None
         for profile in profiles:
             metadata_values = self.get_db_item_metadata(profile)
-            out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=profile.view_name,
-                                                      name=profile.name,
-                                                      ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                      meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                                                      lyr_type='profile'))
+            out_layers.append(
+                rsxml.project_xml.GeopackageLayer(lyr_name=profile.view_name, name=profile.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, meta_data=rsxml.project_xml.MetaData(values=metadata_values), lyr_type="profile")
+            )
         return out_layers
-    
+
     def build_cross_sections(self, cross_sections):
         out_layers = []
         cross_section: CrossSections = None
         for cross_section in cross_sections:
             metadata_values = self.get_db_item_metadata(cross_section)
-            out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=cross_section.view_name,
-                                                      name=cross_section.name,
-                                                      ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                      meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                                                      lyr_type='cross_section'))
+            out_layers.append(
+                rsxml.project_xml.GeopackageLayer(
+                    lyr_name=cross_section.view_name, name=cross_section.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, meta_data=rsxml.project_xml.MetaData(values=metadata_values), lyr_type="cross_section"
+                )
+            )
         return out_layers
-    
+
     def build_pour_points(self):
         out_layers = []
         pour_point: PourPoint = None
         for pour_point in self.qris_project.pour_points.values():
             metadata_values = self.get_db_item_metadata(pour_point)
-            out_layers.append(rsxml.project_xml.GeopackageLayer(
-                lyr_name=pour_point.view_name,
-                name=pour_point.name,
-                ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                lyr_type='pour_point'))
-            out_layers.append(rsxml.project_xml.GeopackageLayer(
-                lyr_name=pour_point.catchment.view_name,
-                name=pour_point.name,
-                ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                lyr_type='catchments'))
+            out_layers.append(
+                rsxml.project_xml.GeopackageLayer(
+                    lyr_name=pour_point.view_name, name=pour_point.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, meta_data=rsxml.project_xml.MetaData(values=metadata_values), lyr_type="pour_point"
+                )
+            )
+            out_layers.append(rsxml.project_xml.GeopackageLayer(lyr_name=pour_point.catchment.view_name, name=pour_point.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, lyr_type="catchments"))
         if out_layers:
             # Use the first pour_point for xml_id and name, or set a generic name
-            out_gpkg = rsxml.project_xml.Geopackage(
-                xml_id=f'pour_points_gpkg',
-                name=f'Pour Points',
-                path=self.out_name,
-                layers=out_layers)
+            out_gpkg = rsxml.project_xml.Geopackage(xml_id="pour_points_gpkg", name="Pour Points", path=self.out_name, layers=out_layers)
             return out_gpkg
         return None
 
@@ -392,17 +372,12 @@ class RSProject:
                 curs = conn.cursor()
                 curs.execute(f"SELECT geometry_type_name FROM gpkg_geometry_columns WHERE table_name = '{context_vector.fc_name}'")  # nosec B608
                 geom_type = curs.fetchone()[0]
-            metadata_values = self.get_db_item_metadata(context_vector)
-            context_layers.append(rsxml.project_xml.GeopackageLayer(summary=f'context_{geom_type.lower()}',
-                                                        lyr_name=context_vector.fc_name,
-                                                        name=context_vector.name,
-                                                        ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                        lyr_type='context'))   
+            _metadata_values = self.get_db_item_metadata(context_vector)
+            context_layers.append(
+                rsxml.project_xml.GeopackageLayer(summary=f"context_{geom_type.lower()}", lyr_name=context_vector.fc_name, name=context_vector.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, lyr_type="context")
+            )
         if len(context_layers) > 0:
-            out_gpkg = rsxml.project_xml.Geopackage(xml_id=f'context_gpkg',
-                                              name=f'Context',
-                                              path='context/feature_classes.gpkg',
-                                              layers=context_layers)
+            out_gpkg = rsxml.project_xml.Geopackage(xml_id="context_gpkg", name="Context", path="context/feature_classes.gpkg", layers=context_layers)
         return out_gpkg
 
     def build_events(self, events: dict) -> list:
@@ -414,8 +389,8 @@ class RSProject:
             rows = curs.fetchall()
             for row in rows:
                 metadata = json.loads(row[0])
-                if 'Photo Path' in metadata:
-                    all_photo_metadata[metadata['Photo Path']] = metadata
+                if "Photo Path" in metadata:
+                    all_photo_metadata[metadata["Photo Path"]] = metadata
 
         # find the Events node in the tree
         event_realizations = []
@@ -428,23 +403,18 @@ class RSProject:
             # Search for photos for the dce in the photos folder
             photo_datasets = []
 
-            photo_dce_folder = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), f'photos/dce_{str(event.id).zfill(3)}').replace("\\", "/"))
+            photo_dce_folder = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), f"photos/dce_{str(event.id).zfill(3)}").replace("\\", "/"))
             # list photos in the photos folder
             if os.path.exists(photo_dce_folder):
                 for photo in os.listdir(photo_dce_folder):
                     photo_metadata = all_photo_metadata[photo]
                     photo_id = os.path.splitext(photo)[0]
                     # get the lat long of the photo
-                    photo_meta = rsxml.project_xml.MetaData(values=[rsxml.project_xml.Meta('lat', photo_metadata['latitude']),
-                                                    rsxml.project_xml.Meta('long', photo_metadata['longitude']),
-                                                    rsxml.project_xml.Meta('timestamp', photo_metadata['timestamp'])
-                                                    ])
+                    photo_meta = rsxml.project_xml.MetaData(
+                        values=[rsxml.project_xml.Meta("lat", photo_metadata["latitude"]), rsxml.project_xml.Meta("long", photo_metadata["longitude"]), rsxml.project_xml.Meta("timestamp", photo_metadata["timestamp"])]
+                    )
 
-                    photo_datasets.append(rsxml.project_xml.Dataset(xml_id=photo_id,
-                                                    name=photo,
-                                                    path=f'photos/dce_{str(event.id).zfill(3)}/{photo}',
-                                                    meta_data=photo_meta,
-                                                    ds_type='Image'))
+                    photo_datasets.append(rsxml.project_xml.Dataset(xml_id=photo_id, name=photo, path=f"photos/dce_{str(event.id).zfill(3)}/{photo}", meta_data=photo_meta, ds_type="Image"))
 
             metadata_values = self.get_db_item_metadata(event)
             metadata_values.append(rsxml.project_xml.Meta(event_type, ""))
@@ -460,16 +430,11 @@ class RSProject:
                     continue
                 added_layer_ids.add(layer.view_name)
                 layer_metadata_values = self.get_db_item_metadata(layer.layer)
-                gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=layer.view_name,
-                                                name=layer.name,
-                                                ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                                meta_data=rsxml.project_xml.MetaData(values=layer_metadata_values),
-                                                lyr_type=layer.layer.layer_id)
+                gp_lyr = rsxml.project_xml.GeopackageLayer(
+                    lyr_name=layer.view_name, name=layer.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, meta_data=rsxml.project_xml.MetaData(values=layer_metadata_values), lyr_type=layer.layer.layer_id
+                )
                 geopackage_layers.append(gp_lyr)
-            events_gpkg = rsxml.project_xml.Geopackage(xml_id=f'dce_{event.id}_gpkg',
-                                            name=f'{event.name}',
-                                            path=self.out_name,
-                                            layers=geopackage_layers)
+            events_gpkg = rsxml.project_xml.Geopackage(xml_id=f"dce_{event.id}_gpkg", name=f"{event.name}", path=self.out_name, layers=geopackage_layers)
             event_creation = event.get_created_on(self.qris_project.project_file)
             if isinstance(event_creation, str):
                 try:
@@ -478,19 +443,15 @@ class RSProject:
                     event_creation = datetime.now()  # fallback if format is wrong
 
             realization = rsxml.project_xml.Realization(
-                xml_id=f'realization_qris_{event.id}',
-                name=event.name,
-                date_created=event_creation,
-                product_version=self.qris_version,
-                datasets=[events_gpkg] + photo_datasets,
-                meta_data=rsxml.project_xml.MetaData(values=metadata_values))
+                xml_id=f"realization_qris_{event.id}", name=event.name, date_created=event_creation, product_version=self.qris_version, datasets=[events_gpkg, *photo_datasets], meta_data=rsxml.project_xml.MetaData(values=metadata_values)
+            )
 
             # add description if it exists
             if event.description:
                 realization.description = event.description
 
             event_realizations.append(realization)
-        
+
         return event_realizations
 
     def build_planning_containers(self):
@@ -500,8 +461,8 @@ class RSProject:
         for planning_container in self.qris_project.planning_containers.values():
             if len(planning_container.planning_events) == 0:
                 continue
-            planning_events = [self.qris_project.events[event_id] for event_id in planning_container.planning_events.keys() ]
-            event_realizations = self.build_events(planning_events)
+            planning_events = [self.qris_project.events[event_id] for event_id in planning_container.planning_events.keys()]
+            _event_realizations = self.build_events(planning_events)
             date_created = planning_container.get_created_on(self.qris_project.project_file)
             if isinstance(date_created, str):
                 try:
@@ -512,26 +473,17 @@ class RSProject:
             # Build metadata entries for each event in the planning container
             meta_values = []
             for event in planning_events:
-                meta_values.append(rsxml.project_xml.Meta(
-                    f'Planning Event {event.id}',
-                    f'Name: {event.name}, Type: {EVENT_TYPE_LOOKUP[event.event_type.id]}'
-                ))
+                meta_values.append(rsxml.project_xml.Meta(f"Planning Event {event.id}", f"Name: {event.name}, Type: {EVENT_TYPE_LOOKUP[event.event_type.id]}"))
 
             meta_data = rsxml.project_xml.MetaData(values=meta_values)
 
             planning_container_realization = rsxml.project_xml.Realization(
-                xml_id=f'planning_container_{planning_container.id}',
-                name=planning_container.name,
-                date_created=date_created,
-                product_version=self.qris_version,
-                datasets=[],
-                meta_data=meta_data
+                xml_id=f"planning_container_{planning_container.id}", name=planning_container.name, date_created=date_created, product_version=self.qris_version, datasets=[], meta_data=meta_data
             )
 
             planning_containter_realizations.append(planning_container_realization)
 
         return planning_containter_realizations
-
 
     def build_analyses(self):
 
@@ -539,15 +491,9 @@ class RSProject:
         analysis: Analysis = None
         for analysis in self.qris_project.analyses.values():
             geopackage_layers = []
-            gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=analysis.view_name,
-                                            name=analysis.name,
-                                            ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR,
-                                            lyr_type='analysis')
+            gp_lyr = rsxml.project_xml.GeopackageLayer(lyr_name=analysis.view_name, name=analysis.name, ds_type=rsxml.project_xml.GeoPackageDatasetTypes.VECTOR, lyr_type="analysis")
             geopackage_layers.append(gp_lyr)
-            analysis_gpkg = rsxml.project_xml.Geopackage(xml_id=f'{analysis.id}_gpkg',
-                                                name=f'{analysis.name}',
-                                                path=self.out_name,
-                                                layers=geopackage_layers)
+            analysis_gpkg = rsxml.project_xml.Geopackage(xml_id=f"{analysis.id}_gpkg", name=f"{analysis.name}", path=self.out_name, layers=geopackage_layers)
             date_created = analysis.get_created_on(self.qris_project.project_file)
             if isinstance(date_created, str):
                 try:
@@ -556,12 +502,7 @@ class RSProject:
                     date_created = datetime.now()
             metadata_values = self.get_db_item_metadata(analysis)
             realization = rsxml.project_xml.Realization(
-                xml_id=f'analysis_{analysis.id}',
-                name=analysis.name,
-                date_created=date_created,
-                product_version=self.qris_version,
-                datasets=[analysis_gpkg],
-                meta_data=rsxml.project_xml.MetaData(values=metadata_values)
+                xml_id=f"analysis_{analysis.id}", name=analysis.name, date_created=date_created, product_version=self.qris_version, datasets=[analysis_gpkg], meta_data=rsxml.project_xml.MetaData(values=metadata_values)
             )
             analysis_realizations.append(realization)
 
@@ -575,29 +516,14 @@ class RSProject:
         for attachment in self.qris_project.attachments.values():
             if attachment.attachment_type == Attachment.TYPE_FILE:
                 metadata_values = self.get_db_item_metadata(attachment)
-                attachments.append(rsxml.project_xml.Dataset(
-                    xml_id=f'attachment_{attachment.id}',
-                    name=attachment.name,
-                    path=f'attachments/{attachment.path}',
-                    meta_data=rsxml.project_xml.MetaData(values=metadata_values),
-                    ds_type='File'))
+                attachments.append(rsxml.project_xml.Dataset(xml_id=f"attachment_{attachment.id}", name=attachment.name, path=f"attachments/{attachment.path}", meta_data=rsxml.project_xml.MetaData(values=metadata_values), ds_type="File"))
             elif attachment.attachment_type == Attachment.TYPE_WEB_LINK:
                 # Create a metadata entry for web link
-                meta_values.append(rsxml.project_xml.Meta(
-                    f'Web Link {attachment.id}',
-                    f'Name: {attachment.name}, URL: {attachment.path}'
-                ))
+                meta_values.append(rsxml.project_xml.Meta(f"Web Link {attachment.id}", f"Name: {attachment.name}, URL: {attachment.path}"))
 
         meta_data = rsxml.project_xml.MetaData(values=meta_values) if meta_values else None
 
-        attachments_realization = rsxml.project_xml.Realization(
-            xml_id='attachments',
-            name='Attachments',
-            date_created=self.created_on,
-            product_version=self.qris_version,
-            datasets=attachments,
-            meta_data=meta_data
-        )
+        attachments_realization = rsxml.project_xml.Realization(xml_id="attachments", name="Attachments", date_created=self.created_on, product_version=self.qris_version, datasets=attachments, meta_data=meta_data)
 
         return attachments_realization
 
@@ -605,10 +531,10 @@ class RSProject:
         metadata_values = []
         if not db_item.metadata:
             return metadata_values
-        for key, value in db_item.metadata.get('metadata', {}).items():
+        for key, value in db_item.metadata.get("metadata", {}).items():
             metadata_values.append(rsxml.project_xml.Meta(key, value))
-        for key, value in db_item.metadata.get('system', {}).items():
-            metadata_values.append(rsxml.project_xml.Meta(f'{key} (System)', f'{value}'))
+        for key, value in db_item.metadata.get("system", {}).items():
+            metadata_values.append(rsxml.project_xml.Meta(f"{key} (System)", f"{value}"))
         return metadata_values
 
     def write(self):
@@ -622,34 +548,24 @@ class RSProject:
             self.warehouse_attrs = existing_attrs
 
         self.rs_project = self.build_project()
-        
+
         raster_datasets = self.build_rasters()
-        
+
         input_layers = []
-        input_layers.extend(self.build_sample_frames(self.qris_project.valley_bottoms.values(), SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE, 'valley_bottom'))
-        input_layers.extend(self.build_sample_frames(self.qris_project.aois.values(), SampleFrame.AOI_SAMPLE_FRAME_TYPE, 'aoi'))
-        input_layers.extend(self.build_sample_frames(self.qris_project.sample_frames.values(), SampleFrame.SAMPLE_FRAME_TYPE, 'sample_frame'))
+        input_layers.extend(self.build_sample_frames(self.qris_project.valley_bottoms.values(), SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE, "valley_bottom"))
+        input_layers.extend(self.build_sample_frames(self.qris_project.aois.values(), SampleFrame.AOI_SAMPLE_FRAME_TYPE, "aoi"))
+        input_layers.extend(self.build_sample_frames(self.qris_project.sample_frames.values(), SampleFrame.SAMPLE_FRAME_TYPE, "sample_frame"))
         input_layers.extend(self.build_profiles(self.qris_project.profiles.values()))
         input_layers.extend(self.build_cross_sections(self.qris_project.cross_sections.values()))
 
-        inputs_gpkg = rsxml.project_xml.Geopackage(xml_id=f'inputs_gpkg',
-                                       name=f'Inputs',
-                                       path=self.out_name,
-                                       layers=input_layers)
-        
+        inputs_gpkg = rsxml.project_xml.Geopackage(xml_id="inputs_gpkg", name="Inputs", path=self.out_name, layers=input_layers)
+
         pour_point_gpkg = self.build_pour_points()
         context_gpkg = self.build_context_layers()
-        
+
         out_gpkgs = [gpkg for gpkg in [inputs_gpkg, pour_point_gpkg, context_gpkg] if gpkg is not None]
 
-
-        self.rs_project.realizations.append(rsxml.project_xml.Realization(
-            xml_id=f'inputs',
-            name='Inputs',
-            date_created=self.created_on,
-            product_version=self.qris_version,
-            datasets=raster_datasets + out_gpkgs))
-
+        self.rs_project.realizations.append(rsxml.project_xml.Realization(xml_id="inputs", name="Inputs", date_created=self.created_on, product_version=self.qris_version, datasets=raster_datasets + out_gpkgs))
 
         events_realizations = self.build_events(self.qris_project.events.values())
         planning_container_realizations = self.build_planning_containers()

@@ -1,7 +1,7 @@
 from qgis.PyQt import QtCore, QtGui
 
-from .map import get_map_center, get_zoom_level
 from ..QRiS.settings import CONSTANTS
+from .map import get_map_center, get_zoom_level
 
 
 def browse_data_exchange(canvas):
