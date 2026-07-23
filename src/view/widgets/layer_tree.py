@@ -3,25 +3,24 @@ import os
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
-from ...model.project import Project
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.layer import Layer
-
-from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocol_definitions
-
+from ...model.project import Project
+from ...QRiS.protocol_parser import LayerDefinition, ProtocolDefinition, load_protocol_definitions
 from ..frm_event_picker import FrmEventPicker
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
 
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
-SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
+SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
+
 
 class LayerTreeWidget(QtWidgets.QWidget):
-    def __init__(self, parent, qris_project:Project, event_type_id: int, mandatory_layers=None):
-        super(LayerTreeWidget, self).__init__(parent)
-        
+    def __init__(self, parent, qris_project: Project, event_type_id: int, mandatory_layers=None):
+        super().__init__(parent)
+
         self.qris_project = qris_project
         self.event_type_id = event_type_id
         self.mandatory_layers = mandatory_layers
@@ -36,7 +35,6 @@ class LayerTreeWidget(QtWidgets.QWidget):
 
         self.layers_model = QtGui.QStandardItemModel()
         self.layers_in_use_list.setModel(self.layers_model)
-
 
     def add_selected_layers(self, item: QtGui.QStandardItem) -> None:
 
@@ -58,23 +56,22 @@ class LayerTreeWidget(QtWidgets.QWidget):
                     list_protocol = data.get_layer_protocol(self.qris_project.protocols)
                     if list_protocol is None:
                         continue
-                    if list_protocol.unique_key() == f'{tree_protocol.machine_code}::{tree_protocol.version}':
-                        if data.unique_key() == f'{tree_layer.id}::{tree_layer.version}':
+                    if list_protocol.unique_key() == f"{tree_protocol.machine_code}::{tree_protocol.version}":
+                        if data.unique_key() == f"{tree_layer.id}::{tree_layer.version}":
                             return
                 else:
                     list_protocol, list_layer = data
                     if tree_layer == list_layer:
                         return
-                
+
             # If got to here then the layer selected in the tree is not in use
             # need the protocol name as well. should be the parent
             layer_item = QtGui.QStandardItem(tree_name)
             data_item = (tree_protocol, tree_layer)
             layer_item.setData(data_item, QtCore.Qt.UserRole)
             layer_item.setEditable(False)
-            layer_item.setToolTip(f'{tree_protocol.label} ({tree_protocol.version}): {tree_layer.id} - Version {tree_layer.version}')
+            layer_item.setToolTip(f"{tree_protocol.label} ({tree_protocol.version}): {tree_layer.id} - Version {tree_layer.version}")
             self.layers_model.appendRow(layer_item)
-
 
     def load_protocol_layer_tree(self):
 
@@ -88,31 +85,31 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.tree_model.clear()
         for protocol in protocols:
             label = protocol.label
-            if protocol.status == 'experimental':
-                label += ' (Experimental)'
+            if protocol.status == "experimental":
+                label += " (Experimental)"
             protocol_si = QtGui.QStandardItem(label)
             if self.event_type_id == DATA_CAPTURE_EVENT_TYPE_ID:
-                if protocol.protocol_type.lower() != 'dce':
+                if protocol.protocol_type.lower() != "dce":
                     continue
             # I don't think we need to add planning layers to the tree, I don't think they have any?
             # if self.event_type_id == PLANNING_EVENT_TYPE_ID:
             #     if protocol.machine_code.lower() != PLANNING_MACHINE_CODE.lower():
             #         continue
             if self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
-                if protocol.protocol_type.lower() != 'asbuilt':
+                if protocol.protocol_type.lower() != "asbuilt":
                     continue
             if self.event_type_id == DESIGN_EVENT_TYPE_ID:
-                if protocol.protocol_type.lower() != 'design':
+                if protocol.protocol_type.lower() != "design":
                     continue
 
             protocol_si.setData(protocol, QtCore.Qt.UserRole)
             protocol_si.setEditable(False)
 
             for layer in protocol.layers:
-                layer_name = layer.label if layer.label not in duplicate_layers else f'{layer.label} ({layer.geom_type})'
+                layer_name = layer.label if layer.label not in duplicate_layers else f"{layer.label} ({layer.geom_type})"
                 layer_si = QtGui.QStandardItem(layer_name)
                 layer_si.setEditable(False)
-                layer_si.setToolTip(f'{layer.id} - Version {layer.version}')
+                layer_si.setToolTip(f"{layer.id} - Version {layer.version}")
                 layer_si.setData(layer, QtCore.Qt.UserRole)
                 protocol_si.appendRow(layer_si)
 
@@ -193,8 +190,8 @@ class LayerTreeWidget(QtWidgets.QWidget):
                         layer_item = protocol_item.child(j)
                         layer_definition: LayerDefinition = layer_item.data(QtCore.Qt.UserRole)
                         layer_protocol = layer.get_layer_protocol(self.qris_project.protocols)
-                        if f'{layer_definition.id}::{layer_definition.version}' == layer.unique_key():
-                            if f'{protocol_definition.machine_code}::{protocol_definition.version}' == layer_protocol.unique_key():
+                        if f"{layer_definition.id}::{layer_definition.version}" == layer.unique_key():
+                            if f"{protocol_definition.machine_code}::{protocol_definition.version}" == layer_protocol.unique_key():
                                 self.add_selected_layers(layer_item)
                                 break
 
@@ -218,18 +215,22 @@ class LayerTreeWidget(QtWidgets.QWidget):
     def on_show_experimental_changed(self, state):
         self.show_experimental = state == QtCore.Qt.Checked
         if self.show_experimental:
-            QtWidgets.QMessageBox.warning(self, "Experimental Protocols", "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.")
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Experimental Protocols",
+                "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.",
+            )
         self.load_protocol_layer_tree()
 
     def setupUi(self):
-        
+
         self.horiz_layers = QtWidgets.QHBoxLayout(self)
         self.setLayout(self.horiz_layers)
 
         # layer tree
         self.vert_layer_tree = QtWidgets.QVBoxLayout(self)
         self.horiz_layers.addLayout(self.vert_layer_tree)
-        self.lblAllLayers = QtWidgets.QLabel('Available Layers')
+        self.lblAllLayers = QtWidgets.QLabel("Available Layers")
         self.vert_layer_tree.addWidget(self.lblAllLayers)
 
         self.available_layers_tree = QtWidgets.QTreeView(self)
@@ -238,7 +239,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.available_layers_tree.customContextMenuRequested.connect(self.on_right_click_tree)
         self.vert_layer_tree.addWidget(self.available_layers_tree)
 
-        chk_show_experimental = QtWidgets.QCheckBox('Show Experimental Protocols', self)
+        chk_show_experimental = QtWidgets.QCheckBox("Show Experimental Protocols", self)
         chk_show_experimental.setChecked(self.show_experimental)
         chk_show_experimental.stateChanged.connect(self.on_show_experimental_changed)
         self.vert_layer_tree.addWidget(chk_show_experimental)
@@ -248,18 +249,18 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.horiz_layers.addLayout(self.vert_buttons)
         self.vert_add = QtWidgets.QVBoxLayout(self)
         self.vert_buttons.addLayout(self.vert_add)
-        self.cmdAddLayer = QtWidgets.QPushButton('Add >>', self)
+        self.cmdAddLayer = QtWidgets.QPushButton("Add >>", self)
         self.cmdAddLayer.clicked.connect(self.on_add_layer_clicked)
         self.vert_add.addWidget(self.cmdAddLayer)
-        self.cmdAddFromDCE = QtWidgets.QPushButton('Add From DCE >>', self)
+        self.cmdAddFromDCE = QtWidgets.QPushButton("Add From DCE >>", self)
         self.cmdAddFromDCE.clicked.connect(self.on_add_from_dce_clicked)
         self.vert_add.addWidget(self.cmdAddFromDCE)
         self.vert_remove = QtWidgets.QVBoxLayout(self)
         self.vert_buttons.addLayout(self.vert_remove)
-        self.cmdRemoveLayer = QtWidgets.QPushButton('<< Remove', self)
+        self.cmdRemoveLayer = QtWidgets.QPushButton("<< Remove", self)
         self.cmdRemoveLayer.clicked.connect(self.on_remove_layer)
         self.vert_remove.addWidget(self.cmdRemoveLayer)
-        self.cmdRemoveAllLayers = QtWidgets.QPushButton('<< Remove All', self)
+        self.cmdRemoveAllLayers = QtWidgets.QPushButton("<< Remove All", self)
         self.cmdRemoveAllLayers.clicked.connect(lambda: self.layers_model.removeRows(0, self.layers_model.rowCount()))
         self.vert_remove.addWidget(self.cmdRemoveAllLayers)
 
@@ -267,7 +268,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.vert_layers = QtWidgets.QVBoxLayout(self)
         self.horiz_layers.addLayout(self.vert_layers)
 
-        self.lblLayersInUse = QtWidgets.QLabel('Layers In Use')
+        self.lblLayersInUse = QtWidgets.QLabel("Layers In Use")
         self.vert_layers.addWidget(self.lblLayersInUse)
 
         self.layers_in_use_list = QtWidgets.QListView(self)
@@ -277,5 +278,5 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.vert_layers.addWidget(self.layers_in_use_list)
 
         # dummy label to take up space so the list view matches the protocol tree height
-        lbl_empty = QtWidgets.QLabel('')
+        lbl_empty = QtWidgets.QLabel("")
         self.vert_layers.addWidget(lbl_empty)

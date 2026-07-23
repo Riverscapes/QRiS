@@ -1,33 +1,31 @@
-from qgis.PyQt.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
-                              QTableWidgetItem, QPushButton, QLabel, QComboBox,
-                              QMenu, QApplication, QSizePolicy)
-from qgis.PyQt.QtCore import Qt
-from qgis.core import QgsUnitTypes
+from typing import ClassVar
 
-from ...lib.unit_conversion import distance_units, area_units, short_unit_name
+from qgis.core import QgsUnitTypes
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+
+from ...lib.unit_conversion import area_units, distance_units, short_unit_name
 from ..frm_export_table import FrmTableExport
 
-
-_AREA_KEYS = {'total_area', 'average_area', 'min_area', 'max_area'}
-_LENGTH_KEYS = {'total_length', 'average_length', 'min_length', 'max_length'}
+_AREA_KEYS = {"total_area", "average_area", "min_area", "max_area"}
+_LENGTH_KEYS = {"total_length", "average_length", "min_length", "max_length"}
 
 STAT_LABELS = {
-    'feature_count': 'Feature Count',
-    'total_area': 'Total Area',
-    'average_area': 'Average Area',
-    'min_area': 'Min Area',
-    'max_area': 'Max Area',
-    'total_length': 'Total Length',
-    'average_length': 'Average Length',
-    'min_length': 'Min Length',
-    'max_length': 'Max Length',
-    'sinuosity': 'Planform Sinuosity',
+    "feature_count": "Feature Count",
+    "total_area": "Total Area",
+    "average_area": "Average Area",
+    "min_area": "Min Area",
+    "max_area": "Max Area",
+    "total_length": "Total Length",
+    "average_length": "Average Length",
+    "min_length": "Min Length",
+    "max_length": "Max Length",
+    "sinuosity": "Planform Sinuosity",
 }
 
 
 class StatsWidget(QWidget):
-
-    def __init__(self, db_item=None, db_path: str = None, parent=None):
+    def __init__(self, db_item=None, db_path: str = None, parent=None):  # noqa: RUF013
         super().__init__(parent)
 
         self._db_item = db_item
@@ -41,7 +39,7 @@ class StatsWidget(QWidget):
 
         self.stats_table = QTableWidget()
         self.stats_table.setColumnCount(2)
-        self.stats_table.setHorizontalHeaderLabels(['Statistic', 'Value'])
+        self.stats_table.setHorizontalHeaderLabels(["Statistic", "Value"])
         self.stats_table.horizontalHeader().setStretchLastSection(True)
         self.stats_table.horizontalHeader().setMinimumSectionSize(80)
         self.stats_table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -53,12 +51,12 @@ class StatsWidget(QWidget):
         bottom = QHBoxLayout()
         layout.addLayout(bottom)
 
-        self.refresh_button = QPushButton('Refresh')
+        self.refresh_button = QPushButton("Refresh")
         self.refresh_button.clicked.connect(self.refresh_stats)
         self.refresh_button.setVisible(False)
         bottom.addWidget(self.refresh_button)
 
-        self.lblUnits = QLabel('Units:')
+        self.lblUnits = QLabel("Units:")
         self.lblUnits.setVisible(False)
         bottom.addWidget(self.lblUnits)
 
@@ -71,7 +69,7 @@ class StatsWidget(QWidget):
 
         bottom.addStretch()
 
-        self.export_button = QPushButton('Export')
+        self.export_button = QPushButton("Export")
         self.export_button.clicked.connect(self._export_table)
         bottom.addWidget(self.export_button)
 
@@ -83,7 +81,7 @@ class StatsWidget(QWidget):
         self._stats_calculated = True
         self.refresh_button.setVisible(False)
 
-    def add_stats_tab(self, tab_widget, label='Geometry'):
+    def add_stats_tab(self, tab_widget, label="Geometry"):
         """Add this widget as a tab only if a db_item exists or pre-loaded stats are present."""
         if self._db_item is None and not self._raw_stats:
             self.hide()
@@ -93,7 +91,7 @@ class StatsWidget(QWidget):
         tab_widget.currentChanged.connect(self._on_parent_tab_changed)
 
     def _on_parent_tab_changed(self, index):
-        if self._tab_widget and self._tab_widget.tabText(index) == 'Geometry':
+        if self._tab_widget and self._tab_widget.tabText(index) == "Geometry":
             self.load_stats()
 
     def set_db_item(self, db_item, db_path: str):
@@ -110,7 +108,7 @@ class StatsWidget(QWidget):
     def refresh_stats(self):
         """Force recalculate and display stats."""
         if self._db_item is None:
-            self._show_message('Save the record first to view statistics.')
+            self._show_message("Save the record first to view statistics.")
             return
         try:
             self._raw_stats = self._db_item.get_spatial_stats(self._db_path)
@@ -118,7 +116,7 @@ class StatsWidget(QWidget):
             self._populate_table(self._raw_stats)
             self._stats_calculated = True
         except Exception as ex:
-            self._show_message(f'Error calculating statistics: {ex}')
+            self._show_message(f"Error calculating statistics: {ex}")
 
     def _setup_units_combo(self, stats: dict):
         keys = set(stats.keys())
@@ -155,7 +153,7 @@ class StatsWidget(QWidget):
         if key in _LENGTH_KEYS and unit_text in distance_units:
             factor = QgsUnitTypes.fromUnitToUnitFactor(QgsUnitTypes.DistanceMeters, distance_units[unit_text])
             return value * factor, short_unit_name(unit_text)
-        return value, ''
+        return value, ""
 
     def _show_message(self, message: str):
         self.stats_table.clearSpans()
@@ -163,27 +161,27 @@ class StatsWidget(QWidget):
         self.stats_table.setSpan(0, 0, 1, 2)
         self.stats_table.setItem(0, 0, QTableWidgetItem(message))
 
-    _MULTI_ONLY_KEYS = {'average_area', 'min_area', 'max_area', 'average_length', 'min_length', 'max_length'}
+    _MULTI_ONLY_KEYS: ClassVar = {"average_area", "min_area", "max_area", "average_length", "min_length", "max_length"}
 
     def _populate_table(self, stats: dict):
-        single_feature = stats.get('feature_count', 0) == 1
+        single_feature = stats.get("feature_count", 0) == 1
         visible = {k: v for k, v in stats.items() if not (single_feature and k in self._MULTI_ONLY_KEYS)}
         self.stats_table.clearSpans()
         self.stats_table.setRowCount(len(visible))
         for row, (key, value) in enumerate(visible.items()):
-            label = STAT_LABELS.get(key, key.replace('_', ' ').title())
+            label = STAT_LABELS.get(key, key.replace("_", " ").title())
             if isinstance(value, float):
                 converted, abbrev = self._convert_value(key, value)
-                numeric_str = f'{converted:,.2f}'
-                display_str = f'{numeric_str} {abbrev}'.strip()
+                numeric_str = f"{converted:,.2f}"
+                display_str = f"{numeric_str} {abbrev}".strip()
             elif isinstance(value, int):
                 numeric_str = str(value)
                 display_str = numeric_str
-                abbrev = ''
+                abbrev = ""
             else:
-                numeric_str = str(value) if value is not None else 'N/A'
+                numeric_str = str(value) if value is not None else "N/A"
                 display_str = numeric_str
-                abbrev = ''
+                abbrev = ""
             label_item = QTableWidgetItem(label)
             value_item = QTableWidgetItem(display_str)
             # store numeric-only string for copy actions
@@ -205,8 +203,8 @@ class StatsWidget(QWidget):
         full_str = value_item.text()
 
         menu = QMenu(self)
-        copy_value = menu.addAction('Copy Value')
-        copy_with_units = menu.addAction('Copy Value with Units')
+        copy_value = menu.addAction("Copy Value")
+        copy_with_units = menu.addAction("Copy Value with Units")
         action = menu.exec_(self.stats_table.viewport().mapToGlobal(pos))
         if action == copy_value:
             QApplication.clipboard().setText(numeric_str)
@@ -219,8 +217,8 @@ class StatsWidget(QWidget):
             label_item = self.stats_table.item(row, 0)
             value_item = self.stats_table.item(row, 1)
             if label_item is not None and value_item is not None:
-                data.append({'Statistic': label_item.text(), 'Value': value_item.text()})
-        name = getattr(self._db_item, 'name', 'statistics') if self._db_item else 'statistics'
+                data.append({"Statistic": label_item.text(), "Value": value_item.text()})
+        name = getattr(self._db_item, "name", "statistics") if self._db_item else "statistics"
         db_path = self._db_path
-        frm = FrmTableExport(self, data=data, base_name=f'{name}_stats', project_path=db_path)
+        frm = FrmTableExport(self, data=data, base_name=f"{name}_stats", project_path=db_path)
         frm.exec_()

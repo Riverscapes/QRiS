@@ -1,18 +1,19 @@
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+
 class CheckableComboBox(QtWidgets.QComboBox):
     # Custom signal to notify when the popup is closed (edit finished)
     popupClosed = QtCore.pyqtSignal()
-    
+
     def __init__(self, parent=None):
-        super(CheckableComboBox, self).__init__(parent)
+        super().__init__(parent)
         self.setEditable(True)
         self.lineEdit().setReadOnly(True)
         self.lineEdit().setAlignment(QtCore.Qt.AlignCenter)
         self.setModel(QtGui.QStandardItemModel(self))
         self.view().viewport().installEventFilter(self)
         self.model().dataChanged.connect(self.updateText)
-        self.is_batch_mode = False # Flag to suppress updates
+        self.is_batch_mode = False  # Flag to suppress updates
         self.all_checked_text = "All"
         self.none_checked_text = "None"
         self.empty_text = "No Options"
@@ -21,11 +22,11 @@ class CheckableComboBox(QtWidgets.QComboBox):
         super().setPlaceholderText(text)
         self.all_checked_text = text
         self.updateText()
-        
+
     def setNoneCheckedText(self, text):
         self.none_checked_text = text
         self.updateText()
-        
+
     def setEmptyText(self, text):
         self.empty_text = text
         self.updateText()
@@ -35,7 +36,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
             index = self.view().indexAt(event.pos())
             if index.isValid():
                 item = self.model().itemFromIndex(index)
-                
+
                 # Check for commands
                 data = item.data()
                 if data == "SELECT_ALL":
@@ -48,8 +49,8 @@ class CheckableComboBox(QtWidgets.QComboBox):
                         item.setCheckState(QtCore.Qt.Unchecked)
                     else:
                         item.setCheckState(QtCore.Qt.Checked)
-            return True # Consume event to prevent popup close
-        return super(CheckableComboBox, self).eventFilter(obj, event)
+            return True  # Consume event to prevent popup close
+        return super().eventFilter(obj, event)
 
     def set_all_check_state(self, state):
         self.is_batch_mode = True
@@ -60,19 +61,19 @@ class CheckableComboBox(QtWidgets.QComboBox):
                 item.setCheckState(state)
         self.model().blockSignals(False)
         self.is_batch_mode = False
-        self.updateText() 
-        
+        self.updateText()
+
     def hidePopup(self):
-        super(CheckableComboBox, self).hidePopup()
+        super().hidePopup()
         self.popupClosed.emit()
 
     def addItem(self, text, data=None):
         item = QtGui.QStandardItem(text)
         item.setToolTip(text)
         item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-        item.setData(QtCore.Qt.Checked, QtCore.Qt.CheckStateRole) # Default checked
+        item.setData(QtCore.Qt.Checked, QtCore.Qt.CheckStateRole)  # Default checked
         if data is not None:
-             item.setData(data)
+            item.setData(data)
         self.model().appendRow(item)
         if not self.is_batch_mode:
             self.updateText()
@@ -99,16 +100,16 @@ class CheckableComboBox(QtWidgets.QComboBox):
 
     def updateText(self, *args):
         items = self.get_checked_items()
-        
+
         # Count checkable items only
         total_checkable = 0
         for i in range(self.model().rowCount()):
             if self.model().item(i).isCheckable():
                 total_checkable += 1
-                
+
         text = ", ".join(items)
         self.setToolTip(text)
-        
+
         if total_checkable == 0:
             text = self.empty_text
             self.setEnabled(False)
@@ -122,7 +123,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
                 text = f"{len(items)} selected"
 
         self.lineEdit().setText(text)
-    
+
     def get_checked_items(self):
         checkedItems = []
         for i in range(self.count()):
@@ -130,7 +131,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
             if item.checkState() == QtCore.Qt.Checked:
                 checkedItems.append(item.text())
         return checkedItems
-        
+
     def get_checked_data(self):
         checkedData = []
         for i in range(self.count()):

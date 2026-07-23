@@ -4,17 +4,16 @@ from qgis.PyQt import QtWidgets
 
 from ...model.datespec import DateSpec
 
-NONE_TEXT = 'None'
+NONE_TEXT = "None"
 
 
 class FrmDatePicker(QtWidgets.QWidget):
-
     def __init__(self, parent, date_spec: DateSpec = None):
         super().__init__(parent)
         self.setupUi()
 
         [self.cboYear.addItem(str(year), year) for year in range(1970, 2050)]
-        [self.cboMonth.addItem(datetime(2000, month, 1).strftime('%b'), month) for month in range(1, 13)]
+        [self.cboMonth.addItem(datetime(2000, month, 1).strftime("%b"), month) for month in range(1, 13)]
         [self.cboDay.addItem((str(day)), day) for day in range(1, 32)]
 
         # Add the unspecified text with a value of zero
@@ -33,10 +32,7 @@ class FrmDatePicker(QtWidgets.QWidget):
         month = self.cboMonth.currentData()
         day = self.cboDay.currentData()
 
-        return DateSpec(
-            year if year != 0 else None,
-            month if month != 0 else None,
-            day if day != 0 else None)
+        return DateSpec(year if year != 0 else None, month if month != 0 else None, day if day != 0 else None)
 
     def set_date_spec(self, date_spec: DateSpec):
 
@@ -87,29 +83,29 @@ class FrmDatePicker(QtWidgets.QWidget):
         self.setLayout(self.horiz)
 
         self.lblYear = QtWidgets.QLabel()
-        self.lblYear.setText('Year')
+        self.lblYear.setText("Year")
         self.horiz.addWidget(self.lblYear)
 
         self.cboYear = QtWidgets.QComboBox()
         self.horiz.addWidget(self.cboYear)
 
         self.lblMonth = QtWidgets.QLabel()
-        self.lblMonth.setText('Month')
+        self.lblMonth.setText("Month")
         self.horiz.addWidget(self.lblMonth)
 
         self.cboMonth = QtWidgets.QComboBox()
         self.horiz.addWidget(self.cboMonth)
 
         self.lblDay = QtWidgets.QLabel()
-        self.lblDay.setText('Day')
+        self.lblDay.setText("Day")
         self.horiz.addWidget(self.lblDay)
 
         self.cboDay = QtWidgets.QComboBox()
         self.horiz.addWidget(self.cboDay)
-        
+
         self.btnToday = QtWidgets.QPushButton("Today")
         self.btnToday.setToolTip("Set to today's date")
         self.btnToday.clicked.connect(self.set_to_today)
         self.horiz.addWidget(self.btnToday)
-        
+
         self.horiz.addStretch()

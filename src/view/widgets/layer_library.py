@@ -1,42 +1,40 @@
 import os
-from typing import Dict, List, Tuple
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
-from ...model.project import Project
+from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
 from ...model.layer import Layer
-from ...model.event import Event, DCE_EVENT_TYPE_ID, AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
-
-from ...QRiS.protocol_parser import ProtocolDefinition, LayerDefinition, load_protocol_definitions
+from ...model.project import Project
+from ...QRiS.protocol_parser import LayerDefinition, ProtocolDefinition, load_protocol_definitions
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from .checkable_combo_box import CheckableComboBox
 
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
-SHOW_EXPERIMENTAL_PROTOCOLS = 'show_experimental_protocols'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
+SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
+
 
 class LayerLibraryWidget(QtWidgets.QWidget):
-
     def __init__(self, parent, project: Project, event_type_id: int, dce_event: Event = None):
-        super(LayerLibraryWidget, self).__init__(parent)
-        
+        super().__init__(parent)
+
         self.qris_project = project
         self.event_type_id = event_type_id
         self.dce_event = dce_event
         self.is_tree_view = True
-        
+
         settings = QSettings(ORGANIZATION, APPNAME)
         self.show_experimental = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, bool)
 
         # Map unique_key -> inclusion status (bool)
         # Unique key structure: "ProtocolMachineCode::ProtocolVersion::LayerID::LayerVersion"
-        self.current_layers_state: Dict[str, bool] = {}
-        
+        self.current_layers_state: dict[str, bool] = {}
+
         # Store definitions loaded from files
         # Key: "ProtocolMachineCode::ProtocolVersion", Value: ProtocolDefinition
-        self.protocol_definitions: Dict[str, ProtocolDefinition] = {} 
-        
+        self.protocol_definitions: dict[str, ProtocolDefinition] = {}
+
         self.load_definitions()
         self.init_state()
 
@@ -48,14 +46,14 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def apply_initial_protocol_filter(self):
         if not self.dce_event:
             return
-            
+
         # Find used protocols
         used_protocols = set()
-        for p, l in self.available_layers:
-            key = self.get_layer_unique_key(p, l)
+        for p, layer in self.available_layers:
+            key = self.get_layer_unique_key(p, layer)
             if self.current_layers_state.get(key, False):
                 used_protocols.add(p.label)
-        
+
         # If no protocols are used, we keep the default "All Selected" behavior
         if not used_protocols:
             return
@@ -63,7 +61,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         # Uncheck all, then check used
         model = self.cbo_filter_protocol.model()
         model.blockSignals(True)
-        
+
         for i in range(model.rowCount()):
             item = model.item(i)
             if item.isCheckable():
@@ -72,12 +70,12 @@ class LayerLibraryWidget(QtWidgets.QWidget):
                     item.setCheckState(QtCore.Qt.Checked)
                 else:
                     item.setCheckState(QtCore.Qt.Unchecked)
-                    
+
         model.blockSignals(False)
         self.cbo_filter_protocol.updateText()
 
     def get_layer_unique_key(self, protocol_def: ProtocolDefinition, layer_def: LayerDefinition):
-        return f"{protocol_def.machine_code}::{str(protocol_def.version)}::{layer_def.id}::{str(layer_def.version)}"
+        return f"{protocol_def.machine_code}::{protocol_def.version!s}::{layer_def.id}::{layer_def.version!s}"
 
     @property
     def tree_model(self):
@@ -87,15 +85,15 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         data = item.data(0, QtCore.Qt.UserRole)
         # Compatibility handling
         if isinstance(data, tuple):
-             p, l = data
-             key = self.get_layer_unique_key(p, l)
-             self.current_layers_state[key] = True
-             self.full_refresh_ui()
+            p, layer = data
+            key = self.get_layer_unique_key(p, layer)
+            self.current_layers_state[key] = True
+            self.full_refresh_ui()
 
     def load_definitions(self):
         # Load protocols - Always load experimental to check for usage, filter later if needed
         protocols = load_protocol_definitions(os.path.dirname(self.qris_project.project_file), show_experimental=True)
-        
+
         # Identify protocols used by the current event
         used_protocol_machine_codes = set()
         if self.dce_event:
@@ -104,7 +102,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
                 if p:
                     used_protocol_machine_codes.add(p.machine_code)
 
-        self.available_layers = [] # List of (ProtocolDefinition, LayerDefinition)
+        self.available_layers = []  # List of (ProtocolDefinition, LayerDefinition)
 
         for p in protocols:
             p_key = f"{p.machine_code}::{p.version}"
@@ -113,49 +111,49 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             # Filter by event type if needed
             if self.event_type_id == DCE_EVENT_TYPE_ID:
                 # Only allow protocols that are explicitly DCE (case-insensitive)
-                if not p.protocol_type or p.protocol_type.strip().lower() != 'dce':
+                if not p.protocol_type or p.protocol_type.strip().lower() != "dce":
                     continue
             elif self.event_type_id == DESIGN_EVENT_TYPE_ID:
-                if not p.protocol_type or p.protocol_type.strip().lower() != 'design':
+                if not p.protocol_type or p.protocol_type.strip().lower() != "design":
                     continue
             elif self.event_type_id == AS_BUILT_EVENT_TYPE_ID:
-                if not p.protocol_type or p.protocol_type.strip().lower() != 'asbuilt':
+                if not p.protocol_type or p.protocol_type.strip().lower() != "asbuilt":
                     continue
-            
-            for l in p.layers:
-                self.available_layers.append((p, l))
+
+            for layer in p.layers:
+                self.available_layers.append((p, layer))
 
     def init_state(self):
         # Initialize all to false and build uniqueness map
         self.layer_id_map = {}
-        for p, l in self.available_layers:
-            key = self.get_layer_unique_key(p, l)
+        for p, layer in self.available_layers:
+            key = self.get_layer_unique_key(p, layer)
             self.current_layers_state[key] = False
-            
-            l_id_lower = l.id.lower()
-            if l_id_lower not in self.layer_id_map:
-                self.layer_id_map[l_id_lower] = []
-            self.layer_id_map[l_id_lower].append(key)
+
+            layer_id_lower = layer.id.lower()
+            if layer_id_lower not in self.layer_id_map:
+                self.layer_id_map[layer_id_lower] = []
+            self.layer_id_map[layer_id_lower].append(key)
 
         # If editing an event, set included layers to True
         if self.dce_event:
             has_experimental = False
-            
+
             for event_layer in self.dce_event.event_layers:
                 layer = event_layer.layer
                 # Find the matching definition
                 # We need to reverse map the project layer to definitions
                 # Layer object has protocol info via get_layer_protocol?
                 # Actually Layer object only stores ID, we need to look up protocol logic.
-                
+
                 # Check stored protocols in project
                 # Using Layer.get_layer_protocol() might work if the protocol is in the project
                 proj_protocol = layer.get_layer_protocol(self.qris_project.protocols)
-                
+
                 target_proto_code = proj_protocol.machine_code if proj_protocol else None
-                if proj_protocol and proj_protocol.system_metadata and proj_protocol.system_metadata.get('status') == 'experimental':
+                if proj_protocol and proj_protocol.system_metadata and proj_protocol.system_metadata.get("status") == "experimental":
                     has_experimental = True
-                
+
                 target_layer_id = layer.layer_id
 
                 found_match = False
@@ -163,24 +161,24 @@ class LayerLibraryWidget(QtWidgets.QWidget):
                 if proj_protocol:
                     # Construct key
                     # layer.layer_id matches def.id, layer.layer_version matches def.version
-                    key = f"{proj_protocol.machine_code}::{str(proj_protocol.version)}::{layer.layer_id}::{str(layer.layer_version)}"
+                    key = f"{proj_protocol.machine_code}::{proj_protocol.version!s}::{layer.layer_id}::{layer.layer_version!s}"
                     if key in self.current_layers_state:
-                         self.current_layers_state[key] = True
-                         found_match = True
+                        self.current_layers_state[key] = True
+                        found_match = True
 
                 # 2. Fuzzy Match (Machine Code + Layer ID)
                 if not found_match and target_proto_code:
-                     for avail_key in self.current_layers_state.keys():
-                        parts = avail_key.split('::')
+                    for avail_key in self.current_layers_state.keys():
+                        parts = avail_key.split("::")
                         if len(parts) == 4:
-                            p_mc, p_ver, l_id, l_ver = parts
+                            p_mc, _p_ver, l_id, _l_ver = parts
                             if p_mc.lower() == target_proto_code.lower() and l_id.lower() == target_layer_id.lower():
                                 self.current_layers_state[avail_key] = True
                                 found_match = True
 
                 # 3. Unique Layer ID Fallback
                 # If the layer ID exists in exactly ONE loaded protocol definition, we assume it's a match.
-                # This handles cases like protocol renaming/typo fixes (GEOMPORPHIC vs GEOMORPHIC) 
+                # This handles cases like protocol renaming/typo fixes (GEOMPORPHIC vs GEOMORPHIC)
                 # where the layer ID itself is stable and unique in the current context.
                 if not found_match:
                     candidates = self.layer_id_map.get(target_layer_id.lower(), [])
@@ -205,7 +203,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.cbo_filter_protocol.setPlaceholderText("All Protocols")
         self.cbo_filter_protocol.setNoneCheckedText("No Protocols Selected")
         self.cbo_filter_protocol.setEmptyText("No Protocols Available")
-        self.cbo_filter_protocol.popupClosed.connect(self.update_visibility) # Just update vis directly
+        self.cbo_filter_protocol.popupClosed.connect(self.update_visibility)  # Just update vis directly
         self.horiz_filters.addWidget(self.cbo_filter_protocol)
 
         self.txt_filter_search = QtWidgets.QLineEdit()
@@ -213,9 +211,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.txt_filter_search.textChanged.connect(self.update_visibility)
         self.txt_filter_search.setMinimumWidth(200)
         self.horiz_filters.addWidget(self.txt_filter_search)
-        
+
         self.btn_clear_filters = QtWidgets.QPushButton()
-        self.btn_clear_filters.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/clear_filter'))
+        self.btn_clear_filters.setIcon(QtGui.QIcon(":plugins/qris_toolbar/clear_filter"))
         self.btn_clear_filters.setToolTip("Clear Filters")
         self.btn_clear_filters.clicked.connect(self.clear_filters)
         self.horiz_filters.addWidget(self.btn_clear_filters)
@@ -230,20 +228,20 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.btn_advanced.setText("Advanced Filters")
         self.btn_advanced.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
-        
+
         self.menu_advanced = QtWidgets.QMenu(self.btn_advanced)
-        
+
         self.act_limit_included = self.menu_advanced.addAction("Show Only Included Layers")
         self.act_limit_included.setCheckable(True)
         self.act_limit_included.toggled.connect(self.update_visibility)
-        
+
         self.menu_advanced.addSeparator()
 
         self.act_show_experimental = self.menu_advanced.addAction("Show Experimental Protocols")
         self.act_show_experimental.setCheckable(True)
         self.act_show_experimental.setChecked(self.show_experimental)
         self.act_show_experimental.toggled.connect(self.on_show_experimental_toggled)
-        
+
         self.btn_advanced.setMenu(self.menu_advanced)
         self.horiz_filters.addWidget(self.btn_advanced)
 
@@ -255,9 +253,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.pageTree = QtWidgets.QWidget()
         self.vboxTree = QtWidgets.QVBoxLayout(self.pageTree)
         self.vboxTree.setContentsMargins(0, 0, 0, 0)
-        
+
         self.layersTree = QtWidgets.QTreeWidget()
-        self.layersTree.setHeaderLabels(['Layer', '', 'Version', 'Description'])
+        self.layersTree.setHeaderLabels(["Layer", "", "Version", "Description"])
         self.layersTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.layersTree.header().setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
         self.layersTree.header().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
@@ -275,9 +273,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.pageTable = QtWidgets.QWidget()
         self.vboxTable = QtWidgets.QVBoxLayout(self.pageTable)
         self.vboxTable.setContentsMargins(0, 0, 0, 0)
-        
+
         self.layersTable = QtWidgets.QTableWidget(0, 6)
-        self.layersTable.setHorizontalHeaderLabels(['', 'Protocol', 'Group', 'Layer', 'Version', 'Description'])
+        self.layersTable.setHorizontalHeaderLabels(["", "Protocol", "Group", "Layer", "Version", "Description"])
         self.layersTable.verticalHeader().setVisible(False)
         header = self.layersTable.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
@@ -311,9 +309,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         # Build initial views
         self.build_tree()
         self.build_table()
-        
+
         self.stackedWidget.setCurrentIndex(0)
-        
+
         # Default to showing only included layers if editing an event
         if self.dce_event:
             self.act_limit_included.setChecked(True)
@@ -330,23 +328,23 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def load_filters(self):
         # Protocols
         visible_protocols = set()
-        for p, l in self.available_layers:
-             if p.status == 'experimental' and not self.show_experimental:
-                 # Check usage
-                 key = self.get_layer_unique_key(p, l)
-                 if not self.current_layers_state.get(key):
-                      continue
-             visible_protocols.add(p.label)
+        for p, layer in self.available_layers:
+            if p.status == "experimental" and not self.show_experimental:
+                # Check usage
+                key = self.get_layer_unique_key(p, layer)
+                if not self.current_layers_state.get(key):
+                    continue
+            visible_protocols.add(p.label)
 
         unique_protocols = sorted(list(visible_protocols))
-        
+
         self.cbo_filter_protocol.clear()
         if unique_protocols:
-             self.cbo_filter_protocol.add_command_item("(Select All)", "SELECT_ALL")
-             self.cbo_filter_protocol.add_command_item("(Select None)", "SELECT_NONE")
-             self.cbo_filter_protocol.insertSeparator(self.cbo_filter_protocol.count())
-             
-             self.cbo_filter_protocol.addBatchItems([(p, p) for p in unique_protocols])
+            self.cbo_filter_protocol.add_command_item("(Select All)", "SELECT_ALL")
+            self.cbo_filter_protocol.add_command_item("(Select None)", "SELECT_NONE")
+            self.cbo_filter_protocol.insertSeparator(self.cbo_filter_protocol.count())
+
+            self.cbo_filter_protocol.addBatchItems([(p, p) for p in unique_protocols])
 
     def clear_filters(self):
         self.txt_filter_search.clear()
@@ -356,23 +354,22 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
     def should_show_layer(self, protocol_def: ProtocolDefinition, layer_def: LayerDefinition):
         # 0. Experimental Filter
-        if protocol_def.status == 'experimental' and not self.show_experimental:
-             # Check usage - show if included
-             key = self.get_layer_unique_key(protocol_def, layer_def)
-             if not self.current_layers_state.get(key, False):
-                 return False
+        if protocol_def.status == "experimental" and not self.show_experimental:
+            # Check usage - show if included
+            key = self.get_layer_unique_key(protocol_def, layer_def)
+            if not self.current_layers_state.get(key, False):
+                return False
 
         # 1. Search
         search = self.txt_filter_search.text().lower().strip()
         if search:
-            match = (search in layer_def.label.lower() or 
-                     search in protocol_def.label.lower() or 
-                     (layer_def.hierarchy and any(search in str(h).lower() for h in layer_def.hierarchy)))
-            if not match: return False
+            match = search in layer_def.label.lower() or search in protocol_def.label.lower() or (layer_def.hierarchy and any(search in str(h).lower() for h in layer_def.hierarchy))
+            if not match:
+                return False
 
         # 2. Protocol Filter
         checked_protocols = self.cbo_filter_protocol.get_checked_data()
-        # Handle "All" case or empty case? 
+        # Handle "All" case or empty case?
         # If checked_protocols is empty due to Select None, then filtering is active
         # But if cbo is empty, it means no protocols.
         if self.cbo_filter_protocol.count() > 0:
@@ -390,47 +387,48 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def update_visibility(self):
         # Update Tree
         root = self.layersTree.invisibleRootItem()
-        visible_count = 0
+        _visible_count = 0
         total_count = len(self.available_layers)
-        
+
         for i in range(root.childCount()):
             prot_item = root.child(i)
             prot_visible = False
-            
+
             for j in range(prot_item.childCount()):
                 # Check if group or layer
                 child = prot_item.child(j)
                 child_visible = self.update_tree_item_visibility(child)
                 if child_visible:
                     prot_visible = True
-            
+
             prot_item.setHidden(not prot_visible)
 
         # Update Table
         visible_rows = 0
         for row in range(self.layersTable.rowCount()):
-             data = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole)
-             if data:
-                 p, l, key = data
-                 show = self.should_show_layer(p, l)
-                 self.layersTable.setRowHidden(row, not show)
-                 if show: visible_rows += 1
-        
+            data = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole)
+            if data:
+                p, layer, _key = data
+                show = self.should_show_layer(p, layer)
+                self.layersTable.setRowHidden(row, not show)
+                if show:
+                    visible_rows += 1
+
         self.lbl_filter_count.setText(f"Showing {visible_rows} of {total_count} layers")
 
     def on_show_experimental_toggled(self, checked):
         self.show_experimental = checked
-        
+
         self.load_filters()
         self.update_visibility()
         self.update_counts()
-        
+
         # Ensure new layers have state in dictionary
-        for p, l in self.available_layers:
-            key = self.get_layer_unique_key(p, l)
+        for p, layer in self.available_layers:
+            key = self.get_layer_unique_key(p, layer)
             if key not in self.current_layers_state:
                 self.current_layers_state[key] = False
-                
+
         self.load_filters()
         self.load_current_view()
         self.update_counts()
@@ -438,11 +436,11 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def update_tree_item_visibility(self, item):
         data = item.data(0, QtCore.Qt.UserRole)
         if isinstance(data, list) or isinstance(data, tuple):
-             # It's a layer leaf: (ProtocolDefinition, LayerDefinition)
-             p, l = data
-             visible = self.should_show_layer(p, l)
-             item.setHidden(not visible)
-             return visible
+            # It's a layer leaf: (ProtocolDefinition, LayerDefinition)
+            p, layer = data
+            visible = self.should_show_layer(p, layer)
+            item.setHidden(not visible)
+            return visible
         else:
             # It's a group node or protocol node
             any_visible = False
@@ -455,7 +453,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
     def build_tree(self):
         self.layersTree.clear()
-        
+
         # Helper to find/create nodes
         def get_node(parent, text, data=None):
             for i in range(parent.childCount()):
@@ -465,98 +463,99 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             item.setText(0, text)
             item.setToolTip(0, text)
             item.setExpanded(self.dce_event is not None)
-            if data: item.setData(0, QtCore.Qt.UserRole, data)
+            if data:
+                item.setData(0, QtCore.Qt.UserRole, data)
             return item
 
-        for p, l in self.available_layers:
-            key = self.get_layer_unique_key(p, l)
+        for p, layer in self.available_layers:
+            key = self.get_layer_unique_key(p, layer)
             is_included = self.current_layers_state[key]
 
             # Protocol Node
             prot_node = get_node(self.layersTree.invisibleRootItem(), p.label, data="PROTOCOL")
-            
+
             # Group Node
             parent_node = prot_node
-            if l.hierarchy:
-                if isinstance(l.hierarchy, list):
-                    for group_name in l.hierarchy:
-                         parent_node = get_node(parent_node, str(group_name), data="GROUP")
+            if layer.hierarchy:
+                if isinstance(layer.hierarchy, list):
+                    for group_name in layer.hierarchy:
+                        parent_node = get_node(parent_node, str(group_name), data="GROUP")
                 else:
-                     parent_node = get_node(parent_node, str(l.hierarchy), data="GROUP")
-            
+                    parent_node = get_node(parent_node, str(layer.hierarchy), data="GROUP")
+
             # Layer Leaf
             layer_node = QtWidgets.QTreeWidgetItem(parent_node)
-            layer_node.setText(0, l.label)
-            layer_node.setIcon(0, self.get_geom_icon(l.geom_type))
-            layer_node.setText(2, str(l.version))
-            layer_node.setText(3, l.description or "")
-            layer_node.setData(0, QtCore.Qt.UserRole, (p, l))
-            
-            layer_node.setToolTip(0, l.label)
-            layer_node.setToolTip(2, str(l.version))
-            layer_node.setToolTip(3, l.description or "")
-            
+            layer_node.setText(0, layer.label)
+            layer_node.setIcon(0, self.get_geom_icon(layer.geom_type))
+            layer_node.setText(2, str(layer.version))
+            layer_node.setText(3, layer.description or "")
+            layer_node.setData(0, QtCore.Qt.UserRole, (p, layer))
+
+            layer_node.setToolTip(0, layer.label)
+            layer_node.setToolTip(2, str(layer.version))
+            layer_node.setToolTip(3, layer.description or "")
+
             self.setup_include_widget(self.layersTree, layer_node, 1, key, is_included)
             self.update_item_style(layer_node, is_included)
 
     def build_table(self):
         self.layersTable.setRowCount(len(self.available_layers))
         self.layersTable.setSortingEnabled(False)
-        
-        for i, (p, l) in enumerate(self.available_layers):
-            key = self.get_layer_unique_key(p, l)
+
+        for i, (p, layer) in enumerate(self.available_layers):
+            key = self.get_layer_unique_key(p, layer)
             is_included = self.current_layers_state[key]
-            
+
             # 1: Protocol
             item_prot = QtWidgets.QTableWidgetItem(p.label)
             item_prot.setToolTip(p.label)
-            item_prot.setData(QtCore.Qt.UserRole, (p, l, key))
+            item_prot.setData(QtCore.Qt.UserRole, (p, layer, key))
             self.layersTable.setItem(i, 1, item_prot)
-            
+
             # 0: Include (Checkbox)
             self.setup_include_widget(self.layersTable, i, 0, key, is_included)
 
             # 2: Group
             group_text = ""
-            if l.hierarchy:
-                if isinstance(l.hierarchy, list):
-                    group_text = " > ".join([str(h) for h in l.hierarchy])
+            if layer.hierarchy:
+                if isinstance(layer.hierarchy, list):
+                    group_text = " > ".join([str(h) for h in layer.hierarchy])
                 else:
-                    group_text = str(l.hierarchy)
+                    group_text = str(layer.hierarchy)
             item_grp = QtWidgets.QTableWidgetItem(group_text)
             item_grp.setToolTip(group_text)
             self.layersTable.setItem(i, 2, item_grp)
-            
+
             # 3: Layer
-            item_lay = QtWidgets.QTableWidgetItem(l.label)
-            item_lay.setIcon(self.get_geom_icon(l.geom_type))
-            item_lay.setToolTip(l.label)
+            item_lay = QtWidgets.QTableWidgetItem(layer.label)
+            item_lay.setIcon(self.get_geom_icon(layer.geom_type))
+            item_lay.setToolTip(layer.label)
             self.layersTable.setItem(i, 3, item_lay)
-            
+
             # 4: Version
-            item_ver = QtWidgets.QTableWidgetItem(str(l.version))
-            item_ver.setToolTip(str(l.version))
+            item_ver = QtWidgets.QTableWidgetItem(str(layer.version))
+            item_ver.setToolTip(str(layer.version))
             self.layersTable.setItem(i, 4, item_ver)
 
             # 5: Description
-            desc = l.description or ""
+            desc = layer.description or ""
             item_desc = QtWidgets.QTableWidgetItem(desc)
             item_desc.setToolTip(desc)
             self.layersTable.setItem(i, 5, item_desc)
-            
+
             self.update_table_row_style(i, is_included)
-            
+
         self.layersTable.setSortingEnabled(True)
 
     def get_geom_icon(self, geom_type):
-        icon_name = 'layer'
-        if geom_type == 'Point':
-            icon_name = 'point'
-        elif geom_type == 'Linestring':
-            icon_name = 'line'
-        elif geom_type == 'Polygon':
-            icon_name = 'polygon'
-        return QtGui.QIcon(f':plugins/qris_toolbar/{icon_name}')
+        icon_name = "layer"
+        if geom_type == "Point":
+            icon_name = "point"
+        elif geom_type == "Linestring":
+            icon_name = "line"
+        elif geom_type == "Polygon":
+            icon_name = "polygon"
+        return QtGui.QIcon(f":plugins/qris_toolbar/{icon_name}")
 
     def setup_include_widget(self, parent_widget, item_or_row, col, key, is_checked):
         # Create a widget with a checkbox centered
@@ -564,20 +563,20 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(QtCore.Qt.AlignCenter)
-        
+
         chk = QtWidgets.QCheckBox()
         chk.setChecked(is_checked)
         chk.clicked.connect(lambda checked: self.on_layer_toggled(key, checked))
-        
+
         layout.addWidget(chk)
-        
+
         if isinstance(parent_widget, QtWidgets.QTreeWidget):
-             parent_widget.setItemWidget(item_or_row, col, container)
-             # Store reference to chk for updates? 
-             item_or_row.setData(col, QtCore.Qt.UserRole, chk)
+            parent_widget.setItemWidget(item_or_row, col, container)
+            # Store reference to chk for updates?
+            item_or_row.setData(col, QtCore.Qt.UserRole, chk)
         else:
-             parent_widget.setCellWidget(item_or_row, col, container)
-             parent_widget.item(item_or_row, 1).setData(QtCore.Qt.UserRole + 1, chk) # Store ref on protocol column item
+            parent_widget.setCellWidget(item_or_row, col, container)
+            parent_widget.item(item_or_row, 1).setData(QtCore.Qt.UserRole + 1, chk)  # Store ref on protocol column item
 
     def on_layer_toggled(self, key, checked):
         self.current_layers_state[key] = checked
@@ -590,45 +589,46 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
     def refresh_styles(self, key):
         is_included = self.current_layers_state[key]
-        
+
         # Find items in Tree and Table matching key and update style/checkbox
         # Is there a faster way than iterating? probably mapping but simple iteration is robust.
-        
+
         # Update Tree
         root = self.layersTree.invisibleRootItem()
+
         def visit(item):
             data = item.data(0, QtCore.Qt.UserRole)
-            if isinstance(data, tuple): # Leaf
-                 p, l = data
-                 if self.get_layer_unique_key(p, l) == key:
-                     self.update_item_style(item, is_included)
-                     # Update Checkbox state if changed programmatically (batch)
-                     chk = item.data(1, QtCore.Qt.UserRole)
-                     if chk and chk.isChecked() != is_included:
-                         chk.blockSignals(True)
-                         chk.setChecked(is_included)
-                         chk.blockSignals(False)
-            
+            if isinstance(data, tuple):  # Leaf
+                p, layer = data
+                if self.get_layer_unique_key(p, layer) == key:
+                    self.update_item_style(item, is_included)
+                    # Update Checkbox state if changed programmatically (batch)
+                    chk = item.data(1, QtCore.Qt.UserRole)
+                    if chk and chk.isChecked() != is_included:
+                        chk.blockSignals(True)
+                        chk.setChecked(is_included)
+                        chk.blockSignals(False)
+
             for i in range(item.childCount()):
                 visit(item.child(i))
-        
+
         for i in range(root.childCount()):
             visit(root.child(i))
-            
+
         # Update Table
-        self.layersTable.setSortingEnabled(False) # Prevent jumping
+        self.layersTable.setSortingEnabled(False)  # Prevent jumping
         for row in range(self.layersTable.rowCount()):
-             data = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole)
-             if data:
-                 p, l, k = data
-                 if k == key:
-                     self.update_table_row_style(row, is_included)
-                     # Checkbox
-                     chk = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole + 1)
-                     if chk and chk.isChecked() != is_included:
-                         chk.blockSignals(True)
-                         chk.setChecked(is_included)
-                         chk.blockSignals(False)
+            data = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole)
+            if data:
+                _p, _l, k = data
+                if k == key:
+                    self.update_table_row_style(row, is_included)
+                    # Checkbox
+                    chk = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole + 1)
+                    if chk and chk.isChecked() != is_included:
+                        chk.blockSignals(True)
+                        chk.setChecked(is_included)
+                        chk.blockSignals(False)
         self.layersTable.setSortingEnabled(True)
 
     def update_item_style(self, item: QtWidgets.QTreeWidgetItem, is_included):
@@ -639,34 +639,39 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def update_table_row_style(self, row, is_included):
         font = self.layersTable.item(row, 1).font()
         font.setBold(is_included)
-        for c in range(1, 6): # Protocol to Version
-             item = self.layersTable.item(row, c)
-             if item: item.setFont(font)
+        for c in range(1, 6):  # Protocol to Version
+            item = self.layersTable.item(row, c)
+            if item:
+                item.setFont(font)
 
     def batch_set_include(self, include_state):
         # Apply to all VISIBLE items
         # Tree View active?
         if self.is_tree_view:
             root = self.layersTree.invisibleRootItem()
+
             def recurse(item):
-                if item.isHidden(): return
+                if item.isHidden():
+                    return
                 data = item.data(0, QtCore.Qt.UserRole)
                 if isinstance(data, tuple):
-                     p, l = data
-                     key = self.get_layer_unique_key(p, l)
-                     self.current_layers_state[key] = include_state
+                    p, layer = data
+                    key = self.get_layer_unique_key(p, layer)
+                    self.current_layers_state[key] = include_state
                 for i in range(item.childCount()):
                     recurse(item.child(i))
+
             for i in range(root.childCount()):
                 recurse(root.child(i))
         else:
             for row in range(self.layersTable.rowCount()):
-                 if self.layersTable.isRowHidden(row): continue
-                 data = self.layersTable.item(row, 0).data(QtCore.Qt.UserRole)
-                 if data:
-                     p, l, key = data
-                     self.current_layers_state[key] = include_state
-        
+                if self.layersTable.isRowHidden(row):
+                    continue
+                data = self.layersTable.item(row, 0).data(QtCore.Qt.UserRole)
+                if data:
+                    _p, _layer, key = data
+                    self.current_layers_state[key] = include_state
+
         # Refresh all UI
         self.full_refresh_ui()
 
@@ -683,29 +688,30 @@ class LayerLibraryWidget(QtWidgets.QWidget):
     def collapse_tree_children(self, item: QtWidgets.QTreeWidgetItem):
         item.setExpanded(False)
         for i in range(item.childCount()):
-             self.collapse_tree_children(item.child(i))
+            self.collapse_tree_children(item.child(i))
 
     def expand_tree_children(self, item: QtWidgets.QTreeWidgetItem):
         item.setExpanded(True)
         for i in range(item.childCount()):
-             self.expand_tree_children(item.child(i))
+            self.expand_tree_children(item.child(i))
 
     def open_tree_context_menu(self, position):
         item = self.layersTree.itemAt(position)
-        if not item: return
+        if not item:
+            return
 
         data = item.data(0, QtCore.Qt.UserRole)
         menu = QtWidgets.QMenu()
-        
-        if isinstance(data, tuple): # Layer
-            p, l = data
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Layer Details", lambda: self.show_layer_details(p, l))
-        else: # Group or Protocol
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/expand'), "Expand All Children", lambda: self.expand_tree_children(item))
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
+
+        if isinstance(data, tuple):  # Layer
+            p, layer = data
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Layer Details", lambda: self.show_layer_details(p, layer))
+        else:  # Group or Protocol
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/expand"), "Expand All Children", lambda: self.expand_tree_children(item))
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/collapse"), "Collapse All Children", lambda: self.collapse_tree_children(item))
             menu.addSeparator()
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/checked_box'), "Include All Child Layers", lambda: self.set_children_state(item, True))
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/unchecked_box'), "Remove All Child Layers", lambda: self.set_children_state(item, False))
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/checked_box"), "Include All Child Layers", lambda: self.set_children_state(item, True))
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/unchecked_box"), "Remove All Child Layers", lambda: self.set_children_state(item, False))
         if not menu.isEmpty():
             menu.exec_(self.layersTree.viewport().mapToGlobal(position))
 
@@ -720,43 +726,43 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         def recurse(item):
             data = item.data(0, QtCore.Qt.UserRole)
             if isinstance(data, tuple):
-                 p, l = data
-                 key = self.get_layer_unique_key(p, l)
-                 self.current_layers_state[key] = state
+                p, layer = data
+                key = self.get_layer_unique_key(p, layer)
+                self.current_layers_state[key] = state
             for i in range(item.childCount()):
                 recurse(item.child(i))
-        
+
         recurse(parent_item)
         self.full_refresh_ui()
 
     # API for FrmEvent to retrieve result
-    def get_selected_layer_definitions(self, project_layers_cache) -> Tuple[List[Layer], List[Tuple[ProtocolDefinition, LayerDefinition]]]:
+    def get_selected_layer_definitions(self, project_layers_cache) -> tuple[list[Layer], list[tuple[ProtocolDefinition, LayerDefinition]]]:
         """
         Returns (list_of_existing_project_layers, list_of_new_definitions_to_create)
         project_layers_cache: Dict of existing project layers to resolve against.
         """
         existing_layers = []
         new_definitions = []
-        
+
         # Build cache of existing project layers by unique key
         # We need to map project layers back to the protocol/layer key format
         # This might be tricky without a clear link.
         # But wait, we used the project layer's protocol info in init_state.
         # Let's rebuild that map.
-        
+
         project_layer_map = {}
         for layer in project_layers_cache.values():
-             proj_protocol = layer.get_layer_protocol(self.qris_project.protocols)
-             if proj_protocol:
-                  key = f"{proj_protocol.machine_code}::{proj_protocol.version}::{layer.layer_id}::{layer.layer_version}"
-                  project_layer_map[key] = layer
-        
-        for p, l in self.available_layers:
-            key = self.get_layer_unique_key(p, l)
+            proj_protocol = layer.get_layer_protocol(self.qris_project.protocols)
+            if proj_protocol:
+                key = f"{proj_protocol.machine_code}::{proj_protocol.version}::{layer.layer_id}::{layer.layer_version}"
+                project_layer_map[key] = layer
+
+        for p, layer in self.available_layers:
+            key = self.get_layer_unique_key(p, layer)
             if self.current_layers_state[key]:
                 if key in project_layer_map:
                     existing_layers.append(project_layer_map[key])
                 else:
-                    new_definitions.append((p, l))
-                    
+                    new_definitions.append((p, layer))
+
         return existing_layers, new_definitions

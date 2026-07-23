@@ -1,40 +1,37 @@
-from typing import Dict
+from typing import Optional
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ...model.project import Project
-from ...model.metric import Metric
-from ...model.analysis_metric import AnalysisMetric
 from ...model.analysis import Analysis
-
+from ...model.analysis_metric import AnalysisMetric
+from ...model.metric import Metric
+from ...model.project import Project
+from ..frm_custom_metric_library import FrmCustomMetricLibrary
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
-from ..frm_custom_metric_library import FrmCustomMetricLibrary
-
 from .checkable_combo_box import CheckableComboBox
 
 
 class MetricLibrary(QtWidgets.QWidget):
-
     def __init__(self, parent, project: Project, analysis: Analysis = None):
-        super(MetricLibrary, self).__init__(parent)
-        
+        super().__init__(parent)
+
         self.qris_project = project
         self.analysis = analysis
         self.analysis_metadata = self.analysis.metadata.copy() if self.analysis and self.analysis.metadata else {}
         self._intrinsic_mode = bool(self.analysis is not None and self.analysis.is_simple_intrinsic_mode())
         self.is_tree_view = True
         self.limit_dces = None
-        self._availability_cache: Dict[int, str] = {}
+        self._availability_cache: dict[int, str] = {}
         self._selected_analysis_metrics_cache = None
         self._availability_compute_queue = []
         self._availability_batch_size = 3
         self._availability_timer = QtCore.QTimer(self)
         self._availability_timer.setSingleShot(True)
         self._availability_timer.timeout.connect(self._process_availability_batch)
-        
+
         # Initialize state
-        self.current_metrics_state: Dict[int, int] = {}
+        self.current_metrics_state: dict[int, int] = {}
         self.init_state()
 
         self.setupUi()
@@ -54,13 +51,7 @@ class MetricLibrary(QtWidgets.QWidget):
         # or when availability-based filters are active.
         tree_visible = not self.metricsTree.isColumnHidden(2)
         table_visible = not self.metricsTable.isColumnHidden(4)
-        return (
-            tree_visible or
-            table_visible or
-            self.act_limit_feasible.isChecked() or
-            self.act_limit_blocked.isChecked() or
-            self.act_limit_manual.isChecked()
-        )
+        return tree_visible or table_visible or self.act_limit_feasible.isChecked() or self.act_limit_blocked.isChecked() or self.act_limit_manual.isChecked()
 
     def apply_smart_filtering_for_existing_analysis(self):
         # 1. Do NOT limit to in-use metrics by default; leave unchecked when form opens
@@ -69,16 +60,17 @@ class MetricLibrary(QtWidgets.QWidget):
         # 2. Check if we need to expand the universe for experimental/deprecated metrics currently in use
         enable_experimental = False
         enable_deprecated = False
-        
+
         for metric_id, level_id in self.current_metrics_state.items():
             if level_id > 0:
                 metric = self.qris_project.metrics.get(metric_id)
-                if not metric: continue
-                
+                if not metric:
+                    continue
+
                 # Check Deprecated
-                if getattr(metric, 'status', 'active') == 'deprecated':
+                if getattr(metric, "status", "active") == "deprecated":
                     enable_deprecated = True
-                
+
                 # Check Experimental (via Protocol)
                 protocol_machine_code = metric.protocol_machine_code
                 # We need to find the protocol object to check its name/properties
@@ -89,31 +81,31 @@ class MetricLibrary(QtWidgets.QWidget):
                     if p.machine_code == protocol_machine_code:
                         protocol = p
                         break
-                
+
                 if protocol:
-                     # Check if protocol status is experimental
-                     # We might store status in metadata, or check name. 
-                     # Ideally Protocol object has a status attribute or similar.
-                     # Based on grep results, xml has status="experimental".
-                     # The python object seems to not expose it explicitly as a property in __init__ 
-                     # but likely passes it via metadata or we check name as fallback.
-                     
-                     # Check protocol metadata first (if available)
-                     p_status = ""
-                     if protocol.metadata and isinstance(protocol.metadata, dict):
-                         p_status = protocol.metadata.get('status', "")
-                         
-                     # Fallback to name check if status not clearly experimental
-                     if p_status.lower() == "experimental" or "experimental" in protocol.name.lower():
-                         enable_experimental = True
-                         
-                     # Also check for experimental status attribute if it exists
-                     if hasattr(protocol, 'status') and protocol.status == 'experimental':
-                         enable_experimental = True
+                    # Check if protocol status is experimental
+                    # We might store status in metadata, or check name.
+                    # Ideally Protocol object has a status attribute or similar.
+                    # Based on grep results, xml has status="experimental".
+                    # The python object seems to not expose it explicitly as a property in __init__
+                    # but likely passes it via metadata or we check name as fallback.
+
+                    # Check protocol metadata first (if available)
+                    p_status = ""
+                    if protocol.metadata and isinstance(protocol.metadata, dict):
+                        p_status = protocol.metadata.get("status", "")
+
+                    # Fallback to name check if status not clearly experimental
+                    if p_status.lower() == "experimental" or "experimental" in protocol.name.lower():
+                        enable_experimental = True
+
+                    # Also check for experimental status attribute if it exists
+                    if hasattr(protocol, "status") and protocol.status == "experimental":
+                        enable_experimental = True
 
         if enable_experimental:
             self.act_include_experimental.setChecked(True)
-        
+
         if enable_deprecated:
             self.act_include_deprecated.setChecked(True)
 
@@ -128,98 +120,102 @@ class MetricLibrary(QtWidgets.QWidget):
         enable_experimental = False
         for eid in dce_ids:
             event = self.qris_project.events.get(eid)
-            if not event: continue
-            
+            if not event:
+                continue
+
             for event_layer in event.event_layers:
-                if hasattr(event_layer, 'layer') and event_layer.layer:
+                if hasattr(event_layer, "layer") and event_layer.layer:
                     protocol = event_layer.layer.get_layer_protocol(self.qris_project.protocols)
                     if protocol:
                         # Check protocol metadata first (if available)
                         p_status = ""
                         if protocol.metadata and isinstance(protocol.metadata, dict):
-                            p_status = protocol.metadata.get('status', "")
-                        
+                            p_status = protocol.metadata.get("status", "")
+
                         # Fallback to name check if status not clearly experimental
                         if p_status.lower() == "experimental" or "experimental" in protocol.name.lower():
                             enable_experimental = True
                             break
-                        
+
                         # Also check for experimental status attribute if it exists
-                        if hasattr(protocol, 'status') and protocol.status == 'experimental':
+                        if hasattr(protocol, "status") and protocol.status == "experimental":
                             enable_experimental = True
                             break
             if enable_experimental:
                 break
-        
+
         if enable_experimental:
             self.act_include_experimental.setChecked(True)
 
     def get_metric_font(self, metric, level_id):
         font = QtGui.QFont()
-        status = getattr(metric, 'status', 'active')
-        
+        status = getattr(metric, "status", "active")
+
         # Check if Protocol is Deprecated
         # lookup protocol by machine code
-        protocol_status = 'active'
-        if hasattr(self.qris_project, 'protocols'): # Safety check
+        protocol_status = "active"
+        if hasattr(self.qris_project, "protocols"):  # Safety check
             for p in self.qris_project.protocols.values():
                 if p.machine_code == metric.protocol_machine_code:
-                    if getattr(p, 'status', 'active') == 'deprecated':
-                        protocol_status = 'deprecated'
+                    if getattr(p, "status", "active") == "deprecated":
+                        protocol_status = "deprecated"
                     break
 
         if level_id > 0:
             font.setBold(True)
-            
-        if status == 'deprecated' or protocol_status == 'deprecated':
+
+        if status == "deprecated" or protocol_status == "deprecated":
             font.setItalic(True)
-            if protocol_status == 'deprecated':
-                 font.setStrikeOut(True) # Optional visual cue for protocol-level deprecation
-            
+            if protocol_status == "deprecated":
+                font.setStrikeOut(True)  # Optional visual cue for protocol-level deprecation
+
         return font
 
     def on_metric_status_changed(self, metric_id: int, index: int):
         self.current_metrics_state[metric_id] = index
         self.invalidate_availability_cache()
-        
+
         # Get Font
-        # We need the metric object to determine deprecated status, which we can get from the item traversal below 
+        # We need the metric object to determine deprecated status, which we can get from the item traversal below
         # provided we find it.
-        
+
         # Update text for sorting in Tree
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
-        usage_display = ['None', 'Metric', 'Indicator'][index] if 0 <= index <= 2 else 'None'
+        usage_display = ["None", "Metric", "Indicator"][index] if 0 <= index <= 2 else "None"
         while iterator.value():
             item = iterator.value()
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric and metric.id == metric_id:
-                 item.setText(3, usage_display)
-                 
-                 # Update Font
-                 font = self.get_metric_font(metric, index)
-                 item.setFont(0, font)
-                 item.setFont(1, font)
-                 break
+                item.setText(3, usage_display)
+
+                # Update Font
+                font = self.get_metric_font(metric, index)
+                item.setFont(0, font)
+                item.setFont(1, font)
+                break
             iterator += 1
-        
+
         # Update text for sorting in Table
         for row in range(self.metricsTable.rowCount()):
-             item = self.metricsTable.item(row, 0)
-             if not item: continue
-             metric = item.data(QtCore.Qt.UserRole)
-             if metric and metric.id == metric_id:
-                 usage_item = self.metricsTable.item(row, 5)
-                 if usage_item:
-                     usage_item.setText(usage_display)
-                 
-                 # Update Font (Name and Version)
-                 font = self.get_metric_font(metric, index)
-                 if self.metricsTable.item(row, 2): self.metricsTable.item(row, 2).setFont(font)
-                 if self.metricsTable.item(row, 3): self.metricsTable.item(row, 3).setFont(font)
-                 break
-        
+            item = self.metricsTable.item(row, 0)
+            if not item:
+                continue
+            metric = item.data(QtCore.Qt.UserRole)
+            if metric and metric.id == metric_id:
+                usage_item = self.metricsTable.item(row, 5)
+                if usage_item:
+                    usage_item.setText(usage_display)
+
+                # Update Font (Name and Version)
+                font = self.get_metric_font(metric, index)
+                if self.metricsTable.item(row, 2):
+                    self.metricsTable.item(row, 2).setFont(font)
+                if self.metricsTable.item(row, 3):
+                    self.metricsTable.item(row, 3).setFont(font)
+                break
+
         self.update_usage_count_label()
-                 
+
     def init_state(self):
         metrics = list(self.qris_project.metrics.values())
         for metric in metrics:
@@ -234,7 +230,7 @@ class MetricLibrary(QtWidgets.QWidget):
             self.current_metrics_state[metric.id] = level_id
 
     def setupUi(self):
-        
+
         self.vert_metrics = QtWidgets.QVBoxLayout(self)
         self.vert_metrics.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.vert_metrics)
@@ -252,7 +248,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.cbo_filter_protocol.setEmptyText("No Protocols Available")
         self.cbo_filter_protocol.popupClosed.connect(self.on_protocol_filter_changed)
         self.horiz_filters.addWidget(self.cbo_filter_protocol)
-        
+
         self.cbo_filter_group = CheckableComboBox()
         self.cbo_filter_group.setPlaceholderText("All Groups")
         self.cbo_filter_group.setNoneCheckedText("No Groups Selected")
@@ -260,7 +256,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.cbo_filter_group.popupClosed.connect(self.update_visibility)
         self.cbo_filter_group.setMinimumWidth(150)
         self.horiz_filters.addWidget(self.cbo_filter_group)
-        
+
         self.txt_filter_search = QtWidgets.QLineEdit()
         self.txt_filter_search.setPlaceholderText("Search Metrics...")
         self.txt_filter_search.textChanged.connect(self.update_visibility)
@@ -268,7 +264,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.horiz_filters.addWidget(self.txt_filter_search)
 
         self.btn_clear_filters = QtWidgets.QPushButton()
-        self.btn_clear_filters.setIcon(QtGui.QIcon(f':plugins/qris_toolbar/clear_filter'))
+        self.btn_clear_filters.setIcon(QtGui.QIcon(":plugins/qris_toolbar/clear_filter"))
         self.btn_clear_filters.setToolTip("Clear Filters")
         self.btn_clear_filters.clicked.connect(self.clear_filters)
         self.horiz_filters.addWidget(self.btn_clear_filters)
@@ -282,13 +278,13 @@ class MetricLibrary(QtWidgets.QWidget):
         self.btn_advanced.setText("Advanced Filters")
         self.btn_advanced.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
-        
+
         self.menu_advanced = QtWidgets.QMenu(self.btn_advanced)
-        
+
         self.act_limit_metrics = self.menu_advanced.addAction("Limit to Currently In Use Metrics")
         self.act_limit_metrics.setCheckable(True)
         self.act_limit_metrics.toggled.connect(self.update_visibility)
-        
+
         self.menu_advanced.addSeparator()
 
         # Type Filters Group
@@ -297,7 +293,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
         self.act_show_all = self.menu_advanced.addAction("Show All Metric Types")
         self.act_show_all.setCheckable(True)
-        self.act_show_all.setChecked(True) # Default
+        self.act_show_all.setChecked(True)  # Default
         self.act_show_all.toggled.connect(self.update_visibility)
         self.type_filter_group.addAction(self.act_show_all)
 
@@ -317,17 +313,17 @@ class MetricLibrary(QtWidgets.QWidget):
         self.act_limit_manual.setCheckable(True)
         self.act_limit_manual.toggled.connect(self.on_availability_filter_toggled)
         self.type_filter_group.addAction(self.act_limit_manual)
-        
+
         self.menu_advanced.addSeparator()
-        
+
         self.act_include_experimental = self.menu_advanced.addAction("Include Experimental Protocols")
         self.act_include_experimental.setCheckable(True)
         self.act_include_experimental.toggled.connect(self.on_universe_changed)
-        
+
         self.act_include_deprecated = self.menu_advanced.addAction("Include Deprecated Metrics")
         self.act_include_deprecated.setCheckable(True)
         self.act_include_deprecated.toggled.connect(self.on_universe_changed)
-        
+
         self.btn_advanced.setMenu(self.menu_advanced)
 
         self.horiz_filters.addWidget(self.btn_advanced)
@@ -340,10 +336,10 @@ class MetricLibrary(QtWidgets.QWidget):
         self.pageTree = QtWidgets.QWidget()
         self.vboxTree = QtWidgets.QVBoxLayout(self.pageTree)
         self.vboxTree.setContentsMargins(0, 0, 0, 0)
-        
+
         self.metricsTree = QtWidgets.QTreeWidget()
-        self.metricsTree.setHeaderLabels(['Metric', 'Version (Status)', 'Availability', 'Usage', 'Description'])
-        
+        self.metricsTree.setHeaderLabels(["Metric", "Version (Status)", "Availability", "Usage", "Description"])
+
         # Header Tooltips
         headerItem = self.metricsTree.headerItem()
         headerItem.setToolTip(0, "Name of the metric or indicator.")
@@ -365,7 +361,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.metricsTree.setSortingEnabled(True)
         self.metricsTree.setColumnHidden(2, False)
         self.vboxTree.addWidget(self.metricsTree)
-        
+
         self.stackedWidget.addWidget(self.pageTree)
 
         # --- Page 1: Table View ---
@@ -375,8 +371,8 @@ class MetricLibrary(QtWidgets.QWidget):
 
         self.metricsTable = QtWidgets.QTableWidget(0, 7)
         self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.metricsTable.setHorizontalHeaderLabels(['Protocol', 'Group', 'Metric', 'Version (Status)', 'Availability', 'Usage', 'Description'])
-        
+        self.metricsTable.setHorizontalHeaderLabels(["Protocol", "Group", "Metric", "Version (Status)", "Availability", "Usage", "Description"])
+
         # Header Tooltips
         table_tooltips = [
             "The protocol that defines this metric.",
@@ -385,7 +381,7 @@ class MetricLibrary(QtWidgets.QWidget):
             "Version number and active status.",
             "Automation availability status based on current inputs.",
             "Select usage level: Metric or Indicator.",
-            "Description of the metric."
+            "Description of the metric.",
         ]
         for i, tip in enumerate(table_tooltips):
             if self.metricsTable.horizontalHeaderItem(i):
@@ -421,48 +417,48 @@ class MetricLibrary(QtWidgets.QWidget):
         self.lbl_usage_count = QtWidgets.QLabel("")
         self.horiz_metric_buttons.addWidget(self.lbl_usage_count)
 
-        self.cmd_custom_metrics = QtWidgets.QPushButton('Custom Metrics...')
-        self.cmd_custom_metrics.setToolTip('Open project custom metric library (add/edit/delete custom manual metrics).')
+        self.cmd_custom_metrics = QtWidgets.QPushButton("Custom Metrics...")
+        self.cmd_custom_metrics.setToolTip("Open project custom metric library (add/edit/delete custom manual metrics).")
         self.cmd_custom_metrics.clicked.connect(self.open_custom_metric_library)
         self.horiz_metric_buttons.addWidget(self.cmd_custom_metrics)
 
         self.horiz_metric_buttons.addStretch()
 
-        self.lbl_metric_set_all = QtWidgets.QLabel('Set Currently Displayed Metrics to:')
+        self.lbl_metric_set_all = QtWidgets.QLabel("Set Currently Displayed Metrics to:")
         self.horiz_metric_buttons.addWidget(self.lbl_metric_set_all)
-        self.cmd_set_all_metrics = QtWidgets.QPushButton('Metric')
-        self.cmd_set_all_metrics.clicked.connect(lambda: self.toggle_all_metrics('Metric'))
+        self.cmd_set_all_metrics = QtWidgets.QPushButton("Metric")
+        self.cmd_set_all_metrics.clicked.connect(lambda: self.toggle_all_metrics("Metric"))
         self.horiz_metric_buttons.addWidget(self.cmd_set_all_metrics)
 
-        self.cmd_set_all_indicators = QtWidgets.QPushButton('Indicator')
-        self.cmd_set_all_indicators.clicked.connect(lambda: self.toggle_all_metrics('Indicator'))
+        self.cmd_set_all_indicators = QtWidgets.QPushButton("Indicator")
+        self.cmd_set_all_indicators.clicked.connect(lambda: self.toggle_all_metrics("Indicator"))
         self.horiz_metric_buttons.addWidget(self.cmd_set_all_indicators)
 
-        self.cmd_clear_all = QtWidgets.QPushButton('None')
-        self.cmd_clear_all.clicked.connect(lambda: self.toggle_all_metrics('None'))
+        self.cmd_clear_all = QtWidgets.QPushButton("None")
+        self.cmd_clear_all.clicked.connect(lambda: self.toggle_all_metrics("None"))
         self.horiz_metric_buttons.addWidget(self.cmd_clear_all)
 
-        self.cmd_set_defaults = QtWidgets.QPushButton('Default Usage')
+        self.cmd_set_defaults = QtWidgets.QPushButton("Default Usage")
         font = self.cmd_set_defaults.font()
         font.setBold(True)
         self.cmd_set_defaults.setFont(font)
-        self.cmd_set_defaults.clicked.connect(lambda: self.toggle_all_metrics('Default'))
+        self.cmd_set_defaults.clicked.connect(lambda: self.toggle_all_metrics("Default"))
         self.horiz_metric_buttons.addWidget(self.cmd_set_defaults)
 
         # Build views once
         self.build_metrics_tree()
         self.build_metrics_table()
-        
+
         # Apply Logic from User Settings (Must be after views are built because toggling triggers update_visibility)
-        settings = QtCore.QSettings('Riverscapes', 'QRiS')
-        show_experimental = settings.value('show_experimental_protocols', False, bool)
-        
+        settings = QtCore.QSettings("Riverscapes", "QRiS")
+        show_experimental = settings.value("show_experimental_protocols", False, bool)
+
         if show_experimental:
             self.act_include_experimental.setChecked(True)
 
         # Apply intelligent filtering if loading an existing analysis
         if self.analysis is not None:
-             self.apply_smart_filtering_for_existing_analysis()
+            self.apply_smart_filtering_for_existing_analysis()
 
         # Initial Stack View
         self.stackedWidget.setCurrentIndex(0 if self.is_tree_view else 1)
@@ -476,11 +472,11 @@ class MetricLibrary(QtWidgets.QWidget):
     def toggle_view(self):
         # Toggle Mode
         self.is_tree_view = not self.is_tree_view
-        
+
         # Update UI
         self.cmdToggleView.setText(self.get_toggle_text())
         self.stackedWidget.setCurrentIndex(0 if self.is_tree_view else 1)
-        
+
         # Load new view
         self.load_current_view()
 
@@ -513,22 +509,22 @@ class MetricLibrary(QtWidgets.QWidget):
             item = it.value()
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric:
-                 status = self.get_metric_availability(metric)
-                 item.setText(2, status)
+                status = self.get_metric_availability(metric)
+                item.setText(2, status)
             it += 1
-        
+
         # Update Table
         self.metricsTable.setSortingEnabled(False)
         for row in range(self.metricsTable.rowCount()):
-             metric_item = self.metricsTable.item(row, 0)
-             if metric_item:
-                 metric = metric_item.data(QtCore.Qt.UserRole)
-                 if metric:
-                     status = self.get_metric_availability(metric)
-                     # Column 4 is Availability
-                     avail_item = self.metricsTable.item(row, 4)
-                     if avail_item:
-                         avail_item.setText(status)
+            metric_item = self.metricsTable.item(row, 0)
+            if metric_item:
+                metric = metric_item.data(QtCore.Qt.UserRole)
+                if metric:
+                    status = self.get_metric_availability(metric)
+                    # Column 4 is Availability
+                    avail_item = self.metricsTable.item(row, 4)
+                    if avail_item:
+                        avail_item.setText(status)
         self.metricsTable.setSortingEnabled(True)
 
     def _build_selected_analysis_metrics(self):
@@ -543,13 +539,13 @@ class MetricLibrary(QtWidgets.QWidget):
         return selected
 
     def _resolve_intrinsic_availability(self, metric) -> str:
-        if metric.metric_function == 'manual' or not metric.metric_params:
+        if metric.metric_function == "manual" or not metric.metric_params:
             return "Manual Only"
 
         # Inputs must exist in analysis metadata for intrinsic calculation.
-        inputs = metric.metric_params.get('inputs', []) if metric.metric_params else []
+        inputs = metric.metric_params.get("inputs", []) if metric.metric_params else []
         for analysis_input in inputs:
-            input_ref = analysis_input.get('input_ref')
+            input_ref = analysis_input.get("input_ref")
             if not input_ref:
                 continue
             s_ref = str(input_ref).strip().lower()
@@ -572,10 +568,10 @@ class MetricLibrary(QtWidgets.QWidget):
                 self.analysis.metadata = self.analysis_metadata
                 self.analysis.analysis_metrics = self._build_selected_analysis_metrics()
                 feasibility = self.analysis.check_metric_feasibility(metric, self.qris_project, None)
-                status = feasibility.get('status', 'NOT_FEASIBLE')
-                if status in ['FEASIBLE', 'FEASIBLE_EMPTY']:
+                status = feasibility.get("status", "NOT_FEASIBLE")
+                if status in ["FEASIBLE", "FEASIBLE_EMPTY"]:
                     return "Feasible"
-                if status == 'MANUAL_ONLY':
+                if status == "MANUAL_ONLY":
                     return "Manual Only"
                 return "Not Feasible"
             finally:
@@ -647,11 +643,7 @@ class MetricLibrary(QtWidgets.QWidget):
             return
 
         if self._intrinsic_mode:
-            metric_ids = [
-                metric_id
-                for metric_id, metric in self.qris_project.metrics.items()
-                if metric.protocol_machine_code == 'RIVERSCAPE_SYSTEM_PROTOCOL'
-            ]
+            metric_ids = [metric_id for metric_id, metric in self.qris_project.metrics.items() if metric.protocol_machine_code == "RIVERSCAPE_SYSTEM_PROTOCOL"]
         else:
             metric_ids = list(self.qris_project.metrics.keys())
         if len(metric_ids) == 0:
@@ -659,7 +651,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
         # Show immediate feedback in both views; hidden columns can still be updated.
         for metric_id in metric_ids:
-            self.set_metric_availability_text(metric_id, 'Calculating...')
+            self.set_metric_availability_text(metric_id, "Calculating...")
 
         self._availability_compute_queue = metric_ids
         self._availability_timer.start(0)
@@ -668,7 +660,7 @@ class MetricLibrary(QtWidgets.QWidget):
         if len(self._availability_compute_queue) == 0:
             return
 
-        selected_analysis_metrics = self._build_selected_analysis_metrics()
+        self._build_selected_analysis_metrics()
         batch = []
         for _ in range(min(self._availability_batch_size, len(self._availability_compute_queue))):
             batch.append(self._availability_compute_queue.pop(0))
@@ -681,7 +673,7 @@ class MetricLibrary(QtWidgets.QWidget):
             try:
                 status = self._compute_availability_status(metric)
             except Exception:
-                status = 'Error'
+                status = "Error"
 
             self._availability_cache[metric_id] = status
             self.set_metric_availability_text(metric_id, status)
@@ -692,19 +684,19 @@ class MetricLibrary(QtWidgets.QWidget):
     def load_filters(self):
         # Gather unique protocols
         protocols = set()
-        
+
         for metric in self.qris_project.metrics.values():
             if self.is_metric_in_universe(metric):
                 protocols.add(metric.protocol_machine_code)
-            
+
         # Populate Protocol Filter
         self.cbo_filter_protocol.clear()
-        
+
         # Map protocol codes to names if possible
         protocol_map = {p.machine_code: p.name for p in self.qris_project.protocols.values()}
-        
+
         sorted_protocols = sorted(list(protocols))
-        
+
         if sorted_protocols:
             self.cbo_filter_protocol.add_command_item("(Select All)", "SELECT_ALL")
             self.cbo_filter_protocol.add_command_item("(Select None)", "SELECT_NONE")
@@ -714,9 +706,9 @@ class MetricLibrary(QtWidgets.QWidget):
         for p_code in sorted_protocols:
             p_name = protocol_map.get(p_code, p_code)
             items_to_add.append((p_name, p_code))
-        
+
         self.cbo_filter_protocol.addBatchItems(items_to_add)
-        
+
         # Initial Population of Group Filter
         self.update_group_filter()
 
@@ -726,33 +718,33 @@ class MetricLibrary(QtWidgets.QWidget):
         for i in range(self.cbo_filter_group.count()):
             item = self.cbo_filter_group.model().item(i)
             if item.isCheckable() and item.checkState() == QtCore.Qt.Unchecked:
-                 unchecked_items.add(item.text())
+                unchecked_items.add(item.text())
 
         # Determine available groups based on selected protocols
         sel_protocols = self.cbo_filter_protocol.get_checked_data()
-        
+
         available_groups = set()
         protocol_count = self.cbo_filter_protocol.count()
         # If no protocols in filter (empty project?), loop won't run.
         # If protocols exist, sel_protocols might be empty (Select None).
-        
+
         for metric in self.qris_project.metrics.values():
             if not self.is_metric_in_universe(metric):
                 continue
-            
+
             # If we have protocol items, filter by them.
             if protocol_count > 0:
                 if metric.protocol_machine_code not in sel_protocols:
                     continue
-            
-            if hasattr(metric, 'hierarchy') and metric.hierarchy:
+
+            if hasattr(metric, "hierarchy") and metric.hierarchy:
                 for group in metric.hierarchy:
                     available_groups.add(group)
 
         # Repopulate Group Filter
         self.cbo_filter_group.clear()
         sorted_groups = sorted(list(available_groups))
-        
+
         if sorted_groups:
             self.cbo_filter_group.add_command_item("(Select All)", "SELECT_ALL")
             self.cbo_filter_group.add_command_item("(Select None)", "SELECT_NONE")
@@ -760,8 +752,8 @@ class MetricLibrary(QtWidgets.QWidget):
 
         items_to_add = []
         for group in sorted_groups:
-             items_to_add.append((group, group))
-        
+            items_to_add.append((group, group))
+
         self.cbo_filter_group.addBatchItems(items_to_add)
 
         # Restore unchecked state (after batch adds)
@@ -772,8 +764,8 @@ class MetricLibrary(QtWidgets.QWidget):
             if item.text() in unchecked_items:
                 item.setCheckState(QtCore.Qt.Unchecked)
         self.cbo_filter_group.model().blockSignals(False)
-        self.cbo_filter_group.updateText() # Update text after restoring selections
-            
+        self.cbo_filter_group.updateText()  # Update text after restoring selections
+
         # Force text update in case we unchecked items manually without signal
         self.cbo_filter_group.updateText()
 
@@ -784,7 +776,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
         prot_count = self.cbo_filter_protocol.count()
         group_count = self.cbo_filter_group.count()
-        
+
         # 1. Search Text Check
         if search_text:
             # Check name, protocol, hierarchy
@@ -797,11 +789,9 @@ class MetricLibrary(QtWidgets.QWidget):
         if self.act_limit_metrics.isChecked():
             if self.current_metrics_state.get(metric.id, 0) == 0:
                 return False
-        
+
         # Availability Status Check (expensive): only compute when availability-based filters are active.
-        if (self.act_limit_feasible.isChecked() or
-            self.act_limit_blocked.isChecked() or
-            self.act_limit_manual.isChecked()):
+        if self.act_limit_feasible.isChecked() or self.act_limit_blocked.isChecked() or self.act_limit_manual.isChecked():
             status = self.get_metric_availability(metric)
             status_lower = status.lower()
             is_manual = "manual" in status_lower
@@ -830,7 +820,7 @@ class MetricLibrary(QtWidgets.QWidget):
                 if not is_manual:
                     return False
 
-        # Note: Experimental and Deprecated checks are Universe checks. 
+        # Note: Experimental and Deprecated checks are Universe checks.
         # If the metric is hidden by these flags, it should not be shown even if it matches search.
         if not self.is_metric_in_universe(metric):
             return False
@@ -841,38 +831,38 @@ class MetricLibrary(QtWidgets.QWidget):
         if prot_count > 0:
             if metric.protocol_machine_code not in sel_protocols:
                 return False
-        
+
         if group_count > 0:
-            m_groups = getattr(metric, 'hierarchy', [])
+            m_groups = getattr(metric, "hierarchy", [])
             if m_groups:
                 if not any(g in sel_groups for g in m_groups):
                     return False
-        
+
         return True
 
     def is_metric_in_universe(self, metric):
-        
+
         # Check Protocol Status first
-        protocol_status = 'active'
+        protocol_status = "active"
         protocol_experimental = False
         for p in self.qris_project.protocols.values():
             if p.machine_code == metric.protocol_machine_code:
-                if "experimental" in p.name.lower() or getattr(p, 'status', 'active') == 'experimental':
+                if "experimental" in p.name.lower() or getattr(p, "status", "active") == "experimental":
                     protocol_experimental = True
-                
-                if getattr(p, 'status', 'active') == 'deprecated':
-                    protocol_status = 'deprecated'
+
+                if getattr(p, "status", "active") == "deprecated":
+                    protocol_status = "deprecated"
                 break
 
         if not self.act_include_experimental.isChecked():
-             if protocol_experimental:
-                 return False
+            if protocol_experimental:
+                return False
 
         if not self.act_include_deprecated.isChecked():
-            status = getattr(metric, 'status', 'active')
-            if status == 'deprecated' or protocol_status == 'deprecated':
+            status = getattr(metric, "status", "active")
+            if status == "deprecated" or protocol_status == "deprecated":
                 return False
-        
+
         return True
 
     def clear_filters(self):
@@ -880,11 +870,11 @@ class MetricLibrary(QtWidgets.QWidget):
         self.cbo_filter_protocol.set_all_check_state(QtCore.Qt.Checked)
         # Groups will be reset by protocol change triggers usually, but explicit is better
         self.cbo_filter_group.set_all_check_state(QtCore.Qt.Checked)
-        
+
         self.act_limit_metrics.setChecked(False)
-        self.act_show_all.setChecked(True) # Resets the exclusive group to "All"
+        self.act_show_all.setChecked(True)  # Resets the exclusive group to "All"
         # Do not reset Universe filters (Experimental/Deprecated) as they are likely user preferences
-        
+
         self.update_visibility()
 
     def update_visibility(self):
@@ -927,7 +917,7 @@ class MetricLibrary(QtWidgets.QWidget):
                     self.metricsTable.setRowHidden(row, not show)
                     if show:
                         visible_count += 1
-        
+
         self.lbl_filter_count.setText(f"Viewing {visible_count} of {universe_count} Metrics")
 
     def update_tree_item_visibility(self, item):
@@ -938,15 +928,15 @@ class MetricLibrary(QtWidgets.QWidget):
             visible = self.should_show_metric(metric)
             item.setHidden(not visible)
             return visible
-        
+
         # It's a group node
         any_child_visible = False
         for i in range(item.childCount()):
             child = item.child(i)
-            child_visible = self.update_tree_item_visibility(child) # Recursion
+            child_visible = self.update_tree_item_visibility(child)  # Recursion
             if child_visible:
                 any_child_visible = True
-        
+
         item.setHidden(not any_child_visible)
         return any_child_visible
 
@@ -960,10 +950,10 @@ class MetricLibrary(QtWidgets.QWidget):
         if frm.changed:
             self.refresh_after_metric_catalog_change(frm.created_metric_ids)
 
-    def refresh_after_metric_catalog_change(self, new_metric_ids: list = None):
+    def refresh_after_metric_catalog_change(self, new_metric_ids: Optional[list] = None):
         # Rebuild state and views after protocol/metric catalog changes.
         self.init_state()
-        for metric_id in (new_metric_ids or []):
+        for metric_id in new_metric_ids or []:
             self.current_metrics_state[metric_id] = 1  # Metric
         self.invalidate_availability_cache()
         self.build_metrics_tree()
@@ -975,9 +965,9 @@ class MetricLibrary(QtWidgets.QWidget):
         self.metricsTree.setSortingEnabled(False)
         metrics = list(self.qris_project.metrics.values())
         protocol_map = {p.machine_code: p.name for p in self.qris_project.protocols.values()}
-        
+
         self.metricsTree.clear()
-        
+
         def find_or_create_item(parent, text):
             for i in range(parent.childCount()):
                 child = parent.child(i)
@@ -997,7 +987,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
             # 2. Group Nodes
             current_parent = prot_item
-            hierarchy = getattr(metric, 'hierarchy', [])
+            hierarchy = getattr(metric, "hierarchy", [])
             if hierarchy:
                 for group_name in hierarchy:
                     current_parent = find_or_create_item(current_parent, group_name)
@@ -1006,12 +996,12 @@ class MetricLibrary(QtWidgets.QWidget):
             metric_item = QtWidgets.QTreeWidgetItem(current_parent)
             metric_item.setText(0, metric.name)
             metric_item.setData(0, QtCore.Qt.UserRole, metric)
-            
+
             font = self.get_metric_font(metric, level_id)
             metric_item.setFont(0, font)
-            
+
             # Version (Status)
-            status = getattr(metric, 'status', 'active')
+            status = getattr(metric, "status", "active")
             ver_text = str(metric.version) if metric.version else ""
             metric_item.setText(1, f"{ver_text} ({status})")
             metric_item.setFont(1, font)
@@ -1021,50 +1011,51 @@ class MetricLibrary(QtWidgets.QWidget):
             metric_item.setText(2, calc_status)
 
             # Usage
-            usage_display = ['None', 'Metric', 'Indicator'][level_id] if 0 <= level_id <= 2 else 'None'
-            
+            usage_display = ["None", "Metric", "Indicator"][level_id] if 0 <= level_id <= 2 else "None"
+
             # Use a specialized item for sorting if feasible, or just text
             # Setting text on column 4 allows sorting even if widget covers it?
             # QTreeWidget uses the item text for sorting.
             metric_item.setText(3, usage_display)
 
             cboStatus = QtWidgets.QComboBox()
-            cboStatus.addItem('None', 0)
-            cboStatus.addItem('Metric', 1)
-            cboStatus.addItem('Indicator', 2)
+            cboStatus.addItem("None", 0)
+            cboStatus.addItem("Metric", 1)
+            cboStatus.addItem("Indicator", 2)
             cboStatus.setCurrentIndex(level_id)
-            cboStatus.setProperty("metric_item", metric_item) 
+            cboStatus.setProperty("metric_item", metric_item)
             cboStatus.currentIndexChanged.connect(lambda idx, m_id=metric.id: self.on_metric_status_changed(m_id, idx))
             self.metricsTree.setItemWidget(metric_item, 3, cboStatus)
 
             # Description
             metric_item.setText(4, metric.description)
             metric_item.setToolTip(4, metric.description)
-        
+
         self.metricsTree.setSortingEnabled(True)
 
     def collapse_tree_children(self, item: QtWidgets.QTreeWidgetItem):
         item.setExpanded(False)
         for i in range(item.childCount()):
-             self.collapse_tree_children(item.child(i))
+            self.collapse_tree_children(item.child(i))
 
     def expand_tree_children(self, item: QtWidgets.QTreeWidgetItem):
         item.setExpanded(True)
         for i in range(item.childCount()):
-             self.expand_tree_children(item.child(i))
+            self.expand_tree_children(item.child(i))
 
     def open_tree_context_menu(self, position):
         item = self.metricsTree.itemAt(position)
-        if not item: return
+        if not item:
+            return
 
         metric = item.data(0, QtCore.Qt.UserRole)
         menu = QtWidgets.QMenu()
         if metric:
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/details'), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
             if metric.metric_params:
                 menu.addSeparator()
                 menu.addAction(
-                    QtGui.QIcon(':/plugins/qris_toolbar/fact_check'),
+                    QtGui.QIcon(":/plugins/qris_toolbar/fact_check"),
                     "Metric Availability",
                     lambda: FrmMetricAvailabilityMatrix(
                         self,
@@ -1077,8 +1068,8 @@ class MetricLibrary(QtWidgets.QWidget):
                     ).exec_(),
                 )
         elif item.childCount() > 0:
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/expand'), "Expand All Children", lambda: self.expand_tree_children(item))
-            menu.addAction(QtGui.QIcon(':/plugins/qris_toolbar/collapse'), "Collapse All Children", lambda: self.collapse_tree_children(item))
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/expand"), "Expand All Children", lambda: self.expand_tree_children(item))
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/collapse"), "Collapse All Children", lambda: self.collapse_tree_children(item))
         if not menu.isEmpty():
             menu.exec_(self.metricsTree.viewport().mapToGlobal(position))
 
@@ -1097,13 +1088,13 @@ class MetricLibrary(QtWidgets.QWidget):
             prot_display = protocol_map.get(metric.protocol_machine_code, metric.protocol_machine_code)
             prot_item = QtWidgets.QTableWidgetItem()
             prot_item.setText(prot_display)
-            prot_item.setData(QtCore.Qt.UserRole, metric) # Storing metric here for retrieval
+            prot_item.setData(QtCore.Qt.UserRole, metric)  # Storing metric here for retrieval
             prot_item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.metricsTable.setItem(row, 0, prot_item)
 
             # Group
             group_item = QtWidgets.QTableWidgetItem()
-            hierarchy = getattr(metric, 'hierarchy', [])
+            hierarchy = getattr(metric, "hierarchy", [])
             group_item.setText(" > ".join(hierarchy) if hierarchy else "")
             group_item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.metricsTable.setItem(row, 1, group_item)
@@ -1117,7 +1108,7 @@ class MetricLibrary(QtWidgets.QWidget):
             label_item.setFlags(QtCore.Qt.ItemIsEnabled)
 
             # Version (Status)
-            status = getattr(metric, 'status', 'active')
+            status = getattr(metric, "status", "active")
             ver_text = str(metric.version) if metric.version else ""
             ver_item = QtWidgets.QTableWidgetItem()
             ver_item.setText(f"{ver_text} ({status})")
@@ -1133,16 +1124,16 @@ class MetricLibrary(QtWidgets.QWidget):
             self.metricsTable.setItem(row, 4, calc_item)
 
             # Usage
-            usage_display = ['None', 'Metric', 'Indicator'][level_id] if 0 <= level_id <= 2 else 'None'
-            
+            usage_display = ["None", "Metric", "Indicator"][level_id] if 0 <= level_id <= 2 else "None"
+
             # Create an item for sorting purposes
             usage_item = QtWidgets.QTableWidgetItem(usage_display)
             self.metricsTable.setItem(row, 5, usage_item)
 
             cboStatus = QtWidgets.QComboBox()
-            cboStatus.addItem('None', 0)
-            cboStatus.addItem('Metric', 1)
-            cboStatus.addItem('Indicator', 2)
+            cboStatus.addItem("None", 0)
+            cboStatus.addItem("Metric", 1)
+            cboStatus.addItem("Indicator", 2)
             cboStatus.setCurrentIndex(level_id)
             cboStatus.currentIndexChanged.connect(lambda idx, m_id=metric.id: self.on_metric_status_changed(m_id, idx))
             self.metricsTable.setCellWidget(row, 5, cboStatus)
@@ -1154,19 +1145,22 @@ class MetricLibrary(QtWidgets.QWidget):
             self.metricsTable.setItem(row, 6, desc_item)
 
         self.metricsTable.resizeColumnsToContents()
-        self.metricsTable.setColumnWidth(5, 120) # Ensure Usage column is wide enough for ComboBox
+        self.metricsTable.setColumnWidth(5, 120)  # Ensure Usage column is wide enough for ComboBox
         self.metricsTable.setSortingEnabled(True)
 
     def open_table_context_menu(self, position):
         item = self.metricsTable.itemAt(position)
-        if not item: return
-        
+        if not item:
+            return
+
         row = item.row()
-        metric_item = self.metricsTable.item(row, 0) # Metric stored in first column data
-        if not metric_item: return
+        metric_item = self.metricsTable.item(row, 0)  # Metric stored in first column data
+        if not metric_item:
+            return
 
         metric = metric_item.data(QtCore.Qt.UserRole)
-        if not metric: return
+        if not metric:
+            return
 
         menu = QtWidgets.QMenu()
         action_details = menu.addAction("Metric Details...")
@@ -1187,26 +1181,28 @@ class MetricLibrary(QtWidgets.QWidget):
                     selected_analysis_metrics=self._build_selected_analysis_metrics(),
                 ).exec_()
             )
-        
+
         menu.exec_(self.metricsTable.viewport().mapToGlobal(position))
 
     def toggle_all_metrics(self, level_id_text: str):
-        metrics_update_map = {} # metric_id -> new_level_idx
-        
+        metrics_update_map = {}  # metric_id -> new_level_idx
+
         # Determine target logic
-        use_default = (level_id_text == 'Default')
+        use_default = level_id_text == "Default"
         fixed_target_idx = 0
-        if level_id_text == 'Metric': fixed_target_idx = 1
-        elif level_id_text == 'Indicator': fixed_target_idx = 2
-        
-        usage_labels = ['None', 'Metric', 'Indicator']
+        if level_id_text == "Metric":
+            fixed_target_idx = 1
+        elif level_id_text == "Indicator":
+            fixed_target_idx = 2
+
+        usage_labels = ["None", "Metric", "Indicator"]
 
         # 1. Calculate updates
         for metric in self.qris_project.metrics.values():
-             if self.should_show_metric(metric):
-                 new_state = metric.default_level_id if use_default else fixed_target_idx
-                 metrics_update_map[metric.id] = new_state
-                 self.current_metrics_state[metric.id] = new_state
+            if self.should_show_metric(metric):
+                new_state = metric.default_level_id if use_default else fixed_target_idx
+                metrics_update_map[metric.id] = new_state
+                self.current_metrics_state[metric.id] = new_state
 
         self.invalidate_availability_cache()
 
@@ -1216,55 +1212,58 @@ class MetricLibrary(QtWidgets.QWidget):
             item = iterator.value()
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric and metric.id in metrics_update_map:
-                 new_idx = metrics_update_map[metric.id]
-                 item.setText(3, usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None') # Update sorting text
-                 
-                 # Apply Font
-                 font = self.get_metric_font(metric, new_idx)
-                 item.setFont(0, font)
-                 item.setFont(1, font)
+                new_idx = metrics_update_map[metric.id]
+                item.setText(3, usage_labels[new_idx] if 0 <= new_idx <= 2 else "None")  # Update sorting text
 
-                 w = self.metricsTree.itemWidget(item, 3)
-                 if isinstance(w, QtWidgets.QComboBox):
-                     w.blockSignals(True)
-                     w.setCurrentIndex(new_idx)
-                     w.blockSignals(False)
+                # Apply Font
+                font = self.get_metric_font(metric, new_idx)
+                item.setFont(0, font)
+                item.setFont(1, font)
+
+                w = self.metricsTree.itemWidget(item, 3)
+                if isinstance(w, QtWidgets.QComboBox):
+                    w.blockSignals(True)
+                    w.setCurrentIndex(new_idx)
+                    w.blockSignals(False)
             iterator += 1
 
         # 3. Update Table Widgets
         for row in range(self.metricsTable.rowCount()):
-             item = self.metricsTable.item(row, 0) # Protocol column holds valid items? No, row 0 col 0. Checks valid row.
-             if not item: continue # Should not happen
-             
-             # Metric is stored in Column 0 (Protocol) UserRole? YES.
-             metric = item.data(QtCore.Qt.UserRole) 
-             
-             if metric and metric.id in metrics_update_map:
-                 new_idx = metrics_update_map[metric.id]
-                 usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None'
+            item = self.metricsTable.item(row, 0)  # Protocol column holds valid items? No, row 0 col 0. Checks valid row.
+            if not item:
+                continue  # Should not happen
 
-                 # Update sorting text
-                 usage_item = self.metricsTable.item(row, 5)
-                 if usage_item:
-                     usage_item.setText(usage_display)
-                 
-                 # Apply Font
-                 font = self.get_metric_font(metric, new_idx)
-                 if self.metricsTable.item(row, 2): self.metricsTable.item(row, 2).setFont(font)
-                 if self.metricsTable.item(row, 3): self.metricsTable.item(row, 3).setFont(font)
-                     
-                 w = self.metricsTable.cellWidget(row, 5)
-                 if isinstance(w, QtWidgets.QComboBox):
-                     w.blockSignals(True)
-                     w.setCurrentIndex(new_idx)
-                     w.blockSignals(False)
-                     
+            # Metric is stored in Column 0 (Protocol) UserRole? YES.
+            metric = item.data(QtCore.Qt.UserRole)
+
+            if metric and metric.id in metrics_update_map:
+                new_idx = metrics_update_map[metric.id]
+                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else "None"
+
+                # Update sorting text
+                usage_item = self.metricsTable.item(row, 5)
+                if usage_item:
+                    usage_item.setText(usage_display)
+
+                # Apply Font
+                font = self.get_metric_font(metric, new_idx)
+                if self.metricsTable.item(row, 2):
+                    self.metricsTable.item(row, 2).setFont(font)
+                if self.metricsTable.item(row, 3):
+                    self.metricsTable.item(row, 3).setFont(font)
+
+                w = self.metricsTable.cellWidget(row, 5)
+                if isinstance(w, QtWidgets.QComboBox):
+                    w.blockSignals(True)
+                    w.setCurrentIndex(new_idx)
+                    w.blockSignals(False)
+
         self.update_usage_count_label()
 
     def apply_metric_states(self, states: dict):
         """Bulk-apply a pre-computed {metric_id: level_id} dict in a single tree/table pass.
         More efficient than calling on_metric_status_changed() per metric."""
-        usage_labels = ['None', 'Metric', 'Indicator']
+        usage_labels = ["None", "Metric", "Indicator"]
 
         # Update internal state
         for metric_id, level_id in states.items():
@@ -1279,7 +1278,7 @@ class MetricLibrary(QtWidgets.QWidget):
             metric = item.data(0, QtCore.Qt.UserRole)
             if metric and metric.id in states:
                 new_idx = states[metric.id]
-                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None'
+                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else "None"
                 item.setText(3, usage_display)
                 font = self.get_metric_font(metric, new_idx)
                 item.setFont(0, font)
@@ -1299,7 +1298,7 @@ class MetricLibrary(QtWidgets.QWidget):
             metric = item.data(QtCore.Qt.UserRole)
             if metric and metric.id in states:
                 new_idx = states[metric.id]
-                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else 'None'
+                usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else "None"
                 usage_item = self.metricsTable.item(row, 5)
                 if usage_item:
                     usage_item.setText(usage_display)
@@ -1318,15 +1317,15 @@ class MetricLibrary(QtWidgets.QWidget):
 
     def get_selected_metrics(self):
         analysis_metrics = {}
-        # Iterate through project metrics or cache? 
+        # Iterate through project metrics or cache?
         # Using cache is safer because it reflects the user's latest actions on the UI
-        
+
         for metric_id, level_idx in self.current_metrics_state.items():
             if level_idx > 0:
-                 # Need Metric object.
-                 metric = self.qris_project.metrics.get(metric_id)
-                 if metric:
-                     analysis_metrics[metric_id] = AnalysisMetric(metric, level_idx)
+                # Need Metric object.
+                metric = self.qris_project.metrics.get(metric_id)
+                if metric:
+                    analysis_metrics[metric_id] = AnalysisMetric(metric, level_idx)
         return analysis_metrics
 
     def update_usage_count_label(self):
