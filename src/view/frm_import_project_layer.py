@@ -1,17 +1,17 @@
 import os
 
-from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.core import QgsVectorLayer, QgsWkbTypes
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..model.project import Project
-from ..model.event_layer import EventLayer
 from ..model.db_item_spatial import DBItemSpatial
+from ..model.event_layer import EventLayer
+from ..model.project import Project
 from ..model.scratch_vector import ScratchVector
 
 _GEOM_TYPE_MAP = {
-    'point': QgsWkbTypes.PointGeometry,
-    'linestring': QgsWkbTypes.LineGeometry,
-    'polygon': QgsWkbTypes.PolygonGeometry,
+    "point": QgsWkbTypes.PointGeometry,
+    "linestring": QgsWkbTypes.LineGeometry,
+    "polygon": QgsWkbTypes.PolygonGeometry,
 }
 
 
@@ -21,12 +21,12 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
     DCE event layer.  Three vertically-stacked sections, each with its own
     radio button and dedicated combo box:
 
-      1. Project Inputs  – sample frames, profiles, cross sections, pour points,
+      1. Project Inputs  - sample frames, profiles, cross sections, pour points,
                            and context (scratch) vectors matching geometry type.
-      2. DCE Same Type   – DCE event layers with the same protocol layer
+      2. DCE Same Type   - DCE event layers with the same protocol layer
                            definition; features are copied directly (no field
                            mapping needed).
-      3. DCE Diff Type   – DCE event layers with a different protocol layer
+      3. DCE Diff Type   - DCE event layers with a different protocol layer
                            definition but the same geometry type; opens the
                            attribute-mapping import form.
     """
@@ -40,7 +40,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         self.use_direct_copy: bool = False
 
         self.setupUi()
-        self.setWindowTitle('Import from Existing Project Layer')
+        self.setWindowTitle("Import from Existing Project Layer")
 
         self._populate_all_combos()
 
@@ -71,7 +71,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
 
     def _apply_model(self, combo: QtWidgets.QComboBox, model: QtGui.QStandardItemModel):
         if model.rowCount() == 0:
-            placeholder = QtGui.QStandardItem('— No layers available —')
+            placeholder = QtGui.QStandardItem("— No layers available —")
             placeholder.setData(None, QtCore.Qt.UserRole)
             model.appendRow(placeholder)
         combo.setModel(model)
@@ -88,31 +88,28 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         # --- Project Inputs ---
         project_model = self._make_model()
 
-        if geom == 'polygon':
+        if geom == "polygon":
             for sf in self.qris_project.sample_frames.values():
                 if sf.feature_count(project_file) > 0:
-                    self._add_item(project_model, f'Sample Frame: {sf.name}', ('project', sf))
-        elif geom == 'linestring':
+                    self._add_item(project_model, f"Sample Frame: {sf.name}", ("project", sf))
+        elif geom == "linestring":
             for p in self.qris_project.profiles.values():
                 if p.feature_count(project_file) > 0:
-                    self._add_item(project_model, f'Profile: {p.name}', ('project', p))
+                    self._add_item(project_model, f"Profile: {p.name}", ("project", p))
             for cs in self.qris_project.cross_sections.values():
                 if cs.feature_count(project_file) > 0:
-                    self._add_item(project_model, f'Cross Section: {cs.name}', ('project', cs))
-        elif geom == 'point':
+                    self._add_item(project_model, f"Cross Section: {cs.name}", ("project", cs))
+        elif geom == "point":
             for pp in self.qris_project.pour_points.values():
                 if pp.feature_count(project_file) > 0:
-                    self._add_item(project_model, f'Pour Point: {pp.name}', ('project', pp))
+                    self._add_item(project_model, f"Pour Point: {pp.name}", ("project", pp))
 
         # Scratch / context vectors (any geometry — check at runtime)
         for sv in self.qris_project.scratch_vectors.values():
             if os.path.exists(sv.gpkg_path):
-                temp = QgsVectorLayer(
-                    f'{sv.gpkg_path}|layername={sv.fc_name}', 'tmp', 'ogr')
-                if (temp.isValid()
-                        and temp.geometryType() == target_qgs_geom
-                        and temp.featureCount() > 0):
-                    self._add_item(project_model, f'Context Layer: {sv.name}', ('scratch', sv))
+                temp = QgsVectorLayer(f"{sv.gpkg_path}|layername={sv.fc_name}", "tmp", "ogr")
+                if temp.isValid() and temp.geometryType() == target_qgs_geom and temp.featureCount() > 0:
+                    self._add_item(project_model, f"Context Layer: {sv.name}", ("scratch", sv))
 
         self._apply_model(self.cboProject, project_model)
 
@@ -122,19 +119,16 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
             for el in event.event_layers:
                 if el.layer.id == self.db_item.layer.id and el.event_id != self.db_item.event_id:
                     if el.feature_count(project_file) > 0:
-                        self._add_item(same_model,
-                                       f'{event.name} — {el.layer.name}', ('dce', el))
+                        self._add_item(same_model, f"{event.name} — {el.layer.name}", ("dce", el))
         self._apply_model(self.cboDceSame, same_model)
 
         # --- DCE Different Type ---
         diff_model = self._make_model()
         for event in self.qris_project.events.values():
             for el in event.event_layers:
-                if (self._geom_matches(el.layer.geom_type)
-                        and el.layer.id != self.db_item.layer.id):
+                if self._geom_matches(el.layer.geom_type) and el.layer.id != self.db_item.layer.id:
                     if el.feature_count(project_file) > 0:
-                        self._add_item(diff_model,
-                                       f'{event.name} — {el.layer.name}', ('dce', el))
+                        self._add_item(diff_model, f"{event.name} — {el.layer.name}", ("dce", el))
         self._apply_model(self.cboDceDiff, diff_model)
 
     # ------------------------------------------------------------------
@@ -150,11 +144,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         self.cboDceSame.setEnabled(same_on)
         self.cboDceDiff.setEnabled(diff_on)
 
-        active_combo = (
-            self.cboProject if project_on
-            else self.cboDceSame if same_on
-            else self.cboDceDiff
-        )
+        active_combo = self.cboProject if project_on else self.cboDceSame if same_on else self.cboDceDiff
         has_data = active_combo.currentData(QtCore.Qt.UserRole) is not None
         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(has_data)
 
@@ -181,20 +171,17 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         label = combo.currentText()
         project_file = self.qris_project.project_file
 
-        if kind == 'project':
+        if kind == "project":
             spatial_item: DBItemSpatial = item
             self.source_layer = spatial_item.get_temp_layer(project_file)
             self.source_layer.setName(label)
-        elif kind == 'scratch':
+        elif kind == "scratch":
             sv: ScratchVector = item
-            self.source_layer = QgsVectorLayer(
-                f'{sv.gpkg_path}|layername={sv.fc_name}', label, 'ogr')
+            self.source_layer = QgsVectorLayer(f"{sv.gpkg_path}|layername={sv.fc_name}", label, "ogr")
         else:  # 'dce'
             el: EventLayer = item
-            self.source_layer = QgsVectorLayer(
-                f'{project_file}|layername={el.fc_name}', label, 'ogr')
-            self.source_layer.setSubsetString(
-                f'event_id = {el.event_id} AND event_layer_id = {el.layer.id}')
+            self.source_layer = QgsVectorLayer(f"{project_file}|layername={el.fc_name}", label, "ogr")
+            self.source_layer.setSubsetString(f"event_id = {el.event_id} AND event_layer_id = {el.layer.id}")
 
         super().accept()
 
@@ -209,7 +196,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         self.vert = QtWidgets.QVBoxLayout(self)
 
         # Section 1: Project Inputs
-        self.rdoProject = QtWidgets.QRadioButton('Project Inputs')
+        self.rdoProject = QtWidgets.QRadioButton("Project Inputs")
         self.vert.addWidget(self.rdoProject)
         self.cboProject = QtWidgets.QComboBox()
         self.vert.addWidget(self.cboProject)
@@ -217,7 +204,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         self.vert.addSpacing(8)
 
         # Section 2: DCE Same Type
-        self.rdoDceSame = QtWidgets.QRadioButton('DCE Layers (Same Layer Type)')
+        self.rdoDceSame = QtWidgets.QRadioButton("DCE Layers (Same Layer Type)")
         self.vert.addWidget(self.rdoDceSame)
         self.cboDceSame = QtWidgets.QComboBox()
         self.vert.addWidget(self.cboDceSame)
@@ -225,16 +212,14 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         self.vert.addSpacing(8)
 
         # Section 3: DCE Different Type
-        self.rdoDceDiff = QtWidgets.QRadioButton('DCE Layers (Different Layer Type)')
+        self.rdoDceDiff = QtWidgets.QRadioButton("DCE Layers (Different Layer Type)")
         self.vert.addWidget(self.rdoDceDiff)
         self.cboDceDiff = QtWidgets.QComboBox()
         self.vert.addWidget(self.cboDceDiff)
 
         self.vert.addStretch(1)
 
-        self.buttonBox = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel,
-            QtCore.Qt.Horizontal)
+        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.vert.addWidget(self.buttonBox)

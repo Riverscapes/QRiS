@@ -1,16 +1,12 @@
 from qgis.PyQt import QtGui, QtWidgets
 
-from .frm_geospatial_metrics_options import FrmOptions
-from .frm_geospatial_metrics_export import FrmGeospatialMetricsExport
-
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
-
+from .frm_geospatial_metrics_export import FrmGeospatialMetricsExport
 from .utilities import add_standard_form_buttons
 
 
 class FrmGeospatialMetrics(QtWidgets.QDialog):
-
     def __init__(self, parent, project: Project, mask: SampleFrame, polygons: dict, metrics: dict):
         super().__init__(parent)
 
@@ -21,7 +17,7 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
         self.setupUi()
 
-        self.setWindowTitle(f'Zonal Statistics for {self.qris_mask.name}')
+        self.setWindowTitle(f"Zonal Statistics for {self.qris_mask.name}")
 
         self.txtMask.setText(self.qris_mask.name)
 
@@ -38,23 +34,23 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
         self.treeModel = QtGui.QStandardItemModel()
         self.treeModel.setColumnCount(2)
-        self.treeModel.setHorizontalHeaderLabels(['Layer / Polygon / Metric', 'Value'])
+        self.treeModel.setHorizontalHeaderLabels(["Layer / Polygon / Metric", "Value"])
 
         for layer_name, values in display_data.items():
             layer_item = QtGui.QStandardItem(layer_name)
             for polygon_id, poly_values in values.items():
-                polygon_label = self.polygons[polygon_id]['display_label']
+                polygon_label = self.polygons[polygon_id]["display_label"]
                 poly_item = QtGui.QStandardItem(polygon_label)
                 layer_item.appendRow(poly_item)
 
                 for metric_name, metric_value in poly_values.items():
                     metric_item = QtGui.QStandardItem(metric_name)
                     if metric_value is None:
-                        metric_value_str = ''
+                        metric_value_str = ""
                     elif isinstance(metric_value, float):
-                        metric_value_str = '{:,.2f}'.format(metric_value)
+                        metric_value_str = f"{metric_value:,.2f}"
                     else:
-                        metric_value_str = '{:,}'.format(metric_value)
+                        metric_value_str = f"{metric_value:,}"
                     metric_value_item = QtGui.QStandardItem(str(metric_value_str))
                     poly_item.appendRow([metric_item, metric_value_item])
 
@@ -72,7 +68,7 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
     def on_settings(self):
         # frm = FrmOptions(self, None)
         # frm.exec_()
-        QtWidgets.QMessageBox.warning(None, 'Settings', 'This Feature Is Not Implemented.')
+        QtWidgets.QMessageBox.warning(None, "Settings", "This Feature Is Not Implemented.")
 
     def accept(self):
 
@@ -94,17 +90,17 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         self.horizCommands = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horizCommands)
 
-        self.rdoPolygonsFirst = QtWidgets.QRadioButton('Polygons then Layers')
+        self.rdoPolygonsFirst = QtWidgets.QRadioButton("Polygons then Layers")
         self.rdoPolygonsFirst.setEnabled(False)
         self.horizCommands.addWidget(self.rdoPolygonsFirst)
 
-        self.rdoLayersFirst = QtWidgets.QRadioButton('Layers then Polygons')
+        self.rdoLayersFirst = QtWidgets.QRadioButton("Layers then Polygons")
         self.rdoLayersFirst.setChecked(True)
         self.horizCommands.addWidget(self.rdoLayersFirst)
 
         self.horizCommands.addStretch()
 
-        self.cmdExport = QtWidgets.QPushButton('Export Data')
+        self.cmdExport = QtWidgets.QPushButton("Export Data")
         self.cmdExport.clicked.connect(self.on_export)
         self.horizCommands.addWidget(self.cmdExport)
 
@@ -115,4 +111,4 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
         self.tree = QtWidgets.QTreeView()
         self.vert.addWidget(self.tree)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'zonal-statistics'))
+        self.vert.addLayout(add_standard_form_buttons(self, "zonal-statistics"))

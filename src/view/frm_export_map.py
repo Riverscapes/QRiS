@@ -57,9 +57,9 @@ class FrmMapExport(FrmBaseExport):
     @property
     def render_params(self):
         return {
-            'width': self.spnWidth.value() if self.spnWidth else 1600,
-            'height': self.spnHeight.value() if self.spnHeight else 1200,
-            'dpi': self.spnDpi.value() if self.spnDpi else 150,
+            "width": self.spnWidth.value() if self.spnWidth else 1600,
+            "height": self.spnHeight.value() if self.spnHeight else 1200,
+            "dpi": self.spnDpi.value() if self.spnDpi else 150,
         }
 
     def accept(self):

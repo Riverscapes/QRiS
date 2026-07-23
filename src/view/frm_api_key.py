@@ -1,7 +1,6 @@
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import (QApplication, QDialog, QVBoxLayout,
-                                  QLabel, QDialogButtonBox)
 from qgis.gui import QgsPasswordLineEdit
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
 from ..lib.climate_engine import CLIMATE_ENGINE_CREDENTIAL_SETTING, check_climate_engine_api_key
 from ..QRiS.settings import Settings
@@ -40,13 +39,13 @@ class FrmApiKey(QDialog):
         layout.addWidget(self.button_box)
 
     def _on_text_changed(self):
-        self.lbl_status.setText('')
+        self.lbl_status.setText("")
         self.button_box.button(QDialogButtonBox.Ok).setEnabled(bool(self.txt_api_key.text().strip()))
 
     def _on_accept(self):
         api_key = self.txt_api_key.text().strip()
         self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.lbl_status.setText('Validating\u2026')
+        self.lbl_status.setText("Validating\u2026")
         QApplication.processEvents()
 
         valid = check_climate_engine_api_key(api_key)

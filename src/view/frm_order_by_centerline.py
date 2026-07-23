@@ -1,9 +1,8 @@
 from qgis.PyQt import QtCore, QtWidgets
 
-from ..model.project import Project
 from ..model.db_item import DBItemModel
 from ..model.profile import Profile
-
+from ..model.project import Project
 from .utilities import add_standard_form_buttons
 
 
@@ -18,7 +17,7 @@ class FrmOrderByCenterline(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.qris_project = qris_project
-        self.setWindowTitle('Set Order by Centerline')
+        self.setWindowTitle("Set Order by Centerline")
         self.resize(350, 130)
         self.setMinimumSize(300, 110)
 
@@ -42,17 +41,12 @@ class FrmOrderByCenterline(QtWidgets.QDialog):
     # ------------------------------------------------------------------
 
     def _load_centerlines(self):
-        centerlines = {
-            id: profile
-            for id, profile in self.qris_project.profiles.items()
-            if profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE
-        }
+        centerlines = {id: profile for id, profile in self.qris_project.profiles.items() if profile.profile_type_id == Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE}
         self.cboCenterline.setModel(DBItemModel(centerlines))
 
     def accept(self):
         if self.selected_profile() is None:
-            QtWidgets.QMessageBox.warning(self, 'No Centerline Selected',
-                                          'Please select a centerline profile.')
+            QtWidgets.QMessageBox.warning(self, "No Centerline Selected", "Please select a centerline profile.")
             return
         super().accept()
 
@@ -63,17 +57,15 @@ class FrmOrderByCenterline(QtWidgets.QDialog):
         grid = QtWidgets.QGridLayout()
         self.vert.addLayout(grid)
 
-        grid.addWidget(QtWidgets.QLabel('Centerline'), 0, 0)
+        grid.addWidget(QtWidgets.QLabel("Centerline"), 0, 0)
 
         self.cboCenterline = QtWidgets.QComboBox()
-        self.cboCenterline.setToolTip('Select the centerline profile to use for ordering features.')
+        self.cboCenterline.setToolTip("Select the centerline profile to use for ordering features.")
         grid.addWidget(self.cboCenterline, 0, 1)
 
-        self.chkUpdateDisplayLabel = QtWidgets.QCheckBox('Also update Display Label')
-        self.chkUpdateDisplayLabel.setToolTip(
-            'Write the sort position (1, 2, 3…) to the display_label field as well.\n'
-            'Useful when display_label is null or out of date.')
+        self.chkUpdateDisplayLabel = QtWidgets.QCheckBox("Also update Display Label")
+        self.chkUpdateDisplayLabel.setToolTip("Write the sort position (1, 2, 3…) to the display_label field as well.\nUseful when display_label is null or out of date.")
         self.chkUpdateDisplayLabel.setChecked(False)
         grid.addWidget(self.chkUpdateDisplayLabel, 1, 0, 1, 2)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'inputs/sample-frames'))
+        self.vert.addLayout(add_standard_form_buttons(self, "inputs/sample-frames"))

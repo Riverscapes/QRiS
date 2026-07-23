@@ -1,11 +1,9 @@
-
 from qgis.PyQt import QtWidgets
 
 from .utilities import add_standard_form_buttons
 
 
 class FrmEventPicker(QtWidgets.QDialog):
-
     def __init__(self, parent, qris_project, event_type_id, layer_name=None, events=None, show_copy_options=False):
         super().__init__(parent=parent)
         self.qris_project = qris_project
@@ -37,7 +35,7 @@ class FrmEventPicker(QtWidgets.QDialog):
         self.layers = []
         if not self.dce_events or index < 0 or index >= len(self.dce_events):
             return
-        
+
         self.qris_event = self.dce_events[index]
         for layer in self.qris_event.event_layers:
             self.layers.append(layer.layer)
@@ -60,26 +58,26 @@ class FrmEventPicker(QtWidgets.QDialog):
         self.horizontalLayout.addWidget(self.cboDCE)
 
         if self.show_copy_options:
-             self.grpOptions = QtWidgets.QGroupBox("Import Options")
-             self.vboxOptions = QtWidgets.QVBoxLayout(self.grpOptions)
-             
-             self.chkLayers = QtWidgets.QCheckBox("Layers")
-             self.chkLayers.setChecked(True)
-             self.vboxOptions.addWidget(self.chkLayers)
-             
-             self.chkBasicProps = QtWidgets.QCheckBox("Basic Properties (Date, Platform, etc.)")
-             self.chkBasicProps.setChecked(False)
-             self.vboxOptions.addWidget(self.chkBasicProps)
+            self.grpOptions = QtWidgets.QGroupBox("Import Options")
+            self.vboxOptions = QtWidgets.QVBoxLayout(self.grpOptions)
 
-             self.chkDescription = QtWidgets.QCheckBox("Description")
-             self.chkDescription.setChecked(False)
-             self.vboxOptions.addWidget(self.chkDescription)
+            self.chkLayers = QtWidgets.QCheckBox("Layers")
+            self.chkLayers.setChecked(True)
+            self.vboxOptions.addWidget(self.chkLayers)
 
-             self.chkMetadata = QtWidgets.QCheckBox("Metadata")
-             self.chkMetadata.setChecked(False)
-             self.vboxOptions.addWidget(self.chkMetadata)
+            self.chkBasicProps = QtWidgets.QCheckBox("Basic Properties (Date, Platform, etc.)")
+            self.chkBasicProps.setChecked(False)
+            self.vboxOptions.addWidget(self.chkBasicProps)
 
-             self.verticalLayout.addWidget(self.grpOptions)
+            self.chkDescription = QtWidgets.QCheckBox("Description")
+            self.chkDescription.setChecked(False)
+            self.vboxOptions.addWidget(self.chkDescription)
+
+            self.chkMetadata = QtWidgets.QCheckBox("Metadata")
+            self.chkMetadata.setChecked(False)
+            self.vboxOptions.addWidget(self.chkMetadata)
+
+            self.verticalLayout.addWidget(self.grpOptions)
 
         # push the horizontal layout to the top
         self.verticalLayout.addStretch(1)

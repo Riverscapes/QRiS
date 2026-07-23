@@ -1,8 +1,8 @@
 import csv
 import json
 
-import xlwt
 from qgis.PyQt import QtWidgets
+import xlwt
 
 from .frm_export_base import FrmBaseExport
 

@@ -1,35 +1,30 @@
 import json
+from typing import Optional
 
+from qgis.core import QgsFeature, QgsVectorLayer
 from qgis.PyQt import QtCore, QtWidgets
-from qgis.gui import QgisInterface
-from qgis.core import QgsVectorLayer, QgsFeature
 from qgis.utils import Qgis
-
-from ..model.db_item import DBItem, DBItemModel
-from ..model.project import Project
-from ..model.cross_sections import CrossSections, insert_cross_sections
 
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
-
+from ..model.cross_sections import CrossSections, insert_cross_sections
+from ..model.db_item import DBItem, DBItemModel
+from ..model.project import Project
+from ..QRiS.settings import Settings
+from .utilities import add_standard_form_buttons, validate_name
 from .widgets.metadata import MetadataWidget
 from .widgets.stats_widget import StatsWidget
-from .utilities import validate_name, add_standard_form_buttons
-from ..QRiS.settings import Settings
-
-from typing import Dict
 
 
 class FrmCrossSections(QtWidgets.QDialog):
-
-    def __init__(self, parent, qris_project: Project, import_source_path: str = None, cross_sections: CrossSections = None, output_features: Dict[float, QgsFeature] = None, metadata: dict = None):
+    def __init__(self, parent, qris_project: Project, import_source_path: Optional[str] = None, cross_sections: CrossSections = None, output_features: Optional[dict[float, QgsFeature]] = None, metadata: Optional[dict] = None):
 
         self.qris_project = qris_project
         self.cross_sections = cross_sections
         self.import_source_path = import_source_path
         self.output_features = output_features
 
-        super(FrmCrossSections, self).__init__(parent)
+        super().__init__(parent)
         metadata_json = json.dumps(cross_sections.metadata) if cross_sections is not None else None
         if metadata is not None:
             metadata_json = json.dumps(metadata)
@@ -37,7 +32,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         self.stats_widget = StatsWidget(db_item=cross_sections, db_path=qris_project.project_file, parent=self)
         self.setupUi()
 
-        window_title = 'Create New Cross Sections layer' if self.cross_sections is None else 'Edit Cross Sections Properties'
+        window_title = "Create New Cross Sections layer" if self.cross_sections is None else "Edit Cross Sections Properties"
 
         show_attribute_filter = import_source_path is not None
         show_mask_clip = import_source_path is not None or output_features is not None
@@ -49,15 +44,15 @@ class FrmCrossSections(QtWidgets.QDialog):
 
         if show_mask_clip:
             if self.tabs.indexOf(self.tabProperties) == -1:
-                self.tabs.insertTab(0, self.tabProperties, 'Inputs')
+                self.tabs.insertTab(0, self.tabProperties, "Inputs")
             self.tabs.setCurrentIndex(0)
 
         if import_source_path is not None:
-            window_title = 'Import Cross Sections'
+            window_title = "Import Cross Sections"
             if isinstance(import_source_path, QgsVectorLayer):
-                window_title = 'Import Cross Sections from Temporary Layer'
+                window_title = "Import Cross Sections from Temporary Layer"
                 self.layer_name = import_source_path.name()
-                self.layer_id = 'memory'
+                self.layer_id = "memory"
             else:
                 # find if import_source_path is shapefile, geopackage, or other
                 self.basepath, self.layer_name, self.layer_id = layer_path_parser(import_source_path)
@@ -67,15 +62,15 @@ class FrmCrossSections(QtWidgets.QDialog):
 
             if show_attribute_filter:
                 vector_layer = import_source_path if isinstance(import_source_path, QgsVectorLayer) else QgsVectorLayer(import_source_path)
-                self.no_attribute = DBItem('None', 0, 'None - No cross section ids')
-                self.attributes = {i: DBItem('None', i, vector_layer.attributeDisplayName(i)) for i in vector_layer.attributeList()}
+                self.no_attribute = DBItem("None", 0, "None - No cross section ids")
+                self.attributes = {i: DBItem("None", i, vector_layer.attributeDisplayName(i)) for i in vector_layer.attributeList()}
                 self.attributes[-1] = self.no_attribute
                 self.attribute_model = DBItemModel(self.attributes)
                 self.cboAttribute.setModel(self.attribute_model)
                 self.cboAttribute.setCurrentIndex(self.attribute_model.getItemIndex(self.no_attribute))
         if show_mask_clip:
             clip_items = {**self.qris_project.valley_bottoms, **self.qris_project.aois}
-            no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+            no_clipping = DBItem("None", 0, "None - Retain full dataset extent")
             clip_items[0] = no_clipping
             self.masks_model = DBItemModel(clip_items)
             self.cboMaskClip.setModel(self.masks_model)
@@ -105,39 +100,39 @@ class FrmCrossSections(QtWidgets.QDialog):
                 self.cross_sections.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
                 self.qris_project.project_changed.emit()
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A cross sections layer with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A cross sections layer with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving cross sections', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving cross sections", str(ex))
                 return
-            super(FrmCrossSections, self).accept()
+            super().accept()
 
         else:
             try:
                 self.cross_sections = insert_cross_sections(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata)
                 self.qris_project.add_db_item(self.cross_sections)
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A cross sections layer with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A cross sections layer with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving cross sections', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving cross sections", str(ex))
                 return
             try:
                 clip_mask = None
-                clip_item:DBItem = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+                clip_item: DBItem = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
                 if clip_item is not None:
-                    if clip_item.id > 0:      
+                    if clip_item.id > 0:
                         clip_mask = (clip_item.fc_name, clip_item.fc_id_column_name, clip_item.id)
-                
+
                 if self.import_source_path is not None:
-                    attributes = {'cross_section_id': self.cross_sections.id}
+                    attributes = {"cross_section_id": self.cross_sections.id}
                     # if the selected value of cboAttribute is not the no_attribute, then set the attribute to the display_label
                     if self.cboAttribute.isVisible() and self.cboAttribute.currentData(QtCore.Qt.UserRole) != self.no_attribute:
-                        attributes['display_label'] = self.cboAttribute.currentData(QtCore.Qt.UserRole).name
-                    if self.layer_id == 'memory':
-                        fc_name = f'{self.qris_project.project_file}|layername=cross_section_features'
+                        attributes["display_label"] = self.cboAttribute.currentData(QtCore.Qt.UserRole).name
+                    if self.layer_id == "memory":
+                        fc_name = f"{self.qris_project.project_file}|layername=cross_section_features"
                         task = ImportMapLayer(self.import_source_path, fc_name, attributes, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
                         result = task.run()
                         self.on_import_complete(result)
@@ -145,22 +140,22 @@ class FrmCrossSections(QtWidgets.QDialog):
                         # task.import_complete.connect(self.on_import_complete)
                         # QgsApplication.taskManager().addTask(task)
                     else:
-                        import_existing(self.import_source_path, self.qris_project.project_file, 'cross_section_features', self.cross_sections.id, 'cross_section_id', attributes, clip_mask)
-                        super(FrmCrossSections, self).accept()
+                        import_existing(self.import_source_path, self.qris_project.project_file, "cross_section_features", self.cross_sections.id, "cross_section_id", attributes, clip_mask)
+                        super().accept()
                 elif self.output_features is not None:
-                    out_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername=cross_section_features')
+                    out_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername=cross_section_features")
                     clip_geom = None
                     if clip_mask is not None:
-                        clip_layer = QgsVectorLayer(f'{self.qris_project.project_file}|layername={clip_mask[0]}')
-                        clip_layer.setSubsetString(f'{clip_mask[1]} = {clip_mask[2]}')
+                        clip_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={clip_mask[0]}")
+                        clip_layer.setSubsetString(f"{clip_mask[1]} = {clip_mask[2]}")
                         clip_feats = clip_layer.getFeatures()
                         clip_feat = QgsFeature()
                         clip_feats.nextFeature(clip_feat)
                         clip_geom = clip_feat.geometry()
                     for sequence, out_feature in self.output_features.items():
                         out_feature.setFields(out_layer.fields())
-                        out_feature['sequence'] = sequence
-                        out_feature['cross_section_id'] = self.cross_sections.id
+                        out_feature["sequence"] = sequence
+                        out_feature["cross_section_id"] = self.cross_sections.id
                         if clip_geom is not None:
                             geom = out_feature.geometry()
                             out_geom = geom.intersection(clip_geom)
@@ -172,24 +167,24 @@ class FrmCrossSections(QtWidgets.QDialog):
                 try:
                     self.cross_sections.delete(self.qris_project.project_file)
                 except Exception as ex_del:
-                    Settings().msg_bar('Error attempting to delete cross sections after the importing of features failed.', str(ex_del), level=Qgis.Critical, duration=10)
-                Settings().msg_bar('Error Importing Cross Sections Features', str(ex), level=Qgis.Critical, duration=10)
+                    Settings().msg_bar("Error attempting to delete cross sections after the importing of features failed.", str(ex_del), level=Qgis.Critical, duration=10)
+                Settings().msg_bar("Error Importing Cross Sections Features", str(ex), level=Qgis.Critical, duration=10)
                 return
 
-            super(FrmCrossSections, self).accept()
+            super().accept()
 
     def on_import_complete(self, result: bool):
 
         if not result:
-            Settings().msg_bar('Error Importing Cross Section Features', str(self.exception), level=Qgis.Critical, duration=10)
+            Settings().msg_bar("Error Importing Cross Section Features", str(self.exception), level=Qgis.Critical, duration=10)
             try:
                 self.cross_sections.delete(self.qris_project.project_file)
             except Exception as ex:
-                Settings().msg_bar('Error Deleting Cross Sections on Failed Import', str(ex), level=Qgis.Critical, duration=10)
+                Settings().msg_bar("Error Deleting Cross Sections on Failed Import", str(ex), level=Qgis.Critical, duration=10)
             return
         else:
-            Settings().msg_bar('Cross Section Import Complete.', f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
-            super(FrmCrossSections, self).accept()
+            Settings().msg_bar("Cross Section Import Complete.", f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
+            super().accept()
 
     def setupUi(self):
 
@@ -202,10 +197,10 @@ class FrmCrossSections(QtWidgets.QDialog):
 
         # Name (outside tabs)
         horiz_name = QtWidgets.QHBoxLayout()
-        self.lblName = QtWidgets.QLabel('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         horiz_name.addWidget(self.lblName)
         self.txtName = QtWidgets.QLineEdit()
-        self.txtName.setToolTip('Name of the cross sections layer')
+        self.txtName.setToolTip("Name of the cross sections layer")
         self.txtName.setMaxLength(255)
         horiz_name.addWidget(self.txtName)
         self.vert.addLayout(horiz_name)
@@ -216,18 +211,18 @@ class FrmCrossSections(QtWidgets.QDialog):
         # Basic Properties Tab (only inserted when clipping or attribute filter is needed)
         self.grid = QtWidgets.QGridLayout()
 
-        self.lblAttribute = QtWidgets.QLabel('Load Labels from Field (Optional)')
+        self.lblAttribute = QtWidgets.QLabel("Load Labels from Field (Optional)")
         self.grid.addWidget(self.lblAttribute, 0, 0, 1, 1)
 
         self.cboAttribute = QtWidgets.QComboBox()
-        self.cboAttribute.setToolTip('Attribute to use as the display label for the cross sections')
+        self.cboAttribute.setToolTip("Attribute to use as the display label for the cross sections")
         self.grid.addWidget(self.cboAttribute, 0, 1, 1, 1)
 
-        self.lblMaskClip = QtWidgets.QLabel('Clip to AOI / Valley Bottom')
+        self.lblMaskClip = QtWidgets.QLabel("Clip to AOI / Valley Bottom")
         self.grid.addWidget(self.lblMaskClip, 1, 0, 1, 1)
 
         self.cboMaskClip = QtWidgets.QComboBox()
-        self.cboMaskClip.setToolTip('Optionally clip the cross sections to the selected AOI or Valley Bottom')
+        self.cboMaskClip.setToolTip("Optionally clip the cross sections to the selected AOI or Valley Bottom")
         self.grid.addWidget(self.cboMaskClip, 1, 1, 1, 1)
 
         self.grid.setRowStretch(2, 1)
@@ -242,23 +237,20 @@ class FrmCrossSections(QtWidgets.QDialog):
         description_tab_layout = QtWidgets.QVBoxLayout()
         description_tab_layout.addWidget(self.txtDescription)
         description_tab.setLayout(description_tab_layout)
-        self.tabs.addTab(description_tab, 'Description')
+        self.tabs.addTab(description_tab, "Description")
 
         # Statistics Tab
         self.stats_widget.add_stats_tab(self.tabs)
 
         # Metadata Tab
-        self.tabs.addTab(self.metadata_widget, 'Metadata')
+        self.tabs.addTab(self.metadata_widget, "Metadata")
 
-        self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
+        self.chkAddToMap = QtWidgets.QCheckBox("Add to Map")
         self.chkAddToMap.setChecked(True)
 
-        self.chkStartEditSession = QtWidgets.QCheckBox('Start Edit Session')
+        self.chkStartEditSession = QtWidgets.QCheckBox("Start Edit Session")
         self.chkStartEditSession.setChecked(False)
-        self.chkAddToMap.stateChanged.connect(lambda state: (
-            self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked),
-            self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None
-        ))
+        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked), self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None))
 
         add_to_map_row = QtWidgets.QHBoxLayout()
         add_to_map_row.addWidget(self.chkAddToMap)
@@ -266,4 +258,4 @@ class FrmCrossSections(QtWidgets.QDialog):
         add_to_map_row.addStretch()
         self.vert.addLayout(add_to_map_row)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'inputs/cross-sections'))
+        self.vert.addLayout(add_standard_form_buttons(self, "inputs/cross-sections"))

@@ -1,25 +1,23 @@
-import os
 import json
+import os
 
-from qgis.PyQt import QtCore, QtWidgets
-from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
-from qgis.PyQt.QtCore import pyqtSlot
-from qgis.gui import QgisInterface
 from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
-
-from ..model.raster import Raster, insert_raster, SURFACES_PARENT_FOLDER, CONTEXT_PARENT_FOLDER
-from ..model.db_item import DBItemModel, DBItem
-from ..model.project import Project
+from qgis.gui import QgisInterface
+from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt.QtCore import pyqtSlot
+from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
-from .widgets.metadata import MetadataWidget
-from .utilities import validate_name_unique, validate_name, add_standard_form_buttons
+from ..model.db_item import DBItem, DBItemModel
+from ..model.project import Project
+from ..model.raster import CONTEXT_PARENT_FOLDER, SURFACES_PARENT_FOLDER, Raster, insert_raster
 from ..QRiS.path_utilities import parse_posix_path
+from .utilities import add_standard_form_buttons, validate_name, validate_name_unique
+from .widgets.metadata import MetadataWidget
 
 
 class FrmRaster(QtWidgets.QDialog):
-
     def __init__(self, parent, iface: QgisInterface, qris_project: Project, import_source_path: str, is_context: bool, raster: Raster = None, add_new_keys=True):
 
         self.iface = iface
@@ -30,17 +28,17 @@ class FrmRaster(QtWidgets.QDialog):
         self.hillshade = None
         self.metadata = None
 
-        super(FrmRaster, self).__init__(parent)
+        super().__init__(parent)
         new_keys = None
         if add_new_keys:
-            new_keys = ['source', 'aquisition date'] if self.raster is None else None
+            new_keys = ["source", "aquisition date"] if self.raster is None else None
         metadata_json = json.dumps(raster.metadata) if raster is not None else None
         self.metadata_widget = MetadataWidget(self, metadata_json, new_keys)
 
         self.setupUi()
 
-        raster_types = {id: db_item for id, db_item in qris_project.lookup_tables['lkp_raster_types'].items()}
-        raster_sources = {id: db_item for id, db_item in qris_project.lookup_tables['lkp_raster_sources'].items()}
+        raster_types = {id: db_item for id, db_item in qris_project.lookup_tables["lkp_raster_types"].items()}
+        raster_sources = {id: db_item for id, db_item in qris_project.lookup_tables["lkp_raster_sources"].items()}
         self.raster_sources_model = QStandardItemModel()
         for raster_source in raster_sources.values():
             raster_name = raster_source.name
@@ -56,35 +54,35 @@ class FrmRaster(QtWidgets.QDialog):
         self.raster_types_model = DBItemModel(raster_types)
         self.cboRasterType.setModel(self.raster_types_model)
 
-        raster_type = 'Context' if is_context is True else 'Surface'
-        self.setWindowTitle(f'Import {raster_type} Raster' if self.raster is None else f'Edit {raster_type} Raster Properties')
+        raster_type = "Context" if is_context is True else "Surface"
+        self.setWindowTitle(f"Import {raster_type} Raster" if self.raster is None else f"Edit {raster_type} Raster Properties")
 
         if raster is None:
             self.txtName.textChanged.connect(self.on_name_changed)
             self.txtSourcePath.textChanged.connect(self.on_name_changed)
             self.txtSourcePath.setText(import_source_path)
             name, ext = os.path.splitext(os.path.basename(import_source_path))
-            gpkg = ext.split(':')
-            if gpkg[0].lower() in ['.gpkg', '.gdb']:
+            gpkg = ext.split(":")
+            if gpkg[0].lower() in [".gpkg", ".gdb"]:
                 name = gpkg[1]
             self.txtName.setText(name)
 
             # Attempt to parse the raster type from the source raster name
-            if 'hillshade' in self.txtName.text().lower():
-                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Hillshade'))
-            elif 'dem' in self.txtName.text().lower():
-                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Digital Elevation Model (DEM)'))
-            elif 'vbet' in self.txtName.text().lower():
-                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Valley Bottom Evidence'))
-            elif 'detrended' in self.txtName.text().lower():
-                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Detrended Surface'))
+            if "hillshade" in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName("Hillshade"))
+            elif "dem" in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName("Digital Elevation Model (DEM)"))
+            elif "vbet" in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName("Valley Bottom Evidence"))
+            elif "detrended" in self.txtName.text().lower():
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName("Detrended Surface"))
             else:
-                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName('Other'))
+                self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexByName("Other"))
             self.set_hillshade()
 
             # Masks (filtered to just AOI)
             self.clipping_masks = {id: aoi for id, aoi in self.qris_project.aois.items()}
-            no_clipping = DBItem('None', 0, 'None - Retain full dataset extent')
+            no_clipping = DBItem("None", 0, "None - Retain full dataset extent")
             self.clipping_masks[0] = no_clipping
             self.masks_model = DBItemModel(self.clipping_masks)
             self.cboMask.setModel(self.masks_model)
@@ -97,12 +95,12 @@ class FrmRaster(QtWidgets.QDialog):
             self.cboRasterType.setCurrentIndex(self.raster_types_model.getItemIndexById(raster.raster_type_id))
 
             if raster.date is not None:
-                self.txtDate.setDate(QtCore.QDate.fromString(raster.date, 'yyyy-MM-dd'))
+                self.txtDate.setDate(QtCore.QDate.fromString(raster.date, "yyyy-MM-dd"))
 
             if self.raster.metadata is not None:
-                if 'system' in self.raster.metadata:
-                    if 'source_type' in self.raster.metadata['system']:
-                        source_type = self.raster.metadata['system']['source_type']
+                if "system" in self.raster.metadata:
+                    if "source_type" in self.raster.metadata["system"]:
+                        source_type = self.raster.metadata["system"]["source_type"]
                         if source_type not in raster_sources:
                             self.raster_sources_model.appendRow(QStandardItem(source_type))
                         for i in range(self.raster_sources_model.rowCount()):
@@ -133,14 +131,14 @@ class FrmRaster(QtWidgets.QDialog):
             return
 
         if self.txtDate.date() != self.txtDate.minimumDate():
-            self.metadata_widget.add_system_metadata('date', self.txtDate.date().toString('yyyy-MM-dd'))
+            self.metadata_widget.add_system_metadata("date", self.txtDate.date().toString("yyyy-MM-dd"))
         else:
-            self.metadata_widget.remove_system_metadata('date')
+            self.metadata_widget.remove_system_metadata("date")
 
         if self.cboRasterSource.currentData(QtCore.Qt.UserRole) is not None:
-            self.metadata_widget.add_system_metadata('source_type', self.cboRasterSource.currentData(QtCore.Qt.UserRole))
+            self.metadata_widget.add_system_metadata("source_type", self.cboRasterSource.currentData(QtCore.Qt.UserRole))
         else:
-            self.metadata_widget.add_system_metadata('source_type', self.cboRasterSource.currentText())
+            self.metadata_widget.add_system_metadata("source_type", self.cboRasterSource.currentText())
 
         metadata_json = self.metadata_widget.get_json()
         self.metadata = json.loads(metadata_json) if metadata_json is not None else None
@@ -152,19 +150,19 @@ class FrmRaster(QtWidgets.QDialog):
                 self.qris_project.project_changed.emit()
                 # TODO update hillshade if exists
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A raster with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving raster', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving raster", str(ex))
                 return
 
-            super(FrmRaster, self).accept()
+            super().accept()
 
         else:
             # Inserting a new raster. Check name uniqueness before copying the raster file
-            if validate_name_unique(self.qris_project.project_file, 'rasters', 'name', self.txtName.text()) is False:
-                QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+            if validate_name_unique(self.qris_project.project_file, "rasters", "name", self.txtName.text()) is False:
+                QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A raster with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                 self.txtName.setFocus()
                 return
 
@@ -182,7 +180,7 @@ class FrmRaster(QtWidgets.QDialog):
                 self.buttonBox.setEnabled(False)
 
                 if self.chkHillshade.isChecked() is True:
-                    self.hillshade_raster_name = f'{self.txtName.text()} hillshade'
+                    self.hillshade_raster_name = f"{self.txtName.text()} hillshade"
                     hillshade_path = self.qris_project.get_absolute_path(self.hillshade_project_path)
                     hillshade_task = Hillshade(project_path, hillshade_path)
                     hillshade_task.addSubTask(copy_raster, [], QgsTask.ParentDependsOnSubTask)
@@ -202,16 +200,16 @@ class FrmRaster(QtWidgets.QDialog):
                 try:
                     self.raster.delete(self.qris_project.project_file)
                 except Exception as ex2:
-                    QgsMessageLog.logMessage(f'Error attempting to delete raster after the importing raster failed.\n{ex2}', 'Copy Raster', Qgis.Critical)
+                    QgsMessageLog.logMessage(f"Error attempting to delete raster after the importing raster failed.\n{ex2}", "Copy Raster", Qgis.Critical)
                 self.raster = None
-                QtWidgets.QMessageBox.warning(self, 'Error Importing raster', str(ex))
+                QtWidgets.QMessageBox.warning(self, "Error Importing raster", str(ex))
                 return
 
     @pyqtSlot(bool)
     def on_raster_copy_complete(self, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage('Raster Copy Complete.', f'Raster {self.txtName.text()} added to project', level=Qgis.Info, duration=5)
+            self.iface.messageBar().pushMessage("Raster Copy Complete.", f"Raster {self.txtName.text()} added to project", level=Qgis.Info, duration=5)
 
             try:
                 raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
@@ -220,48 +218,48 @@ class FrmRaster(QtWidgets.QDialog):
                 self.raster = insert_raster(self.qris_project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, metadata)
                 self.qris_project.add_db_item(self.raster)
                 if self.chkHillshade.isChecked() is True:
-                    hillshade_metadata = {'system': {'parent_raster': self.raster.name, 'parent_raster_id': self.raster.id}}
+                    hillshade_metadata = {"system": {"parent_raster": self.raster.name, "parent_raster_id": self.raster.id}}
                     hillshade_metadata.update(metadata)
                     self.hillshade = insert_raster(self.qris_project.project_file, self.hillshade_raster_name, self.hillshade_project_path, 6, self.txtDescription.toPlainText(), self.is_context, metadata=hillshade_metadata)
                     self.qris_project.add_db_item(self.hillshade)
-                    if 'system' not in metadata:
-                        metadata['system'] = dict()
-                    metadata['system']['hillsahde_raster'] = self.hillshade_project_path
-                    metadata['system']['hillshade_raster_id'] = self.hillshade.id
+                    if "system" not in metadata:
+                        metadata["system"] = dict()
+                    metadata["system"]["hillsahde_raster"] = self.hillshade_project_path
+                    metadata["system"]["hillshade_raster_id"] = self.hillshade.id
                     self.raster.update(self.qris_project.project_file, self.raster.name, self.raster.description, metadata=metadata)
 
             except Exception as ex:
-                if 'unique' in str(ex).lower():
-                    QtWidgets.QMessageBox.warning(self, 'Duplicate Name', "A raster with the name '{}' already exists. Please choose a unique name.".format(self.txtName.text()))
+                if "unique" in str(ex).lower():
+                    QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A raster with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
                     self.txtName.setFocus()
                 else:
-                    QtWidgets.QMessageBox.warning(self, 'Error Saving Raster', str(ex))
+                    QtWidgets.QMessageBox.warning(self, "Error Saving Raster", str(ex))
                 return
 
-            super(FrmRaster, self).accept()
+            super().accept()
         else:
-            self.iface.messageBar().pushMessage('Raster Copy Error', 'Review the QGIS log.', level=Qgis.Critical, duration=5)
+            self.iface.messageBar().pushMessage("Raster Copy Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
             try:
                 self.raster.delete(self.qris_project.project_file)
             except Exception as ex:
-                QgsMessageLog.logMessage(f'Error attempting to delete raster after the importing raster failed.: {ex}', 'QRiS_CopyRaster Task', Qgis.Critical)
+                QgsMessageLog.logMessage(f"Error attempting to delete raster after the importing raster failed.: {ex}", "QRiS_CopyRaster Task", Qgis.Critical)
             self.raster = None
 
             self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):
         project_name = self.txtName.text().strip()
-        clean_name = ''.join(e for e in project_name.replace(" ", "_") if e.isalnum() or e == "_")
-        clean_name_hillshade = f'{clean_name}_hillshade'
+        clean_name = "".join(e for e in project_name.replace(" ", "_") if e.isalnum() or e == "_")
+        clean_name_hillshade = f"{clean_name}_hillshade"
 
         if len(project_name) > 0:
             # _name, ext = os.path.splitext(self.txtSourcePath.text())
-            ext = '.tif' # We are only saving files as tif
+            ext = ".tif"  # We are only saving files as tif
             parent_folder = CONTEXT_PARENT_FOLDER if self.is_context else SURFACES_PARENT_FOLDER
             self.txtProjectPath.setText(parse_posix_path(os.path.join(parent_folder, self.qris_project.get_safe_file_name(clean_name, ext))))
             self.hillshade_project_path = parse_posix_path(os.path.join(parent_folder, self.qris_project.get_safe_file_name(clean_name_hillshade, ext)))
         else:
-            self.txtProjectPath.setText('')
+            self.txtProjectPath.setText("")
             self.hillshade_project_path = None
 
     def on_clear_date_clicked(self):
@@ -291,75 +289,75 @@ class FrmRaster(QtWidgets.QDialog):
         # Basic Properties Tab
         self.grid = QtWidgets.QGridLayout()
         self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Basic Properties')
+        self.tabs.addTab(self.tabProperties, "Basic Properties")
         self.tabProperties.setLayout(self.grid)
 
-        self.lblName = QtWidgets.QLabel('Name')
+        self.lblName = QtWidgets.QLabel("Name")
         self.grid.addWidget(self.lblName, 0, 0, 1, 1)
 
         self.txtName = QtWidgets.QLineEdit()
-        self.txtName.setToolTip('Name of the raster data')
+        self.txtName.setToolTip("Name of the raster data")
         self.txtName.setMaxLength(255)
         self.grid.addWidget(self.txtName, 0, 1, 1, 1)
 
-        self.lblSourcePath = QtWidgets.QLabel('Source Path')
+        self.lblSourcePath = QtWidgets.QLabel("Source Path")
         self.grid.addWidget(self.lblSourcePath, 1, 0, 1, 1)
 
         self.txtSourcePath = QtWidgets.QLineEdit()
         self.txtSourcePath.setReadOnly(True)
         self.grid.addWidget(self.txtSourcePath, 1, 1, 1, 1)
 
-        self.lblRasterType = QtWidgets.QLabel('Raster Type')
+        self.lblRasterType = QtWidgets.QLabel("Raster Type")
         self.grid.addWidget(self.lblRasterType, 2, 0, 1, 1)
 
         self.cboRasterType = QtWidgets.QComboBox()
-        self.cboRasterType.setToolTip('Type of raster data')
+        self.cboRasterType.setToolTip("Type of raster data")
         self.grid.addWidget(self.cboRasterType, 2, 1, 1, 1)
 
-        self.lblRasterSource = QtWidgets.QLabel('Raster Source')
+        self.lblRasterSource = QtWidgets.QLabel("Raster Source")
         self.grid.addWidget(self.lblRasterSource, 3, 0, 1, 1)
 
         self.cboRasterSource = QtWidgets.QComboBox()
-        self.cboRasterSource.setToolTip('Source of the raster data. Use the dropdown to select from existing sources or type a new source.')
+        self.cboRasterSource.setToolTip("Source of the raster data. Use the dropdown to select from existing sources or type a new source.")
         self.cboRasterSource.setEditable(True)
         self.grid.addWidget(self.cboRasterSource, 3, 1, 1, 1)
 
-        self.lblProjectPath = QtWidgets.QLabel('Project Path')
+        self.lblProjectPath = QtWidgets.QLabel("Project Path")
         self.grid.addWidget(self.lblProjectPath, 4, 0, 1, 1)
 
         self.txtProjectPath = QtWidgets.QLineEdit()
         self.txtProjectPath.setReadOnly(True)
         self.grid.addWidget(self.txtProjectPath, 4, 1, 1, 1)
 
-        self.lblMask = QtWidgets.QLabel('Clip to AOI')
+        self.lblMask = QtWidgets.QLabel("Clip to AOI")
         self.grid.addWidget(self.lblMask, 5, 0, 1, 1)
 
         self.cboMask = QtWidgets.QComboBox()
-        self.cboMask.setToolTip('Optionally clip the raster to the selected area of interest')
+        self.cboMask.setToolTip("Optionally clip the raster to the selected area of interest")
         self.grid.addWidget(self.cboMask, 5, 1, 1, 1)
 
-        self.chkHillshade = QtWidgets.QCheckBox('Create Hillshade')
-        self.chkHillshade.setToolTip('Create a hillshade raster from the DEM')
+        self.chkHillshade = QtWidgets.QCheckBox("Create Hillshade")
+        self.chkHillshade.setToolTip("Create a hillshade raster from the DEM")
         self.chkHillshade.setChecked(False)
         self.chkHillshade.setEnabled(False)
         self.grid.addWidget(self.chkHillshade, 6, 1, 1, 1)
 
-        self.lblDate = QtWidgets.QLabel('Aquisition Date')
+        self.lblDate = QtWidgets.QLabel("Aquisition Date")
         self.grid.addWidget(self.lblDate, 7, 0, 1, 1)
 
         self.horiz_date = QtWidgets.QHBoxLayout()
         self.grid.addLayout(self.horiz_date, 7, 1, 1, 2)
 
         self.txtDate = ClickableDateEdit()
-        self.txtDate.setToolTip('Date the raster data was captured')
+        self.txtDate.setToolTip("Date the raster data was captured")
         self.txtDate.setMinimumDate(QtCore.QDate(1900, 1, 1))
         self.txtDate.setSpecialValueText("No Date")
         self.txtDate.setDate(self.txtDate.minimumDate())
         self.txtDate.setCalendarPopup(True)
         self.horiz_date.addWidget(self.txtDate)
 
-        self.btn_clear_date = QtWidgets.QPushButton('Clear')
-        self.btn_clear_date.setToolTip('Clear the acquisition date')
+        self.btn_clear_date = QtWidgets.QPushButton("Clear")
+        self.btn_clear_date.setToolTip("Clear the acquisition date")
         self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
         # make button size pushed to the right
         self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))
@@ -369,21 +367,22 @@ class FrmRaster(QtWidgets.QDialog):
 
         # Description Tab
         self.tabDescription = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabDescription, 'Description')
+        self.tabs.addTab(self.tabDescription, "Description")
         self.tabDescription.setLayout(QtWidgets.QVBoxLayout())
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
         self.tabDescription.layout().addWidget(self.txtDescription)
 
         # Metadata Tab
-        self.tabs.addTab(self.metadata_widget, 'Metadata')
+        self.tabs.addTab(self.metadata_widget, "Metadata")
 
-        self.chkAddToMap = QtWidgets.QCheckBox('Add to Map')
+        self.chkAddToMap = QtWidgets.QCheckBox("Add to Map")
         self.chkAddToMap.setChecked(True)
         self.vert.addWidget(self.chkAddToMap)
 
-        help_page = 'context/raster-layers' if self.is_context else 'surfaces'
+        help_page = "context/raster-layers" if self.is_context else "surfaces"
         self.vert.addLayout(add_standard_form_buttons(self, help_page))
+
 
 class ClickableDateEdit(QtWidgets.QDateEdit):
     def focusInEvent(self, event):

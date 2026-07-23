@@ -1,56 +1,52 @@
 import sqlite3
 
+from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
-
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import Qt
 
-from ..model.project import Project
+from ..model.analysis import Analysis
 from ..model.db_item import DBItemModel
 from ..model.event import DCE_EVENT_TYPE_ID
-from ..model.analysis import Analysis
 from ..model.metric import Metric
+from ..model.project import Project
 from ..model.sample_frame import get_sample_frame_ids, get_sample_frame_sequence
 
-class FrmAnalysisExplorer(QtWidgets.QDialog):
 
+class FrmAnalysisExplorer(QtWidgets.QDialog):
     def __init__(self, parent=None, qris_project: Project = None, analysis_id=None):
-        super(FrmAnalysisExplorer, self).__init__(parent)
+        super().__init__(parent)
 
         self.qris_project = qris_project
 
-        self.widgetAnalysisExplorer = QWidgetAnalysisExplorer(self, self.qris_project, analysis_id)
+        self.widgetAnalysisExplorer = QWidgetAnalysisExplorer(parent=self, qris_project=self.qris_project, analysis_id=analysis_id)
 
         self.setupUi(self)
 
-        self.setWindowTitle('Analysis Explorer')
-
+        self.setWindowTitle("Analysis Explorer")
 
     def setupUi(self, Dialog):
 
         self.vlayout = QtWidgets.QVBoxLayout()
         self.setLayout(self.vlayout)
-        
+
         self.grid = QtWidgets.QGridLayout()
         self.vlayout.addLayout(self.grid)
 
         self.vlayout.addWidget(self.widgetAnalysisExplorer)
 
 
-
 class QWidgetAnalysisExplorer(QtWidgets.QWidget):
-
     def __init__(self, parent=None, qris_project: Project = None, analysis_id=None):
-        super(QWidgetAnalysisExplorer, self).__init__(parent)
+        super().__init__(parent)
 
         self.qris_project = qris_project
         self.setupUi()
 
-        self.setWindowTitle('Analysis Explorer')
+        self.setWindowTitle("Analysis Explorer")
 
-        self.cmbAnalysisType.addItems(['Metric over Time', 'Metric over Riverscape'])
+        self.cmbAnalysisType.addItems(["Metric over Time", "Metric over Riverscape"])
         self.cmbAnalysisType.currentIndexChanged.connect(self.on_analysis_type_changed)
         self.cmbAnalysisType.setEnabled(True)
 
@@ -66,7 +62,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
                     self.cmbAnalysis.setCurrentIndex(i)
                     index = i
                     break
-        
+
         self.on_analysis_changed(index)
         self.metric_over_time()
 
@@ -94,7 +90,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbEvent.setModel(events)
 
     def metric_over_time(self):
-    
+
         self.cmbEvent.setEnabled(False)
         self.cmbSampleFrameFeature.setEnabled(True)
         self.cmbMetric.setEnabled(True)
@@ -106,9 +102,9 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
             self.plot_metric_over_time(self.cmbMetric.currentData(Qt.UserRole).id)
 
     def on_sample_frame_feature_changed(self, index):
-        
+
         metric = self.cmbMetric.currentData(Qt.UserRole)
-        self.plot_metric_over_time(metric.id)  
+        self.plot_metric_over_time(metric.id)
 
     def on_metric_changed(self, index):
 
@@ -122,7 +118,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         metric = self.cmbMetric.currentData(Qt.UserRole)
         self.plot_metric_over_riverscape(metric.id)
-    
+
     def metric_over_riverscape(self):
 
         self.cmbEvent.setEnabled(True)
@@ -140,9 +136,8 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         with sqlite3.connect(gpkg) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM metric_values WHERE analysis_id = ? AND metric_id = ?', (analysis_id, metric_id))
+            cursor.execute("SELECT * FROM metric_values WHERE analysis_id = ? AND metric_id = ?", (analysis_id, metric_id))
             return cursor.fetchall()
-        
 
     def reload_metrics(self):
 
@@ -156,16 +151,16 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         with sqlite3.connect(gpkg) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM events')
+            cursor.execute("SELECT * FROM events")
             events = cursor.fetchall()
 
             event_dates = {}
             for event in events:
-                year = event['start_year'] if event['start_year'] is not None else ''
-                month = event['start_month'] if event['start_month'] is not None else ''
-                day = event['start_day'] if event['start_day'] is not None else ''
-                date = '{}-{}-{}'.format(year, month, day)
-                event_dates[event['id']] = date
+                year = event["start_year"] if event["start_year"] is not None else ""
+                month = event["start_month"] if event["start_month"] is not None else ""
+                day = event["start_day"] if event["start_day"] is not None else ""
+                date = f"{year}-{month}-{day}"
+                event_dates[event["id"]] = date
 
         return event_dates
 
@@ -181,28 +176,27 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         event_dates = self.get_event_dates()
 
         # This is a bar chart with time on the y axis and metric values on the x axis
-        #y = [event_dates[m['event_id']] for m in metric_values]
+        # y = [event_dates[m['event_id']] for m in metric_values]
         y = []
         x = []
         for event_id, date in event_dates.items():
             for m in metric_values:
-                if m['event_id'] == event_id:
-                    if m['sample_frame_feature_id'] == sample_frame_feature_id:
+                if m["event_id"] == event_id:
+                    if m["sample_frame_feature_id"] == sample_frame_feature_id:
                         x.append(date)
-                        y.append(m['automated_value'] if m['is_manual'] == 0 else m['manual_value'])
-            
+                        y.append(m["automated_value"] if m["is_manual"] == 0 else m["manual_value"])
+
         ax: plt = self.plot.figure.add_subplot(111)
         ax.bar(x, y)
         ax.set_ylabel(metric_name)
-        ax.set_xlabel('Time')
-        ax.set_title(f'{metric_name} Over Time')
-        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right', fontsize='x-small')
+        ax.set_xlabel("Time")
+        ax.set_title(f"{metric_name} Over Time")
+        plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment="right", fontsize="x-small")
         self.plot.draw()
 
     def plot_metric_over_riverscape(self, metric_id):
 
         analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
-
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
@@ -219,11 +213,11 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         for sample_frame_feature in sample_frame_features:
             for m in metric_values:
-                if m['sample_frame_feature_id'] == sample_frame_feature.id:
-                    if m['event_id'] != event_id:
+                if m["sample_frame_feature_id"] == sample_frame_feature.id:
+                    if m["event_id"] != event_id:
                         continue
                     x.append(sample_frame_feature.id)
-                    y.append(m['automated_value'] if m['is_manual'] == 0 else m['manual_value'])
+                    y.append(m["automated_value"] if m["is_manual"] == 0 else m["manual_value"])
                     x_label.append(sample_frame_feature.name if sample_frame_feature.name is not None else sample_frame_feature.id)
 
         use_topology = True
@@ -241,7 +235,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         if not all(item in x for item in topology if item is not None):
             use_topology = False
 
-        if use_topology: 
+        if use_topology:
             # Create a dictionary mapping x to the next x (topology)
             topology_dict = {x: topo for x, topo in zip(x, topology)}
 
@@ -267,68 +261,69 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
         ax: plt = self.plot.figure.add_subplot(111)
         ax.plot(ordered_y)
-        ax.set_xlabel('Sample Frame Feature')
+        ax.set_xlabel("Sample Frame Feature")
         ax.set_xticks(range(len(ordered_x_label)))
-        ax.set_xticklabels(ordered_x_label, rotation=45, ha='right')
-        ax.set_ylabel('Metric Value')
-        ax.set_title(f'Metric Across Riverscape for {event_date}')
+        ax.set_xticklabels(ordered_x_label, rotation=45, ha="right")
+        ax.set_ylabel("Metric Value")
+        ax.set_title(f"Metric Across Riverscape for {event_date}")
         self.plot.draw()
 
         return
 
     def setupUi(self):
-        
+
         self.vlayout = QtWidgets.QVBoxLayout()
         self.setLayout(self.vlayout)
-        
+
         self.grid = QtWidgets.QGridLayout()
         self.vlayout.addLayout(self.grid)
 
-        self.lblAnalysis = QtWidgets.QLabel('Analysis')
+        self.lblAnalysis = QtWidgets.QLabel("Analysis")
         self.grid.addWidget(self.lblAnalysis, 0, 0)
 
         self.cmbAnalysis = QtWidgets.QComboBox()
         self.cmbAnalysis.setEnabled(False)
         self.grid.addWidget(self.cmbAnalysis, 0, 1)
 
-        self.lblAnalysisType = QtWidgets.QLabel('Analysis Type')
+        self.lblAnalysisType = QtWidgets.QLabel("Analysis Type")
         self.grid.addWidget(self.lblAnalysisType, 1, 0)
 
         self.cmbAnalysisType = QtWidgets.QComboBox()
         self.cmbAnalysisType.setEnabled(False)
-        self.cmbAnalysisType.setToolTip('Select the type of analysis to perform, either a sample frame metric over time or a metric across a riverscape')
+        self.cmbAnalysisType.setToolTip("Select the type of analysis to perform, either a sample frame metric over time or a metric across a riverscape")
         self.grid.addWidget(self.cmbAnalysisType, 1, 1)
 
-        self.lblMetric = QtWidgets.QLabel('Metric')
+        self.lblMetric = QtWidgets.QLabel("Metric")
         self.grid.addWidget(self.lblMetric, 2, 0)
 
         self.cmbMetric = QtWidgets.QComboBox()
         self.cmbMetric.setEnabled(False)
-        self.cmbMetric.setToolTip('Select the metric to display')
+        self.cmbMetric.setToolTip("Select the metric to display")
         self.grid.addWidget(self.cmbMetric, 2, 1)
 
-        self.lblEvent = QtWidgets.QLabel('Event')
+        self.lblEvent = QtWidgets.QLabel("Event")
         self.grid.addWidget(self.lblEvent, 3, 0)
 
         self.cmbEvent = QtWidgets.QComboBox()
         self.cmbEvent.setEnabled(False)
-        self.cmbEvent.setToolTip('Select the Data Capture Event to display')
+        self.cmbEvent.setToolTip("Select the Data Capture Event to display")
         self.grid.addWidget(self.cmbEvent, 3, 1)
 
-        self.lblSampleFrameFeature = QtWidgets.QLabel('Sample Frame Feature')
+        self.lblSampleFrameFeature = QtWidgets.QLabel("Sample Frame Feature")
         self.grid.addWidget(self.lblSampleFrameFeature, 5, 0)
 
         self.cmbSampleFrameFeature = QtWidgets.QComboBox()
         self.cmbSampleFrameFeature.setEnabled(False)
-        self.cmbSampleFrameFeature.setToolTip('Select the sample frame feature to display')
+        self.cmbSampleFrameFeature.setToolTip("Select the sample frame feature to display")
         self.grid.addWidget(self.cmbSampleFrameFeature, 5, 1)
 
         self.plot = FigureCanvas(Figure())
         self.vlayout.addWidget(self.plot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     w = FrmAnalysisExplorer()
     w.show()

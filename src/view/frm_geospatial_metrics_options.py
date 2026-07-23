@@ -1,12 +1,11 @@
 from qgis.PyQt import QtWidgets
 
-from ..QRiS.units import get_areas, get_lengths
 from ..model.project import Project
+from ..QRiS.units import get_areas, get_lengths
 from .utilities import add_standard_form_buttons
 
 
 class FrmOptions(QtWidgets.QDialog):
-
     def __init__(self, parent, project: Project):
         super().__init__(parent)
         self.setupUi()
@@ -42,17 +41,17 @@ class FrmOptions(QtWidgets.QDialog):
         self.vert.addLayout(self.grid)
 
         self.lblLength = QtWidgets.QLabel()
-        self.lblLength.setText('Length')
+        self.lblLength.setText("Length")
         self.grid.addWidget(self.lblLength, 0, 0, 1, 1)
 
         self.cboLength = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboLength, 0, 1, 1, 1)
 
         self.lblArea = QtWidgets.QLabel()
-        self.lblArea.setText('Area')
+        self.lblArea.setText("Area")
         self.grid.addWidget(self.lblArea, 1, 0, 1, 1)
 
         self.cboArea = QtWidgets.QComboBox()
         self.grid.addWidget(self.cboArea, 1, 1, 1, 1)
 
-        self.vert.addLayout(add_standard_form_buttons(self, 'zonal-statistics'))
+        self.vert.addLayout(add_standard_form_buttons(self, "zonal-statistics"))

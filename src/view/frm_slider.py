@@ -1,21 +1,18 @@
+from qgis.core import QgsRasterBandStats
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal
 
-from qgis.core import QgsRasterBandStats
-
-from ..model.scratch_vector import ScratchVector
-from ..model.raster import Raster, RASTER_SLIDER_MACHINE_CODE
 from ..model.project import Project
-
+from ..model.raster import RASTER_SLIDER_MACHINE_CODE, Raster
+from ..model.scratch_vector import ScratchVector
+from ..QRiS.qris_map_manager import QRisMapManager
 from .frm_layer_picker import FrmLayerPicker
 from .frm_slider_scratch_vector import FrmSliderScratchVector
-from .widgets.double_slider import DoubleSlider
 from .utilities import add_help_button
-from ..QRiS.qris_map_manager import QRisMapManager
+from .widgets.double_slider import DoubleSlider
 
 
 class FrmSlider(QtWidgets.QDockWidget):
-
     export_complete = pyqtSignal(ScratchVector or None, bool)
 
     def __init__(self, parent, project: Project, map_manager: QRisMapManager):
@@ -66,7 +63,7 @@ class FrmSlider(QtWidgets.QDockWidget):
 
     def cmdSelect_click(self):
         rasters = list(self.project.rasters.values())
-        frm = FrmLayerPicker(self, 'Select raster', rasters)
+        frm = FrmLayerPicker(self, "Select raster", rasters)
         result = frm.exec_()
         if result is not None and result != 0:
             self.configure_raster(frm.layer)
@@ -93,7 +90,7 @@ class FrmSlider(QtWidgets.QDockWidget):
 
     def setupUi(self):
 
-        self.setWindowTitle('Raster Slider')
+        self.setWindowTitle("Raster Slider")
 
         # Top level layout must include parent. Widgets added to this layout do not need parent.
         self.dockWidgetContents = QtWidgets.QWidget(self)
@@ -102,7 +99,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.grid = QtWidgets.QGridLayout()
         self.vert.addLayout(self.grid)
 
-        self.lblSurface = QtWidgets.QLabel('Surface')
+        self.lblSurface = QtWidgets.QLabel("Surface")
         self.grid.addWidget(self.lblSurface, 0, 0, 1, 1)
 
         self.horiz = QtWidgets.QHBoxLayout()
@@ -112,25 +109,25 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.txtSurface.setReadOnly(True)
         self.horiz.addWidget(self.txtSurface)
 
-        self.cmdSurface = QtWidgets.QPushButton('Select')
-        self.cmdSurface.setToolTip('Select a raster layer')
+        self.cmdSurface = QtWidgets.QPushButton("Select")
+        self.cmdSurface.setToolTip("Select a raster layer")
         self.cmdSurface.clicked.connect(self.cmdSelect_click)
         self.horiz.addWidget(self.cmdSurface)
 
-        self.lblSliderType = QtWidgets.QLabel('Threshold')
-        self.lblSliderType.setToolTip('Select whether the highlighted area will be above or below the threshold value')
+        self.lblSliderType = QtWidgets.QLabel("Threshold")
+        self.lblSliderType.setToolTip("Select whether the highlighted area will be above or below the threshold value")
         self.grid.addWidget(self.lblSliderType, 1, 0, 1, 1)
 
         self.horizOptions = QtWidgets.QHBoxLayout()
         self.grid.addLayout(self.horizOptions, 1, 1, 1, 1)
 
-        self.optAbove = QtWidgets.QRadioButton('Above Value')
+        self.optAbove = QtWidgets.QRadioButton("Above Value")
         self.horizOptions.addWidget(self.optAbove)
-        self.optBelow = QtWidgets.QRadioButton('Below Value')
+        self.optBelow = QtWidgets.QRadioButton("Below Value")
         self.optBelow.setChecked(True)
         self.horizOptions.addWidget(self.optBelow)
 
-        self.lblElevation = QtWidgets.QLabel('Surface Value')
+        self.lblElevation = QtWidgets.QLabel("Surface Value")
         self.grid.addWidget(self.lblElevation, 2, 0, 1, 1)
 
         self.valElevation = QtWidgets.QDoubleSpinBox()
@@ -146,8 +143,8 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.slider.doubleValueChanged.connect(self.sliderElevationChange)
         self.grid.addWidget(self.slider, 3, 1, 1, 1)
 
-        self.lblIncrement = QtWidgets.QLabel('Increment')
-        self.lblIncrement.setToolTip('The increment value for the slider')
+        self.lblIncrement = QtWidgets.QLabel("Increment")
+        self.lblIncrement.setToolTip("The increment value for the slider")
         self.grid.addWidget(self.lblIncrement, 4, 0, 1, 1)
 
         self.valIncrement = QtWidgets.QDoubleSpinBox()
@@ -160,12 +157,12 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
-        self.gridButtons.addWidget(add_help_button(self, 'inputs/surfaces/#raster-slider-tool'), 0, 0, 1, 1)
+        self.gridButtons.addWidget(add_help_button(self, "inputs/surfaces/#raster-slider-tool"), 0, 0, 1, 1)
 
         self.gridButtons.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
 
-        self.cmdExport = QtWidgets.QPushButton('Export Polygon')
-        self.cmdExport.setToolTip('Export the highlighted area as a polygon')
+        self.cmdExport = QtWidgets.QPushButton("Export Polygon")
+        self.cmdExport.setToolTip("Export the highlighted area as a polygon")
         self.cmdExport.clicked.connect(self.cmdExport_click)
         self.gridButtons.addWidget(self.cmdExport, 0, 2, 1, 1)
 

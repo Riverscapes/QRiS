@@ -1,41 +1,39 @@
-import os
 import json
+import os
+import re
 import shutil
 import sqlite3
-import re
+from typing import Optional
 
 from osgeo import ogr
-
-from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.core import Qgis, QgsMessageLog
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
+from ..lib.rs_project import RSProject
+from ..model.analysis import Analysis
+from ..model.attachment import Attachment
+from ..model.cross_sections import CrossSections
 from ..model.event import Event
 from ..model.planning_container import PlanningContainer
-from ..model.analysis import Analysis
-from ..model.profile import Profile
 from ..model.pour_point import PourPoint
-from ..model.cross_sections import CrossSections
+from ..model.profile import Profile
 from ..model.project import Project as QRiSProject
 from ..model.raster import Raster
-from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.sample_frame import SampleFrame
-from ..model.attachment import Attachment
-from ..lib.rs_project import RSProject
-
+from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from .utilities import add_standard_form_buttons, message_box
 
 # Puting these here for now to avoid circular imports - source: qris_toolbar.py
-ORGANIZATION = 'Riverscapes'
-APPNAME = 'QRiS'
+ORGANIZATION = "Riverscapes"
+APPNAME = "QRiS"
 
-PROJECT_MACHINE_NAME = 'RiverscapesStudio'
-DEFAULT_EXPORT_PATH = 'default_export_path'
+PROJECT_MACHINE_NAME = "RiverscapesStudio"
+DEFAULT_EXPORT_PATH = "default_export_path"
 
 
 class FrmExportProject(QtWidgets.QDialog):
-
-    def __init__(self, parent, project: QRiSProject, outpath: str = None):
+    def __init__(self, parent, project: QRiSProject, outpath: Optional[str] = None):
         super().__init__(parent)
 
         self.qris_project = project
@@ -51,7 +49,7 @@ class FrmExportProject(QtWidgets.QDialog):
             self.base_folder = outpath
         else:
             settings = QSettings(ORGANIZATION, APPNAME)
-            self.base_folder = settings.value(DEFAULT_EXPORT_PATH, '').replace("/", "\\")
+            self.base_folder = settings.value(DEFAULT_EXPORT_PATH, "").replace("/", "\\")
         if self.base_folder == "":
             # use the parent of the project folder
             self.base_folder = os.path.dirname(os.path.dirname(self.qris_project.project_file))
@@ -217,10 +215,10 @@ class FrmExportProject(QtWidgets.QDialog):
         name = ""
 
         if self.chk_qris_export_folder.isChecked():
-            name = re.sub(r'[ .,:/\\?!\'"<>\|\*\(\)\[\]\{\}]', '_', self.txt_rs_name.text())
+            name = re.sub(r'[ .,:/\\?!\'"<>\|\*\(\)\[\]\{\}]', "_", self.txt_rs_name.text())
 
         outpath = os.path.join(self.base_folder, name)
-        
+
         if self.chk_qris_export_folder.isChecked():
             if os.path.exists(outpath):
                 outpath = outpath + "_export"
@@ -265,12 +263,10 @@ class FrmExportProject(QtWidgets.QDialog):
             os.makedirs(self.txt_outpath.text())
 
         # copy the geopackage layers to the new project folder
-        out_name = 'qris.gpkg'  # os.path.split(self.qris_project.project_file)[1]
+        out_name = "qris.gpkg"  # os.path.split(self.qris_project.project_file)[1]
         out_geopackage = os.path.abspath(os.path.join(self.txt_outpath.text(), out_name).replace("\\", "/"))
 
         shutil.copy(self.qris_project.project_file, out_geopackage)
-
-        date_created = QtCore.QDateTime.currentDateTime()
 
         keep_layers: dict = {}  # {layer_name: {id_field: id_field_name, id_values: [id_values]}}
 
@@ -286,9 +282,9 @@ class FrmExportProject(QtWidgets.QDialog):
                     continue
                 raster: Raster = raster_item.data(QtCore.Qt.UserRole)
 
-                if 'rasters' not in keep_layers:
-                    keep_layers['rasters'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['rasters']['id_values'].append(str(raster.id))
+                if "rasters" not in keep_layers:
+                    keep_layers["rasters"] = {"id_field": "id", "id_values": []}
+                keep_layers["rasters"]["id_values"].append(str(raster.id))
 
                 src_raster_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path).replace("\\", "/"))
                 out_raster_path = os.path.abspath(os.path.join(self.txt_outpath.text(), raster.path).replace("\\", "/"))
@@ -307,12 +303,12 @@ class FrmExportProject(QtWidgets.QDialog):
                 if not valley_bottom.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                     continue
 
-                if 'sample_frame_features' not in keep_layers:
-                    keep_layers['sample_frame_features'] = {'id_field': 'sample_frame_id', 'id_values': []}
-                keep_layers['sample_frame_features']['id_values'].append(str(valley_bottom.id))
-                if 'sample_frames' not in keep_layers:
-                    keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['sample_frames']['id_values'].append(str(valley_bottom.id))
+                if "sample_frame_features" not in keep_layers:
+                    keep_layers["sample_frame_features"] = {"id_field": "sample_frame_id", "id_values": []}
+                keep_layers["sample_frame_features"]["id_values"].append(str(valley_bottom.id))
+                if "sample_frames" not in keep_layers:
+                    keep_layers["sample_frames"] = {"id_field": "id", "id_values": []}
+                keep_layers["sample_frames"]["id_values"].append(str(valley_bottom.id))
 
         # AOIs
         aoi_node = self.find_child_node(inputs_node, "AOIs")
@@ -326,12 +322,12 @@ class FrmExportProject(QtWidgets.QDialog):
                 if not aoi.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                     continue
 
-                if 'sample_frame_features' not in keep_layers:
-                    keep_layers['sample_frame_features'] = {'id_field': 'sample_frame_id', 'id_values': []}
-                keep_layers['sample_frame_features']['id_values'].append(str(aoi.id))
-                if 'sample_frames' not in keep_layers:
-                    keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['sample_frames']['id_values'].append(str(aoi.id))
+                if "sample_frame_features" not in keep_layers:
+                    keep_layers["sample_frame_features"] = {"id_field": "sample_frame_id", "id_values": []}
+                keep_layers["sample_frame_features"]["id_values"].append(str(aoi.id))
+                if "sample_frames" not in keep_layers:
+                    keep_layers["sample_frames"] = {"id_field": "id", "id_values": []}
+                keep_layers["sample_frames"]["id_values"].append(str(aoi.id))
 
         # Sample Frames
         sample_frame_node = self.find_child_node(inputs_node, "Sample Frames")
@@ -343,12 +339,12 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 sample_frame: SampleFrame = sample_frame_item.data(QtCore.Qt.UserRole)
 
-                if 'sample_frame_features' not in keep_layers:
-                    keep_layers['sample_frame_features'] = {'id_field': 'sample_frame_id', 'id_values': []}
-                keep_layers['sample_frame_features']['id_values'].append(str(sample_frame.id))
-                if 'sample_frames' not in keep_layers:
-                    keep_layers['sample_frames'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['sample_frames']['id_values'].append(str(sample_frame.id))
+                if "sample_frame_features" not in keep_layers:
+                    keep_layers["sample_frame_features"] = {"id_field": "sample_frame_id", "id_values": []}
+                keep_layers["sample_frame_features"]["id_values"].append(str(sample_frame.id))
+                if "sample_frames" not in keep_layers:
+                    keep_layers["sample_frames"] = {"id_field": "id", "id_values": []}
+                keep_layers["sample_frames"]["id_values"].append(str(sample_frame.id))
 
         # Profiles
         profile_node = self.find_child_node(inputs_node, "Profiles")
@@ -358,14 +354,14 @@ class FrmExportProject(QtWidgets.QDialog):
                 if profile_item.checkState() == QtCore.Qt.Unchecked:
                     continue
                 profile: Profile = profile_item.data(QtCore.Qt.UserRole)
-                profile_fc = 'profile_centerlines' if profile.profile_type_id == 2 else 'profile_features'
+                profile_fc = "profile_centerlines" if profile.profile_type_id == 2 else "profile_features"
 
                 if profile_fc not in keep_layers:
-                    keep_layers[profile_fc] = {'id_field': 'profile_id', 'id_values': []}
-                keep_layers[profile_fc]['id_values'].append(str(profile.id))
-                if 'profiles' not in keep_layers:
-                    keep_layers['profiles'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['profiles']['id_values'].append(str(profile.id))
+                    keep_layers[profile_fc] = {"id_field": "profile_id", "id_values": []}
+                keep_layers[profile_fc]["id_values"].append(str(profile.id))
+                if "profiles" not in keep_layers:
+                    keep_layers["profiles"] = {"id_field": "id", "id_values": []}
+                keep_layers["profiles"]["id_values"].append(str(profile.id))
 
         # Cross Sections
         xsection_node = self.find_child_node(inputs_node, "Cross Sections")
@@ -376,17 +372,16 @@ class FrmExportProject(QtWidgets.QDialog):
                     continue
                 xsection: CrossSections = xsection_item.data(QtCore.Qt.UserRole)
 
-                if 'cross_section_features' not in keep_layers:
-                    keep_layers['cross_section_features'] = {'id_field': 'cross_section_id', 'id_values': []}
-                keep_layers['cross_section_features']['id_values'].append(str(xsection.id))
-                if 'cross_sections' not in keep_layers:
-                    keep_layers['cross_sections'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['cross_sections']['id_values'].append(str(xsection.id))
+                if "cross_section_features" not in keep_layers:
+                    keep_layers["cross_section_features"] = {"id_field": "cross_section_id", "id_values": []}
+                keep_layers["cross_section_features"]["id_values"].append(str(xsection.id))
+                if "cross_sections" not in keep_layers:
+                    keep_layers["cross_sections"] = {"id_field": "id", "id_values": []}
+                keep_layers["cross_sections"]["id_values"].append(str(xsection.id))
 
         context_node = self.find_child_node(inputs_node, "Context")
 
         # need to prepare the Watershed catchments (pour points)
-        pour_point_gpkgs = []
         pour_point_node = self.find_child_node(context_node, "Watershed Catchments")
         if pour_point_node:
             for i in range(pour_point_node.rowCount()):
@@ -395,13 +390,13 @@ class FrmExportProject(QtWidgets.QDialog):
                     continue
                 pour_point: PourPoint = pour_point_item.data(QtCore.Qt.UserRole)
 
-                if 'pour_points' not in keep_layers:
-                    keep_layers['pour_points'] = {'id_field': 'fid', 'id_values': []}
-                keep_layers['pour_points']['id_values'].append(str(pour_point.id))
+                if "pour_points" not in keep_layers:
+                    keep_layers["pour_points"] = {"id_field": "fid", "id_values": []}
+                keep_layers["pour_points"]["id_values"].append(str(pour_point.id))
 
-                if 'catchments' not in keep_layers:
-                    keep_layers['catchments'] = {'id_field': 'pour_point_id', 'id_values': []}
-                keep_layers['catchments']['id_values'].append(str(pour_point.id))
+                if "catchments" not in keep_layers:
+                    keep_layers["catchments"] = {"id_field": "pour_point_id", "id_values": []}
+                keep_layers["catchments"]["id_values"].append(str(pour_point.id))
 
         # context vectors
         keep_context_layers = []
@@ -416,9 +411,9 @@ class FrmExportProject(QtWidgets.QDialog):
             if isinstance(context, Raster):
                 raster: Raster = context_item.data(QtCore.Qt.UserRole)
 
-                if 'rasters' not in keep_layers:
-                    keep_layers['rasters'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['rasters']['id_values'].append(str(raster.id))
+                if "rasters" not in keep_layers:
+                    keep_layers["rasters"] = {"id_field": "id", "id_values": []}
+                keep_layers["rasters"]["id_values"].append(str(raster.id))
 
                 raster_path = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), raster.path).replace("\\", "/"))
                 out_raster_path = os.path.abspath(os.path.join(self.txt_outpath.text(), raster.path).replace("\\", "/"))
@@ -435,9 +430,9 @@ class FrmExportProject(QtWidgets.QDialog):
                     geom_type = curs.fetchone()[0]
                 keep_context_layers.append(context_vector.fc_name)
 
-                if 'scratch_vectors' not in keep_layers:
-                    keep_layers['scratch_vectors'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['scratch_vectors']['id_values'].append(str(context_vector.id))
+                if "scratch_vectors" not in keep_layers:
+                    keep_layers["scratch_vectors"] = {"id_field": "id", "id_values": []}
+                keep_layers["scratch_vectors"]["id_values"].append(str(context_vector.id))
 
         # out_gpkgs = [inputs_gpkg]
         if len(keep_context_layers) > 0:
@@ -448,7 +443,7 @@ class FrmExportProject(QtWidgets.QDialog):
             src_ds = ogr.Open(scratch_gpkg_path(self.qris_project.project_file), 0)
 
             # create a new GeoPackage
-            dst_ds = ogr.GetDriverByName('GPKG').CreateDataSource(context_gpkg)
+            dst_ds = ogr.GetDriverByName("GPKG").CreateDataSource(context_gpkg)
 
             # iterate over the layers in the source GeoPackage
             for i in range(src_ds.GetLayerCount()):
@@ -483,8 +478,8 @@ class FrmExportProject(QtWidgets.QDialog):
             rows = curs.fetchall()
             for row in rows:
                 metadata = json.loads(row[0])
-                if 'Photo Path' in metadata:
-                    all_photo_metadata[metadata['Photo Path']] = metadata
+                if "Photo Path" in metadata:
+                    all_photo_metadata[metadata["Photo Path"]] = metadata
 
         # find the Events node in the tree
         events_nodes = self.export_layers_model.findItems("Data Capture Events")
@@ -498,20 +493,19 @@ class FrmExportProject(QtWidgets.QDialog):
                 # if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
                 #     continue
 
-
-                if 'events' not in keep_layers:
-                    keep_layers['events'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['events']['id_values'].append(str(event.id))
-                if 'event_layers' not in keep_layers:
-                    keep_layers['event_layers'] = {'id_field': 'event_id', 'id_values': []}
-                keep_layers['event_layers']['id_values'].append(str(event.id))
-                if 'event_rasters' not in keep_layers:
-                    keep_layers['event_rasters'] = {'id_field': 'event_id', 'id_values': []}
-                keep_layers['event_rasters']['id_values'].append(str(event.id))
+                if "events" not in keep_layers:
+                    keep_layers["events"] = {"id_field": "id", "id_values": []}
+                keep_layers["events"]["id_values"].append(str(event.id))
+                if "event_layers" not in keep_layers:
+                    keep_layers["event_layers"] = {"id_field": "event_id", "id_values": []}
+                keep_layers["event_layers"]["id_values"].append(str(event.id))
+                if "event_rasters" not in keep_layers:
+                    keep_layers["event_rasters"] = {"id_field": "event_id", "id_values": []}
+                keep_layers["event_rasters"]["id_values"].append(str(event.id))
 
                 # Search for photos for the dce in the photos folder
-                source_photos_dir = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), "photos", f'dce_{str(event.id).zfill(3)}').replace("\\", "/"))
-                photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f'dce_{str(event.id).zfill(3)}').replace("\\", "/"))
+                source_photos_dir = os.path.abspath(os.path.join(os.path.dirname(self.qris_project.project_file), "photos", f"dce_{str(event.id).zfill(3)}").replace("\\", "/"))
+                photo_dce_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "photos", f"dce_{str(event.id).zfill(3)}").replace("\\", "/"))
                 if os.path.exists(source_photos_dir):
                     shutil.copytree(source_photos_dir, photo_dce_folder)
 
@@ -521,17 +515,17 @@ class FrmExportProject(QtWidgets.QDialog):
                         continue
                     geom_type = layer.layer.geom_type
                     if geom_type == "Point":
-                        fc_name = 'dce_points'
+                        fc_name = "dce_points"
                     elif geom_type == "Linestring":
-                        fc_name = 'dce_lines'
+                        fc_name = "dce_lines"
                     elif geom_type == "Polygon":
-                        fc_name = 'dce_polygons'
+                        fc_name = "dce_polygons"
                     else:
                         continue
 
                     if fc_name not in keep_layers:
-                        keep_layers[fc_name] = {'id_field': 'event_layer_id', 'id_values': []}
-                    keep_layers[fc_name]['id_values'].append(str(layer.layer.id))
+                        keep_layers[fc_name] = {"id_field": "event_layer_id", "id_values": []}
+                    keep_layers[fc_name]["id_values"].append(str(layer.layer.id))
 
         # add planning containers
         planning_containers_nodes = self.export_layers_model.findItems("Planning Containers")
@@ -544,9 +538,9 @@ class FrmExportProject(QtWidgets.QDialog):
                 planning_container: PlanningContainer = planning_container_item.data(QtCore.Qt.UserRole)
                 if len(planning_container.planning_events) == 0:
                     continue
-                if 'planning_containers' not in keep_layers:
-                    keep_layers['planning_containers'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['planning_containers']['id_values'].append(str(planning_container.id))
+                if "planning_containers" not in keep_layers:
+                    keep_layers["planning_containers"] = {"id_field": "id", "id_values": []}
+                keep_layers["planning_containers"]["id_values"].append(str(planning_container.id))
 
         # add analyses
         analysis_nodes = self.export_layers_model.findItems("Analyses")
@@ -566,12 +560,12 @@ class FrmExportProject(QtWidgets.QDialog):
                 for metric_id, metric in analysis.analysis_metrics.items():
                     analysis_metrics.append([metric_id, metric.level_id])
 
-                if 'analyses' not in keep_layers:
-                    keep_layers['analyses'] = {'id_field': 'id', 'id_values': []}
-                keep_layers['analyses']['id_values'].append(str(analysis.id))
-                if 'analysis_metrics' not in keep_layers:
-                    keep_layers['analysis_metrics'] = {'id_field': 'analysis_id', 'id_values': []}
-                keep_layers['analysis_metrics']['id_values'].append(str(analysis.id))
+                if "analyses" not in keep_layers:
+                    keep_layers["analyses"] = {"id_field": "id", "id_values": []}
+                keep_layers["analyses"]["id_values"].append(str(analysis.id))
+                if "analysis_metrics" not in keep_layers:
+                    keep_layers["analysis_metrics"] = {"id_field": "analysis_id", "id_values": []}
+                keep_layers["analysis_metrics"]["id_values"].append(str(analysis.id))
 
         # Attachments
         attachments_nodes = self.export_layers_model.findItems("Attachments")
@@ -594,14 +588,34 @@ class FrmExportProject(QtWidgets.QDialog):
 
                 # elif attachment.attachment_type == Attachment.TYPE_WEB_LINK:
                 #     pass
-                
-                if 'attachments' not in keep_layers:
-                    keep_layers['attachments'] = {'id_field': 'attachment_id', 'id_values': []}
-                keep_layers['attachments']['id_values'].append(str(attachment.id))
+
+                if "attachments" not in keep_layers:
+                    keep_layers["attachments"] = {"id_field": "attachment_id", "id_values": []}
+                keep_layers["attachments"]["id_values"].append(str(attachment.id))
 
         # open the geopackage using ogr
         ds_gpkg: ogr.DataSource = ogr.Open(out_geopackage, 1)
-        for layer in ['analyses', 'catchments', 'cross_sections', 'cross_section_features', 'dce_lines', 'dce_points', 'dce_polygons', 'events', 'event_layers', 'pour_points', 'profile_centerlines', 'profile_features', 'profiles', 'rasters', 'scratch_vectors', 'sample_frame_features', 'sample_frames', 'attachments', 'planning_containers']:
+        for layer in [
+            "analyses",
+            "catchments",
+            "cross_sections",
+            "cross_section_features",
+            "dce_lines",
+            "dce_points",
+            "dce_polygons",
+            "events",
+            "event_layers",
+            "pour_points",
+            "profile_centerlines",
+            "profile_features",
+            "profiles",
+            "rasters",
+            "scratch_vectors",
+            "sample_frame_features",
+            "sample_frames",
+            "attachments",
+            "planning_containers",
+        ]:
             # get the layer
             lyr: ogr.Layer = ds_gpkg.GetLayerByName(layer)
             # remove all features that are not in the keep list
@@ -617,7 +631,6 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # use sqlite3 to vacuum the geopackage
         with sqlite3.connect(out_geopackage) as conn:
-
             # Delete orphaned records
             curs = conn.cursor()
             curs.execute("DELETE FROM event_rasters WHERE event_id NOT IN (SELECT id FROM events)")
@@ -660,7 +673,7 @@ class FrmExportProject(QtWidgets.QDialog):
             basepath = self.txt_outpath.text()
         else:
             basepath = os.path.dirname(self.qris_project.project_file)
-        path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder', basepath, QtWidgets.QFileDialog.ShowDirsOnly)
+        path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder", basepath, QtWidgets.QFileDialog.ShowDirsOnly)
         if path:
             # check if a project.rs.xml file already exists in the selected folder
             if os.path.exists(path):
@@ -711,19 +724,17 @@ class FrmExportProject(QtWidgets.QDialog):
                     yield item.data(QtCore.Qt.UserRole)
 
     def validate_tree(self) -> bool:
-        
+
         event_ids = {event.id for event in self.get_checked_items("Data Capture Events")}
         planning_container: PlanningContainer
         for planning_container in self.get_checked_items("Planning Containers"):
             all_checked = all(dce_id in event_ids for dce_id in planning_container.planning_events.keys())
             if not all_checked:
                 # item.setCheckState(QtCore.Qt.Unchecked)
-                message_box("Export Validation",
-                    f"All Data Capture Events associated with '{planning_container.name}' must be selected for export before the Planning Container can be checked.")
+                message_box("Export Validation", f"All Data Capture Events associated with '{planning_container.name}' must be selected for export before the Planning Container can be checked.")
                 return False
-        
+
         return True
-    
 
     def setupUi(self):
 
@@ -850,14 +861,14 @@ class FrmExportProject(QtWidgets.QDialog):
         self.vert.addStretch()
 
         self.tabProperties = QtWidgets.QWidget()
-        self.tabs.addTab(self.tabProperties, 'Export Properties')
+        self.tabs.addTab(self.tabProperties, "Export Properties")
         self.tabProperties.setLayout(self.grid)
 
         # Export Tab
         self.vert_export = QtWidgets.QVBoxLayout()
         self.tabExport = QtWidgets.QWidget()
         self.tabExport.setLayout(self.vert_export)
-        self.tabs.addTab(self.tabExport, 'Export Layers')
+        self.tabs.addTab(self.tabExport, "Export Layers")
 
         self.export_tree = QtWidgets.QTreeView()
         self.export_tree.setHeaderHidden(True)
@@ -885,7 +896,7 @@ class FrmExportProject(QtWidgets.QDialog):
         self.vert.addLayout(add_standard_form_buttons(self, "projects/#export-to-riverscapes-project"))
 
 
-def add_to_node(node: QtGui.QStandardItem, db_item, label: str, checked: bool=True):
+def add_to_node(node: QtGui.QStandardItem, db_item, label: str, checked: bool = True):
     """
     Adds a new item to the specified node in the tree view.
     """

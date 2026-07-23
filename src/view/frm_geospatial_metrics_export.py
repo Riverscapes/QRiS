@@ -1,9 +1,8 @@
-import os
-import json
 import csv
+import json
+import os
 
 import numpy as np
-
 from qgis.PyQt import QtCore, QtWidgets
 
 try:
@@ -11,9 +10,8 @@ try:
 except ImportError:
     pd = None
 
-from .frm_geospatial_metrics_options import FrmOptions
+from .frm_export_base import get_unique_export_path, sanitize_file_base_name
 from .utilities import add_help_button
-from .frm_export_base import sanitize_file_base_name, get_unique_export_path
 
 
 class FrmGeospatialMetricsExport(QtWidgets.QDialog):
@@ -75,15 +73,13 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         self.txtOutpath.setText(file + self.get_current_extension())
 
     def export(self):
-        
+
         path = self.txtOutpath.text()
         if not path:
             QtWidgets.QMessageBox.warning(self, "Export", "Please specify an export file path.")
             return
-        
-        selected = [self.listWidget.item(i).data(QtCore.Qt.UserRole)
-                    for i in range(self.listWidget.count())
-                    if self.listWidget.item(i).checkState() == QtCore.Qt.Checked]
+
+        selected = [self.listWidget.item(i).data(QtCore.Qt.UserRole) for i in range(self.listWidget.count()) if self.listWidget.item(i).checkState() == QtCore.Qt.Checked]
         if not selected:
             QtWidgets.QMessageBox.warning(self, "Export", "No metrics selected.")
             return
@@ -95,12 +91,7 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
             # Convert numpy types to native Python types for JSON serialization
             if isinstance(value, (np.generic,)):
                 value = value.item()
-            export_data.append({
-                "layer": layer_name,
-                "polygon": self.polygons[polygon_id]['display_label'],
-                "metric": metric_name,
-                "value": value
-            })
+            export_data.append({"layer": layer_name, "polygon": self.polygons[polygon_id]["display_label"], "metric": metric_name, "value": value})
 
         # Choose file
         if self.radioJson.isChecked():
@@ -116,7 +107,7 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
                 with open(path, "w", encoding="utf-8") as f:
                     json.dump(export_data, f, indent=2)
             elif fmt == "csv":
-                with open(path, "w", newline='', encoding="utf-8") as f:
+                with open(path, "w", newline="", encoding="utf-8") as f:
                     writer = csv.DictWriter(f, fieldnames=["layer", "polygon", "metric", "value"])
                     writer.writeheader()
                     writer.writerows(export_data)
@@ -141,8 +132,8 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         self.listWidget = QtWidgets.QListWidget(self)
         for layer_name, values in self.metrics.items():
             for polygon_id, poly_values in values.items():
-                polygon_label = self.polygons[polygon_id]['display_label']
-                for metric_name, metric_value in poly_values.items():
+                polygon_label = self.polygons[polygon_id]["display_label"]
+                for metric_name, _metric_value in poly_values.items():
                     item = QtWidgets.QListWidgetItem(f"{layer_name} - {polygon_label} - {metric_name}")
                     item.setData(QtCore.Qt.UserRole, (layer_name, polygon_id, metric_name))
                     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -155,15 +146,9 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         # add select all and select none buttons
         btnLayout = QtWidgets.QHBoxLayout()
         btnSelectAll = QtWidgets.QPushButton("Select All")
-        btnSelectAll.clicked.connect(lambda: [
-            self.listWidget.item(i).setCheckState(QtCore.Qt.Checked)
-            for i in range(self.listWidget.count())
-        ])
+        btnSelectAll.clicked.connect(lambda: [self.listWidget.item(i).setCheckState(QtCore.Qt.Checked) for i in range(self.listWidget.count())])
         btnSelectNone = QtWidgets.QPushButton("Select None")
-        btnSelectNone.clicked.connect(lambda: [
-            self.listWidget.item(i).setCheckState(QtCore.Qt.Unchecked)
-            for i in range(self.listWidget.count())
-        ])
+        btnSelectNone.clicked.connect(lambda: [self.listWidget.item(i).setCheckState(QtCore.Qt.Unchecked) for i in range(self.listWidget.count())])
         btnLayout.addSpacerItem(QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         btnLayout.addWidget(btnSelectAll)
         btnLayout.addWidget(btnSelectNone)
@@ -218,7 +203,7 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         btnExport = QtWidgets.QPushButton("Export")
         btnExport.clicked.connect(self.export)
         horiz_bottom.addWidget(btnExport)
-        
+
         # Add cancel button
         self.btnCancel = QtWidgets.QPushButton("Cancel")
         self.btnCancel.clicked.connect(self.reject)
