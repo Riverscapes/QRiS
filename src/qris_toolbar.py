@@ -579,7 +579,7 @@ class QRiSToolbar:
                     self.mru_menu,
                     "qris_icon",
                     mru,
-                    (lambda path=mru: self.open_qris_project(path)),
+                    (lambda _checked=False, path=mru: self.open_qris_project(path)),
                     True,
                     "",
                 )
