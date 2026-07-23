@@ -1,25 +1,25 @@
-import os
 import importlib
+import os
 import traceback
 
-from qgis.PyQt.QtCore import Qt, QObject, pyqtSignal
-from qgis.PyQt.QtGui import QStandardItem, QIcon
-from qgis.PyQt.QtWidgets import QMenu
 from qgis.core import Qgis
+from qgis.PyQt.QtCore import QObject, Qt, pyqtSignal
+from qgis.PyQt.QtGui import QIcon, QStandardItem
+from qgis.PyQt.QtWidgets import QMenu
 from qgis.utils import plugins
 
 from .path_utilities import parse_posix_path
 from .settings import Settings
 
 # Try to load these plugin names in priority order
-NAMES = ['riverscapes_viewer_dev', 'riverscapes_viewer']
+NAMES = ["riverscapes_viewer_dev", "riverscapes_viewer"]
 
 
 class QRaveIntegration(QObject):
     qrave_to_qris = pyqtSignal(str, str, dict)
 
     def __init__(self, parent):
-        super(QRaveIntegration, self).__init__(parent)
+        super().__init__(parent)
         self.name = None
         self.plugin_instance = None
         self.symbology_folders = None
@@ -38,47 +38,45 @@ class QRaveIntegration(QObject):
             rave_names_lower_case = [name.lower() for name in NAMES]
             matched_lower_case_name = next((pname for pname in rave_names_lower_case if pname in plugins_lower_case), None)
             if matched_lower_case_name is not None:
-
                 self.name = plugins_lower_case[matched_lower_case_name]
                 self.plugin_instance = plugins[self.name]
-                self.qrave_map_layer = importlib.import_module(f'{self.name}.src.classes.qrave_map_layer')
+                self.qrave_map_layer = importlib.import_module(f"{self.name}.src.classes.qrave_map_layer")
                 try:
-                    remote_project_module = importlib.import_module(f'{self.name}.src.classes.remote_project')
+                    remote_project_module = importlib.import_module(f"{self.name}.src.classes.remote_project")
                     self.RemoteProject = remote_project_module.RemoteProject
                 except ImportError:
                     self.RemoteProject = None
                 try:
-                    telemetry_module = importlib.import_module(f'{self.name}.src.classes.telemetry')
-                    self.telemetry = telemetry_module.Telemetry('QRiS', Settings().version())
+                    telemetry_module = importlib.import_module(f"{self.name}.src.classes.telemetry")
+                    self.telemetry = telemetry_module.Telemetry("QRiS", Settings().version())
                 except ImportError:
                     self.telemetry = None
 
-                self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'RiverscapesStudio')),
-                                          parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, 'Shared'))]
+                self.symbology_folders = [parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, "RiverscapesStudio")), parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, "Shared"))]
 
-                self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, '..'))
-                self.protocol_folder = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'protocols'))
-                self.climate_engine_json = parse_posix_path(os.path.join(self.resources_folder, 'QRiS', 'climate_engine_datasets.json'))
-                
+                self.resources_folder = parse_posix_path(os.path.join(self.qrave_map_layer.SYMBOLOGY_DIR, ".."))
+                self.protocol_folder = parse_posix_path(os.path.join(self.resources_folder, "QRiS", "protocols"))
+                self.climate_engine_json = parse_posix_path(os.path.join(self.resources_folder, "QRiS", "climate_engine_datasets.json"))
+
                 # TODO: Currently in locally deployed qris folder, change these paths when we make the changeover.
-                local_qris_resources = parse_posix_path(os.path.join(os.path.dirname(__file__), '..', '..', 'resources'))
-                self.lookups_json = parse_posix_path(os.path.join(local_qris_resources, 'lookups.json'))
+                local_qris_resources = parse_posix_path(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
+                self.lookups_json = parse_posix_path(os.path.join(local_qris_resources, "lookups.json"))
                 # self.lookups_json = parse_posix_path(os.path.join(self.resources_folder, 'lookups.json'))
 
-                self.basemaps_module = importlib.import_module(f'{self.name}.src.classes.basemaps')
+                self.basemaps_module = importlib.import_module(f"{self.name}.src.classes.basemaps")
                 self.ProjectTreeData = self.qrave_map_layer.ProjectTreeData
                 self.QRaveBaseMap = self.basemaps_module.QRaveBaseMap
                 self.BaseMaps = self.basemaps_module.BaseMaps()
                 self.BaseMaps.load()
 
                 # Uploader
-                self.riverscapes_project_module = importlib.import_module(f'{self.name}.src.classes.project')
-                self.project_upload_module = importlib.import_module(f'{self.name}.src.project_upload_dialog')
+                self.riverscapes_project_module = importlib.import_module(f"{self.name}.src.classes.project")
+                self.project_upload_module = importlib.import_module(f"{self.name}.src.project_upload_dialog")
                 self.ProjectUploadDialog = self.project_upload_module.ProjectUploadDialog
 
                 # Successfully loaded the plugin, log a message
                 Settings().log(f"Riverscapes Viewer plugin '{self.name}' loaded successfully.", Qgis.Info)
-                
+
                 if self.plugin_instance.dockwidget:
                     # Check if the signal is already connected
                     if self.plugin_instance.dockwidget.receivers(self.plugin_instance.dockwidget.layerMenuOpen) > 0:
@@ -86,8 +84,7 @@ class QRaveIntegration(QObject):
                     self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
 
         except Exception as ex:
-
-            Settings().log(f"Error initializing QRaveIntegration: {str(ex)}\n{traceback.format_exc()}", Qgis.Critical)
+            Settings().log(f"Error initializing QRaveIntegration: {ex!s}\n{traceback.format_exc()}", Qgis.Critical)
             self.name = None
             self.plugin_instance = None
             self.symbology_folders = None
@@ -106,9 +103,9 @@ class QRaveIntegration(QObject):
 
         if self.RemoteProject and isinstance(data.project, self.RemoteProject):
             return  # Do not add menu for remote projects
-        
+
         menu.addSeparator()
-        menu.addCustomAction(QIcon(f':/plugins/qris_toolbar/add_to_map'), "Add to QRiS", lambda: self.add_to_qris(item, data))
+        menu.addCustomAction(QIcon(":/plugins/qris_toolbar/add_to_map"), "Add to QRiS", lambda: self.add_to_qris(item, data))
 
     def add_to_qris(self, item: QStandardItem, data):
         """_summary_
@@ -122,26 +119,26 @@ class QRaveIntegration(QObject):
         qrave_project = data.project
         project_meta = qrave_project.meta
 
-        project_source_url = ('None','string')
+        project_source_url = ("None", "string")
         if qrave_project.warehouse_meta is not None:
-            project_id = qrave_project.warehouse_meta.get('id', None)
+            project_id = qrave_project.warehouse_meta.get("id", None)
             if project_id is not None:
-                project_source_url = f'https://data.riverscapes.net/p/{project_id[0]}'
-        
-        project_meta['SourceUrl'] = (project_source_url, 'string')
+                project_source_url = f"https://data.riverscapes.net/p/{project_id[0]}"
+
+        project_meta["SourceUrl"] = (project_source_url, "string")
 
         layer_meta = data.data.meta
-        out_meta = {'layer_label': layer.label, 'project_metadata': project_meta, 'layer_metadata': layer_meta}
+        out_meta = {"layer_label": layer.label, "project_metadata": project_meta, "layer_metadata": layer_meta}
         proj_type = data.project.project_type
-        symbology = layer.bl_attr.get('symbology', None)
+        symbology = layer.bl_attr.get("symbology", None)
         if symbology is not None:
-            out_meta['symbology'] = os.path.join(proj_type,symbology)
+            out_meta["symbology"] = os.path.join(proj_type, symbology)
         layer_uri = layer.layer_uri.lower()
-        if layer.layer_type == 'raster':
+        if layer.layer_type == "raster":
             path = layer.layer_uri
         # check if the layer is a shapefile
-        elif layer_uri.endswith('.shp'):
+        elif layer_uri.endswith(".shp"):
             path = layer.layer_uri
         else:
-            path = f'{layer.layer_uri}|layername={layer.layer_name}'
+            path = f"{layer.layer_uri}|layername={layer.layer_name}"
         self.qrave_to_qris.emit(path, layer.layer_type, out_meta)

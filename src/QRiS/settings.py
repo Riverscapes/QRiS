@@ -1,38 +1,40 @@
-import os
-import json
-import html
 import base64
+import html
+import json
+import os
+from typing import ClassVar
 
-from qgis.core import Qgis, QgsProject, QgsSettings, QgsMessageLog
+from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsSettings
 
-from .units import Units
 from ...__version__ import __version__
+from .units import Units
 
-with open(os.path.join(os.path.dirname(__file__), '..', '..', 'config.json')) as cfg_file:
+with open(os.path.join(os.path.dirname(__file__), "..", "..", "config.json")) as cfg_file:
     cfg_json = json.load(cfg_file)
 
 # Load the secrets.json file with sensitive information that is git ignored.
-secrets_path = os.path.join(os.path.dirname(__file__), '..', '..', 'secrets.json')
+secrets_path = os.path.join(os.path.dirname(__file__), "..", "..", "secrets.json")
 if os.path.isfile(secrets_path):
     with open(secrets_path) as cfg_file:
         secrets_json = json.load(cfg_file)
-        if 'constants' in secrets_json:
-            cfg_json['constants'].update(secrets_json['constants'])
+        if "constants" in secrets_json:
+            cfg_json["constants"].update(secrets_json["constants"])
 
 # We include these so that
-_DEFAULTS = cfg_json['defaultSettings']
-CONSTANTS = cfg_json['constants']
+_DEFAULTS = cfg_json["defaultSettings"]
+CONSTANTS = cfg_json["constants"]
 
 # BASE is the name we want to use inside the settings keys
-MESSAGE_CATEGORY = CONSTANTS['logCategory']
+MESSAGE_CATEGORY = CONSTANTS["logCategory"]
 
 
-class SettingsBorg(object):
-    _shared_state = {}
+class SettingsBorg:
+    _shared_state: ClassVar[dict] = {}
     _initdone = False
 
     def __init__(self):
         self.__dict__ = self._shared_state
+
 
 # https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/settings.html
 # NB: We use json here to get better simple values back. This is a bit hack-y
@@ -46,15 +48,15 @@ class Settings(SettingsBorg):
     def __init__(self, iface=None):
         SettingsBorg.__init__(self)
 
-        self.units = Units('meter', 'square_meter')
+        self.units = Units("meter", "square_meter")
 
         # The iface is important as a pointer so we can get to the messagebar
-        if iface is not None and 'iface' not in self.__dict__:
+        if iface is not None and "iface" not in self.__dict__:
             self.iface = iface
         if not self._initdone:
             self.proj = QgsProject.instance()
             self.s = QgsSettings()
-            self.s.beginGroup(CONSTANTS['settingsCategory'])
+            self.s.beginGroup(CONSTANTS["settingsCategory"])
 
             # Do a sanity check and reset anything that looks fishy
             for key in _DEFAULTS.keys():
@@ -79,7 +81,7 @@ class Settings(SettingsBorg):
             self.iface.messageBar().pushMessage(title, msg, level=level, duration=duration)
         # Fall back to regular logging
         else:
-            QgsMessageLog.logMessage("{}: {}".format(title, msg), MESSAGE_CATEGORY, level=level)
+            QgsMessageLog.logMessage(f"{title}: {msg}", MESSAGE_CATEGORY, level=level)
 
     def resetAllSettings(self):
         for key in _DEFAULTS.keys():
@@ -98,7 +100,7 @@ class Settings(SettingsBorg):
         value = None
         try:
             default = _DEFAULTS[key] if key in _DEFAULTS else None
-            value = json.loads(self.s.value(key, default))['v']
+            value = json.loads(self.s.value(key, default))["v"]
         except Exception as e:
             print(e)
             value = None
@@ -121,11 +123,11 @@ class Settings(SettingsBorg):
         Protected by OS user account — no QGIS master password required.
         """
         try:
-            self.s.beginGroup('secure')
+            self.s.beginGroup("secure")
             raw = self.s.value(key, None)
             self.s.endGroup()
             if raw:
-                return base64.b64decode(raw.encode()).decode('utf-8')
+                return base64.b64decode(raw.encode()).decode("utf-8")
         except Exception as e:
             self.log(f"Error getting secure setting {key}: {e}", level=Qgis.Warning)
         return None
@@ -136,9 +138,9 @@ class Settings(SettingsBorg):
         Protected by OS user account — no QGIS master password required.
         """
         try:
-            self.s.beginGroup('secure')
+            self.s.beginGroup("secure")
             if value:
-                self.s.setValue(key, base64.b64encode(value.encode()).decode('utf-8'))
+                self.s.setValue(key, base64.b64encode(value.encode()).decode("utf-8"))
             else:
                 self.s.remove(key)
             self.s.endGroup()
@@ -148,7 +150,7 @@ class Settings(SettingsBorg):
 
     def plugin_root_path(self):
         """Return absolute path to the plugin root directory."""
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
     def version(self) -> str:
         """Return the current QRiS plugin version."""
@@ -156,16 +158,16 @@ class Settings(SettingsBorg):
 
     def resource_path(self, *parts):
         """Build an absolute path under the plugin resources directory."""
-        return os.path.join(self.plugin_root_path(), 'resources', *parts)
+        return os.path.join(self.plugin_root_path(), "resources", *parts)
 
     def _load_lookups(self) -> dict:
         """Load lookups JSON from configured path; return empty dict when unavailable."""
-        lookups_json_path = self.getValue('lookupsJson')
+        lookups_json_path = self.getValue("lookupsJson")
         if not lookups_json_path or not os.path.exists(lookups_json_path):
             return {}
 
         try:
-            with open(lookups_json_path, 'r', encoding='utf-8') as fh:
+            with open(lookups_json_path, encoding="utf-8") as fh:
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
         except Exception as e:

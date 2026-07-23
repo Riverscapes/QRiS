@@ -1,29 +1,27 @@
 from qgis.PyQt.QtCore import QSettings, Qt
 from qgis.PyQt.QtGui import QFont
-from qgis.PyQt.QtWidgets import QWidget, QMessageBox, QDialog, QFileDialog, QPushButton, QRadioButton, QCheckBox, QVBoxLayout, QHBoxLayout, QGridLayout, QDialogButtonBox, QLabel, QTabWidget, QLineEdit, QSpacerItem, QSizePolicy
+from qgis.PyQt.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QSizePolicy, QSpacerItem, QTabWidget, QVBoxLayout, QWidget
 
-from ..model.project import Project
 from ..lib.climate_engine import clear_api_key, get_api_key, open_climate_engine_website
+from ..lib.font_tools import sanitize_chart_font, select_chart_font
+from ..model.project import Project
 from ..QRiS.protocol_parser import LOCAL_PROTOCOL_FOLDER, SHOW_EXPERIMENTAL_PROTOCOLS
 from ..QRiS.settings import Settings
-from ..lib.font_tools import select_chart_font, sanitize_chart_font
-
 from .frm_api_key import FrmApiKey
+from .frm_export_project import DEFAULT_EXPORT_PATH
 from .utilities import add_help_button
 
-from .frm_export_project import DEFAULT_EXPORT_PATH
+DOCK_WIDGET_LOCATION = "dock_widget_location"
+REMOVE_LAYERS_ON_CLOSE = "remove_layers_on_close"
+TELEMETRY_ENABLED_KEY = "telemetryEnabled"
+DEFAULT_CHART_FONT = "default_chart_font"
+SELECTION_COLOR_OVERRIDE_ENABLED = "selectionColorOverrideEnabled"
 
-DOCK_WIDGET_LOCATION = 'dock_widget_location'
-REMOVE_LAYERS_ON_CLOSE = 'remove_layers_on_close'
-TELEMETRY_ENABLED_KEY = 'telemetryEnabled'
-DEFAULT_CHART_FONT = 'default_chart_font'
-SELECTION_COLOR_OVERRIDE_ENABLED = 'selectionColorOverrideEnabled'
-
-default_dock_widget_location = 'right'
+default_dock_widget_location = "right"
 
 
 def get_default_chart_font(settings: QSettings) -> QFont:
-    font_text = settings.value(DEFAULT_CHART_FONT, '', type=str)
+    font_text = settings.value(DEFAULT_CHART_FONT, "", type=str)
 
     if font_text:
         font = QFont()
@@ -32,12 +30,13 @@ def get_default_chart_font(settings: QSettings) -> QFont:
                 font.setPointSize(10)
             return sanitize_chart_font(font)
 
-    return sanitize_chart_font(QFont('Sans Serif', 10))
+    return sanitize_chart_font(QFont("Sans Serif", 10))
 
 
 def set_default_chart_font(font: QFont, settings: QSettings):
     if font:
         settings.setValue(DEFAULT_CHART_FONT, font.toString())
+
 
 class FrmSettings(QDialog):
     def __init__(self, settings: QSettings, qris_project: Project):
@@ -53,19 +52,19 @@ class FrmSettings(QDialog):
 
         # Get the dockwidget location from the settings
         dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
-        self.left_radio.setChecked(dock_location == 'left')
-        self.right_radio.setChecked(dock_location == 'right')
+        self.left_radio.setChecked(dock_location == "left")
+        self.right_radio.setChecked(dock_location == "right")
 
         # Get the remove layers on close setting
         remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
         self.chk_remove_layers_on_close.setChecked(remove_layers_on_close)
 
         # Get the default export path
-        default_export_path = settings.value(DEFAULT_EXPORT_PATH, '')
+        default_export_path = settings.value(DEFAULT_EXPORT_PATH, "")
         self.txt_path_export.setText(default_export_path)
 
         # Get the local protocol folder
-        protocol_folder = settings.value(LOCAL_PROTOCOL_FOLDER, '')
+        protocol_folder = settings.value(LOCAL_PROTOCOL_FOLDER, "")
         self.txt_protocol_folder.setText(protocol_folder)
 
         show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, type=bool)
@@ -83,24 +82,24 @@ class FrmSettings(QDialog):
     def accept(self):
 
         if self.left_radio.isChecked():
-            self.settings.setValue(DOCK_WIDGET_LOCATION, 'left')
+            self.settings.setValue(DOCK_WIDGET_LOCATION, "left")
         else:
-            self.settings.setValue(DOCK_WIDGET_LOCATION, 'right')
+            self.settings.setValue(DOCK_WIDGET_LOCATION, "right")
 
         if self.chk_remove_layers_on_close.isChecked():
             self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, True)
         else:
             self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, False)
 
-        if self.txt_path_export.text() != '':
+        if self.txt_path_export.text() != "":
             self.settings.setValue(DEFAULT_EXPORT_PATH, self.txt_path_export.text())
         else:
-            self.settings.setValue(DEFAULT_EXPORT_PATH, '')
+            self.settings.setValue(DEFAULT_EXPORT_PATH, "")
 
-        if self.txt_protocol_folder.text() != '':
+        if self.txt_protocol_folder.text() != "":
             self.settings.setValue(LOCAL_PROTOCOL_FOLDER, self.txt_protocol_folder.text())
         else:
-            self.settings.setValue(LOCAL_PROTOCOL_FOLDER, '')
+            self.settings.setValue(LOCAL_PROTOCOL_FOLDER, "")
 
         self.settings.setValue(SHOW_EXPERIMENTAL_PROTOCOLS, self.chkShowExperimentalProtocols.isChecked())
         set_default_chart_font(self.default_chart_font, self.settings)
@@ -122,10 +121,14 @@ class FrmSettings(QDialog):
 
     def on_show_experimental_changed(self, state):
         if state == Qt.Checked:
-            QMessageBox.warning(self, "Experimental Protocols", "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.")
+            QMessageBox.warning(
+                self,
+                "Experimental Protocols",
+                "Experimental protocols are protocols that are still under development and testing. They may not be fully functional and can change without notice. Please backup your project before using and proceed with caution.",
+            )
 
     def select_chart_font(self):
-        font, ok = select_chart_font(self, self.default_chart_font, 'Select Default Chart Font')
+        font, ok = select_chart_font(self, self.default_chart_font, "Select Default Chart Font")
         if ok:
             self.default_chart_font = font
             self.update_chart_font_button_text()
@@ -139,10 +142,7 @@ class FrmSettings(QDialog):
             self._refresh_api_key_status()
 
     def remove_api_key(self):
-        reply = QMessageBox.question(
-            self, "Remove API Key",
-            "Are you sure you want to remove the Climate Engine API key?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, "Remove API Key", "Are you sure you want to remove the Climate Engine API key?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             clear_api_key()
             self._refresh_api_key_status()
@@ -153,7 +153,7 @@ class FrmSettings(QDialog):
             self.lbl_api_key_status.setText('<span style="color:green;">Configured &#10004;</span>')
             self.btn_remove_api_key.setEnabled(True)
         else:
-            self.lbl_api_key_status.setText('Not configured')
+            self.lbl_api_key_status.setText("Not configured")
             self.btn_remove_api_key.setEnabled(False)
 
     def setup_ui(self):
@@ -168,7 +168,7 @@ class FrmSettings(QDialog):
 
         # General Tab
         self.vertGeneral = QVBoxLayout()
-        
+
         horiz_export_path = QHBoxLayout()
         self.vertGeneral.addLayout(horiz_export_path)
 
@@ -184,7 +184,7 @@ class FrmSettings(QDialog):
         horiz_export_path.addWidget(btn_path_export)
 
         btn_clear_path_export = QPushButton("Clear")
-        btn_clear_path_export.clicked.connect(lambda: self.txt_path_export.setText(''))
+        btn_clear_path_export.clicked.connect(lambda: self.txt_path_export.setText(""))
         horiz_export_path.addWidget(btn_clear_path_export)
 
         horiz_chart_font = QHBoxLayout()
@@ -207,7 +207,7 @@ class FrmSettings(QDialog):
         self.chk_selection_color_override = QCheckBox("Override feature selection color for QRiS layers")
         self.chk_selection_color_override.setToolTip("Uses white (#ffffff) with 30% transparency so selected features remain visible while editing.")
         self.vertGeneral.addWidget(self.chk_selection_color_override)
-        
+
         self.grid = QGridLayout()
 
         self.label = QLabel("Default Dock widget location")
@@ -229,7 +229,7 @@ class FrmSettings(QDialog):
         self.button_box.rejected.connect(self.reject)
 
         self.horiz_buttons = QHBoxLayout()
-        self.horiz_buttons.addWidget(add_help_button(self, 'toolbar#settings'))
+        self.horiz_buttons.addWidget(add_help_button(self, "toolbar#settings"))
         self.horiz_buttons.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.horiz_buttons.addWidget(self.button_box)
         self.vert.addLayout(self.horiz_buttons)
@@ -267,12 +267,15 @@ class FrmSettings(QDialog):
 
         # Climate Engine Tab
         climate_engine_layout = QVBoxLayout()
-        
-        lbl_climate_engine_text = QLabel("Climate Engine is a third-party service accessing climate and Earth observation data. QRiS connects to the Climate Engine API to retrieve these data for use in your QRiS projects. Use the buttons below to request a Climate Engine API key and then set the key so QRiS can use your account when accessing Climate Engine data.")
+
+        lbl_climate_engine_text = QLabel(
+            "Climate Engine is a third-party service accessing climate and Earth observation data. QRiS connects to the Climate Engine API to retrieve these data for use in your QRiS projects. Use the buttons below to request a Climate "
+            "Engine API key and then set the key so QRiS can use your account when accessing Climate Engine data."
+        )
         lbl_climate_engine_text.setTextFormat(Qt.PlainText)
         lbl_climate_engine_text.setWordWrap(True)
         climate_engine_layout.addWidget(lbl_climate_engine_text)
-        
+
         horiz_api_key = QHBoxLayout()
         climate_engine_layout.addLayout(horiz_api_key)
 
@@ -300,7 +303,7 @@ class FrmSettings(QDialog):
         horiz_buttons_layout.addWidget(btn_climate_engine_url)
 
         btn_request_api_key = QPushButton("Request API key")
-        btn_request_api_key.clicked.connect(lambda: open_climate_engine_website('/apis/requesting-an-authorization-key-token/'))
+        btn_request_api_key.clicked.connect(lambda: open_climate_engine_website("/apis/requesting-an-authorization-key-token/"))
         horiz_buttons_layout.addWidget(btn_request_api_key)
 
         horiz_buttons_layout.addStretch(1)

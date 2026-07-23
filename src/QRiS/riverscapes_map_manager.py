@@ -1,67 +1,64 @@
-import os
 import json
+import os
 import sqlite3
 from textwrap import dedent
-
-from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtCore import QVariant, QMetaType, pyqtSignal, QObject
-from qgis.utils import iface
-
-from .path_utilities import is_url
-from .settings import Settings, CONSTANTS
-from .sql_utilities import validate_sql_identifier
-
-from ..model.db_item import DBItem
-from ..model.raster import BASEMAP_MACHINE_CODE
-
-from ..view.metadata_field_editor_widget import initialize_metadata_widget
+from typing import Optional
 
 from qgis.core import (
     Qgis,
-    QgsField,
-    QgsLayerTreeGroup,
-    QgsLayerTreeNode,
-    QgsVectorLayer,
-    QgsRasterLayer,
-    QgsDefaultValue,
-    QgsEditorWidgetSetup,
-    QgsProject,
-    QgsExpressionContextUtils,
-    QgsFieldConstraints,
-    QgsColorRampShader,
-    QgsRasterShader,
-    QgsSingleBandPseudoColorRenderer,
-    QgsAttributeEditorContainer,
-    QgsAttributeEditorField,
-    QgsPalLayerSettings,
-    QgsVectorLayerSimpleLabeling,
     QgsAction,
     QgsAttributeEditorAction,
-    QgsMapLayer
+    QgsAttributeEditorContainer,
+    QgsAttributeEditorField,
+    QgsColorRampShader,
+    QgsDefaultValue,
+    QgsEditorWidgetSetup,
+    QgsExpressionContextUtils,
+    QgsField,
+    QgsFieldConstraints,
+    QgsLayerTreeGroup,
+    QgsLayerTreeNode,
+    QgsMapLayer,
+    QgsPalLayerSettings,
+    QgsProject,
+    QgsRasterLayer,
+    QgsRasterShader,
+    QgsSingleBandPseudoColorRenderer,
+    QgsVectorLayer,
+    QgsVectorLayerSimpleLabeling,
 )
+from qgis.PyQt.QtCore import QMetaType, QObject, QVariant, pyqtSignal
+from qgis.PyQt.QtGui import QColor
+from qgis.utils import iface
 
-SELECTION_COLOR_OVERRIDE_ENABLED = 'selectionColorOverrideEnabled'
-SELECTION_COLOR_OVERRIDE_HEX = 'selectionColorOverrideHex'
-SELECTION_COLOR_OVERRIDE_TRANSPARENCY_PERCENT = 'selectionColorOverrideTransparencyPercent'
+from ..model.db_item import DBItem
+from ..model.raster import BASEMAP_MACHINE_CODE
+from ..view.metadata_field_editor_widget import initialize_metadata_widget
+from .path_utilities import is_url
+from .settings import CONSTANTS, Settings
+from .sql_utilities import validate_sql_identifier
+
+SELECTION_COLOR_OVERRIDE_ENABLED = "selectionColorOverrideEnabled"
+SELECTION_COLOR_OVERRIDE_HEX = "selectionColorOverrideHex"
+SELECTION_COLOR_OVERRIDE_TRANSPARENCY_PERCENT = "selectionColorOverrideTransparencyPercent"
 
 
 class RiverscapesMapManager(QObject):
-
     edit_mode_changed = pyqtSignal(bool)
 
     def __init__(self, product_key) -> None:
         super().__init__()
         self.product_key = product_key
         settings = Settings()
-        self.symbology_folders: list = settings.getValue('symbologyDir')
-        self.layer_order = ['Basemaps']
+        self.symbology_folders: list = settings.getValue("symbologyDir")
+        self.layer_order = ["Basemaps"]
         self._previous_canvas_selection_color: QColor = None
 
     def get_symbology_qml(self, symbology_key: str) -> str:
-        
+
         if symbology_key is None:
             return None
-        raw_symbology_filename = symbology_key if symbology_key.endswith('.qml') else f'{symbology_key}.qml'
+        raw_symbology_filename = symbology_key if symbology_key.endswith(".qml") else f"{symbology_key}.qml"
         qml = None
         # check if we can split the file name into a folder and file name
         split = os.path.split(raw_symbology_filename)
@@ -70,7 +67,7 @@ class RiverscapesMapManager(QObject):
 
         symbology_folders = self.symbology_folders.copy()
 
-        if len(split) == 2 and proj_folder != '':
+        if len(split) == 2 and proj_folder != "":
             base_symbology_folder = os.path.dirname(self.symbology_folders[1])
             symbology_folders.insert(2, os.path.join(base_symbology_folder, proj_folder))
 
@@ -80,7 +77,7 @@ class RiverscapesMapManager(QObject):
             if os.path.exists(qml):
                 return qml
 
-        # if we can't find the symbology file, return None and let the layer use the default symbology        
+        # if we can't find the symbology file, return None and let the layer use the default symbology
         return qml
 
     def get_product_key_layers(self) -> list:
@@ -95,7 +92,7 @@ class RiverscapesMapManager(QObject):
         for layer in self.get_product_key_layers():
             if layer.layer().type() == QgsMapLayer.VectorLayer:
                 layer.layer().setReadOnly(False)
-        
+
         self.edit_mode_changed.emit(False)
 
     def start_edits(self):
@@ -124,10 +121,10 @@ class RiverscapesMapManager(QObject):
             layer.setReadOnly(db_item.locked)
 
     def __get_custom_property(self, project_key: str, db_item: DBItem) -> str:
-        return f'{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}'
+        return f"{self.product_key}::{project_key}::{db_item.db_table_name}::{db_item.id}"
 
     def __get_machine_code_custom_property(self, project_key: str, machine_code: str) -> str:
-        return f'{self.product_key}::{project_key}::{machine_code}'
+        return f"{self.product_key}::{project_key}::{machine_code}"
 
     def get_db_item_layer(self, project_key: str, db_item: DBItem, layer: QgsLayerTreeNode) -> QgsLayerTreeNode:
 
@@ -191,7 +188,6 @@ class RiverscapesMapManager(QObject):
                 return child_layer
 
         if add_missing:
-
             if add_to_bottom:
                 target_index = len(parent.children())
             else:
@@ -242,7 +238,7 @@ class RiverscapesMapManager(QObject):
     def remove_all_layers(self, project_key: str) -> None:
 
         for layer in self.get_product_key_layers():
-            if layer.customProperty(self.product_key).startswith(f'{self.product_key}::{project_key}'):
+            if layer.customProperty(self.product_key).startswith(f"{self.product_key}::{project_key}"):
                 parent_group = layer.parent()
                 parent_group.removeChildNode(layer)
                 self.remove_empty_groups(parent_group)
@@ -253,11 +249,11 @@ class RiverscapesMapManager(QObject):
         # get number of layers in the invisible root node do this before we add new layers to the map
         layers = QgsProject.instance().layerTreeRoot().findLayers()
         layer_count = len(layers)
-        count_basemaps = len([layer for layer in layers if layer.customProperty('Basemaps') is not None])
+        count_basemaps = len([layer for layer in layers if layer.customProperty("Basemaps") is not None])
         zoom = True if layer_count - count_basemaps == 0 else False
 
         return zoom
-    
+
     def apply_selection_color_override(self, layer: QgsMapLayer) -> None:
         if layer is None or layer.type() != QgsMapLayer.VectorLayer:
             return
@@ -271,17 +267,14 @@ class RiverscapesMapManager(QObject):
         override_color = QColor(selection_color_hex)
         if not override_color.isValid():
             override_color = QColor(default_selection_color_hex)
-            Settings().log(
-                f'Invalid selection color "{selection_color_hex}". Falling back to {default_selection_color_hex}.',
-                level=Qgis.Warning
-            )
+            Settings().log(f'Invalid selection color "{selection_color_hex}". Falling back to {default_selection_color_hex}.', level=Qgis.Warning)
 
         transparency = max(0, min(100, selection_transparency))
-        opacity = int(round(255 * ((100 - transparency) / 100.0)))
+        opacity = round(255 * ((100 - transparency) / 100.0))
         override_color.setAlpha(opacity)
 
-        selection_properties = layer.selectionProperties() if hasattr(layer, 'selectionProperties') else None
-        if selection_properties is not None and hasattr(selection_properties, 'setColor'):
+        selection_properties = layer.selectionProperties() if hasattr(layer, "selectionProperties") else None
+        if selection_properties is not None and hasattr(selection_properties, "setColor"):
             if override_enabled:
                 selection_properties.setColor(override_color)
             elif canvas is not None:
@@ -298,14 +291,16 @@ class RiverscapesMapManager(QObject):
         elif self._previous_canvas_selection_color is not None:
             canvas.setSelectionColor(self._previous_canvas_selection_color)
             self._previous_canvas_selection_color = None
-    
+
     def refresh_selection_color_overrides(self) -> None:
         for layer_node in self.get_product_key_layers():
             layer = layer_node.layer()
             if layer is not None and layer.type() == QgsMapLayer.VectorLayer:
                 self.apply_selection_color_override(layer)
 
-    def create_db_item_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str, add_to_map: bool=True, layer_name_override: str=None) -> QgsVectorLayer:
+    def create_db_item_feature_layer(
+        self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, db_item: DBItem, id_field: str, symbology_key: str, add_to_map: bool = True, layer_name_override: Optional[str] = None
+    ) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified DBItem and adds it to the map.
         args:
@@ -322,11 +317,11 @@ class RiverscapesMapManager(QObject):
 
         # Create a layer from the table
         if id_field is not None:
-            id_value = db_item.event_id if id_field == 'event_id' else db_item.id
-            fc_path = fc_path + f'|subset={id_field} = {id_value}'
-        
+            id_value = db_item.event_id if id_field == "event_id" else db_item.id
+            fc_path = fc_path + f"|subset={id_field} = {id_value}"
+
         layer_name = layer_name_override if layer_name_override else db_item.name
-        layer = QgsVectorLayer(fc_path, layer_name, 'ogr')
+        layer = QgsVectorLayer(fc_path, layer_name, "ogr")
         # QgsProject.instance().addMapLayer(layer, False)
 
         # Apply symbology
@@ -344,30 +339,30 @@ class RiverscapesMapManager(QObject):
             QgsExpressionContextUtils.setLayerVariable(layer, id_field, id_value)
             # Set the default value from the variable
             field_index = layer.fields().indexFromName(id_field)
-            if field_index != -1: # Added check
-                layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f'@{id_field}'))
+            if field_index != -1:  # Added check
+                layer.setDefaultValueDefinition(field_index, QgsDefaultValue(f"@{id_field}"))
 
         # Finally add the new layer here
         if add_to_map:
             QgsProject.instance().addMapLayer(layer, False)
             if parent_group is not None:
                 tree_layer_node = parent_group.addLayer(layer)
-                
+
                 cust_prop = self.__get_custom_property(project_key, db_item)
                 if layer_name_override:
-                     # Unique property to avoid collision/reuse of single instance
+                    # Unique property to avoid collision/reuse of single instance
                     cust_prop += f"::FILTERED::{layer_name_override}"
 
                 tree_layer_node.setCustomProperty(self.product_key, cust_prop)
                 tree_layer_node.setCustomProperty("showFeatureCount", True)
                 tree_layer_node.setExpanded(False)
-            
+
             if zoom:
                 iface.setActiveLayer(layer)
                 iface.zoomToActiveLayer()
         else:
-             # Even if not adding to map, we might want to configure some things?
-             pass
+            # Even if not adding to map, we might want to configure some things?
+            pass
 
         layer.setReadOnly(self.get_edit_mode() or db_item.locked)
 
@@ -376,7 +371,7 @@ class RiverscapesMapManager(QObject):
 
         return layer
 
-    def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: str = None, driver: str = 'ogr') -> QgsVectorLayer:
+    def create_machine_code_feature_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, fc_path: str, machine_code: str, display_label: str, symbology_key: Optional[str] = None, driver: str = "ogr") -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified machine code and adds it to the map.
         args:
@@ -416,7 +411,7 @@ class RiverscapesMapManager(QObject):
 
         return layer
 
-    def create_temporary_feature_layer(self, project_key: str, fc_path: str, machine_code: str, display_label: str, symbology_key: str = None, driver: str = 'ogr', private_layer=True) -> QgsVectorLayer:
+    def create_temporary_feature_layer(self, project_key: str, fc_path: str, machine_code: str, display_label: str, symbology_key: Optional[str] = None, driver: Optional[str] = "ogr", private_layer=True) -> QgsVectorLayer:
         """
         Creates a new feature layer for the specified machine code and adds it to the top of the map.
         args:
@@ -448,7 +443,7 @@ class RiverscapesMapManager(QObject):
 
         return layer
 
-    def create_db_item_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, symbology_key: str = None):
+    def create_db_item_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, symbology_key: Optional[str] = None):
 
         zoom = self.test_for_zoom()
 
@@ -466,7 +461,7 @@ class RiverscapesMapManager(QObject):
 
         return raster_layer
 
-    def create_machine_code_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, machine_code, symbology_key: str = None):
+    def create_machine_code_raster_layer(self, project_key: str, parent_group: QgsLayerTreeGroup, raster_path: str, raster: DBItem, machine_code, symbology_key: Optional[str] = None):
 
         zoom = self.test_for_zoom()
 
@@ -486,19 +481,19 @@ class RiverscapesMapManager(QObject):
 
     def create_basemap_raster_layer(self, basemap_name: str, basemap_path: str, provider: str):
 
-        basemap_group = self.get_group_layer('Basemaps', 'Basemaps', 'Riverscapes Basemaps', add_missing=True, add_to_bottom=True)
-        if provider.lower() in ['wms', 'xyz']:
-            basemap_path = basemap_path.replace('%3F', '?').replace('%3A', ':').replace('%2F', '/').replace('%3D', '=')
+        basemap_group = self.get_group_layer("Basemaps", "Basemaps", "Riverscapes Basemaps", add_missing=True, add_to_bottom=True)
+        if provider.lower() in ["wms", "xyz"]:
+            basemap_path = basemap_path.replace("%3F", "?").replace("%3A", ":").replace("%2F", "/").replace("%3D", "=")
         raster_layer = QgsRasterLayer(basemap_path, basemap_name, provider)
         QgsProject.instance().addMapLayer(raster_layer, False)
         raster_layer.triggerRepaint()
 
         tree_layer_node = basemap_group.addLayer(raster_layer)
-        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property('Basemaps', basemap_name))
+        tree_layer_node.setCustomProperty(self.product_key, self.__get_machine_code_custom_property("Basemaps", basemap_name))
 
         return raster_layer
 
-    def create_tile_layer(self, project_key: str, tile_url: str, layer_name: str, machine_code: str=BASEMAP_MACHINE_CODE, provider_service: str='xyz') -> QgsRasterLayer:
+    def create_tile_layer(self, project_key: str, tile_url: str, layer_name: str, machine_code: str = BASEMAP_MACHINE_CODE, provider_service: str = "xyz") -> QgsRasterLayer:
         """Creates a new tile layer for the specified machine code and adds it to the map."""
 
         parent_group: QgsLayerTreeGroup = self.get_group_layer(project_key, machine_code, machine_code, add_missing=True, add_to_bottom=True)
@@ -507,7 +502,7 @@ class RiverscapesMapManager(QObject):
         #     return layer
 
         # Create a layer from the table
-        layer = QgsRasterLayer(f'http-header:referer=&type=xyz&url={tile_url}', layer_name, provider_service)
+        layer = QgsRasterLayer(f"http-header:referer=&type=xyz&url={tile_url}", layer_name, provider_service)
         QgsProject.instance().addMapLayer(layer, False)
 
         # Finally add the new layer here
@@ -521,10 +516,14 @@ class RiverscapesMapManager(QObject):
         fcn = QgsColorRampShader()
         fcn.setColorRampType(QgsColorRampShader.Discrete)
         if inverse is True:
-            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(0, 0, 255, 0), ''),  # QColorConstants.Transparent
-                                      QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225, 200), f'Threshold {raster_value}')])
+            fcn.setColorRampItemList(
+                [
+                    QgsColorRampShader.ColorRampItem(raster_value, QColor(0, 0, 255, 0), ""),  # QColorConstants.Transparent
+                    QgsColorRampShader.ColorRampItem(max, QColor(255, 20, 225, 200), f"Threshold {raster_value}"),
+                ]
+            )
         else:
-            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225, 200), f'Threshold {raster_value}')])
+            fcn.setColorRampItemList([QgsColorRampShader.ColorRampItem(raster_value, QColor(255, 20, 225, 200), f"Threshold {raster_value}")])
         shader = QgsRasterShader()
         shader.setRasterShaderFunction(fcn)
 
@@ -533,39 +532,32 @@ class RiverscapesMapManager(QObject):
         raster_layer.triggerRepaint()
 
     # Set Fields
-    def set_metadata_virtual_fields(self, feature_layer: QgsVectorLayer, field_config: dict = None, default_photo_path: str = None) -> None:
+    def set_metadata_virtual_fields(self, feature_layer: QgsVectorLayer, field_config: Optional[dict] = None, default_photo_path: Optional[str] = None) -> None:
 
-        field_types = {
-            'integer': QMetaType.Int,
-            'float': QMetaType.Double,
-            'boolean': QMetaType.Bool,
-            'url': QMetaType.QUrl,
-            'string': QMetaType.QString
-        }
+        field_types = {"integer": QMetaType.Int, "float": QMetaType.Double, "boolean": QMetaType.Bool, "url": QMetaType.QUrl, "string": QMetaType.QString}
 
         fields = feature_layer.fields()
-        field_index = fields.indexFromName('metadata')
+        field_index = fields.indexFromName("metadata")
         if field_index == -1:
             return
 
-        metadata_fields = {'attributes': {},
-                            'metadata': {}}
+        metadata_fields = {"attributes": {}, "metadata": {}}
         added_fields = []
         field_labels = {}
         if field_config is not None:
-            for field in field_config.get('fields', []):
-                field_type = field_types.get(field['type'], QMetaType.QString)
-                field_name = field['label']
-                field_labels.update({field['id']: field_name})
-                metadata_fields['attributes'].update({field['id']: field_type})
+            for field in field_config.get("fields", []):
+                field_type = field_types.get(field["type"], QMetaType.QString)
+                field_name = field["label"]
+                field_labels.update({field["id"]: field_name})
+                metadata_fields["attributes"].update({field["id"]: field_type})
 
         # get all the keys from the metadata dictionary by reading all of the features
         for feature in feature_layer.getFeatures():
             # this is to catch empty metadata fields, which are stored as QVariant
-            if isinstance(feature['metadata'], QVariant) or feature['metadata'] is None:
+            if isinstance(feature["metadata"], QVariant) or feature["metadata"] is None:
                 continue
-            feat_metadata_obj = json.loads(feature['metadata'])
-            feat_metadata = feat_metadata_obj.get('metadata', {})
+            feat_metadata_obj = json.loads(feature["metadata"])
+            feat_metadata = feat_metadata_obj.get("metadata", {})
             for key, value in feat_metadata.items():
                 if key in added_fields:
                     continue
@@ -584,15 +576,14 @@ class RiverscapesMapManager(QObject):
                     field_type = QMetaType.QString
                 # if 'metadata' not in metadata_fields:
                 #     metadata_fields.update({'metadata': {}})
-                metadata_fields['metadata'].update({key: field_type})
+                metadata_fields["metadata"].update({key: field_type})
                 added_fields.append(key)
 
         # create a virtual field for each key
         for upper_key, new_fields in metadata_fields.items():
             for key, field_type in new_fields.items():
-
                 field_name = f"{key} ({upper_key})"
-                if upper_key == 'attributes':
+                if upper_key == "attributes":
                     field_name = field_labels.get(key, field_name)
 
                 virtual_field = QgsField(field_name, int(field_type))
@@ -600,30 +591,32 @@ class RiverscapesMapManager(QObject):
 
                 if key == "photo_path":
                     # set attachment widget for photos
-                    widget = QgsEditorWidgetSetup('ExternalResource',
-                                                {
-                                                    'FileWidget': False,
-                                                    'DocumentViewer': 1,
-                                                    'RelativeStorage': 2,
-                                                    'StorageMode': 0,
-                                                    'DocumentViewerHeight': 0,
-                                                    'FileWidgetButton': False,
-                                                    'DocumentViewerWidth': 0,
-                                                    'FileWidgetFilter': '',
-                                                    'DefaultRoot': default_photo_path
-                                                })
+                    widget = QgsEditorWidgetSetup(
+                        "ExternalResource",
+                        {
+                            "FileWidget": False,
+                            "DocumentViewer": 1,
+                            "RelativeStorage": 2,
+                            "StorageMode": 0,
+                            "DocumentViewerHeight": 0,
+                            "FileWidgetButton": False,
+                            "DocumentViewerWidth": 0,
+                            "FileWidgetFilter": "",
+                            "DefaultRoot": default_photo_path,
+                        },
+                    )
                 else:
                     # hide the virtual field from the form editor
-                    widget = QgsEditorWidgetSetup('Hidden', {})
+                    widget = QgsEditorWidgetSetup("Hidden", {})
                 feature_layer.setEditorWidgetSetup(feature_layer.fields().indexFromName(field_name), widget)
 
             # set the default value for the metadata field
-        feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue('\'{}\''))
+        feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("'{}'"))
 
     def set_multiline(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
-        widget_setup = QgsEditorWidgetSetup('TextEdit', {'IsMultiline': True, 'UseHtml': False})
+        widget_setup = QgsEditorWidgetSetup("TextEdit", {"IsMultiline": True, "UseHtml": False})
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
         feature_layer.setFieldAlias(field_index, field_alias)
         form_config = feature_layer.editFormConfig()
@@ -638,7 +631,7 @@ class RiverscapesMapManager(QObject):
         form_config.setReadOnly(field_index, True)
         feature_layer.setEditFormConfig(form_config)
         feature_layer.setFieldAlias(field_index, field_alias)
-        widget_setup = QgsEditorWidgetSetup('Hidden', {})
+        widget_setup = QgsEditorWidgetSetup("Hidden", {})
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
 
         if hide_in_attribute_table:
@@ -662,13 +655,12 @@ class RiverscapesMapManager(QObject):
             parent_container.addChildElement(editor_field)
             feature_layer.setEditFormConfig(form_config)
 
-
     def set_table_as_layer_variable(self, feature_layer: QgsVectorLayer, database: str, table: str):
 
         safe_table = validate_sql_identifier(table)
         with sqlite3.connect(database) as conn:
             curs = conn.cursor()
-            curs.execute(f'SELECT * FROM "{safe_table}";') # nosec B608
+            curs.execute(f'SELECT * FROM "{safe_table}";')  # nosec B608
             lookup_collection = curs.fetchall()
             conn.commit()
         QgsExpressionContextUtils.setLayerVariable(feature_layer, table, json.dumps(lookup_collection))
@@ -692,9 +684,7 @@ class RiverscapesMapManager(QObject):
             key = str(row[desc_position])
             value = row[value_position]
             lookup_list.append({key: value})
-        lookup_config = {
-            'map': lookup_list
-        }
+        lookup_config = {"map": lookup_list}
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
         if expression is not None:
@@ -702,7 +692,7 @@ class RiverscapesMapManager(QObject):
             virtual_field = QgsField(field_name, int(QMetaType.Int))
             feature_layer.addExpressionField(expression, virtual_field)
             feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(expression))
-        widget_setup = QgsEditorWidgetSetup('ValueMap', lookup_config)
+        widget_setup = QgsEditorWidgetSetup("ValueMap", lookup_config)
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
         feature_layer.setFieldAlias(field_index, field_alias)
         form_config = feature_layer.editFormConfig()
@@ -720,9 +710,9 @@ class RiverscapesMapManager(QObject):
                            help_url = "[% @help_url %]"
                            webbrowser.open(help_url, new=2)
                            """).strip("\n")
-        help_url = CONSTANTS['webUrl'].rstrip('/') + '/Software_Help/' + help_slug.strip('/') if help_slug is not None and len(help_slug) > 0 else CONSTANTS
-        QgsExpressionContextUtils.setLayerVariable(feature_layer, 'help_url', help_url)
-        helpAction = QgsAction(1, 'Open Help URL', help_action_text, None, capture=False, shortTitle='Help', actionScopes={'Layer'})
+        help_url = CONSTANTS["webUrl"].rstrip("/") + "/Software_Help/" + help_slug.strip("/") if help_slug is not None and len(help_slug) > 0 else CONSTANTS
+        QgsExpressionContextUtils.setLayerVariable(feature_layer, "help_url", help_url)
+        helpAction = QgsAction(1, "Open Help URL", help_action_text, None, capture=False, shortTitle="Help", actionScopes={"Layer"})
         feature_layer.actions().addAction(helpAction)
         editorAction = QgsAttributeEditorAction(helpAction, parent_container)
         parent_container.addChildElement(editorAction)
@@ -736,22 +726,22 @@ class RiverscapesMapManager(QObject):
         sets the widget type to text
         sets default value to the dimension expression"""
 
-        if dimension == 'area':
-            field_name = 'vrt_area'
-            field_alias = 'Area (m²)'
+        if dimension == "area":
+            field_name = "vrt_area"
+            field_alias = "Area (m²)"
             if feature_layer.crs().isGeographic():
                 # Use transform function to reproject geometry to EPSG:5070 for area calculation
-                field_expression = 'round(area(transform($geometry, \'EPSG:4326\', \'EPSG:5070\')), 0)'
+                field_expression = "round(area(transform($geometry, 'EPSG:4326', 'EPSG:5070')), 0)"
             else:
-                field_expression = 'round($area, 0)'
-        elif dimension == 'length':
-            field_name = 'vrt_length'
-            field_alias = 'Length (m)'
+                field_expression = "round($area, 0)"
+        elif dimension == "length":
+            field_name = "vrt_length"
+            field_alias = "Length (m)"
             if feature_layer.crs().isGeographic():
                 # Use transform function to reproject geometry to EPSG:5070 for length calculation
-                field_expression = 'round(length(transform($geometry, \'EPSG:4326\', \'EPSG:5070\')), 0)'
+                field_expression = "round(length(transform($geometry, 'EPSG:4326', 'EPSG:5070')), 0)"
             else:
-                field_expression = 'round($length, 0)'
+                field_expression = "round($length, 0)"
         else:
             raise ValueError("Dimension must be 'area' or 'length'")
 
@@ -762,15 +752,15 @@ class RiverscapesMapManager(QObject):
         field_index = fields.indexFromName(field_name)
         feature_layer.setFieldAlias(field_index, field_alias)
         feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(field_expression, True))
-        widget_setup = QgsEditorWidgetSetup('TextEdit', {})
+        widget_setup = QgsEditorWidgetSetup("TextEdit", {})
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
 
     def set_created_datetime(self, feature_layer: QgsVectorLayer) -> None:
         """Will set a date time created field to a default value of now() and also set it to read only"""
 
         fields = feature_layer.fields()
-        field_index = fields.indexFromName('created')
-        feature_layer.setFieldAlias(field_index, 'Created')
+        field_index = fields.indexFromName("created")
+        feature_layer.setFieldAlias(field_index, "Created")
         feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("now()"))
         form_config = feature_layer.editFormConfig()
         form_config.setReadOnly(field_index, True)
@@ -798,14 +788,16 @@ class RiverscapesMapManager(QObject):
         field_index = fields.indexFromName(field_name)
         feature_layer.setFieldConstraint(field_index, QgsFieldConstraints.ConstraintNotNull, strength)
 
-    def set_metadata_attribute_editor(self, feature_layer: QgsVectorLayer, field_name='metadata', field_alias='Metadata', config_params={}):
+    def set_metadata_attribute_editor(self, feature_layer: QgsVectorLayer, field_name="metadata", field_alias="Metadata", config_params: Optional[dict] = None):
+        if config_params is None:
+            config_params = {}
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)
         initialize_metadata_widget()
-        widget_setup = QgsEditorWidgetSetup('MetadataFieldEdit', config_params)
+        widget_setup = QgsEditorWidgetSetup("MetadataFieldEdit", config_params)
         feature_layer.setEditorWidgetSetup(field_index, widget_setup)
         feature_layer.setFieldAlias(field_index, field_alias)
-        feature_layer.setDisplayExpression('fid')
+        feature_layer.setDisplayExpression("fid")
         form_config = feature_layer.editFormConfig()
         form_config.setReadOnly(field_index, False)
         form_config.setLabelOnTop(field_index, True)
