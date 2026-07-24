@@ -1,32 +1,55 @@
 {
+    // ─── Python editor behaviour ─────────────────────────────────────────────────
+    // All ruff rules are configured in pyproject.toml — the extension picks them
+    // up automatically.  On every save VS Code will:
+    //   1. format      — ruff format  (replaces autopep8)
+    //   2. lint + fix  — ruff check --fix  (replaces pylint, safe auto-fixes only)
+    //   3. sort imports — ruff's built-in isort
     "[python]": {
         "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
     },
-    "python.terminal.activateEnvironment": true,
-    "python.autoComplete.extraPaths": [
-        "${workspaceRoot}",
-        "${workspaceFolder}/.."
-    ],
+
+    // ─── Visual guide at the agreed line-length limit ─────────────────────────────
+    "editor.rulers": [240],
+
+    // ─── File hygiene (applies to every file type) ───────────────────────────────
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+
+    // ─── Explorer / watcher exclusions ───────────────────────────────────────────
     "files.exclude": {
+        "**/__pycache__": true,
         "**/*.egg-info": true
     },
     "files.watcherExclude": {
+        "**/__pycache__/**": true,
         "**/*.egg-info/**": true
     },
     "search.exclude": {
+        "**/__pycache__": true,
         "**/*.egg-info": true
     },
-    "pylint.args": [
-        "--extension-pkg-whitelist=PyQt5,qgis,db_manager",
-        "--disable=all",
-        "--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode",
-        // Relative imports can be noisy in this plugin layout.
-        // "--disable=relative-beyond-top-level"
+
+    // ─── Python environment ───────────────────────────────────────────────────────
+    "python.terminal.activateEnvironment": true,
+    "python.autoComplete.extraPaths": [
+        "${workspaceRoot}"
     ],
-    "python.analysis.extraPaths": [
-        "${workspaceRoot}",
-        "${workspaceFolder}/..",
-        "C:/Program Files/QGIS 3.40.8/apps/qgis-ltr/python"
-    ],
+
+    // ─── python-envs extension ────────────────────────────────────────────────────
+    "python-envs.pythonProjects": [
+      {
+        "path": ".",
+        "envManager": "ms-python.python:system",
+        "packageManager": "ms-python.python:pip"
+      }
+    ]
 }
