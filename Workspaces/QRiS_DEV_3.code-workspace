@@ -5,31 +5,8 @@
     }
   ],
   "settings": {
-    "[python]": {
-      "editor.tabSize": 4,
-      "editor.formatOnSave": true,
-    },
-    "autopep8.args": [
-      "--max-line-length=240",
-    ],
-    "pylint.args": [
-      "--disable=C0301,C0114,C0103,W0719,W0718",
-      "--max-line-length=240"
-    ],
-    "files.exclude": {
-      "**/*.egg-info": true,
-      "**/__pycache__": true
-    },
-    "files.watcherExclude": {
-      "**/*.egg-info/**": true,
-      "**/__pycache__": true
-    },
-    "search.exclude": {
-      "**/*.egg-info": true,
-      "**/__pycache__": true
-    },
     // FROM: https://gist.github.com/NicolaiMogensen/acfd8723720c4761aefef3cdfc2aa55a
-    // I like changing colors for my projects. QGIS projects are usually green. 
+    // I like changing colors for my projects. QGIS projects are usually green.
     "workbench.colorCustomizations": {
       "titleBar.activeForeground": "#ffffff",
       "titleBar.activeBackground": "#b4b4b473",
@@ -40,9 +17,5 @@
       "PATH": "${env:PATH}:${env:QGIS_PATH}/Contents/MacOS/bin"
     },
     "terminal.integrated.defaultProfile.linux": "zsh"
-  },
-  "launch": {
-    "configurations": [],
-    "compounds": []
   }
 }

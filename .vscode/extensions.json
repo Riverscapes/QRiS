@@ -1,0 +1,15 @@
+{
+    "recommendations": [
+        // ── Python toolchain ──────────────────────────────────────────────────
+        "ms-python.python",          // Python language support
+        "charliermarsh.ruff",        // Ruff: fast linter + formatter (replaces pylint & autopep8)
+        "ms-python.vscode-pylance",  // Fast type-checking & IntelliSense
+
+        // ── Cross-editor whitespace consistency ───────────────────────────────
+        "editorconfig.editorconfig", // Reads .editorconfig for indent/newline rules
+
+        // ── General quality of life ───────────────────────────────────────────
+        "streetsidesoftware.code-spell-checker", // Catch typos in code and comments
+        "eamodio.gitlens"            // Richer git blame / history
+    ]
+}
