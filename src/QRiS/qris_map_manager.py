@@ -589,7 +589,7 @@ class QRisMapManager(RiverscapesMapManager):
     def add_buffer_action(self, feature_layer: QgsVectorLayer, parent_container: QgsAttributeEditorContainer):
 
         action_text = dedent("""
-                            from PyQt5 import QtCore
+                            from qgis.PyQt import QtCore
                             from qgis.PyQt.QtGui import QColor
 
                             buffers = {"Small":15,

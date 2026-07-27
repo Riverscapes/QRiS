@@ -1,34 +1,32 @@
-import re
-import requests
+import glob
 import importlib.util
 import os
-import glob
+import re
 import unittest
 
+import requests
+
 # Patterns to match add_standard_form_buttons and add_help_button usage
-PATTERNS = [
-    re.compile(r"add_standard_form_buttons\([^,]+,\s*['\"]([^'\"]+)['\"]"),
-    re.compile(r"add_help_button\([^,]+,\s*['\"]([^'\"]+)['\"]")
-]
+PATTERNS = [re.compile(r"add_standard_form_buttons\([^,]+,\s*['\"]([^'\"]+)['\"]"), re.compile(r"add_help_button\([^,]+,\s*['\"]([^'\"]+)['\"]")]
 
 # Base URL for help docs (adjust if needed)
 BASE_URL = "https://qris.riverscapes.net/"
 REQUEST_TIMEOUT_SECONDS = 10
 
 # Find all .py files in src/view
-view_dir = os.path.join(os.path.dirname(__file__), '../src/view')
-py_files = glob.glob(os.path.join(view_dir, '**', '*.py'), recursive=True)
-
+view_dir = os.path.join(os.path.dirname(__file__), "../src/view")
+py_files = glob.glob(os.path.join(view_dir, "**", "*.py"), recursive=True)
 
 
 def extract_help_slugs(file_path):
     slugs = set()
-    with open(file_path, encoding='utf-8') as f:
+    with open(file_path, encoding="utf-8") as f:
         for line in f:
             for pat in PATTERNS:
                 for match in pat.finditer(line):
                     slugs.add((file_path, match.group(1)))
     return slugs
+
 
 class TestHelpLinks(unittest.TestCase):
     def test_help_links(self):
@@ -42,16 +40,20 @@ class TestHelpLinks(unittest.TestCase):
 
         errors = []
         for file_path, slug in all_slug_tuples:
-            url = BASE_URL + "software-help/" + slug.lstrip('/')
+            url = BASE_URL + "software-help/" + slug.lstrip("/")
             try:
                 resp = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
                 if resp.status_code != 200:
                     errors.append(f"Invalid help URL in {os.path.basename(file_path)}: {url} (status {resp.status_code})")
             except Exception as ex:
                 errors.append(f"Error accessing help URL in {os.path.basename(file_path)}: {url} ({ex})")
-        
+
         if errors:
             self.fail("\n".join(errors))
 
+
 if __name__ == "__main__":
     unittest.main()
+
+
+

@@ -66,6 +66,7 @@ ignore = [
 
 # ── isort ─────────────────────────────────────────────────────────────────────
 [tool.ruff.lint.isort]
+known-first-party         = ["src", "test", "qris_dev"]
 known-third-party          = ["qgis", "PyQt5", "PyQt6", "lxml"]
 force-sort-within-sections = true
 

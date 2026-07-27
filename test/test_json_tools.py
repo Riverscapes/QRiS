@@ -1,14 +1,14 @@
-import unittest
 import os
 import sys
+import unittest
 
 # Add the parent directory to sys.path so we can import 'qris_dev' as a package
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from qris_dev.src.lib.json_tools import json_repair, safe_json_loads
+from ..src.lib.json_tools import json_repair, safe_json_loads
+
 
 class TestJsonTools(unittest.TestCase):
-    
     def test_json_repair_valid(self):
         """Test json_repair with valid JSON."""
         json_str = '{"key": "value"}'
@@ -34,14 +34,14 @@ class TestJsonTools(unittest.TestCase):
         # The current simple implementation might fail on complex nesting, returning empty dict
         # This test documents that behavior or success if it happens to work
         json_str = '{"a": {"b": [1, 2'
-        result = json_repair(json_str) 
+        result = json_repair(json_str)
         # Currently the simple heuristic append order produces invalid JSON for this case
         # resulting in {} being returned after exception
         if result == {}:
-             pass # Expected failure mode
+            pass  # Expected failure mode
         else:
-             # If it somehow succeeded, that's great too
-             self.assertTrue(isinstance(result, dict))
+            # If it somehow succeeded, that's great too
+            self.assertTrue(isinstance(result, dict))
 
     def test_safe_json_loads_valid(self):
         """Test safe_json_loads with valid JSON."""
@@ -51,5 +51,6 @@ class TestJsonTools(unittest.TestCase):
         """Test safe_json_loads with invalid JSON that gets repaired."""
         self.assertEqual(safe_json_loads('{"a": 1'), {"a": 1})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
