@@ -2,8 +2,9 @@ import json
 import sqlite3
 from typing import Optional
 
-from qgis.core import QgsDistanceArea, QgsProject, QgsUnitTypes
+from qgis.core import QgsDistanceArea, QgsProject
 
+from ..compat import UNIT_DISTANCE_METERS
 from .db_item_spatial import DBItemSpatial
 
 
@@ -28,7 +29,7 @@ class CrossSections(DBItemSpatial):
         max_length = None
         count = 0
         for feature in temp_layer.getFeatures():
-            length = da.convertLengthMeasurement(da.measureLength(feature.geometry()), QgsUnitTypes.DistanceMeters)
+            length = da.convertLengthMeasurement(da.measureLength(feature.geometry()), UNIT_DISTANCE_METERS)
             total_length += length
             min_length = length if min_length is None else min(min_length, length)
             max_length = length if max_length is None else max(max_length, length)

@@ -236,7 +236,7 @@ class FrmMetricValue(QtWidgets.QDialog):
                     # Here we want to go backwards.
                     # Actually convert_count_per_length takes (value, unit_from, unit_to).
                     # So if we say convert_count_per_length(val, TargetUnit, BaseUnit) it should work?
-                    # base_unit for metric is usually QgsUnitTypes.DistanceMeters (which is integer 1)
+                    # base_unit for metric is usually meter-based (compat UNIT_DISTANCE_METERS)
                     # target_unit_name is string 'Feet'.
                     return convert_count_per_length(value, target_unit_name, base_unit)
 

@@ -1,8 +1,9 @@
 import sqlite3
 from typing import Optional
 
-from qgis.core import QgsDistanceArea, QgsProject, QgsUnitTypes, QgsVectorLayer
+from qgis.core import QgsDistanceArea, QgsProject, QgsVectorLayer
 
+from ..compat import UNIT_AREA_SQUARE_METERS
 from .db_item import DBItem
 
 
@@ -68,7 +69,7 @@ class DBItemSpatial(DBItem):
             min_area = None
             max_area = None
             for feature in temp_layer.getFeatures():
-                area_m2 = da.convertAreaMeasurement(da.measureArea(feature.geometry()), QgsUnitTypes.AreaSquareMeters)
+                area_m2 = da.convertAreaMeasurement(da.measureArea(feature.geometry()), UNIT_AREA_SQUARE_METERS)
                 total_area += area_m2
                 min_area = area_m2 if min_area is None else min(min_area, area_m2)
                 max_area = area_m2 if max_area is None else max(max_area, area_m2)
