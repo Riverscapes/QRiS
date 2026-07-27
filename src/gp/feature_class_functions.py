@@ -2,10 +2,11 @@ import os
 from typing import Optional
 
 from osgeo import ogr, osr
-from qgis.core import QgsGeometry, QgsMapLayer, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsGeometry, QgsVectorLayer, QgsWkbTypes
 from qgis.gui import QgsDataSourceSelectDialog
 from qgis.PyQt.QtWidgets import QMessageBox
 
+from ..compat import MAPLAYER_RASTER, MAPLAYER_VECTOR
 from ..model.profile import Profile
 from ..model.project import Project
 
@@ -162,7 +163,7 @@ def get_field_values(path: str, field_name: str) -> list:
 
 def browse_raster(parent, description: str) -> str:
     # https://qgis.org/pyqgis/master/gui/QgsDataSourceSelectDialog.html
-    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=QgsMapLayer.RasterLayer)
+    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=MAPLAYER_RASTER)
     frm_browse.setDescription(description)
 
     frm_browse.exec()
@@ -195,7 +196,7 @@ def browse_vector(parent, description: str, geometry_type: QgsWkbTypes.GeometryT
     QgsWkbTypes.GeometryType.NullGeometry
     """
 
-    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=QgsMapLayer.VectorLayer)
+    frm_browse = QgsDataSourceSelectDialog(parent=parent, setFilterByLayerType=True, layerType=MAPLAYER_VECTOR)
     frm_browse.setDescription(description)
 
     frm_browse.exec()

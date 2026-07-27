@@ -7,6 +7,7 @@ from typing import Optional
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError
 from ..model.metric_value import INTRINSIC_EVENT_ID, MetricValue, load_metric_values
@@ -34,7 +35,7 @@ class AnalysisMetricsTask(QgsTask):
         overwrite_existing: bool,
         force_active: bool,
     ):
-        super().__init__("Calculate Analysis Metrics", QgsTask.CanCancel)
+        super().__init__("Calculate Analysis Metrics", QGSTASK_CAN_CANCEL)
 
         self.qris_project = qris_project
         self.analysis = analysis

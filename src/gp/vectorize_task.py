@@ -2,7 +2,9 @@ import os
 
 from qgis import processing
 from qgis.core import Qgis, QgsCoordinateTransformContext, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsField, QgsMessageLog, QgsRasterLayer, QgsTask, QgsVectorDataProvider, QgsVectorFileWriter, QgsVectorLayer, edit
-from qgis.PyQt.QtCore import QMetaType, pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal
+
+from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_DOUBLE, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
 
 # ---- processing tool parameters ----
 # simplify tolerance
@@ -32,7 +34,7 @@ class VectorizeTask(QgsTask):
     on_complete = pyqtSignal(bool)
 
     def __init__(self, raster_path: Path, out_gpkg: Path, out_layer_name: str, raster_value: float, simplify_tolerance: float = 0.00008, smoothing_offset: float = 0.25, polygon_min_size: float = 9.0, inverse: bool = False):
-        super().__init__("Vectorize Task", QgsTask.CanCancel)
+        super().__init__("Vectorize Task", QGSTASK_CAN_CANCEL)
 
         self.raster_path = raster_path
         self.out_gpkg = out_gpkg
@@ -69,7 +71,7 @@ class VectorizeTask(QgsTask):
             pv = raw_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField("raw_area_m", int(QMetaType.Type.Double)), QgsField("max_elev_m", int(QMetaType.Type.Double)), QgsField("surface_name", int(QMetaType.QString))])
+            pv.addAttributes([QgsField("raw_area_m", int(QMETATYPE_DOUBLE)), QgsField("max_elev_m", int(QMETATYPE_DOUBLE)), QgsField("surface_name", int(QMETATYPE_STRING))])
             raw_vector.updateFields()
 
             # Create a context and scope
@@ -123,7 +125,7 @@ class VectorizeTask(QgsTask):
             pv = final_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField("area_m", int(QMetaType.Int))])
+            pv.addAttributes([QgsField("area_m", int(QMETATYPE_INT))])
             final_vector.updateFields()
 
             # Loop through and add the areas
@@ -171,7 +173,7 @@ class VectorizeTask(QgsTask):
                 options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
             result = QgsVectorFileWriter.writeAsVectorFormatV3(final_vector, self.out_gpkg, tc, options)
 
-            if result[0] == QgsVectorFileWriter.NoError:
+            if result[0] == VFW_NO_ERROR:
                 return True
             else:
                 self.exception = Exception(str(result))

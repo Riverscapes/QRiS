@@ -8,12 +8,13 @@ All shared enum shims live here.  **Do not** duplicate ``USER_ROLE`` or
 other guards in individual source files — import from this module instead.
 """
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import QMetaType, Qt, QVariant
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QDialogButtonBox,
     QFrame,
     QHeaderView,
+    QLineEdit,
     QMessageBox,
     QSizePolicy,
 )
@@ -29,6 +30,7 @@ try:
     UNCHECKED = Qt.CheckState.Unchecked
     ITEM_FLAG_CHECKABLE = Qt.ItemFlag.ItemIsUserCheckable
     ITEM_FLAG_ENABLED = Qt.ItemFlag.ItemIsEnabled
+    ITEM_FLAG_SELECTABLE = Qt.ItemFlag.ItemIsSelectable
     HORIZONTAL = Qt.Orientation.Horizontal
     VERTICAL = Qt.Orientation.Vertical
     ASCENDING_ORDER = Qt.SortOrder.AscendingOrder
@@ -55,6 +57,7 @@ except AttributeError:
     UNCHECKED = Qt.Unchecked  # type: ignore[attr-defined]
     ITEM_FLAG_CHECKABLE = Qt.ItemIsUserCheckable  # type: ignore[attr-defined]
     ITEM_FLAG_ENABLED = Qt.ItemIsEnabled  # type: ignore[attr-defined]
+    ITEM_FLAG_SELECTABLE = Qt.ItemIsSelectable  # type: ignore[attr-defined]
     HORIZONTAL = Qt.Horizontal  # type: ignore[attr-defined]
     VERTICAL = Qt.Vertical  # type: ignore[attr-defined]
     ASCENDING_ORDER = Qt.AscendingOrder  # type: ignore[attr-defined]
@@ -70,6 +73,25 @@ except AttributeError:
     DIALOG_BTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
     CUSTOM_CONTEXT_MENU = Qt.CustomContextMenu  # type: ignore[attr-defined]
     USER_ROLE = Qt.UserRole  # type: ignore[attr-defined]
+
+
+# ── QVariant / QMetaType field type compatibility ───────────────────────────
+try:
+    # Qt 6 / PyQt6 — QVariant enum was moved under QMetaType.Type
+    QMETATYPE_STRING = QMetaType.Type.QString
+    QMETATYPE_INT = QMetaType.Type.Int
+    QMETATYPE_DOUBLE = QMetaType.Type.Double
+    QMETATYPE_LONGLONG = QMetaType.Type.LongLong
+    QMETATYPE_UINT = QMetaType.Type.UInt
+    QMETATYPE_ULONGLONG = QMetaType.Type.ULongLong
+except AttributeError:
+    # Qt 5 / PyQt5 — flat QVariant enum
+    QMETATYPE_STRING = QVariant.String  # type: ignore[attr-defined]
+    QMETATYPE_INT = QMetaType.Int  # type: ignore[attr-defined]
+    QMETATYPE_DOUBLE = QMetaType.Double  # type: ignore[attr-defined]
+    QMETATYPE_LONGLONG = QMetaType.LongLong  # type: ignore[attr-defined]
+    QMETATYPE_UINT = QMetaType.UInt  # type: ignore[attr-defined]
+    QMETATYPE_ULONGLONG = QMetaType.ULongLong  # type: ignore[attr-defined]
 
 
 # ── QFrame shape / shadow ────────────────────────────────────────────────────
@@ -171,9 +193,26 @@ except AttributeError:
 try:
     # Qt 6 / PyQt6 — scoped enum
     QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS = QAbstractItemView.EditTrigger.NoEditTriggers
+    QABSTRACTITEMVIEW_DOUBLE_CLICKED = QAbstractItemView.EditTrigger.DoubleClicked
+    QABSTRACTITEMVIEW_SELECTED_CLICKED = QAbstractItemView.EditTrigger.SelectedClicked
+    QABSTRACTITEMVIEW_EDIT_KEY_PRESSED = QAbstractItemView.EditTrigger.EditKeyPressed
+    QABSTRACTITEMVIEW_SELECT_ROWS = QAbstractItemView.SelectionBehavior.SelectRows
+    QABSTRACTITEMVIEW_SINGLE_SELECTION = QAbstractItemView.SelectionMode.SingleSelection
 except AttributeError:
     # Qt 5 / PyQt5 — flat enum
     QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS = QAbstractItemView.NoEditTriggers  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_DOUBLE_CLICKED = QAbstractItemView.DoubleClicked  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_SELECTED_CLICKED = QAbstractItemView.SelectedClicked  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_EDIT_KEY_PRESSED = QAbstractItemView.EditKeyPressed  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_SELECT_ROWS = QAbstractItemView.SelectRows  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_SINGLE_SELECTION = QAbstractItemView.SingleSelection  # type: ignore[attr-defined]
+
+
+# ── QLineEdit action positions ───────────────────────────────────────────────
+try:
+    LINEEDIT_TRAILING_POSITION = QLineEdit.ActionPosition.TrailingPosition
+except AttributeError:
+    LINEEDIT_TRAILING_POSITION = QLineEdit.TrailingPosition  # type: ignore[attr-defined]
 
 
 from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest

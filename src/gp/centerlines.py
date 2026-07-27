@@ -5,6 +5,8 @@ Centerline geoprocessing task using QgsGeometry
 from qgis.core import Qgis, QgsGeometry, QgsLineString, QgsMessageLog, QgsPointXY, QgsTask, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "CenterlineTask"
 
 
@@ -12,7 +14,7 @@ class CenterlineTask(QgsTask):
     centerline_complete = pyqtSignal(QgsGeometry)
 
     def __init__(self, in_polygon: QgsGeometry, start_clipline: QgsLineString, end_clipline: QgsLineString, densify_distance=None, islands: QgsGeometry = None) -> None:
-        super().__init__("Generate Centerline Task", QgsTask.CanCancel)
+        super().__init__("Generate Centerline Task", QGSTASK_CAN_CANCEL)
 
         # Try to make deep copies of geometries so gui/parent changes don't cause issues?
         self.in_polygon = QgsGeometry(in_polygon)

@@ -1,6 +1,7 @@
 from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsRasterLayer, QgsTask, QgsVectorLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
 from .zonal_metrics import ZonalMetrics
@@ -17,7 +18,7 @@ class ZonalMetricsTask(QgsTask):
     on_complete = pyqtSignal(bool, SampleFrame, dict or None, dict or None)
 
     def __init__(self, project: Project, mask: SampleFrame):
-        super().__init__(MESSAGE_CATEGORY, QgsTask.CanCancel)
+        super().__init__(MESSAGE_CATEGORY, QGSTASK_CAN_CANCEL)
 
         self.polygons = {}
         self.data = {}

@@ -4,6 +4,8 @@ from osgeo.gdal import Translate, Warp
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "QRiS_CopyRasterTask"
 
 
@@ -16,7 +18,7 @@ class CopyRaster(QgsTask):
     copy_raster_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, mask_tuple, output_path: str):
-        super().__init__("Copy Raster Task", QgsTask.CanCancel)
+        super().__init__("Copy Raster Task", QGSTASK_CAN_CANCEL)
 
         self.source_path = source_path
         self.mask_tuple = mask_tuple

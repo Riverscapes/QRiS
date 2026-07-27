@@ -3,6 +3,8 @@ import os
 from qgis.core import Qgis, QgsCoordinateTransform, QgsMessageLog, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL, VFW_NO_ERROR
+
 MESSAGE_CATEGORY = "QRiS_CopyFeatureClassTask"
 
 
@@ -17,7 +19,7 @@ class CopyFeatureClass(QgsTask):
     copy_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, mask_tuple, output_ds: str, output_fc_name: str):
-        super().__init__("Copy Feature Task", QgsTask.CanCancel)
+        super().__init__("Copy Feature Task", QGSTASK_CAN_CANCEL)
 
         self.source_path = source_path
         self.mask_tuple = mask_tuple
@@ -81,7 +83,7 @@ class CopyFeatureClass(QgsTask):
                         feat.setGeometry(geom)
                         writer.addFeature(feat)
 
-                if writer.hasError() != QgsVectorFileWriter.NoError:
+                if writer.hasError() != VFW_NO_ERROR:
                     self.exception = Exception(str(writer.errorMessage()))
                     return False
 
@@ -92,7 +94,7 @@ class CopyFeatureClass(QgsTask):
                 # Write vector layer to file
                 error = QgsVectorFileWriter.writeAsVectorFormatV3(source_layer, self.output_path, context, options)
 
-                if error[0] != QgsVectorFileWriter.NoError:
+                if error[0] != VFW_NO_ERROR:
                     self.exception = Exception(str(error))
                     return False
             return True

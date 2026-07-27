@@ -22,10 +22,11 @@ from qgis.core import (
     QgsVectorLayer,
     QgsVectorLayerSimpleLabeling,
 )
-from qgis.PyQt.QtCore import QRect, QSize, QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QRect, QSize, pyqtSignal
 from qgis.PyQt.QtGui import QColor, QImage, QPainter
 from qgis.PyQt.QtSvg import QSvgGenerator
 
+from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_STRING
 from ..QRiS.settings import Settings
 from .map_centroid import build_aoi_centroids_layer
 
@@ -41,7 +42,7 @@ class VicinityMapExportTask(QgsTask):
     on_complete = pyqtSignal(bool, str, object)
 
     def __init__(self, output_path, qris_project, render_params=None):
-        super().__init__("Vicinity Map Export", QgsTask.CanCancel)
+        super().__init__("Vicinity Map Export", QGSTASK_CAN_CANCEL)
         self.output_path = output_path
         self.qris_project = qris_project
         self.render_params = render_params or {}
@@ -161,7 +162,7 @@ class VicinityMapExportTask(QgsTask):
             raise Exception("Could not create region render layer.")
 
         provider = region_layer.dataProvider()
-        provider.addAttributes([QgsField("label_text", QVariant.String)])
+        provider.addAttributes([QgsField("label_text", QMETATYPE_STRING)])
         region_layer.updateFields()
 
         feature = QgsFeature(region_layer.fields())
@@ -199,7 +200,7 @@ class VicinityMapExportTask(QgsTask):
             raise Exception("Could not create centroid render layer.")
 
         provider = centroid_layer.dataProvider()
-        provider.addAttributes([QgsField("label_text", QVariant.String)])
+        provider.addAttributes([QgsField("label_text", QMETATYPE_STRING)])
         centroid_layer.updateFields()
 
         feature = QgsFeature(centroid_layer.fields())

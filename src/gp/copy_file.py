@@ -3,10 +3,12 @@ from shutil import copyfile
 
 from qgis.core import QgsTask
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 
 class FileCopyTask(QgsTask):
     def __init__(self, source_path, dest_path, callback, mode="copy"):
-        super().__init__("Copy Attachment File", QgsTask.CanCancel)
+        super().__init__("Copy Attachment File", QGSTASK_CAN_CANCEL)
         self.source_path = source_path
         self.dest_path = dest_path
         self.callback = callback

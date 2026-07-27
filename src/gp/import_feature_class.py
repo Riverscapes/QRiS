@@ -6,6 +6,7 @@ from osgeo import ogr, osr
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import QVariant, pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..gp.feature_class_functions import layer_path_parser
 
 MESSAGE_CATEGORY = "QRiS_ImportFeatureClassTask"
@@ -40,7 +41,7 @@ class ImportFeatureClass(QgsTask):
         proj_gpkg=None,
         explode_geometries=False,
     ):
-        super().__init__("Import Feature Class Task", QgsTask.CanCancel)
+        super().__init__("Import Feature Class Task", QGSTASK_CAN_CANCEL)
 
         self.source_path = source_path
         self.clip_mask = clip_mask  # (fc_name, field_name, feature_id)

@@ -5,6 +5,8 @@ from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "QRiS_StreamGageTask"
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
@@ -39,7 +41,7 @@ class StreamGageDischargeTask(QgsTask):
     """
 
     def __init__(self, db_path: str, site_code, site_id, start_date, end_date):
-        super().__init__(f"Stream Gage Discharge API Request for {site_code}", QgsTask.CanCancel)
+        super().__init__(f"Stream Gage Discharge API Request for {site_code}", QGSTASK_CAN_CANCEL)
         # self.duration = duration
         self.db_path = db_path
         self.site_code = site_code

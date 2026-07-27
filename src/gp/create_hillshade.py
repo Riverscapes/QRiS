@@ -4,6 +4,8 @@ from osgeo import gdal, osr
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "QRiS_HillshadeTask"
 
 
@@ -16,7 +18,7 @@ class Hillshade(QgsTask):
     hillshade_complete = pyqtSignal(bool)
 
     def __init__(self, source_path: str, output_path: str):
-        super().__init__("Hillshade Task", QgsTask.CanCancel)
+        super().__init__("Hillshade Task", QGSTASK_CAN_CANCEL)
 
         self.dem = source_path
         self.output_path = output_path

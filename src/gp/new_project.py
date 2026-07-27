@@ -5,6 +5,7 @@ import sqlite3
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..model.project import create_geopackage_table
 
 MESSAGE_CATEGORY = "QRiS_NewProjectTask"
@@ -21,7 +22,7 @@ class NewProjectTask(QgsTask):
     project_create_schema = pyqtSignal()
 
     def __init__(self, project_name: str, output_gpkg: str, description: str, map_guid: str, layers: dict, metadata=None):
-        super().__init__("New QRIS Project Task", QgsTask.CanCancel)
+        super().__init__("New QRIS Project Task", QGSTASK_CAN_CANCEL)
 
         self.project_name = project_name
         self.project_description = description

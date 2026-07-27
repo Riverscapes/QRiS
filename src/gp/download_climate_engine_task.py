@@ -7,6 +7,7 @@ from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..lib.climate_engine import CLIMATE_ENGINE_API, get_api_key
 from ..model.project import Project
 
@@ -26,7 +27,7 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
     download_complete = pyqtSignal(bool)
 
     def __init__(self, qris_project: Project, name: str, dataset: str, variables: list[str], start_date: str, end_date: str, features: ogr.Feature, area_reducer: str = "mean"):
-        super().__init__("Download Climate Engine Task", QgsTask.CanCancel)
+        super().__init__("Download Climate Engine Task", QGSTASK_CAN_CANCEL)
 
         self.qris_project = qris_project
         self.name = name
