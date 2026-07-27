@@ -2,12 +2,13 @@ import traceback
 
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..model.project import Project, apply_db_migrations, test_project
 
 
 class LoadProjectTask(QgsTask):
     def __init__(self, db_path, callback):
-        super().__init__("Load QRiS Project", QgsTask.CanCancel)
+        super().__init__("Load QRiS Project", QGSTASK_CAN_CANCEL)
         self.db_path = db_path
         self.callback = callback
         self.qris_project = None

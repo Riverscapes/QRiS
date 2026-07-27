@@ -2,6 +2,8 @@ from qgis import processing
 from qgis.core import Qgis, QgsCoordinateTransform, QgsFeature, QgsMessageLog, QgsProject, QgsTask, QgsVectorLayer
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "SampleFrameTask"
 
 
@@ -9,7 +11,7 @@ class SampleFrameTask(QgsTask):
     sample_frame_complete = pyqtSignal(bool)
 
     def __init__(self, polygon: QgsVectorLayer, cross_sections: QgsVectorLayer, out_path: str, id: int) -> None:
-        super().__init__("Generate Sample Frames Task", QgsTask.CanCancel)
+        super().__init__("Generate Sample Frames Task", QGSTASK_CAN_CANCEL)
 
         self.polygon_layer = polygon
         self.cross_sections_layer = cross_sections

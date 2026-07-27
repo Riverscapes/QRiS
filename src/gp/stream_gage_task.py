@@ -8,6 +8,8 @@ from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "QRiS_StreamGageTask"
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
@@ -25,7 +27,7 @@ class StreamGageTask(QgsTask):
     """
 
     def __init__(self, db_path: str, min_lat: float, max_lat: float, min_lng: float, max_lng: float):
-        super().__init__(f"Stream Gage API Request at {min_lat}, {max_lat}, {min_lng}, {max_lng}", QgsTask.CanCancel)
+        super().__init__(f"Stream Gage API Request at {min_lat}, {max_lat}, {min_lng}, {max_lng}", QGSTASK_CAN_CANCEL)
         # self.duration = duration
         self.db_path = db_path
         self.min_lat = min_lat

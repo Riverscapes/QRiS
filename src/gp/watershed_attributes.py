@@ -5,6 +5,7 @@ import webbrowser
 from qgis.core import Qgis, QgsMessageLog, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..QRiS.settings import CONSTANTS
 from .watershed_attribute_api import QueryMonster
 
@@ -22,7 +23,7 @@ class WatershedAttributes(QgsTask):
     """
 
     def __init__(self, latitude: float, longitude: float, format_as_report: bool):
-        super().__init__(f"Watershed Attributes API Request at {longitude}, {latitude}", QgsTask.CanCancel)
+        super().__init__(f"Watershed Attributes API Request at {longitude}, {latitude}", QGSTASK_CAN_CANCEL)
         # self.duration = duration
         self.format_as_report = False  # format_as_report
         self.latitude = latitude

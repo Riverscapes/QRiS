@@ -3,6 +3,8 @@ import math
 from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsLineString, QgsMessageLog, QgsPointXY, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL
+
 MESSAGE_CATEGORY = "CrossSectionsTask"
 
 
@@ -10,7 +12,7 @@ class CrossSectionsTask(QgsTask):
     cross_sections_complete = pyqtSignal(dict)
 
     def __init__(self, in_centerline: QgsLineString, offset: float, spacing: float, extension: float, in_polygon: QgsGeometry = None) -> None:
-        super().__init__("Generate Cross Sections Task", QgsTask.CanCancel)
+        super().__init__("Generate Cross Sections Task", QGSTASK_CAN_CANCEL)
 
         self.polygon = in_polygon
         self.centerline = in_centerline

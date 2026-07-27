@@ -3,8 +3,9 @@ import os
 from typing import Optional
 
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDataProvider, QgsFeatureRequest, QgsField, QgsMessageLog, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer, QgsWkbTypes
-from qgis.PyQt.QtCore import QMetaType, QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QVariant, pyqtSignal
 
+from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
 from ..gp.feature_class_functions import layer_path_parser
 from .import_feature_class import ImportFieldMap
 
@@ -24,7 +25,7 @@ class ImportMapLayer(QgsTask):
     def __init__(
         self, source_layer: QgsVectorLayer, dest_path: str, attributes: Optional[dict] = None, field_map: Optional[list[ImportFieldMap]] = None, clip_mask: Optional[tuple] = None, attribute_filter: Optional[str] = None, proj_gpkg=None
     ):
-        super().__init__("Import Map Layer", QgsTask.CanCancel)
+        super().__init__("Import Map Layer", QGSTASK_CAN_CANCEL)
 
         # Instead of clone(), create a true in-memory copy
         self.source_layer = self._make_memory_copy(source_layer)
@@ -87,7 +88,7 @@ class ImportMapLayer(QgsTask):
             if self.attributes is not None:
                 fields = []
                 for field_name in self.attributes.keys():
-                    field = QgsField(field_name, int(QMetaType.Int))
+                    field = QgsField(field_name, int(QMETATYPE_INT))
                     fields.append(field)
                 self.source_layer.dataProvider().addAttributes(fields)
                 self.source_layer.updateFields()
@@ -109,7 +110,7 @@ class ImportMapLayer(QgsTask):
             # add the metadata field to the source layer
             # Check first
             if self.source_layer.fields().lookupField("metadata") == -1:
-                field = QgsField("metadata", int(QMetaType.QString))
+                field = QgsField("metadata", int(QMETATYPE_STRING))
                 self.source_layer.dataProvider().addAttributes([field])
                 self.source_layer.updateFields()
 
@@ -118,7 +119,7 @@ class ImportMapLayer(QgsTask):
                 for field_map in self.field_map:
                     if field_map.direct_copy is True:
                         if self.source_layer.fields().lookupField(field_map.dest_field) == -1:
-                            field = QgsField(field_map.dest_field, int(QMetaType.QString))
+                            field = QgsField(field_map.dest_field, int(QMETATYPE_STRING))
                             self.source_layer.dataProvider().addAttributes([field])
                             self.source_layer.updateFields()
 
@@ -187,7 +188,7 @@ class ImportMapLayer(QgsTask):
             # Write vector layer to file
             error = QgsVectorFileWriter.writeAsVectorFormatV3(self.source_layer, dst_path, context, options)
 
-            if error[0] != QgsVectorFileWriter.NoError:
+            if error[0] != VFW_NO_ERROR:
                 self.exception = Exception(str(error))
                 return False
             return True

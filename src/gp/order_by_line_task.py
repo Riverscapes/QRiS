@@ -1,7 +1,9 @@
 from typing import Optional
 
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry, QgsMessageLog, QgsPointXY, QgsProject, QgsTask, QgsVectorLayer, QgsWkbTypes
-from qgis.PyQt.QtCore import QMetaType, pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal
+
+from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_LONGLONG, QMETATYPE_UINT, QMETATYPE_ULONGLONG
 
 MESSAGE_CATEGORY = "OrderByLineTask"
 
@@ -46,7 +48,7 @@ class OrderByLineTask(QgsTask):
         flow_path_value: Optional[str] = None,
         intersecting_only: bool = False,
     ) -> None:
-        super().__init__("Order Features by Line Task", QgsTask.CanCancel)
+        super().__init__("Order Features by Line Task", QGSTASK_CAN_CANCEL)
 
         self.layer_path = layer_path
         self.centerline = centerline
@@ -200,7 +202,7 @@ class OrderByLineTask(QgsTask):
             secondary_idx = layer.fields().indexOf(self.secondary_label_field) if self.secondary_label_field else -1
             flow_path_idx = layer.fields().indexOf(self.flow_path_field) if self.flow_path_field else -1
             fid_field_idx = layer.fields().indexOf("fid")
-            label_is_int = label_idx >= 0 and layer.fields().field(label_idx).type() in (QMetaType.Int, QMetaType.LongLong, QMetaType.UInt, QMetaType.ULongLong)
+            label_is_int = label_idx >= 0 and layer.fields().field(label_idx).type() in (QMETATYPE_INT, QMETATYPE_LONGLONG, QMETATYPE_UINT, QMETATYPE_ULONGLONG)
 
             def _feature_chain_id(feature):
                 if fid_field_idx >= 0:

@@ -6,6 +6,7 @@ from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
+from ..compat import QGSTASK_CAN_CANCEL
 from ..model.pour_point import PourPoint, save_pour_point
 from ..QRiS.settings import Settings
 
@@ -23,7 +24,7 @@ class StreamStats(QgsTask):
     """
 
     def __init__(self, db_path: str, latitude: float, longitude: float, name: str, description: str, get_basic_chars: bool, get_flow_stats: bool, add_to_map: bool, metadata: Optional[dict] = None):
-        super().__init__(f"{name} Stream Stats API Request at {longitude}, {latitude}", QgsTask.CanCancel)
+        super().__init__(f"{name} Stream Stats API Request at {longitude}, {latitude}", QGSTASK_CAN_CANCEL)
         # self.duration = duration
         self.db_path = db_path
         self.name = name
