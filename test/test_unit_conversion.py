@@ -9,7 +9,15 @@ from .utilities import get_qgis_app
 # Add the parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from ..src.lib.unit_conversion import RatioUnit, distance_units, short_unit_name
+from src.compat import (
+    UNIT_DISTANCE_FEET,
+    UNIT_DISTANCE_METERS,
+)
+from src.lib.unit_conversion import (
+    RatioUnit,
+    distance_units,
+    short_unit_name,
+)
 
 # Initialize QGIS app
 get_qgis_app()
@@ -20,13 +28,13 @@ class TestUnitConversion(unittest.TestCase):
         """Test short_unit_name for distance units."""
         # We rely on QGIS behavior here, so we test a few known ones
         # Meters
-        unit_str = QgsUnitTypes.toString(QgsUnitTypes.DistanceMeters)
+        unit_str = QgsUnitTypes.toString(UNIT_DISTANCE_METERS)
         abbr = short_unit_name(unit_str)
         # Typically 'm' or 'meters' depending on QGIS locale/version, but 'm' is standard
         self.assertTrue(abbr in ["m", "meters"], f"Expected abbreviation for meters, got {abbr}")
 
         # Feet
-        unit_str = QgsUnitTypes.toString(QgsUnitTypes.DistanceFeet)
+        unit_str = QgsUnitTypes.toString(UNIT_DISTANCE_FEET)
         abbr = short_unit_name(unit_str)
         self.assertTrue(abbr in ["ft", "feet"], f"Expected abbreviation for feet, got {abbr}")
 

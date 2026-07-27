@@ -4,6 +4,7 @@ import unittest
 
 from qgis.core import QgsUnitTypes
 
+from ..src.compat import UNIT_DISTANCE_FEET, UNIT_DISTANCE_METERS
 from ..src.model.metric import Metric
 from ..src.model.metric_value import MetricValue
 from ..src.view.frm_metric_value import FrmMetricValue
@@ -26,7 +27,7 @@ class MockAnalysis:
     def __init__(self):
         self.id = 1
         # Use QgsUnitTypes to get the correct string key
-        feet_str = QgsUnitTypes.toString(QgsUnitTypes.DistanceFeet)
+        feet_str = QgsUnitTypes.toString(UNIT_DISTANCE_FEET)
         self.units = {"distance": feet_str, "area": "Acres"}
         # print(f"MockAnalysis using distance unit: '{feet_str}'")
         self.metadata = {}
@@ -123,8 +124,8 @@ class TestMetricConstraints(unittest.TestCase):
 
         # 5. Assertions - Initial Load (Feet)
 
-        feet_str = QgsUnitTypes.toString(QgsUnitTypes.DistanceFeet)
-        meter_str = QgsUnitTypes.toString(QgsUnitTypes.DistanceMeters)
+        feet_str = QgsUnitTypes.toString(UNIT_DISTANCE_FEET)
+        meter_str = QgsUnitTypes.toString(UNIT_DISTANCE_METERS)
 
         # Check current unit selection
         current_data = form.cboUnits.currentData()

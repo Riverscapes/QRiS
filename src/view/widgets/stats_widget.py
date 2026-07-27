@@ -4,6 +4,7 @@ from qgis.core import QgsUnitTypes
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
+from ...compat import UNIT_AREA_SQUARE_METERS, UNIT_DISTANCE_METERS
 from ...lib.unit_conversion import area_units, distance_units, short_unit_name
 from ..frm_export_table import FrmTableExport
 
@@ -127,12 +128,12 @@ class StatsWidget(QWidget):
         self.cboUnits.clear()
         if has_area:
             self.cboUnits.addItems(list(area_units.keys()))
-            self.cboUnits.setCurrentText(QgsUnitTypes.toString(QgsUnitTypes.AreaSquareMeters))
+            self.cboUnits.setCurrentText(QgsUnitTypes.toString(UNIT_AREA_SQUARE_METERS))
             self.lblUnits.setVisible(True)
             self.cboUnits.setVisible(True)
         elif has_length:
             self.cboUnits.addItems(list(distance_units.keys()))
-            self.cboUnits.setCurrentText(QgsUnitTypes.toString(QgsUnitTypes.DistanceMeters))
+            self.cboUnits.setCurrentText(QgsUnitTypes.toString(UNIT_DISTANCE_METERS))
             self.lblUnits.setVisible(True)
             self.cboUnits.setVisible(True)
         else:
@@ -148,10 +149,10 @@ class StatsWidget(QWidget):
         """Returns (converted_value, unit_abbrev) from base units (m or m²)."""
         unit_text = self.cboUnits.currentText()
         if key in _AREA_KEYS and unit_text in area_units:
-            factor = QgsUnitTypes.fromUnitToUnitFactor(QgsUnitTypes.AreaSquareMeters, area_units[unit_text])
+            factor = QgsUnitTypes.fromUnitToUnitFactor(UNIT_AREA_SQUARE_METERS, area_units[unit_text])
             return value * factor, short_unit_name(unit_text)
         if key in _LENGTH_KEYS and unit_text in distance_units:
-            factor = QgsUnitTypes.fromUnitToUnitFactor(QgsUnitTypes.DistanceMeters, distance_units[unit_text])
+            factor = QgsUnitTypes.fromUnitToUnitFactor(UNIT_DISTANCE_METERS, distance_units[unit_text])
             return value * factor, short_unit_name(unit_text)
         return value, ""
 
