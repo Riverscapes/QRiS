@@ -1,21 +1,22 @@
+import os
+import sys
 import unittest
 from unittest.mock import MagicMock
-import sys
-import os
 
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from qris_dev.src.view.widgets.analysis_table import MetricStatusWidgetButtons
-from qris_dev.src.model.metric import Metric
-from qris_dev.src.model.metric_value import MetricValue
-from qris_dev.test.utilities import get_qgis_app
 from qgis.PyQt import QtWidgets
+
+from ..src.model.metric import Metric
+from ..src.model.metric_value import MetricValue
+from ..src.view.widgets.analysis_table import MetricStatusWidgetButtons
+from ..test.utilities import get_qgis_app
 
 # Ensure QGIS is running
 QGIS_APP = get_qgis_app()
 if QGIS_APP[0] is None:
-    from PyQt5.QtWidgets import QApplication
+    from qgis.PyQt.QtWidgets import QApplication
 
     if QApplication.instance() is None:
         app = QApplication(sys.argv)
