@@ -184,7 +184,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
     def on_add_from_dce_clicked(self):
 
         frm = FrmEventPicker(self, self.qris_project, self.event_type_id)
-        frm.exec_()
+        frm.exec()
         if frm.result() == DLG_ACCEPTED:
             for layer in frm.layers:
                 layer: Layer
@@ -212,7 +212,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
     def show_layer_properties(self, layer: Layer):
 
         frm = FrmLayerMetricDetails(self, self.qris_project, layer)
-        frm.exec_()
+        frm.exec()
         if frm.result() == DLG_ACCEPTED:
             return
         else:

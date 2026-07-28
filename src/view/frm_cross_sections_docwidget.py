@@ -103,7 +103,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
         layers = list(layer for layer in self.project.profiles.values())
         frm_layer_picker = FrmLayerPicker(self, "Select Profile Layer", layers)
-        result = frm_layer_picker.exec_()
+        result = frm_layer_picker.exec()
 
         if result == DLG_ACCEPTED:
             self.cross_sections_setup(frm_layer_picker.layer)
@@ -148,7 +148,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
         frm_x_sections = FrmCrossSections(self, self.project, output_features=self.xsections, metadata=out_metadata)
 
-        result = frm_x_sections.exec_()
+        result = frm_x_sections.exec()
 
         if result == DLG_ACCEPTED:
             self.cross_sections_setup()  # Reset the map

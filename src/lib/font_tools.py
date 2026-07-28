@@ -125,7 +125,7 @@ class _ChartFontDialog(QtWidgets.QDialog):
 def select_chart_font(parent, current_font: QFont, title: str = "Select Chart Font"):
     """Open a custom chart font dialog constrained to matplotlib-supported settings."""
     dialog = _ChartFontDialog(parent, current_font, title)
-    if dialog.exec_() == QtWidgets.QDialog.Accepted:
+    if dialog.exec() == QtWidgets.QDialog.Accepted:
         return dialog.selected_font(), True
 
     return sanitize_chart_font(current_font), False

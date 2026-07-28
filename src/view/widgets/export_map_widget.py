@@ -26,7 +26,7 @@ class MapExportWidget(BaseExportWidget):
             project_path=self.project_path,
             export_type=self.export_type,
         )
-        if dlg.exec_() != DLG_ACCEPTED:
+        if dlg.exec() != DLG_ACCEPTED:
             return None
 
         file_path = dlg.leFile.text() if dlg.leFile is not None else ""

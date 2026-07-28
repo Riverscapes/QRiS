@@ -63,11 +63,11 @@ class FrmGeospatialMetrics(QtWidgets.QDialog):
 
     def on_export(self):
         frm = FrmGeospatialMetricsExport(self, self.qris_project, self.qris_mask, self.polygons, self.metrics)
-        frm.exec_()
+        frm.exec()
 
     def on_settings(self):
         # frm = FrmOptions(self, None)
-        # frm.exec_()
+        # frm.exec()
         QtWidgets.QMessageBox.warning(None, "Settings", "This Feature Is Not Implemented.")
 
     def accept(self):

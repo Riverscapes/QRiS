@@ -459,7 +459,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 is_polygon = "Polygon" in g_type
 
         dlg = ChartSettingsDialog(self, self.chart_font, self.chart_show_pct, self.chart_pct_basis, is_polygon)
-        if dlg.exec_() == DLG_ACCEPTED:
+        if dlg.exec() == DLG_ACCEPTED:
             settings = dlg.get_settings()
             self.chart_font = settings["font"]
             self.chart_font_family = self.chart_font.family()

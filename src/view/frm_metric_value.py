@@ -477,7 +477,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.cmdHelp = QtWidgets.QPushButton()
         self.cmdHelp.setIcon(QtGui.QIcon(":plugins/qris_toolbar/help"))
         self.cmdHelp.setToolTip("Help")
-        self.cmdHelp.clicked.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=self.metric_value.metric).exec_())
+        self.cmdHelp.clicked.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=self.metric_value.metric).exec())
         self.grid.addWidget(self.cmdHelp, 0, 2)
 
         self.lblMetricDesc = QtWidgets.QLabel()

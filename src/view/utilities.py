@@ -86,5 +86,4 @@ def message_box(title: str, message: str):
     msg.setStandardButtons(MSGBOX_OK)
     msg.setDefaultButton(MSGBOX_OK)
     msg.setEscapeButton(MSGBOX_OK)
-    msg.exec_()
-
+    msg.exec()

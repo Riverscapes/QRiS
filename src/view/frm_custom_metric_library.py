@@ -278,7 +278,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
     def _on_add_metric(self):
         protocol = self._ensure_custom_protocol()
         dlg = CustomMetricCreateDialog(self)
-        if dlg.exec_() != DLG_ACCEPTED:
+        if dlg.exec() != DLG_ACCEPTED:
             return
 
         values = dlg.get_values()

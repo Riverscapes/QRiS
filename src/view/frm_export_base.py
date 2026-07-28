@@ -163,7 +163,7 @@ class FrmBaseExport(QtWidgets.QDialog):
         btn_fold = mbox.addButton("Open Folder", MSGBOX_ROLE_ACTION)
         btn_open = mbox.addButton("Open File", MSGBOX_ROLE_ACTION)
         mbox.addButton("Close", MSGBOX_ROLE_REJECT)
-        mbox.exec_()
+        mbox.exec()
 
         if mbox.clickedButton() == btn_fold:
             self.open_location(out_file)

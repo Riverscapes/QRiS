@@ -255,7 +255,7 @@ class FrmExportProject(QtWidgets.QDialog):
                 msg.setStandardButtons(MSGBOX_YES | MSGBOX_CANCEL)
                 msg.setDefaultButton(MSGBOX_CANCEL)
                 msg.setEscapeButton(MSGBOX_CANCEL)
-                ret = msg.exec_()
+                ret = msg.exec()
                 if ret == MSGBOX_CANCEL:
                     return
 
@@ -686,7 +686,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     msg.setStandardButtons(MSGBOX_YES | MSGBOX_CANCEL)
                     msg.setDefaultButton(MSGBOX_CANCEL)
                     msg.setEscapeButton(MSGBOX_CANCEL)
-                    ret = msg.exec_()
+                    ret = msg.exec()
                     if ret == MSGBOX_CANCEL:
                         return
         self.base_folder = path.replace("/", "\\")

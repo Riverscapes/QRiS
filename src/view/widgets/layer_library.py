@@ -726,14 +726,14 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/checked_box"), "Include All Child Layers", lambda: self.set_children_state(item, True))
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/unchecked_box"), "Remove All Child Layers", lambda: self.set_children_state(item, False))
         if not menu.isEmpty():
-            menu.exec_(self.layersTree.viewport().mapToGlobal(position))
+            menu.exec(self.layersTree.viewport().mapToGlobal(position))
 
     def show_layer_details(self, protocol_def: ProtocolDefinition, layer_def: LayerDefinition):
         # Ensure protocol definition is attached for context
         # FrmLayerMetricDetails can handle LayerDefinition objects if protocol_definition is set
         layer_def.protocol_definition = protocol_def
         frm = FrmLayerMetricDetails(self, self.qris_project, layer_def)
-        frm.exec_()
+        frm.exec()
 
     def set_children_state(self, parent_item, state):
         def recurse(item):

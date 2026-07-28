@@ -65,7 +65,7 @@ class FrmSlider(QtWidgets.QDockWidget):
     def cmdSelect_click(self):
         rasters = list(self.project.rasters.values())
         frm = FrmLayerPicker(self, "Select raster", rasters)
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             self.configure_raster(frm.layer)
 
@@ -75,7 +75,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         threshold_value = self.valElevation.value()
 
         frm = FrmSliderScratchVector(self, self.project, raster_path, threshold_value, self.optAbove.isChecked())
-        frm.exec_()
+        frm.exec()
 
         if frm.result() == DLG_REJECTED:
             return

@@ -222,4 +222,4 @@ class StatsWidget(QWidget):
         name = getattr(self._db_item, "name", "statistics") if self._db_item else "statistics"
         db_path = self._db_path
         frm = FrmTableExport(self, data=data, base_name=f"{name}_stats", project_path=db_path)
-        frm.exec_()
+        frm.exec()

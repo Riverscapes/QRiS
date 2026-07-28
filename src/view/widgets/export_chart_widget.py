@@ -29,7 +29,7 @@ class ChartExportWidget(BaseExportWidget):
 
         # Create and show dialog
         dlg = FrmTableExport(self, data=data, base_name=self.base_name, project_path=self.project_path, export_type=self.export_type)
-        dlg.exec_()
+        dlg.exec()
 
     def export_image(self):
         if not self.get_figure_callback:
@@ -41,4 +41,4 @@ class ChartExportWidget(BaseExportWidget):
 
         # Create and show dialog
         dlg = FrmChartExport(self, mode="image", figure=fig, base_name=self.base_name, project_path=self.project_path, export_type=self.export_type)
-        dlg.exec_()
+        dlg.exec()

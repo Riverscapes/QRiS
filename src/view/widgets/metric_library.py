@@ -961,7 +961,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
     def open_custom_metric_library(self):
         frm = FrmCustomMetricLibrary(self, self.qris_project, self.analysis)
-        frm.exec_()
+        frm.exec()
         if frm.changed:
             self.refresh_after_metric_catalog_change(frm.created_metric_ids)
 
@@ -1066,7 +1066,7 @@ class MetricLibrary(QtWidgets.QWidget):
         metric = item.data(0, USER_ROLE)
         menu = QtWidgets.QMenu()
         if metric:
-            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+            menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec())
             if metric.metric_params:
                 menu.addSeparator()
                 menu.addAction(
@@ -1080,7 +1080,7 @@ class MetricLibrary(QtWidgets.QWidget):
                         limit_dces=self.limit_dces,
                         analysis=self.analysis,
                         selected_analysis_metrics=self._build_selected_analysis_metrics(),
-                    ).exec_(),
+                    ).exec(),
                 )
         elif item.childCount() > 0:
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/expand"), "Expand All Children", lambda: self.expand_tree_children(item))
@@ -1179,7 +1179,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
         menu = QtWidgets.QMenu()
         action_details = menu.addAction("Metric Details...")
-        action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+        action_details.triggered.connect(lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec())
 
         if metric.metric_params:
             menu.addSeparator()
@@ -1194,10 +1194,10 @@ class MetricLibrary(QtWidgets.QWidget):
                     limit_dces=self.limit_dces,
                     analysis=self.analysis,
                     selected_analysis_metrics=self._build_selected_analysis_metrics(),
-                ).exec_()
+                ).exec()
             )
 
-        menu.exec_(self.metricsTable.viewport().mapToGlobal(position))
+        menu.exec(self.metricsTable.viewport().mapToGlobal(position))
 
     def toggle_all_metrics(self, level_id_text: str):
         metrics_update_map = {}  # metric_id -> new_level_idx

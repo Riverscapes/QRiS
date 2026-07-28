@@ -103,7 +103,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         valley_bottom_layers = list(layer for layer in self.project.valley_bottoms.values())
         layers = sv_layers + aoi_layers + valley_bottom_layers
         frm_layer_picker = FrmLayerPicker(self, "Select Polygon Layer", layers)
-        result = frm_layer_picker.exec_()
+        result = frm_layer_picker.exec()
 
         if result == DLG_ACCEPTED:
             self.centerline_setup(frm_layer_picker.layer)
@@ -192,7 +192,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         temp_layer.dataProvider().addFeatures([feat])
 
         frm_profile = FrmProfile(self, self.project, temp_layer, profile_type=Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, fc_name="profile_centerlines", system_metadata=self.fields, metrics=metrics)
-        result = frm_profile.exec_()
+        result = frm_profile.exec()
 
         if result == DLG_ACCEPTED:
             self.centerline_setup(self.polygon_source)  # Reset the map
@@ -464,4 +464,3 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridButtons.addWidget(self.cmdSaveCl, 1, 2, 1, 1)
 
         self.setWidget(self.dockWidgetContents)
-

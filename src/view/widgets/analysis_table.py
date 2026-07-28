@@ -626,7 +626,7 @@ class AnalysisTable(QtWidgets.QWidget):
             analysis=self.analysis,
             selected_analysis_metrics=self.analysis.analysis_metrics,
         )
-        dlg.exec_()
+        dlg.exec()
 
     def on_item_clicked(self, item):
         # Edit handling is now done via signal from widget
@@ -651,7 +651,7 @@ class AnalysisTable(QtWidgets.QWidget):
         metric = analysis_metric.metric
 
         menu = QtWidgets.QMenu()
-        menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
+        menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec())
         menu.addSeparator()
 
         if metric.metric_params:
@@ -677,7 +677,7 @@ class AnalysisTable(QtWidgets.QWidget):
                     limit_dces=limit_dces,
                     analysis=self.analysis,
                     selected_analysis_metrics=self.analysis.analysis_metrics,
-                ).exec_(),
+                ).exec(),
             )
             menu.addSeparator()
 

@@ -197,7 +197,7 @@ class FrmExportLayer(QtWidgets.QDialog):
             btn_open = msg_box.addButton("Open File", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)
             msg_box.addButton("Close", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)
 
-            msg_box.exec_()
+            msg_box.exec()
 
             clicked = msg_box.clickedButton()
             if clicked == btn_folder:
@@ -306,5 +306,3 @@ class FrmExportLayer(QtWidgets.QDialog):
             return False
 
         return True
-
-

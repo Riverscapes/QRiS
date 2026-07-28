@@ -687,7 +687,7 @@ class SampleFrameAttributes(QWidget):
         existing_fields = [self.model.item(i).text() for i in range(self.model.rowCount())]
 
         frm = FrmNewAttribute(self, self.sample_frame, existing_fields=existing_fields)
-        frm.exec_()
+        frm.exec()
 
         if frm.result() == QDialog.Accepted:
             if frm.name is not None:
@@ -707,7 +707,7 @@ class SampleFrameAttributes(QWidget):
         attributes = [item.child(i).text() for i in range(item.rowCount())]
 
         frm = FrmNewAttribute(self, field_name, attributes, existing_fields)
-        frm.exec_()
+        frm.exec()
 
         if frm.result() == QDialog.Accepted:
             if frm.name is not None:

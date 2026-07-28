@@ -160,7 +160,7 @@ class FrmEvent(QtWidgets.QDialog):
         dlg = FrmEventPicker(self, self.qris_project, self.event_type_id, events=events, show_copy_options=True)
         dlg.setWindowTitle("Select Template " + dlg.event_name)
 
-        if dlg.exec_():
+        if dlg.exec():
             source_event = dlg.qris_event
 
             if dlg.chkDescription.isChecked():
