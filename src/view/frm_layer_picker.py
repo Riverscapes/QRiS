@@ -1,5 +1,6 @@
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, USER_ROLE
 from ..model.db_item import DBItemModel
 
 
@@ -18,7 +19,7 @@ class FrmLayerPicker(QtWidgets.QDialog):
         self.cboLayers.setModel(self.model)
 
         # Prevent clicking OK if there are no layers
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(len(layers) > 0)
+        self.buttonBox.button(DLGBTN_OK).setEnabled(len(layers) > 0)
 
     def setupUi(self):
 
@@ -39,12 +40,12 @@ class FrmLayerPicker(QtWidgets.QDialog):
 
         self.buttonBox = QtWidgets.QDialogButtonBox()
         self.vert.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(HORIZONTAL)
+        self.buttonBox.setStandardButtons(DLGBTN_CANCEL | DLGBTN_OK)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
     def accept(self):
 
-        self.layer = self.cboLayers.currentData(QtCore.Qt.UserRole)
+        self.layer = self.cboLayers.currentData(USER_ROLE)
         super().accept()

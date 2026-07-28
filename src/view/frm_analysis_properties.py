@@ -1,6 +1,7 @@
 from qgis.core import QgsVectorLayer
 from qgis.PyQt import QtCore, QtWidgets
 
+from ..compat import CHECKED, UNCHECKED, USER_ROLE
 from ..model.analysis import SIMPLE_INTRINSIC_MODE, Analysis, insert_analysis
 from ..model.db_item import DBItem, DBItemModel
 from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
@@ -144,9 +145,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         # return lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(f"{CONSTANTS['webUrl'].rstrip('/')}/Technical_Reference/metrics/#{metric_name.replace(' ', '-')}"))
 
     def update_metric_selector(self, index=None):
-        centerline = self.cboCenterline.currentData(QtCore.Qt.UserRole)
-        dem = self.cboDEM.currentData(QtCore.Qt.UserRole)
-        valley_bottom = self.cboValleyBottom.currentData(QtCore.Qt.UserRole)
+        centerline = self.cboCenterline.currentData(USER_ROLE)
+        dem = self.cboDEM.currentData(USER_ROLE)
+        valley_bottom = self.cboValleyBottom.currentData(USER_ROLE)
 
         metadata = {}
         if centerline:
@@ -166,7 +167,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
     def on_cboSampleFrame_currentIndexChanged(self, index):
 
         # if the sample frame type is Valley Bottom, then set the Valley Bottom combo box to the selected valley bottom as well, then lock that combo box. if not, then unlock the combo box
-        sample_frame: SampleFrame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        sample_frame: SampleFrame = self.cboSampleFrame.currentData(USER_ROLE)
         if sample_frame is not None:
             if sample_frame.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                 index = self.cboValleyBottom.findData(sample_frame)
@@ -252,7 +253,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         for i in range(cbo.count()):
             item = cbo.model().item(i)
             if item.isCheckable():
-                state = QtCore.Qt.Checked if item.data() == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE else QtCore.Qt.Unchecked
+                state = CHECKED if item.data() == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE else UNCHECKED
                 item.setCheckState(state)
         self.metric_selector.on_protocol_filter_changed()
 
@@ -311,15 +312,15 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
         if not validate_name(self, self.txtName):
             return
 
-        sample_frame: SampleFrame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        sample_frame: SampleFrame = self.cboSampleFrame.currentData(USER_ROLE)
         if sample_frame is None:
             QtWidgets.QMessageBox.warning(self, "Missing Sample Frame", "You must select a sample frame to continue.")
             self.cboSampleFrame.setFocus()
             return
 
-        centerline: Profile = self.cboCenterline.currentData(QtCore.Qt.UserRole)
-        dem: Raster = self.cboDEM.currentData(QtCore.Qt.UserRole)
-        valley_bottom: DBItem = self.cboValleyBottom.currentData(QtCore.Qt.UserRole)
+        centerline: Profile = self.cboCenterline.currentData(USER_ROLE)
+        dem: Raster = self.cboDEM.currentData(USER_ROLE)
+        valley_bottom: DBItem = self.cboValleyBottom.currentData(USER_ROLE)
 
         # write the profile id to the analysis and analysis metadata
         metadata = self.analysis.metadata if self.analysis is not None else {}
@@ -360,9 +361,9 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             analysis_metrics = {metric_id: am for metric_id, am in analysis_metrics.items() if am.metric.protocol_machine_code == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}
         # analysis_metrics = {}
         # for row in range(self.metricsTable.rowCount()):
-        #     metric = self.metricsTable.item(row, 0).data(QtCore.Qt.UserRole)
+        #     metric = self.metricsTable.item(row, 0).data(USER_ROLE)
         #     cboStatus = self.metricsTable.cellWidget(row, 1)
-        #     level_id = cboStatus.currentData(QtCore.Qt.UserRole)
+        #     level_id = cboStatus.currentData(USER_ROLE)
         #     if level_id > 0:
         #         analysis_metrics[metric.id] = AnalysisMetric(metric, level_id)
 
@@ -395,3 +396,5 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
 
         super().accept()
+
+

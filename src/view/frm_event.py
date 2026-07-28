@@ -1,8 +1,9 @@
 from datetime import datetime
 import json
 
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import ALIGN_TOP, MSGBOX_NO, SPSZ_EXPANDING, SPSZ_MINIMUM, USER_ROLE
 from ..model.datespec import DateSpec
 from ..model.db_item import DBItem, DBItemModel
 from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, PLANNING_EVENT_TYPE_ID, Event
@@ -125,7 +126,7 @@ class FrmEvent(QtWidgets.QDialog):
             #         if display_name in duplicates:
             #             display_name = f"{display_name} ({event_layer.layer.geom_type})"
             #         item = QtGui.QStandardItem(display_name)
-            #         item.setData(event_layer.layer, QtCore.Qt.UserRole)
+            #         item.setData(event_layer.layer, USER_ROLE)
             #         item.setEditable(False)
             #         self.layer_widget.layers_model.appendRow(item)
 
@@ -305,7 +306,7 @@ class FrmEvent(QtWidgets.QDialog):
         surface_rasters = self.surface_library.get_selected_surfaces()
 
         if self.cboValleyBottom.currentText() != "None":
-            self.metadata_widget.add_system_metadata("valley_bottom_id", self.cboValleyBottom.currentData(QtCore.Qt.UserRole).id)
+            self.metadata_widget.add_system_metadata("valley_bottom_id", self.cboValleyBottom.currentData(USER_ROLE).id)
         else:
             self.metadata_widget.delete_item("system", "valley_bottom_id")
 
@@ -347,7 +348,7 @@ class FrmEvent(QtWidgets.QDialog):
                             "Click No to stop and avoid any data loss."
                         ),
                     )
-                    if response == QtWidgets.QMessageBox.No:
+                    if response == MSGBOX_NO:
                         return
 
                 self.dce_event.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), event_layers, surface_rasters, start_date, end_date, None, None, self.metadata_widget.get_data())
@@ -366,7 +367,7 @@ class FrmEvent(QtWidgets.QDialog):
                     "",
                     self.qris_project.lookup_tables["lkp_event_types"][self.event_type_id],
                     None,
-                    None,  # self.cboRepresentation.currentData(QtCore.Qt.UserRole),
+                    None,  # self.cboRepresentation.currentData(USER_ROLE),
                     event_layers,
                     surface_rasters,
                     self.metadata_widget.get_data(),
@@ -466,7 +467,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.tabGrid.addWidget(self.uc_end, 6, 1, 1, 1)
 
         self.lblPlatform = QtWidgets.QLabel("Event completed at")
-        self.lblPlatform.setAlignment(QtCore.Qt.AlignTop)
+        self.lblPlatform.setAlignment(ALIGN_TOP)
         self.tabGrid.addWidget(self.lblPlatform, 8, 0, 1, 1)
 
         self.wdgPlatform = QtWidgets.QWidget()
@@ -481,7 +482,7 @@ class FrmEvent(QtWidgets.QDialog):
         self.txtDateLabel.setPlaceholderText("Optional label to express what the date represents.")
         self.tabGrid.addWidget(self.txtDateLabel, 7, 1, 1, 1)
 
-        verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        verticalSpacer = QtWidgets.QSpacerItem(20, 40, SPSZ_MINIMUM, SPSZ_EXPANDING)
         self.tabGrid.addItem(verticalSpacer)
 
         self.chkAddToMap = QtWidgets.QCheckBox("Add New Layers to Map")

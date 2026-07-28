@@ -1,5 +1,6 @@
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import BOTTOM_DOCK, TOP_DOCK
 from ..model.project import Project
 from .widgets.analysis_distribution_widget import DistributionAnalysisWidget
 
@@ -17,7 +18,7 @@ class FrmDistributionAnalysisDockWidget(QtWidgets.QDockWidget):
         self.iface = iface
 
         # Dock Specific Settings
-        self.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.TopDockWidgetArea)
+        self.setAllowedAreas(BOTTOM_DOCK | TOP_DOCK)
 
         # Instantiate common widget
         self.widget = DistributionAnalysisWidget(iface, qris_project, map_manager, self)

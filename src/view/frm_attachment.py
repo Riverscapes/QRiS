@@ -7,6 +7,17 @@ from qgis.core import Qgis, QgsApplication
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
+from ..compat import (
+    HEADER_STRETCH,
+    QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+    SPSZ_EXPANDING,
+    SPSZ_MAXIMUM,
+    SPSZ_MINIMUM,
+    SPSZ_PREFERRED,
+    USER_ROLE,
+)
 from ..gp.copy_file import FileCopyTask
 from ..model.attachment import Attachment, attachments_path, insert_attachment, load_events_for_attachment
 from ..model.project import Project
@@ -202,12 +213,12 @@ class FrmAttachment(QtWidgets.QDialog):
         self.tbl_referenced_by.setColumnCount(2)
         self.tbl_referenced_by.setHorizontalHeaderLabels(["Name", "Purpose"])
         self.tbl_referenced_by.verticalHeader().setVisible(False)
-        self.tbl_referenced_by.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.tbl_referenced_by.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tbl_referenced_by.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tbl_referenced_by.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
+        self.tbl_referenced_by.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.tbl_referenced_by.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         hdr = self.tbl_referenced_by.horizontalHeader()
-        hdr.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        hdr.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        hdr.setSectionResizeMode(0, HEADER_STRETCH)
+        hdr.setSectionResizeMode(1, HEADER_STRETCH)
         layout.addWidget(self.tbl_referenced_by)
 
         self.lbl_referenced_by_summary = QtWidgets.QLabel("")
@@ -225,7 +236,7 @@ class FrmAttachment(QtWidgets.QDialog):
             event = self.qris_project.events.get(event_id)
             if event is not None:
                 name_item.setIcon(QtGui.QIcon(f":/plugins/qris_toolbar/{event.icon}"))
-            name_item.setData(QtCore.Qt.UserRole, event_id)
+            name_item.setData(USER_ROLE, event_id)
             self.tbl_referenced_by.setItem(i, 0, name_item)
 
             purpose_item = QtWidgets.QTableWidgetItem(purpose)
@@ -290,11 +301,11 @@ class FrmAttachment(QtWidgets.QDialog):
 
         self.btn_clear_date = QtWidgets.QPushButton("Clear")
         self.btn_clear_date.setToolTip("Clear the date")
-        self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))
+        self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(SPSZ_MAXIMUM, SPSZ_MAXIMUM))
         self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
         self.horiz_date.addWidget(self.btn_clear_date)
 
-        self.grid.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding), 5, 0, 1, 2)
+        self.grid.addItem(QtWidgets.QSpacerItem(20, 40, SPSZ_MINIMUM, SPSZ_EXPANDING), 5, 0, 1, 2)
 
         self.tabProperties = QtWidgets.QWidget()
         self.tabs.addTab(self.tabProperties, "Basic Properties")
@@ -330,15 +341,15 @@ class FileBrowseWidget(QtWidgets.QWidget):
 
         self.lineEdit = QtWidgets.QLineEdit(self)
         self.lineEdit.setReadOnly(True)
-        self.lineEdit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.lineEdit.setSizePolicy(SPSZ_EXPANDING, SPSZ_PREFERRED)
         layout.addWidget(self.lineEdit)
 
         self.browseButton = QtWidgets.QPushButton("...", self)
-        self.browseButton.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        self.browseButton.setSizePolicy(SPSZ_MINIMUM, SPSZ_PREFERRED)
         self.browseButton.clicked.connect(self.browse)
         layout.addWidget(self.browseButton)
 
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(SPSZ_EXPANDING, SPSZ_PREFERRED)
 
     def browse(self):
         options = QtWidgets.QFileDialog.Options()
@@ -358,17 +369,20 @@ class WebLinkWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
         self.lineEdit = QtWidgets.QLineEdit(self)
-        self.lineEdit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)  # <--- Add this
+        self.lineEdit.setSizePolicy(SPSZ_EXPANDING, SPSZ_PREFERRED)  # <--- Add this
         layout.addWidget(self.lineEdit, stretch=1)  # <--- Add stretch
 
         self.btnPaste = QtWidgets.QPushButton("Paste", self)
         self.btnPaste.clicked.connect(self.paste_link)
         layout.addWidget(self.btnPaste)
 
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(SPSZ_EXPANDING, SPSZ_PREFERRED)
 
     def paste_link(self):
         clipboard = QtWidgets.QApplication.clipboard()
         web_link = clipboard.text()
         if web_link:
             self.lineEdit.setText(web_link)
+
+
+

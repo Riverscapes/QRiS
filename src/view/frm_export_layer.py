@@ -4,6 +4,7 @@ from typing import Optional
 from qgis.core import QgsCoordinateTransformContext, QgsFeature, QgsField, QgsProject, QgsVectorFileWriter, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ..compat import MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT, QMETATYPE_STRING, VFW_NO_ERROR
 from .frm_export_base import get_unique_export_path, sanitize_file_base_name
 from .utilities import add_standard_form_buttons
 
@@ -192,9 +193,9 @@ class FrmExportLayer(QtWidgets.QDialog):
             msg_box.setText(f"Layer exported successfully to:\n{out_file}")
             msg_box.setIcon(QtWidgets.QMessageBox.Information)
 
-            btn_folder = msg_box.addButton("Open Folder", QtWidgets.QMessageBox.ActionRole)
-            btn_open = msg_box.addButton("Open File", QtWidgets.QMessageBox.ActionRole)
-            msg_box.addButton("Close", QtWidgets.QMessageBox.RejectRole)
+            btn_folder = msg_box.addButton("Open Folder", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)
+            btn_open = msg_box.addButton("Open File", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)
+            msg_box.addButton("Close", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)
 
             msg_box.exec_()
 
@@ -246,7 +247,7 @@ class FrmExportLayer(QtWidgets.QDialog):
                 # Add original fields
                 temp_data.addAttributes(self.layer.fields().toList())
                 # Add geometry field
-                temp_data.addAttributes([QgsField("geometry", QtCore.QVariant.String)])
+                temp_data.addAttributes([QgsField("geometry", QMETATYPE_STRING)])
                 temp_layer.updateFields()
 
                 features = []
@@ -299,9 +300,11 @@ class FrmExportLayer(QtWidgets.QDialog):
         if temp_layer:
             del temp_layer
 
-        if error != QgsVectorFileWriter.NoError:
+        if error != VFW_NO_ERROR:
             error_msg = result[3]
             QtWidgets.QMessageBox.critical(self, "Export Failed", f"Error exporting layer:\n{error_msg}")
             return False
 
         return True
+
+

@@ -8,6 +8,7 @@ from qgis.core import Qgis, QgsCoordinateTransform, QgsMessageLog, QgsProject
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ..compat import BOTTOM_DOCK, CHECKED, HORIZONTAL, LEFT_DOCK, RIGHT_DOCK, SPSZ_EXPANDING, SPSZ_MINIMUM, TOP_DOCK, USER_ROLE
 from ..lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ..lib.unit_conversion import area_units, distance_units, ratio_units, short_unit_name
 from ..model.analysis import Analysis
@@ -29,7 +30,7 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
     def __init__(self, iface: QgisInterface, project: Project, map_manager, analysis: Analysis = None):
         super().__init__("Analysis Over Time", iface.mainWindow())
         self.setObjectName("AnalysisOverTimeDock")
-        self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.TopDockWidgetArea)
+        self.setAllowedAreas(LEFT_DOCK | RIGHT_DOCK | BOTTOM_DOCK | TOP_DOCK)
 
         self.iface = iface
         self.project = project
@@ -196,7 +197,7 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
         self.setWidget(self.main_widget)
 
         # Splitter to separate left/right
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter = QtWidgets.QSplitter(HORIZONTAL)
 
         main_layout = QtWidgets.QHBoxLayout()
         main_layout.addWidget(self.splitter)
@@ -301,8 +302,8 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
         selected_events = []
         table = self.event_library.table
         for row in range(table.rowCount()):
-            if table.item(row, 0).checkState() == QtCore.Qt.Checked:
-                event = table.item(row, 1).data(QtCore.Qt.UserRole)
+            if table.item(row, 0).checkState() == CHECKED:
+                event = table.item(row, 1).data(USER_ROLE)
                 if event is not None:
                     selected_events.append(event)
 
@@ -423,7 +424,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvas(self.fig)
-        self.canvas.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.canvas.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)
         self.canvas.updateGeometry()
         vbox.addWidget(self.canvas)
 
@@ -440,7 +441,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         self.btn_units = QtWidgets.QPushButton("Units")
         hbox_controls.addWidget(self.btn_units)
 
-        hbox_controls.addItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        hbox_controls.addItem(QtWidgets.QSpacerItem(40, 20, SPSZ_EXPANDING, SPSZ_MINIMUM))
 
         self.btn_chart_options = QtWidgets.QPushButton("Chart Options")
         self.btn_chart_options.setToolTip("Chart Options")
@@ -734,3 +735,4 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         # Threshold in pixels (e.g. 10 pixels radius)
         if closest_point and closest_dist < 10:
             self.metric_data_clicked.emit(closest_point["data"])
+

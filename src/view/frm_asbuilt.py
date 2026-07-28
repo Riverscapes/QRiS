@@ -1,8 +1,9 @@
 import json
 import sqlite3
 
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import ALIGN_LEFT, USER_ROLE
 from ..model.datespec import DateSpec
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
@@ -55,7 +56,7 @@ class FrmAsBuilt(FrmEvent):
 
         self.lblDesigners = QtWidgets.QLabel("Observer(s)", self)
         self.tabGrid.addWidget(self.lblDesigners, 8, 0, 1, 1)
-        self.tabGrid.setAlignment(self.lblDesigners, QtCore.Qt.AlignTop)
+        self.tabGrid.setAlignment(self.lblDesigners, ALIGN_LEFT)
 
         self.txtDesigners = QtWidgets.QPlainTextEdit(self)
         self.txtDesigners.setToolTip("Enter the name(s) of the person(s) who observed the as-built survey.")
@@ -66,7 +67,7 @@ class FrmAsBuilt(FrmEvent):
 
         # Add the checkboxes to the form
         self.lblDesignSources = QtWidgets.QLabel("As-Built Observations", self)
-        self.lblDesignSources.setAlignment(QtCore.Qt.AlignTop)
+        self.lblDesignSources.setAlignment(ALIGN_LEFT)
         self.tabGrid.addWidget(self.lblDesignSources, 9, 0, 1, 1)
         self.groupBoxDesignSources = QtWidgets.QGroupBox(self)
         self.groupBoxDesignSources.setLayout(QtWidgets.QVBoxLayout())
@@ -74,7 +75,7 @@ class FrmAsBuilt(FrmEvent):
         # add vertical spacer to group box layout
 
         self.tabGrid.addWidget(self.groupBoxDesignSources, 9, 1)
-        self.tabGrid.setAlignment(self.groupBoxDesignSources, QtCore.Qt.AlignTop)
+        self.tabGrid.setAlignment(self.groupBoxDesignSources, ALIGN_LEFT)
 
         surface_tab_index = self.tab.indexOf(self.surfaces_widget)
         self.tab.setTabText(surface_tab_index, "Bases for As-Built")
@@ -184,7 +185,7 @@ class FrmAsBuilt(FrmEvent):
         dce_dates = {}
         dce: Event
         for i in range(self.associated_dce_model.rowCount(0)):
-            dce = self.associated_dce_model.data(self.associated_dce_model.index(i), QtCore.Qt.UserRole)
+            dce = self.associated_dce_model.data(self.associated_dce_model.index(i), USER_ROLE)
             if dce.date is not None:
                 year, month, day = dce.date.split("-")
                 year = int(year) if year != "None" else None
@@ -225,8 +226,8 @@ class FrmAsBuilt(FrmEvent):
 
         self.metadata_widget.add_system_metadata("observers", self.txtDesigners.toPlainText())
 
-        if self.cboAssociatedDesign.currentData(QtCore.Qt.UserRole).id != 0:
-            self.metadata_widget.add_system_metadata("associatedDesignId", self.cboAssociatedDesign.currentData(QtCore.Qt.UserRole).id)
+        if self.cboAssociatedDesign.currentData(USER_ROLE).id != 0:
+            self.metadata_widget.add_system_metadata("associatedDesignId", self.cboAssociatedDesign.currentData(USER_ROLE).id)
         else:
             self.metadata_widget.delete_item("system", "associatedDesignId")
 
@@ -252,8 +253,8 @@ class FrmAsBuilt(FrmEvent):
         else:
             self.metadata_widget.delete_item("system", "designSourceIds")
 
-        if self.cboAssociatedDCE.currentData(QtCore.Qt.UserRole).id != 0:
-            self.metadata_widget.add_system_metadata("associatedDCE_Id", self.cboAssociatedDCE.currentData(QtCore.Qt.UserRole).id)
+        if self.cboAssociatedDCE.currentData(USER_ROLE).id != 0:
+            self.metadata_widget.add_system_metadata("associatedDCE_Id", self.cboAssociatedDCE.currentData(USER_ROLE).id)
         else:
             self.metadata_widget.delete_item("system", "associatedDCE_Id")
 

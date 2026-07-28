@@ -5,6 +5,7 @@ from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QDate
 from qgis.utils import iface
 
+from ..compat import ALIGN_TOP, CHECKED, ITEM_FLAG_CHECKABLE, MSGBOX_NO, MSGBOX_YES, UNCHECKED, USER_ROLE
 from ..gp.download_climate_engine_task import AREA_REDUCER, DownloadClimateEngineTimeseriesTask
 from ..lib.climate_engine import get_dataset_date_range, get_datasets, open_climate_engine_website
 from ..model.project import Project
@@ -78,9 +79,9 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         if dataset_variables is not None and len(dataset_variables) > 0:
             for variable in dataset_variables:
                 item = QtWidgets.QListWidgetItem(variable["variableName"])
-                item.setData(QtCore.Qt.UserRole, variable)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(QtCore.Qt.Unchecked)
+                item.setData(USER_ROLE, variable)
+                item.setFlags(item.flags() | ITEM_FLAG_CHECKABLE)
+                item.setCheckState(UNCHECKED)
                 self.lboxVariables.addItem(item)
                 if variable.get("defaultVisible", False) is False and self.chkFilterQris.isChecked():
                     item.setHidden(True)
@@ -100,11 +101,11 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
         # desired behavior is to filter the list of variables to those that are in the QRIS project. things to consider:
 
-        if state == QtCore.Qt.Checked:
+        if state == CHECKED:
             # filter the list of variables to those that are in the QRIS project
             for i in range(self.lboxVariables.count()):
                 item = self.lboxVariables.item(i)
-                variable = item.data(QtCore.Qt.UserRole)
+                variable = item.data(USER_ROLE)
                 if variable is not None:
                     if variable.get("defaultVisible", False) is False:
                         item.setHidden(True)
@@ -152,9 +153,9 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
             date_diff = end_date - start_date
             if date_diff.days > 3650:
                 result = QtWidgets.QMessageBox.warning(
-                    self, "Warning", "The date range is over 10 years. This may take a long time to download, especially for several sample frame features. Do you want to continue?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+                    self, "Warning", "The date range is over 10 years. This may take a long time to download, especially for several sample frame features. Do you want to continue?", MSGBOX_YES | MSGBOX_NO
                 )
-                if result == QtWidgets.QMessageBox.No:
+                if result == MSGBOX_NO:
                     return
 
         self.lblStatus.setText("Starting Metric Download...")
@@ -162,8 +163,8 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         variables = []
         for i in range(self.lboxVariables.count()):
             item = self.lboxVariables.item(i)
-            if item.checkState() == QtCore.Qt.Checked:
-                variable = item.data(QtCore.Qt.UserRole)
+            if item.checkState() == CHECKED:
+                variable = item.data(USER_ROLE)
                 if variable is not None:
                     variables.append(variable["variableName"])
 
@@ -220,7 +221,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.grid.addWidget(self.txtName, 0, 1)
 
         self.lblSampleFrames = QtWidgets.QLabel("Sample Frames")
-        self.lblSampleFrames.setAlignment(QtCore.Qt.AlignTop)
+        self.lblSampleFrames.setAlignment(ALIGN_TOP)
         self.grid.addWidget(self.lblSampleFrames, 1, 0)
 
         self.grid.addWidget(self.sample_frame_widget, 1, 1)
@@ -235,7 +236,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.grid.addLayout(self.vert_variables, 3, 0)
 
         self.lblVariable = QtWidgets.QLabel("Variables")
-        self.lblVariable.setAlignment(QtCore.Qt.AlignTop)
+        self.lblVariable.setAlignment(ALIGN_TOP)
         self.vert_variables.addWidget(self.lblVariable)
 
         self.btn_variable_description = QtWidgets.QPushButton()
@@ -261,7 +262,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.lblDateRange = QtWidgets.QLabel("Date Range")
         self.grid.addWidget(self.lblDateRange, 5, 0)
         # set the alignment of the label in the cell to the top
-        self.grid.setAlignment(self.lblDateRange, QtCore.Qt.AlignTop)
+        self.grid.setAlignment(self.lblDateRange, ALIGN_TOP)
 
         self.frameDateRange = QtWidgets.QFrame()
         self.frameDateRange.setLayout(QtWidgets.QVBoxLayout())
@@ -270,7 +271,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.frameDateRange.setObjectName("frameDateRange")
         self.frameDateRange.setStyleSheet("QFrame#frameDateRange {border: 1px solid gray; border-radius: 3px; padding: 5px;}")
         self.grid.addWidget(self.frameDateRange, 5, 1)
-        self.grid.setAlignment(self.frameDateRange, QtCore.Qt.AlignTop)
+        self.grid.setAlignment(self.frameDateRange, ALIGN_TOP)
 
         self.cboDateRange = QtWidgets.QComboBox()
         self.cboDateRange.addItems(date_ranges)
@@ -279,7 +280,7 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
 
         self.date_range_widget.setEnabled(False)
         self.frameDateRange.layout().addWidget(self.date_range_widget)
-        self.frameDateRange.layout().setAlignment(self.date_range_widget, QtCore.Qt.AlignTop)
+        self.frameDateRange.layout().setAlignment(self.date_range_widget, ALIGN_TOP)
 
         self.lblAreaReducer = QtWidgets.QLabel("Area Reducer")
         self.grid.addWidget(self.lblAreaReducer, 7, 0)
@@ -323,3 +324,4 @@ class FrmClimateEngineDownload(QtWidgets.QDialog):
         self.horiz_buttons.addWidget(self.btn_close)
 
         self.cboDataset.currentIndexChanged.connect(self.on_dataset_changed)
+

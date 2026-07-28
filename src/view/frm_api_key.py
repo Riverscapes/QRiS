@@ -2,6 +2,7 @@ from qgis.gui import QgsPasswordLineEdit
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
+from ..compat import PLAIN_TEXT
 from ..lib.climate_engine import CLIMATE_ENGINE_CREDENTIAL_SETTING, check_climate_engine_api_key
 from ..QRiS.settings import Settings
 
@@ -19,7 +20,7 @@ class FrmApiKey(QDialog):
 
         lbl = QLabel("Enter your Climate Engine API key. The key will be validated when you click OK.")
         lbl.setWordWrap(True)
-        lbl.setTextFormat(Qt.PlainText)
+        lbl.setTextFormat(PLAIN_TEXT)
         layout.addWidget(lbl)
 
         self.txt_api_key = QgsPasswordLineEdit()

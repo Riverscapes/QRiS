@@ -6,6 +6,7 @@ from qgis.core import Qgis, QgsApplication, QgsCoordinateReferenceSystem, QgsCoo
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
+from ..compat import CUSTOM_CONTEXT_MENU, MSGBOX_NO, MSGBOX_YES, USER_ROLE
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 from ..gp.stream_gage_task import StreamGageTask
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
@@ -67,7 +68,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
             self.stream_gage_model = QtGui.QStandardItemModel()
             for row in curs.fetchall():
                 item = QtGui.QStandardItem(row[1])
-                item.setData((row[0], row[2]), QtCore.Qt.UserRole)
+                item.setData((row[0], row[2]), USER_ROLE)
                 self.stream_gage_model.appendRow(item)
 
         self.lst_gages.setModel(self.stream_gage_model)
@@ -104,7 +105,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         if lst_item is None:
             return
 
-        site_id, _site_code = lst_item.data(QtCore.Qt.UserRole)
+        site_id, _site_code = lst_item.data(USER_ROLE)
         return site_id
 
     def load_metadata(self):
@@ -115,7 +116,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         fields = {"site_code": "Site Code", "site_name": "Site Name", "site_datum": "Site Datum", "huc": "HUC", "agency": "Agency", "latitude": "Latitude", "longitude": "Longitude"}
 
-        site_id, _site_code = lst_item.data(QtCore.Qt.UserRole)
+        site_id, _site_code = lst_item.data(USER_ROLE)
         with sqlite3.connect(self.project.project_file) as conn:
             conn.row_factory = dict_factory
             curs = conn.cursor()
@@ -131,7 +132,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         if lst_item is None:
             return
 
-        site_id, _site_code = lst_item.data(QtCore.Qt.UserRole)
+        site_id, _site_code = lst_item.data(USER_ROLE)
         start = date(self.dtStart.date().year(), self.dtStart.date().month(), self.dtStart.date().day())
         end = date(self.dtEnd.date().year(), self.dtEnd.date().month(), self.dtEnd.date().day())
 
@@ -161,7 +162,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         station_code = None
         if lst_item is not None:
             station_name = lst_item.text()
-            station_data = lst_item.data(QtCore.Qt.UserRole)
+            station_data = lst_item.data(USER_ROLE)
             if station_data and len(station_data) > 1:
                 station_code = station_data[1]
 
@@ -219,7 +220,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         if lst_item is None:
             return
 
-        site_id, site_code = lst_item.data(QtCore.Qt.UserRole)
+        site_id, site_code = lst_item.data(USER_ROLE)
 
         start = date(self.dtStart.date().year(), self.dtStart.date().month(), self.dtStart.date().day())
         end = date(self.dtEnd.date().year(), self.dtEnd.date().month(), self.dtEnd.date().day())
@@ -281,15 +282,15 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
     def delete_gage(self):
 
         # Confirm deletion
-        result = QtWidgets.QMessageBox.question(self, "Delete Stream Gage", "Are you sure you want to delete this stream gage and all associated discharge data?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if result == QtWidgets.QMessageBox.No:
+        result = QtWidgets.QMessageBox.question(self, "Delete Stream Gage", "Are you sure you want to delete this stream gage and all associated discharge data?", MSGBOX_YES | MSGBOX_NO)
+        if result == MSGBOX_NO:
             return
 
         lst_item = self.stream_gage_model.itemFromIndex(self.lst_gages.currentIndex())
         if lst_item is None:
             return
 
-        site_id, site_code = lst_item.data(QtCore.Qt.UserRole)
+        site_id, site_code = lst_item.data(USER_ROLE)
         with sqlite3.connect(self.project.project_file) as conn:
             try:
                 curs = conn.cursor()
@@ -365,7 +366,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         self.lst_gages = QtWidgets.QListView()
         # self.lst_gages.setMaximumWidth(400)
-        self.lst_gages.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.lst_gages.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.lst_gages.customContextMenuRequested.connect(self.on_gage_context_menu)
         self.left_vert.addWidget(self.lst_gages)
 
@@ -440,3 +441,5 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.tabWidget.addTab(self.metadata_tab, "Metadata")
 
         self.setWidget(self.dockWidgetContents)
+
+

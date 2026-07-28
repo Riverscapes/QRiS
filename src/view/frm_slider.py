@@ -1,7 +1,8 @@
 from qgis.core import QgsRasterBandStats
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal
 
+from ..compat import DLG_REJECTED, HORIZONTAL, SLIDER_TICKS_BELOW, SPSZ_EXPANDING, SPSZ_MINIMUM
 from ..model.project import Project
 from ..model.raster import RASTER_SLIDER_MACHINE_CODE, Raster
 from ..model.scratch_vector import ScratchVector
@@ -76,7 +77,7 @@ class FrmSlider(QtWidgets.QDockWidget):
         frm = FrmSliderScratchVector(self, self.project, raster_path, threshold_value, self.optAbove.isChecked())
         frm.exec_()
 
-        if frm.result() == QtWidgets.QDialog.Rejected:
+        if frm.result() == DLG_REJECTED:
             return
 
         self.add_to_map = frm.chkAddToMap.isChecked()
@@ -137,8 +138,8 @@ class FrmSlider(QtWidgets.QDockWidget):
         self.grid.addWidget(self.valElevation, 2, 1, 1, 1)
 
         self.slider = DoubleSlider(decimals=2)
-        self.slider.setOrientation(QtCore.Qt.Horizontal)
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        self.slider.setOrientation(HORIZONTAL)
+        self.slider.setTickPosition(SLIDER_TICKS_BELOW)
         self.slider.setSingleStep(self.increment)
         self.slider.doubleValueChanged.connect(self.sliderElevationChange)
         self.grid.addWidget(self.slider, 3, 1, 1, 1)
@@ -159,7 +160,7 @@ class FrmSlider(QtWidgets.QDockWidget):
 
         self.gridButtons.addWidget(add_help_button(self, "inputs/surfaces/#raster-slider-tool"), 0, 0, 1, 1)
 
-        self.gridButtons.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
+        self.gridButtons.addItem(QtWidgets.QSpacerItem(20, 40, SPSZ_EXPANDING, SPSZ_MINIMUM), 0, 1, 1, 1)
 
         self.cmdExport = QtWidgets.QPushButton("Export Polygon")
         self.cmdExport.setToolTip("Export the highlighted area as a polygon")

@@ -2,9 +2,10 @@ import json
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.gui import QgisInterface
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.utils import iface
 
+from ..compat import CHECKED, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -110,7 +111,7 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
         if self.sample_frame is not None:
             self.txtName.setText(sample_frame.name)
             self.txtDescription.setPlainText(sample_frame.description)
-            self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
+            self.chkAddToMap.setCheckState(UNCHECKED)
             self.chkAddToMap.setVisible(False)
             self.chkStartEditSession.setVisible(False)
 
@@ -206,12 +207,12 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
                 layer_attributes = {"sample_frame_id": self.sample_frame.id}
 
                 field_map = None
-                if self.cboAttribute.isVisible() and self.cboAttribute.currentData(QtCore.Qt.UserRole) is not None:
-                    field_map = [ImportFieldMap(self.cboAttribute.currentData(QtCore.Qt.UserRole).name, "display_label", direct_copy=True)]
+                if self.cboAttribute.isVisible() and self.cboAttribute.currentData(USER_ROLE) is not None:
+                    field_map = [ImportFieldMap(self.cboAttribute.currentData(USER_ROLE).name, "display_label", direct_copy=True)]
 
                 clip_mask = None
                 if self.cboMaskClip.isVisible():
-                    clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+                    clip_item = self.cboMaskClip.currentData(USER_ROLE)
                     if clip_item is not None and clip_item.id > 0:
                         clip_mask = ("sample_frame_features", "sample_frame_id", clip_item.id)
 
@@ -336,7 +337,7 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
         self.chkStartEditSession = QtWidgets.QCheckBox()
         self.chkStartEditSession.setText("Start Edit Session")
         self.chkStartEditSession.setChecked(False)
-        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked), self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None))
+        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == CHECKED), self.chkStartEditSession.setChecked(False) if state != CHECKED else None))
 
         add_to_map_row = QtWidgets.QHBoxLayout()
         add_to_map_row.addWidget(self.chkAddToMap)
@@ -346,3 +347,5 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
 
         help_slug = "inputs/aoi" if self.is_aoi else "inputs/valley-bottoms"
         self.vert.addLayout(add_standard_form_buttons(self, help_slug))
+
+

@@ -4,8 +4,22 @@ import re
 import sqlite3
 from typing import Optional
 
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import (
+    DLG_ACCEPTED,
+    DLGBTN_CANCEL,
+    DLGBTN_CLOSE,
+    DLGBTN_OK,
+    HEADER_RESIZE_TO_CONTENTS,
+    HEADER_STRETCH,
+    MSGBOX_NO,
+    MSGBOX_YES,
+    QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+    USER_ROLE,
+)
 from ..model.analysis import Analysis
 from ..model.metric import Metric, insert_metric
 from ..model.project import Project
@@ -55,7 +69,7 @@ class CustomMetricCreateDialog(QtWidgets.QDialog):
 
         layout.addLayout(form)
 
-        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        buttons = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         buttons.accepted.connect(self._accept_with_validation)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -137,18 +151,18 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
 
         self.tbl_metrics = QtWidgets.QTableWidget(0, 7)
         self.tbl_metrics.setHorizontalHeaderLabels(["Name", "Metric ID", "Type", "Min", "Max", "Precision", "Tolerance"])
-        self.tbl_metrics.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tbl_metrics.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.tbl_metrics.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tbl_metrics.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.tbl_metrics.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
+        self.tbl_metrics.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         self.tbl_metrics.verticalHeader().setVisible(False)
         header = self.tbl_metrics.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, HEADER_STRETCH)
+        header.setSectionResizeMode(1, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(2, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(3, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(4, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(5, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(6, HEADER_RESIZE_TO_CONTENTS)
         layout.addWidget(self.tbl_metrics)
 
         button_row = QtWidgets.QHBoxLayout()
@@ -161,10 +175,10 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
         button_row.addStretch()
         layout.addLayout(button_row)
 
-        dlg_buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        dlg_buttons = QtWidgets.QDialogButtonBox(DLGBTN_CLOSE)
         dlg_buttons.rejected.connect(self.reject)
         dlg_buttons.accepted.connect(self.accept)
-        dlg_buttons.button(QtWidgets.QDialogButtonBox.Close).clicked.connect(self.accept)
+        dlg_buttons.button(DLGBTN_CLOSE).clicked.connect(self.accept)
         layout.addWidget(dlg_buttons)
 
         self.btn_add.clicked.connect(self._on_add_metric)
@@ -237,7 +251,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
         item = self.tbl_metrics.item(row, 0)
         if item is None:
             return None
-        return item.data(QtCore.Qt.UserRole)
+        return item.data(USER_ROLE)
 
     def _refresh_table(self):
         metrics = self._custom_metrics()
@@ -252,7 +266,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
             tolerance = metadata.get("tolerance", "")
 
             name_item = QtWidgets.QTableWidgetItem(metric.name)
-            name_item.setData(QtCore.Qt.UserRole, metric)
+            name_item.setData(USER_ROLE, metric)
             self.tbl_metrics.setItem(row, 0, name_item)
             self.tbl_metrics.setItem(row, 1, QtWidgets.QTableWidgetItem(metric.machine_name))
             self.tbl_metrics.setItem(row, 2, QtWidgets.QTableWidgetItem(str(metric_type)))
@@ -264,7 +278,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
     def _on_add_metric(self):
         protocol = self._ensure_custom_protocol()
         dlg = CustomMetricCreateDialog(self)
-        if dlg.exec_() != QtWidgets.QDialog.Accepted:
+        if dlg.exec_() != DLG_ACCEPTED:
             return
 
         values = dlg.get_values()
@@ -331,10 +345,10 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
             self,
             "Delete Metric",
             f"Delete custom metric '{metric.name}'?",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No,
+            MSGBOX_YES | MSGBOX_NO,
+            MSGBOX_NO,
         )
-        if result != QtWidgets.QMessageBox.Yes:
+        if result != MSGBOX_YES:
             return
 
         with sqlite3.connect(self.qris_project.project_file) as conn:

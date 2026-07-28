@@ -1,5 +1,7 @@
 from qgis.PyQt import QtWidgets
 
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK
+
 
 class FrmLayerTypeDialog(QtWidgets.QDialog):
     def __init__(self, items, parent=None):
@@ -9,7 +11,7 @@ class FrmLayerTypeDialog(QtWidgets.QDialog):
         label = QtWidgets.QLabel("Add this layer as:")
         self.combo = QtWidgets.QComboBox()
         self.combo.addItems(items)
-        btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        btn_box = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         btn_box.accepted.connect(self.accept)
         btn_box.rejected.connect(self.reject)
         layout.addWidget(label)

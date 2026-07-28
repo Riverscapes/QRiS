@@ -1,5 +1,6 @@
 from qgis.PyQt import QtWidgets
 
+from ..compat import SPSZ_EXPANDING, SPSZ_MINIMUM
 from .utilities import add_standard_form_buttons
 
 
@@ -56,6 +57,6 @@ class FrmCalculateAllMetrics(QtWidgets.QDialog):
         self.grpMetricValues.layout().addWidget(self.chkForceActive)
         self.vert.addWidget(self.grpMetricValues)
 
-        self.vert.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
+        self.vert.addSpacerItem(QtWidgets.QSpacerItem(0, 0, SPSZ_MINIMUM, SPSZ_EXPANDING))
 
         self.vert.addLayout(add_standard_form_buttons(self, "analyses"))

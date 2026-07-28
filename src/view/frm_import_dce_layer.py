@@ -4,6 +4,7 @@ from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.utils import iface
 
+from ..compat import QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, SPSZ_EXPANDING, SPSZ_MINIMUM, USER_ROLE
 from ..gp.feature_class_functions import get_field_names, get_field_values
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -90,7 +91,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
             layout.setSpacing(0)  # Remove spacing
             transfer_widget.setLayout(layout)
-            transfer_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)  # Expand vertically
+            transfer_widget.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)  # Expand vertically
 
             chk_map = QtWidgets.QCheckBox()
             chk_map.setChecked(False)
@@ -110,7 +111,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             copy_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
             copy_layout.setSpacing(0)  # Remove spacing
             copy_widget.setLayout(copy_layout)
-            copy_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)  # Expand vertically
+            copy_widget.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)  # Expand vertically
             # checkbox to copy the value to the target field. add a combobox to select the target field
             chk_copy = QtWidgets.QCheckBox()
             chk_copy.setToolTip("Copy value to target field")
@@ -227,7 +228,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             chk_copy: QtWidgets.QCheckBox = copy_widget.layout().itemAt(0).widget()
             if chk_copy.isChecked():
                 field_name = self.tblFields.item(i, 0).text()
-                target_field = copy_widget.layout().itemAt(1).widget().currentData(QtCore.Qt.UserRole)
+                target_field = copy_widget.layout().itemAt(1).widget().currentData(USER_ROLE)
                 if target_field != "- No Target Fields for Input Data Type -":
                     field_map = ImportFieldMap(field_name, target_field, parent="attributes", direct_copy=False)
                     field_maps.append(field_map)
@@ -247,7 +248,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             layer_attributes = {"event_id": self.db_item.event_id, "event_layer_id": self.db_item.layer.id}
 
             clip_mask = None
-            clip_item = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+            clip_item = self.cboMaskClip.currentData(USER_ROLE)
             if clip_item is not None:
                 if clip_item.id > 0:
                     clip_mask = ("sample_frame_features", "sample_frame_id", clip_item.id)
@@ -352,15 +353,16 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.rdoIgnore.clicked.connect(self.on_rdoImport_clicked)
         self.horiz.addWidget(self.rdoIgnore)
 
-        self.horiz.addSpacerItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        self.horiz.addSpacerItem(QtWidgets.QSpacerItem(0, 0, SPSZ_EXPANDING, SPSZ_MINIMUM))
 
         self.tblFields = QtWidgets.QTableWidget()
         self.tblFields.setColumnCount(5)
         self.tblFields.setHorizontalHeaderLabels(["Input Field", "Data Type", "Retain Values", "Transfer Values", "Copy Values"])
         self.tblFields.verticalHeader().setVisible(False)
-        self.tblFields.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.tblFields.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.tblFields.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.tblFields.setSelectionMode(QABSTRACTITEMVIEW_NO_SELECTION)
+        self.tblFields.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
+        self.tblFields.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)
         self.vert.addWidget(self.tblFields)
 
         self.vert.addLayout(add_standard_form_buttons(self, "dce/import-dce-layer"))
+

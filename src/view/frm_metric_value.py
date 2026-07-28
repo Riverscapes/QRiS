@@ -1,8 +1,9 @@
 import json
 
 from qgis.core import QgsApplication, QgsMessageLog
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
+from ..compat import ALIGN_RIGHT, ALIGN_VCENTER, LINEEDIT_TRAILING_POSITION, SPSZ_EXPANDING, SPSZ_FIXED
 from ..gp.analysis_metrics_task import AnalysisMetricsTask
 from ..lib.unit_conversion import convert_count_per_area, convert_count_per_length, convert_units, unit_types
 from ..model.analysis import Analysis, format_feasibility_text
@@ -501,7 +502,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.horizUnits.addStretch()
 
         self.lblUnits = QtWidgets.QLabel("Display Units:")
-        self.lblUnits.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.lblUnits.setAlignment(ALIGN_RIGHT | ALIGN_VCENTER)
         self.horizUnits.addWidget(self.lblUnits)
 
         self.cboUnits = QtWidgets.QComboBox()
@@ -515,7 +516,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.gridValues.addWidget(self.rdoManual, 1, 0)
 
         self.valManual = QtWidgets.QDoubleSpinBox()
-        self.valManual.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.valManual.setSizePolicy(SPSZ_EXPANDING, SPSZ_FIXED)
         self.gridValues.addWidget(self.valManual, 1, 1)
 
         # --- Row 2: Automated Value ---
@@ -524,14 +525,14 @@ class FrmMetricValue(QtWidgets.QDialog):
 
         self.txtAutomated = QtWidgets.QLineEdit()
         self.txtAutomated.setReadOnly(True)
-        self.txtAutomated.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.txtAutomated.setSizePolicy(SPSZ_EXPANDING, SPSZ_FIXED)
         self.gridValues.addWidget(self.txtAutomated, 2, 1)
 
         self.actionCalculate = QtWidgets.QAction(self.txtAutomated)
         self.actionCalculate.setIcon(QtGui.QIcon(":plugins/qris_toolbar/calculate"))
         self.actionCalculate.setToolTip("Calculate Metric From GIS")
         self.actionCalculate.triggered.connect(self.cmd_calculate_metric_clicked)
-        self.txtAutomated.addAction(self.actionCalculate, QtWidgets.QLineEdit.TrailingPosition)
+        self.txtAutomated.addAction(self.actionCalculate, LINEEDIT_TRAILING_POSITION)
 
         # --- Row 3: Uncertainty ---
         self.lblUbcertainty = QtWidgets.QLabel("Uncertainty")
