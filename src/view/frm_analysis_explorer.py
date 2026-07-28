@@ -1,7 +1,7 @@
 import sqlite3
 
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import Qt
