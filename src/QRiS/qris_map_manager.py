@@ -614,7 +614,7 @@ class QRisMapManager(RiverscapesMapManager):
                                 # preview_layers[buffer].setFlags(QgsMapLayer.LayerFlag(QgsMapLayer.Private + QgsMapLayer.Removable))
                                 preview_layers[buffer].renderer().symbol().symbolLayer(0).setColor(QColor(0,0,0,0))
                                 preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeColor(buffer_color[buffer])
-                                preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeStyle(QtCore.Qt.DashLine)
+                                preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeStyle(QtCore.Qt.PenStyle.DashLine)
                                 preview_layers[buffer].renderer().symbol().symbolLayer(0).setStrokeWidth(0.5)
 
                                 buffer_geom = base_geom.buffer(size, 10, QgsGeometry.CapFlat, QgsGeometry.JoinStyleRound, 0.0)

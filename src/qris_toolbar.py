@@ -36,6 +36,18 @@ from qgis.PyQt.QtCore import QSettings, pyqtSlot
 
 # Initialize Qt resources from file resources.py
 from . import resources  # noqa: F401  # side-effect import: registers Qt resource paths
+from .compat import (
+    LEFT_DOCK,
+    MSGBOX_BTN_NO,
+    MSGBOX_BTN_YES,
+    MSGBOX_ICON_WARNING,
+    RIGHT_DOCK,
+    TOOL_BTN_ICON_ONLY,
+    TOOL_BTN_INSTANT_POPUP,
+    TOOL_BTN_MENU_POPUP,
+    TOOL_BTN_TEXT_BESIDE,
+    TOOL_BTN_TEXT_ONLY,
+)
 from .gp.load_project_task import LoadProjectTask
 from .gp.update_metadata import check_metadata, update_metadata
 from .gp.watershed_attributes import WatershedAttributes
@@ -62,8 +74,8 @@ LAST_PROJECT_FOLDER = "last_project_folder"
 RECENT_PROJECT_LIST = "recent_projects"
 
 dock_widget_locations = {
-    "left": QtCore.Qt.LeftDockWidgetArea,
-    "right": QtCore.Qt.RightDockWidgetArea,
+    "left": LEFT_DOCK,
+    "right": RIGHT_DOCK,
 }
 
 
@@ -214,9 +226,9 @@ class QRiSToolbar:
         self.qris_button = QtWidgets.QToolButton(self.toolbar)
         self.qris_button.setText("  QRiS")
         self.qris_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/qris_icon"))
-        self.qris_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.qris_button.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
         self.qris_button.setMenu(self.qris_menu)
-        self.qris_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)  # Clicking anywhere opens the menu
+        self.qris_button.setPopupMode(TOOL_BTN_INSTANT_POPUP)  # Clicking anywhere opens the menu
 
         self.toolbar.addWidget(self.qris_button)
 
@@ -487,14 +499,14 @@ class QRiSToolbar:
             if result is False:
                 # window dialog ask user if they want to update the metadata
                 msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Warning)
+                msg.setIcon(MSGBOX_ICON_WARNING)
                 msg.setText("Metadata Update Recommended")
                 msg.setInformativeText("The QRiS project you are attempting to open has an older metadata format. Would you like to update the metadata?")
                 msg.setWindowTitle("Metadata Update Recommended")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                msg.setDefaultButton(QtWidgets.QMessageBox.Yes)
+                msg.setStandardButtons(MSGBOX_BTN_YES | MSGBOX_BTN_NO)
+                msg.setDefaultButton(MSGBOX_BTN_YES)
                 retval = msg.exec_()
-                if retval == QtWidgets.QMessageBox.Yes:
+                if retval == MSGBOX_BTN_YES:
                     update_metadata(db_path)
 
             self.toggle_widget(forceOn=True)
@@ -681,17 +693,17 @@ class QRiSToolbar:
     def configure_watershed_attribute_menu(self):
 
         self.wat_button = QtWidgets.QToolButton()
-        self.wat_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        self.wat_button.setToolButtonStyle(TOOL_BTN_ICON_ONLY)
         self.wat_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/watershed"))
         self.wat_button.setMenu(QtWidgets.QMenu())
-        self.wat_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+        self.wat_button.setPopupMode(TOOL_BTN_MENU_POPUP)
         self.toolbar.addWidget(self.wat_button)
         self.wat_menu = self.wat_button.menu()
 
         self.wat_button = QtWidgets.QToolButton()
-        self.wat_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        self.wat_button.setToolButtonStyle(TOOL_BTN_TEXT_ONLY)
         self.wat_button.setMenu(self.wat_menu)
-        self.wat_button.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+        self.wat_button.setPopupMode(TOOL_BTN_MENU_POPUP)
 
         self.wat_html_action = QtWidgets.QAction(
             QtGui.QIcon(":/plugins/qris_toolbar/watershed"),

@@ -38,6 +38,9 @@ try:
     RIGHT_DOCK = Qt.DockWidgetArea.RightDockWidgetArea
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonStyle.ToolButtonTextBesideIcon
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonStyle.ToolButtonTextOnly
+    TOOL_BTN_ICON_ONLY = Qt.ToolButtonStyle.ToolButtonIconOnly
+    TOOL_BTN_INSTANT_POPUP = Qt.ToolButtonPopupMode.InstantPopup
+    TOOL_BTN_MENU_POPUP = Qt.ToolButtonPopupMode.MenuButtonPopup
     SCROLL_BAR_ALWAYS_OFF = Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     TEXT_BROWSER_INTERACTION = Qt.TextInteractionFlag.TextBrowserInteraction
     FOREGROUND_ROLE = Qt.ItemDataRole.ForegroundRole
@@ -65,6 +68,9 @@ except AttributeError:
     RIGHT_DOCK = Qt.RightDockWidgetArea  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonTextBesideIcon  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonTextOnly  # type: ignore[attr-defined]
+    TOOL_BTN_ICON_ONLY = Qt.ToolButtonIconOnly  # type: ignore[attr-defined]
+    TOOL_BTN_INSTANT_POPUP = Qt.InstantPopup  # type: ignore[attr-defined]
+    TOOL_BTN_MENU_POPUP = Qt.MenuButtonPopup  # type: ignore[attr-defined]
     SCROLL_BAR_ALWAYS_OFF = Qt.ScrollBarAlwaysOff  # type: ignore[attr-defined]
     TEXT_BROWSER_INTERACTION = Qt.TextBrowserInteraction  # type: ignore[attr-defined]
     FOREGROUND_ROLE = Qt.ForegroundRole  # type: ignore[attr-defined]
@@ -81,6 +87,8 @@ try:
     QMETATYPE_STRING = QMetaType.Type.QString
     QMETATYPE_INT = QMetaType.Type.Int
     QMETATYPE_DOUBLE = QMetaType.Type.Double
+    QMETATYPE_BOOL = QMetaType.Type.Bool
+    QMETATYPE_QURL = QMetaType.Type.QUrl
     QMETATYPE_LONGLONG = QMetaType.Type.LongLong
     QMETATYPE_UINT = QMetaType.Type.UInt
     QMETATYPE_ULONGLONG = QMetaType.Type.ULongLong
@@ -89,6 +97,8 @@ except AttributeError:
     QMETATYPE_STRING = QVariant.String  # type: ignore[attr-defined]
     QMETATYPE_INT = QMetaType.Int  # type: ignore[attr-defined]
     QMETATYPE_DOUBLE = QMetaType.Double  # type: ignore[attr-defined]
+    QMETATYPE_BOOL = QMetaType.Bool  # type: ignore[attr-defined]
+    QMETATYPE_QURL = QMetaType.QUrl  # type: ignore[attr-defined]
     QMETATYPE_LONGLONG = QMetaType.LongLong  # type: ignore[attr-defined]
     QMETATYPE_UINT = QMetaType.UInt  # type: ignore[attr-defined]
     QMETATYPE_ULONGLONG = QMetaType.ULongLong  # type: ignore[attr-defined]
