@@ -4,10 +4,10 @@ import webbrowser
 
 from osgeo import ogr
 from qgis.core import QgsGeometry
-from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QMessageBox
 import requests
 
+from ..compat import PLAIN_TEXT
 from ..QRiS.settings import Settings
 
 # Global timeout for all requests
@@ -41,7 +41,7 @@ def require_api_key(parent=None, open_settings_callback=None) -> bool:
         return True
     msg = QMessageBox(parent)
     msg.setWindowTitle("Climate Engine API Key Required")
-    msg.setTextFormat(Qt.PlainText)
+    msg.setTextFormat(PLAIN_TEXT)
     msg.setText("A Climate Engine API key has not been configured.\n\nPlease set your Climate Engine API key in the QRiS Settings")
     msg.setIcon(QMessageBox.Information)
     if open_settings_callback:

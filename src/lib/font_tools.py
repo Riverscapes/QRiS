@@ -3,6 +3,8 @@ from typing import Optional
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtGui import QFont
 
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK
+
 try:
     from matplotlib import font_manager as mpl_font_manager
 except Exception:  # nosec B110 - matplotlib may not be available in limited environments
@@ -99,7 +101,7 @@ class _ChartFontDialog(QtWidgets.QDialog):
         self.lbl_preview.setWordWrap(True)
         layout.addWidget(self.lbl_preview)
 
-        btns = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        btns = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)

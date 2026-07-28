@@ -26,6 +26,7 @@ try:
     ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight
     ALIGN_VCENTER = Qt.AlignmentFlag.AlignVCenter
     RICH_TEXT = Qt.TextFormat.RichText
+    PLAIN_TEXT = Qt.TextFormat.PlainText
     CHECKED = Qt.CheckState.Checked
     UNCHECKED = Qt.CheckState.Unchecked
     ITEM_FLAG_CHECKABLE = Qt.ItemFlag.ItemIsUserCheckable
@@ -56,6 +57,7 @@ except AttributeError:
     ALIGN_RIGHT = Qt.AlignRight  # type: ignore[attr-defined]
     ALIGN_VCENTER = Qt.AlignVCenter  # type: ignore[attr-defined]
     RICH_TEXT = Qt.RichText  # type: ignore[attr-defined]
+    PLAIN_TEXT = Qt.PlainText  # type: ignore[attr-defined]
     CHECKED = Qt.Checked  # type: ignore[attr-defined]
     UNCHECKED = Qt.Unchecked  # type: ignore[attr-defined]
     ITEM_FLAG_CHECKABLE = Qt.ItemIsUserCheckable  # type: ignore[attr-defined]
