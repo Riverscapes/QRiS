@@ -9,6 +9,7 @@ from qgis.PyQt.QtCore import Qt, pyqtSignal, pyqtSlot
 from qgis.PyQt.QtGui import QColor
 from qgis.utils import iface
 
+from ..compat import DLG_ACCEPTED, SPSZ_EXPANDING, SPSZ_MINIMUM
 from ..gp.centerlines import CenterlineTask
 from ..model.db_item import DBItem
 from ..model.layer import Layer
@@ -104,7 +105,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         frm_layer_picker = FrmLayerPicker(self, "Select Polygon Layer", layers)
         result = frm_layer_picker.exec_()
 
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             self.centerline_setup(frm_layer_picker.layer)
         return
 
@@ -193,7 +194,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         frm_profile = FrmProfile(self, self.project, temp_layer, profile_type=Profile.ProfileTypes.CENTERLINE_PROFILE_TYPE, fc_name="profile_centerlines", system_metadata=self.fields, metrics=metrics)
         result = frm_profile.exec_()
 
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             self.centerline_setup(self.polygon_source)  # Reset the map
             self.export_complete.emit(frm_profile.profile, True)
         return
@@ -450,7 +451,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridButtons.addWidget(add_help_button(self, "inputs/valley-bottoms#centerline-tool"), 0, 0, 1, 1)
 
         # include a spacer to push the buttons to the right
-        self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
+        self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, SPSZ_EXPANDING, SPSZ_MINIMUM), 0, 1, 1, 1)
 
         self.cmdGenerateCl = QtWidgets.QPushButton("Generate Centerline")
         self.cmdGenerateCl.setToolTip("Generate a preview the centerline")
@@ -463,3 +464,4 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridButtons.addWidget(self.cmdSaveCl, 1, 2, 1, 1)
 
         self.setWidget(self.dockWidgetContents)
+

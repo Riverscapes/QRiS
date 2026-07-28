@@ -7,6 +7,7 @@ from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 
+from ..compat import DISPLAY_ROLE, SPSZ_EXPANDING, SPSZ_MAXIMUM, SPSZ_MINIMUM, UNCHECKED, USER_ROLE
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
 from ..model.db_item import DBItem, DBItemModel
@@ -43,7 +44,7 @@ class FrmRaster(QtWidgets.QDialog):
         for raster_source in raster_sources.values():
             raster_name = raster_source.name
             item = QStandardItem(raster_name)
-            item.setData(raster_name, QtCore.Qt.DisplayRole)
+            item.setData(raster_name, DISPLAY_ROLE)
             self.raster_sources_model.appendRow(item)
         self.cboRasterSource.setModel(self.raster_sources_model)
         self.cboRasterSource.setCurrentIndex(-1)
@@ -118,7 +119,7 @@ class FrmRaster(QtWidgets.QDialog):
             self.txtProjectPath.setText(qris_project.get_absolute_path(raster.path))
 
             self.chkAddToMap.setVisible(False)
-            self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
+            self.chkAddToMap.setCheckState(UNCHECKED)
 
         self.txtName.selectAll()
 
@@ -135,8 +136,8 @@ class FrmRaster(QtWidgets.QDialog):
         else:
             self.metadata_widget.remove_system_metadata("date")
 
-        if self.cboRasterSource.currentData(QtCore.Qt.UserRole) is not None:
-            self.metadata_widget.add_system_metadata("source_type", self.cboRasterSource.currentData(QtCore.Qt.UserRole))
+        if self.cboRasterSource.currentData(USER_ROLE) is not None:
+            self.metadata_widget.add_system_metadata("source_type", self.cboRasterSource.currentData(USER_ROLE))
         else:
             self.metadata_widget.add_system_metadata("source_type", self.cboRasterSource.currentText())
 
@@ -145,7 +146,7 @@ class FrmRaster(QtWidgets.QDialog):
 
         if self.raster is not None:
             try:
-                raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
+                raster_type = self.cboRasterType.currentData(USER_ROLE).id
                 self.raster.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), metadata=self.metadata, raster_type_id=raster_type)
                 self.qris_project.project_changed.emit()
                 # TODO update hillshade if exists
@@ -167,7 +168,7 @@ class FrmRaster(QtWidgets.QDialog):
                 return
 
             try:
-                mask = self.cboMask.currentData(QtCore.Qt.UserRole)
+                mask = self.cboMask.currentData(USER_ROLE)
                 mask_tuple = (self.qris_project.project_file, mask.id) if mask.id > 0 else None
 
                 project_path = self.qris_project.get_absolute_path(self.txtProjectPath.text())
@@ -212,7 +213,7 @@ class FrmRaster(QtWidgets.QDialog):
             self.iface.messageBar().pushMessage("Raster Copy Complete.", f"Raster {self.txtName.text()} added to project", level=Qgis.Info, duration=5)
 
             try:
-                raster_type = self.cboRasterType.currentData(QtCore.Qt.UserRole).id
+                raster_type = self.cboRasterType.currentData(USER_ROLE).id
                 metadata_json = self.metadata_widget.get_json()
                 metadata = json.loads(metadata_json) if metadata_json is not None else None
                 self.raster = insert_raster(self.qris_project.project_file, self.txtName.text(), self.txtProjectPath.text(), raster_type, self.txtDescription.toPlainText(), self.is_context, metadata)
@@ -267,7 +268,7 @@ class FrmRaster(QtWidgets.QDialog):
 
     def set_hillshade(self):
         """check hillshade if raster type is dem"""
-        raster = self.cboRasterType.currentData(QtCore.Qt.UserRole)
+        raster = self.cboRasterType.currentData(USER_ROLE)
         if raster.id == 4:
             self.chkHillshade.setEnabled(True)
             self.chkHillshade.setChecked(True)
@@ -360,10 +361,10 @@ class FrmRaster(QtWidgets.QDialog):
         self.btn_clear_date.setToolTip("Clear the acquisition date")
         self.btn_clear_date.clicked.connect(self.on_clear_date_clicked)
         # make button size pushed to the right
-        self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum))
+        self.btn_clear_date.setSizePolicy(QtWidgets.QSizePolicy(SPSZ_MAXIMUM, SPSZ_MAXIMUM))
         self.horiz_date.addWidget(self.btn_clear_date)
 
-        self.grid.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding), 10, 0, 1, 2)
+        self.grid.addItem(QtWidgets.QSpacerItem(20, 40, SPSZ_MINIMUM, SPSZ_EXPANDING), 10, 0, 1, 2)
 
         # Description Tab
         self.tabDescription = QtWidgets.QWidget()
@@ -389,3 +390,4 @@ class ClickableDateEdit(QtWidgets.QDateEdit):
         super().focusInEvent(event)
         if self.specialValueText() == self.text():
             self.setDate(QtCore.QDate.currentDate())
+

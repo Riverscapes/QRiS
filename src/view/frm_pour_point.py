@@ -3,6 +3,7 @@ import json
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ..compat import CUSTOM_CONTEXT_MENU, DISPLAY_ROLE, DLGBTN_OK, HEADER_INTERACTIVE, HORIZONTAL, USER_ROLE, WAIT_CURSOR
 from ..gp.stream_stats import calculate_flow_statistics, delineate_watershed, get_state_from_coordinates, retrieve_basin_characteristics, retrieve_flow_scenarios
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.pour_point import PourPoint
@@ -85,7 +86,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
             # Expand headers
             header = self.basinTable.horizontalHeader()
-            header.setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
+            header.setSectionResizeMode(HEADER_INTERACTIVE)
             self.basinTable.resizeColumnToContents(0)
             if self.basinTable.columnWidth(0) > 275:
                 self.basinTable.setColumnWidth(0, 275)
@@ -101,7 +102,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         # Get the item in column 1 (Value) for the clicked row
         val_item = self.tabFlow.item(item.row(), 1)
         if val_item:
-            raw_val = val_item.data(QtCore.Qt.UserRole)
+            raw_val = val_item.data(USER_ROLE)
             full_text = val_item.text()
 
             if raw_val:
@@ -130,8 +131,8 @@ class FrmPourPoint(QtWidgets.QDialog):
         val_idx = self.basin_model.index(row, 3)
         unit_idx = self.basin_model.index(row, 2)
 
-        val_str = str(self.basin_model.data(val_idx, QtCore.Qt.DisplayRole))
-        unit_str = str(self.basin_model.data(unit_idx, QtCore.Qt.DisplayRole))
+        val_str = str(self.basin_model.data(val_idx, DISPLAY_ROLE))
+        unit_str = str(self.basin_model.data(unit_idx, DISPLAY_ROLE))
 
         full_text = f"{val_str} {unit_str}".strip()
 
@@ -151,7 +152,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         row = index.row()
         code_idx = self.basin_model.index(row, 1)  # Code is column 1
-        code = self.basin_model.data(code_idx, QtCore.Qt.DisplayRole)
+        code = self.basin_model.data(code_idx, DISPLAY_ROLE)
 
         # Find the parameter usage
         param_obj = None
@@ -293,7 +294,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         layout.addWidget(txt)
 
-        btnbox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        btnbox = QtWidgets.QDialogButtonBox(DLGBTN_OK)
         btnbox.accepted.connect(dlg.accept)
         layout.addWidget(btnbox)
 
@@ -415,7 +416,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         layout.addWidget(txt)
 
-        btnbox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        btnbox = QtWidgets.QDialogButtonBox(DLGBTN_OK)
         btnbox.accepted.connect(dlg.accept)
         layout.addWidget(btnbox)
 
@@ -467,7 +468,7 @@ class FrmPourPoint(QtWidgets.QDialog):
                     if col_idx == 1 and isinstance(value, tuple):
                         text, raw = value
                         item = QtWidgets.QTableWidgetItem(str(text))
-                        item.setData(QtCore.Qt.UserRole, raw)
+                        item.setData(USER_ROLE, raw)
                         self.tabFlow.setItem(row_idx, col_idx, item)
                     else:
                         self.tabFlow.setItem(row_idx, col_idx, QtWidgets.QTableWidgetItem(str(value)))
@@ -477,7 +478,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
             # Expand columns
             header = self.tabFlow.horizontalHeader()
-            header.setSectionResizeMode(QtWidgets.QHeaderView.Interactive)
+            header.setSectionResizeMode(HEADER_INTERACTIVE)
 
             # Stretch the last two columns so they fill the remaining space
             header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
@@ -498,7 +499,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.lblBasinStatus.setText(" Starting Basin Characteristics download...")
         QtWidgets.QApplication.processEvents()
 
-        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(WAIT_CURSOR)
         self.btnDownloadBasinChars.setEnabled(False)
         try:
             # The basin endpoints generally require the original delineation SSHydroRequest payload as input
@@ -574,7 +575,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         self.lblFlowStatus.setText(" Starting Flow Statistics recalculation...")
         QtWidgets.QApplication.processEvents()
 
-        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(WAIT_CURSOR)
         self.btnRecalculate.setEnabled(False)
         try:
             # Create a deep copy of basin_chars specifically for calculation
@@ -657,14 +658,14 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         headers = []
         for c in range(model.columnCount(QtCore.QModelIndex())):
-            header_data = model.headerData(c, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+            header_data = model.headerData(c, HORIZONTAL, DISPLAY_ROLE)
             headers.append(str(header_data) if header_data else f"column_{c + 1}")
 
         rows = []
         for r in range(model.rowCount(QtCore.QModelIndex())):
             row_dict = {}
             for c, header in enumerate(headers):
-                val = model.data(model.index(r, c), QtCore.Qt.DisplayRole)
+                val = model.data(model.index(r, c), DISPLAY_ROLE)
                 row_dict[header] = "" if val is None else val
             rows.append(row_dict)
 
@@ -793,7 +794,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         layoutBasin = QtWidgets.QVBoxLayout(self.tabBasinPage)
         self.basinTable = QtWidgets.QTableView()
         self.basinTable.verticalHeader().hide()
-        self.basinTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.basinTable.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.basinTable.customContextMenuRequested.connect(self.show_basin_context_menu)
         self.basinTable.doubleClicked.connect(self.show_basin_details)
         layoutBasin.addWidget(self.basinTable)
@@ -827,7 +828,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
         self.tabFlow = QtWidgets.QTableWidget()
         self.tabFlow.itemDoubleClicked.connect(self.show_flow_stat_details)
-        self.tabFlow.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tabFlow.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.tabFlow.customContextMenuRequested.connect(self.show_flow_context_menu)
         layoutFlow.addWidget(self.tabFlow)
 
@@ -878,3 +879,4 @@ if __name__ == "__main__":
     window = FrmPourPoint(None, 123, 123)
     window.show()
     app.exec_()
+

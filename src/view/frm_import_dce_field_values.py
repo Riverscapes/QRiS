@@ -1,6 +1,7 @@
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtCore import QVariant
 
+from ..compat import HEADER_STRETCH, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION
 from .utilities import add_standard_form_buttons
 
 
@@ -136,10 +137,10 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
         self.tblFields = QtWidgets.QTableWidget()
         self.tblFields.setColumnCount(1)
         self.tblFields.setHorizontalHeaderLabels(["Input Values"])
-        self.tblFields.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.tblFields.horizontalHeader().setSectionResizeMode(HEADER_STRETCH)
         self.tblFields.verticalHeader().setVisible(False)
-        self.tblFields.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.tblFields.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tblFields.setSelectionMode(QABSTRACTITEMVIEW_NO_SELECTION)
+        self.tblFields.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
 
         self.vLayout.addWidget(self.tblFields)
 
@@ -148,3 +149,5 @@ class FrmAssignFieldValues(QtWidgets.QDialog):
         self.btnAddOutputField.clicked.connect(self.add_output_field)
         self.btnRemoveOutputField.clicked.connect(self.remove_output_field)
         self.cmbOutputField.currentIndexChanged.connect(self.cbo_changed)
+
+

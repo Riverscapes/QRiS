@@ -3,9 +3,10 @@ import re
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 from qgis.gui import QgisInterface
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
+from ..compat import ALIGN_TOP, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
 from ..gp.import_temp_layer import ImportMapLayer
@@ -69,7 +70,7 @@ class FrmScratchVector(QtWidgets.QDialog):
             self.txtProjectPath.setText(qris_project.get_absolute_path(scratch_vector.gpkg_path))
 
             self.chkAddToMap.setVisible(False)
-            self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
+            self.chkAddToMap.setCheckState(UNCHECKED)
 
         self.txtName.selectAll()
 
@@ -108,7 +109,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                 _out_path, self.fc_name, _layer_id = layer_path_parser(self.txtProjectPath.text())
 
                 clip_mask = None
-                clip_item = self.cboMask.currentData(QtCore.Qt.UserRole)
+                clip_item = self.cboMask.currentData(USER_ROLE)
                 if clip_item is not None:
                     if clip_item.id > 0:
                         clip_mask = ("sample_frame_features", "sample_frame_id", clip_item.id)
@@ -145,7 +146,7 @@ class FrmScratchVector(QtWidgets.QDialog):
                     self.txtName.text(),
                     self.fc_name,
                     scratch_gpkg_path(self.qris_project.project_file),
-                    self.cboVectorType.currentData(QtCore.Qt.UserRole).id,
+                    self.cboVectorType.currentData(USER_ROLE).id,
                     self.txtDescription.toPlainText(),
                     self.metadata,
                 )
@@ -223,7 +224,7 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.cboMask, 4, 1, 1, 1)
 
         self.lblDescription = QtWidgets.QLabel("Description")
-        self.lblDescription.setAlignment(QtCore.Qt.AlignTop)
+        self.lblDescription.setAlignment(ALIGN_TOP)
         self.grid.addWidget(self.lblDescription, 5, 0, 1, 1)
 
         self.txtDescription = QtWidgets.QPlainTextEdit()
@@ -241,3 +242,4 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, "context/vector-layers"))
+

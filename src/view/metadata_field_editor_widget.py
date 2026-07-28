@@ -3,9 +3,11 @@ import typing
 
 from qgis.core import NULL, QgsVectorLayer
 from qgis.gui import QgsEditorConfigWidget, QgsEditorWidgetFactory, QgsEditorWidgetWrapper, QgsGui
-from qgis.PyQt.QtCore import Qt, QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSlider, QTextEdit, QVBoxLayout, QWidget
+
+from ..compat import CHECKED, HORIZONTAL
 
 
 class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
@@ -377,8 +379,8 @@ class SliderWidget(QWidget):
         self.hlayout = QHBoxLayout(self)
         self.setLayout(self.hlayout)
 
-        self.slider = QSlider(Qt.Horizontal, self)
-        self.slider.setOrientation(Qt.Horizontal)
+        self.slider = QSlider(HORIZONTAL, self)
+        self.slider.setOrientation(HORIZONTAL)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.hlayout.addWidget(self.slider)
 
@@ -486,7 +488,7 @@ class DependantComboBox(QWidget):
         return
 
     def onManual(self, state):
-        if state == Qt.Checked:
+        if state == CHECKED:
             self.cboValues.setEnabled(True)
             if self.manual_value is not None:
                 self.setValue(self.manual_value)

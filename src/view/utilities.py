@@ -3,6 +3,7 @@ import sqlite3
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, MSGBOX_OK, SPSZ_EXPANDING, SPSZ_MINIMUM
 from ..QRiS.settings import CONSTANTS
 
 
@@ -38,13 +39,13 @@ def add_standard_form_buttons(form: QtWidgets.QDialog, help_slug: str) -> QtWidg
 
     form.horiz.addWidget(form.cmdHelp)
 
-    form.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    form.spacerItem = QtWidgets.QSpacerItem(40, 20, SPSZ_EXPANDING, SPSZ_MINIMUM)
     form.horiz.addItem(form.spacerItem)
 
     form.buttonBox = QtWidgets.QDialogButtonBox()
     form.horiz.addWidget(form.buttonBox)
-    form.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-    form.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+    form.buttonBox.setOrientation(HORIZONTAL)
+    form.buttonBox.setStandardButtons(DLGBTN_CANCEL | DLGBTN_OK)
     form.buttonBox.accepted.connect(form.accept)
     form.buttonBox.rejected.connect(form.reject)
 
@@ -82,7 +83,8 @@ def message_box(title: str, message: str):
     msg.setIcon(QtWidgets.QMessageBox.Warning)
     msg.setText(message)
     msg.setWindowTitle(title)
-    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-    msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
-    msg.setEscapeButton(QtWidgets.QMessageBox.Ok)
+    msg.setStandardButtons(MSGBOX_OK)
+    msg.setDefaultButton(MSGBOX_OK)
+    msg.setEscapeButton(MSGBOX_OK)
     msg.exec_()
+

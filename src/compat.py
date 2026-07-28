@@ -14,11 +14,13 @@ from qgis.PyQt.QtWidgets import (
     QAbstractScrollArea,
     QDialog,
     QDialogButtonBox,
+    QDockWidget,
     QFrame,
     QHeaderView,
     QLineEdit,
     QMessageBox,
     QSizePolicy,
+    QSlider,
     QStyle,
 )
 
@@ -27,11 +29,14 @@ try:
     ALIGN_CENTER = Qt.AlignmentFlag.AlignCenter
     ALIGN_LEFT = Qt.AlignmentFlag.AlignLeft
     ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight
+    ALIGN_TOP = Qt.AlignmentFlag.AlignTop
     ALIGN_VCENTER = Qt.AlignmentFlag.AlignVCenter
     RICH_TEXT = Qt.TextFormat.RichText
     PLAIN_TEXT = Qt.TextFormat.PlainText
+    WA_QUIT_ON_CLOSE = Qt.ApplicationAttribute.WA_QuitOnClose
     CHECKED = Qt.CheckState.Checked
     UNCHECKED = Qt.CheckState.Unchecked
+    PARTIALLY_CHECKED = Qt.CheckState.PartiallyChecked
     ITEM_FLAG_CHECKABLE = Qt.ItemFlag.ItemIsUserCheckable
     ITEM_FLAG_ENABLED = Qt.ItemFlag.ItemIsEnabled
     ITEM_FLAG_SELECTABLE = Qt.ItemFlag.ItemIsSelectable
@@ -41,13 +46,24 @@ try:
     DESCENDING_ORDER = Qt.SortOrder.DescendingOrder
     LEFT_DOCK = Qt.DockWidgetArea.LeftDockWidgetArea
     RIGHT_DOCK = Qt.DockWidgetArea.RightDockWidgetArea
+    TOP_DOCK = Qt.DockWidgetArea.TopDockWidgetArea
+    BOTTOM_DOCK = Qt.DockWidgetArea.BottomDockWidgetArea
+    DOCK_CLOSABLE = QDockWidget.DockWidgetFeature.DockWidgetClosable
+    DOCK_MOVABLE = QDockWidget.DockWidgetFeature.DockWidgetMovable
+    DOCK_FLOATABLE = QDockWidget.DockWidgetFeature.DockWidgetFloatable
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonStyle.ToolButtonTextBesideIcon
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonStyle.ToolButtonTextOnly
     TOOL_BTN_ICON_ONLY = Qt.ToolButtonStyle.ToolButtonIconOnly
     TOOL_BTN_INSTANT_POPUP = Qt.ToolButtonPopupMode.InstantPopup
     TOOL_BTN_MENU_POPUP = Qt.ToolButtonPopupMode.MenuButtonPopup
+    SLIDER_TICKS_BELOW = QSlider.TickPosition.TicksBelow
     SCROLL_BAR_ALWAYS_OFF = Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+    WAIT_CURSOR = Qt.CursorShape.WaitCursor
     TEXT_BROWSER_INTERACTION = Qt.TextInteractionFlag.TextBrowserInteraction
+    LINKS_ACCESSIBLE_BY_KEYBOARD = Qt.TextInteractionFlag.LinksAccessibleByKeyboard
+    LINKS_ACCESSIBLE_BY_MOUSE = Qt.TextInteractionFlag.LinksAccessibleByMouse
+    TEXT_SELECTABLE_BY_KEYBOARD = Qt.TextInteractionFlag.TextSelectableByKeyboard
+    TEXT_SELECTABLE_BY_MOUSE = Qt.TextInteractionFlag.TextSelectableByMouse
     DISPLAY_ROLE = Qt.ItemDataRole.DisplayRole
     EDIT_ROLE = Qt.ItemDataRole.EditRole
     BACKGROUND_ROLE = Qt.ItemDataRole.BackgroundRole
@@ -57,6 +73,7 @@ try:
     NO_ITEM_FLAGS = Qt.ItemFlag.NoItemFlags
     COLOR_BLUE = Qt.GlobalColor.blue
     COLOR_GRAY = Qt.GlobalColor.gray
+    COLOR_TRANSPARENT = Qt.GlobalColor.transparent
     MATCH_EXACTLY = Qt.MatchFlag.MatchExactly
     MATCH_WRAP = Qt.MatchFlag.MatchWrap
     DIALOG_BTN_CLOSE = QDialogButtonBox.StandardButton.Close
@@ -67,11 +84,14 @@ except AttributeError:
     ALIGN_CENTER = Qt.AlignCenter  # type: ignore[attr-defined]
     ALIGN_LEFT = Qt.AlignLeft  # type: ignore[attr-defined]
     ALIGN_RIGHT = Qt.AlignRight  # type: ignore[attr-defined]
+    ALIGN_TOP = Qt.AlignTop  # type: ignore[attr-defined]
     ALIGN_VCENTER = Qt.AlignVCenter  # type: ignore[attr-defined]
     RICH_TEXT = Qt.RichText  # type: ignore[attr-defined]
     PLAIN_TEXT = Qt.PlainText  # type: ignore[attr-defined]
+    WA_QUIT_ON_CLOSE = Qt.WA_QuitOnClose  # type: ignore[attr-defined]
     CHECKED = Qt.Checked  # type: ignore[attr-defined]
     UNCHECKED = Qt.Unchecked  # type: ignore[attr-defined]
+    PARTIALLY_CHECKED = Qt.PartiallyChecked  # type: ignore[attr-defined]
     ITEM_FLAG_CHECKABLE = Qt.ItemIsUserCheckable  # type: ignore[attr-defined]
     ITEM_FLAG_ENABLED = Qt.ItemIsEnabled  # type: ignore[attr-defined]
     ITEM_FLAG_SELECTABLE = Qt.ItemIsSelectable  # type: ignore[attr-defined]
@@ -81,13 +101,24 @@ except AttributeError:
     DESCENDING_ORDER = Qt.DescendingOrder  # type: ignore[attr-defined]
     LEFT_DOCK = Qt.LeftDockWidgetArea  # type: ignore[attr-defined]
     RIGHT_DOCK = Qt.RightDockWidgetArea  # type: ignore[attr-defined]
+    TOP_DOCK = Qt.TopDockWidgetArea  # type: ignore[attr-defined]
+    BOTTOM_DOCK = Qt.BottomDockWidgetArea  # type: ignore[attr-defined]
+    DOCK_CLOSABLE = QDockWidget.DockWidgetClosable  # type: ignore[attr-defined]
+    DOCK_MOVABLE = QDockWidget.DockWidgetMovable  # type: ignore[attr-defined]
+    DOCK_FLOATABLE = QDockWidget.DockWidgetFloatable  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonTextBesideIcon  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonTextOnly  # type: ignore[attr-defined]
     TOOL_BTN_ICON_ONLY = Qt.ToolButtonIconOnly  # type: ignore[attr-defined]
     TOOL_BTN_INSTANT_POPUP = Qt.InstantPopup  # type: ignore[attr-defined]
     TOOL_BTN_MENU_POPUP = Qt.MenuButtonPopup  # type: ignore[attr-defined]
+    SLIDER_TICKS_BELOW = QSlider.TicksBelow  # type: ignore[attr-defined]
     SCROLL_BAR_ALWAYS_OFF = Qt.ScrollBarAlwaysOff  # type: ignore[attr-defined]
+    WAIT_CURSOR = Qt.WaitCursor  # type: ignore[attr-defined]
     TEXT_BROWSER_INTERACTION = Qt.TextBrowserInteraction  # type: ignore[attr-defined]
+    LINKS_ACCESSIBLE_BY_KEYBOARD = Qt.LinksAccessibleByKeyboard  # type: ignore[attr-defined]
+    LINKS_ACCESSIBLE_BY_MOUSE = Qt.LinksAccessibleByMouse  # type: ignore[attr-defined]
+    TEXT_SELECTABLE_BY_KEYBOARD = Qt.TextSelectableByKeyboard  # type: ignore[attr-defined]
+    TEXT_SELECTABLE_BY_MOUSE = Qt.TextSelectableByMouse  # type: ignore[attr-defined]
     DISPLAY_ROLE = Qt.DisplayRole  # type: ignore[attr-defined]
     EDIT_ROLE = Qt.EditRole  # type: ignore[attr-defined]
     BACKGROUND_ROLE = Qt.BackgroundRole  # type: ignore[attr-defined]
@@ -97,6 +128,7 @@ except AttributeError:
     NO_ITEM_FLAGS = Qt.NoItemFlags  # type: ignore[attr-defined]
     COLOR_BLUE = Qt.blue  # type: ignore[attr-defined]
     COLOR_GRAY = Qt.gray  # type: ignore[attr-defined]
+    COLOR_TRANSPARENT = Qt.transparent  # type: ignore[attr-defined]
     MATCH_EXACTLY = Qt.MatchExactly  # type: ignore[attr-defined]
     MATCH_WRAP = Qt.MatchWrap  # type: ignore[attr-defined]
     DIALOG_BTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
@@ -158,6 +190,7 @@ except AttributeError:
 try:
     SPSZ_FIXED = QSizePolicy.Policy.Fixed
     SPSZ_MINIMUM = QSizePolicy.Policy.Minimum
+    SPSZ_MAXIMUM = QSizePolicy.Policy.Maximum
     SPSZ_PREFERRED = QSizePolicy.Policy.Preferred
     SPSZ_EXPANDING = QSizePolicy.Policy.Expanding
     SPSZ_MINIMUM_EXPANDING = QSizePolicy.Policy.MinimumExpanding
@@ -165,6 +198,7 @@ try:
 except AttributeError:
     SPSZ_FIXED = QSizePolicy.Fixed  # type: ignore[attr-defined]
     SPSZ_MINIMUM = QSizePolicy.Minimum  # type: ignore[attr-defined]
+    SPSZ_MAXIMUM = QSizePolicy.Maximum  # type: ignore[attr-defined]
     SPSZ_PREFERRED = QSizePolicy.Preferred  # type: ignore[attr-defined]
     SPSZ_EXPANDING = QSizePolicy.Expanding  # type: ignore[attr-defined]
     SPSZ_MINIMUM_EXPANDING = QSizePolicy.MinimumExpanding  # type: ignore[attr-defined]
@@ -175,8 +209,11 @@ except AttributeError:
 try:
     DLGBTN_OK = QDialogButtonBox.StandardButton.Ok
     DLGBTN_CANCEL = QDialogButtonBox.StandardButton.Cancel
+    DLGBTN_CLOSE = QDialogButtonBox.StandardButton.Close
     DLGBTN_APPLY = QDialogButtonBox.StandardButton.Apply
     DLGBTN_RESET = QDialogButtonBox.StandardButton.Reset
+    MSGBOX_ROLE_ACTION = QMessageBox.ButtonRole.ActionRole
+    MSGBOX_ROLE_REJECT = QMessageBox.ButtonRole.RejectRole
     DLGBTN_ROLE_APPLY = QDialogButtonBox.ButtonRole.ApplyRole
     DLGBTN_ROLE_RESET = QDialogButtonBox.ButtonRole.ResetRole
     DLGBTN_ROLE_HELP = QDialogButtonBox.ButtonRole.HelpRole
@@ -184,8 +221,11 @@ try:
 except AttributeError:
     DLGBTN_OK = QDialogButtonBox.Ok  # type: ignore[attr-defined]
     DLGBTN_CANCEL = QDialogButtonBox.Cancel  # type: ignore[attr-defined]
+    DLGBTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
     DLGBTN_APPLY = QDialogButtonBox.Apply  # type: ignore[attr-defined]
     DLGBTN_RESET = QDialogButtonBox.Reset  # type: ignore[attr-defined]
+    MSGBOX_ROLE_ACTION = QMessageBox.ActionRole  # type: ignore[attr-defined]
+    MSGBOX_ROLE_REJECT = QMessageBox.RejectRole  # type: ignore[attr-defined]
     DLGBTN_ROLE_APPLY = QDialogButtonBox.ApplyRole  # type: ignore[attr-defined]
     DLGBTN_ROLE_RESET = QDialogButtonBox.ResetRole  # type: ignore[attr-defined]
     DLGBTN_ROLE_HELP = QDialogButtonBox.HelpRole  # type: ignore[attr-defined]
@@ -237,8 +277,11 @@ try:
     QABSTRACTITEMVIEW_SELECT_ITEMS = QAbstractItemView.SelectionMode.SelectItems
     MOVE_ACTION = Qt.DropAction.MoveAction
     DLG_ACCEPTED = QDialog.DialogCode.Accepted
+    DLG_REJECTED = QDialog.DialogCode.Rejected
     MSGBOX_YES = QMessageBox.StandardButton.Yes
     MSGBOX_NO = QMessageBox.StandardButton.No
+    MSGBOX_CANCEL = QMessageBox.StandardButton.Cancel
+    MSGBOX_OK = QMessageBox.StandardButton.Ok
     MSGBOX_QUESTION = QMessageBox.Icon.Question
     SP_CRITICAL = QStyle.StandardPixmap.SP_MessageBoxCritical
     SP_WARNING = QStyle.StandardPixmap.SP_MessageBoxWarning
@@ -258,8 +301,11 @@ except AttributeError:
     QABSTRACTITEMVIEW_SELECT_ITEMS = QAbstractItemView.SelectItems  # type: ignore[attr-defined]
     MOVE_ACTION = Qt.MoveAction  # type: ignore[attr-defined]
     DLG_ACCEPTED = QDialog.Accepted  # type: ignore[attr-defined]
+    DLG_REJECTED = QDialog.Rejected  # type: ignore[attr-defined]
     MSGBOX_YES = QMessageBox.Yes  # type: ignore[attr-defined]
     MSGBOX_NO = QMessageBox.No  # type: ignore[attr-defined]
+    MSGBOX_CANCEL = QMessageBox.Cancel  # type: ignore[attr-defined]
+    MSGBOX_OK = QMessageBox.Ok  # type: ignore[attr-defined]
     MSGBOX_QUESTION = QMessageBox.Question  # type: ignore[attr-defined]
     SP_CRITICAL = QStyle.SP_MessageBoxCritical  # type: ignore[attr-defined]
     SP_WARNING = QStyle.SP_MessageBoxWarning  # type: ignore[attr-defined]

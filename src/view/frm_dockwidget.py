@@ -43,9 +43,26 @@ from qgis.core import (
     QgsWkbTypes,
 )
 from qgis.gui import QgisInterface, QgsLayerTreeView, QgsMapToolEmitPoint
-from qgis.PyQt import QtCore, QtGui, QtWidgets
-from qgis.PyQt.QtCore import QDate, QMetaType, QModelIndex, pyqtSlot
+from qgis.PyQt import QtGui, QtWidgets
+from qgis.PyQt.QtCore import QDate, QMetaType, QModelIndex, QRect, QSettings, QUrl, pyqtSignal, pyqtSlot
 
+from ..compat import (
+    ASCENDING_ORDER,
+    BOTTOM_DOCK,
+    COLOR_TRANSPARENT,
+    CUSTOM_CONTEXT_MENU,
+    DESCENDING_ORDER,
+    DISPLAY_ROLE,
+    DLG_ACCEPTED,
+    DLG_REJECTED,
+    LEFT_DOCK,
+    MAPLAYER_VECTOR,
+    MSGBOX_NO,
+    MSGBOX_OK,
+    QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    RIGHT_DOCK,
+    USER_ROLE,
+)
 from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
 from ..gp.order_by_line_task import OrderByLineTask
 from ..gp.stream_stats import StreamStats, get_state_from_coordinates, transform_geometry
@@ -148,15 +165,15 @@ GROUP_FOLDER_LABELS = {
 }
 
 USER_ROLES = {
-    "date": QtCore.Qt.UserRole + 1,
-    "raster_type": QtCore.Qt.UserRole + 2,
-    "node_type": QtCore.Qt.UserRole + 3,
-    "attachment_type": QtCore.Qt.UserRole + 4,
+    "date": USER_ROLE + 1,
+    "raster_type": USER_ROLE + 2,
+    "node_type": USER_ROLE + 3,
+    "attachment_type": USER_ROLE + 4,
 }
 
 
 class QRiSDockWidget(QtWidgets.QDockWidget):
-    closingPlugin = QtCore.pyqtSignal()
+    closingPlugin = pyqtSignal()
 
     def __init__(self, iface: QgisInterface, parent=None):
         """Constructor."""
@@ -177,8 +194,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.basemap_manager = RiverscapesMapManager("Basemaps")
         self.menu = QtWidgets.QMenu()
 
-        self.treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.treeView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.treeView.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
+        self.treeView.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         self.treeView.customContextMenuRequested.connect(self.open_menu)
         self.treeView.doubleClicked.connect(self.double_click_tree_item)
 
@@ -342,14 +359,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         root = self.model.invisibleRootItem()
         for row in range(root.rowCount()):
             child = root.child(row)
-            if isinstance(child.data(QtCore.Qt.UserRole), Project):
+            if isinstance(child.data(USER_ROLE), Project):
                 root.removeRow(row)
                 break
 
     def double_click_tree_item(self, idx: QModelIndex):
 
         model_item = self.model.itemFromIndex(idx)
-        model_data = model_item.data(QtCore.Qt.UserRole)
+        model_data = model_item.data(USER_ROLE)
 
         if isinstance(model_data, DBItem):
             if isinstance(model_data, Event):
@@ -367,7 +384,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def expand_tree_item(self, idx: QModelIndex):
         item = self.model.itemFromIndex(idx)
-        item_data = item.data(QtCore.Qt.UserRole)
+        item_data = item.data(USER_ROLE)
         if isinstance(item_data, self.qrave.ProjectTreeData):
             if item_data and item_data.data and isinstance(item_data.data, self.qrave.QRaveBaseMap):
                 item_data.data.load_layers()
@@ -394,7 +411,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if self.qrave.BaseMaps is not None:
                 # add the first basemap to the basemap manager
                 region = self.settings.getValue("basemapRegion")
-                data = self.qrave.BaseMaps.regions[region].child(0).child(0).data(QtCore.Qt.UserRole)
+                data = self.qrave.BaseMaps.regions[region].child(0).child(0).data(USER_ROLE)
                 self.add_basemap_to_map(data, trigger_repaint=trigger_repaint)
                 self.iface.mapCanvas().refresh()
                 self.iface.mapCanvas().refreshAllLayers()
@@ -403,7 +420,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         event.accept()
 
     def destroy_docwidget(self):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QSettings(ORGANIZATION, APPNAME)
         remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
         if remove_layers is True:
             if self.map_manager is not None and self.qris_project is not None:
@@ -491,7 +508,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmLayerTypeDialog(["Surface Raster", "Context Raster"])
             result = frm.exec_()
             selected_type = frm.selected_type()
-            if result == QtWidgets.QDialog.Rejected or selected_type is None:
+            if result == DLG_REJECTED or selected_type is None:
                 return
             elif selected_type == "Surface Raster":
                 is_context = False
@@ -504,7 +521,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmLayerTypeDialog(["Riverscape (Valley Bottom)", "AOI", "Sample Frame", "Context Vector"])
             result = frm.exec_()
             selected_type = frm.selected_type()
-            if result == QtWidgets.QDialog.Rejected or selected_type is None:
+            if result == DLG_REJECTED or selected_type is None:
                 return
             elif selected_type == "Riverscape (Valley Bottom)":
                 self.add_valley_bottom(self.riverscapes_node, DB_MODE_IMPORT, layer_path, meta=metadata)
@@ -518,7 +535,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmLayerTypeDialog(["Profile/Centerline", "Cross Sections", "Context Vector"])
             result = frm.exec_()
             selected_type = frm.selected_type()
-            if result == QtWidgets.QDialog.Rejected or selected_type is None:
+            if result == DLG_REJECTED or selected_type is None:
                 return
             elif selected_type == "Profile/Centerline":
                 self.add_profile(self.profiles_node, DB_MODE_IMPORT, layer_path, meta=metadata)
@@ -542,7 +559,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         model_item = self.model.itemFromIndex(indexes[0])
-        model_data = model_item.data(QtCore.Qt.UserRole)
+        model_data = model_item.data(USER_ROLE)
 
         if isinstance(model_data, str):
             if model_data not in [STREAM_GAGE_MACHINE_CODE, CLIMATE_ENGINE_MACHINE_CODE]:
@@ -806,13 +823,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
                 if not isinstance(model_data, Project):
                     # if an event is under a planning container node, then do not show the delete option
-                    if not (isinstance(model_data, Event) and isinstance(model_item.parent().data(QtCore.Qt.UserRole), PlanningContainer)):
+                    if not (isinstance(model_data, Event) and isinstance(model_item.parent().data(USER_ROLE), PlanningContainer)):
                         if not model_data.locked:
                             self.add_context_menu_item(self.menu, "Delete", "delete", lambda: self.delete_item(model_item, model_data))
 
         self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
 
-    def add_context_menu_item(self, menu: QtWidgets.QMenu, menu_item_text: str, icon_file_name, slot: QtCore.pyqtSlot = None, enabled=True):
+    def add_context_menu_item(self, menu: QtWidgets.QMenu, menu_item_text: str, icon_file_name, slot: pyqtSlot = None, enabled=True):
         action = menu.addAction(QtGui.QIcon(f":/plugins/qris_toolbar/{icon_file_name}"), menu_item_text)
         action.setEnabled(enabled)
 
@@ -831,7 +848,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # iterate through the original children, grab all the metadata keys
             metadata_tags = set()
             for child in original_children:
-                db_item = child.data(QtCore.Qt.UserRole)
+                db_item = child.data(USER_ROLE)
                 if isinstance(db_item, str):
                     continue
                 if db_item.metadata is not None:
@@ -853,18 +870,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if group_key is None:
             # Re-add the original children to the root level
             for child in original_children:
-                if not child.data(QtCore.Qt.UserRole) == "group_node":
+                if not child.data(USER_ROLE) == "group_node":
                     tree_node.appendRow(child)
             return
 
         # Iterate through the original children
         for child in original_children:
             # if the child is a group folder, skip it
-            if isinstance(child.data(QtCore.Qt.UserRole), str):
+            if isinstance(child.data(USER_ROLE), str):
                 continue
 
             # Get the value of the group key for the child
-            db_item = child.data(QtCore.Qt.UserRole)
+            db_item = child.data(USER_ROLE)
             if group_key == "raster_type":
                 group_value = self.qris_project.lookup_tables["lkp_raster_types"][db_item.raster_type_id].name
             elif group_key == "metadata_tag":
@@ -885,7 +902,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 group_item = QtGui.QStandardItem(group_value)
                 icon = QtGui.QIcon(f":/plugins/qris_toolbar/{FOLDER_ICON}")
                 group_item.setIcon(icon)
-                group_item.setData("group_node", QtCore.Qt.UserRole)
+                group_item.setData("group_node", USER_ROLE)
                 groups[group_value] = group_item
                 tree_node.appendRow(group_item)
 
@@ -906,7 +923,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def sort_children(self, tree_node: QtGui.QStandardItem, sort_key: str):
         if sort_key == "name":
-            tree_node.model().setSortRole(QtCore.Qt.DisplayRole)
+            tree_node.model().setSortRole(DISPLAY_ROLE)
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
                 if tree_node.child(i).text() > tree_node.child(i + 1).text():
@@ -916,13 +933,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             tree_node.model().setSortRole(USER_ROLES["date"])
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
-                db_item = item.data(QtCore.Qt.UserRole)
+                db_item = item.data(USER_ROLE)
                 if isinstance(db_item, str):
                     continue
                 item.setData(db_item.date, USER_ROLES["date"])
             current_order = True
             for i in range(0, tree_node.rowCount() - 1):
-                if (tree_node.child(i).data(USER_ROLES["date"]) or QtCore.QDate()) > (tree_node.child(i + 1).data(USER_ROLES["date"]) or QtCore.QDate()):
+                if (tree_node.child(i).data(USER_ROLES["date"]) or QDate()) > (tree_node.child(i + 1).data(USER_ROLES["date"]) or QDate()):
                     current_order = False
                     break
         elif sort_key == "node_type":
@@ -930,7 +947,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             current_order = True
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
-                db_item = item.data(QtCore.Qt.UserRole)
+                db_item = item.data(USER_ROLE)
                 if isinstance(db_item, str):
                     item.setData(f"_{db_item}", USER_ROLES["node_type"])
                 else:
@@ -940,7 +957,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             tree_node.model().setSortRole(USER_ROLES["raster_type"])
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
-                db_item = item.data(QtCore.Qt.UserRole)
+                db_item = item.data(USER_ROLE)
                 type_name = self.qris_project.lookup_tables["lkp_raster_types"][db_item.raster_type_id].name
                 combined = f"{type_name}|{db_item.name}"
                 item.setData(combined, USER_ROLES["raster_type"])
@@ -955,7 +972,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             tree_node.model().setSortRole(USER_ROLES["attachment_type"])
             for i in range(0, tree_node.rowCount()):
                 item = tree_node.child(i)
-                db_item = item.data(QtCore.Qt.UserRole)
+                db_item = item.data(USER_ROLE)
                 if isinstance(db_item, str):
                     item.setData(f"_{db_item}", USER_ROLES["attachment_type"])
                     continue
@@ -968,7 +985,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     current_order = False
                     break
 
-        tree_node.sortChildren(0, QtCore.Qt.DescendingOrder if current_order else QtCore.Qt.AscendingOrder)
+        tree_node.sortChildren(0, DESCENDING_ORDER if current_order else ASCENDING_ORDER)
 
     def add_db_item_to_map(self, tree_node: QtGui.QStandardItem, db_item: DBItem):
 
@@ -995,7 +1012,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         elif isinstance(db_item, Protocol):
             # determine parent node
             event_node = tree_node.parent()
-            event: Event = event_node.data(QtCore.Qt.UserRole)
+            event: Event = event_node.data(USER_ROLE)
             for event_layer in event.event_layers:
                 if event_layer.layer in db_item.layers:
                     self.map_manager.build_event_single_layer(event, event_layer)
@@ -1004,9 +1021,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # determine parent node
             event_node = tree_node
             # traverse up the tree until we find the event node
-            while not isinstance(event_node.data(QtCore.Qt.UserRole), Event):
+            while not isinstance(event_node.data(USER_ROLE), Event):
                 event_node = event_node.parent()
-            event: Event = event_node.data(QtCore.Qt.UserRole)
+            event: Event = event_node.data(USER_ROLE)
             self.map_manager.build_event_single_layer(event, db_item)
             [self.map_manager.build_raster_layer(raster) for raster in event.rasters]
         elif isinstance(db_item, Project):
@@ -1034,7 +1051,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # add all children to the map
             for row in range(0, tree_node.rowCount()):
                 child_item = tree_node.child(row)
-                self.add_db_item_to_map(child_item, child_item.data(QtCore.Qt.UserRole))
+                self.add_db_item_to_map(child_item, child_item.data(USER_ROLE))
         elif isinstance(db_item, str):
             # this is a group node, do nothing
             pass
@@ -1049,14 +1066,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def add_tree_group_to_map(self, model_item: QtGui.QStandardItem, features_only=False):
         """Add all children of a group node to the map ToC"""
-        machine_code = model_item.data(QtCore.Qt.UserRole)
+        machine_code = model_item.data(USER_ROLE)
         if machine_code == STREAM_GAGE_MACHINE_CODE:
             self.map_manager.build_stream_gage_layer()
         else:
             # Reverse the order of children
             for row in reversed(range(0, model_item.rowCount())):
                 child_item = model_item.child(row)
-                child_data = child_item.data(QtCore.Qt.UserRole)
+                child_data = child_item.data(USER_ROLE)
 
                 if features_only is True:
                     # In features-only mode, recurse through container nodes without calling
@@ -1185,7 +1202,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """Recursively search the tree for a node whose UserRole data equals data_value."""
         for i in range(root.rowCount()):
             child = root.child(i)
-            if child.data(QtCore.Qt.UserRole) == data_value:
+            if child.data(USER_ROLE) == data_value:
                 return child
             found = self._find_tree_node(child, data_value)
             if found is not None:
@@ -1261,7 +1278,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.analysis_doc_widget is None:
             self.analysis_doc_widget = FrmAnalysisDocWidget(self, self.iface)
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
-            self.iface.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.analysis_doc_widget)
+            self.iface.addDockWidget(RIGHT_DOCK, self.analysis_doc_widget)
             self.analysis_doc_widget.closing.connect(self.destroy_analysis_doc_widget)
         else:
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
@@ -1270,7 +1287,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def open_analysis_over_time_dock(self, analysis: Analysis = None):
         if self.analysis_over_time_dock_widget is None:
             self.analysis_over_time_dock_widget = FrmAnalysisOverTime(self.iface, self.qris_project, self.map_manager, analysis)
-            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.analysis_over_time_dock_widget)
+            self.iface.addDockWidget(BOTTOM_DOCK, self.analysis_over_time_dock_widget)
         else:
             # Update analysis context if needed
             if analysis is not None:
@@ -1310,11 +1327,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def _open_settings_climate_engine_tab(self):
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QSettings(ORGANIZATION, APPNAME)
         frm = FrmSettings(settings, self.qris_project)
         frm.tabs.setCurrentWidget(frm.tabClimateEngine)
         result = frm.exec_()
-        if result == QtWidgets.QDialog.Accepted and self.map_manager is not None:
+        if result == DLG_ACCEPTED and self.map_manager is not None:
             self.map_manager.refresh_selection_color_overrides()
 
     def climate_engine_explorer(self):
@@ -1332,7 +1349,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.climate_engine_doc_widget is None:
             self.climate_engine_doc_widget = FrmClimateEngineExplorer(self, self.qris_project, self.map_manager)
-            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.climate_engine_doc_widget)
+            self.iface.addDockWidget(BOTTOM_DOCK, self.climate_engine_doc_widget)
 
         self.climate_engine_doc_widget.show()
 
@@ -1350,7 +1367,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.stream_gage_doc_widget is None:
             self.stream_gage_doc_widget = FrmStreamGageDocWidget(self.iface, self.qris_project, self.map_manager)
-            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.stream_gage_doc_widget)
+            self.iface.addDockWidget(BOTTOM_DOCK, self.stream_gage_doc_widget)
 
         # self.analysis_doc_widget.configure_analysis(self.project, frm.analysis, None)
         self.stream_gage_doc_widget.show()
@@ -1387,7 +1404,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     return value
 
         # Select output csv file
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QSettings(ORGANIZATION, APPNAME)
         last_project_folder = settings.value(LAST_PROJECT_FOLDER)  # TODO where is the export folder?
         out_csv = QtWidgets.QFileDialog.getSaveFileName(self, "Open Existing QRiS Project", last_project_folder, self.tr("Comma Separated Values(*.csv)"))[0]
 
@@ -1432,7 +1449,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         frm = FrmImportPhotos(self, self.qris_project, db_item, photos_folder)
         result = frm.exec_()
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             self.add_db_item_to_map(parent_node, db_item)
 
     def add_event_layer_to_map_with_filter(self, model_item: QtGui.QStandardItem, event_layer: EventLayer):
@@ -1483,7 +1500,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if frm.dce_events == [] or frm.dce_events is None:
                 return
             result = frm.exec_()
-            if result != QtWidgets.QDialog.Accepted:
+            if result != DLG_ACCEPTED:
                 return
             import_source_path = QgsVectorLayer(out_path)
             import_source_path.setSubsetString(f"event_id = {frm.qris_event.id} AND event_layer_id = {db_item.layer.id}")
@@ -1527,7 +1544,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         """Show the project-layer picker then route to the correct import path."""
 
         frm_picker = FrmImportProjectLayer(self, self.qris_project, db_item)
-        if frm_picker.exec_() != QtWidgets.QDialog.Accepted:
+        if frm_picker.exec_() != DLG_ACCEPTED:
             return
         source_layer = frm_picker.source_layer
         if source_layer is None or source_layer.featureCount() == 0:
@@ -1571,7 +1588,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         valley_bottoms = [vb for vb in self.qris_project.valley_bottoms.values()]
         frm = FrmLayerPicker(self, "Select Valley Bottom to Copy", valley_bottoms)
         result = frm.exec_()
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             if frm.layer is None:
                 return
             # now copy the valley bottom
@@ -1634,13 +1651,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self,
             "Export Project",
             "Exporting a QRiS project will create a new copy of the project.\n\nTo ensure all data is included, the project has been flushed to disk. However, if you encounter missing data, please try restarting QGIS before exporting.",
-            QtWidgets.QMessageBox.Ok,
+            MSGBOX_OK,
         )
 
         frm = FrmExportProject(self, self.qris_project)
         result = frm.exec_()
 
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             self.iface.messageBar().pushMessage("Export Project", "Export Complete", level=Qgis.Success, duration=5)
 
     def create_vicinity_map(self, db_item: DBItem):
@@ -1687,7 +1704,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.slider_doc_widget is None:
             self.slider_doc_widget = FrmSlider(self, self.qris_project, self.map_manager)
-            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.slider_doc_widget)
+            self.iface.addDockWidget(LEFT_DOCK, self.slider_doc_widget)
 
         self.slider_doc_widget.export_complete.connect(self.raster_slider_export_complete)
 
@@ -1700,7 +1717,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.centerline_doc_widget is None:
             self.centerline_doc_widget = FrmCenterlineDocWidget(self, self.qris_project, self.map_manager)
-            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.centerline_doc_widget)
+            self.iface.addDockWidget(LEFT_DOCK, self.centerline_doc_widget)
 
         self.centerline_doc_widget.export_complete.connect(self.centerline_save_complete)
         self.centerline_doc_widget.centerline_setup(db_item)
@@ -1714,7 +1731,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if self.cross_sections_doc_widget is None:
             self.cross_sections_doc_widget = FrmCrossSectionsDocWidget(self, self.qris_project, db_item, self.map_manager)
-            self.iface.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.cross_sections_doc_widget)
+            self.iface.addDockWidget(LEFT_DOCK, self.cross_sections_doc_widget)
 
         self.cross_sections_doc_widget.export_complete.connect(self.save_complete)
         self.cross_sections_doc_widget.show()
@@ -1812,7 +1829,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         target_node = None
         for row in range(0, parent_node.rowCount()):
             child_node = parent_node.child(row)
-            if child_node.data(QtCore.Qt.UserRole) == data_item:
+            if child_node.data(USER_ROLE) == data_item:
                 target_node = child_node
                 break
 
@@ -1835,7 +1852,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 # Set icon before calling set_node_text which might update it
                 target_node.setIcon(QtGui.QIcon(f":plugins/qris_toolbar/{icon}"))
                 # IMPORTANT: Set data first so set_node_text can read the locked status
-                target_node.setData(data_item, QtCore.Qt.UserRole)
+                target_node.setData(data_item, USER_ROLE)
                 self.set_node_text(target_node, data_item)
             else:
                 if data_item in GROUP_FOLDER_LABELS:
@@ -1843,7 +1860,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 else:
                     target_node = QtGui.QStandardItem(data_item)
                 target_node.setIcon(QtGui.QIcon(f":plugins/qris_toolbar/{icon}"))
-                target_node.setData(data_item, QtCore.Qt.UserRole)
+                target_node.setData(data_item, USER_ROLE)
 
             parent_node.appendRow(target_node)
             if collapsed is True:
@@ -1876,7 +1893,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Remove events that are no longer in the planning container
         for row in reversed(range(planning_container_node.rowCount())):
             child_node = planning_container_node.child(row)
-            if child_node.data(QtCore.Qt.UserRole).id not in planning_container.planning_events.keys():
+            if child_node.data(USER_ROLE).id not in planning_container.planning_events.keys():
                 planning_container_node.removeRow(row)
 
     def add_event_to_project_tree(self, parent_node: QtGui.QStandardItem, event: Event, add_to_map: bool = False):
@@ -1973,7 +1990,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if not frm_toc.layer_count > 0:
             return
         result = frm_toc.exec_()
-        if result != QtWidgets.QDialog.Accepted:
+        if result != DLG_ACCEPTED:
             return
         out_layer: QgsVectorLayer = frm_toc.layer
         if out_layer is None:
@@ -1987,7 +2004,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if not frm_toc.layer_count > 0:
             return
         result = frm_toc.exec_()
-        if result != QtWidgets.QDialog.Accepted:
+        if result != DLG_ACCEPTED:
             return
         out_layer: QgsRasterLayer = frm_toc.layer
         if out_layer is None:
@@ -2036,7 +2053,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if "symbology" in meta:
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
         if mode == DB_MODE_PROMOTE:
-            db_item = parent_node.data(QtCore.Qt.UserRole)
+            db_item = parent_node.data(USER_ROLE)
             frm.promote_to_sample_frame(db_item)
 
             # find the AOIs Node in the model
@@ -2084,7 +2101,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         if mode == DB_MODE_PROMOTE:
-            db_item = parent_node.data(QtCore.Qt.UserRole)
+            db_item = parent_node.data(USER_ROLE)
             frm.promote_to_sample_frame(db_item)
         if mode == DB_MODE_CREATE:
             cross_sections = parent_node if isinstance(parent_node, CrossSections) else None
@@ -2152,7 +2169,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         if mode == DB_MODE_PROMOTE:
-            db_item = parent_node.data(QtCore.Qt.UserRole)
+            db_item = parent_node.data(USER_ROLE)
             frm.promote_to_sample_frame(db_item)
 
         result = frm.exec_()
@@ -2197,7 +2214,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
         if mode == DB_MODE_PROMOTE:
-            db_item = parent_node.data(QtCore.Qt.UserRole)
+            db_item = parent_node.data(USER_ROLE)
             frm.promote_to_profile(db_item)
 
         result = frm.exec_()
@@ -2445,15 +2462,15 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def set_edit_text(self, node: QtGui.QStandardItem):
 
-        if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
-            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(QtCore.Qt.UserRole), None)
+        if isinstance(node.data(USER_ROLE), DBItem):
+            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(USER_ROLE), None)
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
                     layer: QgsVectorLayer = layer_node.layer()
                     if not isinstance(layer, QgsVectorLayer):
                         return
                     if layer.isEditable():
-                        node.setText(node.data(QtCore.Qt.UserRole).name + " (Editing)")
+                        node.setText(node.data(USER_ROLE).name + " (Editing)")
                         # make the text bold
                         font = node.font()
                         font.setBold(True)
@@ -2465,14 +2482,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         feature_count = layer.featureCount()
                         if feature_count == 0:
                             # set text to italic, non-bold and gray font
-                            node.setText(node.data(QtCore.Qt.UserRole).name + " (Empty)")
+                            node.setText(node.data(USER_ROLE).name + " (Empty)")
                             font = node.font()
                             font.setItalic(True)
                             font.setBold(False)
                             node.setFont(font)
                             node.setForeground(QtGui.QBrush(QtGui.QColor(128, 128, 128)))
                         else:
-                            node.setText(node.data(QtCore.Qt.UserRole).name)
+                            node.setText(node.data(USER_ROLE).name)
                             # make the text normal
                             font = node.font()
                             font.setBold(False)
@@ -2485,7 +2502,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         target_size = 32
         # Create a new transparent pixmap to serve as the canvas
         final_pixmap = QtGui.QPixmap(target_size, target_size)
-        final_pixmap.fill(QtCore.Qt.transparent)
+        final_pixmap.fill(COLOR_TRANSPARENT)
         # Draw base icon
         if ":" in base_icon_name:
             base_path = base_icon_name
@@ -2496,7 +2513,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         painter = QtGui.QPainter(final_pixmap)
         # Force scaling to fill the target size to prevent "shrinking" if the source is small
-        painter.drawPixmap(QtCore.QRect(0, 0, target_size, target_size), base_pixmap)
+        painter.drawPixmap(QRect(0, 0, target_size, target_size), base_pixmap)
 
         # Draw lock overlay
         lock_icon = QtGui.QIcon(":/plugins/qris_toolbar/lock")
@@ -2513,7 +2530,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def set_node_text(self, node: QtGui.QStandardItem, data_item: DBItem = None):
 
-        data_item = node.data(QtCore.Qt.UserRole) if data_item is None else data_item
+        data_item = node.data(USER_ROLE) if data_item is None else data_item
         if data_item is None:
             return
 
@@ -2563,7 +2580,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         layer: QgsVectorLayer = self.iface.activeLayer()
         if not layer:
             return
-        if layer.type() != QgsMapLayer.VectorLayer:
+        if layer.type() != MAPLAYER_VECTOR:
             return
 
         has_event_layer = layer.fields().indexOf("event_layer_id") != -1
@@ -2591,7 +2608,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         layer: QgsMapLayer = self.iface.activeLayer()
         if not layer:
             return
-        if layer.type() == QgsMapLayer.VectorLayer:
+        if layer.type() == MAPLAYER_VECTOR:
             if layer.isEditable():
                 QtWidgets.QMessageBox.warning(self, "Batch Edit QRiS Attributes", "Please stop the editing session before proceeding.")
                 return
@@ -2601,7 +2618,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def set_order_by_centerline(self, db_item) -> None:
 
         frm = FrmOrderByCenterline(self, self.qris_project)
-        if frm.exec_() != QtWidgets.QDialog.Accepted:
+        if frm.exec_() != DLG_ACCEPTED:
             return
 
         profile = frm.selected_profile()
@@ -2663,8 +2680,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
-        if isinstance(node.data(QtCore.Qt.UserRole), DBItem):
-            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(QtCore.Qt.UserRole), None)
+        if isinstance(node.data(USER_ROLE), DBItem):
+            layer_node: QgsLayerTreeNode = self.map_manager.get_db_item_layer(self.qris_project.map_guid, node.data(USER_ROLE), None)
             if layer_node is not None:
                 if isinstance(layer_node, QgsLayerTreeNode):
                     layer: QgsVectorLayer = layer_node.layer()
@@ -2688,7 +2705,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def is_removed_event_layer(self, node: QtGui.QStandardItem, event: Event):
         # This method should return True if the node represents an event layer that has been removed from the event,
         # and False otherwise. You'll need to implement this method based on how you're representing event layers in your tree.
-        layer = node.data(QtCore.Qt.UserRole)
+        layer = node.data(USER_ROLE)
         if isinstance(layer, EventLayer):
             return layer not in event.event_layers
 
@@ -2698,7 +2715,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             child_node = node.child(row)
             if child_node is None:
                 continue
-            data = child_node.data(QtCore.Qt.UserRole)
+            data = child_node.data(USER_ROLE)
             if data is None or isinstance(data, DBItem):
                 continue
             if child_node.rowCount() == 0:
@@ -2719,7 +2736,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def delete_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
         response = QtWidgets.QMessageBox.question(self, "Confirm Delete", "Are you sure that you want to delete the selected item?")
-        if response == QtWidgets.QMessageBox.No:
+        if response == MSGBOX_NO:
             return
 
         # Remove the layer from the map first
@@ -2742,7 +2759,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             event = self.qris_project.events.get(db_item.event_id)
             # Traverse up the tree to find the event node
             parent = model_item.parent()
-            while parent.data(QtCore.Qt.UserRole) != event:
+            while parent.data(USER_ROLE) != event:
                 parent = parent.parent()
             events_node = parent
             self.qris_project.remove(db_item)
@@ -2755,7 +2772,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     root = self.model.invisibleRootItem()
 
                     def find_planning_container_node(node, planning_container=planning_container):
-                        if node.data(QtCore.Qt.UserRole) == planning_container:
+                        if node.data(USER_ROLE) == planning_container:
                             return node
                         for i in range(node.rowCount()):
                             result = find_planning_container_node(node.child(i))
@@ -2768,11 +2785,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         # Find the event node under this planning container
                         for i in range(pc_node.rowCount()):
                             event_node = pc_node.child(i)
-                            if event_node.data(QtCore.Qt.UserRole).id == db_item.event_id:
+                            if event_node.data(USER_ROLE).id == db_item.event_id:
                                 # Remove the event layer node under this event node
                                 for j in range(event_node.rowCount()):
                                     el_node = event_node.child(j)
-                                    if isinstance(el_node.data(QtCore.Qt.UserRole), type(db_item)) and el_node.data(QtCore.Qt.UserRole) == db_item:
+                                    if isinstance(el_node.data(USER_ROLE), type(db_item)) and el_node.data(USER_ROLE) == db_item:
                                         event_node.removeRow(j)
                                         break
         else:
@@ -2790,7 +2807,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         if parent_item is not None:
                             for row in range(parent_item.rowCount()):
                                 child_item = parent_item.child(row)
-                                if child_item is not None and child_item.data(QtCore.Qt.UserRole).id == db_item.id:
+                                if child_item is not None and child_item.data(USER_ROLE).id == db_item.id:
                                     parent_item.removeRow(row)
                                     break
                             # Optionally, remove empty child nodes if needed
@@ -2813,7 +2830,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.distribution_dock_widget is None:
             self.distribution_dock_widget = FrmDistributionAnalysisDockWidget(self.iface, self.qris_project, self.map_manager)
             # Add to iface. The allowed areas are set in Dock init, but addDockWidget sets initial area.
-            self.iface.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.distribution_dock_widget)
+            self.iface.addDockWidget(BOTTOM_DOCK, self.distribution_dock_widget)
 
         if not self.distribution_dock_widget.isVisible():
             self.distribution_dock_widget.show()
@@ -2824,7 +2841,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.distribution_dock_widget.widget.select_event(event, event_layer)
 
     def browse_item(self, db_item: DBItem, folder_path):
-        qurl = QtCore.QUrl.fromLocalFile(folder_path)
+        qurl = QUrl.fromLocalFile(folder_path)
         QtGui.QDesktopServices.openUrl(qurl)
 
     def _has_upload_blocking_state(self):

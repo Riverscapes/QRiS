@@ -1,5 +1,6 @@
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import USER_ROLE
 from ..model.db_item import DBItemModel
 from ..model.profile import Profile
 from ..model.project import Project
@@ -30,7 +31,7 @@ class FrmOrderByCenterline(QtWidgets.QDialog):
 
     def selected_profile(self) -> Profile:
         """Returns the Profile selected by the user, or None."""
-        return self.cboCenterline.currentData(QtCore.Qt.UserRole)
+        return self.cboCenterline.currentData(USER_ROLE)
 
     def update_display_label(self) -> bool:
         """Returns True if the user also wants display_label updated."""

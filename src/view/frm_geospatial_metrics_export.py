@@ -3,7 +3,9 @@ import json
 import os
 
 import numpy as np
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
+
+from ..compat import CHECKED, ITEM_FLAG_CHECKABLE, SPSZ_EXPANDING, SPSZ_MINIMUM, UNCHECKED, USER_ROLE
 
 try:
     import pandas as pd
@@ -79,7 +81,7 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(self, "Export", "Please specify an export file path.")
             return
 
-        selected = [self.listWidget.item(i).data(QtCore.Qt.UserRole) for i in range(self.listWidget.count()) if self.listWidget.item(i).checkState() == QtCore.Qt.Checked]
+        selected = [self.listWidget.item(i).data(USER_ROLE) for i in range(self.listWidget.count()) if self.listWidget.item(i).checkState() == CHECKED]
         if not selected:
             QtWidgets.QMessageBox.warning(self, "Export", "No metrics selected.")
             return
@@ -135,9 +137,9 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
                 polygon_label = self.polygons[polygon_id]["display_label"]
                 for metric_name, _metric_value in poly_values.items():
                     item = QtWidgets.QListWidgetItem(f"{layer_name} - {polygon_label} - {metric_name}")
-                    item.setData(QtCore.Qt.UserRole, (layer_name, polygon_id, metric_name))
-                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                    item.setCheckState(QtCore.Qt.Checked)
+                    item.setData(USER_ROLE, (layer_name, polygon_id, metric_name))
+                    item.setFlags(item.flags() | ITEM_FLAG_CHECKABLE)
+                    item.setCheckState(CHECKED)
                     self.listWidget.addItem(item)
         layout.addWidget(self.listWidget)
         self.listWidget.setMinimumHeight(200)
@@ -146,10 +148,10 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         # add select all and select none buttons
         btnLayout = QtWidgets.QHBoxLayout()
         btnSelectAll = QtWidgets.QPushButton("Select All")
-        btnSelectAll.clicked.connect(lambda: [self.listWidget.item(i).setCheckState(QtCore.Qt.Checked) for i in range(self.listWidget.count())])
+        btnSelectAll.clicked.connect(lambda: [self.listWidget.item(i).setCheckState(CHECKED) for i in range(self.listWidget.count())])
         btnSelectNone = QtWidgets.QPushButton("Select None")
-        btnSelectNone.clicked.connect(lambda: [self.listWidget.item(i).setCheckState(QtCore.Qt.Unchecked) for i in range(self.listWidget.count())])
-        btnLayout.addSpacerItem(QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        btnSelectNone.clicked.connect(lambda: [self.listWidget.item(i).setCheckState(UNCHECKED) for i in range(self.listWidget.count())])
+        btnLayout.addSpacerItem(QtWidgets.QSpacerItem(20, 20, SPSZ_EXPANDING, SPSZ_MINIMUM))
         btnLayout.addWidget(btnSelectAll)
         btnLayout.addWidget(btnSelectNone)
         layout.addLayout(btnLayout)

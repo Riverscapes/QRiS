@@ -1,7 +1,8 @@
 import sqlite3
 
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
+from ..compat import ALIGN_TOP, HORIZONTAL, SLIDER_TICKS_BELOW, USER_ROLE
 from ..model.db_item import DBItem, DBItemModel, dict_factory
 from ..model.event import DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
 from ..model.planning_container import PlanningContainer
@@ -38,10 +39,10 @@ class FrmDesign(FrmEvent):
 
         self.horiz_slider = QtWidgets.QHBoxLayout()
         self.tabGrid.addLayout(self.horiz_slider, 7, 1, 1, 1)
-        self.sliderPercentComplete = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.sliderPercentComplete = QtWidgets.QSlider(HORIZONTAL, self)
         self.sliderPercentComplete.setMinimum(0)
         self.sliderPercentComplete.setMaximum(100)
-        self.sliderPercentComplete.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        self.sliderPercentComplete.setTickPosition(SLIDER_TICKS_BELOW)
         self.sliderPercentComplete.setTickInterval(5)
         self.sliderPercentComplete.setSingleStep(5)
         self.sliderPercentComplete.update()
@@ -80,7 +81,7 @@ class FrmDesign(FrmEvent):
 
         # Add the checkboxes to the form
         self.lblDesignSources = QtWidgets.QLabel("Design Sources", self)
-        self.lblDesignSources.setAlignment(QtCore.Qt.AlignTop)
+        self.lblDesignSources.setAlignment(ALIGN_TOP)
         self.tabGrid.addWidget(self.lblDesignSources, 10, 0, 1, 1)
         self.groupBoxDesignSources = QtWidgets.QGroupBox(self)
         self.groupBoxDesignSources.setLayout(QtWidgets.QVBoxLayout())
@@ -242,7 +243,7 @@ class FrmDesign(FrmEvent):
 
     def load_events_from_container(self):
         if self.cboPlanningContainers.count() > 0:
-            planning_container_id = self.cboPlanningContainers.currentData(QtCore.Qt.UserRole).id
+            planning_container_id = self.cboPlanningContainers.currentData(USER_ROLE).id
             planning_container: PlanningContainer = self.qris_project.planning_containers[planning_container_id]
             self.event_library.set_event_representations(planning_container.planning_events)
 
@@ -263,7 +264,7 @@ class FrmDesign(FrmEvent):
 
     def accept(self):
 
-        self.metadata_widget.add_system_metadata("statusId", self.cboStatus.currentData(QtCore.Qt.UserRole).id)
+        self.metadata_widget.add_system_metadata("statusId", self.cboStatus.currentData(USER_ROLE).id)
         self.metadata_widget.add_system_metadata("designers", self.txtDesigners.toPlainText())
 
         design_source_ids = []
@@ -277,7 +278,7 @@ class FrmDesign(FrmEvent):
             if "designSourceIds" in self.metadata_widget.metadata["system"]:
                 self.metadata_widget.delete_item("system", "designSourceIds")
 
-        self.metadata_widget.add_system_metadata("status", self.cboStatus.currentData(QtCore.Qt.UserRole).name)
+        self.metadata_widget.add_system_metadata("status", self.cboStatus.currentData(USER_ROLE).name)
         self.metadata_widget.add_system_metadata("percentComplete", self.sliderPercentComplete.value())
 
         objectives = self.txtObjectives.toPlainText().strip()
@@ -302,7 +303,7 @@ class FrmDesign(FrmEvent):
             elif "planning_events" in self.metadata_widget.metadata["system"]:
                 self.metadata_widget.delete_item("system", "planning_events")
         else:
-            planning_container_id = self.cboPlanningContainers.currentData(QtCore.Qt.UserRole).id
+            planning_container_id = self.cboPlanningContainers.currentData(USER_ROLE).id
             self.metadata_widget.add_system_metadata("planningContainerId", planning_container_id)
             if "planning_events" in self.metadata_widget.metadata["system"]:
                 self.metadata_widget.delete_item("system", "planning_events")
@@ -326,3 +327,4 @@ def add_checkbox_widgets(parent_widget, db_path, table_name):
         widget_list.append(widget)
 
     return widget_list, data
+

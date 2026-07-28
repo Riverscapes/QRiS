@@ -3,6 +3,18 @@ import os
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 from .. import __version__
+from ..compat import (
+    ALIGN_CENTER,
+    DIALOG_BTN_CLOSE,
+    HORIZONTAL,
+    LINKS_ACCESSIBLE_BY_KEYBOARD,
+    LINKS_ACCESSIBLE_BY_MOUSE,
+    RICH_TEXT,
+    SPSZ_FIXED,
+    TEXT_BROWSER_INTERACTION,
+    TEXT_SELECTABLE_BY_KEYBOARD,
+    TEXT_SELECTABLE_BY_MOUSE,
+)
 from ..QRiS.settings import CONSTANTS
 
 
@@ -51,7 +63,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.vert.addLayout(self.horiz)
 
         self.logo = QtWidgets.QLabel()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(SPSZ_FIXED, SPSZ_FIXED)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.logo.sizePolicy().hasHeightForWidth())
@@ -59,7 +71,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.logo.setMinimumSize(QtCore.QSize(128, 128))
         self.logo.setMaximumSize(QtCore.QSize(128, 128))
         # center the logo
-        self.logo.setAlignment(QtCore.Qt.AlignCenter)
+        self.logo.setAlignment(ALIGN_CENTER)
         self.horiz.addWidget(self.logo)
 
         self.grid = QtWidgets.QGridLayout()
@@ -78,7 +90,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
 
         self.lblWebsite = QtWidgets.QLabel()
         self.lblWebsite.setOpenExternalLinks(True)
-        self.lblWebsite.setTextFormat(QtCore.Qt.RichText)
+        self.lblWebsite.setTextFormat(RICH_TEXT)
         self.grid.addWidget(self.lblWebsite, 1, 1, 1, 1)
 
         self.lblIssuesHeader = QtWidgets.QLabel()
@@ -87,7 +99,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
 
         self.lblIssues = QtWidgets.QLabel()
         self.lblIssues.setOpenExternalLinks(True)
-        self.lblIssues.setTextFormat(QtCore.Qt.RichText)
+        self.lblIssues.setTextFormat(RICH_TEXT)
         self.grid.addWidget(self.lblIssues, 2, 1, 1, 1)
 
         self.lblChangelogHeader = QtWidgets.QLabel()
@@ -96,7 +108,7 @@ class FrmAboutDialog(QtWidgets.QDialog):
 
         self.lblChangelog = QtWidgets.QLabel()
         self.lblChangelog.setOpenExternalLinks(True)
-        self.lblChangelog.setTextFormat(QtCore.Qt.RichText)
+        self.lblChangelog.setTextFormat(RICH_TEXT)
         self.grid.addWidget(self.lblChangelog, 3, 1, 1, 1)
 
         self.grpAcknowledgements = QtWidgets.QGroupBox()
@@ -107,13 +119,13 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.lblAcknowledgements.setEnabled(True)
         self.lblAcknowledgements.setReadOnly(True)
         self.lblAcknowledgements.setCursorWidth(0)
-        self.lblAcknowledgements.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByKeyboard | QtCore.Qt.LinksAccessibleByMouse | QtCore.Qt.TextBrowserInteraction | QtCore.Qt.TextSelectableByKeyboard | QtCore.Qt.TextSelectableByMouse)
+        self.lblAcknowledgements.setTextInteractionFlags(LINKS_ACCESSIBLE_BY_KEYBOARD | LINKS_ACCESSIBLE_BY_MOUSE | TEXT_BROWSER_INTERACTION | TEXT_SELECTABLE_BY_KEYBOARD | TEXT_SELECTABLE_BY_MOUSE)
         self.lblAcknowledgements.setObjectName("acknowledgements")
         self.lblAcknowledgements.setOpenExternalLinks(True)
         self.vert.addWidget(self.lblAcknowledgements)
         self.closeButton = QtWidgets.QDialogButtonBox()
-        self.closeButton.setOrientation(QtCore.Qt.Horizontal)
-        self.closeButton.setStandardButtons(QtWidgets.QDialogButtonBox.Close)
+        self.closeButton.setOrientation(HORIZONTAL)
+        self.closeButton.setStandardButtons(DIALOG_BTN_CLOSE)
         self.vert.addWidget(self.closeButton)
         self.closeButton.rejected.connect(self.reject)
         self.closeButton.accepted.connect(self.accept)

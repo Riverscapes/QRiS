@@ -25,6 +25,8 @@ from qgis.core import Qgis, QgsApplication, QgsMessageLog
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ..compat import (DLG_ACCEPTED, DOCK_CLOSABLE, DOCK_FLOATABLE, DOCK_MOVABLE, SPSZ_EXPANDING, SPSZ_FIXED, SPSZ_MINIMUM, USER_ROLE)
+
 from ..gp.analysis_metrics_task import AnalysisMetricsTask
 from ..model.analysis import Analysis
 from ..model.db_item import DBItemModel
@@ -47,7 +49,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         super().__init__(parent)
         self.iface = iface
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetClosable | QtWidgets.QDockWidget.DockWidgetMovable | QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.setFeatures(DOCK_CLOSABLE | DOCK_MOVABLE | DOCK_FLOATABLE)
         # Store the connections so they can be disconnected when the form is closed
         self.connections = {}
         self.setupUi()
@@ -105,8 +107,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def load_table_values(self):
         # Delegate to table widget. Intrinsic analyses pass event=None.
-        event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(QtCore.Qt.UserRole)
-        mask_feature_id = self.cboSampleFrame.currentData(QtCore.Qt.UserRole).id
+        event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(USER_ROLE)
+        mask_feature_id = self.cboSampleFrame.currentData(USER_ROLE).id
         self.table.load_values(event, mask_feature_id)
 
     # set_status method is removed as it is now in AnalysisTable
@@ -116,9 +118,9 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         frm = FrmCalculateAllMetrics(self)
         result = frm.exec_()
 
-        if result == QtWidgets.QDialog.Accepted:
-            sample_frame_features = [self.cboSampleFrame.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(QtCore.Qt.UserRole)]
-            data_capture_events = [self.cboEvent.itemData(i, QtCore.Qt.UserRole) for i in range(self.cboEvent.count())] if frm.rdoAllDCE.isChecked() else [self.cboEvent.currentData(QtCore.Qt.UserRole)]
+        if result == DLG_ACCEPTED:
+            sample_frame_features = [self.cboSampleFrame.itemData(i, USER_ROLE) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(USER_ROLE)]
+            data_capture_events = [self.cboEvent.itemData(i, USER_ROLE) for i in range(self.cboEvent.count())] if frm.rdoAllDCE.isChecked() else [self.cboEvent.currentData(USER_ROLE)]
             sample_frame_ids = [sf.id for sf in sample_frame_features if sf is not None]
             event_ids = [event.id for event in data_capture_events if event is not None]
             metric_ids = list(self.analysis.analysis_metrics.keys())
@@ -204,8 +206,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def export_table(self):
 
         # open modal dialog to select export file
-        current_sample_frame = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
-        current_data_capture_event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(QtCore.Qt.UserRole)
+        current_sample_frame = self.cboSampleFrame.currentData(USER_ROLE)
+        current_data_capture_event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(USER_ROLE)
         frm = FrmExportMetrics(self, self.iface, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
         frm.exec_()
 
@@ -220,8 +222,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def edit_metric_value(self, metric_value):
 
-        event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(QtCore.Qt.UserRole)
-        mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(USER_ROLE)
+        mask_feature = self.cboSampleFrame.currentData(USER_ROLE)
 
         frm = FrmMetricValue(self, self.qris_project, self.analysis, event, mask_feature.id, metric_value)
         result = frm.exec_()
@@ -230,8 +232,8 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
     def calculate_metric_value(self, analysis_metric, metric_value):
 
-        event = self.cboEvent.currentData(QtCore.Qt.UserRole)
-        mask_feature = self.cboSampleFrame.currentData(QtCore.Qt.UserRole)
+        event = self.cboEvent.currentData(USER_ROLE)
+        mask_feature = self.cboSampleFrame.currentData(USER_ROLE)
 
         # Intrinsic analyses have no real events; pass a synthetic event_id=0.
         is_intrinsic = self.analysis.is_simple_intrinsic_mode()
@@ -336,7 +338,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
         self.cmdCalculate = QtWidgets.QPushButton("Calculate...")
         self.connections[self.cmdCalculate.clicked] = self.cmdCalculate.clicked.connect(self.cmdCalculate_clicked)
-        self.cmdCalculate.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.cmdCalculate.setSizePolicy(SPSZ_FIXED, SPSZ_FIXED)
         self.cmdCalculate.setToolTip("Options to calculate metrics and indicators for the selected event and sample frame")
         self.cmdCalculate.setToolTipDuration(2000)
         self.horizEvent.addWidget(self.cmdCalculate, 0)
@@ -351,7 +353,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horiz = QtWidgets.QHBoxLayout()
         self.vert.addLayout(self.horiz)
 
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, SPSZ_EXPANDING, SPSZ_MINIMUM)
         self.horiz.addItem(self.spacerItem)
 
         self.table = AnalysisTable()
@@ -369,7 +371,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdUnits.setMenu(self.table.units_menu)
         self.horizExport.addWidget(self.cmdUnits)
 
-        self.spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.spacerItem = QtWidgets.QSpacerItem(40, 20, SPSZ_EXPANDING, SPSZ_MINIMUM)
         self.horizExport.addItem(self.spacerItem)
 
         self.cmdExport = QtWidgets.QPushButton()
@@ -379,3 +381,5 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horizExport.addWidget(self.cmdExport, 0)
 
         self.setWidget(self.dockWidgetContents)
+
+

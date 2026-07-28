@@ -1,7 +1,8 @@
 from typing import Optional
 
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
+from ..compat import ALIGN_CENTER, RICH_TEXT
 from ..model.metric import Metric
 from ..model.project import Project
 
@@ -62,7 +63,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
         )
         self.lbl_legend = QtWidgets.QLabel(legend_text)
         self.lbl_legend.setWordWrap(True)
-        self.lbl_legend.setTextFormat(QtCore.Qt.RichText)
+        self.lbl_legend.setTextFormat(RICH_TEXT)
         self.v_layout.addWidget(self.lbl_legend)
 
         h_layout = QtWidgets.QHBoxLayout()
@@ -453,7 +454,7 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
                     tool_tip_lines.append("One or more required DCE layers (or usage groups) are missing or incomplete.")
 
             summary_item.setToolTip("\n".join(tool_tip_lines))
-            summary_item.setTextAlignment(QtCore.Qt.AlignCenter)
+            summary_item.setTextAlignment(ALIGN_CENTER)
 
             if is_highlighted:
                 font = summary_item.font()

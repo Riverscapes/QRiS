@@ -1,5 +1,6 @@
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ..compat import VERTICAL
 from ..model.project import Project
 from .utilities import add_standard_form_buttons
 from .widgets.analysis_distribution_widget import DistributionAnalysisWidget
@@ -19,7 +20,7 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         self.vlayout = QtWidgets.QVBoxLayout(self)
 
         # Instantiate common widget
-        self.widget = DistributionAnalysisWidget(iface, qris_project, map_manager, self, orientation=QtCore.Qt.Vertical)
+        self.widget = DistributionAnalysisWidget(iface, qris_project, map_manager, self, orientation=VERTICAL)
 
         self.vlayout.addWidget(self.widget)
 
@@ -30,3 +31,4 @@ class FrmDistributionAnalysis(QtWidgets.QDialog):
         super().showEvent(event)
         self.widget.refresh_default_chart_font()
         self.activateWindow()
+

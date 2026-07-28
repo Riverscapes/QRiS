@@ -3,6 +3,7 @@ import re
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ..compat import MSGBOX_ICON_INFORMATION, MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT
 from .utilities import add_standard_form_buttons
 
 
@@ -158,10 +159,10 @@ class FrmBaseExport(QtWidgets.QDialog):
         mbox = QtWidgets.QMessageBox()
         mbox.setWindowTitle("Export Successful")
         mbox.setText(f"File saved to:\n{out_file}")
-        mbox.setIcon(QtWidgets.QMessageBox.Information)
-        btn_fold = mbox.addButton("Open Folder", QtWidgets.QMessageBox.ActionRole)
-        btn_open = mbox.addButton("Open File", QtWidgets.QMessageBox.ActionRole)
-        mbox.addButton("Close", QtWidgets.QMessageBox.RejectRole)
+        mbox.setIcon(MSGBOX_ICON_INFORMATION)
+        btn_fold = mbox.addButton("Open Folder", MSGBOX_ROLE_ACTION)
+        btn_open = mbox.addButton("Open File", MSGBOX_ROLE_ACTION)
+        mbox.addButton("Close", MSGBOX_ROLE_REJECT)
         mbox.exec_()
 
         if mbox.clickedButton() == btn_fold:

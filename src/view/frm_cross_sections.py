@@ -2,9 +2,10 @@ import json
 from typing import Optional
 
 from qgis.core import QgsFeature, QgsVectorLayer
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.utils import Qgis
 
+from ..compat import CHECKED, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
 from ..model.cross_sections import CrossSections, insert_cross_sections
@@ -80,7 +81,7 @@ class FrmCrossSections(QtWidgets.QDialog):
         if self.cross_sections is not None:
             self.txtName.setText(cross_sections.name)
             self.txtDescription.setPlainText(cross_sections.description)
-            self.chkAddToMap.setCheckState(QtCore.Qt.Unchecked)
+            self.chkAddToMap.setCheckState(UNCHECKED)
             self.chkAddToMap.setVisible(False)
             self.chkStartEditSession.setVisible(False)
 
@@ -121,7 +122,7 @@ class FrmCrossSections(QtWidgets.QDialog):
                 return
             try:
                 clip_mask = None
-                clip_item: DBItem = self.cboMaskClip.currentData(QtCore.Qt.UserRole)
+                clip_item: DBItem = self.cboMaskClip.currentData(USER_ROLE)
                 if clip_item is not None:
                     if clip_item.id > 0:
                         clip_mask = (clip_item.fc_name, clip_item.fc_id_column_name, clip_item.id)
@@ -129,8 +130,8 @@ class FrmCrossSections(QtWidgets.QDialog):
                 if self.import_source_path is not None:
                     attributes = {"cross_section_id": self.cross_sections.id}
                     # if the selected value of cboAttribute is not the no_attribute, then set the attribute to the display_label
-                    if self.cboAttribute.isVisible() and self.cboAttribute.currentData(QtCore.Qt.UserRole) != self.no_attribute:
-                        attributes["display_label"] = self.cboAttribute.currentData(QtCore.Qt.UserRole).name
+                    if self.cboAttribute.isVisible() and self.cboAttribute.currentData(USER_ROLE) != self.no_attribute:
+                        attributes["display_label"] = self.cboAttribute.currentData(USER_ROLE).name
                     if self.layer_id == "memory":
                         fc_name = f"{self.qris_project.project_file}|layername=cross_section_features"
                         task = ImportMapLayer(self.import_source_path, fc_name, attributes, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
@@ -250,7 +251,7 @@ class FrmCrossSections(QtWidgets.QDialog):
 
         self.chkStartEditSession = QtWidgets.QCheckBox("Start Edit Session")
         self.chkStartEditSession.setChecked(False)
-        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked), self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None))
+        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == CHECKED), self.chkStartEditSession.setChecked(False) if state != CHECKED else None))
 
         add_to_map_row = QtWidgets.QHBoxLayout()
         add_to_map_row.addWidget(self.chkAddToMap)

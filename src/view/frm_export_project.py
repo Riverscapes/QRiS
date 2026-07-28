@@ -7,9 +7,10 @@ from typing import Optional
 
 from osgeo import ogr
 from qgis.core import Qgis, QgsMessageLog
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
+from ..compat import ALIGN_TOP, CHECKED, MSGBOX_CANCEL, MSGBOX_YES, PARTIALLY_CHECKED, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, UNCHECKED, USER_ROLE
 from ..lib.rs_project import RSProject
 from ..model.analysis import Analysis
 from ..model.attachment import Attachment
@@ -58,12 +59,12 @@ class FrmExportProject(QtWidgets.QDialog):
         # Inputs
         inputs_node = QtGui.QStandardItem("Inputs")
         inputs_node.setCheckable(True)
-        inputs_node.setCheckState(QtCore.Qt.PartiallyChecked)
+        inputs_node.setCheckState(PARTIALLY_CHECKED)
 
         # Riverscapes Node
         riverscapes_node = QtGui.QStandardItem("Riverscapes")
         riverscapes_node.setCheckable(True)
-        riverscapes_node.setCheckState(QtCore.Qt.Checked)
+        riverscapes_node.setCheckState(CHECKED)
         for valley_bottom in self.qris_project.valley_bottoms.values():
             add_to_node(riverscapes_node, valley_bottom, valley_bottom.name)
         inputs_node.appendRow(riverscapes_node)
@@ -71,7 +72,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # AOIs
         aois_node = QtGui.QStandardItem("AOIs")
         aois_node.setCheckable(True)
-        aois_node.setCheckState(QtCore.Qt.Checked)
+        aois_node.setCheckState(CHECKED)
         for aoi in self.qris_project.aois.values():
             add_to_node(aois_node, aoi, aoi.name)
         inputs_node.appendRow(aois_node)
@@ -79,7 +80,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # Sample Frames
         sample_frames_node = QtGui.QStandardItem("Sample Frames")
         sample_frames_node.setCheckable(True)
-        sample_frames_node.setCheckState(QtCore.Qt.Checked)
+        sample_frames_node.setCheckState(CHECKED)
         for sample_frame in self.qris_project.sample_frames.values():
             add_to_node(sample_frames_node, sample_frame, sample_frame.name)
         inputs_node.appendRow(sample_frames_node)
@@ -87,7 +88,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # Profiles
         profiles_node = QtGui.QStandardItem("Profiles")
         profiles_node.setCheckable(True)
-        profiles_node.setCheckState(QtCore.Qt.Checked)
+        profiles_node.setCheckState(CHECKED)
         for profile in self.qris_project.profiles.values():
             add_to_node(profiles_node, profile, profile.name)
         inputs_node.appendRow(profiles_node)
@@ -95,7 +96,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # Cross Sections
         xsections_node = QtGui.QStandardItem("Cross Sections")
         xsections_node.setCheckable(True)
-        xsections_node.setCheckState(QtCore.Qt.Checked)
+        xsections_node.setCheckState(CHECKED)
         for xsection in self.qris_project.cross_sections.values():
             add_to_node(xsections_node, xsection, xsection.name)
         inputs_node.appendRow(xsections_node)
@@ -113,12 +114,12 @@ class FrmExportProject(QtWidgets.QDialog):
         # Context
         context_node = QtGui.QStandardItem("Context")
         context_node.setCheckable(True)
-        context_node.setCheckState(QtCore.Qt.Checked)
+        context_node.setCheckState(CHECKED)
 
         # Pour Points
         pour_points_node = QtGui.QStandardItem("Watershed Catchments")
         pour_points_node.setCheckable(True)
-        pour_points_node.setCheckState(QtCore.Qt.Checked)
+        pour_points_node.setCheckState(CHECKED)
         for pour_point in self.qris_project.pour_points.values():
             add_to_node(pour_points_node, pour_point, pour_point.name)
         context_node.appendRow(pour_points_node)
@@ -134,14 +135,14 @@ class FrmExportProject(QtWidgets.QDialog):
         # DCE and Designs
         events_node = QtGui.QStandardItem("Data Capture Events")
         events_node.setCheckable(True)
-        events_node.setCheckState(QtCore.Qt.Checked)
+        events_node.setCheckState(CHECKED)
         for event in self.qris_project.events.values():
             add_to_node(events_node, event, event.name)
         self.export_layers_model.appendRow(events_node)
 
         planning_containers_node = QtGui.QStandardItem("Planning Containers")
         planning_containers_node.setCheckable(True)
-        planning_containers_node.setCheckState(QtCore.Qt.Checked)
+        planning_containers_node.setCheckState(CHECKED)
         for pc in self.qris_project.planning_containers.values():
             add_to_node(planning_containers_node, pc, pc.name)
         self.export_layers_model.appendRow(planning_containers_node)
@@ -149,7 +150,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # Analysis
         analyses_node = QtGui.QStandardItem("Analyses")
         analyses_node.setCheckable(True)
-        analyses_node.setCheckState(QtCore.Qt.Checked)
+        analyses_node.setCheckState(CHECKED)
         for analysis in self.qris_project.analyses.values():
             add_to_node(analyses_node, analysis, analysis.name)
         self.export_layers_model.appendRow(analyses_node)
@@ -157,7 +158,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # Attachments Node
         attachments_node = QtGui.QStandardItem("Attachments")
         attachments_node.setCheckable(True)
-        attachments_node.setCheckState(QtCore.Qt.Checked)
+        attachments_node.setCheckState(CHECKED)
 
         for attachment in self.qris_project.attachments.values():
             label = f"{attachment.name} ({'File' if attachment.attachment_type == Attachment.TYPE_FILE else 'Web Link'})"
@@ -171,8 +172,8 @@ class FrmExportProject(QtWidgets.QDialog):
         self.export_tree.setAnimated(True)
         self.export_tree.setIndentation(20)
         self.export_tree.setSortingEnabled(False)
-        self.export_tree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.export_tree.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.export_tree.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
+        self.export_tree.setSelectionMode(QABSTRACTITEMVIEW_NO_SELECTION)
         self.export_tree.expandAll()
 
     def handle_item_changed(self, item: QtGui.QStandardItem):
@@ -193,17 +194,17 @@ class FrmExportProject(QtWidgets.QDialog):
     def update_check_state(self, item: QtGui.QStandardItem):
         if item is not None and item.hasChildren():
             check_states = [item.child(i).checkState() for i in range(item.rowCount())]
-            if all(state == QtCore.Qt.Checked for state in check_states):
+            if all(state == CHECKED for state in check_states):
                 self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
-                item.setCheckState(QtCore.Qt.Checked)
+                item.setCheckState(CHECKED)
                 self.export_layers_model.itemChanged.connect(self.handle_item_changed)
-            elif all(state == QtCore.Qt.Unchecked for state in check_states):
+            elif all(state == UNCHECKED for state in check_states):
                 self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
-                item.setCheckState(QtCore.Qt.Unchecked)
+                item.setCheckState(UNCHECKED)
                 self.export_layers_model.itemChanged.connect(self.handle_item_changed)
             else:
                 self.export_layers_model.itemChanged.disconnect(self.handle_item_changed)
-                item.setCheckState(QtCore.Qt.PartiallyChecked)
+                item.setCheckState(PARTIALLY_CHECKED)
                 self.export_layers_model.itemChanged.connect(self.handle_item_changed)
             self.update_check_state(item.parent())
 
@@ -251,11 +252,11 @@ class FrmExportProject(QtWidgets.QDialog):
                 msg.setIcon(QtWidgets.QMessageBox.Warning)
                 msg.setText("The selected output folder is not empty. Do you want to overwrite it?")
                 msg.setWindowTitle("Overwrite Output Folder?")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-                msg.setDefaultButton(QtWidgets.QMessageBox.Cancel)
-                msg.setEscapeButton(QtWidgets.QMessageBox.Cancel)
+                msg.setStandardButtons(MSGBOX_YES | MSGBOX_CANCEL)
+                msg.setDefaultButton(MSGBOX_CANCEL)
+                msg.setEscapeButton(MSGBOX_CANCEL)
                 ret = msg.exec_()
-                if ret == QtWidgets.QMessageBox.Cancel:
+                if ret == MSGBOX_CANCEL:
                     return
 
         # create a new project folder if it doesn't exist
@@ -278,9 +279,9 @@ class FrmExportProject(QtWidgets.QDialog):
         if raster_node:
             for i in range(raster_node.rowCount()):
                 raster_item = raster_node.child(i)
-                if raster_item.checkState() == QtCore.Qt.Unchecked:
+                if raster_item.checkState() == UNCHECKED:
                     continue
-                raster: Raster = raster_item.data(QtCore.Qt.UserRole)
+                raster: Raster = raster_item.data(USER_ROLE)
 
                 if "rasters" not in keep_layers:
                     keep_layers["rasters"] = {"id_field": "id", "id_values": []}
@@ -297,9 +298,9 @@ class FrmExportProject(QtWidgets.QDialog):
         if valley_bottom_node:
             for i in range(valley_bottom_node.rowCount()):
                 valley_bottom_item = valley_bottom_node.child(i)
-                if valley_bottom_item.checkState() == QtCore.Qt.Unchecked:
+                if valley_bottom_item.checkState() == UNCHECKED:
                     continue
-                valley_bottom: SampleFrame = valley_bottom_item.data(QtCore.Qt.UserRole)
+                valley_bottom: SampleFrame = valley_bottom_item.data(USER_ROLE)
                 if not valley_bottom.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                     continue
 
@@ -315,10 +316,10 @@ class FrmExportProject(QtWidgets.QDialog):
         if aoi_node:
             for i in range(aoi_node.rowCount()):
                 aoi_item = aoi_node.child(i)
-                if aoi_item.checkState() == QtCore.Qt.Unchecked:
+                if aoi_item.checkState() == UNCHECKED:
                     continue
 
-                aoi: SampleFrame = aoi_item.data(QtCore.Qt.UserRole)
+                aoi: SampleFrame = aoi_item.data(USER_ROLE)
                 if not aoi.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
                     continue
 
@@ -334,10 +335,10 @@ class FrmExportProject(QtWidgets.QDialog):
         if sample_frame_node:
             for i in range(sample_frame_node.rowCount()):
                 sample_frame_item = sample_frame_node.child(i)
-                if sample_frame_item.checkState() == QtCore.Qt.Unchecked:
+                if sample_frame_item.checkState() == UNCHECKED:
                     continue
 
-                sample_frame: SampleFrame = sample_frame_item.data(QtCore.Qt.UserRole)
+                sample_frame: SampleFrame = sample_frame_item.data(USER_ROLE)
 
                 if "sample_frame_features" not in keep_layers:
                     keep_layers["sample_frame_features"] = {"id_field": "sample_frame_id", "id_values": []}
@@ -351,9 +352,9 @@ class FrmExportProject(QtWidgets.QDialog):
         if profile_node:
             for i in range(profile_node.rowCount()):
                 profile_item = profile_node.child(i)
-                if profile_item.checkState() == QtCore.Qt.Unchecked:
+                if profile_item.checkState() == UNCHECKED:
                     continue
-                profile: Profile = profile_item.data(QtCore.Qt.UserRole)
+                profile: Profile = profile_item.data(USER_ROLE)
                 profile_fc = "profile_centerlines" if profile.profile_type_id == 2 else "profile_features"
 
                 if profile_fc not in keep_layers:
@@ -368,9 +369,9 @@ class FrmExportProject(QtWidgets.QDialog):
         if xsection_node:
             for i in range(xsection_node.rowCount()):
                 xsection_item = xsection_node.child(i)
-                if xsection_item.checkState() == QtCore.Qt.Unchecked:
+                if xsection_item.checkState() == UNCHECKED:
                     continue
-                xsection: CrossSections = xsection_item.data(QtCore.Qt.UserRole)
+                xsection: CrossSections = xsection_item.data(USER_ROLE)
 
                 if "cross_section_features" not in keep_layers:
                     keep_layers["cross_section_features"] = {"id_field": "cross_section_id", "id_values": []}
@@ -386,9 +387,9 @@ class FrmExportProject(QtWidgets.QDialog):
         if pour_point_node:
             for i in range(pour_point_node.rowCount()):
                 pour_point_item = pour_point_node.child(i)
-                if pour_point_item.checkState() == QtCore.Qt.Unchecked:
+                if pour_point_item.checkState() == UNCHECKED:
                     continue
-                pour_point: PourPoint = pour_point_item.data(QtCore.Qt.UserRole)
+                pour_point: PourPoint = pour_point_item.data(USER_ROLE)
 
                 if "pour_points" not in keep_layers:
                     keep_layers["pour_points"] = {"id_field": "fid", "id_values": []}
@@ -405,11 +406,11 @@ class FrmExportProject(QtWidgets.QDialog):
             # Skip if this is the Watershed Catchments
             if context_item.text() == "Watershed Catchments":
                 continue
-            if context_item.checkState() == QtCore.Qt.Unchecked:
+            if context_item.checkState() == UNCHECKED:
                 continue
-            context = context_item.data(QtCore.Qt.UserRole)
+            context = context_item.data(USER_ROLE)
             if isinstance(context, Raster):
-                raster: Raster = context_item.data(QtCore.Qt.UserRole)
+                raster: Raster = context_item.data(USER_ROLE)
 
                 if "rasters" not in keep_layers:
                     keep_layers["rasters"] = {"id_field": "id", "id_values": []}
@@ -421,7 +422,7 @@ class FrmExportProject(QtWidgets.QDialog):
                     os.makedirs(os.path.dirname(out_raster_path))
                 shutil.copy(raster_path, out_raster_path)
             else:
-                context_vector: ScratchVector = context_item.data(QtCore.Qt.UserRole)
+                context_vector: ScratchVector = context_item.data(USER_ROLE)
                 # get the geom type for the feature class
                 geom_type: str = None
                 with sqlite3.connect(scratch_gpkg_path(self.qris_project.project_file)) as conn:
@@ -487,9 +488,9 @@ class FrmExportProject(QtWidgets.QDialog):
             events_node = events_nodes[0]
             for i in range(events_node.rowCount()):
                 event_item = events_node.child(i)
-                if event_item.checkState() == QtCore.Qt.Unchecked:
+                if event_item.checkState() == UNCHECKED:
                     continue
-                event: Event = event_item.data(QtCore.Qt.UserRole)
+                event: Event = event_item.data(USER_ROLE)
                 # if all([layer.feature_count(self.qris_project.project_file) == 0 for layer in event.event_layers]):
                 #     continue
 
@@ -533,9 +534,9 @@ class FrmExportProject(QtWidgets.QDialog):
             planning_container_node = planning_containers_nodes[0]
             for i in range(planning_container_node.rowCount()):
                 planning_container_item = planning_container_node.child(i)
-                if planning_container_item.checkState() == QtCore.Qt.Unchecked:
+                if planning_container_item.checkState() == UNCHECKED:
                     continue
-                planning_container: PlanningContainer = planning_container_item.data(QtCore.Qt.UserRole)
+                planning_container: PlanningContainer = planning_container_item.data(USER_ROLE)
                 if len(planning_container.planning_events) == 0:
                     continue
                 if "planning_containers" not in keep_layers:
@@ -548,9 +549,9 @@ class FrmExportProject(QtWidgets.QDialog):
             analysis_node = analysis_nodes[0]
             for i in range(analysis_node.rowCount()):
                 analysis_item = analysis_node.child(i)
-                if analysis_item.checkState() == QtCore.Qt.Unchecked:
+                if analysis_item.checkState() == UNCHECKED:
                     continue
-                analysis: Analysis = analysis_item.data(QtCore.Qt.UserRole)
+                analysis: Analysis = analysis_item.data(USER_ROLE)
 
                 # analysis: Analysis = analysis
                 sample_frame: SampleFrame = analysis.sample_frame
@@ -573,9 +574,9 @@ class FrmExportProject(QtWidgets.QDialog):
             attachments_node = attachments_nodes[0]
             for i in range(attachments_node.rowCount()):
                 child = attachments_node.child(i)
-                if child.checkState() == QtCore.Qt.Unchecked:
+                if child.checkState() == UNCHECKED:
                     continue
-                attachment: Attachment = child.data(QtCore.Qt.UserRole)
+                attachment: Attachment = child.data(USER_ROLE)
                 # Process the attachment (e.g., copy files, collect web links)
                 if attachment.attachment_type == Attachment.TYPE_FILE:
                     dest_attachments_folder = os.path.abspath(os.path.join(self.txt_outpath.text(), "attachments").replace("\\", "/"))
@@ -682,11 +683,11 @@ class FrmExportProject(QtWidgets.QDialog):
                     msg.setIcon(QtWidgets.QMessageBox.Warning)
                     msg.setText("A Riverscapes project file already exists in the selected folder. Do you want to overwrite it?")
                     msg.setWindowTitle("Overwrite Project File?")
-                    msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
-                    msg.setDefaultButton(QtWidgets.QMessageBox.Cancel)
-                    msg.setEscapeButton(QtWidgets.QMessageBox.Cancel)
+                    msg.setStandardButtons(MSGBOX_YES | MSGBOX_CANCEL)
+                    msg.setDefaultButton(MSGBOX_CANCEL)
+                    msg.setEscapeButton(MSGBOX_CANCEL)
                     ret = msg.exec_()
-                    if ret == QtWidgets.QMessageBox.Cancel:
+                    if ret == MSGBOX_CANCEL:
                         return
         self.base_folder = path.replace("/", "\\")
         self.set_output_path()
@@ -695,7 +696,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         for i in range(self.export_layers_model.rowCount()):
             item = self.export_layers_model.item(i)
-            item.setCheckState(QtCore.Qt.Checked if state else QtCore.Qt.Unchecked)
+            item.setCheckState(CHECKED if state else UNCHECKED)
 
     # def browse_existing(self):
 
@@ -720,8 +721,8 @@ class FrmExportProject(QtWidgets.QDialog):
             node = nodes[0]
             for i in range(node.rowCount()):
                 item = node.child(i)
-                if item.checkState() == QtCore.Qt.Checked:
-                    yield item.data(QtCore.Qt.UserRole)
+                if item.checkState() == CHECKED:
+                    yield item.data(USER_ROLE)
 
     def validate_tree(self) -> bool:
 
@@ -730,7 +731,7 @@ class FrmExportProject(QtWidgets.QDialog):
         for planning_container in self.get_checked_items("Planning Containers"):
             all_checked = all(dce_id in event_ids for dce_id in planning_container.planning_events.keys())
             if not all_checked:
-                # item.setCheckState(QtCore.Qt.Unchecked)
+                # item.setCheckState(UNCHECKED)
                 message_box("Export Validation", f"All Data Capture Events associated with '{planning_container.name}' must be selected for export before the Planning Container can be checked.")
                 return False
 
@@ -786,7 +787,7 @@ class FrmExportProject(QtWidgets.QDialog):
         # # Project Bounds
         # self.lbl_project_bounds = QtWidgets.QLabel("Project Bounds")
         # self.lbl_project_bounds.setToolTip("Select the extent of the project. This is used for display purposes on the Riverscapes Data Exchange")
-        # self.grid.addWidget(self.lbl_project_bounds, 3, 0, 1, 1, QtCore.Qt.AlignTop)
+        # self.grid.addWidget(self.lbl_project_bounds, 3, 0, 1, 1, ALIGN_TOP)
 
         # self.vert_project_bounds = QtWidgets.QVBoxLayout()
         # self.grid.addLayout(self.vert_project_bounds, 3, 1, 1, 1)
@@ -850,7 +851,7 @@ class FrmExportProject(QtWidgets.QDialog):
 
         # add multiline box for description
         self.lbl_description = QtWidgets.QLabel("Description")
-        self.grid.addWidget(self.lbl_description, 7, 0, 1, 1, QtCore.Qt.AlignTop)
+        self.grid.addWidget(self.lbl_description, 7, 0, 1, 1, ALIGN_TOP)
 
         self.txt_description = QtWidgets.QTextEdit()
         self.txt_description.setReadOnly(False)
@@ -903,6 +904,6 @@ def add_to_node(node: QtGui.QStandardItem, db_item, label: str, checked: bool = 
 
     item = QtGui.QStandardItem(label)
     item.setCheckable(True)
-    item.setCheckState(QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked)
-    item.setData(db_item, QtCore.Qt.UserRole)
+    item.setCheckState(CHECKED if checked else UNCHECKED)
+    item.setData(db_item, USER_ROLE)
     node.appendRow(item)

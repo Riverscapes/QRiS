@@ -3,10 +3,11 @@ import re
 
 from qgis.core import Qgis, QgsApplication
 from qgis.gui import QgisInterface
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.utils import iface
 
+from ..compat import USER_ROLE
 from ..gp.vectorize_task import VectorizeTask
 from ..model.db_item import DBItemModel
 from ..model.project import Project
@@ -89,7 +90,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
         if result is True:
             try:
                 gpkg = os.path.dirname(self.txtProjectPath.text())
-                self.scratch_vector = insert_scratch_vector(self.qris_project.project_file, self.txtName.text(), self.fc_name, gpkg, self.cboVectorType.currentData(QtCore.Qt.UserRole).id, self.txtDescription.toPlainText())
+                self.scratch_vector = insert_scratch_vector(self.qris_project.project_file, self.txtName.text(), self.fc_name, gpkg, self.cboVectorType.currentData(USER_ROLE).id, self.txtDescription.toPlainText())
                 self.qris_project.add_db_item(self.scratch_vector)
                 self.iface.messageBar().pushMessage("Vectorize Raster Complete", f"{self.txtName.text()} saved successfully.", level=Qgis.Info, duration=5)
             except Exception as ex:

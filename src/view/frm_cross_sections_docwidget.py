@@ -4,10 +4,11 @@ Doc Widget for building x-sections from centerlines
 """
 
 from qgis.core import QgsApplication, QgsCoordinateTransform, QgsDistanceArea, QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
 from qgis.utils import iface
 
+from ..compat import DLG_ACCEPTED, SPSZ_EXPANDING, SPSZ_MINIMUM, WA_QUIT_ON_CLOSE
 from ..gp.cross_sections import CrossSectionsTask
 from ..model.cross_sections import CrossSections
 from ..model.profile import Profile
@@ -27,7 +28,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
     def __init__(self, parent, project: Project, profile: Profile, map_manager: QRisMapManager):
 
         super().__init__(parent)
-        self.setAttribute(QtCore.Qt.WA_QuitOnClose)
+        self.setAttribute(WA_QUIT_ON_CLOSE)
         self.setupUi()
 
         self.project = project
@@ -104,7 +105,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         frm_layer_picker = FrmLayerPicker(self, "Select Profile Layer", layers)
         result = frm_layer_picker.exec_()
 
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             self.cross_sections_setup(frm_layer_picker.layer)
         return
 
@@ -149,7 +150,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
 
         result = frm_x_sections.exec_()
 
-        if result == QtWidgets.QDialog.Accepted:
+        if result == DLG_ACCEPTED:
             self.cross_sections_setup()  # Reset the map
             self.export_complete.emit(frm_x_sections.cross_sections, CrossSections.CROSS_SECTIONS_MACHINE_CODE, True, True)
         return
@@ -253,7 +254,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.cmdGenerateXS.clicked.connect(self.cmdGenerateXS_click)
         self.gridButtons.addWidget(self.cmdGenerateXS, 0, 2, 1, 1)
 
-        self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum), 0, 1, 1, 1)
+        self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, SPSZ_EXPANDING, SPSZ_MINIMUM), 0, 1, 1, 1)
 
         self.cmdExportXS = QtWidgets.QPushButton("Save Cross Sections")
         self.cmdExportXS.setToolTip("Save cross sections to the project, with an option to clip to a polygon mask")

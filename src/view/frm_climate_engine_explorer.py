@@ -9,6 +9,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QSize, Qt
 from qgis.PyQt.QtGui import QCursor, QIcon, QStandardItem, QStandardItemModel
 
+from ..compat import MSGBOX_NO, MSGBOX_YES, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_SINGLE_SELECTION
 from ..lib.climate_engine import get_datasets, open_climate_engine_website
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.db_item import dict_factory
@@ -311,8 +312,8 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
     def delete_time_series(self):
 
         # Confirm deletion
-        reply = QtWidgets.QMessageBox.question(self, "Delete Time Series", "Are you sure you want to delete the selected time series?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-        if reply == QtWidgets.QMessageBox.No:
+        reply = QtWidgets.QMessageBox.question(self, "Delete Time Series", "Are you sure you want to delete the selected time series?", MSGBOX_YES | MSGBOX_NO, MSGBOX_NO)
+        if reply == MSGBOX_NO:
             return
 
         time_series_ids = self.lst_climate_engine.selectedIndexes()
@@ -396,8 +397,8 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.horiz_climate_engine.addWidget(self.btn_climate_engine_download)
 
         self.lst_climate_engine = QtWidgets.QListView(self.widget_left)
-        self.lst_climate_engine.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.lst_climate_engine.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.lst_climate_engine.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
+        self.lst_climate_engine.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
         self.lst_climate_engine.setContextMenuPolicy(Qt.CustomContextMenu)
         self.lst_climate_engine.customContextMenuRequested.connect(self.on_context)
         self.vert_climate_engine.addWidget(self.lst_climate_engine)

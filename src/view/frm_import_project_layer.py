@@ -1,8 +1,9 @@
 import os
 
 from qgis.core import QgsVectorLayer, QgsWkbTypes
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, USER_ROLE
 from ..model.db_item_spatial import DBItemSpatial
 from ..model.event_layer import EventLayer
 from ..model.project import Project
@@ -66,13 +67,13 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
 
     def _add_item(self, model: QtGui.QStandardItemModel, label: str, data):
         item = QtGui.QStandardItem(label)
-        item.setData(data, QtCore.Qt.UserRole)
+        item.setData(data, USER_ROLE)
         model.appendRow(item)
 
     def _apply_model(self, combo: QtWidgets.QComboBox, model: QtGui.QStandardItemModel):
         if model.rowCount() == 0:
             placeholder = QtGui.QStandardItem("— No layers available —")
-            placeholder.setData(None, QtCore.Qt.UserRole)
+            placeholder.setData(None, USER_ROLE)
             model.appendRow(placeholder)
         combo.setModel(model)
 
@@ -145,8 +146,8 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
         self.cboDceDiff.setEnabled(diff_on)
 
         active_combo = self.cboProject if project_on else self.cboDceSame if same_on else self.cboDceDiff
-        has_data = active_combo.currentData(QtCore.Qt.UserRole) is not None
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(has_data)
+        has_data = active_combo.currentData(USER_ROLE) is not None
+        self.buttonBox.button(DLGBTN_OK).setEnabled(has_data)
 
     # ------------------------------------------------------------------
     # Accept
@@ -163,7 +164,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
             combo = self.cboDceDiff
             self.use_direct_copy = False
 
-        data = combo.currentData(QtCore.Qt.UserRole)
+        data = combo.currentData(USER_ROLE)
         if data is None:
             return
 
@@ -219,7 +220,7 @@ class FrmImportProjectLayer(QtWidgets.QDialog):
 
         self.vert.addStretch(1)
 
-        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal)
+        self.buttonBox = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL, HORIZONTAL)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.vert.addWidget(self.buttonBox)

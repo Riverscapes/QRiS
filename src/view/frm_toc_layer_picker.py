@@ -1,8 +1,9 @@
 from typing import Optional
 
 from qgis.core import QgsRasterLayer, QgsVectorLayer
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, USER_ROLE
 from ..QRiS.settings import Settings
 
 
@@ -40,7 +41,7 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
                     if layer.dataProvider().dataSourceUri().startswith(exclude_datasource_prefix):
                         continue
                 item = QtGui.QStandardItem(layer.name())
-                item.setData(layer, QtCore.Qt.UserRole)
+                item.setData(layer, USER_ROLE)
                 self.model.appendRow(item)
                 continue
 
@@ -55,7 +56,7 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
                     if layer.dataProvider().dataSourceUri().startswith(exclude_datasource_prefix):
                         continue
                 item = QtGui.QStandardItem(layer.name())
-                item.setData(layer, QtCore.Qt.UserRole)
+                item.setData(layer, USER_ROLE)
                 self.model.appendRow(item)
 
         self.layer_count = self.model.rowCount()
@@ -90,12 +91,12 @@ class FrmTOCLayerPicker(QtWidgets.QDialog):
 
         self.buttonBox = QtWidgets.QDialogButtonBox()
         self.vert.addWidget(self.buttonBox)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(HORIZONTAL)
+        self.buttonBox.setStandardButtons(DLGBTN_CANCEL | DLGBTN_OK)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
     def accept(self):
 
-        self.layer = self.cboLayers.currentData(QtCore.Qt.UserRole)
+        self.layer = self.cboLayers.currentData(USER_ROLE)
         super().accept()
