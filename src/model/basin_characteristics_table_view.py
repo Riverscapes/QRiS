@@ -3,6 +3,16 @@ from typing import Optional
 from qgis.PyQt import QtCore
 from qgis.PyQt.QtGui import QColor
 
+from ..compat import (
+    BACKGROUND_ROLE,
+    DISPLAY_ROLE,
+    EDIT_ROLE,
+    HORIZONTAL,
+    ITEM_FLAG_EDITABLE,
+    ITEM_FLAG_ENABLED,
+    ITEM_FLAG_SELECTABLE,
+)
+
 
 class BasinCharsTableModel(QtCore.QAbstractTableModel):
     def __init__(self, data: list, header_text: list, required_codes: Optional[list] = None):
@@ -12,12 +22,12 @@ class BasinCharsTableModel(QtCore.QAbstractTableModel):
         self.required_codes = required_codes if required_codes is not None else []
 
         for col in range(len(header_text)):
-            self.setHeaderData(col, QtCore.Qt.Horizontal, header_text[col], QtCore.Qt.DisplayRole)
+            self.setHeaderData(col, HORIZONTAL, header_text[col], DISPLAY_ROLE)
 
     def data(self, index, role):
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+        if role == DISPLAY_ROLE or role == EDIT_ROLE:
             return self._data[index.row()][index.column()]
-        elif role == QtCore.Qt.BackgroundRole:
+        elif role == BACKGROUND_ROLE:
             row = self._data[index.row()]
             if len(row) < 4:
                 return None
@@ -32,7 +42,7 @@ class BasinCharsTableModel(QtCore.QAbstractTableModel):
         return None
 
     def setData(self, index, value, role):
-        if role == QtCore.Qt.EditRole:
+        if role == EDIT_ROLE:
             if index.column() == 4:
                 try:
                     if str(value).strip() == "":
@@ -49,7 +59,7 @@ class BasinCharsTableModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         flags = super().flags(index)
         if index.column() == 4:
-            flags |= QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+            flags |= ITEM_FLAG_EDITABLE | ITEM_FLAG_ENABLED | ITEM_FLAG_SELECTABLE
         return flags
 
     def rowCount(self, parent=None):
@@ -69,7 +79,7 @@ class BasinCharsTableModel(QtCore.QAbstractTableModel):
             return len(self._data[0])
         return 0
 
-    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+    def headerData(self, section, orientation, role=DISPLAY_ROLE):
+        if orientation == HORIZONTAL and role == DISPLAY_ROLE:
             return self.horizontalHeaders[section]
         return super().headerData(section, orientation, role)
