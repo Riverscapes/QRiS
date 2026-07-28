@@ -3,7 +3,7 @@ import re
 import sqlite3
 import xml.etree.ElementTree as ET  # nosec B405
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from qgis.core import Qgis, QgsCoordinateTransform, QgsDistanceArea, QgsFeatureRequest, QgsGeometry, QgsMessageLog, QgsProject, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets

@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import sqlite3
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure
 from qgis.PyQt import QtWidgets
