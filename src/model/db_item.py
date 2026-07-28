@@ -2,20 +2,16 @@ import json
 import sqlite3
 from typing import Optional
 
-from qgis.PyQt.QtCore import QAbstractListModel, QModelIndex
+from qgis.PyQt.QtCore import QAbstractListModel, QModelIndex, Qt
 
 from ..compat import (
-    CHECKED,
     CHECK_STATE_ROLE,
     DISPLAY_ROLE,
-    EDIT_ROLE,
     ITEM_FLAG_CHECKABLE,
-    ITEM_FLAG_EDITABLE,
     ITEM_FLAG_ENABLED,
     ITEM_FLAG_SELECTABLE,
     MATCH_EXACTLY,
     MATCH_WRAP,
-    UNCHECKED,
     USER_ROLE,
 )
 
