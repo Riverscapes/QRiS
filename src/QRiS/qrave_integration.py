@@ -3,11 +3,12 @@ import os
 import traceback
 
 from qgis.core import Qgis
-from qgis.PyQt.QtCore import QObject, Qt, pyqtSignal
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 from qgis.PyQt.QtGui import QIcon, QStandardItem
 from qgis.PyQt.QtWidgets import QMenu
 from qgis.utils import plugins
 
+from ..compat import USER_ROLE
 from .path_utilities import parse_posix_path
 from .settings import Settings
 
@@ -115,7 +116,7 @@ class QRaveIntegration(QObject):
             data (ProjectTreeData): ProjectTreeData (QRave)
         """
 
-        layer = item.data(Qt.UserRole).data
+        layer = item.data(USER_ROLE).data
         qrave_project = data.project
         project_meta = qrave_project.meta
 

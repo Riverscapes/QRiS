@@ -27,10 +27,18 @@ from qgis.core import (
     QgsVectorLayer,
     QgsVectorLayerSimpleLabeling,
 )
-from qgis.PyQt.QtCore import QMetaType, QObject, QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QObject, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.utils import iface
 
+from ..compat import (
+    MAPLAYER_VECTOR,
+    QMETATYPE_BOOL,
+    QMETATYPE_DOUBLE,
+    QMETATYPE_INT,
+    QMETATYPE_QURL,
+    QMETATYPE_STRING,
+)
 from ..model.db_item import DBItem
 from ..model.raster import BASEMAP_MACHINE_CODE
 from ..view.metadata_field_editor_widget import initialize_metadata_widget
@@ -90,7 +98,7 @@ class RiverscapesMapManager(QObject):
 
         # set all layers to editable true
         for layer in self.get_product_key_layers():
-            if layer.layer().type() == QgsMapLayer.VectorLayer:
+            if layer.layer().type() == MAPLAYER_VECTOR:
                 layer.layer().setReadOnly(False)
 
         self.edit_mode_changed.emit(False)
@@ -99,7 +107,7 @@ class RiverscapesMapManager(QObject):
 
         # set all layers to editable false
         for layer in self.get_product_key_layers():
-            if layer.layer().type() == QgsMapLayer.VectorLayer:
+            if layer.layer().type() == MAPLAYER_VECTOR:
                 layer.layer().setReadOnly(True)
         # get active layer
         active_layer = iface.activeLayer()
@@ -255,7 +263,7 @@ class RiverscapesMapManager(QObject):
         return zoom
 
     def apply_selection_color_override(self, layer: QgsMapLayer) -> None:
-        if layer is None or layer.type() != QgsMapLayer.VectorLayer:
+        if layer is None or layer.type() != MAPLAYER_VECTOR:
             return
 
         override_enabled = bool(Settings().getValue(SELECTION_COLOR_OVERRIDE_ENABLED))
@@ -295,7 +303,7 @@ class RiverscapesMapManager(QObject):
     def refresh_selection_color_overrides(self) -> None:
         for layer_node in self.get_product_key_layers():
             layer = layer_node.layer()
-            if layer is not None and layer.type() == QgsMapLayer.VectorLayer:
+            if layer is not None and layer.type() == MAPLAYER_VECTOR:
                 self.apply_selection_color_override(layer)
 
     def create_db_item_feature_layer(
@@ -534,7 +542,7 @@ class RiverscapesMapManager(QObject):
     # Set Fields
     def set_metadata_virtual_fields(self, feature_layer: QgsVectorLayer, field_config: Optional[dict] = None, default_photo_path: Optional[str] = None) -> None:
 
-        field_types = {"integer": QMetaType.Int, "float": QMetaType.Double, "boolean": QMetaType.Bool, "url": QMetaType.QUrl, "string": QMetaType.QString}
+        field_types = {"integer": QMETATYPE_INT, "float": QMETATYPE_DOUBLE, "boolean": QMETATYPE_BOOL, "url": QMETATYPE_QURL, "string": QMETATYPE_STRING}
 
         fields = feature_layer.fields()
         field_index = fields.indexFromName("metadata")
@@ -546,7 +554,7 @@ class RiverscapesMapManager(QObject):
         field_labels = {}
         if field_config is not None:
             for field in field_config.get("fields", []):
-                field_type = field_types.get(field["type"], QMetaType.QString)
+                field_type = field_types.get(field["type"], QMETATYPE_STRING)
                 field_name = field["label"]
                 field_labels.update({field["id"]: field_name})
                 metadata_fields["attributes"].update({field["id"]: field_type})
@@ -564,16 +572,16 @@ class RiverscapesMapManager(QObject):
                 # parse data type from values. do not change if the type is of a higher order
                 # e.g. if the value is a float, but the type is already a string, don't change it
                 existing_type = metadata_fields.get(key, None)
-                if isinstance(value, bool) and (existing_type is None or existing_type == QMetaType.Bool):
-                    field_type = QMetaType.Bool
-                if isinstance(value, int) and (existing_type is None or existing_type == QMetaType.Int):
-                    field_type = QMetaType.Int
-                elif isinstance(value, float) and (existing_type is None or existing_type == QMetaType.Double):
-                    field_type = QMetaType.Double
-                elif is_url(value) and (existing_type is None or existing_type == QMetaType.QUrl):
-                    field_type = QMetaType.QUrl
+                if isinstance(value, bool) and (existing_type is None or existing_type == QMETATYPE_BOOL):
+                    field_type = QMETATYPE_BOOL
+                if isinstance(value, int) and (existing_type is None or existing_type == QMETATYPE_INT):
+                    field_type = QMETATYPE_INT
+                elif isinstance(value, float) and (existing_type is None or existing_type == QMETATYPE_DOUBLE):
+                    field_type = QMETATYPE_DOUBLE
+                elif is_url(value) and (existing_type is None or existing_type == QMETATYPE_QURL):
+                    field_type = QMETATYPE_QURL
                 else:
-                    field_type = QMetaType.QString
+                    field_type = QMETATYPE_STRING
                 # if 'metadata' not in metadata_fields:
                 #     metadata_fields.update({'metadata': {}})
                 metadata_fields["metadata"].update({key: field_type})
@@ -689,7 +697,7 @@ class RiverscapesMapManager(QObject):
         field_index = fields.indexFromName(field_name)
         if expression is not None:
             # Set field to display vegetation dam density based on values in other fields
-            virtual_field = QgsField(field_name, int(QMetaType.Int))
+            virtual_field = QgsField(field_name, int(QMETATYPE_INT))
             feature_layer.addExpressionField(expression, virtual_field)
             feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(expression))
         widget_setup = QgsEditorWidgetSetup("ValueMap", lookup_config)
@@ -745,7 +753,7 @@ class RiverscapesMapManager(QObject):
         else:
             raise ValueError("Dimension must be 'area' or 'length'")
 
-        field_type = int(QMetaType.Double)
+        field_type = int(QMETATYPE_DOUBLE)
         virtual_field = QgsField(field_name, int(field_type))
         feature_layer.addExpressionField(field_expression, virtual_field)
         fields = feature_layer.fields()
