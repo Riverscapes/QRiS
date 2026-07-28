@@ -1,5 +1,15 @@
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ...compat import (
+    ALIGN_CENTER,
+    CHECK_STATE_ROLE,
+    CHECKED,
+    ITEM_FLAG_CHECKABLE,
+    ITEM_FLAG_ENABLED,
+    ITEM_FLAG_SELECTABLE,
+    UNCHECKED,
+)
+
 
 class CheckableComboBox(QtWidgets.QComboBox):
     # Custom signal to notify when the popup is closed (edit finished)
@@ -9,7 +19,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
         super().__init__(parent)
         self.setEditable(True)
         self.lineEdit().setReadOnly(True)
-        self.lineEdit().setAlignment(QtCore.Qt.AlignCenter)
+        self.lineEdit().setAlignment(ALIGN_CENTER)
         self.setModel(QtGui.QStandardItemModel(self))
         self.view().viewport().installEventFilter(self)
         self.model().dataChanged.connect(self.updateText)
@@ -40,15 +50,15 @@ class CheckableComboBox(QtWidgets.QComboBox):
                 # Check for commands
                 data = item.data()
                 if data == "SELECT_ALL":
-                    self.set_all_check_state(QtCore.Qt.Checked)
+                    self.set_all_check_state(CHECKED)
                 elif data == "SELECT_NONE":
-                    self.set_all_check_state(QtCore.Qt.Unchecked)
+                    self.set_all_check_state(UNCHECKED)
                 elif item.isCheckable():
                     # Normal toggle
-                    if item.checkState() == QtCore.Qt.Checked:
-                        item.setCheckState(QtCore.Qt.Unchecked)
+                    if item.checkState() == CHECKED:
+                        item.setCheckState(UNCHECKED)
                     else:
-                        item.setCheckState(QtCore.Qt.Checked)
+                        item.setCheckState(CHECKED)
             return True  # Consume event to prevent popup close
         return super().eventFilter(obj, event)
 
@@ -70,8 +80,8 @@ class CheckableComboBox(QtWidgets.QComboBox):
     def addItem(self, text, data=None):
         item = QtGui.QStandardItem(text)
         item.setToolTip(text)
-        item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-        item.setData(QtCore.Qt.Checked, QtCore.Qt.CheckStateRole)  # Default checked
+        item.setFlags(ITEM_FLAG_CHECKABLE | ITEM_FLAG_ENABLED)
+        item.setData(CHECKED, CHECK_STATE_ROLE)  # Default checked
         if data is not None:
             item.setData(data)
         self.model().appendRow(item)
@@ -91,7 +101,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
     def add_command_item(self, text, data):
         item = QtGui.QStandardItem(text)
         item.setToolTip(text)
-        item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        item.setFlags(ITEM_FLAG_ENABLED | ITEM_FLAG_SELECTABLE)
         item.setData(data)
         font = item.font()
         font.setItalic(True)
@@ -128,7 +138,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
         checkedItems = []
         for i in range(self.count()):
             item = self.model().item(i)
-            if item.checkState() == QtCore.Qt.Checked:
+            if item.checkState() == CHECKED:
                 checkedItems.append(item.text())
         return checkedItems
 
@@ -136,6 +146,6 @@ class CheckableComboBox(QtWidgets.QComboBox):
         checkedData = []
         for i in range(self.count()):
             item = self.model().item(i)
-            if item.checkState() == QtCore.Qt.Checked:
+            if item.checkState() == CHECKED:
                 checkedData.append(item.data())
         return checkedData

@@ -2,6 +2,24 @@ import os
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ...compat import (
+    CHECKED,
+    DLG_ACCEPTED,
+    DLGBTN_CANCEL,
+    DLGBTN_OK,
+    HEADER_RESIZE_TO_CONTENTS,
+    HEADER_STRETCH,
+    ITEM_FLAG_CHECKABLE,
+    ITEM_FLAG_EDITABLE,
+    ITEM_FLAG_ENABLED,
+    MSGBOX_NO,
+    MSGBOX_YES,
+    QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+    UNCHECKED,
+    USER_ROLE,
+)
 from ...model.attachment import (
     Attachment,
     associate_attachment_with_dce,
@@ -93,9 +111,9 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
             icon_alias = "link" if attachment.attachment_type == Attachment.TYPE_WEB_LINK else "file"
 
             name_item = QtWidgets.QTableWidgetItem(name)
-            name_item.setData(QtCore.Qt.UserRole, attachment_id)
+            name_item.setData(USER_ROLE, attachment_id)
             name_item.setIcon(QtGui.QIcon(f":/plugins/qris_toolbar/{icon_alias}"))
-            name_item.setFlags(name_item.flags() & ~QtCore.Qt.ItemIsEditable)
+            name_item.setFlags(name_item.flags() & ~ITEM_FLAG_EDITABLE)
             self.table.setItem(row, 0, name_item)
 
             # Purpose cell — editable combobox embedded in the table
@@ -113,11 +131,11 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
             self.table.setCellWidget(row, 1, cbo_purpose)
 
             type_item = QtWidgets.QTableWidgetItem(label)
-            type_item.setFlags(type_item.flags() & ~QtCore.Qt.ItemIsEditable)
+            type_item.setFlags(type_item.flags() & ~ITEM_FLAG_EDITABLE)
             self.table.setItem(row, 2, type_item)
 
             date_item = QtWidgets.QTableWidgetItem(date)
-            date_item.setFlags(date_item.flags() & ~QtCore.Qt.ItemIsEditable)
+            date_item.setFlags(date_item.flags() & ~ITEM_FLAG_EDITABLE)
             self.table.setItem(row, 3, date_item)
 
         self.table.setUpdatesEnabled(True)
@@ -140,7 +158,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
 
     def _attachment_id_at_row(self, row: int):
         item = self.table.item(row, 0)
-        return item.data(QtCore.Qt.UserRole) if item else None
+        return item.data(USER_ROLE) if item else None
 
     # ------------------------------------------------------------------
     # Slots
@@ -167,7 +185,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
             return
 
         dlg = _AttachmentPickerDialog(self, candidates, self._purposes)
-        if dlg.exec_() != QtWidgets.QDialog.Accepted:
+        if dlg.exec_() != DLG_ACCEPTED:
             return
 
         for aid, purpose in dlg.selected_with_purpose():
@@ -181,7 +199,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
         frm = FrmAttachment(self, self.qris_project, attachment_type=attachment_type)
         old_ids = set(self.qris_project.attachments.keys())
 
-        if frm.exec_() != QtWidgets.QDialog.Accepted:
+        if frm.exec_() != DLG_ACCEPTED:
             return
 
         new_ids = set(self.qris_project.attachments.keys()) - old_ids
@@ -203,10 +221,8 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
             return
 
         attachment, _ = self._dce_attachments[attachment_id]
-        reply = QtWidgets.QMessageBox.question(
-            self, "Disassociate Reference", f'Remove the reference to "{attachment.name}" from this event?\n\nThe attachment will remain in the project.', QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No
-        )
-        if reply != QtWidgets.QMessageBox.Yes:
+        reply = QtWidgets.QMessageBox.question(self, "Disassociate Reference", f'Remove the reference to "{attachment.name}" from this event?\n\nThe attachment will remain in the project.', MSGBOX_YES | MSGBOX_NO, MSGBOX_NO)
+        if reply != MSGBOX_YES:
             return
 
         del self._dce_attachments[attachment_id]
@@ -258,14 +274,14 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Name", "Purpose", "Type", "Date"])
         self.table.verticalHeader().setVisible(False)
-        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
+        self.table.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.table.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         hdr = self.table.horizontalHeader()
-        hdr.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        hdr.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        hdr.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        hdr.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        hdr.setSectionResizeMode(0, HEADER_STRETCH)
+        hdr.setSectionResizeMode(1, HEADER_STRETCH)
+        hdr.setSectionResizeMode(2, HEADER_RESIZE_TO_CONTENTS)
+        hdr.setSectionResizeMode(3, HEADER_RESIZE_TO_CONTENTS)
         self.table.itemSelectionChanged.connect(self._update_button_states)
         self.table.cellDoubleClicked.connect(self.on_open_attachment)
         layout.addWidget(self.table)
@@ -325,12 +341,12 @@ def _ask_purpose(parent, purposes: list) -> str:
         cbo.addItem(p)
     layout.addWidget(cbo)
 
-    btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+    btn_box = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
     btn_box.accepted.connect(dlg.accept)
     btn_box.rejected.connect(dlg.reject)
     layout.addWidget(btn_box)
 
-    if dlg.exec_() == QtWidgets.QDialog.Accepted:
+    if dlg.exec_() == DLG_ACCEPTED:
         return cbo.currentText().strip()
     return ""
 
@@ -360,11 +376,11 @@ class _AttachmentPickerDialog(QtWidgets.QDialog):
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["", "Name", "Purpose"])
         self.table.verticalHeader().setVisible(False)
-        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         hdr = self.table.horizontalHeader()
-        hdr.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        hdr.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-        hdr.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
+        hdr.setSectionResizeMode(0, HEADER_RESIZE_TO_CONTENTS)
+        hdr.setSectionResizeMode(1, HEADER_STRETCH)
+        hdr.setSectionResizeMode(2, HEADER_STRETCH)
         layout.addWidget(self.table)
 
         for attachment in attachments.values():
@@ -372,9 +388,9 @@ class _AttachmentPickerDialog(QtWidgets.QDialog):
             self.table.insertRow(row)
 
             chk_item = QtWidgets.QTableWidgetItem()
-            chk_item.setCheckState(QtCore.Qt.Unchecked)
-            chk_item.setData(QtCore.Qt.UserRole, attachment.id)
-            chk_item.setFlags(chk_item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            chk_item.setCheckState(UNCHECKED)
+            chk_item.setData(USER_ROLE, attachment.id)
+            chk_item.setFlags(chk_item.flags() | ITEM_FLAG_CHECKABLE | ITEM_FLAG_ENABLED)
             self.table.setItem(row, 0, chk_item)
 
             icon_alias = "link" if attachment.attachment_type == Attachment.TYPE_WEB_LINK else "file"
@@ -389,7 +405,7 @@ class _AttachmentPickerDialog(QtWidgets.QDialog):
                 cbo.addItem(p)
             self.table.setCellWidget(row, 2, cbo)
 
-        btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        btn_box = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         btn_box.accepted.connect(self.accept)
         btn_box.rejected.connect(self.reject)
         layout.addWidget(btn_box)
@@ -399,8 +415,8 @@ class _AttachmentPickerDialog(QtWidgets.QDialog):
         result = []
         for row in range(self.table.rowCount()):
             chk = self.table.item(row, 0)
-            if chk and chk.checkState() == QtCore.Qt.Checked:
-                aid = chk.data(QtCore.Qt.UserRole)
+            if chk and chk.checkState() == CHECKED:
+                aid = chk.data(USER_ROLE)
                 cbo = self.table.cellWidget(row, 2)
                 purpose = cbo.currentText().strip() if cbo else ""
                 result.append((aid, purpose))

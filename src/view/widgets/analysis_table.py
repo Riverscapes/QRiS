@@ -2,6 +2,22 @@ from typing import ClassVar
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ...compat import (
+    CHECKED,
+    CUSTOM_CONTEXT_MENU,
+    HEADER_FIXED,
+    ITEM_FLAG_ENABLED,
+    NO_ITEM_FLAGS,
+    QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+    SP_CRITICAL,
+    SP_INFO,
+    SP_WARNING,
+    TOOL_BTN_INSTANT_POPUP,
+    TOOL_BTN_TEXT_BESIDE,
+    USER_ROLE,
+)
 from ...lib.unit_conversion import area_units, distance_units, ratio_units, short_unit_name
 from ...model.analysis import format_feasibility_text
 from ...model.analysis_metric import AnalysisMetric
@@ -100,12 +116,12 @@ class MetricStatusWidgetButtons(QtWidgets.QWidget):
 
         # Check Calculation Error
         if metric_value and metric_value.metadata and metric_value.metadata.get("calculation_error"):
-            icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical)
+            icon = QtWidgets.QApplication.style().standardIcon(SP_CRITICAL)
             warning_tooltip = f"Calculation Error: {metric_value.metadata.get('calculation_error')}"
 
         if icon is None and (f_status == "NOT_FEASIBLE" or f_status == "FEASIBLE_EMPTY"):
             f_reasons = feasibility.get("reasons", [])
-            icon_std = QtWidgets.QStyle.SP_MessageBoxWarning if f_status == "NOT_FEASIBLE" else QtWidgets.QStyle.SP_MessageBoxInformation
+            icon_std = SP_WARNING if f_status == "NOT_FEASIBLE" else SP_INFO
             icon = QtWidgets.QApplication.style().standardIcon(icon_std)
             warning_tooltip = format_feasibility_text(f_status, f_reasons)
 
@@ -116,7 +132,7 @@ class MetricStatusWidgetButtons(QtWidgets.QWidget):
                 try:
                     diff = abs(metric_value.manual_value - metric_value.automated_value)
                     if diff > tol:
-                        icon = QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation)
+                        icon = QtWidgets.QApplication.style().standardIcon(SP_INFO)
                         warning_tooltip = f"Manual value differs from automated value by more than tolerance ({tol}).\nManual: {metric_value.manual_value}\nAutomated: {metric_value.automated_value}"
                 except Exception:  # nosec B110 - threshold diff calculation is best-effort; non-numeric values silently skip the warning icon
                     pass
@@ -174,8 +190,8 @@ class AnalysisTable(QtWidgets.QWidget):
 
         self.btn_advanced = QtWidgets.QToolButton()
         self.btn_advanced.setText("Advanced Filters")
-        self.btn_advanced.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.btn_advanced.setPopupMode(TOOL_BTN_INSTANT_POPUP)
+        self.btn_advanced.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
         self.header_layout_filters.addWidget(self.btn_advanced)
 
         self.main_layout.addWidget(self.filter_tools_widget)
@@ -183,27 +199,27 @@ class AnalysisTable(QtWidgets.QWidget):
         # Create Table Widget
         self.table = QtWidgets.QTableWidget()
         self.table.setColumnCount(6)
-        self.table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        self.table.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         self.table.verticalHeader().setVisible(False)
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.table.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.table.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
         self.table.setSortingEnabled(True)  # Enable Sorting
         self.table.setHorizontalHeaderLabels(["", "Protocol", "Metric", "Value", "Units", "Uncertainty"])
         self.table.setColumnHidden(self.column["protocol"], True)
 
-        self.table.horizontalHeader().setSectionResizeMode(self.column["status"], QtWidgets.QHeaderView.Fixed)
-        self.table.horizontalHeader().setSectionResizeMode(self.column["uncertainty"], QtWidgets.QHeaderView.Fixed)
+        self.table.horizontalHeader().setSectionResizeMode(self.column["status"], HEADER_FIXED)
+        self.table.horizontalHeader().setSectionResizeMode(self.column["uncertainty"], HEADER_FIXED)
 
         # Disable sorting for the status/button column (0)
         # Note: Simply locking section resize isn't enough to stop sorting clicks,
         # but standard QTableWidget doesn't allow per-column sort disabling without subclassing.
         # The crash 'NoneType' has no attribute 'setFlags' happens because itemPrototype() is None by default.
-        self.table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
+        self.table.horizontalHeader().setSectionResizeMode(0, HEADER_FIXED)
 
-        # self.table.itemPrototype().setFlags(QtCore.Qt.ItemIsEnabled) # Removed: Causes crash if prototype not set
+        # self.table.itemPrototype().setFlags(ITEM_FLAG_ENABLED) # Removed: Causes crash if prototype not set
         if self.table.itemPrototype() is None:
             self.table.setItemPrototype(QtWidgets.QTableWidgetItem())
-        self.table.itemPrototype().setFlags(QtCore.Qt.ItemIsEnabled)
+        self.table.itemPrototype().setFlags(ITEM_FLAG_ENABLED)
 
         self.table.setColumnWidth(self.column["status"], 80)
         self.table.setColumnWidth(self.column["units"], 75)
@@ -211,7 +227,7 @@ class AnalysisTable(QtWidgets.QWidget):
         self.table.setColumnWidth(self.column["uncertainty"], 100)
         self.table.setIconSize(QtCore.QSize(16, 16))
 
-        self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.table.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.table.customContextMenuRequested.connect(self.open_context_menu)
 
         self.main_layout.addWidget(self.table)
@@ -374,7 +390,7 @@ class AnalysisTable(QtWidgets.QWidget):
             item = self.table.item(row, self.column["metric"])
             if not item:
                 continue
-            analysis_metric = item.data(QtCore.Qt.UserRole)
+            analysis_metric = item.data(USER_ROLE)
             if not analysis_metric:
                 continue
             metric = analysis_metric.metric
@@ -401,7 +417,7 @@ class AnalysisTable(QtWidgets.QWidget):
 
             # Advanced Filters (Value Based)
             match_value_state = True
-            metric_value = self.table.item(row, self.column["value"]).data(QtCore.Qt.UserRole)
+            metric_value = self.table.item(row, self.column["value"]).data(USER_ROLE)
 
             # Determine Value States
             has_automated_value = False
@@ -431,7 +447,7 @@ class AnalysisTable(QtWidgets.QWidget):
 
     def clear_filters(self):
         self.txt_filter_search.clear()
-        self.cbo_filter_protocol.set_all_check_state(QtCore.Qt.Checked)
+        self.cbo_filter_protocol.set_all_check_state(CHECKED)
 
         self.act_limit_indicators.setChecked(False)
         self.act_limit_automated.setChecked(False)
@@ -477,7 +493,7 @@ class AnalysisTable(QtWidgets.QWidget):
         # Create a proxy item for sorting the status column (hidden value)
         # Even though we disable the header click, this ensures data integrity
         dummy_status = QtWidgets.QTableWidgetItem()
-        dummy_status.setFlags(QtCore.Qt.NoItemFlags)  # Not selectable or editable
+        dummy_status.setFlags(NO_ITEM_FLAGS)  # Not selectable or editable
         self.table.setItem(row, self.column["status"], dummy_status)
 
         protocol_name = metric.protocol_machine_code
@@ -490,7 +506,7 @@ class AnalysisTable(QtWidgets.QWidget):
         label_metric = QtWidgets.QTableWidgetItem()
         label_metric.setText(metric.name)
         self.table.setItem(row, self.column["metric"], label_metric)
-        label_metric.setData(QtCore.Qt.UserRole, analysis_metric)
+        label_metric.setData(USER_ROLE, analysis_metric)
 
         label_units = QtWidgets.QTableWidgetItem()
         display_unit = short_unit_name(self.analysis.units.get(metric.unit_type, None))
@@ -520,7 +536,7 @@ class AnalysisTable(QtWidgets.QWidget):
             # Loop over active metrics and load values into grid
             self.table.setSortingEnabled(False)
             for row in range(self.table.rowCount()):
-                analysis_metric: AnalysisMetric = self.table.item(row, self.column["metric"]).data(QtCore.Qt.UserRole)
+                analysis_metric: AnalysisMetric = self.table.item(row, self.column["metric"]).data(USER_ROLE)
                 metric: Metric = analysis_metric.metric
 
                 # Update Status Widget (Source)
@@ -546,7 +562,7 @@ class AnalysisTable(QtWidgets.QWidget):
                     is_manual = metric_value.is_manual
                     _has_automated = metric_value.automated_value is not None
 
-                self.table.item(row, self.column["value"]).setData(QtCore.Qt.UserRole, metric_value)
+                self.table.item(row, self.column["value"]).setData(USER_ROLE, metric_value)
                 self.table.item(row, self.column["value"]).setText(metric_value_text)
                 self.table.item(row, self.column["uncertainty"]).setText(uncertainty_text)
 
@@ -570,8 +586,8 @@ class AnalysisTable(QtWidgets.QWidget):
     # set_status method removed (logic moved to widget classes)
 
     def _handle_calculate(self, row):
-        analysis_metric = self.table.item(row, self.column["metric"]).data(QtCore.Qt.UserRole)
-        metric_value = self.table.item(row, self.column["value"]).data(QtCore.Qt.UserRole)
+        analysis_metric = self.table.item(row, self.column["metric"]).data(USER_ROLE)
+        metric_value = self.table.item(row, self.column["value"]).data(USER_ROLE)
         self.metric_calculate_requested.emit(analysis_metric, metric_value)
 
     def _handle_warning(self, row):
@@ -583,7 +599,7 @@ class AnalysisTable(QtWidgets.QWidget):
         if not item:
             return
 
-        analysis_metric = item.data(QtCore.Qt.UserRole)
+        analysis_metric = item.data(USER_ROLE)
         if not analysis_metric:
             return
         metric = analysis_metric.metric
@@ -629,7 +645,7 @@ class AnalysisTable(QtWidgets.QWidget):
         if not metric_item:
             return
 
-        analysis_metric = metric_item.data(QtCore.Qt.UserRole)
+        analysis_metric = metric_item.data(USER_ROLE)
         if not analysis_metric:
             return
         metric = analysis_metric.metric
@@ -679,9 +695,9 @@ class AnalysisTable(QtWidgets.QWidget):
         menu.exec_(self.table.viewport().mapToGlobal(position))
 
     def _handle_edit(self, row):
-        metric_value = self.table.item(row, self.column["value"]).data(QtCore.Qt.UserRole)
+        metric_value = self.table.item(row, self.column["value"]).data(USER_ROLE)
         if metric_value is None:
-            metric: Metric = self.table.item(row, self.column["metric"]).data(QtCore.Qt.UserRole).metric
+            metric: Metric = self.table.item(row, self.column["metric"]).data(USER_ROLE).metric
             metric_value = MetricValue(metric, None, None, True, None, None, metric.default_unit_id, {})
 
         self.metric_edit_requested.emit(metric_value)

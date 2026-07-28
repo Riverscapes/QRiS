@@ -2,13 +2,29 @@ from typing import Optional
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ...compat import (
+    ASCENDING_ORDER,
+    CHECKED,
+    DESCENDING_ORDER,
+    ITEM_FLAG_CHECKABLE,
+    ITEM_FLAG_ENABLED,
+    ITEM_FLAG_SELECTABLE,
+    MOVE_ACTION,
+    QABSTRACTITEMVIEW_INTERNAL_MOVE,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+    TOOL_BTN_INSTANT_POPUP,
+    TOOL_BTN_TEXT_ONLY,
+    UNCHECKED,
+    USER_ROLE,
+)
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.project import Project
 
 
 class SortableTableWidgetItem(QtWidgets.QTableWidgetItem):
     def __lt__(self, other):
-        return (self.data(QtCore.Qt.UserRole) or "") < (other.data(QtCore.Qt.UserRole) or "")
+        return (self.data(USER_ROLE) or "") < (other.data(USER_ROLE) or "")
 
 
 class ReorderableTableWidget(QtWidgets.QTableWidget):
@@ -19,7 +35,7 @@ class ReorderableTableWidget(QtWidgets.QTableWidget):
     orderChanged = QtCore.pyqtSignal()
 
     def dropEvent(self, event):
-        if event.source() == self and (event.dropAction() == QtCore.Qt.MoveAction or self.dragDropMode() == QtWidgets.QAbstractItemView.InternalMove):
+        if event.source() == self and (event.dropAction() == MOVE_ACTION or self.dragDropMode() == QABSTRACTITEMVIEW_INTERNAL_MOVE):
             selection = self.selectedItems()
             if not selection:
                 return
@@ -85,7 +101,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
 
         # Track current sort state explicitly
         self.current_sort_col = -1
-        self.current_sort_order = QtCore.Qt.AscendingOrder
+        self.current_sort_order = ASCENDING_ORDER
 
         self.setupUi()
         self.load_events()
@@ -192,16 +208,16 @@ class EventLibraryWidget(QtWidgets.QWidget):
         for i, event in enumerate(filtered_events):
             # 0: Checkbox
             checkItem = QtWidgets.QTableWidgetItem()
-            checkItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            checkItem.setFlags(ITEM_FLAG_CHECKABLE | ITEM_FLAG_ENABLED | ITEM_FLAG_SELECTABLE)
             if event.id in self.checked_event_ids:
-                checkItem.setCheckState(QtCore.Qt.Checked)
+                checkItem.setCheckState(CHECKED)
             else:
-                checkItem.setCheckState(QtCore.Qt.Unchecked)
+                checkItem.setCheckState(UNCHECKED)
             self.table.setItem(i, 0, checkItem)
 
             # 1: Name + Icon
             item = QtWidgets.QTableWidgetItem(event.name)
-            item.setData(QtCore.Qt.UserRole, event)  # Store event object
+            item.setData(USER_ROLE, event)  # Store event object
             icon_alias = self.get_icon_alias(event.event_type.id)
             if icon_alias:
                 item.setIcon(QtGui.QIcon(f":plugins/qris_toolbar/{icon_alias}"))
@@ -217,7 +233,7 @@ class EventLibraryWidget(QtWidgets.QWidget):
             sort_key = (0, 0, 0)
             if event.start:
                 sort_key = (event.start.year or 0, event.start.month or 0, event.start.day or 0)
-            date_item.setData(QtCore.Qt.UserRole, sort_key)
+            date_item.setData(USER_ROLE, sort_key)
             self.table.setItem(i, 3, date_item)
 
             # 4: Description
@@ -288,8 +304,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
         # Select all VISIBLE events
         self.table.blockSignals(True)
         for i in range(self.table.rowCount()):
-            self.table.item(i, 0).setCheckState(QtCore.Qt.Checked)
-            event = self.table.item(i, 1).data(QtCore.Qt.UserRole)
+            self.table.item(i, 0).setCheckState(CHECKED)
+            event = self.table.item(i, 1).data(USER_ROLE)
             self.checked_event_ids.add(event.id)
         self.table.blockSignals(False)
         self.on_event_checked()
@@ -298,8 +314,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
         # Deselect all VISIBLE events
         self.table.blockSignals(True)
         for i in range(self.table.rowCount()):
-            self.table.item(i, 0).setCheckState(QtCore.Qt.Unchecked)
-            event = self.table.item(i, 1).data(QtCore.Qt.UserRole)
+            self.table.item(i, 0).setCheckState(UNCHECKED)
+            event = self.table.item(i, 1).data(USER_ROLE)
             if event.id in self.checked_event_ids:
                 self.checked_event_ids.remove(event.id)
         self.table.blockSignals(False)
@@ -312,8 +328,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
     def on_item_changed(self, item):
         if item.column() == 0:
             row = item.row()
-            event = self.table.item(row, 1).data(QtCore.Qt.UserRole)
-            if item.checkState() == QtCore.Qt.Checked:
+            event = self.table.item(row, 1).data(USER_ROLE)
+            if item.checkState() == CHECKED:
                 self.checked_event_ids.add(event.id)
             else:
                 if event.id in self.checked_event_ids:
@@ -378,14 +394,14 @@ class EventLibraryWidget(QtWidgets.QWidget):
         header = self.table.horizontalHeader()
 
         # New default order is Ascending
-        new_order = QtCore.Qt.AscendingOrder
+        new_order = ASCENDING_ORDER
 
         # If we are already sorting by this column, toggle the order
         if self.current_sort_col == logicalIndex:
-            if self.current_sort_order == QtCore.Qt.AscendingOrder:
-                new_order = QtCore.Qt.DescendingOrder
+            if self.current_sort_order == ASCENDING_ORDER:
+                new_order = DESCENDING_ORDER
             else:
-                new_order = QtCore.Qt.AscendingOrder
+                new_order = ASCENDING_ORDER
 
         # Update state
         self.current_sort_col = logicalIndex
@@ -410,8 +426,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
 
         self.btn_filter_type = QtWidgets.QToolButton()
         self.btn_filter_type.setText("All Types")
-        self.btn_filter_type.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.btn_filter_type.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        self.btn_filter_type.setPopupMode(TOOL_BTN_INSTANT_POPUP)
+        self.btn_filter_type.setToolButtonStyle(TOOL_BTN_TEXT_ONLY)
         self.btn_filter_type.setToolTip("Filter by event type")
         self.menu_filter_type = QtWidgets.QMenu(self.btn_filter_type)
         self.btn_filter_type.setMenu(self.menu_filter_type)
@@ -442,8 +458,8 @@ class EventLibraryWidget(QtWidgets.QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.itemChanged.connect(self.on_item_changed)
         # Single Selection for HIGHLIGHTING
-        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
+        self.table.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
 
         if self.allow_reorder:
             self.table.setSortingEnabled(False)

@@ -5,6 +5,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.utils import iface
 
+from ...compat import QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION
 from ...model.db_item import CheckableDBItemModel, DBItem, DBItemModel
 from ...model.project import Project
 from ...model.sample_frame import SampleFrame, get_sample_frame_ids
@@ -147,8 +148,8 @@ class SampleFrameWidget(QtWidgets.QWidget):
         self.vert.addWidget(self.cbo_sample_frame)
 
         self.lst_sample_frame_features = QtWidgets.QListView(self)
-        self.lst_sample_frame_features.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.lst_sample_frame_features.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.lst_sample_frame_features.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
+        self.lst_sample_frame_features.setSelectionMode(QABSTRACTITEMVIEW_NO_SELECTION)
         self.vert.addWidget(self.lst_sample_frame_features)
 
         self.horiz_sample_frame_buttons = QtWidgets.QHBoxLayout(self)

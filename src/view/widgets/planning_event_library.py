@@ -1,7 +1,12 @@
 from typing import Optional
 
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 
+from ...compat import (
+    TOOL_BTN_INSTANT_POPUP,
+    TOOL_BTN_TEXT_BESIDE,
+    USER_ROLE,
+)
 from ...model.db_item import DBItem, DBItemModel
 from .event_library import EventLibraryWidget, SortableTableWidgetItem
 
@@ -39,8 +44,8 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
 
         self.btn_advanced = QtWidgets.QToolButton(self)
         self.btn_advanced.setText("Advanced Filters")
-        self.btn_advanced.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.btn_advanced.setPopupMode(TOOL_BTN_INSTANT_POPUP)
+        self.btn_advanced.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
 
         self.menu_advanced = QtWidgets.QMenu(self.btn_advanced)
         self.advanced_filter_group = QtWidgets.QActionGroup(self)
@@ -71,7 +76,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
 
         # 4. Dynamic Filters
         for row_idx in range(self.rep_model.rowCount(None)):
-            item: DBItem = self.rep_model.data(self.rep_model.index(row_idx), QtCore.Qt.UserRole)
+            item: DBItem = self.rep_model.data(self.rep_model.index(row_idx), USER_ROLE)
             if item.id == 0:
                 continue
 
@@ -115,7 +120,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
 
         # Add buttons for each active representation (likely just Existing/Proposed)
         for row_idx in range(self.rep_model.rowCount(None)):
-            item: DBItem = self.rep_model.data(self.rep_model.index(row_idx), QtCore.Qt.UserRole)
+            item: DBItem = self.rep_model.data(self.rep_model.index(row_idx), USER_ROLE)
             if item.id == 0:
                 continue  # Skip None
 
@@ -182,7 +187,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
 
             # Set a dummy item for potential sorting or data retrieval
             sortItem = QtWidgets.QTableWidgetItem()
-            sortItem.setData(QtCore.Qt.UserRole, current_rep_id)
+            sortItem.setData(USER_ROLE, current_rep_id)
             self.table.setItem(i, 0, sortItem)
 
             font = QtGui.QFont()
@@ -191,7 +196,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
 
             # 1: Name + Icon
             item = QtWidgets.QTableWidgetItem(event.name)
-            item.setData(QtCore.Qt.UserRole, event)
+            item.setData(USER_ROLE, event)
             icon_alias = self.get_icon_alias(event.event_type.id)
             if icon_alias:
                 item.setIcon(QtGui.QIcon(f":plugins/qris_toolbar/{icon_alias}"))
@@ -203,7 +208,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
             sort_key = (0, 0, 0)
             if event.start:
                 sort_key = (event.start.year or 0, event.start.month or 0, event.start.day or 0)
-            date_item.setData(QtCore.Qt.UserRole, sort_key)
+            date_item.setData(USER_ROLE, sort_key)
             date_item.setFont(font)
             self.table.setItem(i, 2, date_item)
 
@@ -225,7 +230,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
 
     def on_representation_changed(self, event, index):
         # Retrieve the rep ID from the model using the index
-        rep_db_item: DBItem = self.rep_model.data(self.rep_model.index(index), QtCore.Qt.UserRole)
+        rep_db_item: DBItem = self.rep_model.data(self.rep_model.index(index), USER_ROLE)
 
         if rep_db_item:
             self.event_representations[event.id] = rep_db_item.id
@@ -295,7 +300,7 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
             # Find name
             idx = self.rep_model.getItemIndexById(r_id)
             if idx is not None:
-                item = self.rep_model.data(self.rep_model.index(idx), QtCore.Qt.UserRole)
+                item = self.rep_model.data(self.rep_model.index(idx), USER_ROLE)
                 name = item.name
                 counts[name] = counts.get(name, 0) + 1
 
@@ -337,14 +342,14 @@ class PlanningEventLibraryWidget(EventLibraryWidget):
         # Try finding 'Existing' explicitly
         idx = self.rep_model.getItemIndexByName("Existing")
         if idx is not None:
-            item = self.rep_model.data(self.rep_model.index(idx), QtCore.Qt.UserRole)
+            item = self.rep_model.data(self.rep_model.index(idx), USER_ROLE)
             target_rep = item.id
         else:
             # Fallback: check if hardcoded 1 is valid, otherwise grab first available
             if self.rep_model.getItemIndexById(1) is None:
                 if self.rep_model.rowCount(None) > 1:
                     # Index 0 is 'None' (ID 0), so Index 1 is the first real option
-                    item = self.rep_model.data(self.rep_model.index(1), QtCore.Qt.UserRole)
+                    item = self.rep_model.data(self.rep_model.index(1), USER_ROLE)
                     target_rep = item.id
 
         new_map = {}
