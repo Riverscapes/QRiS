@@ -3,6 +3,21 @@ from typing import Optional
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ...compat import (
+    HEADER_STRETCH,
+    ITEM_FLAG_EDITABLE,
+    ITEM_FLAG_ENABLED,
+    ITEM_FLAG_SELECTABLE,
+    MSGBOX_NO,
+    MSGBOX_YES,
+    QABSTRACTITEMVIEW_DOUBLE_CLICKED,
+    QABSTRACTITEMVIEW_EDIT_KEY_PRESSED,
+    QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SELECTED_CLICKED,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+)
+
 
 class MetadataWidget(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QDialog, json_meta: Optional[str] = None, new_keys: Optional[list] = None):
@@ -82,11 +97,11 @@ class MetadataWidget(QtWidgets.QWidget):
         self.table.setColumnCount(2)
         self.table.setRowCount(0)
         self.table.setHorizontalHeaderLabels(["Key", "Value"])
-        self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, HEADER_STRETCH)
         self.table.verticalHeader().setVisible(False)
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.table.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked | QtWidgets.QAbstractItemView.SelectedClicked | QtWidgets.QAbstractItemView.EditKeyPressed)
-        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.table.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.table.setEditTriggers(QABSTRACTITEMVIEW_DOUBLE_CLICKED | QABSTRACTITEMVIEW_SELECTED_CLICKED | QABSTRACTITEMVIEW_EDIT_KEY_PRESSED)
+        self.table.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
         self.table.setAlternatingRowColors(True)
         self.table.setSortingEnabled(True)
 
@@ -144,9 +159,9 @@ class MetadataWidget(QtWidgets.QWidget):
                 self.table.insertRow(self.table.rowCount())
                 key_item = QtWidgets.QTableWidgetItem(key)
                 key_item.setForeground(QtGui.QBrush(QtGui.QColor(102, 102, 102)))
-                key_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                key_item.setFlags(ITEM_FLAG_ENABLED | ITEM_FLAG_SELECTABLE)
                 self.table.setItem(self.table.rowCount() - 1, 0, key_item)
-                self.table.item(self.table.rowCount() - 1, 0).setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                self.table.item(self.table.rowCount() - 1, 0).setFlags(ITEM_FLAG_ENABLED | ITEM_FLAG_SELECTABLE)
                 label_widget = MetadataValueLabel(str(value), editable=False, is_system=True)
                 self.table.setCellWidget(self.table.rowCount() - 1, 1, label_widget)
 
@@ -156,11 +171,11 @@ class MetadataWidget(QtWidgets.QWidget):
             self._attribute_table.setColumnCount(2)
             self._attribute_table.setRowCount(0)
             self._attribute_table.setHorizontalHeaderLabels(["Attribute", "Value"])
-            self._attribute_table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+            self._attribute_table.horizontalHeader().setSectionResizeMode(1, HEADER_STRETCH)
             self._attribute_table.verticalHeader().setVisible(False)
-            self._attribute_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-            self._attribute_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-            self._attribute_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            self._attribute_table.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+            self._attribute_table.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
+            self._attribute_table.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
             self._attribute_table.setAlternatingRowColors(True)
             self._attribute_table.setSortingEnabled(True)
             for key, value in self.metadata["attributes"].items():
@@ -200,7 +215,7 @@ class MetadataWidget(QtWidgets.QWidget):
 
         # Create a new QTableWidgetItem for the key column
         key_item = QtWidgets.QTableWidgetItem("")
-        key_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
+        key_item.setFlags(ITEM_FLAG_ENABLED | ITEM_FLAG_SELECTABLE | ITEM_FLAG_EDITABLE)
         self.table.setItem(self.table.rowCount() - 1, 0, key_item)
 
         # Set the cell widget for the value column
@@ -277,10 +292,10 @@ class MetadataWidget(QtWidgets.QWidget):
                 self,
                 f"Missing Metadata Value{s}",
                 f"You have not provided a value for the following suggested metadata:\n\n{', '.join(missing_keys)}.\n\nDo you want to remove them and continue?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                QtWidgets.QMessageBox.No,
+                MSGBOX_YES | MSGBOX_NO,
+                MSGBOX_NO,
             )
-            if result == QtWidgets.QMessageBox.Yes:
+            if result == MSGBOX_YES:
                 for key in missing_keys:
                     for row in range(self.table.rowCount()):
                         if self.table.item(row, 0).text() == key:
@@ -324,7 +339,7 @@ class CustomLineEdit(QtWidgets.QLineEdit):
         super().__init__(*args, **kwargs)
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+        if event.key() == QtCore.Qt.Key.Key_Return or event.key() == QtCore.Qt.Key.Key_Enter:
             self.clearFocus()  # Finish editing
         else:
             super().keyPressEvent(event)

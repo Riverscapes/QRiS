@@ -11,12 +11,15 @@ other guards in individual source files — import from this module instead.
 from qgis.PyQt.QtCore import QMetaType, Qt, QVariant
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
+    QAbstractScrollArea,
+    QDialog,
     QDialogButtonBox,
     QFrame,
     QHeaderView,
     QLineEdit,
     QMessageBox,
     QSizePolicy,
+    QStyle,
 )
 
 try:
@@ -35,6 +38,7 @@ try:
     HORIZONTAL = Qt.Orientation.Horizontal
     VERTICAL = Qt.Orientation.Vertical
     ASCENDING_ORDER = Qt.SortOrder.AscendingOrder
+    DESCENDING_ORDER = Qt.SortOrder.DescendingOrder
     LEFT_DOCK = Qt.DockWidgetArea.LeftDockWidgetArea
     RIGHT_DOCK = Qt.DockWidgetArea.RightDockWidgetArea
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonStyle.ToolButtonTextBesideIcon
@@ -50,6 +54,7 @@ try:
     CHECK_STATE_ROLE = Qt.ItemDataRole.CheckStateRole
     FOREGROUND_ROLE = Qt.ItemDataRole.ForegroundRole
     ITEM_FLAG_EDITABLE = Qt.ItemFlag.ItemIsEditable
+    NO_ITEM_FLAGS = Qt.ItemFlag.NoItemFlags
     COLOR_BLUE = Qt.GlobalColor.blue
     COLOR_GRAY = Qt.GlobalColor.gray
     MATCH_EXACTLY = Qt.MatchFlag.MatchExactly
@@ -73,6 +78,7 @@ except AttributeError:
     HORIZONTAL = Qt.Horizontal  # type: ignore[attr-defined]
     VERTICAL = Qt.Vertical  # type: ignore[attr-defined]
     ASCENDING_ORDER = Qt.AscendingOrder  # type: ignore[attr-defined]
+    DESCENDING_ORDER = Qt.DescendingOrder  # type: ignore[attr-defined]
     LEFT_DOCK = Qt.LeftDockWidgetArea  # type: ignore[attr-defined]
     RIGHT_DOCK = Qt.RightDockWidgetArea  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonTextBesideIcon  # type: ignore[attr-defined]
@@ -88,6 +94,7 @@ except AttributeError:
     CHECK_STATE_ROLE = Qt.CheckStateRole  # type: ignore[attr-defined]
     FOREGROUND_ROLE = Qt.ForegroundRole  # type: ignore[attr-defined]
     ITEM_FLAG_EDITABLE = Qt.ItemIsEditable  # type: ignore[attr-defined]
+    NO_ITEM_FLAGS = Qt.NoItemFlags  # type: ignore[attr-defined]
     COLOR_BLUE = Qt.blue  # type: ignore[attr-defined]
     COLOR_GRAY = Qt.gray  # type: ignore[attr-defined]
     MATCH_EXACTLY = Qt.MatchExactly  # type: ignore[attr-defined]
@@ -224,6 +231,19 @@ try:
     QABSTRACTITEMVIEW_EDIT_KEY_PRESSED = QAbstractItemView.EditTrigger.EditKeyPressed
     QABSTRACTITEMVIEW_SELECT_ROWS = QAbstractItemView.SelectionBehavior.SelectRows
     QABSTRACTITEMVIEW_SINGLE_SELECTION = QAbstractItemView.SelectionMode.SingleSelection
+    QABSTRACTITEMVIEW_EXTENDED_SELECTION = QAbstractItemView.SelectionMode.ExtendedSelection
+    QABSTRACTITEMVIEW_NO_SELECTION = QAbstractItemView.SelectionMode.NoSelection
+    QABSTRACTITEMVIEW_INTERNAL_MOVE = QAbstractItemView.DragDropMode.InternalMove
+    QABSTRACTITEMVIEW_SELECT_ITEMS = QAbstractItemView.SelectionMode.SelectItems
+    MOVE_ACTION = Qt.DropAction.MoveAction
+    DLG_ACCEPTED = QDialog.DialogCode.Accepted
+    MSGBOX_YES = QMessageBox.StandardButton.Yes
+    MSGBOX_NO = QMessageBox.StandardButton.No
+    MSGBOX_QUESTION = QMessageBox.Icon.Question
+    SP_CRITICAL = QStyle.StandardPixmap.SP_MessageBoxCritical
+    SP_WARNING = QStyle.StandardPixmap.SP_MessageBoxWarning
+    SP_INFO = QStyle.StandardPixmap.SP_MessageBoxInformation
+    ADJUST_TO_CONTENTS = QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents
 except AttributeError:
     # Qt 5 / PyQt5 — flat enum
     QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS = QAbstractItemView.NoEditTriggers  # type: ignore[attr-defined]
@@ -232,6 +252,19 @@ except AttributeError:
     QABSTRACTITEMVIEW_EDIT_KEY_PRESSED = QAbstractItemView.EditKeyPressed  # type: ignore[attr-defined]
     QABSTRACTITEMVIEW_SELECT_ROWS = QAbstractItemView.SelectRows  # type: ignore[attr-defined]
     QABSTRACTITEMVIEW_SINGLE_SELECTION = QAbstractItemView.SingleSelection  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_EXTENDED_SELECTION = QAbstractItemView.ExtendedSelection  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_NO_SELECTION = QAbstractItemView.NoSelection  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_INTERNAL_MOVE = QAbstractItemView.InternalMove  # type: ignore[attr-defined]
+    QABSTRACTITEMVIEW_SELECT_ITEMS = QAbstractItemView.SelectItems  # type: ignore[attr-defined]
+    MOVE_ACTION = Qt.MoveAction  # type: ignore[attr-defined]
+    DLG_ACCEPTED = QDialog.Accepted  # type: ignore[attr-defined]
+    MSGBOX_YES = QMessageBox.Yes  # type: ignore[attr-defined]
+    MSGBOX_NO = QMessageBox.No  # type: ignore[attr-defined]
+    MSGBOX_QUESTION = QMessageBox.Question  # type: ignore[attr-defined]
+    SP_CRITICAL = QStyle.SP_MessageBoxCritical  # type: ignore[attr-defined]
+    SP_WARNING = QStyle.SP_MessageBoxWarning  # type: ignore[attr-defined]
+    SP_INFO = QStyle.SP_MessageBoxInformation  # type: ignore[attr-defined]
+    ADJUST_TO_CONTENTS = QAbstractScrollArea.AdjustToContents  # type: ignore[attr-defined]
 
 
 # ── QLineEdit action positions ───────────────────────────────────────────────

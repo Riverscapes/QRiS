@@ -2,6 +2,21 @@ from typing import Optional
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
+from ...compat import (
+    ADJUST_TO_CONTENTS,
+    CHECKED,
+    CUSTOM_CONTEXT_MENU,
+    HEADER_INTERACTIVE,
+    HEADER_RESIZE_TO_CONTENTS,
+    HEADER_STRETCH,
+    ITEM_FLAG_ENABLED,
+    QABSTRACTITEMVIEW_SELECT_ROWS,
+    QABSTRACTITEMVIEW_SINGLE_SELECTION,
+    TOOL_BTN_INSTANT_POPUP,
+    TOOL_BTN_TEXT_BESIDE,
+    UNCHECKED,
+    USER_ROLE,
+)
 from ...model.analysis import Analysis
 from ...model.analysis_metric import AnalysisMetric
 from ...model.metric import Metric
@@ -184,7 +199,7 @@ class MetricLibrary(QtWidgets.QWidget):
         usage_display = ["None", "Metric", "Indicator"][index] if 0 <= index <= 2 else "None"
         while iterator.value():
             item = iterator.value()
-            metric = item.data(0, QtCore.Qt.UserRole)
+            metric = item.data(0, USER_ROLE)
             if metric and metric.id == metric_id:
                 item.setText(3, usage_display)
 
@@ -200,7 +215,7 @@ class MetricLibrary(QtWidgets.QWidget):
             item = self.metricsTable.item(row, 0)
             if not item:
                 continue
-            metric = item.data(QtCore.Qt.UserRole)
+            metric = item.data(USER_ROLE)
             if metric and metric.id == metric_id:
                 usage_item = self.metricsTable.item(row, 5)
                 if usage_item:
@@ -276,8 +291,8 @@ class MetricLibrary(QtWidgets.QWidget):
 
         self.btn_advanced = QtWidgets.QToolButton()
         self.btn_advanced.setText("Advanced Filters")
-        self.btn_advanced.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.btn_advanced.setPopupMode(TOOL_BTN_INSTANT_POPUP)
+        self.btn_advanced.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
 
         self.menu_advanced = QtWidgets.QMenu(self.btn_advanced)
 
@@ -349,14 +364,14 @@ class MetricLibrary(QtWidgets.QWidget):
         headerItem.setToolTip(4, "Description of the metric.")
 
         header = self.metricsTree.header()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Interactive)
-        self.metricsTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.metricsTree.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.metricsTree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        header.setSectionResizeMode(0, HEADER_STRETCH)
+        header.setSectionResizeMode(1, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(2, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(3, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(4, HEADER_INTERACTIVE)
+        self.metricsTree.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.metricsTree.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
+        self.metricsTree.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.metricsTree.customContextMenuRequested.connect(self.open_tree_context_menu)
         self.metricsTree.setSortingEnabled(True)
         self.metricsTree.setColumnHidden(2, False)
@@ -370,7 +385,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.vboxTable.setContentsMargins(0, 0, 0, 0)
 
         self.metricsTable = QtWidgets.QTableWidget(0, 7)
-        self.metricsTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.metricsTable.setSizeAdjustPolicy(ADJUST_TO_CONTENTS)
         self.metricsTable.setHorizontalHeaderLabels(["Protocol", "Group", "Metric", "Version (Status)", "Availability", "Usage", "Description"])
 
         # Header Tooltips
@@ -388,17 +403,17 @@ class MetricLibrary(QtWidgets.QWidget):
                 self.metricsTable.horizontalHeaderItem(i).setToolTip(tip)
 
         header = self.metricsTable.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(6, QtWidgets.QHeaderView.Interactive)
+        header.setSectionResizeMode(0, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(1, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(2, HEADER_STRETCH)
+        header.setSectionResizeMode(3, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(4, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(5, HEADER_RESIZE_TO_CONTENTS)
+        header.setSectionResizeMode(6, HEADER_INTERACTIVE)
         self.metricsTable.verticalHeader().setVisible(False)
-        self.metricsTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.metricsTable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.metricsTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.metricsTable.setSelectionBehavior(QABSTRACTITEMVIEW_SELECT_ROWS)
+        self.metricsTable.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
+        self.metricsTable.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.metricsTable.customContextMenuRequested.connect(self.open_table_context_menu)
         self.metricsTable.setSortingEnabled(True)
         self.metricsTable.setColumnHidden(4, False)
@@ -507,7 +522,7 @@ class MetricLibrary(QtWidgets.QWidget):
         it = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
         while it.value():
             item = it.value()
-            metric = item.data(0, QtCore.Qt.UserRole)
+            metric = item.data(0, USER_ROLE)
             if metric:
                 status = self.get_metric_availability(metric)
                 item.setText(2, status)
@@ -518,7 +533,7 @@ class MetricLibrary(QtWidgets.QWidget):
         for row in range(self.metricsTable.rowCount()):
             metric_item = self.metricsTable.item(row, 0)
             if metric_item:
-                metric = metric_item.data(QtCore.Qt.UserRole)
+                metric = metric_item.data(USER_ROLE)
                 if metric:
                     status = self.get_metric_availability(metric)
                     # Column 4 is Availability
@@ -620,7 +635,7 @@ class MetricLibrary(QtWidgets.QWidget):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
         while iterator.value():
             item = iterator.value()
-            metric = item.data(0, QtCore.Qt.UserRole)
+            metric = item.data(0, USER_ROLE)
             if metric and metric.id == metric_id:
                 item.setText(2, status_text)
                 break
@@ -631,7 +646,7 @@ class MetricLibrary(QtWidgets.QWidget):
             metric_item = self.metricsTable.item(row, 0)
             if not metric_item:
                 continue
-            metric = metric_item.data(QtCore.Qt.UserRole)
+            metric = metric_item.data(USER_ROLE)
             if metric and metric.id == metric_id:
                 avail_item = self.metricsTable.item(row, 4)
                 if avail_item:
@@ -717,7 +732,7 @@ class MetricLibrary(QtWidgets.QWidget):
         unchecked_items = set()
         for i in range(self.cbo_filter_group.count()):
             item = self.cbo_filter_group.model().item(i)
-            if item.isCheckable() and item.checkState() == QtCore.Qt.Unchecked:
+            if item.isCheckable() and item.checkState() == UNCHECKED:
                 unchecked_items.add(item.text())
 
         # Determine available groups based on selected protocols
@@ -762,7 +777,7 @@ class MetricLibrary(QtWidgets.QWidget):
         for i in range(self.cbo_filter_group.count()):
             item = self.cbo_filter_group.model().item(i)
             if item.text() in unchecked_items:
-                item.setCheckState(QtCore.Qt.Unchecked)
+                item.setCheckState(UNCHECKED)
         self.cbo_filter_group.model().blockSignals(False)
         self.cbo_filter_group.updateText()  # Update text after restoring selections
 
@@ -867,9 +882,9 @@ class MetricLibrary(QtWidgets.QWidget):
 
     def clear_filters(self):
         self.txt_filter_search.clear()
-        self.cbo_filter_protocol.set_all_check_state(QtCore.Qt.Checked)
+        self.cbo_filter_protocol.set_all_check_state(CHECKED)
         # Groups will be reset by protocol change triggers usually, but explicit is better
-        self.cbo_filter_group.set_all_check_state(QtCore.Qt.Checked)
+        self.cbo_filter_group.set_all_check_state(CHECKED)
 
         self.act_limit_metrics.setChecked(False)
         self.act_show_all.setChecked(True)  # Resets the exclusive group to "All"
@@ -901,7 +916,7 @@ class MetricLibrary(QtWidgets.QWidget):
             iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
             while iterator.value():
                 item = iterator.value()
-                metric = item.data(0, QtCore.Qt.UserRole)
+                metric = item.data(0, USER_ROLE)
                 if metric and not item.isHidden():
                     visible_count += 1
                 iterator += 1
@@ -911,7 +926,7 @@ class MetricLibrary(QtWidgets.QWidget):
                 item = self.metricsTable.item(row, 0)
                 if not item:
                     continue
-                metric = item.data(QtCore.Qt.UserRole)
+                metric = item.data(USER_ROLE)
                 if metric:
                     show = self.should_show_metric(metric)
                     self.metricsTable.setRowHidden(row, not show)
@@ -922,7 +937,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
     def update_tree_item_visibility(self, item):
         # Leaf node check
-        metric = item.data(0, QtCore.Qt.UserRole)
+        metric = item.data(0, USER_ROLE)
         if metric:
             # It's a metric leaf
             visible = self.should_show_metric(metric)
@@ -995,7 +1010,7 @@ class MetricLibrary(QtWidgets.QWidget):
             # 3. Metric Leaf
             metric_item = QtWidgets.QTreeWidgetItem(current_parent)
             metric_item.setText(0, metric.name)
-            metric_item.setData(0, QtCore.Qt.UserRole, metric)
+            metric_item.setData(0, USER_ROLE, metric)
 
             font = self.get_metric_font(metric, level_id)
             metric_item.setFont(0, font)
@@ -1048,7 +1063,7 @@ class MetricLibrary(QtWidgets.QWidget):
         if not item:
             return
 
-        metric = item.data(0, QtCore.Qt.UserRole)
+        metric = item.data(0, USER_ROLE)
         menu = QtWidgets.QMenu()
         if metric:
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Metric Details", lambda: FrmLayerMetricDetails(self, self.qris_project, metric=metric).exec_())
@@ -1088,15 +1103,15 @@ class MetricLibrary(QtWidgets.QWidget):
             prot_display = protocol_map.get(metric.protocol_machine_code, metric.protocol_machine_code)
             prot_item = QtWidgets.QTableWidgetItem()
             prot_item.setText(prot_display)
-            prot_item.setData(QtCore.Qt.UserRole, metric)  # Storing metric here for retrieval
-            prot_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            prot_item.setData(USER_ROLE, metric)  # Storing metric here for retrieval
+            prot_item.setFlags(ITEM_FLAG_ENABLED)
             self.metricsTable.setItem(row, 0, prot_item)
 
             # Group
             group_item = QtWidgets.QTableWidgetItem()
             hierarchy = getattr(metric, "hierarchy", [])
             group_item.setText(" > ".join(hierarchy) if hierarchy else "")
-            group_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            group_item.setFlags(ITEM_FLAG_ENABLED)
             self.metricsTable.setItem(row, 1, group_item)
 
             # Metric
@@ -1105,7 +1120,7 @@ class MetricLibrary(QtWidgets.QWidget):
             font = self.get_metric_font(metric, level_id)
             label_item.setFont(font)
             self.metricsTable.setItem(row, 2, label_item)
-            label_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            label_item.setFlags(ITEM_FLAG_ENABLED)
 
             # Version (Status)
             status = getattr(metric, "status", "active")
@@ -1113,14 +1128,14 @@ class MetricLibrary(QtWidgets.QWidget):
             ver_item = QtWidgets.QTableWidgetItem()
             ver_item.setText(f"{ver_text} ({status})")
             ver_item.setFont(font)
-            ver_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            ver_item.setFlags(ITEM_FLAG_ENABLED)
             self.metricsTable.setItem(row, 3, ver_item)
 
             # Availability is computed lazily to keep initial form loading responsive.
             calc_status = ""
             calc_item = QtWidgets.QTableWidgetItem()
             calc_item.setText(calc_status)
-            calc_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            calc_item.setFlags(ITEM_FLAG_ENABLED)
             self.metricsTable.setItem(row, 4, calc_item)
 
             # Usage
@@ -1140,7 +1155,7 @@ class MetricLibrary(QtWidgets.QWidget):
 
             # Description
             desc_item = QtWidgets.QTableWidgetItem(metric.description)
-            desc_item.setFlags(QtCore.Qt.ItemIsEnabled)
+            desc_item.setFlags(ITEM_FLAG_ENABLED)
             desc_item.setToolTip(metric.description)
             self.metricsTable.setItem(row, 6, desc_item)
 
@@ -1158,7 +1173,7 @@ class MetricLibrary(QtWidgets.QWidget):
         if not metric_item:
             return
 
-        metric = metric_item.data(QtCore.Qt.UserRole)
+        metric = metric_item.data(USER_ROLE)
         if not metric:
             return
 
@@ -1210,7 +1225,7 @@ class MetricLibrary(QtWidgets.QWidget):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
         while iterator.value():
             item = iterator.value()
-            metric = item.data(0, QtCore.Qt.UserRole)
+            metric = item.data(0, USER_ROLE)
             if metric and metric.id in metrics_update_map:
                 new_idx = metrics_update_map[metric.id]
                 item.setText(3, usage_labels[new_idx] if 0 <= new_idx <= 2 else "None")  # Update sorting text
@@ -1234,7 +1249,7 @@ class MetricLibrary(QtWidgets.QWidget):
                 continue  # Should not happen
 
             # Metric is stored in Column 0 (Protocol) UserRole? YES.
-            metric = item.data(QtCore.Qt.UserRole)
+            metric = item.data(USER_ROLE)
 
             if metric and metric.id in metrics_update_map:
                 new_idx = metrics_update_map[metric.id]
@@ -1275,7 +1290,7 @@ class MetricLibrary(QtWidgets.QWidget):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.metricsTree)
         while iterator.value():
             item = iterator.value()
-            metric = item.data(0, QtCore.Qt.UserRole)
+            metric = item.data(0, USER_ROLE)
             if metric and metric.id in states:
                 new_idx = states[metric.id]
                 usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else "None"
@@ -1295,7 +1310,7 @@ class MetricLibrary(QtWidgets.QWidget):
             item = self.metricsTable.item(row, 0)
             if not item:
                 continue
-            metric = item.data(QtCore.Qt.UserRole)
+            metric = item.data(USER_ROLE)
             if metric and metric.id in states:
                 new_idx = states[metric.id]
                 usage_display = usage_labels[new_idx] if 0 <= new_idx <= 2 else "None"

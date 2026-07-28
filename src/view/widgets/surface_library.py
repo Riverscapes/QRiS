@@ -1,5 +1,6 @@
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
+from ...compat import USER_ROLE
 from ...model.project import Project
 from ...model.raster import Raster
 
@@ -27,7 +28,7 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
 
             # Store the entire Raster object in the first column using a custom role
             item = QtWidgets.QTableWidgetItem(surface.name)
-            item.setData(QtCore.Qt.UserRole, surface)
+            item.setData(USER_ROLE, surface)
             self.table.setItem(i, 1, item)
 
             # Set other surface properties in the table
@@ -59,7 +60,7 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
             # Skip the row with the "No surfaces available" message
             if self.table.item(i, 0) and self.table.item(i, 0).text() == "No surfaces have been loaded in this QRiS project":
                 continue
-            surface: Raster = self.table.item(i, 1).data(QtCore.Qt.UserRole)
+            surface: Raster = self.table.item(i, 1).data(USER_ROLE)
             if surface.id in selected_surfaces:
                 self.table.cellWidget(i, 0).setChecked(True)
 
@@ -72,7 +73,7 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
             if self.table.item(i, 0) and self.table.item(i, 0).text() == "No surfaces have been loaded in this QRiS project":
                 continue
             if self.table.cellWidget(i, 0).isChecked():
-                surface: Raster = self.table.item(i, 1).data(QtCore.Qt.UserRole)
+                surface: Raster = self.table.item(i, 1).data(USER_ROLE)
                 selected_surfaces.append(surface)
         return selected_surfaces
 
@@ -85,7 +86,7 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
             if self.table.item(i, 0) and self.table.item(i, 0).text() == "No surfaces have been loaded in this QRiS project":
                 continue
             if self.table.cellWidget(i, 0).isChecked():
-                surface: Raster = self.table.item(i, 1).data(QtCore.Qt.UserRole)
+                surface: Raster = self.table.item(i, 1).data(USER_ROLE)
                 selected_surfaces.append(surface.id)
         return selected_surfaces
 

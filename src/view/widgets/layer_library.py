@@ -1,8 +1,21 @@
 import os
 
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
+from ...compat import (
+    ALIGN_CENTER,
+    CHECKED,
+    CUSTOM_CONTEXT_MENU,
+    HEADER_FIXED,
+    HEADER_RESIZE_TO_CONTENTS,
+    HEADER_STRETCH,
+    QABSTRACTITEMVIEW_EXTENDED_SELECTION,
+    TOOL_BTN_INSTANT_POPUP,
+    TOOL_BTN_TEXT_BESIDE,
+    UNCHECKED,
+    USER_ROLE,
+)
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
 from ...model.layer import Layer
 from ...model.project import Project
@@ -67,9 +80,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             if item.isCheckable():
                 label = item.data()
                 if label in used_protocols:
-                    item.setCheckState(QtCore.Qt.Checked)
+                    item.setCheckState(CHECKED)
                 else:
-                    item.setCheckState(QtCore.Qt.Unchecked)
+                    item.setCheckState(UNCHECKED)
 
         model.blockSignals(False)
         self.cbo_filter_protocol.updateText()
@@ -82,7 +95,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         return self.layersTree.model()
 
     def add_selected_layers(self, item):
-        data = item.data(0, QtCore.Qt.UserRole)
+        data = item.data(0, USER_ROLE)
         # Compatibility handling
         if isinstance(data, tuple):
             p, layer = data
@@ -226,8 +239,8 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         # Advanced Filters Menu
         self.btn_advanced = QtWidgets.QToolButton()
         self.btn_advanced.setText("Advanced Filters")
-        self.btn_advanced.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.btn_advanced.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.btn_advanced.setPopupMode(TOOL_BTN_INSTANT_POPUP)
+        self.btn_advanced.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
 
         self.menu_advanced = QtWidgets.QMenu(self.btn_advanced)
 
@@ -256,13 +269,13 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
         self.layersTree = QtWidgets.QTreeWidget()
         self.layersTree.setHeaderLabels(["Layer", "", "Version", "Description"])
-        self.layersTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.layersTree.header().setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
-        self.layersTree.header().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        self.layersTree.header().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        self.layersTree.header().setSectionResizeMode(0, HEADER_STRETCH)
+        self.layersTree.header().setSectionResizeMode(1, HEADER_FIXED)
+        self.layersTree.header().setSectionResizeMode(2, HEADER_RESIZE_TO_CONTENTS)
+        self.layersTree.header().setSectionResizeMode(3, HEADER_RESIZE_TO_CONTENTS)
         self.layersTree.setColumnWidth(1, 30)
-        self.layersTree.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.layersTree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.layersTree.setSelectionMode(QABSTRACTITEMVIEW_EXTENDED_SELECTION)
+        self.layersTree.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.layersTree.customContextMenuRequested.connect(self.open_tree_context_menu)
         # Move Include column (Logical 1) to first visual position
         self.layersTree.header().moveSection(1, 0)
@@ -278,9 +291,9 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.layersTable.setHorizontalHeaderLabels(["", "Protocol", "Group", "Layer", "Version", "Description"])
         self.layersTable.verticalHeader().setVisible(False)
         header = self.layersTable.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
+        header.setSectionResizeMode(0, HEADER_FIXED)
         self.layersTable.setColumnWidth(0, 30)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(3, HEADER_STRETCH)
         self.layersTable.setSortingEnabled(True)
         self.vboxTable.addWidget(self.layersTable)
         self.stackedWidget.addWidget(self.pageTable)
@@ -348,7 +361,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
     def clear_filters(self):
         self.txt_filter_search.clear()
-        self.cbo_filter_protocol.set_all_check_state(QtCore.Qt.Checked)
+        self.cbo_filter_protocol.set_all_check_state(CHECKED)
         self.act_limit_included.setChecked(False)
         self.update_visibility()
 
@@ -406,7 +419,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         # Update Table
         visible_rows = 0
         for row in range(self.layersTable.rowCount()):
-            data = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole)
+            data = self.layersTable.item(row, 1).data(USER_ROLE)
             if data:
                 p, layer, _key = data
                 show = self.should_show_layer(p, layer)
@@ -434,7 +447,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.update_counts()
 
     def update_tree_item_visibility(self, item):
-        data = item.data(0, QtCore.Qt.UserRole)
+        data = item.data(0, USER_ROLE)
         if isinstance(data, list) or isinstance(data, tuple):
             # It's a layer leaf: (ProtocolDefinition, LayerDefinition)
             p, layer = data
@@ -464,7 +477,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             item.setToolTip(0, text)
             item.setExpanded(self.dce_event is not None)
             if data:
-                item.setData(0, QtCore.Qt.UserRole, data)
+                item.setData(0, USER_ROLE, data)
             return item
 
         for p, layer in self.available_layers:
@@ -489,7 +502,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             layer_node.setIcon(0, self.get_geom_icon(layer.geom_type))
             layer_node.setText(2, str(layer.version))
             layer_node.setText(3, layer.description or "")
-            layer_node.setData(0, QtCore.Qt.UserRole, (p, layer))
+            layer_node.setData(0, USER_ROLE, (p, layer))
 
             layer_node.setToolTip(0, layer.label)
             layer_node.setToolTip(2, str(layer.version))
@@ -509,7 +522,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             # 1: Protocol
             item_prot = QtWidgets.QTableWidgetItem(p.label)
             item_prot.setToolTip(p.label)
-            item_prot.setData(QtCore.Qt.UserRole, (p, layer, key))
+            item_prot.setData(USER_ROLE, (p, layer, key))
             self.layersTable.setItem(i, 1, item_prot)
 
             # 0: Include (Checkbox)
@@ -562,7 +575,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         container = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(QtCore.Qt.AlignCenter)
+        layout.setAlignment(ALIGN_CENTER)
 
         chk = QtWidgets.QCheckBox()
         chk.setChecked(is_checked)
@@ -573,10 +586,10 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         if isinstance(parent_widget, QtWidgets.QTreeWidget):
             parent_widget.setItemWidget(item_or_row, col, container)
             # Store reference to chk for updates?
-            item_or_row.setData(col, QtCore.Qt.UserRole, chk)
+            item_or_row.setData(col, USER_ROLE, chk)
         else:
             parent_widget.setCellWidget(item_or_row, col, container)
-            parent_widget.item(item_or_row, 1).setData(QtCore.Qt.UserRole + 1, chk)  # Store ref on protocol column item
+            parent_widget.item(item_or_row, 1).setData(USER_ROLE + 1, chk)  # Store ref on protocol column item
 
     def on_layer_toggled(self, key, checked):
         self.current_layers_state[key] = checked
@@ -597,13 +610,13 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         root = self.layersTree.invisibleRootItem()
 
         def visit(item):
-            data = item.data(0, QtCore.Qt.UserRole)
+            data = item.data(0, USER_ROLE)
             if isinstance(data, tuple):  # Leaf
                 p, layer = data
                 if self.get_layer_unique_key(p, layer) == key:
                     self.update_item_style(item, is_included)
                     # Update Checkbox state if changed programmatically (batch)
-                    chk = item.data(1, QtCore.Qt.UserRole)
+                    chk = item.data(1, USER_ROLE)
                     if chk and chk.isChecked() != is_included:
                         chk.blockSignals(True)
                         chk.setChecked(is_included)
@@ -618,13 +631,13 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         # Update Table
         self.layersTable.setSortingEnabled(False)  # Prevent jumping
         for row in range(self.layersTable.rowCount()):
-            data = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole)
+            data = self.layersTable.item(row, 1).data(USER_ROLE)
             if data:
                 _p, _l, k = data
                 if k == key:
                     self.update_table_row_style(row, is_included)
                     # Checkbox
-                    chk = self.layersTable.item(row, 1).data(QtCore.Qt.UserRole + 1)
+                    chk = self.layersTable.item(row, 1).data(USER_ROLE + 1)
                     if chk and chk.isChecked() != is_included:
                         chk.blockSignals(True)
                         chk.setChecked(is_included)
@@ -653,7 +666,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             def recurse(item):
                 if item.isHidden():
                     return
-                data = item.data(0, QtCore.Qt.UserRole)
+                data = item.data(0, USER_ROLE)
                 if isinstance(data, tuple):
                     p, layer = data
                     key = self.get_layer_unique_key(p, layer)
@@ -667,7 +680,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
             for row in range(self.layersTable.rowCount()):
                 if self.layersTable.isRowHidden(row):
                     continue
-                data = self.layersTable.item(row, 0).data(QtCore.Qt.UserRole)
+                data = self.layersTable.item(row, 0).data(USER_ROLE)
                 if data:
                     _p, _layer, key = data
                     self.current_layers_state[key] = include_state
@@ -700,7 +713,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         if not item:
             return
 
-        data = item.data(0, QtCore.Qt.UserRole)
+        data = item.data(0, USER_ROLE)
         menu = QtWidgets.QMenu()
 
         if isinstance(data, tuple):  # Layer
@@ -724,7 +737,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
 
     def set_children_state(self, parent_item, state):
         def recurse(item):
-            data = item.data(0, QtCore.Qt.UserRole)
+            data = item.data(0, USER_ROLE)
             if isinstance(data, tuple):
                 p, layer = data
                 key = self.get_layer_unique_key(p, layer)

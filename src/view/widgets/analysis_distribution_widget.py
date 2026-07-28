@@ -9,6 +9,19 @@ from qgis.core import Qgis, QgsCoordinateTransform, QgsDistanceArea, QgsFeatureR
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
+from ...compat import (
+    CHECKED,
+    DLG_ACCEPTED,
+    DLGBTN_CANCEL,
+    DLGBTN_OK,
+    HORIZONTAL,
+    ITEM_FLAG_CHECKABLE,
+    SPSZ_EXPANDING,
+    SPSZ_MINIMUM,
+    TOOL_BTN_INSTANT_POPUP,
+    UNCHECKED,
+    USER_ROLE,
+)
 from ...lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.project import Project
@@ -23,7 +36,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
     Layout: Horizontal Split (Left=Inputs, Right=Chart)
     """
 
-    def __init__(self, iface, qris_project: Project, map_manager, parent=None, orientation=QtCore.Qt.Horizontal):
+    def __init__(self, iface, qris_project: Project, map_manager, parent=None, orientation=HORIZONTAL):
         super().__init__(parent)
         self.setObjectName("DistributionAnalysisWidget")
         self.iface = iface
@@ -65,16 +78,16 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
     def setupUi(self):
         # Main Layout
         self.splitter = None
-        if self.orientation == QtCore.Qt.Horizontal:
+        if self.orientation == HORIZONTAL:
             self.main_layout = QtWidgets.QHBoxLayout(self)
-            self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+            self.splitter = QtWidgets.QSplitter(HORIZONTAL)
             self.main_layout.addWidget(self.splitter)
         else:
             self.main_layout = QtWidgets.QVBoxLayout(self)
 
         # --- Left Side: Inputs ---
         self.input_container = QtWidgets.QWidget()
-        if self.orientation == QtCore.Qt.Horizontal:
+        if self.orientation == HORIZONTAL:
             self.input_container.setMinimumWidth(300)
 
         # Use a QVBox for the left side to allow pushing items to top
@@ -173,17 +186,17 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         # Interactive Map Checkbox
         self.chkInteractive = QtWidgets.QCheckBox("Interactive Map")
         # Checked by default only for horizontal (dock) layout
-        self.chkInteractive.setChecked(self.orientation == QtCore.Qt.Horizontal)
+        self.chkInteractive.setChecked(self.orientation == HORIZONTAL)
         self.chkInteractive.stateChanged.connect(self.toggle_interactive)
 
         # Hide for Vertical layout (Dialog)
-        if self.orientation != QtCore.Qt.Horizontal:
+        if self.orientation != HORIZONTAL:
             self.chkInteractive.setVisible(False)
 
         self.form_layout.addRow("", self.chkInteractive)
 
         self.layout_inputs.addLayout(self.form_layout)
-        if self.orientation == QtCore.Qt.Horizontal:
+        if self.orientation == HORIZONTAL:
             self.layout_inputs.addStretch()  # Push inputs to top
 
         if self.splitter:
@@ -228,10 +241,10 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
 
         self.btnUnits = QtWidgets.QToolButton()
         self.btnUnits.setText("Units")
-        self.btnUnits.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.btnUnits.setPopupMode(TOOL_BTN_INSTANT_POPUP)
         self.hbox_bottom.addWidget(self.btnUnits)
 
-        self.hbox_bottom.addItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        self.hbox_bottom.addItem(QtWidgets.QSpacerItem(40, 20, SPSZ_EXPANDING, SPSZ_MINIMUM))
 
         # Add Export Widget
         self.export_widget = ChartExportWidget(
@@ -446,7 +459,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 is_polygon = "Polygon" in g_type
 
         dlg = ChartSettingsDialog(self, self.chart_font, self.chart_show_pct, self.chart_pct_basis, is_polygon)
-        if dlg.exec_() == QtWidgets.QDialog.Accepted:
+        if dlg.exec_() == DLG_ACCEPTED:
             settings = dlg.get_settings()
             self.chart_font = settings["font"]
             self.chart_font_family = self.chart_font.family()
@@ -835,20 +848,20 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.draw_chart()
 
     def select_all_attributes(self):
-        self.set_attributes_check_state(QtCore.Qt.Checked)
+        self.set_attributes_check_state(CHECKED)
 
     def select_none_attributes(self):
-        self.set_attributes_check_state(QtCore.Qt.Unchecked)
+        self.set_attributes_check_state(UNCHECKED)
 
     def select_non_empty_attributes(self):
         self.lstAttributes.blockSignals(True)
         for i in range(self.lstAttributes.count()):
             item = self.lstAttributes.item(i)
-            key = item.data(QtCore.Qt.UserRole)
+            key = item.data(USER_ROLE)
             if key is None:
                 key = item.text()
             feature_count = self.current_attribute_feature_counts.get(str(key), 0)
-            state = QtCore.Qt.Checked if feature_count > 0 else QtCore.Qt.Unchecked
+            state = CHECKED if feature_count > 0 else UNCHECKED
             item.setCheckState(state)
         self.lstAttributes.blockSignals(False)
         self.draw_chart()
@@ -887,8 +900,8 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         if not is_fresh:
             for i in range(self.lstAttributes.count()):
                 item = self.lstAttributes.item(i)
-                if item.checkState() == QtCore.Qt.Unchecked:
-                    key = item.data(QtCore.Qt.UserRole)
+                if item.checkState() == UNCHECKED:
+                    key = item.data(USER_ROLE)
                     if key is None:
                         key = item.text()
                     current_unchecked.add(str(key))
@@ -902,15 +915,15 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             key_text = str(key)
             feature_count = self.current_attribute_feature_counts.get(key_text, 0)
             item = QtWidgets.QListWidgetItem(f"{key_text} ({feature_count})")
-            item.setData(QtCore.Qt.UserRole, key_text)
-            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            item.setData(USER_ROLE, key_text)
+            item.setFlags(item.flags() | ITEM_FLAG_CHECKABLE)
 
             if is_fresh:
-                state = QtCore.Qt.Checked if feature_count > 0 else QtCore.Qt.Unchecked
+                state = CHECKED if feature_count > 0 else UNCHECKED
             elif key_text in current_unchecked:
-                state = QtCore.Qt.Unchecked
+                state = UNCHECKED
             else:
-                state = QtCore.Qt.Checked
+                state = CHECKED
             item.setCheckState(state)
 
             self.lstAttributes.addItem(item)
@@ -1163,8 +1176,8 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             checked_keys = set()
             for i in range(self.lstAttributes.count()):
                 item = self.lstAttributes.item(i)
-                if item.checkState() == QtCore.Qt.Checked:
-                    key = item.data(QtCore.Qt.UserRole)
+                if item.checkState() == CHECKED:
+                    key = item.data(USER_ROLE)
                     if key is None:
                         key = item.text()
                     checked_keys.add(str(key))
@@ -1327,7 +1340,7 @@ class ChartSettingsDialog(QtWidgets.QDialog):
         layout.addWidget(grp)
 
         # Buttons
-        btns = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        btns = QtWidgets.QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)

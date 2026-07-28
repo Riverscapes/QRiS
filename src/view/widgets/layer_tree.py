@@ -1,8 +1,14 @@
 import os
 
-from qgis.PyQt import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
+from ...compat import (
+    CHECKED,
+    CUSTOM_CONTEXT_MENU,
+    DLG_ACCEPTED,
+    USER_ROLE,
+)
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.layer import Layer
 from ...model.project import Project
@@ -45,12 +51,12 @@ class LayerTreeWidget(QtWidgets.QWidget):
             for i in range(item.rowCount()):
                 self.add_selected_layers(item.child(i))
         else:
-            tree_layer: LayerDefinition = item.data(QtCore.Qt.UserRole)
+            tree_layer: LayerDefinition = item.data(USER_ROLE)
             tree_name = item.text()
-            tree_protocol: ProtocolDefinition = item.parent().data(QtCore.Qt.UserRole)
+            tree_protocol: ProtocolDefinition = item.parent().data(USER_ROLE)
             # check if in list already
             for i in range(self.layers_model.rowCount()):
-                data = self.layers_model.item(i).data(QtCore.Qt.UserRole)
+                data = self.layers_model.item(i).data(USER_ROLE)
                 if isinstance(data, Layer):
                     # Get the protocol of the layer
                     list_protocol = data.get_layer_protocol(self.qris_project.protocols)
@@ -68,7 +74,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
             # need the protocol name as well. should be the parent
             layer_item = QtGui.QStandardItem(tree_name)
             data_item = (tree_protocol, tree_layer)
-            layer_item.setData(data_item, QtCore.Qt.UserRole)
+            layer_item.setData(data_item, USER_ROLE)
             layer_item.setEditable(False)
             layer_item.setToolTip(f"{tree_protocol.label} ({tree_protocol.version}): {tree_layer.id} - Version {tree_layer.version}")
             self.layers_model.appendRow(layer_item)
@@ -102,7 +108,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
                 if protocol.protocol_type.lower() != "design":
                     continue
 
-            protocol_si.setData(protocol, QtCore.Qt.UserRole)
+            protocol_si.setData(protocol, USER_ROLE)
             protocol_si.setEditable(False)
 
             for layer in protocol.layers:
@@ -110,7 +116,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
                 layer_si = QtGui.QStandardItem(layer_name)
                 layer_si.setEditable(False)
                 layer_si.setToolTip(f"{layer.id} - Version {layer.version}")
-                layer_si.setData(layer, QtCore.Qt.UserRole)
+                layer_si.setData(layer, USER_ROLE)
                 protocol_si.appendRow(layer_si)
 
             if protocol_si.hasChildren():
@@ -120,13 +126,13 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.available_layers_tree.expandAll()
 
         self.available_layers_tree.doubleClicked.connect(self.on_double_click_tree)
-        self.available_layers_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.available_layers_tree.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.available_layers_tree.customContextMenuRequested.connect(self.on_right_click_tree)
 
     def on_double_click_tree(self, index):
 
         item = self.available_layers_tree.model().itemFromIndex(index)
-        layer = item.data(QtCore.Qt.UserRole)
+        layer = item.data(USER_ROLE)
         if isinstance(layer, Layer):
             self.add_selected_layers(item)
 
@@ -136,10 +142,10 @@ class LayerTreeWidget(QtWidgets.QWidget):
             return
 
         item = self.available_layers_tree.model().itemFromIndex(index)
-        layer = item.data(QtCore.Qt.UserRole)
+        layer = item.data(USER_ROLE)
         if isinstance(layer, Layer) or isinstance(layer, LayerDefinition):
             if isinstance(layer, LayerDefinition):
-                protocol_definition: ProtocolDefinition = item.parent().data(QtCore.Qt.UserRole)
+                protocol_definition: ProtocolDefinition = item.parent().data(USER_ROLE)
                 layer.protocol_definition = protocol_definition
             menu = QtWidgets.QMenu(self)
             action = menu.addAction("Layer Details")
@@ -156,7 +162,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
             return
 
         item = self.layers_in_use_list.model().itemFromIndex(index)
-        layer = item.data(QtCore.Qt.UserRole)
+        layer = item.data(USER_ROLE)
         if isinstance(layer, tuple):
             layer_query: LayerDefinition = layer[1]
             protocol_definition: ProtocolDefinition = layer[0]
@@ -179,16 +185,16 @@ class LayerTreeWidget(QtWidgets.QWidget):
 
         frm = FrmEventPicker(self, self.qris_project, self.event_type_id)
         frm.exec_()
-        if frm.result() == QtWidgets.QDialog.Accepted:
+        if frm.result() == DLG_ACCEPTED:
             for layer in frm.layers:
                 layer: Layer
                 # Traverse the tree and find the layer that matches the protocol and layer
                 for i in range(self.tree_model.rowCount()):
                     protocol_item = self.tree_model.item(i)
-                    protocol_definition: ProtocolDefinition = protocol_item.data(QtCore.Qt.UserRole)
+                    protocol_definition: ProtocolDefinition = protocol_item.data(USER_ROLE)
                     for j in range(protocol_item.rowCount()):
                         layer_item = protocol_item.child(j)
-                        layer_definition: LayerDefinition = layer_item.data(QtCore.Qt.UserRole)
+                        layer_definition: LayerDefinition = layer_item.data(USER_ROLE)
                         layer_protocol = layer.get_layer_protocol(self.qris_project.protocols)
                         if f"{layer_definition.id}::{layer_definition.version}" == layer.unique_key():
                             if f"{protocol_definition.machine_code}::{protocol_definition.version}" == layer_protocol.unique_key():
@@ -198,7 +204,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
     def on_remove_layer(self):
         for index in self.layers_in_use_list.selectedIndexes():
             if self.mandatory_layers is not None:
-                layer = self.layers_model.itemFromIndex(index).data(QtCore.Qt.UserRole)
+                layer = self.layers_model.itemFromIndex(index).data(USER_ROLE)
                 if layer.fc_name in self.mandatory_layers:
                     continue
             self.layers_model.removeRow(index.row())
@@ -207,13 +213,13 @@ class LayerTreeWidget(QtWidgets.QWidget):
 
         frm = FrmLayerMetricDetails(self, self.qris_project, layer)
         frm.exec_()
-        if frm.result() == QtWidgets.QDialog.Accepted:
+        if frm.result() == DLG_ACCEPTED:
             return
         else:
             return
 
     def on_show_experimental_changed(self, state):
-        self.show_experimental = state == QtCore.Qt.Checked
+        self.show_experimental = state == CHECKED
         if self.show_experimental:
             QtWidgets.QMessageBox.warning(
                 self,
@@ -235,7 +241,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
 
         self.available_layers_tree = QtWidgets.QTreeView(self)
         self.available_layers_tree.setHeaderHidden(True)
-        self.available_layers_tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.available_layers_tree.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.available_layers_tree.customContextMenuRequested.connect(self.on_right_click_tree)
         self.vert_layer_tree.addWidget(self.available_layers_tree)
 
@@ -273,7 +279,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
 
         self.layers_in_use_list = QtWidgets.QListView(self)
         # set right click menu
-        self.layers_in_use_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.layers_in_use_list.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.layers_in_use_list.customContextMenuRequested.connect(self.on_right_click_list)
         self.vert_layers.addWidget(self.layers_in_use_list)
 
