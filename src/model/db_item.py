@@ -2,7 +2,22 @@ import json
 import sqlite3
 from typing import Optional
 
-from qgis.PyQt.QtCore import QAbstractListModel, QModelIndex, Qt
+from qgis.PyQt.QtCore import QAbstractListModel, QModelIndex
+
+from ..compat import (
+    CHECKED,
+    CHECK_STATE_ROLE,
+    DISPLAY_ROLE,
+    EDIT_ROLE,
+    ITEM_FLAG_CHECKABLE,
+    ITEM_FLAG_EDITABLE,
+    ITEM_FLAG_ENABLED,
+    ITEM_FLAG_SELECTABLE,
+    MATCH_EXACTLY,
+    MATCH_WRAP,
+    UNCHECKED,
+    USER_ROLE,
+)
 
 DB_MODE_NEW = "new"
 DB_MODE_CREATE = "create"
@@ -136,22 +151,22 @@ class DBItemModel(QAbstractListModel):
         self._data.sort(key=lambda x: x[0])
 
     def data(self, index, role):
-        if role == Qt.DisplayRole:
+        if role == DISPLAY_ROLE:
             _id, value = self._data[index.row()]
             return value.name
-        elif role == Qt.UserRole:
+        elif role == USER_ROLE:
             _id, value = self._data[index.row()]
             return value
 
     def getItemIndex(self, db_item: DBItem) -> int:
-        index_list = self.match(self.index(0, 0), Qt.UserRole, db_item, 1, Qt.MatchFlags(Qt.MatchExactly | Qt.MatchWrap))
+        index_list = self.match(self.index(0, 0), USER_ROLE, db_item, 1, Qt.MatchFlags(MATCH_EXACTLY | MATCH_WRAP))
         return index_list[0].row() if isinstance(index_list, list) and len(index_list) == 1 else None
 
     def getItemIndexById(self, id: int) -> int:
 
         for row in range(self.rowCount(None)):
             index = self.index(row)
-            db_item = self.data(index, Qt.UserRole)
+            db_item = self.data(index, USER_ROLE)
             if db_item.id == id:
                 return row
         return None
@@ -160,7 +175,7 @@ class DBItemModel(QAbstractListModel):
 
         for row in range(self.rowCount(None)):
             index = self.index(row)
-            db_item = self.data(index, Qt.UserRole)
+            db_item = self.data(index, USER_ROLE)
             if db_item.name == name:
                 return row
         return None
@@ -173,7 +188,7 @@ class DBItemModel(QAbstractListModel):
         if self.non_selectable_index is None:
             return default_flags
         if index.row() == self.non_selectable_index:
-            return default_flags & ~Qt.ItemIsSelectable & ~Qt.ItemIsEnabled
+            return default_flags & ~ITEM_FLAG_SELECTABLE & ~ITEM_FLAG_ENABLED
         return default_flags
 
 
@@ -184,21 +199,21 @@ class CheckableDBItemModel(QAbstractListModel):
         self._data = [(key, value, False) for key, value in data.items()] or []
 
     def flags(self, index):
-        return super().flags(index) | Qt.ItemIsUserCheckable
+        return super().flags(index) | ITEM_FLAG_CHECKABLE
 
     def data(self, index, role):
-        if role == Qt.DisplayRole:
+        if role == DISPLAY_ROLE:
             _id, value, _ = self._data[index.row()]
             return value.name
-        elif role == Qt.UserRole:
+        elif role == USER_ROLE:
             _id, value, _ = self._data[index.row()]
             return value
-        elif role == Qt.CheckStateRole:
+        elif role == CHECK_STATE_ROLE:
             _, _, check_state = self._data[index.row()]
             return check_state
 
     def setData(self, index: QModelIndex, value: any, role: int = ...) -> bool:
-        if role == Qt.CheckStateRole:
+        if role == CHECK_STATE_ROLE:
             self._data[index.row()] = (self._data[index.row()][0], self._data[index.row()][1], value)
             self.dataChanged.emit(index, index)
             return True
