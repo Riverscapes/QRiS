@@ -185,7 +185,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
             return
 
         dlg = _AttachmentPickerDialog(self, candidates, self._purposes)
-        if dlg.exec_() != DLG_ACCEPTED:
+        if dlg.exec() != DLG_ACCEPTED:
             return
 
         for aid, purpose in dlg.selected_with_purpose():
@@ -199,7 +199,7 @@ class AttachmentsLibraryWidget(QtWidgets.QWidget):
         frm = FrmAttachment(self, self.qris_project, attachment_type=attachment_type)
         old_ids = set(self.qris_project.attachments.keys())
 
-        if frm.exec_() != DLG_ACCEPTED:
+        if frm.exec() != DLG_ACCEPTED:
             return
 
         new_ids = set(self.qris_project.attachments.keys()) - old_ids
@@ -346,7 +346,7 @@ def _ask_purpose(parent, purposes: list) -> str:
     btn_box.rejected.connect(dlg.reject)
     layout.addWidget(btn_box)
 
-    if dlg.exec_() == DLG_ACCEPTED:
+    if dlg.exec() == DLG_ACCEPTED:
         return cbo.currentText().strip()
     return ""
 

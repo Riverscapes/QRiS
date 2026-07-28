@@ -241,7 +241,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         sample_frame_features = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
 
         frm = FrmClimateEngineDownload(parent=self, qris_project=self.qris_project, sample_frame_id=sample_frame_id, sample_frame_feature_fids=sample_frame_features)
-        frm.exec_()
+        frm.exec()
         self.load_climate_engine_metrics()
 
     def export_data(self):

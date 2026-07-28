@@ -138,7 +138,7 @@ class FrmSettings(QDialog):
 
     def open_api_key_dialog(self):
         dlg = FrmApiKey(self)
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.Accepted:
             self._refresh_api_key_status()
 
     def remove_api_key(self):

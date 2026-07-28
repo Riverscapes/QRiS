@@ -391,7 +391,7 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
         frm = FrmMetricValue(self.iface.mainWindow(), self.project, self.analysis, event, feature_id, mv)
 
         # If the user saves, the form returns Accepted (1)
-        if frm.exec_():
+        if frm.exec():
             # Refresh the chart to show new values
             self.redraw_chart()
 
@@ -735,4 +735,3 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         # Threshold in pixels (e.g. 10 pixels radius)
         if closest_point and closest_dist < 10:
             self.metric_data_clicked.emit(closest_point["data"])
-

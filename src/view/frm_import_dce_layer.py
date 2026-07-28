@@ -165,7 +165,7 @@ class FrmImportDceLayer(QtWidgets.QDialog):
             in_field = next((field for field in self.field_maps if field.src_field == input_field), None)
             frm.load_field_value_map(in_field.map)
         frm.field_value_map_signal.connect(self.on_field_value_map)
-        frm.exec_()
+        frm.exec()
 
     def on_field_value_map(self, field_name: str, field_value_map: dict):
 
@@ -365,4 +365,3 @@ class FrmImportDceLayer(QtWidgets.QDialog):
         self.vert.addWidget(self.tblFields)
 
         self.vert.addLayout(add_standard_form_buttons(self, "dce/import-dce-layer"))
-

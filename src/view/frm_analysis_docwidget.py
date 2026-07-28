@@ -25,8 +25,7 @@ from qgis.core import Qgis, QgsApplication, QgsMessageLog
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..compat import (DLG_ACCEPTED, DOCK_CLOSABLE, DOCK_FLOATABLE, DOCK_MOVABLE, SPSZ_EXPANDING, SPSZ_FIXED, SPSZ_MINIMUM, USER_ROLE)
-
+from ..compat import DLG_ACCEPTED, DOCK_CLOSABLE, DOCK_FLOATABLE, DOCK_MOVABLE, SPSZ_EXPANDING, SPSZ_FIXED, SPSZ_MINIMUM, USER_ROLE
 from ..gp.analysis_metrics_task import AnalysisMetricsTask
 from ..model.analysis import Analysis
 from ..model.db_item import DBItemModel
@@ -116,7 +115,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def cmdCalculate_clicked(self):
 
         frm = FrmCalculateAllMetrics(self)
-        result = frm.exec_()
+        result = frm.exec()
 
         if result == DLG_ACCEPTED:
             sample_frame_features = [self.cboSampleFrame.itemData(i, USER_ROLE) for i in range(self.cboSampleFrame.count())] if frm.rdoAllSF.isChecked() else [self.cboSampleFrame.currentData(USER_ROLE)]
@@ -209,12 +208,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         current_sample_frame = self.cboSampleFrame.currentData(USER_ROLE)
         current_data_capture_event = None if self.analysis.is_simple_intrinsic_mode() else self.cboEvent.currentData(USER_ROLE)
         frm = FrmExportMetrics(self, self.iface, self.qris_project, self.analysis, current_data_capture_event, current_sample_frame)
-        frm.exec_()
+        frm.exec()
 
     def cmdProperties_clicked(self):
 
         frm = FrmAnalysisProperties(self, self.qris_project, self.analysis)
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             self.txtName.setText(frm.analysis.name)
             self.configure_analysis(self.qris_project, frm.analysis, None)
@@ -226,7 +225,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         mask_feature = self.cboSampleFrame.currentData(USER_ROLE)
 
         frm = FrmMetricValue(self, self.qris_project, self.analysis, event, mask_feature.id, metric_value)
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             self.load_table_values()
 
@@ -323,7 +322,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdOpenSummary.setIcon(icon)
         self.cmdOpenSummary.setToolTip("Open Analysis Summary")
         self.cmdOpenSummary.setToolTipDuration(2000)
-        self.connections[self.cmdOpenSummary.clicked] = self.cmdOpenSummary.clicked.connect(lambda: FrmAnalysisExplorer(self, self.qris_project, self.analysis.id).exec_())
+        self.connections[self.cmdOpenSummary.clicked] = self.cmdOpenSummary.clicked.connect(lambda: FrmAnalysisExplorer(self, self.qris_project, self.analysis.id).exec())
         self.horizName.addWidget(self.cmdOpenSummary)
 
         self.lblEvent = QtWidgets.QLabel("Data Capture Event")
@@ -381,5 +380,3 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.horizExport.addWidget(self.cmdExport, 0)
 
         self.setWidget(self.dockWidgetContents)
-
-

@@ -298,7 +298,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         btnbox.accepted.connect(dlg.accept)
         layout.addWidget(btnbox)
 
-        dlg.exec_()
+        dlg.exec()
 
     def show_flow_stat_details(self, item):
         row = item.row()
@@ -420,7 +420,7 @@ class FrmPourPoint(QtWidgets.QDialog):
         btnbox.accepted.connect(dlg.accept)
         layout.addWidget(btnbox)
 
-        dlg.exec_()
+        dlg.exec()
 
     def load_flow_statistics(self):
         flow_stats = self.pour_point.flow_stats
@@ -700,7 +700,7 @@ class FrmPourPoint(QtWidgets.QDialog):
                 project_path=self.qris_project.project_file if self.qris_project else None,
                 export_type="basin_characteristics",
             )
-            frm.exec_()
+            frm.exec()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to export table:\n{e}")
@@ -718,7 +718,7 @@ class FrmPourPoint(QtWidgets.QDialog):
                 project_path=self.qris_project.project_file if self.qris_project else None,
                 export_type="flow_statistics",
             )
-            frm.exec_()
+            frm.exec()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to export table:\n{e}")
@@ -878,5 +878,4 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     window = FrmPourPoint(None, 123, 123)
     window.show()
-    app.exec_()
-
+    app.exec()

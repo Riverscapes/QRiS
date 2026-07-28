@@ -506,7 +506,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if layer_type == "raster":
             frm = FrmLayerTypeDialog(["Surface Raster", "Context Raster"])
-            result = frm.exec_()
+            result = frm.exec()
             selected_type = frm.selected_type()
             if result == DLG_REJECTED or selected_type is None:
                 return
@@ -519,7 +519,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.add_raster(node, is_context, layer_path, meta=metadata)
         elif layer_type == "polygon":
             frm = FrmLayerTypeDialog(["Riverscape (Valley Bottom)", "AOI", "Sample Frame", "Context Vector"])
-            result = frm.exec_()
+            result = frm.exec()
             selected_type = frm.selected_type()
             if result == DLG_REJECTED or selected_type is None:
                 return
@@ -533,7 +533,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.add_context_vector(self.context_node, layer_path, meta=metadata)
         elif layer_type == "line":
             frm = FrmLayerTypeDialog(["Profile/Centerline", "Cross Sections", "Context Vector"])
-            result = frm.exec_()
+            result = frm.exec()
             selected_type = frm.selected_type()
             if result == DLG_REJECTED or selected_type is None:
                 return
@@ -1139,14 +1139,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.frm_event = FrmEvent(self, self.qris_project, event_type_id)
 
-        result = self.frm_event.exec_()
+        result = self.frm_event.exec()
         if result is not None and result != 0:
             self.add_event_to_project_tree(parent_node, self.frm_event.dce_event, self.frm_event.chkAddToMap.isChecked())
 
     def add_planning_container(self, parent_node):
         """Initiates adding a new planning container"""
         frm = FrmPlanningContainer(self, self.qris_project)
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             self.add_planning_container_to_project_tree(parent_node, frm.planning_container)
 
@@ -1171,7 +1171,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if index >= 0:
                     frm.cboCenterline.setCurrentIndex(index)
 
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             if parent_node is None:
                 parent_node = self._find_tree_node(self.model.invisibleRootItem(), ANALYSIS_MACHINE_CODE)
@@ -1190,7 +1190,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 if index >= 0:
                     frm.cboSampleFrame.setCurrentIndex(index)
 
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             if parent_node is None:
                 parent_node = self._find_tree_node(self.model.invisibleRootItem(), ANALYSIS_MACHINE_CODE)
@@ -1306,12 +1306,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             analysis_id = analysis.id
 
         frm = FrmAnalysisExplorer(self, self.qris_project, analysis_id)
-        frm.exec_()
+        frm.exec()
 
     def export_analysis_table(self, analysis: Analysis = None):
 
         frm = FrmExportMetrics(self, self.iface, self.qris_project, analysis)
-        frm.exec_()
+        frm.exec()
 
     def add_attachment(self, model_item, attachment_type):
 
@@ -1320,7 +1320,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             browse_result = frm.source.browse()
             if browse_result is None or browse_result == "":
                 return
-        result = frm.exec_()
+        result = frm.exec()
 
         if result is not None and result != 0:
             self.add_child_to_project_tree(model_item, frm.attachment, False)
@@ -1330,7 +1330,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         settings = QSettings(ORGANIZATION, APPNAME)
         frm = FrmSettings(settings, self.qris_project)
         frm.tabs.setCurrentWidget(frm.tabClimateEngine)
-        result = frm.exec_()
+        result = frm.exec()
         if result == DLG_ACCEPTED and self.map_manager is not None:
             self.map_manager.refresh_selection_color_overrides()
 
@@ -1359,7 +1359,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         frm = FrmClimateEngineMapLayer(self, self.qris_project)
-        result = frm.exec_()
+        result = frm.exec()
         if result is not None and result != 0:
             self.map_manager.create_tile_layer(self.qris_project.map_guid, frm.map_tile_url, frm.map_tile_layer_name, CLIMATE_ENGINE_MACHINE_CODE, "wms")
 
@@ -1448,13 +1448,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         frm = FrmImportPhotos(self, self.qris_project, db_item, photos_folder)
-        result = frm.exec_()
+        result = frm.exec()
         if result == DLG_ACCEPTED:
             self.add_db_item_to_map(parent_node, db_item)
 
     def add_event_layer_to_map_with_filter(self, model_item: QtGui.QStandardItem, event_layer: EventLayer):
         dialog = FrmQueryBuilder(self, event_layer.layer, self.qris_project, layer_name=event_layer.name)
-        if dialog.exec_():
+        if dialog.exec():
             extra_filter = dialog.query_string
             custom_name = dialog.txtLayerName.text()
             if extra_filter:
@@ -1499,7 +1499,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmEventPicker(self, self.qris_project, DATA_CAPTURE_EVENT_TYPE_ID, events=dce_events)
             if frm.dce_events == [] or frm.dce_events is None:
                 return
-            result = frm.exec_()
+            result = frm.exec()
             if result != DLG_ACCEPTED:
                 return
             import_source_path = QgsVectorLayer(out_path)
@@ -1538,13 +1538,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             frm = FrmImportDceLayer(self, self.qris_project, db_item, import_source_path)
             frm.import_complete.connect(partial(self.import_dce_complete, db_item))
-            frm.exec_()
+            frm.exec()
 
     def import_from_project_layer(self, db_item: EventLayer):
         """Show the project-layer picker then route to the correct import path."""
 
         frm_picker = FrmImportProjectLayer(self, self.qris_project, db_item)
-        if frm_picker.exec_() != DLG_ACCEPTED:
+        if frm_picker.exec() != DLG_ACCEPTED:
             return
         source_layer = frm_picker.source_layer
         if source_layer is None or source_layer.featureCount() == 0:
@@ -1576,7 +1576,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             frm = FrmImportDceLayer(self, self.qris_project, db_item, source_layer)
             frm.import_complete.connect(partial(self.import_dce_complete, db_item))
-            frm.exec_()
+            frm.exec()
 
     def copy_valley_bottom(self, db_item: DBItem):
 
@@ -1587,7 +1587,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # now use the layer picker to select the valley bottom to copy
         valley_bottoms = [vb for vb in self.qris_project.valley_bottoms.values()]
         frm = FrmLayerPicker(self, "Select Valley Bottom to Copy", valley_bottoms)
-        result = frm.exec_()
+        result = frm.exec()
         if result == DLG_ACCEPTED:
             if frm.layer is None:
                 return
@@ -1630,7 +1630,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             project_path = os.path.dirname(self.qris_project.project_file)
 
         frm = FrmExportLayer(self, layer, base_name=base_name, project_path=project_path)
-        frm.exec_()
+        frm.exec()
 
     def export_project(self, project: Project):
 
@@ -1655,7 +1655,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         )
 
         frm = FrmExportProject(self, self.qris_project)
-        result = frm.exec_()
+        result = frm.exec()
 
         if result == DLG_ACCEPTED:
             self.iface.messageBar().pushMessage("Export Project", "Export Complete", level=Qgis.Success, duration=5)
@@ -1947,7 +1947,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     frm.metadata_widget.add_metadata(key, value[0])
             if "symbology" in meta:
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.raster, frm.chkAddToMap.isChecked())
             if frm.hillshade is not None:
@@ -1979,7 +1979,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     frm.metadata_widget.add_metadata(key, value[0])
             if "symbology" in meta:
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.scratch_vector, frm.chkAddToMap.isChecked())
 
@@ -1989,7 +1989,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm_toc = FrmTOCLayerPicker(self, "Select layer to import", layer_types, temporary_layers_only=False, exclude_datasource_prefix=project_file, exclude_empty_layers=True)
         if not frm_toc.layer_count > 0:
             return
-        result = frm_toc.exec_()
+        result = frm_toc.exec()
         if result != DLG_ACCEPTED:
             return
         out_layer: QgsVectorLayer = frm_toc.layer
@@ -2003,7 +2003,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         frm_toc = FrmTOCLayerPicker(self, "Select raster layer to import", temporary_layers_only=False, exclude_datasource_prefix=project_file, include_raster_layers=True)
         if not frm_toc.layer_count > 0:
             return
-        result = frm_toc.exec_()
+        result = frm_toc.exec()
         if result != DLG_ACCEPTED:
             return
         out_layer: QgsRasterLayer = frm_toc.layer
@@ -2063,7 +2063,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             aoi_node = self.add_child_to_project_tree(inputs_node, AOI_MACHINE_CODE)
             parent_node = aoi_node
 
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.sample_frame, frm.chkAddToMap.isChecked())
             if frm.chkStartEditSession.isChecked():
@@ -2121,7 +2121,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             parent_node = sample_frame_node
 
         frm.complete.connect(partial(self.on_sample_frame_complete, parent_node, lambda: frm.sample_frame, frm.chkAddToMap.isChecked, frm.chkStartEditSession.isChecked))
-        frm.exec_()
+        frm.exec()
 
     def on_sample_frame_complete(self, parent_node, sample_frame_method, add_to_map_method, start_edit_method=None):
         add_to_map = add_to_map_method()
@@ -2172,7 +2172,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             db_item = parent_node.data(USER_ROLE)
             frm.promote_to_sample_frame(db_item)
 
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
                 # find the Valley Bottoms Node in the model
@@ -2217,7 +2217,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             db_item = parent_node.data(USER_ROLE)
             frm.promote_to_profile(db_item)
 
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             if mode in [DB_MODE_CREATE, DB_MODE_PROMOTE]:
                 # find the Profile Node in the model
@@ -2260,7 +2260,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if "symbology" in meta:
                 frm.metadata_widget.add_system_metadata("symbology", meta["symbology"])
 
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             self.add_child_to_project_tree(parent_node, frm.cross_sections, frm.chkAddToMap.isChecked())
             if frm.chkStartEditSession.isChecked():
@@ -2309,7 +2309,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         frm = FrmPourPoint(self, self.qris_project, transformed_point.y(), transformed_point.x(), None)
-        result = frm.exec_()
+        result = frm.exec()
         if result != 0:
             get_basin = frm.radBasin.isChecked() or frm.radFlowStats.isChecked()
             get_flow = frm.radFlowStats.isChecked()
@@ -2422,7 +2422,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.warning(self, "Edit Item", "Editing items is not yet implemented.")
 
         if frm is not None:
-            result = frm.exec_()
+            result = frm.exec()
             if result is not None and result != 0:
                 # Adding the item into the tree again will ensure that it's name is up to date
                 # and that any child nodes are correct. It will also ensure that the corresponding
@@ -2613,12 +2613,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 QtWidgets.QMessageBox.warning(self, "Batch Edit QRiS Attributes", "Please stop the editing session before proceeding.")
                 return
             frm = FrmBatchAttributeEditor(layer)
-            frm.exec_()
+            frm.exec()
 
     def set_order_by_centerline(self, db_item) -> None:
 
         frm = FrmOrderByCenterline(self, self.qris_project)
-        if frm.exec_() != DLG_ACCEPTED:
+        if frm.exec() != DLG_ACCEPTED:
             return
 
         profile = frm.selected_profile()
@@ -2729,7 +2729,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if result is True:
             frm = FrmGeospatialMetrics(self, self.qris_project, model_data, polygons, data)
-            frm.exec_()
+            frm.exec()
         else:
             self.iface.messageBar().pushMessage("Zonal Statistics Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
 
@@ -2824,7 +2824,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.distribution_analysis_form = FrmDistributionAnalysis(self.iface.mainWindow(), self.qris_project, self.map_manager)
         if event is not None:
             self.distribution_analysis_form.widget.select_event(event)
-        self.distribution_analysis_form.exec_()
+        self.distribution_analysis_form.exec()
 
     def open_distribution_analysis_dock(self, event=None, event_layer=None):
         if self.distribution_dock_widget is None:
@@ -2897,7 +2897,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             return
 
         frm_upload = self.qrave.ProjectUploadDialog(self, rs_project)
-        frm_upload.exec_()
+        frm_upload.exec()
 
     def setupUi(self):
 

@@ -47,7 +47,7 @@ def require_api_key(parent=None, open_settings_callback=None) -> bool:
     if open_settings_callback:
         btn_settings = msg.addButton("Open Settings", QMessageBox.ActionRole)
     msg.addButton(QMessageBox.Cancel)
-    msg.exec_()
+    msg.exec()
     if open_settings_callback and msg.clickedButton() == btn_settings:
         open_settings_callback()
     return False

@@ -505,7 +505,7 @@ class QRiSToolbar:
                 msg.setWindowTitle("Metadata Update Recommended")
                 msg.setStandardButtons(MSGBOX_BTN_YES | MSGBOX_BTN_NO)
                 msg.setDefaultButton(MSGBOX_BTN_YES)
-                retval = msg.exec_()
+                retval = msg.exec()
                 if retval == MSGBOX_BTN_YES:
                     update_metadata(db_path)
 
@@ -614,7 +614,7 @@ class QRiSToolbar:
 
         self.frm_new_project = FrmNewProject(self.iface.mainWindow(), last_parent_folder)
         self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
-        self.frm_new_project.exec_()
+        self.frm_new_project.exec()
 
     def on_new_project_complete(self, project_dir: str, db_path: str):
 
@@ -726,7 +726,7 @@ class QRiSToolbar:
     def about_load(self):
 
         self.frm_about = FrmAboutDialog(self.iface.mainWindow())
-        self.frm_about.exec_()
+        self.frm_about.exec()
         self.frm_about = None
 
     def show_settings(self):
@@ -737,7 +737,7 @@ class QRiSToolbar:
             qris_project = self.dockwidget.qris_project
 
         self.settings_dialog = FrmSettings(settings, qris_project)
-        self.settings_dialog.exec_()
+        self.settings_dialog.exec()
         self.settings_dialog = None
 
     def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):

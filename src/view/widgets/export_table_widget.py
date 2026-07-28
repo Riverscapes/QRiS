@@ -36,4 +36,4 @@ class TableExportWidget(BaseExportWidget):
             project_path=self.project_path,
             export_type=self.export_type,
         )
-        dlg.exec_()
+        dlg.exec()
