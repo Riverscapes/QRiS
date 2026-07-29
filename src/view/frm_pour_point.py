@@ -112,7 +112,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
                 menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/copy_content_units"), "Copy Value with Units", lambda: QtWidgets.QApplication.clipboard().setText(full_text))
 
-        action = menu.exec_(self.tabFlow.viewport().mapToGlobal(position))
+        action = menu.exec(self.tabFlow.viewport().mapToGlobal(position))
         if action == details_action:
             self.show_flow_stat_details(item)
 
@@ -142,7 +142,7 @@ class FrmPourPoint(QtWidgets.QDialog):
 
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/copy_content_units"), "Copy Value with Units", lambda: QtWidgets.QApplication.clipboard().setText(full_text))
 
-        action = menu.exec_(self.basinTable.viewport().mapToGlobal(position))
+        action = menu.exec(self.basinTable.viewport().mapToGlobal(position))
         if action == details_action:
             self.show_basin_details(index)
 

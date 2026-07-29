@@ -347,7 +347,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         delete_action = QtWidgets.QAction(QIcon(":/plugins/qris_toolbar/delete"), "Delete Time Series", self)
         delete_action.triggered.connect(self.delete_time_series)
         menu.addAction(delete_action)
-        menu.exec_(QCursor.pos())
+        menu.exec(QCursor.pos())
 
     def setupUi(self):
 

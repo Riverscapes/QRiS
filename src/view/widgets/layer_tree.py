@@ -150,7 +150,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
             menu = QtWidgets.QMenu(self)
             action = menu.addAction("Layer Details")
             action.triggered.connect(lambda: self.show_layer_properties(layer))
-            menu.exec_(self.available_layers_tree.viewport().mapToGlobal(position))
+            menu.exec(self.available_layers_tree.viewport().mapToGlobal(position))
             menu.close()  # Ensure the menu is closed after execution
             return
         else:
@@ -172,7 +172,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
         menu = QtWidgets.QMenu(self)
         action = menu.addAction("Layer Details")
         action.triggered.connect(lambda: self.show_layer_properties(layer_query))
-        menu.exec_(self.layers_in_use_list.viewport().mapToGlobal(position))
+        menu.exec(self.layers_in_use_list.viewport().mapToGlobal(position))
         menu.close()
 
     def on_add_layer_clicked(self):

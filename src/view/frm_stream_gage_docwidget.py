@@ -333,7 +333,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         delete_action = QtWidgets.QAction(QtGui.QIcon(":/plugins/qris_toolbar/delete"), "Delete Stream Gage", self)
         delete_action.triggered.connect(self.delete_gage)
         menu.addAction(delete_action)
-        menu.exec_(QtGui.QCursor.pos())
+        menu.exec(QtGui.QCursor.pos())
 
     def setupUi(self):
 

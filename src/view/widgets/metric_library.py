@@ -1086,7 +1086,7 @@ class MetricLibrary(QtWidgets.QWidget):
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/expand"), "Expand All Children", lambda: self.expand_tree_children(item))
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/collapse"), "Collapse All Children", lambda: self.collapse_tree_children(item))
         if not menu.isEmpty():
-            menu.exec_(self.metricsTree.viewport().mapToGlobal(position))
+            menu.exec(self.metricsTree.viewport().mapToGlobal(position))
 
     def build_metrics_table(self):
         self.metricsTable.setSortingEnabled(False)
