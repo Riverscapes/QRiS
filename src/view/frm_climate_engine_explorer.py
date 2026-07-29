@@ -9,7 +9,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QSize, Qt
 from qgis.PyQt.QtGui import QCursor, QIcon, QStandardItem, QStandardItemModel
 
-from ..compat import MSGBOX_NO, MSGBOX_YES, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_SINGLE_SELECTION
+from ..compat import MSGBOX_NO, MSGBOX_YES, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_SINGLE_SELECTION, USER_ROLE
 from ..lib.climate_engine import get_datasets, open_climate_engine_website
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.db_item import dict_factory
@@ -57,7 +57,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         time_series_ids = self.lst_climate_engine.selectedIndexes()
         if time_series_ids is None or len(time_series_ids) == 0:
             return
-        time_series_id = time_series_ids[0].data(Qt.UserRole)
+        time_series_id = time_series_ids[0].data(USER_ROLE)
 
         with sqlite3.connect(self.qris_project.project_file) as conn:
             curs = conn.cursor()
@@ -101,7 +101,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
             metadata = json.loads(row[2])
             name = f"{row[1]} ({metadata['description']})" if metadata and "description" in metadata else row[1]
             item = QStandardItem(name)
-            item.setData(row[0], Qt.UserRole)
+            item.setData(row[0], USER_ROLE)
             self.time_series_model.appendRow(item)
         self.lst_climate_engine.setModel(self.time_series_model)
         self.lst_climate_engine.selectionModel().selectionChanged.connect(self.set_date_range)
@@ -120,7 +120,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         time_series_ids = self.lst_climate_engine.selectedIndexes()
         if time_series_ids is None or len(time_series_ids) == 0:
             return
-        time_series_id = time_series_ids[0].data(Qt.UserRole)
+        time_series_id = time_series_ids[0].data(USER_ROLE)
 
         self.tab_widget_right.setVisible(True)
         self.lbl_initial_text.setVisible(False)
@@ -218,7 +218,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         time_series_ids = self.lst_climate_engine.selectedIndexes()
         if time_series_ids is None or len(time_series_ids) == 0:
             return
-        time_series_id = time_series_ids[0].data(Qt.UserRole)
+        time_series_id = time_series_ids[0].data(USER_ROLE)
 
         fields = {"name": "Name", "source": "Source", "url": "URL", "description": "Description"}
 
@@ -237,7 +237,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
     def show_climate_engine_download(self):
 
-        sample_frame_id = self.sample_frame_widget.cbo_sample_frame.currentData(Qt.UserRole).id
+        sample_frame_id = self.sample_frame_widget.cbo_sample_frame.currentData(USER_ROLE).id
         sample_frame_features = self.sample_frame_widget.get_selected_sample_frame_feature_ids()
 
         frm = FrmClimateEngineDownload(parent=self, qris_project=self.qris_project, sample_frame_id=sample_frame_id, sample_frame_feature_fids=sample_frame_features)
@@ -259,7 +259,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         if len(sample_frame_feature_ids) == 0:
             return None
-        time_series_id = time_series_ids[0].data(Qt.UserRole)
+        time_series_id = time_series_ids[0].data(USER_ROLE)
 
         # get the date range
         start_date, end_date = self.date_range_widget.get_date_range()
@@ -320,7 +320,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         if time_series_ids is None or len(time_series_ids) == 0:
             return
 
-        time_series_id = time_series_ids[0].data(Qt.UserRole)
+        time_series_id = time_series_ids[0].data(USER_ROLE)
         with sqlite3.connect(self.qris_project.project_file) as conn:
             try:
                 curs = conn.cursor()

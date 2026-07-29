@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import Qt
 
+from ..compat import USER_ROLE
 from ..model.analysis import Analysis
 from ..model.db_item import DBItemModel
 from ..model.event import DCE_EVENT_TYPE_ID
@@ -58,7 +58,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         if analysis_id is not None:
             # Find the index of the analysis with the given ID
             for i in range(self.cmbAnalysis.count()):
-                if self.cmbAnalysis.itemData(i, Qt.UserRole).id == analysis_id:
+                if self.cmbAnalysis.itemData(i, USER_ROLE).id == analysis_id:
                     self.cmbAnalysis.setCurrentIndex(i)
                     index = i
                     break
@@ -75,7 +75,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def on_analysis_changed(self, index):
 
-        self.analysis: Analysis = self.cmbAnalysis.currentData(Qt.UserRole)
+        self.analysis: Analysis = self.cmbAnalysis.currentData(USER_ROLE)
 
         self.cmbMetric.clear()
         analysis_metrics = {i: analysis_metric.metric for i, analysis_metric in self.analysis.analysis_metrics.items()}
@@ -99,16 +99,16 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbMetric.currentIndexChanged.connect(self.on_metric_changed)
 
         if self.cmbMetric.count() > 0:
-            self.plot_metric_over_time(self.cmbMetric.currentData(Qt.UserRole).id)
+            self.plot_metric_over_time(self.cmbMetric.currentData(USER_ROLE).id)
 
     def on_sample_frame_feature_changed(self, index):
 
-        metric = self.cmbMetric.currentData(Qt.UserRole)
+        metric = self.cmbMetric.currentData(USER_ROLE)
         self.plot_metric_over_time(metric.id)
 
     def on_metric_changed(self, index):
 
-        metric: Metric = self.cmbMetric.currentData(Qt.UserRole)
+        metric: Metric = self.cmbMetric.currentData(USER_ROLE)
         if self.cmbAnalysisType.currentIndex() == 0:
             self.plot_metric_over_time(metric.id)
         else:
@@ -116,7 +116,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def on_event_changed(self, index):
 
-        metric = self.cmbMetric.currentData(Qt.UserRole)
+        metric = self.cmbMetric.currentData(USER_ROLE)
         self.plot_metric_over_riverscape(metric.id)
 
     def metric_over_riverscape(self):
@@ -128,7 +128,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbEvent.currentIndexChanged.connect(self.on_event_changed)
         self.cmbMetric.currentIndexChanged.connect(self.on_metric_changed)
 
-        self.plot_metric_over_riverscape(self.cmbMetric.currentData(Qt.UserRole).id)
+        self.plot_metric_over_riverscape(self.cmbMetric.currentData(USER_ROLE).id)
 
     def get_metric_values(self, analysis_id, metric_id):
 
@@ -166,9 +166,9 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def plot_metric_over_time(self, metric_id):
 
-        analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
-        metric_name = self.cmbMetric.currentData(Qt.UserRole).name
-        sample_frame_feature_id = self.cmbSampleFrameFeature.currentData(Qt.UserRole).id
+        analysis_id = self.cmbAnalysis.currentData(USER_ROLE).id
+        metric_name = self.cmbMetric.currentData(USER_ROLE).name
+        sample_frame_feature_id = self.cmbSampleFrameFeature.currentData(USER_ROLE).id
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
@@ -196,13 +196,13 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def plot_metric_over_riverscape(self, metric_id):
 
-        analysis_id = self.cmbAnalysis.currentData(Qt.UserRole).id
+        analysis_id = self.cmbAnalysis.currentData(USER_ROLE).id
 
         self.plot.figure.clear()
         metric_values = self.get_metric_values(analysis_id, metric_id)
 
         event_date = self.cmbEvent.currentText()
-        event_id = self.cmbEvent.currentData(Qt.UserRole).id
+        event_id = self.cmbEvent.currentData(USER_ROLE).id
 
         x = []
         y = []

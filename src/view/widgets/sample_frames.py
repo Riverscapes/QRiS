@@ -5,7 +5,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.utils import iface
 
-from ...compat import QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION
+from ...compat import QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, USER_ROLE
 from ...model.db_item import CheckableDBItemModel, DBItem, DBItemModel
 from ...model.project import Project
 from ...model.sample_frame import SampleFrame, get_sample_frame_ids
@@ -50,7 +50,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
     def on_sample_frame_changed(self):
 
         if self.qris_map_manager is not None:
-            sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
+            sample_frame: SampleFrame = self.cbo_sample_frame.currentData(USER_ROLE)
             if sample_frame.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                 self.qris_map_manager.build_valley_bottom_layer(sample_frame)
             elif sample_frame.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
@@ -64,7 +64,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
 
         # clear the list view
         self.lst_sample_frame_features.setModel(None)
-        sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
+        sample_frame: SampleFrame = self.cbo_sample_frame.currentData(USER_ROLE)
         if sample_frame is None:
             return
         frame_ids = get_sample_frame_ids(self.qris_project.project_file, sample_frame.id)
@@ -76,7 +76,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
     def on_sample_frame_features_changed(self):
 
         if self.qris_map_manager is not None:
-            sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
+            sample_frame: SampleFrame = self.cbo_sample_frame.currentData(USER_ROLE)
             if sample_frame.sample_frame_type == SampleFrame.VALLEY_BOTTOM_SAMPLE_FRAME_TYPE:
                 sample_frame_layer_tree = self.qris_map_manager.build_valley_bottom_layer(sample_frame)
             elif sample_frame.sample_frame_type == SampleFrame.AOI_SAMPLE_FRAME_TYPE:
@@ -102,21 +102,21 @@ class SampleFrameWidget(QtWidgets.QWidget):
             self.sample_frame_features_model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
 
     def selected_sample_frame(self) -> SampleFrame:
-        return self.cbo_sample_frame.currentData(Qt.UserRole)
+        return self.cbo_sample_frame.currentData(USER_ROLE)
 
     def selected_features_count(self):
         return sum([1 for i in range(self.sample_frame_features_model.rowCount(None)) if self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), Qt.CheckStateRole) == Qt.Checked])
 
     def get_selected_sample_frame_feature_ids(self):
         return [
-            self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), Qt.UserRole).id
+            self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), USER_ROLE).id
             for i in range(self.sample_frame_features_model.rowCount(None))
             if self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), Qt.CheckStateRole) == Qt.Checked
         ]
 
     def get_selected_sample_frame_features(self):
 
-        sample_frame: SampleFrame = self.cbo_sample_frame.currentData(Qt.UserRole)
+        sample_frame: SampleFrame = self.cbo_sample_frame.currentData(USER_ROLE)
         sample_frame_feature_ids = self.get_selected_sample_frame_feature_ids()
 
         fc_path = f"{self.qris_project.project_file}|layername={sample_frame.fc_name}|subset={sample_frame.fc_id_column_name} = {sample_frame.id}"
@@ -128,14 +128,14 @@ class SampleFrameWidget(QtWidgets.QWidget):
 
     def set_selected_sample_frame(self, sample_frame_id: int, feature_ids: Optional[list] = None):
         for i in range(self.cbo_sample_frame.count()):
-            if self.cbo_sample_frame.itemData(i, Qt.UserRole).id == sample_frame_id:
+            if self.cbo_sample_frame.itemData(i, USER_ROLE).id == sample_frame_id:
                 self.cbo_sample_frame.setCurrentIndex(i)
                 break
 
         if feature_ids is not None:
             for i in range(self.sample_frame_features_model.rowCount(None)):
                 index = self.sample_frame_features_model.index(i)
-                if self.sample_frame_features_model.data(index, Qt.UserRole).id in feature_ids:
+                if self.sample_frame_features_model.data(index, USER_ROLE).id in feature_ids:
                     self.sample_frame_features_model.setData(index, Qt.Checked, Qt.CheckStateRole)
 
     def setupUi(self):
