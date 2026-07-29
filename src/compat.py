@@ -34,7 +34,7 @@ try:
     ALIGN_VCENTER = Qt.AlignmentFlag.AlignVCenter
     RICH_TEXT = Qt.TextFormat.RichText
     PLAIN_TEXT = Qt.TextFormat.PlainText
-    WA_QUIT_ON_CLOSE = Qt.ApplicationAttribute.WA_QuitOnClose
+    WA_QUIT_ON_CLOSE = Qt.WidgetAttribute.WA_QuitOnClose
     CHECKED = Qt.CheckState.Checked
     UNCHECKED = Qt.CheckState.Unchecked
     PARTIALLY_CHECKED = Qt.CheckState.PartiallyChecked
@@ -45,18 +45,11 @@ try:
     VERTICAL = Qt.Orientation.Vertical
     ASCENDING_ORDER = Qt.SortOrder.AscendingOrder
     DESCENDING_ORDER = Qt.SortOrder.DescendingOrder
-    LEFT_DOCK = Qt.DockWidgetArea.LeftDockWidgetArea
-    RIGHT_DOCK = Qt.DockWidgetArea.RightDockWidgetArea
-    TOP_DOCK = Qt.DockWidgetArea.TopDockWidgetArea
-    BOTTOM_DOCK = Qt.DockWidgetArea.BottomDockWidgetArea
-    DOCK_CLOSABLE = QDockWidget.DockWidgetFeature.DockWidgetClosable
-    DOCK_MOVABLE = QDockWidget.DockWidgetFeature.DockWidgetMovable
-    DOCK_FLOATABLE = QDockWidget.DockWidgetFeature.DockWidgetFloatable
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonStyle.ToolButtonTextBesideIcon
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonStyle.ToolButtonTextOnly
     TOOL_BTN_ICON_ONLY = Qt.ToolButtonStyle.ToolButtonIconOnly
-    TOOL_BTN_INSTANT_POPUP = Qt.ToolButtonPopupMode.InstantPopup
-    TOOL_BTN_MENU_POPUP = Qt.ToolButtonPopupMode.MenuButtonPopup
+    TOOL_BTN_INSTANT_POPUP = QToolButton.ToolButtonPopupMode.InstantPopup
+    TOOL_BTN_MENU_POPUP = QToolButton.ToolButtonPopupMode.MenuButtonPopup
     SLIDER_TICKS_BELOW = QSlider.TickPosition.TicksBelow
     SCROLL_BAR_ALWAYS_OFF = Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     WAIT_CURSOR = Qt.CursorShape.WaitCursor
@@ -100,13 +93,6 @@ except AttributeError:
     VERTICAL = Qt.Vertical  # type: ignore[attr-defined]
     ASCENDING_ORDER = Qt.AscendingOrder  # type: ignore[attr-defined]
     DESCENDING_ORDER = Qt.DescendingOrder  # type: ignore[attr-defined]
-    LEFT_DOCK = Qt.LeftDockWidgetArea  # type: ignore[attr-defined]
-    RIGHT_DOCK = Qt.RightDockWidgetArea  # type: ignore[attr-defined]
-    TOP_DOCK = Qt.TopDockWidgetArea  # type: ignore[attr-defined]
-    BOTTOM_DOCK = Qt.BottomDockWidgetArea  # type: ignore[attr-defined]
-    DOCK_CLOSABLE = QDockWidget.DockWidgetClosable  # type: ignore[attr-defined]
-    DOCK_MOVABLE = QDockWidget.DockWidgetMovable  # type: ignore[attr-defined]
-    DOCK_FLOATABLE = QDockWidget.DockWidgetFloatable  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonTextBesideIcon  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonTextOnly  # type: ignore[attr-defined]
     TOOL_BTN_ICON_ONLY = Qt.ToolButtonIconOnly  # type: ignore[attr-defined]
@@ -135,6 +121,29 @@ except AttributeError:
     DIALOG_BTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
     CUSTOM_CONTEXT_MENU = Qt.CustomContextMenu  # type: ignore[attr-defined]
     USER_ROLE = Qt.UserRole  # type: ignore[attr-defined]
+
+
+# ── Dock widget areas ─────────────────────────────────────────────────────────
+# Qt.DockWidgetArea may not be on QtCore.Qt in all QGIS PyQt6 wrappers,
+# so these are split into their own try/except block.
+try:
+    # Qt 6 / PyQt6 — scoped enum (on QDockWidget, not QtCore.Qt)
+    LEFT_DOCK = Qt.DockWidgetArea.LeftDockWidgetArea
+    RIGHT_DOCK = Qt.DockWidgetArea.RightDockWidgetArea
+    TOP_DOCK = Qt.DockWidgetArea.TopDockWidgetArea
+    BOTTOM_DOCK = Qt.DockWidgetArea.BottomDockWidgetArea
+    DOCK_CLOSABLE = QDockWidget.DockWidgetFeature.DockWidgetClosable
+    DOCK_MOVABLE = QDockWidget.DockWidgetFeature.DockWidgetMovable
+    DOCK_FLOATABLE = QDockWidget.DockWidgetFeature.DockWidgetFloatable
+except AttributeError:
+    # Qt 5 / PyQt5 — flat enums
+    LEFT_DOCK = Qt.LeftDockWidgetArea  # type: ignore[attr-defined]
+    RIGHT_DOCK = Qt.RightDockWidgetArea  # type: ignore[attr-defined]
+    TOP_DOCK = Qt.TopDockWidgetArea  # type: ignore[attr-defined]
+    BOTTOM_DOCK = Qt.BottomDockWidgetArea  # type: ignore[attr-defined]
+    DOCK_CLOSABLE = QDockWidget.DockWidgetClosable  # type: ignore[attr-defined]
+    DOCK_MOVABLE = QDockWidget.DockWidgetMovable  # type: ignore[attr-defined]
+    DOCK_FLOATABLE = QDockWidget.DockWidgetFloatable  # type: ignore[attr-defined]
 
 
 # ── QVariant / QMetaType field type compatibility ───────────────────────────
@@ -275,7 +284,7 @@ try:
     QABSTRACTITEMVIEW_EXTENDED_SELECTION = QAbstractItemView.SelectionMode.ExtendedSelection
     QABSTRACTITEMVIEW_NO_SELECTION = QAbstractItemView.SelectionMode.NoSelection
     QABSTRACTITEMVIEW_INTERNAL_MOVE = QAbstractItemView.DragDropMode.InternalMove
-    QABSTRACTITEMVIEW_SELECT_ITEMS = QAbstractItemView.SelectionMode.SelectItems
+    QABSTRACTITEMVIEW_SELECT_ITEMS = QAbstractItemView.SelectionBehavior.SelectItems
     MOVE_ACTION = Qt.DropAction.MoveAction
     DLG_ACCEPTED = QDialog.DialogCode.Accepted
     DLG_REJECTED = QDialog.DialogCode.Rejected
@@ -385,36 +394,38 @@ except AttributeError:
 
 # ── QgsUnitTypes enum compatibility ──────────────────────────────────────────
 try:
+    from qgis.core import Qgis
+
     # QGIS 4 / Qt 6 — scoped enums
-    UNIT_DISTANCE_METERS = QgsUnitTypes.DistanceUnit.DistanceMeters
-    UNIT_DISTANCE_KILOMETERS = QgsUnitTypes.DistanceUnit.DistanceKilometers
-    UNIT_DISTANCE_FEET = QgsUnitTypes.DistanceUnit.DistanceFeet
-    UNIT_DISTANCE_YARDS = QgsUnitTypes.DistanceUnit.DistanceYards
-    UNIT_DISTANCE_MILES = QgsUnitTypes.DistanceUnit.DistanceMiles
-    UNIT_DISTANCE_NAUTICAL_MILES = QgsUnitTypes.DistanceUnit.DistanceNauticalMiles
-    UNIT_DISTANCE_MILLIMETERS = QgsUnitTypes.DistanceUnit.DistanceMillimeters
-    UNIT_DISTANCE_CENTIMETERS = QgsUnitTypes.DistanceUnit.DistanceCentimeters
+    UNIT_DISTANCE_METERS = Qgis.DistanceUnit.Meters
+    UNIT_DISTANCE_KILOMETERS = Qgis.DistanceUnit.Kilometers
+    UNIT_DISTANCE_FEET = Qgis.DistanceUnit.Feet
+    UNIT_DISTANCE_YARDS = Qgis.DistanceUnit.Yards
+    UNIT_DISTANCE_MILES = Qgis.DistanceUnit.Miles
+    UNIT_DISTANCE_NAUTICAL_MILES = Qgis.DistanceUnit.NauticalMiles
+    UNIT_DISTANCE_MILLIMETERS = Qgis.DistanceUnit.Millimeters
+    UNIT_DISTANCE_CENTIMETERS = Qgis.DistanceUnit.Centimeters
 
-    UNIT_AREA_SQUARE_METERS = QgsUnitTypes.AreaUnit.AreaSquareMeters
-    UNIT_AREA_SQUARE_KILOMETERS = QgsUnitTypes.AreaUnit.AreaSquareKilometers
-    UNIT_AREA_SQUARE_FEET = QgsUnitTypes.AreaUnit.AreaSquareFeet
-    UNIT_AREA_SQUARE_YARDS = QgsUnitTypes.AreaUnit.AreaSquareYards
-    UNIT_AREA_SQUARE_MILES = QgsUnitTypes.AreaUnit.AreaSquareMiles
-    UNIT_AREA_HECTARES = QgsUnitTypes.AreaUnit.AreaHectares
-    UNIT_AREA_ACRES = QgsUnitTypes.AreaUnit.AreaAcres
-    UNIT_AREA_SQUARE_NAUTICAL_MILES = QgsUnitTypes.AreaUnit.AreaSquareNauticalMiles
-    UNIT_AREA_SQUARE_CENTIMETERS = QgsUnitTypes.AreaUnit.AreaSquareCentimeters
-    UNIT_AREA_SQUARE_MILLIMETERS = QgsUnitTypes.AreaUnit.AreaSquareMillimeters
+    UNIT_AREA_SQUARE_METERS = Qgis.AreaUnit.SquareMeters
+    UNIT_AREA_SQUARE_KILOMETERS = Qgis.AreaUnit.SquareKilometers
+    UNIT_AREA_SQUARE_FEET = Qgis.AreaUnit.SquareFeet
+    UNIT_AREA_SQUARE_YARDS = Qgis.AreaUnit.SquareYards
+    UNIT_AREA_SQUARE_MILES = Qgis.AreaUnit.SquareMiles
+    UNIT_AREA_HECTARES = Qgis.AreaUnit.Hectares
+    UNIT_AREA_ACRES = Qgis.AreaUnit.Acres
+    UNIT_AREA_SQUARE_NAUTICAL_MILES = Qgis.AreaUnit.SquareNauticalMiles
+    UNIT_AREA_SQUARE_CENTIMETERS = Qgis.AreaUnit.SquareCentimeters
+    UNIT_AREA_SQUARE_MILLIMETERS = Qgis.AreaUnit.SquareMillimeters
 
-    UNIT_VOLUME_CUBIC_METERS = QgsUnitTypes.VolumeUnit.VolumeCubicMeters
-    UNIT_VOLUME_CUBIC_FEET = QgsUnitTypes.VolumeUnit.VolumeCubicFeet
-    UNIT_VOLUME_CUBIC_YARDS = QgsUnitTypes.VolumeUnit.VolumeCubicYards
-    UNIT_VOLUME_BARREL = QgsUnitTypes.VolumeUnit.VolumeBarrel
-    UNIT_VOLUME_CUBIC_DECIMETER = QgsUnitTypes.VolumeUnit.VolumeCubicDecimeter
-    UNIT_VOLUME_LITERS = QgsUnitTypes.VolumeUnit.VolumeLiters
-    UNIT_VOLUME_GALLON_US = QgsUnitTypes.VolumeUnit.VolumeGallonUS
-    UNIT_VOLUME_CUBIC_INCH = QgsUnitTypes.VolumeUnit.VolumeCubicInch
-    UNIT_VOLUME_CUBIC_CENTIMETER = QgsUnitTypes.VolumeUnit.VolumeCubicCentimeter
+    UNIT_VOLUME_CUBIC_METERS = Qgis.VolumeUnit.CubicMeters
+    UNIT_VOLUME_CUBIC_FEET = Qgis.VolumeUnit.CubicFeet
+    UNIT_VOLUME_CUBIC_YARDS = Qgis.VolumeUnit.CubicYards
+    UNIT_VOLUME_BARREL = Qgis.VolumeUnit.Barrel
+    UNIT_VOLUME_CUBIC_DECIMETER = Qgis.VolumeUnit.CubicDecimeter
+    UNIT_VOLUME_LITERS = Qgis.VolumeUnit.Liters
+    UNIT_VOLUME_GALLON_US = Qgis.VolumeUnit.GallonUS
+    UNIT_VOLUME_CUBIC_INCH = Qgis.VolumeUnit.CubicInch
+    UNIT_VOLUME_CUBIC_CENTIMETER = Qgis.VolumeUnit.CubicCentimeter
 except AttributeError:
     # QGIS 3 / Qt 5 — flat enums
     UNIT_DISTANCE_METERS = QgsUnitTypes.DistanceMeters  # type: ignore[attr-defined]
