@@ -2,14 +2,14 @@ from typing import Optional
 
 from qgis.core import QgsVectorLayer
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import Qt, pyqtSignal
-from qgis.utils import iface
+from qgis.PyQt.QtCore import pyqtSignal
 
-from ...compat import QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, USER_ROLE
+from ...compat import CHECK_STATE_ROLE, CHECKED, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, UNCHECKED, USER_ROLE
 from ...model.db_item import CheckableDBItemModel, DBItem, DBItemModel
 from ...model.project import Project
 from ...model.sample_frame import SampleFrame, get_sample_frame_ids
 from ...QRiS.qris_map_manager import QRisMapManager
+from ...QRiS.settings import Settings
 
 
 class SampleFrameWidget(QtWidgets.QWidget):
@@ -84,7 +84,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
             else:
                 sample_frame_layer_tree = self.qris_map_manager.build_sample_frame_layer(sample_frame)
             sample_frame_layer: QgsVectorLayer = sample_frame_layer_tree.layer() if hasattr(sample_frame_layer_tree, "layer") else sample_frame_layer_tree
-            iface.setActiveLayer(sample_frame_layer)
+            Settings().iface.setActiveLayer(sample_frame_layer)
             sample_frame_feature_ids = self.get_selected_sample_frame_feature_ids()
             sample_frame_layer.removeSelection()
             sample_frame_layer.selectByIds(sample_frame_feature_ids)
@@ -94,24 +94,24 @@ class SampleFrameWidget(QtWidgets.QWidget):
     def btn_select_all_clicked(self):
         for i in range(self.sample_frame_features_model.rowCount(None)):
             index = self.sample_frame_features_model.index(i)
-            self.sample_frame_features_model.setData(index, Qt.Checked, Qt.CheckStateRole)
+            self.sample_frame_features_model.setData(index, CHECKED, CHECK_STATE_ROLE)
 
     def btn_select_none_clicked(self):
         for i in range(self.sample_frame_features_model.rowCount(None)):
             index = self.sample_frame_features_model.index(i)
-            self.sample_frame_features_model.setData(index, Qt.Unchecked, Qt.CheckStateRole)
+            self.sample_frame_features_model.setData(index, UNCHECKED, CHECK_STATE_ROLE)
 
     def selected_sample_frame(self) -> SampleFrame:
         return self.cbo_sample_frame.currentData(USER_ROLE)
 
     def selected_features_count(self):
-        return sum([1 for i in range(self.sample_frame_features_model.rowCount(None)) if self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), Qt.CheckStateRole) == Qt.Checked])
+        return sum([1 for i in range(self.sample_frame_features_model.rowCount(None)) if self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), CHECK_STATE_ROLE) == CHECKED])
 
     def get_selected_sample_frame_feature_ids(self):
         return [
             self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), USER_ROLE).id
             for i in range(self.sample_frame_features_model.rowCount(None))
-            if self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), Qt.CheckStateRole) == Qt.Checked
+            if self.sample_frame_features_model.data(self.sample_frame_features_model.index(i), CHECK_STATE_ROLE) == CHECKED
         ]
 
     def get_selected_sample_frame_features(self):
@@ -136,7 +136,7 @@ class SampleFrameWidget(QtWidgets.QWidget):
             for i in range(self.sample_frame_features_model.rowCount(None)):
                 index = self.sample_frame_features_model.index(i)
                 if self.sample_frame_features_model.data(index, USER_ROLE).id in feature_ids:
-                    self.sample_frame_features_model.setData(index, Qt.Checked, Qt.CheckStateRole)
+                    self.sample_frame_features_model.setData(index, CHECKED, CHECK_STATE_ROLE)
 
     def setupUi(self):
 

@@ -1,7 +1,20 @@
-from qgis.PyQt.QtCore import QSettings, Qt
+from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QFont
-from qgis.PyQt.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QSizePolicy, QSpacerItem, QTabWidget, QVBoxLayout, QWidget
+from qgis.PyQt.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QSpacerItem, QTabWidget, QVBoxLayout, QWidget
 
+from ..compat import (
+    ALIGN_TOP,
+    CHECKED,
+    DLG_ACCEPTED,
+    DLGBTN_CANCEL,
+    DLGBTN_OK,
+    MSGBOX_NO,
+    MSGBOX_YES,
+    PLAIN_TEXT,
+    RICH_TEXT,
+    SPSZ_EXPANDING,
+    SPSZ_MINIMUM,
+)
 from ..lib.climate_engine import clear_api_key, get_api_key, open_climate_engine_website
 from ..lib.font_tools import sanitize_chart_font, select_chart_font
 from ..model.project import Project
@@ -120,7 +133,7 @@ class FrmSettings(QDialog):
             self.txt_protocol_folder.setText(path)
 
     def on_show_experimental_changed(self, state):
-        if state == Qt.Checked:
+        if state == CHECKED:
             QMessageBox.warning(
                 self,
                 "Experimental Protocols",
@@ -138,12 +151,12 @@ class FrmSettings(QDialog):
 
     def open_api_key_dialog(self):
         dlg = FrmApiKey(self)
-        if dlg.exec() == QDialog.Accepted:
+        if dlg.exec() == DLG_ACCEPTED:
             self._refresh_api_key_status()
 
     def remove_api_key(self):
-        reply = QMessageBox.question(self, "Remove API Key", "Are you sure you want to remove the Climate Engine API key?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
+        reply = QMessageBox.question(self, "Remove API Key", "Are you sure you want to remove the Climate Engine API key?", MSGBOX_YES | MSGBOX_NO, MSGBOX_NO)
+        if reply == MSGBOX_YES:
             clear_api_key()
             self._refresh_api_key_status()
 
@@ -224,13 +237,13 @@ class FrmSettings(QDialog):
         self.chk_telemetry = QCheckBox("Help improve the software by sharing anonymous usage data.")
         self.vertGeneral.addWidget(self.chk_telemetry)
 
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box = QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
         self.horiz_buttons = QHBoxLayout()
         self.horiz_buttons.addWidget(add_help_button(self, "toolbar#settings"))
-        self.horiz_buttons.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.horiz_buttons.addItem(QSpacerItem(40, 20, SPSZ_EXPANDING, SPSZ_MINIMUM))
         self.horiz_buttons.addWidget(self.button_box)
         self.vert.addLayout(self.horiz_buttons)
 
@@ -259,7 +272,7 @@ class FrmSettings(QDialog):
         self.protocol_layout.addWidget(self.chkShowExperimentalProtocols)
 
         self.protocol_layout.addStretch(1)
-        self.protocol_layout.setAlignment(Qt.AlignTop)
+        self.protocol_layout.setAlignment(ALIGN_TOP)
 
         self.tabProtocols = QWidget()
         self.tabProtocols.setLayout(self.protocol_layout)
@@ -272,7 +285,7 @@ class FrmSettings(QDialog):
             "Climate Engine is a third-party service accessing climate and Earth observation data. QRiS connects to the Climate Engine API to retrieve these data for use in your QRiS projects. Use the buttons below to request a Climate "
             "Engine API key and then set the key so QRiS can use your account when accessing Climate Engine data."
         )
-        lbl_climate_engine_text.setTextFormat(Qt.PlainText)
+        lbl_climate_engine_text.setTextFormat(PLAIN_TEXT)
         lbl_climate_engine_text.setWordWrap(True)
         climate_engine_layout.addWidget(lbl_climate_engine_text)
 
@@ -282,7 +295,7 @@ class FrmSettings(QDialog):
         horiz_api_key.addWidget(QLabel("API Key:"))
 
         self.lbl_api_key_status = QLabel()
-        self.lbl_api_key_status.setTextFormat(Qt.RichText)
+        self.lbl_api_key_status.setTextFormat(RICH_TEXT)
         horiz_api_key.addWidget(self.lbl_api_key_status, 1)
 
         btn_set_api_key = QPushButton("Set Key…")
