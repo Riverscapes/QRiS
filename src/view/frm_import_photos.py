@@ -3,13 +3,15 @@ import os
 import shutil
 
 from qgis import processing
-from qgis.core import Qgis, QgsMessageLog, QgsProcessingContext, QgsVectorLayer, QgsVectorLayerUtils
+from qgis.core import QgsProcessingContext, QgsVectorLayer, QgsVectorLayerUtils
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QDateTime, Qt
 from qgis.PyQt.QtGui import QPixmap
 
+from ..compat import MESSAGE_LEVEL_WARNING
 from ..model.event_layer import EventLayer
 from ..model.project import Project
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons
 
 
@@ -99,7 +101,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
 
     def task_finished(self, context: QgsProcessingContext, successful, results):
         if not successful:
-            QgsMessageLog.logMessage("Task finished unsucessfully", "Import Photos Qgis Processing", Qgis.Warning)
+            Settings().log("Task finished unsucessfully", "Import Photos Qgis Processing", MESSAGE_LEVEL_WARNING)
         output_layer = results["OUTPUT"]
 
         if output_layer.isValid():

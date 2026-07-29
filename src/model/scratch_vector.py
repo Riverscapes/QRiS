@@ -4,9 +4,10 @@ import sqlite3
 from typing import Optional
 
 from osgeo import ogr
-from qgis.core import Qgis, QgsMessageLog
 
+from ..compat import MESSAGE_LEVEL_CRITICAL
 from ..QRiS.path_utilities import parse_posix_path
+from ..QRiS.settings import Settings
 from .db_item import DBItem
 
 SCRATCH_VECTOR_MACHINE_CODE = "Scratch Vectors"
@@ -84,7 +85,7 @@ class ScratchVector(DBItem):
 
             except Exception as ex:
                 # Do nothing. This is nice to have
-                QgsMessageLog.logMessage(f"Error Cleaning Vector Scratch Space: {ex}", "QRiS", Qgis.Critical)
+                Settings().msg_bar("Error Cleaning Vector Scratch Space", str(ex), MESSAGE_LEVEL_CRITICAL)
 
         # absolute_path = os.path.join(os.path.dirname(db_path), self.path)
 

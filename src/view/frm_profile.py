@@ -2,17 +2,16 @@ import json
 from typing import Optional
 
 from qgis.core import QgsApplication, QgsVectorLayer
-from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtWidgets
-from qgis.utils import Qgis, iface
 
-from ..compat import UNCHECKED, USER_ROLE
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
 from ..model.db_item import DBItem, DBItemModel
 from ..model.profile import Profile, insert_profile
 from ..model.project import Project
 from ..model.scratch_vector import ScratchVector
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons, validate_name
 from .widgets.metadata import MetadataWidget
 from .widgets.stats_widget import StatsWidget
@@ -21,7 +20,6 @@ from .widgets.stats_widget import StatsWidget
 class FrmProfile(QtWidgets.QDialog):
     def __init__(self, parent, qris_project: Project, import_source_path, profile: Profile = None, profile_type=None, fc_name: str = "profile_features", system_metadata: Optional[dict] = None, metrics: Optional[dict] = None):
 
-        self.iface: QgisInterface = iface
         self.qris_project = qris_project
         self.profile = profile
         self.import_source_path = import_source_path
@@ -160,26 +158,24 @@ class FrmProfile(QtWidgets.QDialog):
                         self.profile.delete(self.qris_project.project_file)
                     except Exception as ex_delete:
                         # add to message bar and log
-                        self.iface.messageBar().pushMessage("Error Deleting Profile", str(ex_delete), level=Qgis.Critical, duration=5)
-                        QgsApplication.messageLog().logMessage(f"Error Deleting Profile: {ex_delete!s}", "QRIS")
+                        Settings().msg_bar("Error Deleting Profile", str(ex_delete), MESSAGE_LEVEL_CRITICAL)
                     # add to message bar and log
-                    self.iface.messageBar().pushMessage("Error Importing Profile Features", str(ex), level=Qgis.Critical, duration=5)
-                    QgsApplication.messageLog().logMessage(f"Error Importing Profile Features: {ex!s}", "QRIS", level=Qgis.Critical)
+                    Settings().msg_bar("Error Importing Profile Features", str(ex), MESSAGE_LEVEL_CRITICAL)
+
                     return
 
     def on_import_complete(self, result: bool):
 
         if not result:
-            QtWidgets.QMessageBox.warning(self, "Error Importing Profile Features", str(self.exception))
+            Settings().msg_bar("Error Importing Profile Features", str(self.exception), MESSAGE_LEVEL_CRITICAL)
             try:
                 self.profile.delete(self.qris_project.project_file)
             except Exception as ex:
                 # add to message bar and log
-                self.iface.messageBar().pushMessage("Error Deleting Profile", str(ex), level=Qgis.Critical, duration=5)
-                QgsApplication.messageLog().logMessage(f"Error Deleting Profile: {ex!s}", "QRIS", level=Qgis.Critical)
+                Settings().msg_bar("Error Deleting Profile", str(ex), MESSAGE_LEVEL_CRITICAL)
             return
         else:
-            self.iface.messageBar().pushMessage("Profile Import Complete.", f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Profile Import Complete.", f"{self.import_source_path} saved successfully.", MESSAGE_LEVEL_SUCCESS)
             super().accept()
 
     def setupUi(self):
@@ -249,4 +245,3 @@ class FrmProfile(QtWidgets.QDialog):
         self.vert.addLayout(add_to_map_row)
 
         self.vert.addLayout(add_standard_form_buttons(self, "inputs/profiles"))
-

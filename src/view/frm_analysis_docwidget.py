@@ -21,17 +21,18 @@
  ***************************************************************************/
 """
 
-from qgis.core import Qgis, QgsApplication, QgsMessageLog
+from qgis.core import QgsApplication
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..compat import DLG_ACCEPTED, DOCK_CLOSABLE, DOCK_FLOATABLE, DOCK_MOVABLE, SPSZ_EXPANDING, SPSZ_FIXED, SPSZ_MINIMUM, USER_ROLE
+from ..compat import DLG_ACCEPTED, DOCK_CLOSABLE, DOCK_FLOATABLE, DOCK_MOVABLE, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, SPSZ_EXPANDING, SPSZ_FIXED, SPSZ_MINIMUM, USER_ROLE
 from ..gp.analysis_metrics_task import AnalysisMetricsTask
 from ..model.analysis import Analysis
 from ..model.db_item import DBItemModel
 from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID, Event
 from ..model.project import Project
 from ..model.sample_frame import get_sample_frame_ids
+from ..QRiS.settings import Settings
 from .frm_analysis_explorer import FrmAnalysisExplorer
 from .frm_analysis_properties import FrmAnalysisProperties
 from .frm_export_metrics import FrmExportMetrics
@@ -125,11 +126,11 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             metric_ids = list(self.analysis.analysis_metrics.keys())
 
             if len(sample_frame_ids) < 1 or (len(event_ids) < 1 and not self.analysis.is_simple_intrinsic_mode()) or len(metric_ids) < 1:
-                self.iface.messageBar().pushMessage("Metrics", "Nothing selected to calculate.", level=Qgis.Warning)
+                Settings().msg_bar("Metrics", "Nothing selected to calculate.", MESSAGE_LEVEL_WARNING)
                 return
 
             if self.metrics_task is not None:
-                self.iface.messageBar().pushMessage("Metrics", "A metric calculation task is already running.", level=Qgis.Warning)
+                Settings().msg_bar("Metrics", "A metric calculation task is already running.", MESSAGE_LEVEL_WARNING)
                 return
 
             self.metrics_task = AnalysisMetricsTask(
@@ -147,7 +148,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
 
             self.cmdCalculate.setEnabled(False)
             self.cmdCalculate.setText("Calculating... 0%")
-            self.iface.messageBar().pushMessage("Metrics", "Metric calculation started in the background.", level=Qgis.Info)
+            Settings().msg_bar("Metrics", "Metric calculation started in the background.")
             QgsApplication.taskManager().addTask(self.metrics_task)
 
     def on_metrics_task_progress(self, progress: float):
@@ -157,7 +158,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def on_metrics_task_complete(self, summary: dict):
 
         for message in summary.get("messages", []):
-            QgsMessageLog.logMessage(message["text"], "QRiS_Metrics", message["level"])
+            Settings().log(message["text"], "QRiS_Metrics", message["level"])
 
         task_context = self.metrics_task_context or {"mode": "bulk"}
         self.metrics_task_context = None
@@ -166,12 +167,12 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
         self.cmdCalculate.setText(self._calculate_button_default_text)
 
         if summary.get("canceled", False):
-            self.iface.messageBar().pushMessage("Metrics", "Metric calculation canceled.", level=Qgis.Warning)
+            Settings().msg_bar("Metrics", "Metric calculation canceled.", MESSAGE_LEVEL_WARNING)
             self.load_table_values()
             return
 
         if summary.get("exception", None) is not None:
-            self.iface.messageBar().pushMessage("Metrics", "Metric calculation ended with an error. See log for details.", level=Qgis.Warning)
+            Settings().msg_bar("Metrics", "Metric calculation ended with an error. See log for details.", MESSAGE_LEVEL_WARNING)
             self.load_table_values()
             return
 
@@ -179,24 +180,24 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             has_missing = summary.get("missing_data", 0) > 0
             has_errors = summary.get("errors", 0) > 0
             if not has_missing and not has_errors:
-                self.iface.messageBar().pushMessage("Metrics", "Metric successfully calculated.", level=Qgis.Success)
+                Settings().msg_bar("Metrics", "Metric successfully calculated.", MESSAGE_LEVEL_SUCCESS)
             else:
                 if has_missing:
-                    self.iface.messageBar().pushMessage("Metrics", "Metric was not calculated due to missing data requirements. See log for details.", level=Qgis.Warning)
+                    Settings().msg_bar("Metrics", "Metric was not calculated due to missing data requirements. See log for details.", MESSAGE_LEVEL_WARNING)
                 if has_errors:
-                    self.iface.messageBar().pushMessage("Metrics", "Metric was not calculated due to a processing error. See log for details.", level=Qgis.Warning)
+                    Settings().msg_bar("Metrics", "Metric was not calculated due to a processing error. See log for details.", MESSAGE_LEVEL_WARNING)
             self.load_table_values()
             return
 
         has_missing = summary.get("missing_data", 0) > 0
         has_errors = summary.get("errors", 0) > 0
         if not has_missing and not has_errors:
-            self.iface.messageBar().pushMessage("Metrics", "All metrics successfully calculated.", level=Qgis.Success)
+            Settings().msg_bar("Metrics", "All metrics successfully calculated.", MESSAGE_LEVEL_SUCCESS)
         else:
             if has_missing:
-                self.iface.messageBar().pushMessage("Metrics", "One or more metrics were not calculated due to missing data requirements. See log for details.", level=Qgis.Success)
+                Settings().msg_bar("Metrics", "One or more metrics were not calculated due to missing data requirements. See log for details.", MESSAGE_LEVEL_WARNING)
             if has_errors:
-                self.iface.messageBar().pushMessage("Metrics", "One or more metrics were not calculated due to processing error(s). See log for details.", level=Qgis.Warning)
+                Settings().msg_bar("Metrics", "One or more metrics were not calculated due to processing error(s). See log for details.", MESSAGE_LEVEL_WARNING)
 
         # Metrics task writes directly to SQLite; notify project change so WAL is checkpointed to the gpkg main file.
         self.qris_project.project_changed.emit()
@@ -244,7 +245,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
             return
 
         if self.metrics_task is not None:
-            self.iface.messageBar().pushMessage("Metrics", "A metric calculation task is already running.", level=Qgis.Warning)
+            Settings().msg_bar("Metrics", "A metric calculation task is already running.", MESSAGE_LEVEL_WARNING)
             return
 
         self.metrics_task = AnalysisMetricsTask(

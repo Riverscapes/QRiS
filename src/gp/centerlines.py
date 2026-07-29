@@ -2,12 +2,11 @@
 Centerline geoprocessing task using QgsGeometry
 """
 
-from qgis.core import Qgis, QgsGeometry, QgsLineString, QgsMessageLog, QgsPointXY, QgsTask, QgsWkbTypes
+from qgis.core import QgsGeometry, QgsLineString, QgsPointXY, QgsTask, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
-
-MESSAGE_CATEGORY = "CenterlineTask"
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
 
 class CenterlineTask(QgsTask):
@@ -157,16 +156,16 @@ class CenterlineTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Centerline Task completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Centerline Task completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Centerline not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Centerline not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Generate Centerline Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Generate Centerline Exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.centerline_complete.emit(self.centerline)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Centerline Tool was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Centerline Tool was canceled")
         super().cancel()

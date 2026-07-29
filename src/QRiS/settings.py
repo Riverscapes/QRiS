@@ -7,6 +7,7 @@ from typing import ClassVar
 from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsSettings
 
 from ...__version__ import __version__
+from ..compat import MESSAGE_LEVEL_INFO, MESSAGE_LEVEL_WARNING
 from .units import Units
 
 with open(os.path.join(os.path.dirname(__file__), "..", "..", "config.json")) as cfg_file:
@@ -73,10 +74,10 @@ class Settings(SettingsBorg):
             # Must be the last thing we do in init
             self._initdone = True
 
-    def log(self, msg: str, level: Qgis.MessageLevel = Qgis.Info):
+    def log(self, msg: str, level: Qgis.MessageLevel = MESSAGE_LEVEL_INFO):
         QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=level)
 
-    def msg_bar(self, title: str, msg: str, level: Qgis.MessageLevel = Qgis.Info, duration: int = 5):
+    def msg_bar(self, title: str, msg: str, level: Qgis.MessageLevel = MESSAGE_LEVEL_INFO, duration: int = 5):
         if self.iface is not None:
             self.iface.messageBar().pushMessage(title, msg, level=level, duration=duration)
         # Fall back to regular logging
@@ -115,7 +116,7 @@ class Settings(SettingsBorg):
         """
         # Set it in the file
         self.s.setValue(key, json.dumps({"v": value}))
-        self.log(f"SETTINGS SET: {key}={value} of type '{html.escape(str(type(value)))}'", level=Qgis.Info)
+        self.log(f"SETTINGS SET: {key}={value} of type '{html.escape(str(type(value)))}'", level=MESSAGE_LEVEL_INFO)
 
     def getSecureValue(self, key: str) -> str:
         """
@@ -129,7 +130,7 @@ class Settings(SettingsBorg):
             if raw:
                 return base64.b64decode(raw.encode()).decode("utf-8")
         except Exception as e:
-            self.log(f"Error getting secure setting {key}: {e}", level=Qgis.Warning)
+            self.log(f"Error getting secure setting {key}: {e}", level=MESSAGE_LEVEL_WARNING)
         return None
 
     def setSecureValue(self, key: str, value: str):
@@ -144,9 +145,9 @@ class Settings(SettingsBorg):
             else:
                 self.s.remove(key)
             self.s.endGroup()
-            self.log(f"SETTINGS SET: {key}=<obfuscated>", level=Qgis.Info)
+            self.log(f"SETTINGS SET: {key}=<obfuscated>", level=MESSAGE_LEVEL_INFO)
         except Exception as e:
-            self.log(f"Error setting secure setting {key}: {e}", level=Qgis.Warning)
+            self.log(f"Error setting secure setting {key}: {e}", level=MESSAGE_LEVEL_WARNING)
 
     def plugin_root_path(self):
         """Return absolute path to the plugin root directory."""
@@ -171,7 +172,7 @@ class Settings(SettingsBorg):
                 data = json.load(fh)
             return data if isinstance(data, dict) else {}
         except Exception as e:
-            self.log(f"Error loading lookups JSON: {e}", level=Qgis.Warning)
+            self.log(f"Error loading lookups JSON: {e}", level=MESSAGE_LEVEL_WARNING)
             return {}
 
     def get_lookup_values(self, section: str, key: str) -> list:

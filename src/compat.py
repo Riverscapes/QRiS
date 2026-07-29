@@ -475,3 +475,27 @@ try:
 except ImportError:
     # Not available in this QGIS build
     MAPBOX_GL_SUCCESS = None
+
+# ── QgisMessageLevel ─────────────────────────────────────────────────
+# the Qt5→Qt6 scoped-enum change on the Result enum.
+
+try:
+    from qgis.core import Qgis
+
+    # QGIS 4 / Qt 6 — scoped enum
+    MESSAGE_LEVEL_INFO = Qgis.MessageLevel.Info  # type: ignore[attr-defined]
+    MESSAGE_LEVEL_WARNING = Qgis.MessageLevel.Warning  # type: ignore[attr-defined]
+    MESSAGE_LEVEL_CRITICAL = Qgis.MessageLevel.Critical  # type: ignore[attr-defined]
+    MESSAGE_LEVEL_SUCCESS = Qgis.MessageLevel.Success  # type: ignore[attr-defined]
+except AttributeError:
+    # QGIS 3 / Qt 5 — flat enum
+    MESSAGE_LEVEL_INFO = Qgis.Info  # type: ignore[attr-defined]
+    MESSAGE_LEVEL_WARNING = Qgis.Warning  # type: ignore[attr-defined]
+    MESSAGE_LEVEL_CRITICAL = Qgis.Critical  # type: ignore[attr-defined]
+    MESSAGE_LEVEL_SUCCESS = Qgis.Success  # type: ignore[attr-defined]
+except ImportError:
+    # Not available in this QGIS build
+    MESSAGE_LEVEL_INFO = None
+    MESSAGE_LEVEL_WARNING = None
+    MESSAGE_LEVEL_CRITICAL = None
+    MESSAGE_LEVEL_SUCCESS = None

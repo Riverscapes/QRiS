@@ -2,14 +2,13 @@ import json
 import os
 from typing import Optional
 
-from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDataProvider, QgsFeatureRequest, QgsField, QgsMessageLog, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDataProvider, QgsFeatureRequest, QgsField, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import QVariant, pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
 from ..gp.feature_class_functions import layer_path_parser
+from ..QRiS.settings import Settings
 from .import_feature_class import ImportFieldMap
-
-MESSAGE_CATEGORY = "QRiS_ImportMapLayer"
 
 
 class ImportMapLayer(QgsTask):
@@ -209,16 +208,16 @@ class ImportMapLayer(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Import Feature Class (from map layer) completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Import Feature Class (from map layer) completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Feature Class import (from mapy layer) not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Feature Class import (from mapy layer) not successful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Feature Class import (from map layer) exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Feature Class import (from map layer) exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 # raise self.exception
 
         self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Feature Class import (from map layer) was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Feature Class import (from map layer) was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

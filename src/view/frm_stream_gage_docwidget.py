@@ -2,11 +2,11 @@ from datetime import date, datetime
 import importlib
 import sqlite3
 
-from qgis.core import Qgis, QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsVectorLayer
+from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
-from ..compat import CUSTOM_CONTEXT_MENU, MSGBOX_NO, MSGBOX_YES, USER_ROLE
+from ..compat import CUSTOM_CONTEXT_MENU, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, MSGBOX_NO, MSGBOX_YES, USER_ROLE
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 from ..gp.stream_gage_task import StreamGageTask
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
@@ -32,10 +32,7 @@ try:
     ticker = importlib.import_module("matplotlib.ticker")
     MATPLOTLIB_AVAILABLE = FigureCanvas is not None and Figure is not None
 except ImportError:
-    Settings.log(
-        "Matplotlib is not available. Stream gage graphing is disabled.",
-        level=Qgis.Warning,
-    )
+    Settings.log("Matplotlib is not available. Stream gage graphing is disabled.", MESSAGE_LEVEL_WARNING)
 
 # Help on selection changed event
 # https://stackoverflow.com/questions/10156842/howto-get-the-selectionchanged-signal
@@ -45,7 +42,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
     def __init__(self, iface, project: Project, map_manager: QRisMapManager, parent=None):
 
         super().__init__(parent)
-        self.iface = iface
+
         self.project = project
         self.map_manager = map_manager
         self.setupUi()
@@ -96,9 +93,9 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
             return
 
         # ) .setSelectedFeatures
-        self.iface.mapCanvas().setCurrentLayer(map_layer)
+        Settings().iface.mapCanvas().setCurrentLayer(map_layer)
         map_layer.selectByIds([site_id])
-        self.iface.mapCanvas().zoomToSelected()
+        Settings().iface.mapCanvas().zoomToSelected()
 
     def selected_stream_gage(self):
         lst_item = self.stream_gage_model.itemFromIndex(self.lst_gages.currentIndex())
@@ -235,10 +232,10 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
     def on_download_discharges_complete(self, success: bool, rowsAffected: int):
 
         if success:
-            self.iface.messageBar().pushMessage("Stream Discharges Downloaded", f"{rowsAffected} discharge records downloaded.", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Stream Discharges Downloaded", f"{rowsAffected} discharge records downloaded.", MESSAGE_LEVEL_SUCCESS)
             self.project.project_changed.emit()
         else:
-            self.iface.messageBar().pushMessage("Stream Discharges Download Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Stream Discharges Download Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_CRITICAL)
 
         data = self.load_discharge_data()
         self.load_discharge_plot(data)
@@ -246,8 +243,8 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
     def download_stream_gages(self):
 
-        extent: QgsRectangle = self.iface.mapCanvas().extent()
-        source_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        extent: QgsRectangle = Settings().iface.mapCanvas().extent()
+        source_crs = Settings().iface.mapCanvas().mapSettings().destinationCrs()
         target_crs = QgsCoordinateReferenceSystem("EPSG:4326")
         transform = QgsCoordinateTransform(source_crs, target_crs, QgsProject.instance())
         extent = transform.transform(extent)
@@ -262,14 +259,14 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         if success:
             if rowsDownloaded == 0:
-                self.iface.messageBar().pushMessage("Stream Gages", "No stream gage locations were found in the current map extent.", level=Qgis.Info, duration=5)
+                Settings().msg_bar("Stream Gages", "No stream gage locations were found in the current map extent.")
             elif rowsSaved == 0:
-                self.iface.messageBar().pushMessage("Stream Gages Downloaded", f"{rowsDownloaded} stream gage locations found, however none were new.", level=Qgis.Info, duration=5)
+                Settings().msg_bar("Stream Gages Downloaded", f"{rowsDownloaded} stream gage locations found, however none were new.", MESSAGE_LEVEL_SUCCESS)
             else:
-                self.iface.messageBar().pushMessage("Stream Gages Downloaded", f"{rowsSaved} new stream gage locations were downloaded and saved to the project.", level=Qgis.Success, duration=5)
+                Settings().msg_bar("Stream Gages Downloaded", f"{rowsSaved} new stream gage locations were downloaded and saved to the project.", MESSAGE_LEVEL_SUCCESS)
             self.project.project_changed.emit()
         else:
-            self.iface.messageBar().pushMessage("Stream Gage Download Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Stream Gage Download Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_CRITICAL)
 
         self.load_stream_gages()
 
@@ -298,7 +295,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
                 conn.commit()
             except sqlite3.Error as e:
                 conn.rollback()
-                self.iface.messageBar().pushMessage("Error Deleting Discharge Data", str(e), level=Qgis.Critical, duration=5)
+                Settings().msg_bar("Error Deleting Discharge Data", str(e), MESSAGE_LEVEL_CRITICAL)
                 return
         # now use ogr to delete the feature
         fc_path = f"{self.project.project_file}|layername=stream_gages|subset=fid = {site_id}"
@@ -308,11 +305,11 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
             temp_layer.deleteFeature(feature.id())
         temp_layer.commitChanges()
         temp_layer.updateExtents()
-        self.iface.mapCanvas().refresh()
-        self.iface.mapCanvas().refreshAllLayers()
+        Settings().iface.mapCanvas().refresh()
+        Settings().iface.mapCanvas().refreshAllLayers()
 
         # let the user know
-        self.iface.messageBar().pushMessage("Stream Gage Deleted", f"Stream Gage {site_code} and associated discharge data deleted.", level=Qgis.Info, duration=5)
+        Settings().msg_bar("Stream Gage Deleted", f"Stream Gage {site_code} and associated discharge data deleted.")
         self.project.project_changed.emit()
 
         self.load_stream_gages()
@@ -441,5 +438,3 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.tabWidget.addTab(self.metadata_tab, "Metadata")
 
         self.setWidget(self.dockWidgetContents)
-
-

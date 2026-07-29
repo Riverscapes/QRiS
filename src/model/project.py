@@ -5,9 +5,11 @@ import sqlite3
 import time
 from typing import Optional
 
-from qgis.core import Qgis, QgsCoordinateTransformContext, QgsField, QgsMessageLog, QgsVectorFileWriter, QgsVectorLayer
+from qgis.core import QgsCoordinateTransformContext, QgsField, QgsVectorFileWriter, QgsVectorLayer
 from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 from qgis.utils import spatialite_connect
+
+from src.compat import MESSAGE_LEVEL_WARNING
 
 from ..QRiS.path_utilities import parse_posix_path
 from ..QRiS.protocol_parser import load_protocol_definitions
@@ -254,7 +256,7 @@ class Project(DBItem, QObject):
 
                                 if update_needed:
                                     if update_layer(self.project_file, existing_layer.id, layer_def):
-                                        QgsMessageLog.logMessage(f"Updated fields/properties for layer '{existing_layer.name}'", "QRiS", Qgis.Info)
+                                        Settings().log(f"Updated fields/properties for layer '{existing_layer.name}'")
 
                                         # Update in-memory layer object properties
                                         existing_layer.name = layer_def.label
@@ -320,7 +322,7 @@ class Project(DBItem, QObject):
                                     metric.version,
                                 )
                                 self.metrics[metric_id] = metric_obj
-                                QgsMessageLog.logMessage(f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.", "QRiS", Qgis.Info)
+                                Settings().log(f"Metric '{metric.label}' (ID: {metric.id}, Version: {metric.version}) added to protocol '{current_protocol.machine_code}'.")
                             else:
                                 existing_metric: Metric = existing_metrics[0]
                                 # Only update label, description, and metadata if changed
@@ -375,22 +377,18 @@ class Project(DBItem, QObject):
                                     updated = True
                                     Settings().log(
                                         f"Metric '{existing_metric.name}' (ID: {existing_metric.machine_name}, Version: {existing_metric.version}) label/description/metadata/status/definition_url updated in protocol "
-                                        f"'{current_protocol.machine_code}'.",
-                                        Qgis.Info,
+                                        f"'{current_protocol.machine_code}'."
                                     )
                         if updated:
-                            Settings.log(f"Protocol '{current_protocol.machine_code}' updated.", Qgis.Info)
+                            Settings().log(f"Protocol '{current_protocol.machine_code}' updated.")
                     else:
                         protocol_writes_on_open = True
                         protocol_obj, new_metrics = insert_protocol(self.project_file, current_protocol)
                         self.protocols[protocol_obj.id] = protocol_obj
                         self.metrics.update(new_metrics)
-                        Settings.log(
-                            f"Protocol '{current_protocol.machine_code}' inserted from protocol definitions.",
-                            Qgis.Info,
-                        )
+                        Settings().log(f"Protocol '{current_protocol.machine_code}' inserted from protocol definitions.")
         except Exception as e:
-            Settings.log(f"Error updating protocols: {e}", Qgis.Warning)
+            Settings().log(f"Error updating protocols: {e}", MESSAGE_LEVEL_WARNING)
 
         # Protocol sync can write to the gpkg during project open; flush so uploads/copies see those writes immediately.
         if protocol_writes_on_open:
@@ -594,11 +592,11 @@ class Project(DBItem, QObject):
                     time.sleep(0.15)
 
                 if busy != 0:
-                    QgsMessageLog.logMessage("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", "QRiS", Qgis.Warning)
+                    Settings().log("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", "QRiS", MESSAGE_LEVEL_WARNING)
 
-            # QgsMessageLog.logMessage(f"Project flushed successfully (Vacuum={vacuum}).", 'QRiS', Qgis.Info)
+            # Settings().log(f"Project flushed successfully (Vacuum={vacuum}).")
         except Exception as e:
-            QgsMessageLog.logMessage(f"Failed to flush changes to QRiS project: {e!s}", "QRiS", Qgis.Warning)
+            Settings().log(f"Failed to flush changes to QRiS project: {e!s}", "QRiS", MESSAGE_LEVEL_WARNING)
 
     def request_flush(self) -> None:
         """Request a two-pass flush to improve WAL truncation when short-lived write handles are still active."""

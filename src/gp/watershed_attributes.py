@@ -2,11 +2,11 @@ import json
 import tempfile
 import webbrowser
 
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
-from ..QRiS.settings import CONSTANTS
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import CONSTANTS, Settings
 from .watershed_attribute_api import QueryMonster
 
 # from .report_creation.qris_report import QRiSReport
@@ -51,7 +51,7 @@ class WatershedAttributes(QgsTask):
                     HUC12Metrics
                 }
             }"""
-            QgsMessageLog.logMessage(f"Watershed Attribute API request at {self.latitude}, {self.longitude}\n\n{query}", MESSAGE_CATEGORY, Qgis.Info)
+            Settings().log(f"Watershed Attribute API request at {self.latitude}, {self.longitude}\n\n{query}")
 
             response = api.run_query(query, {"lng": self.longitude, "lat": self.latitude})
 
@@ -82,17 +82,17 @@ class WatershedAttributes(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            QgsMessageLog.logMessage("Watershed Attributes request completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log("Watershed Attributes request completed", MESSAGE_LEVEL_SUCCESS)
             webbrowser.open("file://" + self.output_path)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Watershed Attribute Request unsuccessful but without exception.", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log("Watershed Attribute Request unsuccessful but without exception", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Watershed Attribute API Request Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f"Watershed Attribute API Request Exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 # raise self.exception
 
         self.process_complete.emit(self.output_path, result)
 
     def cancel(self):
-        QgsMessageLog.logMessage(f'Watershed Attributes "{self.description()}" was canceled', MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f'Watershed Attributes "{self.description()}" was canceled', MESSAGE_LEVEL_WARNING)
         super().cancel()

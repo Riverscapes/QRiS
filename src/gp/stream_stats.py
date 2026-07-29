@@ -2,15 +2,14 @@ import json
 import os
 from typing import Optional
 
-from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry, QgsMessageLog, QgsPointXY, QgsProject, QgsTask, QgsVectorLayer
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry, QgsPointXY, QgsProject, QgsTask, QgsVectorLayer
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
 from ..model.pour_point import PourPoint, save_pour_point
 from ..QRiS.settings import Settings
 
-MESSAGE_CATEGORY = "QRiS"
 # Global timeout for API requests
 API_TIMEOUT = 30
 
@@ -44,7 +43,7 @@ class StreamStats(QgsTask):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
         Must return True or False. Raising exceptions will crash QGIS"""
 
-        QgsMessageLog.logMessage(f"Started {self.name} Stream Stats API Request ", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f"Started {self.name} Stream Stats API Request ")
 
         try:
             state_code, _status = get_state_from_coordinates(self.latitude, self.longitude)
@@ -82,12 +81,12 @@ class StreamStats(QgsTask):
                     flow_scenarios = retrieve_flow_scenarios(self.watershed_data, basin_chars)
                     flow_stats = calculate_flow_statistics(flow_scenarios, basin_chars)
                 except Exception as e:
-                    QgsMessageLog.logMessage(f"Flow Statistics failed/not supported yet: {e}", MESSAGE_CATEGORY, Qgis.Warning)
+                    Settings().log(f"Flow Statistics failed/not supported yet: {e}", MESSAGE_LEVEL_WARNING)
                     flow_scenarios = None
                     flow_stats = None
 
-            QgsMessageLog.logMessage(f"DEBUG: flow_scenarios to save: {json.dumps(flow_scenarios) if flow_scenarios is not None else 'None'}", MESSAGE_CATEGORY, Qgis.Info)
-            QgsMessageLog.logMessage(f"DEBUG: flow_stats to save: {json.dumps(flow_stats) if flow_stats is not None else 'None'}", MESSAGE_CATEGORY, Qgis.Info)
+            Settings().log(f"DEBUG: flow_scenarios to save: {json.dumps(flow_scenarios) if flow_scenarios is not None else 'None'}")
+            Settings().log(f"DEBUG: flow_stats to save: {json.dumps(flow_stats) if flow_stats is not None else 'None'}")
 
             # Ensure state_code is in metadata to avoid passing it as a separate parameter
             if self.metadata is None:
@@ -112,17 +111,17 @@ class StreamStats(QgsTask):
         result is the return value from self.run.
         """
         if result is True:
-            QgsMessageLog.logMessage(f'Stream Stats API call "{self.description()}" completed\nRandomTotal: {self.total} (with {self.iterations} iterations)', MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log(f'Stream Stats API call "{self.description()}" completed\nRandomTotal: {self.total} (with {self.iterations} iterations)', MESSAGE_LEVEL_SUCCESS)
             self.stream_stats_successfully_complete.emit(self.pour_point, self.add_to_map)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_LEVEL_CRITICAL)
                 # raise self.exception
 
     def cancel(self):
-        QgsMessageLog.logMessage(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_LEVEL_WARNING)
         super().cancel()
 
 
@@ -162,7 +161,7 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
 
     parameters = {"lat": lat, "lon": lon}
 
-    QgsMessageLog.logMessage(f"Delineating watershed via {url}", MESSAGE_CATEGORY, Qgis.Info)
+    Settings().log(f"Delineating watershed via {url}")
 
     try:
         response = requests.get(url, params=parameters, timeout=API_TIMEOUT)
@@ -186,7 +185,7 @@ def delineate_watershed(lat, lon, rcode, file_dir=None):
                 watershed_data["featurecollection"] = fc[0]
         except Exception as ex:
             # If structure is unexpected, don't crash here - let downstream handle or fail gracefully
-            QgsMessageLog.logMessage(f"Unexpected watershed response structure: {ex}", MESSAGE_CATEGORY, Qgis.Warning)
+            Settings().log(f"Unexpected watershed response structure: {ex}", MESSAGE_LEVEL_WARNING)
 
     except Exception as e:
         error_msg = f"Error in delineate_watershed: {e!s}"
@@ -211,7 +210,7 @@ def retrieve_basin_characteristics(delineation_data, file_dir=None):
     if "bcrequest" in payload and "bcLabels" not in payload["bcrequest"]:
         payload["bcrequest"]["bcLabels"] = "*"
 
-    QgsMessageLog.logMessage(f"Calculating Basin Characteristics via {url}", MESSAGE_CATEGORY, Qgis.Info)
+    Settings().log(f"Calculating Basin Characteristics via {url}")
 
     try:
         response = requests.post(url, json=payload, timeout=API_TIMEOUT)
@@ -269,11 +268,11 @@ def retrieve_flow_scenarios(delineation_data, basin_chars=None, file_dir=None):
             else:
                 raise Exception("Could not extract geometry from watershed feature.")
 
-        QgsMessageLog.logMessage(f"Retrieving Regression Regions via {rr_url}", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f"Retrieving Regression Regions via {rr_url}")
         rr_response = requests.post(rr_url, json=rr_payload, timeout=API_TIMEOUT)
         rr_response.raise_for_status()
         regression_regions = rr_response.json()
-        QgsMessageLog.logMessage(f"DEBUG: regression_regions response: {json.dumps(regression_regions)}", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f"DEBUG: regression_regions response: {json.dumps(regression_regions)}")
 
         # Step 2: Get Scenarios (GET with query params)
         # Extract region and regression region codes
@@ -289,18 +288,18 @@ def retrieve_flow_scenarios(delineation_data, basin_chars=None, file_dir=None):
         import urllib.parse
 
         full_url = scenarios_url + "?" + urllib.parse.urlencode(scenarios_params)
-        QgsMessageLog.logMessage(f"DEBUG: Scenarios API full URL: {full_url}", MESSAGE_CATEGORY, Qgis.Info)
-        QgsMessageLog.logMessage(f"DEBUG: Scenarios API params: regions={region}, regressionregions={','.join(regression_region_codes)}", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f"DEBUG: Scenarios API full URL: {full_url}")
+        Settings().log(f"DEBUG: Scenarios API params: regions={region}, regressionregions={','.join(regression_region_codes)}")
         try:
             scenarios_response = requests.get(scenarios_url, params=scenarios_params, timeout=API_TIMEOUT)
-            QgsMessageLog.logMessage(f"DEBUG: Scenarios API response status: {scenarios_response.status_code}", MESSAGE_CATEGORY, Qgis.Info)
+            Settings().log(f"DEBUG: Scenarios API response status: {scenarios_response.status_code}")
             scenarios_response.raise_for_status()
             scenarios_json = scenarios_response.json()
-            QgsMessageLog.logMessage(f"DEBUG: scenarios response: {json.dumps(scenarios_json)}", MESSAGE_CATEGORY, Qgis.Info)
+            Settings().log(f"DEBUG: scenarios response: {json.dumps(scenarios_json)}")
         except Exception as e:
-            QgsMessageLog.logMessage(f"ERROR: Scenarios API request failed: {e!s}", MESSAGE_CATEGORY, Qgis.Warning)
+            Settings().log(f"ERROR: Scenarios API request failed: {e!s}", MESSAGE_LEVEL_WARNING)
             if hasattr(scenarios_response, "text"):
-                QgsMessageLog.logMessage(f"ERROR: Scenarios API response text: {scenarios_response.text}", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log(f"ERROR: Scenarios API response text: {scenarios_response.text}", MESSAGE_LEVEL_WARNING)
             raise
         # The API returns a list; include all scenarios
         scenarios_data = scenarios_json if isinstance(scenarios_json, list) else [scenarios_json]
@@ -314,7 +313,7 @@ def retrieve_flow_scenarios(delineation_data, basin_chars=None, file_dir=None):
 
     except Exception as ex:
         error_msg = f"Error retrieving flow scenarios: {ex!s}"
-        QgsMessageLog.logMessage(error_msg, MESSAGE_CATEGORY, Qgis.Warning)
+        Settings().log(error_msg, MESSAGE_LEVEL_WARNING)
         return {"error": "Flow Scenarios not fully migrated to new API", "details": str(ex)}
 
 

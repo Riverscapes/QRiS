@@ -1,11 +1,10 @@
 from typing import Optional
 
-from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry, QgsMessageLog, QgsPointXY, QgsProject, QgsTask, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry, QgsPointXY, QgsProject, QgsTask, QgsVectorLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_LONGLONG, QMETATYPE_UINT, QMETATYPE_ULONGLONG
-
-MESSAGE_CATEGORY = "OrderByLineTask"
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_LONGLONG, QMETATYPE_UINT, QMETATYPE_ULONGLONG
+from ..QRiS.settings import Settings
 
 
 class OrderByLineTask(QgsTask):
@@ -71,7 +70,7 @@ class OrderByLineTask(QgsTask):
 
             all_features = list(layer.getFeatures())
             if not all_features:
-                QgsMessageLog.logMessage(f"OrderByLineTask: no features found (filter: {self.filter_expression})", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log(f"OrderByLineTask: no features found (filter: {self.filter_expression})", MESSAGE_LEVEL_WARNING)
                 return True
 
             # Reproject to a metric CRS for lineLocatePoint so the distance
@@ -85,7 +84,7 @@ class OrderByLineTask(QgsTask):
                 transform = QgsCoordinateTransform(source_crs, target_crs, QgsProject.instance())
                 cl_projected = QgsGeometry(self.centerline)
                 cl_projected.transform(transform)
-                QgsMessageLog.logMessage(f"OrderByLineTask: reprojecting from {source_crs.authid()} to {target_crs.authid()} for distance calculation", MESSAGE_CATEGORY, Qgis.Info)
+                Settings.log(f"OrderByLineTask: reprojecting from {source_crs.authid()} to {target_crs.authid()} for distance calculation", MESSAGE_LEVEL_SUCCESS)
             else:
                 transform = None
                 cl_projected = self.centerline
@@ -184,18 +183,18 @@ class OrderByLineTask(QgsTask):
                 features = intersecting_features
 
                 if skipped_features:
-                    QgsMessageLog.logMessage(f"OrderByLineTask: skipped {len(skipped_features)} non-intersecting feature(s). FIDs: {skipped_features}", MESSAGE_CATEGORY, Qgis.Info)
+                    Settings.log(f"OrderByLineTask: skipped {len(skipped_features)} non-intersecting feature(s). FIDs: {skipped_features}", MESSAGE_LEVEL_WARNING)
 
                 if not features:
-                    QgsMessageLog.logMessage("OrderByLineTask: no intersecting features found; no attributes updated.", MESSAGE_CATEGORY, Qgis.Warning)
+                    Settings.log("OrderByLineTask: no intersecting features found; no attributes updated.", MESSAGE_LEVEL_WARNING)
                     return True
 
             features.sort(key=_sort_key)
 
             if bad_fids:
-                QgsMessageLog.logMessage(f"OrderByLineTask: {len(bad_fids)} feature(s) had null/empty geometry and were placed at the end. FIDs: {bad_fids}", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log(f"OrderByLineTask: {len(bad_fids)} feature(s) had null/empty geometry and were placed at the end. FIDs: {bad_fids}", MESSAGE_LEVEL_WARNING)
 
-            QgsMessageLog.logMessage(f"OrderByLineTask: ordering {len(features)} features (filter: {self.filter_expression})", MESSAGE_CATEGORY, Qgis.Info)
+            Settings.log(f"OrderByLineTask: ordering {len(features)} features (filter: {self.filter_expression})", MESSAGE_LEVEL_SUCCESS)
 
             label_idx = layer.fields().indexOf(self.label_field) if self.label_field else -1
             chain_idx = layer.fields().indexOf(self.chain_field) if self.chain_field else -1
@@ -236,16 +235,16 @@ class OrderByLineTask(QgsTask):
 
     def finished(self, result):
         if result:
-            QgsMessageLog.logMessage("Order by Line Task completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Order by Line Task completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Order by Line Task not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Order by Line Task not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Order by Line Task exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Order by Line Task exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.order_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Order by Line Task was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Order by Line Task was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

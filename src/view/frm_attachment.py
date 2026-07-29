@@ -3,12 +3,13 @@ import os
 import re
 from typing import Optional
 
-from qgis.core import Qgis, QgsApplication
+from qgis.core import QgsApplication
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
 from ..compat import (
     HEADER_STRETCH,
+    MESSAGE_LEVEL_CRITICAL,
     QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
     QABSTRACTITEMVIEW_SELECT_ROWS,
     QABSTRACTITEMVIEW_SINGLE_SELECTION,
@@ -27,8 +28,6 @@ from .utilities import add_standard_form_buttons
 from .widgets.metadata import MetadataWidget
 
 ATTACHMENT_TYPE_LABELS = ["Figure", "Link", "Report", "Table"]
-
-settings = Settings()
 
 
 class ClickableDateEdit(QtWidgets.QDateEdit):
@@ -160,11 +159,11 @@ class FrmAttachment(QtWidgets.QDialog):
     def on_copy_complete(self, result: bool, error: Optional[str] = None):
 
         if result is True:
-            settings.msg_bar("Feature Class Copy Complete.", f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Feature Class Copy Complete.", f"{self.txtProjectPath.text()} saved successfully.")
         else:
-            settings.msg_bar("Feature Class Copy Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
+            Settings().msg_bar("Feature Class Copy Error", "Review the QGIS log.", MESSAGE_LEVEL_CRITICAL)
         if error:
-            QgsApplication.messageLog().logMessage(f"Error copying file: {error}", "QRiS", Qgis.Critical)
+            Settings().log(f"Error copying file: {error}", MESSAGE_LEVEL_CRITICAL)
         try:
             self.attachment = insert_attachment(self.qris_project.project_file, self.txtName.text(), os.path.basename(self.txtProjectPath.text()), self.attachment_type, self.txtDescription.toPlainText(), self.metadata)
             self.qris_project.add_db_item(self.attachment)
@@ -383,6 +382,3 @@ class WebLinkWidget(QtWidgets.QWidget):
         web_link = clipboard.text()
         if web_link:
             self.lineEdit.setText(web_link)
-
-
-

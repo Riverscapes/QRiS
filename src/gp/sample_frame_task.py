@@ -1,10 +1,9 @@
 from qgis import processing
-from qgis.core import Qgis, QgsCoordinateTransform, QgsFeature, QgsMessageLog, QgsProject, QgsTask, QgsVectorLayer
+from qgis.core import QgsCoordinateTransform, QgsFeature, QgsProject, QgsTask, QgsVectorLayer
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
-
-MESSAGE_CATEGORY = "SampleFrameTask"
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
 
 class SampleFrameTask(QgsTask):
@@ -71,7 +70,7 @@ class SampleFrameTask(QgsTask):
                 added += 1
 
             if added == 0:
-                QgsMessageLog.logMessage("Sample Frame split completed with zero output features.", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log("Sample Frame split completed with zero output features.", MESSAGE_LEVEL_WARNING)
 
             return True
         except Exception as ex:
@@ -90,16 +89,16 @@ class SampleFrameTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Sample Frame completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log("Sample Frame completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Sample Frame not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log("Sample Frame not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Generate Sample Frame Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f"Generate Sample Frame Exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.sample_frame_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Sample Frame Tool was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log("Sample Frame Tool was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

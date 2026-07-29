@@ -1,15 +1,15 @@
 from typing import Optional
 
-from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.core import QgsApplication, QgsVectorLayer
 from qgis.PyQt import QtCore, QtWidgets
-from qgis.utils import iface
 
-from ..compat import QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, SPSZ_EXPANDING, SPSZ_MINIMUM, USER_ROLE
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, SPSZ_EXPANDING, SPSZ_MINIMUM, USER_ROLE
 from ..gp.feature_class_functions import get_field_names, get_field_values
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
+from ..QRiS.settings import Settings
 from .frm_import_dce_field_values import FrmAssignFieldValues
 from .utilities import add_standard_form_buttons
 
@@ -275,18 +275,16 @@ class FrmImportDceLayer(QtWidgets.QDialog):
     def on_import_complete(self, result: bool, source_feats: int, out_feats: int, skip_feats: int):
 
         if result is True:
-            severity = Qgis.Success if source_feats == out_feats else Qgis.Warning
+            severity = MESSAGE_LEVEL_SUCCESS if source_feats == out_feats else MESSAGE_LEVEL_WARNING
             extra_message = "" if source_feats == out_feats else " (additional features were created due to exploding multi-part geometries.)"
             extra_message += f" {skip_feats} features were skipped due to missing or invalid geometry."
-            iface.messageBar().pushMessage(
-                "Import Feature Class Complete.", f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.layer_id}.{extra_message}", level=severity, duration=5
-            )
-            iface.mapCanvas().refreshAllLayers()
-            iface.mapCanvas().refresh()
+            Settings().msg_bar("Import Feature Class Complete.", f"Successfully imported {source_feats} features from {self.import_path} to {out_feats} features in {self.db_item.layer.layer_id}.{extra_message}", severity)
+            Settings().iface.mapCanvas().refreshAllLayers()
+            Settings().iface.mapCanvas().refresh()
             self.import_complete.emit(result)
             super().accept()
         else:
-            iface.messageBar().pushMessage("Feature Class Import Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
+            Settings().msg_bar("Feature Class Import Error", "Review the QGIS log.", MESSAGE_LEVEL_CRITICAL)
             self.buttonBox.setEnabled(True)
 
     def on_rdoImport_clicked(self):

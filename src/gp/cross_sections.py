@@ -1,11 +1,10 @@
 import math
 
-from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsLineString, QgsMessageLog, QgsPointXY, QgsTask
+from qgis.core import QgsFeature, QgsGeometry, QgsLineString, QgsPointXY, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
-
-MESSAGE_CATEGORY = "CrossSectionsTask"
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
 
 class CrossSectionsTask(QgsTask):
@@ -74,16 +73,16 @@ class CrossSectionsTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("CrossSectionsTask completed\n", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("CrossSectionsTask completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Cross Sections not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Cross Sections not successful but without exception (probably the task was manually canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Generate Cross Sections Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Generate Cross Sections Exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.cross_sections_complete.emit(self.xsections)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Cross Sections Tool was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Cross Sections Tool was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

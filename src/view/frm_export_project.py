@@ -6,11 +6,10 @@ import sqlite3
 from typing import Optional
 
 from osgeo import ogr
-from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt import QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
-from ..compat import ALIGN_TOP, CHECKED, MSGBOX_CANCEL, MSGBOX_YES, PARTIALLY_CHECKED, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, UNCHECKED, USER_ROLE
+from ..compat import ALIGN_TOP, CHECKED, MESSAGE_LEVEL_WARNING, MSGBOX_CANCEL, MSGBOX_YES, PARTIALLY_CHECKED, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, UNCHECKED, USER_ROLE
 from ..lib.rs_project import RSProject
 from ..model.analysis import Analysis
 from ..model.attachment import Attachment
@@ -23,6 +22,7 @@ from ..model.project import Project as QRiSProject
 from ..model.raster import Raster
 from ..model.sample_frame import SampleFrame
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons, message_box
 
 # Puting these here for now to avoid circular imports - source: qris_toolbar.py
@@ -656,7 +656,7 @@ class FrmExportProject(QtWidgets.QDialog):
         except Exception as e:
             # We don't want to fail the export if the xml generation fails
             # But we should probably log it
-            QgsMessageLog.logMessage(f"Error generating project.rs.xml: {e}", APPNAME, Qgis.Warning)
+            Settings().log(f"Error generating project.rs.xml: {e}", APPNAME, MESSAGE_LEVEL_WARNING)
 
         return super().accept()
 

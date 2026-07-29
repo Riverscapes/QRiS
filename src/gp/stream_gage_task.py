@@ -4,13 +4,13 @@ import os
 import sqlite3
 
 from osgeo import ogr
-from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsMessageLog, QgsProject, QgsTask
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
-MESSAGE_CATEGORY = "QRiS_StreamGageTask"
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
 # https://waterservices.usgs.gov/rest/Site-Service.html
@@ -42,7 +42,7 @@ class StreamGageTask(QgsTask):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
         Must return True or False. Raising exceptions will crash QGIS"""
 
-        QgsMessageLog.logMessage("Started Stream Gage API Request ", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log("Started Stream Gage API Request ")
 
         try:
             gage_data = self.get_gage_data()
@@ -145,22 +145,22 @@ class StreamGageTask(QgsTask):
         """
         if result:
             if self.gages_downloaded == 0:
-                QgsMessageLog.logMessage("No Stream Gages found in the area.", MESSAGE_CATEGORY, Qgis.Info)
+                Settings().log("No Stream Gages found in the area.")
             elif self.gages_saved == 0:
-                QgsMessageLog.logMessage("No new Stream Gages saved.", MESSAGE_CATEGORY, Qgis.Info)
+                Settings().log("No new Stream Gages saved.")
             else:
-                QgsMessageLog.logMessage(f"Stream Gage Download Complete. {self.gages_downloaded} gages were downloaded and {self.gages_saved} new gages were saved.", MESSAGE_CATEGORY, Qgis.Success)
+                Settings().log(f"Stream Gage Download Complete. {self.gages_downloaded} gages were downloaded and {self.gages_saved} new gages were saved.", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.on_task_complete.emit(result, self.gages_downloaded, self.gages_saved)
 
     def cancel(self):
-        QgsMessageLog.logMessage(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_LEVEL_WARNING)
         super().cancel()
 
 

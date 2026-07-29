@@ -12,7 +12,6 @@ from qgis.core import (
     QgsMapRendererCustomPainterJob,
     QgsMapSettings,
     QgsMarkerSymbol,
-    QgsMessageLog,
     QgsPalLayerSettings,
     QgsPointXY,
     QgsProject,
@@ -26,11 +25,9 @@ from qgis.PyQt.QtCore import QRect, QSize, pyqtSignal
 from qgis.PyQt.QtGui import QColor, QImage, QPainter
 from qgis.PyQt.QtSvg import QSvgGenerator
 
-from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_STRING
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QMETATYPE_STRING
 from ..QRiS.settings import Settings
 from .map_centroid import build_aoi_centroids_layer
-
-MESSAGE_CATEGORY = "QRiS"
 
 
 class VicinityMapExportTask(QgsTask):
@@ -365,11 +362,11 @@ class VicinityMapExportTask(QgsTask):
         Called in the main thread after run() completes.
         """
         if result:
-            QgsMessageLog.logMessage("Vicinity map export complete", MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log("Vicinity map export complete", MESSAGE_LEVEL_SUCCESS)
         else:
-            QgsMessageLog.logMessage(f"Vicinity map export failed: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+            Settings().log(f"Vicinity map export failed: {self.exception}", MESSAGE_LEVEL_CRITICAL)
         self.on_complete.emit(result, self.output_path, self.exception)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Vicinity map export was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log("Vicinity map export was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

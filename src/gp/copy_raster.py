@@ -1,12 +1,11 @@
 import os
 
 from osgeo.gdal import Translate, Warp
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
-
-MESSAGE_CATEGORY = "QRiS_CopyRasterTask"
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
 
 class CopyRaster(QgsTask):
@@ -45,7 +44,7 @@ class CopyRaster(QgsTask):
             kwargs["cutlineWhere"] = f"sample_frame_id = {self.mask_tuple[1]}"
             kwargs["cropToCutline"] = True
 
-        QgsMessageLog.logMessage("Started copy raster request", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Started copy raster request")
 
         self.setProgress(0)
 
@@ -72,16 +71,16 @@ class CopyRaster(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Copy Raster completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Copy Raster completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Raster Copy not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Raster Copy not successful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Raster Copy Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Raster Copy Exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.copy_raster_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Raster Copy was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Raster Copy was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

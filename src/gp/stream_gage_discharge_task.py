@@ -1,13 +1,13 @@
 import csv
 import sqlite3
 
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
-MESSAGE_CATEGORY = "QRiS_StreamGageTask"
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
 
 # https://waterservices.usgs.gov/rest/Site-Service.html
@@ -54,7 +54,7 @@ class StreamGageDischargeTask(QgsTask):
         """Heavy lifting and periodically check for isCanceled() and gracefully abort.
         Must return True or False. Raising exceptions will crash QGIS"""
 
-        QgsMessageLog.logMessage("Started Stream Gage Discharge API Request ", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log("Started Stream Gage Discharge API Request ")
 
         try:
             params = {"format": "rdb", "sites": self.site_code, "startDT": self.start_date.strftime("%Y-%m-%d"), "endDT": self.end_date.strftime("%Y-%m-%d")}
@@ -151,16 +151,16 @@ class StreamGageDischargeTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            QgsMessageLog.logMessage("Discharge Download Complete. {self.inserted_discharge_records} records downloaded.", MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log(f"Discharge Download Complete. {self.inserted_discharge_records} records downloaded.", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log(f'Stream Stats API Request "{self.description()}" not successful but without exception (probably the task was manually canceled by the user)', MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f'Stream Statistics API Request "{self.description()}" Exception: {self.exception}', MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.on_task_complete.emit(result, self.inserted_discharge_records)
 
     def cancel(self):
-        QgsMessageLog.logMessage(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log(f'Stream Statistics "{self.description()}" was canceled', MESSAGE_LEVEL_WARNING)
         super().cancel()

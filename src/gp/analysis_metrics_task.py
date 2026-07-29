@@ -4,15 +4,14 @@ import json
 import sqlite3
 from typing import Optional
 
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_INFO, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
 from ..gp import analysis_metrics
 from ..gp.analysis_metrics import MetricInputMissingError
 from ..model.metric_value import INTRINSIC_EVENT_ID, MetricValue, load_metric_values
-
-MESSAGE_CATEGORY = "QRiS Metrics Task"
+from ..QRiS.settings import Settings
 
 
 class AnalysisMetricsTask(QgsTask):
@@ -60,7 +59,7 @@ class AnalysisMetricsTask(QgsTask):
             "exception": None,
         }
 
-    def _log(self, text: str, level: int = Qgis.Info):
+    def _log(self, text: str, level: int = MESSAGE_LEVEL_INFO):
         self.summary["messages"].append({"text": text, "level": level})
 
     def _build_analysis_params(self) -> dict:
@@ -462,10 +461,7 @@ class AnalysisMetricsTask(QgsTask):
                             # Feasibility: intrinsic metrics skip DCE-layer checks (event is None).
                             if not is_intrinsic_pass and metric.can_calculate_automated(self.qris_project, event_id, self.analysis.id) is False:
                                 self.summary["skipped_not_feasible"] += 1
-                                self._log(
-                                    f"Unable to calculate metric {metric.name} for {event.name} due to missing required layer in the data capture event.",
-                                    Qgis.Warning,
-                                )
+                                self._log(f"Unable to calculate metric {metric.name} for {event.name} due to missing required layer in the data capture event.", MESSAGE_LEVEL_WARNING)
                                 continue
 
                             try:
@@ -507,7 +503,7 @@ class AnalysisMetricsTask(QgsTask):
 
                             except MetricInputMissingError as ex:
                                 self.summary["missing_data"] += 1
-                                self._log(f"Error calculating metric {metric.name}: {ex}", Qgis.Warning)
+                                self._log(f"Error calculating metric {metric.name}: {ex}", MESSAGE_LEVEL_WARNING)
 
                                 if metric_value.metadata is None:
                                     metric_value.metadata = {}
@@ -528,7 +524,7 @@ class AnalysisMetricsTask(QgsTask):
 
                             except Exception as ex:
                                 self.summary["errors"] += 1
-                                self._log(f"Error calculating metric {metric.name}: {ex}", Qgis.Warning)
+                                self._log(f"Error calculating metric {metric.name}: {ex}", MESSAGE_LEVEL_WARNING)
 
                                 if metric_value.metadata is None:
                                     metric_value.metadata = {}
@@ -561,16 +557,16 @@ class AnalysisMetricsTask(QgsTask):
 
     def finished(self, result: bool):
         if result:
-            QgsMessageLog.logMessage("Analysis metric calculation task complete.", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Analysis metric calculation task complete.", MESSAGE_LEVEL_SUCCESS)
         elif self.exception is None and self.summary.get("canceled", False):
-            QgsMessageLog.logMessage("Analysis metric calculation task canceled.", MESSAGE_CATEGORY, Qgis.Warning)
+            Settings.log("Analysis metric calculation task canceled.", MESSAGE_LEVEL_WARNING)
         elif self.exception is None:
-            QgsMessageLog.logMessage("Analysis metric task ended without exception.", MESSAGE_CATEGORY, Qgis.Warning)
+            Settings.log("Analysis metric task ended without exception.", MESSAGE_LEVEL_WARNING)
         else:
-            QgsMessageLog.logMessage(f"Analysis metric task failed: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+            Settings.log(f"Analysis metric task failed: {self.exception}", MESSAGE_LEVEL_CRITICAL)
 
         self.on_complete.emit(self.summary)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Analysis metric task canceled by user.", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Analysis metric task canceled by user.", MESSAGE_LEVEL_INFO)
         super().cancel()

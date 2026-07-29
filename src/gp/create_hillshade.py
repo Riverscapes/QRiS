@@ -1,12 +1,11 @@
 from math import asin, cos, radians, sin, sqrt
 
 from osgeo import gdal, osr
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
-
-MESSAGE_CATEGORY = "QRiS_HillshadeTask"
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..QRiS.settings import Settings
 
 
 class Hillshade(QgsTask):
@@ -51,7 +50,7 @@ class Hillshade(QgsTask):
             zfactor = (length_km * 1000) / length_deg
         src = None
 
-        QgsMessageLog.logMessage("Started hillshade request", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Started hillshade request")
         self.setProgress(0)
 
         try:
@@ -74,18 +73,18 @@ class Hillshade(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Hillshade completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Hillshade completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Hillshade not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Hillshade not successful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Hillshade Exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Hillshade Exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.hillshade_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Hillshade was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Hillshade was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()
 
 

@@ -2,13 +2,12 @@ import json
 import sqlite3
 from typing import Optional
 
-from qgis.core import Qgis, QgsApplication, QgsFeature, QgsVectorLayer
-from qgis.gui import QgisInterface
+from qgis.core import QgsApplication, QgsFeature, QgsVectorLayer
 from qgis.PyQt.QtCore import QMetaType, QSize, Qt, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTabWidget, QTextEdit, QTreeView, QVBoxLayout, QWidget
-from qgis.utils import iface
 
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -20,6 +19,7 @@ from ..model.pour_point import PourPoint
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame, insert_sample_frame
 from ..model.scratch_vector import ScratchVector
+from ..QRiS.settings import Settings
 from .frm_new_attribute import FrmNewAttribute
 from .utilities import add_standard_form_buttons, validate_name
 from .widgets.metadata import MetadataWidget
@@ -39,7 +39,6 @@ class FrmSampleFrame(QDialog):
 
     def __init__(self, parent, qris_project: Project, import_source_path: Optional[str] = None, sample_frame: SampleFrame = None, create_sample_frame: bool = False):
 
-        self.iface: QgisInterface = iface
         self.qris_project = qris_project
         self.sample_frame = sample_frame
         self.import_source_path = import_source_path
@@ -209,7 +208,7 @@ class FrmSampleFrame(QDialog):
                     QMessageBox.warning(self, "Error Importing Sample Frame Features", str(ex_delete))
                     # enable the buttons
                     self.buttonBox.setEnabled(True)
-                self.iface.messageBar().pushMessage("Error Importing Sample Frame Features", str(ex), level=Qgis.Critical, duration=5)
+                Settings().msg_bar("Error Importing Sample Frame Features", str(ex), MESSAGE_LEVEL_CRITICAL)
                 return
             # finally:
             # # enable the buttons
@@ -242,9 +241,9 @@ class FrmSampleFrame(QDialog):
             except Exception as ex:
                 try:
                     self.sample_frame.delete(self.qris_project.project_file)
-                    QgsApplication.messageLog().logMessage(f"Error Importing Sample Frame Features: {ex!s}", "QRIS", level=Qgis.Critical)
+                    Settings().log(f"Error Importing Sample Frame Features: {ex!s}", MESSAGE_LEVEL_CRITICAL)
                 except Exception as ex:
-                    QgsApplication.messageLog().logMessage(f"Error Deleting sample frame: {ex!s}", "QRIS", level=Qgis.Critical)
+                    Settings().log(f"Error Deleting sample frame: {ex!s}", MESSAGE_LEVEL_CRITICAL)
                 return
 
         self.complete.emit(True)
@@ -281,16 +280,15 @@ class FrmSampleFrame(QDialog):
             if self.tab_inputs is not None and isinstance(self.tab_inputs, SampleFrameInputs):
                 if self.tab_inputs.cboTopologyField.currentIndex() > 0:
                     self._resolve_topology()
-            self.iface.messageBar().pushMessage("Sample Frame Imported", f'Sample Frame "{self.txtName.text()}" has been created successfully.', level=Qgis.Success, duration=5)
+            Settings().msg_bar("Sample Frame Imported", f'Sample Frame "{self.txtName.text()}" has been created successfully.', MESSAGE_LEVEL_SUCCESS)
             self.complete.emit(True)
             super().accept()
         else:
-            QgsApplication.messageLog().logMessage("Error Importing Sample Frame Features", "QRIS", level=Qgis.Critical)
+            Settings().msg_bar("Error Importing Sample Frame Features", f'Sample Frame "{self.txtName.text()}" could not be imported.', MESSAGE_LEVEL_CRITICAL)
             try:
                 self.sample_frame.delete(self.qris_project.project_file)
             except Exception as ex:
-                QgsApplication.messageLog().logMessage(f"Error Deleting sample frame: {ex!s}", "QRIS", level=Qgis.Critical)
-                self.iface.messageBar().pushMessage("Error Deleting sample frame", str(ex), level=Qgis.Critical, duration=5)
+                Settings().msg_bar("Error Deleting sample frame", str(ex), MESSAGE_LEVEL_CRITICAL)
                 super().accept()
             return
 
@@ -329,7 +327,7 @@ class FrmSampleFrame(QDialog):
                     all_downstream = set(src_to_next.values())
                     roots = all_source_fids - all_downstream
                     if len(roots) != 1:
-                        self.iface.messageBar().pushMessage("Topology Warning", "Topology chain is not linear — flows_into not set.", level=Qgis.Warning, duration=5)
+                        Settings().msg_bar("Topology Warning", "Topology chain is not linear — flows_into not set.", MESSAGE_LEVEL_WARNING)
                         return
 
                     # Traverse the chain to get ordered dest fids
@@ -338,7 +336,7 @@ class FrmSampleFrame(QDialog):
                     visited = set()
                     while current is not None:
                         if current in visited:
-                            self.iface.messageBar().pushMessage("Topology Warning", "Cycle detected in topology chain — flows_into not set.", level=Qgis.Warning, duration=5)
+                            Settings().msg_bar("Topology Warning", "Cycle detected in topology chain — flows_into not set.", MESSAGE_LEVEL_WARNING)
                             return
                         visited.add(current)
                         dest_fid = source_fid_to_dest.get(current)
@@ -355,7 +353,7 @@ class FrmSampleFrame(QDialog):
                     curs.execute("UPDATE sample_frame_features SET flows_into = ? WHERE fid = ?", [next_fid, fid])
                 conn.commit()
         except Exception as ex:
-            self.iface.messageBar().pushMessage("Error resolving topology", str(ex), level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Error resolving topology", str(ex), MESSAGE_LEVEL_WARNING)
 
     def setupUi(self):
 
