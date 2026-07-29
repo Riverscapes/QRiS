@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSlider, QTextEdit, QVBoxLayout, QWidget
 
-from ..compat import CHECKED, HORIZONTAL
+from ..compat import CHECKED, HORIZONTAL, SLIDER_TICKS_BELOW
 
 
 class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
@@ -381,7 +381,7 @@ class SliderWidget(QWidget):
 
         self.slider = QSlider(HORIZONTAL, self)
         self.slider.setOrientation(HORIZONTAL)
-        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setTickPosition(SLIDER_TICKS_BELOW)
         self.hlayout.addWidget(self.slider)
 
         self.label = QLabel(self)

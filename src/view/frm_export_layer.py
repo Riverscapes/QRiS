@@ -4,7 +4,7 @@ from typing import Optional
 from qgis.core import QgsCoordinateTransformContext, QgsFeature, QgsField, QgsProject, QgsVectorFileWriter, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..compat import MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT, QMETATYPE_STRING, VFW_NO_ERROR
+from ..compat import MSGBOX_ICON_INFORMATION, MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT, QMETATYPE_STRING, VFW_NO_ERROR
 from .frm_export_base import get_unique_export_path, sanitize_file_base_name
 from .utilities import add_standard_form_buttons
 
@@ -191,7 +191,7 @@ class FrmExportLayer(QtWidgets.QDialog):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Export Successful")
             msg_box.setText(f"Layer exported successfully to:\n{out_file}")
-            msg_box.setIcon(QtWidgets.QMessageBox.Information)
+            msg_box.setIcon(MSGBOX_ICON_INFORMATION)
 
             btn_folder = msg_box.addButton("Open Folder", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)
             btn_open = msg_box.addButton("Open File", MSGBOX_ROLE_ACTION, MSGBOX_ROLE_REJECT)

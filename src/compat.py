@@ -114,7 +114,6 @@ except AttributeError:
     COLOR_TRANSPARENT = Qt.transparent  # type: ignore[attr-defined]
     MATCH_EXACTLY = Qt.MatchExactly  # type: ignore[attr-defined]
     MATCH_WRAP = Qt.MatchWrap  # type: ignore[attr-defined]
-    DIALOG_BTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
     CUSTOM_CONTEXT_MENU = Qt.CustomContextMenu  # type: ignore[attr-defined]
     USER_ROLE = Qt.UserRole  # type: ignore[attr-defined]
 
@@ -225,8 +224,6 @@ try:
     DLGBTN_CLOSE = QDialogButtonBox.StandardButton.Close
     DLGBTN_APPLY = QDialogButtonBox.StandardButton.Apply
     DLGBTN_RESET = QDialogButtonBox.StandardButton.Reset
-    MSGBOX_ROLE_ACTION = QMessageBox.ButtonRole.ActionRole
-    MSGBOX_ROLE_REJECT = QMessageBox.ButtonRole.RejectRole
     DLGBTN_ROLE_APPLY = QDialogButtonBox.ButtonRole.ApplyRole
     DLGBTN_ROLE_RESET = QDialogButtonBox.ButtonRole.ResetRole
     DLGBTN_ROLE_HELP = QDialogButtonBox.ButtonRole.HelpRole
@@ -237,8 +234,6 @@ except AttributeError:
     DLGBTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
     DLGBTN_APPLY = QDialogButtonBox.Apply  # type: ignore[attr-defined]
     DLGBTN_RESET = QDialogButtonBox.Reset  # type: ignore[attr-defined]
-    MSGBOX_ROLE_ACTION = QMessageBox.ActionRole  # type: ignore[attr-defined]
-    MSGBOX_ROLE_REJECT = QMessageBox.RejectRole  # type: ignore[attr-defined]
     DLGBTN_ROLE_APPLY = QDialogButtonBox.ApplyRole  # type: ignore[attr-defined]
     DLGBTN_ROLE_RESET = QDialogButtonBox.ResetRole  # type: ignore[attr-defined]
     DLGBTN_ROLE_HELP = QDialogButtonBox.HelpRole  # type: ignore[attr-defined]
@@ -247,15 +242,23 @@ except AttributeError:
 
 # ── QMessageBox standard buttons and icons ────────────────────────────────────
 try:
-    MSGBOX_BTN_YES = QMessageBox.StandardButton.Yes
-    MSGBOX_BTN_NO = QMessageBox.StandardButton.No
+    MSGBOX_YES = QMessageBox.StandardButton.Yes
+    MSGBOX_NO = QMessageBox.StandardButton.No
+    MSGBOX_ROLE_ACTION = QMessageBox.ButtonRole.ActionRole
+    MSGBOX_ROLE_REJECT = QMessageBox.ButtonRole.RejectRole
+    MSGBOX_CANCEL = QMessageBox.StandardButton.Cancel
+    MSGBOX_OK = QMessageBox.StandardButton.Ok
     MSGBOX_ICON_QUESTION = QMessageBox.Icon.Question
     MSGBOX_ICON_WARNING = QMessageBox.Icon.Warning
     MSGBOX_ICON_CRITICAL = QMessageBox.Icon.Critical
     MSGBOX_ICON_INFORMATION = QMessageBox.Icon.Information
 except AttributeError:
-    MSGBOX_BTN_YES = QMessageBox.Yes  # type: ignore[attr-defined]
-    MSGBOX_BTN_NO = QMessageBox.No  # type: ignore[attr-defined]
+    MSGBOX_YES = QMessageBox.Yes  # type: ignore[attr-defined]
+    MSGBOX_NO = QMessageBox.No  # type: ignore[attr-defined]
+    MSGBOX_ROLE_ACTION = QMessageBox.ActionRole  # type: ignore[attr-defined]
+    MSGBOX_ROLE_REJECT = QMessageBox.RejectRole  # type: ignore[attr-defined]
+    MSGBOX_CANCEL = QMessageBox.Cancel  # type: ignore[attr-defined]
+    MSGBOX_OK = QMessageBox.Ok  # type: ignore[attr-defined]
     MSGBOX_ICON_QUESTION = QMessageBox.Question  # type: ignore[attr-defined]
     MSGBOX_ICON_WARNING = QMessageBox.Warning  # type: ignore[attr-defined]
     MSGBOX_ICON_CRITICAL = QMessageBox.Critical  # type: ignore[attr-defined]
@@ -291,11 +294,6 @@ try:
     MOVE_ACTION = Qt.DropAction.MoveAction
     DLG_ACCEPTED = QDialog.DialogCode.Accepted
     DLG_REJECTED = QDialog.DialogCode.Rejected
-    MSGBOX_YES = QMessageBox.StandardButton.Yes
-    MSGBOX_NO = QMessageBox.StandardButton.No
-    MSGBOX_CANCEL = QMessageBox.StandardButton.Cancel
-    MSGBOX_OK = QMessageBox.StandardButton.Ok
-    MSGBOX_QUESTION = QMessageBox.Icon.Question
     SP_CRITICAL = QStyle.StandardPixmap.SP_MessageBoxCritical
     SP_WARNING = QStyle.StandardPixmap.SP_MessageBoxWarning
     SP_INFO = QStyle.StandardPixmap.SP_MessageBoxInformation
@@ -315,11 +313,6 @@ except AttributeError:
     MOVE_ACTION = Qt.MoveAction  # type: ignore[attr-defined]
     DLG_ACCEPTED = QDialog.Accepted  # type: ignore[attr-defined]
     DLG_REJECTED = QDialog.Rejected  # type: ignore[attr-defined]
-    MSGBOX_YES = QMessageBox.Yes  # type: ignore[attr-defined]
-    MSGBOX_NO = QMessageBox.No  # type: ignore[attr-defined]
-    MSGBOX_CANCEL = QMessageBox.Cancel  # type: ignore[attr-defined]
-    MSGBOX_OK = QMessageBox.Ok  # type: ignore[attr-defined]
-    MSGBOX_QUESTION = QMessageBox.Question  # type: ignore[attr-defined]
     SP_CRITICAL = QStyle.SP_MessageBoxCritical  # type: ignore[attr-defined]
     SP_WARNING = QStyle.SP_MessageBoxWarning  # type: ignore[attr-defined]
     SP_INFO = QStyle.SP_MessageBoxInformation  # type: ignore[attr-defined]

@@ -3,7 +3,7 @@ from typing import Optional
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtGui import QFont
 
-from ..compat import DLGBTN_CANCEL, DLGBTN_OK
+from ..compat import DLG_ACCEPTED, DLGBTN_CANCEL, DLGBTN_OK
 
 try:
     from matplotlib import font_manager as mpl_font_manager
@@ -125,7 +125,7 @@ class _ChartFontDialog(QtWidgets.QDialog):
 def select_chart_font(parent, current_font: QFont, title: str = "Select Chart Font"):
     """Open a custom chart font dialog constrained to matplotlib-supported settings."""
     dialog = _ChartFontDialog(parent, current_font, title)
-    if dialog.exec() == QtWidgets.QDialog.Accepted:
+    if dialog.exec() == DLG_ACCEPTED:
         return dialog.selected_font(), True
 
     return sanitize_chart_font(current_font), False

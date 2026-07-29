@@ -105,7 +105,6 @@ class SurfaceLibraryWidget(QtWidgets.QWidget):
         self.table = QtWidgets.QTableWidget(self)
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["", "Name", "Date", "Type"])
-        # self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
         self.table.setSortingEnabled(True)
         self.vert_layout.addWidget(self.table)

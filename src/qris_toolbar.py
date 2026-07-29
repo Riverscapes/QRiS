@@ -39,9 +39,9 @@ from .compat import (
     LEFT_DOCK,
     MESSAGE_LEVEL_CRITICAL,
     MESSAGE_LEVEL_WARNING,
-    MSGBOX_BTN_NO,
-    MSGBOX_BTN_YES,
     MSGBOX_ICON_WARNING,
+    MSGBOX_NO,
+    MSGBOX_YES,
     RIGHT_DOCK,
     TOOL_BTN_ICON_ONLY,
     TOOL_BTN_INSTANT_POPUP,
@@ -492,10 +492,10 @@ class QRiSToolbar:
                 msg.setText("Metadata Update Recommended")
                 msg.setInformativeText("The QRiS project you are attempting to open has an older metadata format. Would you like to update the metadata?")
                 msg.setWindowTitle("Metadata Update Recommended")
-                msg.setStandardButtons(MSGBOX_BTN_YES | MSGBOX_BTN_NO)
-                msg.setDefaultButton(MSGBOX_BTN_YES)
+                msg.setStandardButtons(MSGBOX_YES | MSGBOX_NO)
+                msg.setDefaultButton(MSGBOX_YES)
                 retval = msg.exec()
-                if retval == MSGBOX_BTN_YES:
+                if retval == MSGBOX_YES:
                     update_metadata(db_path)
 
             self.toggle_widget(forceOn=True)

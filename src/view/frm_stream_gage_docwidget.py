@@ -6,7 +6,7 @@ from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinat
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
-from ..compat import CUSTOM_CONTEXT_MENU, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, MSGBOX_NO, MSGBOX_YES, USER_ROLE
+from ..compat import ALIGN_CENTER, CUSTOM_CONTEXT_MENU, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, MSGBOX_NO, MSGBOX_YES, USER_ROLE
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 from ..gp.stream_gage_task import StreamGageTask
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
@@ -412,7 +412,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
             self._static_ax = self.static_canvas.figure.subplots()
         else:
             self.static_canvas = QtWidgets.QLabel("Matplotlib is not available. Install matplotlib to enable graphing.")
-            self.static_canvas.setAlignment(QtCore.Qt.AlignCenter)
+            self.static_canvas.setAlignment(ALIGN_CENTER)
             self.export_widget.setEnabled(False)
 
         self.tableMeta = QtWidgets.QTableView(self)

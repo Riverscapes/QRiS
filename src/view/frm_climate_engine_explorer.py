@@ -6,10 +6,10 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import QSize, Qt
+from qgis.PyQt.QtCore import QSize
 from qgis.PyQt.QtGui import QCursor, QIcon, QStandardItem, QStandardItemModel
 
-from ..compat import MSGBOX_NO, MSGBOX_YES, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_SINGLE_SELECTION, USER_ROLE
+from ..compat import ALIGN_CENTER, CUSTOM_CONTEXT_MENU, MSGBOX_NO, MSGBOX_YES, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_SINGLE_SELECTION, USER_ROLE
 from ..lib.climate_engine import get_datasets, open_climate_engine_website
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.db_item import dict_factory
@@ -399,7 +399,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine = QtWidgets.QListView(self.widget_left)
         self.lst_climate_engine.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
         self.lst_climate_engine.setSelectionMode(QABSTRACTITEMVIEW_SINGLE_SELECTION)
-        self.lst_climate_engine.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.lst_climate_engine.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.lst_climate_engine.customContextMenuRequested.connect(self.on_context)
         self.vert_climate_engine.addWidget(self.lst_climate_engine)
 
@@ -430,7 +430,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         qframe_x_axis.layout().setSpacing(0)  # Remove spacing
         qframe_x_axis.setObjectName("qframe_x_axis")
         qframe_x_axis.setStyleSheet("QFrame#qframe_x_axis {border: 1px solid gray; border-radius: 3px; padding: 5px;}")
-        # qframe_x_axis.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        # qframe_x_axis.setFrameShape(QFRAME_STYLED_PANEL)
 
         self.horiz_chart_controls.addWidget(qframe_x_axis)
 
@@ -492,7 +492,7 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.lbl_initial_text = QtWidgets.QLabel("Select a Sample Frame and Climate Engine Metric Timeseries to view data")
         self.vert_right.addWidget(self.lbl_initial_text)
-        self.lbl_initial_text.setAlignment(Qt.AlignCenter)
+        self.lbl_initial_text.setAlignment(ALIGN_CENTER)
 
         self.chart_canvas = FigureCanvas(Figure())
         self._static_ax = self.chart_canvas.figure.subplots()
