@@ -1,15 +1,16 @@
-import os
 import json
-import numpy as np
-from xml.etree import ElementTree as ET  # nosec B405
-from .report import Report
-from .plotting import pie_chart, bar_chart
-import urllib.request
+import os
 import urllib.parse
+import urllib.request
+from xml.etree import ElementTree as ET  # nosec B405
+
+import numpy as np
+
+from .plotting import bar_chart, pie_chart
+from .report import Report
 
 
 class QRiSReport(Report):
-
     def __init__(self, google_maps_api_key: str, longitude, latitude, json_data, file_path: str):
         super().__init__(file_path)
 
@@ -29,16 +30,16 @@ class QRiSReport(Report):
 
     def build_qris_report(self, json_data: dict, output_dir):
 
-        self.images_dir = os.path.join(output_dir, 'images')
+        self.images_dir = os.path.join(output_dir, "images")
         # safe_makedirs(self.images_dir)
 
-        section = self.section('ReportIntro', 'Map')
-        self.create_static_map(section, f'{self.latitude}, {self.longitude}')
-        section = self.section('ReportIntro', 'Slope')
+        section = self.section("ReportIntro", "Map")
+        self.create_static_map(section, f"{self.latitude}, {self.longitude}")
+        section = self.section("ReportIntro", "Slope")
 
-        slope_data_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['floatingPoint'][4]['SLOPE']['binnedCounts']['bins0']
-        total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['floatingPoint'][4]['SLOPE']["count"]
-        table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
+        slope_data_unformatted = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["raster"]["floatingPoint"][4]["SLOPE"]["binnedCounts"]["bins0"]
+        total_area = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["raster"]["floatingPoint"][4]["SLOPE"]["count"]
+        table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
         slope_data = []
 
         # Convert list to readable format
@@ -54,7 +55,7 @@ class QRiSReport(Report):
             entry.append(str(round(float(entry[1]) / total_area * 100, 2)) + "%")
 
         column_labels = ["Slope", "Area (ha)", "Percent"]
-        Report.create_table_from_2d_array(slope_data, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+        Report.create_table_from_2d_array(slope_data, table_wrapper, {"id": "SlopeTable"}, column_labels)
         section.append(table_wrapper)
 
         self.setup_pie_chart(section, slope_data, "slope", "Slope")
@@ -63,15 +64,14 @@ class QRiSReport(Report):
         # Convert list of vegetation strings and IDs to dict
         with open(self.veg_types_path) as f:
             veg_list = json.loads(f.read())
-        veg_dict = {row['vegetation_id']: row['name'] for row in veg_list}
+        veg_dict = {row["vegetation_id"]: row["name"] for row in veg_list}
 
         # Data with a similar format
         sections_info = [("EXVEG", "Existing Vegetation", 0), ("HISTVEG", "Historic Vegetation", 1)]
 
         for section_info in sections_info:
-
-            section = self.section('ReportIntro', section_info[1])
-            veg_data_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['raster']['categorical'][section_info[2]][section_info[0]]['categories']
+            section = self.section("ReportIntro", section_info[1])
+            veg_data_unformatted = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["raster"]["categorical"][section_info[2]][section_info[0]]["categories"]
             veg_data = []
             # Convert dict to np array
             for key in veg_data_unformatted.keys():
@@ -83,7 +83,7 @@ class QRiSReport(Report):
             total_count = np_veg.sum(axis=0)[1]
 
             # Adds first 9 values to new list
-            for i in range(0, 9):
+            for _i in range(0, 9):
                 max_index = np_veg.argmax(axis=0)[1]
                 veg_data_trimmed.append([str(int(np_veg[max_index].tolist()[0])), veg_dict[np_veg[max_index].tolist()[0]], np_veg[max_index].tolist()[1]])
                 np_veg = np.delete(np_veg, max_index, axis=0)
@@ -95,20 +95,20 @@ class QRiSReport(Report):
             for entry in veg_data_trimmed:
                 entry.append(str(round(float(entry[2]) / total_count * 100, 2)) + "%")
 
-            table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
+            table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
             column_labels = ["Code", "Vegetation", "Area (ha)", "Percent"]
-            Report.create_table_from_2d_array(veg_data_trimmed, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+            Report.create_table_from_2d_array(veg_data_trimmed, table_wrapper, {"id": "SlopeTable"}, column_labels)
             section.append(table_wrapper)
 
             self.setup_pie_chart(section, veg_data_trimmed, section_info[0], section_info[1])
             self.setup_bar_chart(section, veg_data_trimmed, section_info[0], section_info[1], "Vegetation Type", "Percentage")
 
-        section = self.section('ReportIntro', 'NHD Flowlines')
+        section = self.section("ReportIntro", "NHD Flowlines")
         with open(self.reach_codes_path) as f:
             reach_codes_list = json.loads(f.read())
-        rc_dict = {str(row['ReachCode']): row['DisplayName'] for row in reach_codes_list}
-        nhdflowlines_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][0]['NHDFlowline']['fields']['FCode']
-        total_length = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][0]['NHDFlowline']['lengthTotal'] / 1000
+        rc_dict = {str(row["ReachCode"]): row["DisplayName"] for row in reach_codes_list}
+        nhdflowlines_unformatted = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polyline"][0]["NHDFlowline"]["fields"]["FCode"]
+        total_length = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polyline"][0]["NHDFlowline"]["lengthTotal"] / 1000
 
         nhdflowlines = []
         for key in nhdflowlines_unformatted.keys():
@@ -119,19 +119,19 @@ class QRiSReport(Report):
             entry.append(entry[2] * 0.621371)
             entry.append(str(round(float(entry[2]) / total_length * 100, 2)) + "%")
 
-        table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
+        table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
         column_labels = ["FCode", "Name", "Length (km)", "Length (mi)", "Percent"]
-        Report.create_table_from_2d_array(nhdflowlines, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+        Report.create_table_from_2d_array(nhdflowlines, table_wrapper, {"id": "SlopeTable"}, column_labels)
         section.append(table_wrapper)
         self.setup_pie_chart(section, nhdflowlines, "nhdflowlines", "NHD Flowlines")
         self.setup_bar_chart(section, nhdflowlines, "nhdflowlines", "NHD Flowlines", "Type", "Percentage")
 
         # NHD Waterbodies
-        section = self.section('ReportIntro', 'NHD Waterbodies')
+        section = self.section("ReportIntro", "NHD Waterbodies")
         with open(self.waterbody_codes_path) as f:
             wb_dict = json.loads(f.read())[0]
-        nhd_wb_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][1]['NHDWaterbody']['fields']['FCode']
-        total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][1]['NHDWaterbody']['areaTotal']
+        nhd_wb_unformatted = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polygon"][1]["NHDWaterbody"]["fields"]["FCode"]
+        total_area = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polygon"][1]["NHDWaterbody"]["areaTotal"]
 
         nhd_waterbodies = []
         for key in nhd_wb_unformatted.keys():
@@ -140,20 +140,20 @@ class QRiSReport(Report):
         for entry in nhd_waterbodies:
             entry.append(str(round(float(entry[2]) / total_area * 100, 2)) + "%")
 
-        table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
+        table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
         column_labels = ["FCode", "Name", "Area ()", "Percent"]
-        Report.create_table_from_2d_array(nhd_waterbodies, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+        Report.create_table_from_2d_array(nhd_waterbodies, table_wrapper, {"id": "SlopeTable"}, column_labels)
         section.append(table_wrapper)
         self.setup_pie_chart(section, nhd_waterbodies, "nhdwaterbodies", "NHD Waterbodies")
         self.setup_bar_chart(section, nhd_waterbodies, "nhdwaterbodies", "NHD Waterbodies", "Type", "Percentage")
 
         # Ownership
-        section = self.section('ReportIntro', 'Ownership')
+        section = self.section("ReportIntro", "Ownership")
         with open(self.agencies_path) as f:
             ownership_list = json.loads(f.read())
-        ownership_dict = {str(row['Abbreviation']): row['Name'] for row in ownership_list}
-        ownership_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][3]['Ownership']['fields']['ADMIN_AGEN']
-        total_area = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polygon'][3]['Ownership']['areaTotal']
+        ownership_dict = {str(row["Abbreviation"]): row["Name"] for row in ownership_list}
+        ownership_unformatted = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polygon"][3]["Ownership"]["fields"]["ADMIN_AGEN"]
+        total_area = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polygon"][3]["Ownership"]["areaTotal"]
 
         ownership_data = []
         for key in ownership_unformatted.keys():
@@ -162,20 +162,20 @@ class QRiSReport(Report):
         for entry in ownership_data:
             entry.append(str(round(float(entry[2]) / total_area * 100, 2)) + "%")
 
-        table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
+        table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
         column_labels = ["Code", "Name", "Area (ha)", "Percent"]
-        Report.create_table_from_2d_array(ownership_data, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+        Report.create_table_from_2d_array(ownership_data, table_wrapper, {"id": "SlopeTable"}, column_labels)
         section.append(table_wrapper)
         self.setup_pie_chart(section, ownership_data, "ownership", "Ownership")
         self.setup_bar_chart(section, ownership_data, "ownership", "Ownership", "Agency", "Percentage")
 
         # Transportation
-        section = self.section('ReportIntro', 'Transportation')
+        section = self.section("ReportIntro", "Transportation")
 
         with open(self.transportation_path) as f:
             transportation_dict = json.loads(f.read())[0]
-        transport_unformatted = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][1]['Roads']['fields']['TNMFRC']
-        total_length = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][1]['Roads']["lengthTotal"] / 1000
+        transport_unformatted = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polyline"][1]["Roads"]["fields"]["TNMFRC"]
+        total_length = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polyline"][1]["Roads"]["lengthTotal"] / 1000
 
         transport_data = []
         for key in transport_unformatted.keys():
@@ -185,18 +185,18 @@ class QRiSReport(Report):
             entry.append(entry[2] * 0.621371)
             entry.append(str(round(float(entry[2]) / total_length * 100, 2)) + "%")
 
-        table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
+        table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
         column_labels = ["Code", "Type", "Length (km)", "Length (mi)", "Percent"]
-        Report.create_table_from_2d_array(transport_data, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+        Report.create_table_from_2d_array(transport_data, table_wrapper, {"id": "SlopeTable"}, column_labels)
         section.append(table_wrapper)
         self.setup_pie_chart(section, transport_data, "roads", "Roads")
         self.setup_bar_chart(section, transport_data, "roads", "Roads", "Road Type", "Percentage")
 
-        table_wrapper = ET.Element('div', attrib={'class': 'tableWrapper'})
-        rail_length = json_data['data']['pointMetrics']['HUC12Metrics']['RSContext']['metrics']['vector']['polyline'][2]['Rail']["lengthTotal"] / 1000
+        table_wrapper = ET.Element("div", attrib={"class": "tableWrapper"})
+        rail_length = json_data["data"]["pointMetrics"]["HUC12Metrics"]["RSContext"]["metrics"]["vector"]["polyline"][2]["Rail"]["lengthTotal"] / 1000
         total_length_data = [["Roads", total_length, total_length * 0.621371], ["Rail", rail_length, rail_length * 0.621371]]
         column_labels = ["Type", "Length (km)", "Length(mi)"]
-        Report.create_table_from_2d_array(total_length_data, table_wrapper, {'id': 'SlopeTable'}, column_labels)
+        Report.create_table_from_2d_array(total_length_data, table_wrapper, {"id": "SlopeTable"}, column_labels)
         section.append(table_wrapper)
 
     def setup_bar_chart(self, section, data, name, title, x_label, y_label):
@@ -212,20 +212,20 @@ class QRiSReport(Report):
             labels = [row[0] + "-" + row[1][:30] + "..." if len(row[1]) > 30 else row[0] + "-" + row[1] for row in data]
             percentages = [float(row[4][:-1]) for row in data]
         else:
-            breakpoint
+            breakpoint()
 
-        img_wrap_bar = ET.Element('div', attrib={'class': 'imgWrap'})
-        bar_chart_img_path = os.path.join(self.images_dir, 'attribute_{}.png'.format(name + "_bar"))
+        img_wrap_bar = ET.Element("div", attrib={"class": "imgWrap"})
+        bar_chart_img_path = os.path.join(self.images_dir, "attribute_{}.png".format(name + "_bar"))
         bar_chart(percentages, labels, bar_chart_img_path, x_label, y_label, title)
 
-        bar_img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': '{}/{}'.format(os.path.basename(self.images_dir), os.path.basename(bar_chart_img_path))})
+        bar_img = ET.Element("img", attrib={"class": "boxplot", "alt": "boxplot", "src": f"{os.path.basename(self.images_dir)}/{os.path.basename(bar_chart_img_path)}"})
         img_wrap_bar.append(bar_img)
-        reach_wrapper_inner_bar = ET.Element('div', attrib={'class': 'reachAtributeInner'})
+        reach_wrapper_inner_bar = ET.Element("div", attrib={"class": "reachAtributeInner"})
         section.append(reach_wrapper_inner_bar)
         reach_wrapper_inner_bar.append(img_wrap_bar)
 
     def setup_pie_chart(self, section, data, name, title):
-        image_path = os.path.join(self.images_dir, 'attribute_{}.png'.format(name + "_pie"))
+        image_path = os.path.join(self.images_dir, "attribute_{}.png".format(name + "_pie"))
 
         if len(data[0]) == 4:
             labels = [row[0] + "-" + row[1][:30] + "..." if len(row[1]) > 30 else row[0] + "-" + row[1] for row in data]
@@ -237,26 +237,19 @@ class QRiSReport(Report):
             labels = [row[0] + "-" + row[1][:30] + "..." if len(row[1]) > 30 else row[0] + "-" + row[1] for row in data]
             values = [float(row[4][:-1]) for row in data]
         else:
-            breakpoint
+            breakpoint()
 
         pie_chart(values, labels, image_path, title)
-        img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
-        img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': '{}/{}'.format(os.path.basename(self.images_dir), os.path.basename(image_path))})
+        img_wrap = ET.Element("div", attrib={"class": "imgWrap"})
+        img = ET.Element("img", attrib={"class": "boxplot", "alt": "boxplot", "src": f"{os.path.basename(self.images_dir)}/{os.path.basename(image_path)}"})
         img_wrap.append(img)
-        reach_wrapper_inner = ET.Element('div', attrib={'class': 'reachAtributeInner'})
+        reach_wrapper_inner = ET.Element("div", attrib={"class": "reachAtributeInner"})
         section.append(reach_wrapper_inner)
         reach_wrapper_inner.append(img_wrap)
 
     def create_static_map(self, section, coordinates):
         static_map_api = "https://maps.googleapis.com/maps/api/staticmap"
-        api_parameters = {
-            "center": coordinates,
-            "zoom": "13",
-            "size": "600x300",
-            "maptype": "roadmap",
-            "markers": "color:blue|label:A|" + coordinates,
-            "key": self.google_maps_api_key
-        }
+        api_parameters = {"center": coordinates, "zoom": "13", "size": "600x300", "maptype": "roadmap", "markers": "color:blue|label:A|" + coordinates, "key": self.google_maps_api_key}
         static_map_api += "?" + urllib.parse.urlencode(api_parameters)
         map_image_path = os.path.join(self.images_dir, "static_map.png")
         # Call Google Maps API and save image
@@ -266,10 +259,10 @@ class QRiSReport(Report):
         else:
             raise ValueError("Unsafe URL scheme for static map download.")
 
-        img_wrap = ET.Element('div', attrib={'class': 'imgWrap'})
-        img = ET.Element('img', attrib={'class': 'boxplot', 'alt': 'boxplot', 'src': map_image_path})
+        img_wrap = ET.Element("div", attrib={"class": "imgWrap"})
+        img = ET.Element("img", attrib={"class": "boxplot", "alt": "boxplot", "src": map_image_path})
         img_wrap.append(img)
-        reach_wrapper_inner = ET.Element('div', attrib={'class': 'reachAtributeInner'})
+        reach_wrapper_inner = ET.Element("div", attrib={"class": "reachAtributeInner"})
         section.append(reach_wrapper_inner)
         reach_wrapper_inner.append(img_wrap)
 
@@ -295,22 +288,22 @@ class QRiSReport(Report):
         """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # cfg = ModelConfig('http://xml.riverscapes.net/Projects/XSD/V1/BRAT.xsd', __version__)
     # project = RSProject(cfg, args.projectxml)
 
     # Output file path
-    file_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'test_report.html')
+    file_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "test_report.html")
 
     # Input sample JSON data
-    json_data_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'metric_data.json')
+    json_data_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "metric_data.json")
     json_data = json.load(json_data_path)
 
     # Optional Google Map API Key
     google_api_key = None
-    secrets_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'secrets.json')
+    secrets_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "secrets.json")
     if os.path.isfile(secrets_path):
         secret_data = json.load(secrets_path)
-        google_api_key = secret_data['constants']['google_api_key']
+        google_api_key = secret_data["constants"]["google_api_key"]
 
     report = QRiSReport(google_api_key, 41.74442897545844, -111.80977686337876, json_data, file_path)

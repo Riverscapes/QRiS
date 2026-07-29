@@ -7,20 +7,20 @@
 #
 # Date:     15 Aug 2019
 # -------------------------------------------------------------------------------
-import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
-
-from scipy import stats
 import os
+
+from matplotlib.patches import Patch
+import matplotlib.pyplot as plt
+from scipy import stats
 
 
 def validation_chart(values, chart_title):
 
     if len(values) < 1:
-        raise Exception('No data values to chart.')
+        raise Exception("No data values to chart.")
 
-    file_path = os.path.join('docs/assets/images/validation', chart_title.replace(' ', '_').lower() + '.png')
-    xyscatter(values, 'BRAT 3', 'BRAT 4', chart_title, file_path, True)
+    file_path = os.path.join("docs/assets/images/validation", chart_title.replace(" ", "_").lower() + ".png")
+    xyscatter(values, "BRAT 3", "BRAT 4", chart_title, file_path, True)
 
 
 def xyscatter(values, xlabel, ylabel, chart_title, file_path, one2one=False):
@@ -38,24 +38,24 @@ def xyscatter(values, xlabel, ylabel, chart_title, file_path, one2one=False):
     y = [y for x, y in values]
 
     plt.clf()
-    plt.scatter(x, y, c='#DA8044', alpha=0.5, label='{} (n = {:,})'.format(chart_title, len(x)))
-    plt.title = chart_title
+    plt.scatter(x, y, c="#DA8044", alpha=0.5, label=f"{chart_title} (n = {len(x):,})")
+    plt.title(chart_title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     # TODO: add timestamp text element to the chart (to help when reviewing validation charts)
 
     if one2one:
         if len(x) < 3:
-            raise Exception('Attempting linear regression with less than three data points.')
+            raise Exception("Attempting linear regression with less than three data points.")
 
         m, c, r_value, _p_value, _std_err = stats.linregress(x, y)
 
         min_value = min(x)  # min(min(x), min(y))
         max_value = max(x)  # max(max(x), max(y))
-        plt.plot([min_value, max_value], [m * min_value + c, m * max_value + c], 'blue', lw=1, label='regression m: {:.2f}, r2: {:.2f}'.format(m, r_value))
-        plt.plot([min_value, max_value], [min_value, max_value], 'red', lw=1, label='1:1')
+        plt.plot([min_value, max_value], [m * min_value + c, m * max_value + c], "blue", lw=1, label=f"regression m: {m:.2f}, r2: {r_value:.2f}")
+        plt.plot([min_value, max_value], [min_value, max_value], "red", lw=1, label="1:1")
 
-    plt.legend(loc='upper left')
+    plt.legend(loc="upper left")
     plt.tight_layout()
 
     if not os.path.isdir(os.path.dirname(file_path)):
@@ -77,17 +77,17 @@ def box_plot(values, ylabel, chart_title, file_path):
 
 
 def pie_chart(values, labels, file_path, title=None):
-    fig1, ax1 = plt.subplots()
+    _fig1, ax1 = plt.subplots()
 
-    ax1.pie(values, autopct='%1.1f%%')
+    ax1.pie(values, autopct="%1.1f%%")
 
     if not os.path.isdir(os.path.dirname(file_path)):
         os.makedirs(os.path.dirname(file_path))
     if title is not None:
         ax1.set_title(title)
-    ax1.legend(title='Legend', labels=labels, bbox_to_anchor=(1.0, 1.0))
+    ax1.legend(title="Legend", labels=labels, bbox_to_anchor=(1.0, 1.0))
 
-    plt.savefig(file_path, bbox_inches='tight')
+    plt.savefig(file_path, bbox_inches="tight")
 
 
 def histogram(values, bins, file_path):
@@ -106,7 +106,7 @@ def line(x_values, y_values, xlabel, ylabel, chart_title, file_path):
     plt.clf()
     plt.plot(x_values, y_values)
 
-    plt.title = chart_title
+    plt.title(chart_title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
 
@@ -117,7 +117,7 @@ def line(x_values, y_values, xlabel, ylabel, chart_title, file_path):
 
 
 def bar_chart(y_values, x_values, file_path, x_label, y_label, title=None):
-    fig1, ax1 = plt.subplots()
+    _fig1, ax1 = plt.subplots()
     color_map = plt.get_cmap("tab10").colors
     x = []
     for i in range(0, len(x_values)):
@@ -130,10 +130,10 @@ def bar_chart(y_values, x_values, file_path, x_label, y_label, title=None):
 
     patches = [Patch(color=v, label=k) for k, v in cmap.items()]
 
-    ax1.legend(title='Legend', labels=x_values, handles=patches, bbox_to_anchor=(1.0, 1.0))
+    ax1.legend(title="Legend", labels=x_values, handles=patches, bbox_to_anchor=(1.0, 1.0))
     ax1.set_xticks([])
     if title is not None:
         ax1.set_title(title)
     if not os.path.isdir(os.path.dirname(file_path)):
         os.makedirs(os.path.dirname(file_path))
-    plt.savefig(file_path, bbox_inches='tight')
+    plt.savefig(file_path, bbox_inches="tight")
