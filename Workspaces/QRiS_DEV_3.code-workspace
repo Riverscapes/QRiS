@@ -16,6 +16,10 @@
       "PYTHONPATH": "${env:QGIS_PATH}/Contents/Resources/python:${env:QGIS_PATH}/Contents/Resources/python/site-packages:${env:QGIS_PATH}/Contents/Resources/python/site-packages/PyQt5:${workspaceFolder}/wheels",
       "PATH": "${env:PATH}:${env:QGIS_PATH}/Contents/MacOS/bin"
     },
+    "terminal.integrated.env.windows": {
+      "PYTHONPATH": "${env:OSGEO4W_ROOT}/apps/qgis/python;${env:OSGEO4W_ROOT}/apps/qgis/python/plugins;${env:OSGEO4W_ROOT}/apps/Python312/Lib/site-packages",
+      "PATH": "${env:PATH};${env:OSGEO4W_ROOT}/bin;${env:OSGEO4W_ROOT}/apps/Python312/Scripts;${env:OSGEO4W_ROOT}/apps/Qt5/bin;${env:OSGEO4W_ROOT}/apps/qgis-ltr/bin"
+    },
     "terminal.integrated.defaultProfile.linux": "zsh"
   }
 }
