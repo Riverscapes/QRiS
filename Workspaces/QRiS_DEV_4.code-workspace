@@ -18,7 +18,7 @@
     },
     "terminal.integrated.env.windows": {
       "PYTHONPATH": "${env:OSGEO4W_ROOT}/apps/qgis/python;${env:OSGEO4W_ROOT}/apps/qgis/python/plugins;${env:OSGEO4W_ROOT}/apps/Python312/Lib/site-packages",
-      "PATH": "${env:PATH};${env:OSGEO4W_ROOT}/bin"
+      "PATH": "${env:PATH};${env:OSGEO4W_ROOT}/bin;${env:OSGEO4W_ROOT}/apps/Python312/Scripts;${env:OSGEO4W_ROOT}/apps/qt6/bin;${env:OSGEO4W_ROOT}/apps/qgis/bin"
     },
     "terminal.integrated.defaultProfile.linux": "zsh"
   }
