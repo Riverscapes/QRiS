@@ -15,7 +15,7 @@ class FrmOptions(QtWidgets.QDialog):
         for control, data in ((self.cboLength, get_lengths), (self.cboArea, get_areas)):
             for display_name, unit_key in data().items():
                 # item = QtGui.QStandardItem(display_name)
-                # item.setData(unit_key, QtCore.Qt.UserRole)
+                # item.setData(unit_key, USER_ROLE)
                 control.addItem(display_name, unit_key)
 
         # self.setWindowTitle(f'Geospatial Metrics for {self.mask.name}')

@@ -2,11 +2,12 @@ import json
 
 from qgis.core import QgsAttributeTableConfig, QgsVectorLayer, QgsVectorLayerCache
 from qgis.gui import QgsAttributeTableFilterModel, QgsAttributeTableModel, QgsAttributeTableView
-from qgis.PyQt.QtCore import Qt, QVariant
+from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QVBoxLayout, QWidget
 from qgis.utils import iface
 
+from ..compat import USER_ROLE
 from .utilities import add_help_button
 
 
@@ -31,7 +32,7 @@ class FrmBatchAttributeEditor(QDialog):
             return
         for field in self.config["fields"]:
             field_item = QStandardItem(field["label"])
-            field_item.setData(field, Qt.UserRole)
+            field_item.setData(field, USER_ROLE)
             field_items.append(field_item)
 
         model = QStandardItemModel(self)
@@ -71,7 +72,7 @@ class FrmBatchAttributeEditor(QDialog):
     def on_field_changed(self) -> None:
 
         # Get the field configuration
-        field = self.cboField.currentData(Qt.UserRole)
+        field = self.cboField.currentData(USER_ROLE)
 
         if field is None:
             return
@@ -110,7 +111,7 @@ class FrmBatchAttributeEditor(QDialog):
 
     def update_attributes(self) -> None:
 
-        field = self.cboField.currentData(Qt.UserRole)
+        field = self.cboField.currentData(USER_ROLE)
         value = None
         if field["type"] == "list":
             value = self.widget.currentText()

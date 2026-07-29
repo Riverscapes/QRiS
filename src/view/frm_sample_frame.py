@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import QMetaType, QSize, Qt, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTabWidget, QTextEdit, QTreeView, QVBoxLayout, QWidget
 
-from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -182,7 +182,7 @@ class FrmSampleFrame(QDialog):
 
                 clip_mask = None
                 if self.tab_inputs is not None:
-                    clip_item = self.tab_inputs.cboClipToAOI.currentData(Qt.UserRole)
+                    clip_item = self.tab_inputs.cboClipToAOI.currentData(USER_ROLE)
                     if clip_item is not None:
                         if clip_item.id > 0:
                             clip_mask = ("sample_frame_features", "sample_frame_id", clip_item.id)
@@ -216,17 +216,17 @@ class FrmSampleFrame(QDialog):
             # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
         if self.create_sample_frame is True:
             try:
-                db_item_polygon = self.tab_inputs.cboFramePolygon.currentData(Qt.UserRole)
+                db_item_polygon = self.tab_inputs.cboFramePolygon.currentData(USER_ROLE)
                 if isinstance(db_item_polygon, DBItemSpatial):
                     polygon_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={db_item_polygon.fc_name}")
                     polygon_layer.setSubsetString(f"{db_item_polygon.fc_id_column_name} = {db_item_polygon.id}")
                 else:
                     polygon_layer = QgsVectorLayer(f"{db_item_polygon.gpkg_path}|layername={db_item_polygon.fc_name}")
-                cross_sections = self.tab_inputs.cboCrossSections.currentData(Qt.UserRole)
+                cross_sections = self.tab_inputs.cboCrossSections.currentData(USER_ROLE)
                 cross_sections_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername=cross_section_features")
                 cross_sections_layer.setSubsetString(f"cross_section_id = {cross_sections.id}")
                 self.centerline_geom = None
-                centerline_profile = self.tab_inputs.cboCenterline.currentData(Qt.UserRole)
+                centerline_profile = self.tab_inputs.cboCenterline.currentData(USER_ROLE)
                 if centerline_profile is not None:
                     cl_layer = QgsVectorLayer(f"{self.qris_project.project_file}|layername={centerline_profile.fc_name}")
                     cl_layer.setSubsetString(f"profile_id = {centerline_profile.id}")
@@ -666,7 +666,7 @@ class SampleFrameAttributes(QWidget):
             name = field if isinstance(field, str) else field["label"]
             values = list() if isinstance(field, str) else field["values"]
             item = QStandardItem(name)
-            item.setData(values, Qt.UserRole)
+            item.setData(values, USER_ROLE)
             self.model.appendRow(item)
             # add attributes as children
             for attribute in values:
@@ -728,7 +728,7 @@ class SampleFrameAttributes(QWidget):
 
         # add to model
         item = QStandardItem(field_name)
-        item.setData(attributes, Qt.UserRole)
+        item.setData(attributes, USER_ROLE)
         self.model.appendRow(item)
 
         # add attributes as children

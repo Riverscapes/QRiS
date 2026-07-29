@@ -126,7 +126,7 @@ class DBItemModel(QAbstractListModel):
 
     For comboboxes the currently selected item can be retrieved with
 
-    obj = self.cboComboBox.currentData(Qt.UserRole)
+    obj = self.cboComboBox.currentData(USER_ROLE)
     """
 
     def __init__(self, data: dict, non_selectable_item: DBItem = None, include_none: bool = False):
