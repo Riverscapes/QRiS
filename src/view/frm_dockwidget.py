@@ -43,7 +43,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface, QgsLayerTreeView, QgsMapToolEmitPoint
 from qgis.PyQt import QtGui, QtWidgets
-from qgis.PyQt.QtCore import QDate, QMetaType, QModelIndex, QRect, QSettings, QUrl, pyqtSignal, pyqtSlot
+from qgis.PyQt.QtCore import QDate, QModelIndex, QRect, QSettings, QUrl, pyqtSignal, pyqtSlot
 
 from ..compat import (
     ASCENDING_ORDER,
@@ -62,6 +62,7 @@ from ..compat import (
     MSGBOX_NO,
     MSGBOX_OK,
     QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
+    QMETATYPE_STRING,
     RIGHT_DOCK,
     USER_ROLE,
 )
@@ -1386,9 +1387,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 idx = self.layer.fields().indexFromName(field.name())
                 editorWidget = self.layer.editorWidgetSetup(idx)
                 if editorWidget.type() == "ValueMap":
-                    return QgsField(field.displayName(), int(QMetaType.QString))
+                    return QgsField(field.displayName(), QMETATYPE_STRING)
                 elif field.name() == "observation_date":
-                    return QgsField(field.displayName(), int(QMetaType.QString))
+                    return QgsField(field.displayName(), QMETATYPE_STRING)
                 else:
                     return self.layer.fields()[idx]
 
