@@ -65,8 +65,6 @@ try:
     FOREGROUND_ROLE = Qt.ItemDataRole.ForegroundRole
     ITEM_FLAG_EDITABLE = Qt.ItemFlag.ItemIsEditable
     NO_ITEM_FLAGS = Qt.ItemFlag.NoItemFlags
-    COLOR_BLUE = Qt.GlobalColor.blue
-    COLOR_GRAY = Qt.GlobalColor.gray
     COLOR_TRANSPARENT = Qt.GlobalColor.transparent
     MATCH_EXACTLY = Qt.MatchFlag.MatchExactly
     MATCH_WRAP = Qt.MatchFlag.MatchWrap
@@ -113,8 +111,6 @@ except AttributeError:
     FOREGROUND_ROLE = Qt.ForegroundRole  # type: ignore[attr-defined]
     ITEM_FLAG_EDITABLE = Qt.ItemIsEditable  # type: ignore[attr-defined]
     NO_ITEM_FLAGS = Qt.NoItemFlags  # type: ignore[attr-defined]
-    COLOR_BLUE = Qt.blue  # type: ignore[attr-defined]
-    COLOR_GRAY = Qt.gray  # type: ignore[attr-defined]
     COLOR_TRANSPARENT = Qt.transparent  # type: ignore[attr-defined]
     MATCH_EXACTLY = Qt.MatchExactly  # type: ignore[attr-defined]
     MATCH_WRAP = Qt.MatchWrap  # type: ignore[attr-defined]

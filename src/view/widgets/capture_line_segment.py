@@ -1,6 +1,7 @@
 from qgis.core import QgsLineString, QgsWkbTypes
 from qgis.gui import QgsMapTool, QgsMapToolEmitPoint, QgsRubberBand
-from qgis.PyQt.QtCore import Qt, pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtGui import QColor
 
 
 class LineSegmentMapTool(QgsMapToolEmitPoint):
@@ -10,7 +11,7 @@ class LineSegmentMapTool(QgsMapToolEmitPoint):
         self.canvas = canvas
         QgsMapToolEmitPoint.__init__(self, self.canvas)
         self.rubberBand = QgsRubberBand(self.canvas, QgsWkbTypes.LineGeometry)
-        self.rubberBand.setColor(Qt.red)
+        self.rubberBand.setColor(QColor(255, 0, 0))
         self.rubberBand.setWidth(1)
         self.reset()
         self.line = None
