@@ -8,7 +8,7 @@ All shared enum shims live here.  **Do not** duplicate ``USER_ROLE`` or
 other guards in individual source files — import from this module instead.
 """
 
-from qgis.PyQt.QtCore import QMetaType, Qt, QVariant
+from qgis.PyQt.QtCore import QEvent, QMetaType, Qt, QVariant
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QAbstractScrollArea,
@@ -121,6 +121,13 @@ except AttributeError:
     DIALOG_BTN_CLOSE = QDialogButtonBox.Close  # type: ignore[attr-defined]
     CUSTOM_CONTEXT_MENU = Qt.CustomContextMenu  # type: ignore[attr-defined]
     USER_ROLE = Qt.UserRole  # type: ignore[attr-defined]
+
+
+# ── QEvent types ──────────────────────────────────────────────────────────────
+try:
+    MOUSE_BUTTON_RELEASE = QEvent.Type.MouseButtonRelease
+except AttributeError:
+    MOUSE_BUTTON_RELEASE = QEvent.MouseButtonRelease  # type: ignore[attr-defined]
 
 
 # ── Dock widget areas ─────────────────────────────────────────────────────────
