@@ -9,8 +9,7 @@ from qgis.core import QgsCoordinateTransformContext, QgsField, QgsVectorFileWrit
 from qgis.PyQt.QtCore import QObject, QTimer, pyqtSignal
 from qgis.utils import spatialite_connect
 
-from src.compat import MESSAGE_LEVEL_WARNING
-
+from ..compat import MESSAGE_LEVEL_WARNING
 from ..QRiS.path_utilities import parse_posix_path
 from ..QRiS.protocol_parser import load_protocol_definitions
 from ..QRiS.settings import Settings
