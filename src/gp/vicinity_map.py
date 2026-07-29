@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QRect, QSize, pyqtSignal
 from qgis.PyQt.QtGui import QColor, QImage, QPainter
 from qgis.PyQt.QtSvg import QSvgGenerator
 
-from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QMETATYPE_STRING
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QIMAGE_FORMAT_ARGB32_PREMULTIPLIED, QMETATYPE_STRING
 from ..QRiS.settings import Settings
 from .map_centroid import build_aoi_centroids_layer
 
@@ -336,7 +336,7 @@ class VicinityMapExportTask(QgsTask):
             paint_device.setViewBox(QRect(0, 0, output_size.width(), output_size.height()))
             paint_device.setTitle("QRiS Vicinity Map")
         else:
-            paint_device = QImage(output_size, QImage.Format_ARGB32_Premultiplied)
+            paint_device = QImage(output_size, QIMAGE_FORMAT_ARGB32_PREMULTIPLIED)
             paint_device.fill(QColor(255, 255, 255))
 
         painter = QPainter(paint_device)
