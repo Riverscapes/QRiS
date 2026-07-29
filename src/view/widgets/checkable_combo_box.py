@@ -7,6 +7,7 @@ from ...compat import (
     ITEM_FLAG_CHECKABLE,
     ITEM_FLAG_ENABLED,
     ITEM_FLAG_SELECTABLE,
+    MOUSE_BUTTON_RELEASE,
     UNCHECKED,
 )
 
@@ -42,7 +43,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
         self.updateText()
 
     def eventFilter(self, obj, event):
-        if obj == self.view().viewport() and event.type() == QtCore.QEvent.MouseButtonRelease:
+        if obj == self.view().viewport() and event.type() == MOUSE_BUTTON_RELEASE:
             index = self.view().indexAt(event.pos())
             if index.isValid():
                 item = self.model().itemFromIndex(index)

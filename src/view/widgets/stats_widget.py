@@ -1,10 +1,9 @@
 from typing import ClassVar
 
 from qgis.core import QgsUnitTypes
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from qgis.PyQt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QMenu, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
-from ...compat import UNIT_AREA_SQUARE_METERS, UNIT_DISTANCE_METERS
+from ...compat import CUSTOM_CONTEXT_MENU, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, SPSZ_FIXED, UNIT_AREA_SQUARE_METERS, UNIT_DISTANCE_METERS, USER_ROLE
 from ...lib.unit_conversion import area_units, distance_units, short_unit_name
 from ..frm_export_table import FrmTableExport
 
@@ -43,8 +42,8 @@ class StatsWidget(QWidget):
         self.stats_table.setHorizontalHeaderLabels(["Statistic", "Value"])
         self.stats_table.horizontalHeader().setStretchLastSection(True)
         self.stats_table.horizontalHeader().setMinimumSectionSize(80)
-        self.stats_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.stats_table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.stats_table.setEditTriggers(QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS)
+        self.stats_table.setContextMenuPolicy(CUSTOM_CONTEXT_MENU)
         self.stats_table.customContextMenuRequested.connect(self._show_context_menu)
         layout.addWidget(self.stats_table)
 
@@ -64,7 +63,7 @@ class StatsWidget(QWidget):
         self.cboUnits = QComboBox()
         self.cboUnits.setVisible(False)
         self.cboUnits.setMinimumWidth(160)
-        self.cboUnits.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.cboUnits.setSizePolicy(SPSZ_FIXED, SPSZ_FIXED)
         self.cboUnits.currentTextChanged.connect(self._on_unit_changed)
         bottom.addWidget(self.cboUnits)
 
@@ -186,8 +185,8 @@ class StatsWidget(QWidget):
             label_item = QTableWidgetItem(label)
             value_item = QTableWidgetItem(display_str)
             # store numeric-only string for copy actions
-            value_item.setData(Qt.UserRole, numeric_str)
-            value_item.setData(Qt.UserRole + 1, abbrev)
+            value_item.setData(USER_ROLE, numeric_str)
+            value_item.setData(USER_ROLE + 1, abbrev)
             self.stats_table.setItem(row, 0, label_item)
             self.stats_table.setItem(row, 1, value_item)
         self.stats_table.resizeColumnToContents(0)
@@ -200,7 +199,7 @@ class StatsWidget(QWidget):
         value_item = self.stats_table.item(row, 1)
         if value_item is None:
             return
-        numeric_str = value_item.data(Qt.UserRole) or value_item.text()
+        numeric_str = value_item.data(USER_ROLE) or value_item.text()
         full_str = value_item.text()
 
         menu = QMenu(self)
