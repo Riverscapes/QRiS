@@ -1,6 +1,6 @@
 import json
 
-from qgis.core import QgsApplication, QgsMessageLog
+from qgis.core import QgsApplication
 from qgis.PyQt import QtGui, QtWidgets
 
 from ..compat import ALIGN_RIGHT, ALIGN_VCENTER, LINEEDIT_TRAILING_POSITION, SPSZ_EXPANDING, SPSZ_FIXED
@@ -10,6 +10,7 @@ from ..model.analysis import Analysis, format_feasibility_text
 from ..model.event import Event
 from ..model.metric_value import MetricValue, load_metric_values
 from ..model.project import Project
+from ..QRiS.settings import Settings
 from .frm_layer_metric_details import FrmLayerMetricDetails
 from .utilities import add_standard_form_buttons
 from .widgets.metadata import MetadataWidget
@@ -412,7 +413,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.actionCalculate.setEnabled(True)
 
         for message in summary.get("messages", []):
-            QgsMessageLog.logMessage(message["text"], "QRiS_Metrics", message["level"])
+            Settings().log(message["text"], "QRiS_Metrics", message["level"])
 
         if summary.get("canceled", False):
             self.txtAutomated.setText("")

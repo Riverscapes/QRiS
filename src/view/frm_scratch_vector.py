@@ -1,18 +1,19 @@
 import json
 import re
 
-from qgis.core import Qgis, QgsApplication, QgsVectorLayer
+from qgis.core import QgsApplication, QgsVectorLayer
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
-from ..compat import ALIGN_TOP, UNCHECKED, USER_ROLE
+from ..compat import ALIGN_TOP, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass
 from ..gp.import_temp_layer import ImportMapLayer
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.scratch_vector import ScratchVector, get_unique_scratch_fc_name, insert_scratch_vector, scratch_gpkg_path
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons, validate_name, validate_name_unique
 from .widgets.metadata import MetadataWidget
 
@@ -138,7 +139,7 @@ class FrmScratchVector(QtWidgets.QDialog):
     def on_copy_complete(self, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage("Feature Class Copy Complete.", f"{self.txtProjectPath.text()} saved successfully.", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Feature Class Copy Complete.", f"{self.txtProjectPath.text()} saved successfully.", MESSAGE_LEVEL_SUCCESS)
 
             try:
                 self.scratch_vector = insert_scratch_vector(
@@ -162,7 +163,7 @@ class FrmScratchVector(QtWidgets.QDialog):
 
             super().accept()
         else:
-            self.iface.messageBar().pushMessage("Feature Class Copy Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
+            Settings().msg_bar("Feature Class Copy Error", "Review the QGIS log.", MESSAGE_LEVEL_CRITICAL)
             self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):
@@ -242,4 +243,3 @@ class FrmScratchVector(QtWidgets.QDialog):
         self.grid.addWidget(self.chkAddToMap, 6, 1, 1, 1)
 
         self.vert.addLayout(add_standard_form_buttons(self, "context/vector-layers"))
-

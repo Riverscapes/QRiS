@@ -2,13 +2,12 @@ import json
 import os
 import sqlite3
 
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
 from ..model.project import create_geopackage_table
-
-MESSAGE_CATEGORY = "QRiS_NewProjectTask"
+from ..QRiS.settings import Settings
 
 
 class NewProjectTask(QgsTask):
@@ -84,16 +83,16 @@ class NewProjectTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Creation of new QRIS Project successful", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Creation of new QRIS Project successful", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Creation of new QRIS Project not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings.log("Creation of new QRIS Project not successful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Create New QRIS Project exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Create New QRIS Project exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.project_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Create New QRIS Project was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Create New QRIS Project was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

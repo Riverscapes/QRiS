@@ -1,12 +1,11 @@
-from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsRasterLayer, QgsTask, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsProject, QgsRasterLayer, QgsTask, QgsVectorLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
+from ..QRiS.settings import Settings
 from .zonal_metrics import ZonalMetrics
-
-MESSAGE_CATEGORY = "QRiS Zonal Statistics Task"
 
 
 class ZonalMetricsTask(QgsTask):
@@ -18,7 +17,7 @@ class ZonalMetricsTask(QgsTask):
     on_complete = pyqtSignal(bool, SampleFrame, dict or None, dict or None)
 
     def __init__(self, project: Project, mask: SampleFrame):
-        super().__init__(MESSAGE_CATEGORY, QGSTASK_CAN_CANCEL)
+        super().__init__(f"Zonal Metrics Task for {mask.db_table_name}", QGSTASK_CAN_CANCEL)
 
         self.polygons = {}
         self.data = {}
@@ -77,7 +76,7 @@ class ZonalMetricsTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Metrics Complete", MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log("Metrics Complete", MESSAGE_LEVEL_SUCCESS)
 
             # base_name = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             # output_json = os.path.join(os.path.dirname(self.project.project_file), SURFACES_PARENT_FOLDER, f'geospatial_metric_summary_{base_name}.json')
@@ -87,13 +86,13 @@ class ZonalMetricsTask(QgsTask):
 
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Geospatial Metrics unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log("Geospatial Metrics unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Geospatial metrics exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f"Geospatial metrics exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 # raise self.exception
 
         self.on_complete.emit(result, self.mask, self.polygons, self.data)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Geospatial Metrics was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log("Geospatial Metrics was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

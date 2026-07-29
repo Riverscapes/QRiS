@@ -3,17 +3,16 @@ import sqlite3
 
 from osgeo import ogr
 import pandas as pd
-from qgis.core import Qgis, QgsFeature, QgsGeometry, QgsMessageLog, QgsTask
+from qgis.core import QgsFeature, QgsGeometry, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
 from ..lib.climate_engine import CLIMATE_ENGINE_API, get_api_key
 from ..model.project import Project
+from ..QRiS.settings import Settings
 
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
-
-MESSAGE_CATEGORY = "DownloadClimateEngineTask"
 
 AREA_REDUCER = {"Mean": "mean", "Median": "median", "Max": "max", "Min": "min"}
 
@@ -98,7 +97,7 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
                 data = response_data.get("Data", None)
 
                 if data is None:
-                    QgsMessageLog.logMessage(f"No data for feature {feature_id} for one or more {self.variables} in {self.dataset}", MESSAGE_CATEGORY, Qgis.Warning)
+                    Settings.log(f"No data for feature {feature_id} for one or more {self.variables} in {self.dataset}", MESSAGE_LEVEL_WARNING)
                     continue
 
                 df = pd.DataFrame(data)
@@ -146,10 +145,10 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
             return True
 
         except requests.exceptions.HTTPError as e:
-            QgsMessageLog.logMessage(f"HTTP error occurred: {e}", MESSAGE_CATEGORY, Qgis.Critical)
+            Settings.log(f"HTTP error occurred: {e}", MESSAGE_LEVEL_CRITICAL)
             return False
         except Exception as e:
-            QgsMessageLog.logMessage(f"Error downloading data: {e}", MESSAGE_CATEGORY, Qgis.Critical)
+            Settings.log(f"Error downloading data: {e}", MESSAGE_LEVEL_CRITICAL)
             return False
 
     def finished(self, result):
@@ -157,9 +156,9 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
         This function is automatically called when the task has completed (successfully or not).
         """
         if result:
-            QgsMessageLog.logMessage("Download completed successfully.", MESSAGE_CATEGORY, Qgis.Info)
+            Settings.log("Download completed successfully.", MESSAGE_LEVEL_SUCCESS)
         else:
-            QgsMessageLog.logMessage("Download failed.", MESSAGE_CATEGORY, Qgis.Critical)
+            Settings.log("Download failed.", MESSAGE_LEVEL_CRITICAL)
 
         self.download_complete.emit(result)
 
@@ -167,8 +166,8 @@ class DownloadClimateEngineTimeseriesTask(QgsTask):
         """
         This function is automatically called when the task is canceled.
         """
-        QgsMessageLog.logMessage("Download canceled.", MESSAGE_CATEGORY, Qgis.Warning)
+        Settings.log("Download canceled.", MESSAGE_LEVEL_WARNING)
         super().cancel()
 
-        QgsMessageLog.logMessage("Create New QRIS Project was canceled.", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Create New QRIS Project was canceled.", MESSAGE_LEVEL_WARNING)
         super().cancel()

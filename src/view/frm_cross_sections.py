@@ -3,9 +3,8 @@ from typing import Optional
 
 from qgis.core import QgsFeature, QgsVectorLayer
 from qgis.PyQt import QtWidgets
-from qgis.utils import Qgis
 
-from ..compat import CHECKED, UNCHECKED, USER_ROLE
+from ..compat import CHECKED, MESSAGE_LEVEL_CRITICAL, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
 from ..model.cross_sections import CrossSections, insert_cross_sections
@@ -168,8 +167,8 @@ class FrmCrossSections(QtWidgets.QDialog):
                 try:
                     self.cross_sections.delete(self.qris_project.project_file)
                 except Exception as ex_del:
-                    Settings().msg_bar("Error attempting to delete cross sections after the importing of features failed.", str(ex_del), level=Qgis.Critical, duration=10)
-                Settings().msg_bar("Error Importing Cross Sections Features", str(ex), level=Qgis.Critical, duration=10)
+                    Settings().msg_bar("Error attempting to delete cross sections after the importing of features failed.", str(ex_del), level=MESSAGE_LEVEL_CRITICAL, duration=10)
+                Settings().msg_bar("Error Importing Cross Sections Features", str(ex), level=MESSAGE_LEVEL_CRITICAL, duration=10)
                 return
 
             super().accept()
@@ -177,14 +176,14 @@ class FrmCrossSections(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if not result:
-            Settings().msg_bar("Error Importing Cross Section Features", str(self.exception), level=Qgis.Critical, duration=10)
+            Settings().msg_bar("Error Importing Cross Section Features", str(self.exception), level=MESSAGE_LEVEL_CRITICAL, duration=10)
             try:
                 self.cross_sections.delete(self.qris_project.project_file)
             except Exception as ex:
-                Settings().msg_bar("Error Deleting Cross Sections on Failed Import", str(ex), level=Qgis.Critical, duration=10)
+                Settings().msg_bar("Error Deleting Cross Sections on Failed Import", str(ex), level=MESSAGE_LEVEL_CRITICAL, duration=10)
             return
         else:
-            Settings().msg_bar("Cross Section Import Complete.", f"{self.import_source_path} saved successfully.", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Cross Section Import Complete.", f"{self.import_source_path} saved successfully.")
             super().accept()
 
     def setupUi(self):

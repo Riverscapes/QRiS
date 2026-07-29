@@ -1,10 +1,11 @@
 import os
 
 from qgis import processing
-from qgis.core import Qgis, QgsCoordinateTransformContext, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsField, QgsMessageLog, QgsRasterLayer, QgsTask, QgsVectorDataProvider, QgsVectorFileWriter, QgsVectorLayer, edit
+from qgis.core import QgsCoordinateTransformContext, QgsExpression, QgsExpressionContext, QgsExpressionContextUtils, QgsField, QgsRasterLayer, QgsTask, QgsVectorDataProvider, QgsVectorFileWriter, QgsVectorLayer, edit
 from qgis.PyQt.QtCore import pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_DOUBLE, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QMETATYPE_DOUBLE, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
+from ..QRiS.settings import Settings
 
 # ---- processing tool parameters ----
 # simplify tolerance
@@ -21,8 +22,6 @@ from ..compat import QGSTASK_CAN_CANCEL, QMETATYPE_DOUBLE, QMETATYPE_INT, QMETAT
 # polygon_min_size = 9
 
 Path = str
-
-MESSAGE_CATEGORY = "QRiS_VectorizeClassTask"
 
 
 class VectorizeTask(QgsTask):
@@ -191,17 +190,17 @@ class VectorizeTask(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Export Polygon from Raster Complete", MESSAGE_CATEGORY, Qgis.Success)
+            Settings().log("Export Polygon from Raster Complete", MESSAGE_LEVEL_SUCCESS)
 
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage("Vectorize was unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                Settings().log("Vectorize was unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Vectorize exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings().log(f"Vectorize exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.on_complete.emit(result)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Vectorize polygon was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings().log("Vectorize polygon was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

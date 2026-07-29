@@ -8,9 +8,10 @@ import sqlite3
 import sys
 import xml.etree.ElementTree as ET
 
-from qgis.core import Qgis, QgsMessageLog, QgsVectorLayer
+from qgis.core import QgsVectorLayer
 
 from ...__version__ import __version__ as installed_qris_version
+from ..compat import MESSAGE_LEVEL_WARNING
 from ..model.analysis import Analysis
 from ..model.attachment import Attachment
 from ..model.cross_sections import CrossSections
@@ -24,6 +25,7 @@ from ..model.profile import Profile
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
+from ..QRiS.settings import Settings
 
 
 def rsxml_import():
@@ -53,7 +55,7 @@ def rsxml_import():
                     if match:
                         target_version = match.group(1)
             except Exception:
-                QgsMessageLog.logMessage(f"Error reading {init_path} for version info", "QRiS", Qgis.Warning)
+                Settings().log(f"Error reading {init_path} for version info", MESSAGE_LEVEL_WARNING)
 
         # Find the wheel file
         if target_version:
@@ -72,7 +74,7 @@ def rsxml_import():
                     end = wheel_path.find("-", start)
                     target_version = wheel_path[start:end]
                 except Exception as ex:
-                    QgsMessageLog.logMessage(f"Error parsing version from wheel filename {wheel_path}: {ex!s}", "QRiS", Qgis.Warning)
+                    Settings().log(f"Error parsing version from wheel filename {wheel_path}: {ex!s}", MESSAGE_LEVEL_WARNING)
             break
 
     # 2. TRY IMPORT & CHECK VERSION
@@ -83,10 +85,9 @@ def rsxml_import():
 
         # If we found a specific target version from the wheel/init, enforce it
         if target_version and loaded_version != target_version:
-            QgsMessageLog.logMessage(f"Version mismatch: Loaded {loaded_version}, Target {target_version}. Reloading...", "QRiS", Qgis.Warning)
+            Settings().log(f"Version mismatch: Loaded {loaded_version}, Target {target_version}. Reloading...", MESSAGE_LEVEL_WARNING)
             raise ImportError("Version mismatch")
-
-        QgsMessageLog.logMessage("rsxml imported from system", "QRiS", Qgis.Info)
+        Settings().log(f"rsxml loaded successfully from system: {loaded_version}")
         return rsxml
 
     except ImportError:
@@ -102,13 +103,12 @@ def rsxml_import():
                     importlib.reload(rsxml)
                 else:
                     import rsxml
-
-                QgsMessageLog.logMessage(f"rsxml imported from {os.path.basename(wheel_path)}", "QRiS", Qgis.Info)
+                Settings().log(f"rsxml imported from {os.path.basename(wheel_path)}")
                 return rsxml
             except ImportError:
-                QgsMessageLog.logMessage(f"Failed to import rsxml from {wheel_path}", "QRiS", Qgis.Warning)
+                Settings().log(f"Failed to import rsxml from {wheel_path}", MESSAGE_LEVEL_WARNING)
 
-        QgsMessageLog.logMessage("rsxml not found in system or sibling plugins", "QRiS", Qgis.Warning)
+        Settings().log("rsxml not found in system or sibling plugins", MESSAGE_LEVEL_WARNING)
         return None
 
 
@@ -135,7 +135,7 @@ class RSProject:
         try:
             root = ET.parse(rsxml_path).getroot()
         except Exception as ex:
-            QgsMessageLog.logMessage(f"Unable to parse RS XML for warehouse lookup: {ex!s}", "QRiS", Qgis.Warning)
+            Settings().log(f"Unable to parse RS XML for warehouse lookup: {ex!s}", MESSAGE_LEVEL_WARNING)
             return None
 
         for node in root.iter():

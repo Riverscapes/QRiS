@@ -1,9 +1,10 @@
 import traceback
 
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, QGSTASK_CAN_CANCEL
 from ..model.project import Project, apply_db_migrations, test_project
+from ..QRiS.settings import Settings
 
 
 class LoadProjectTask(QgsTask):
@@ -46,9 +47,10 @@ class LoadProjectTask(QgsTask):
 
     def finished(self, result):
         for msg in self.messages:
-            QgsMessageLog.logMessage(msg, "QRiS", Qgis.Info)
+            Settings.log(msg, MESSAGE_LEVEL_SUCCESS)
         if result and self.qris_project:
-            QgsMessageLog.logMessage("QRiS project loaded successfully.", "QRiS", Qgis.Info)
+            Settings.log("QRiS project loaded successfully.", MESSAGE_LEVEL_SUCCESS)
             self.callback(self.qris_project)
         else:
-            QgsMessageLog.logMessage(f"Error loading project: {self.error}", "QRiS", Qgis.Critical)
+            Settings.log(f"Error loading project: {self.error}", MESSAGE_LEVEL_CRITICAL)
+            self.callback(None)

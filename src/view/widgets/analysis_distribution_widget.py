@@ -5,27 +5,16 @@ import xml.etree.ElementTree as ET  # nosec B405
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from qgis.core import Qgis, QgsCoordinateTransform, QgsDistanceArea, QgsFeatureRequest, QgsGeometry, QgsMessageLog, QgsProject, QgsVectorLayer
+from qgis.core import QgsCoordinateTransform, QgsDistanceArea, QgsFeatureRequest, QgsGeometry, QgsProject, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import QSettings
 
-from ...compat import (
-    CHECKED,
-    DLG_ACCEPTED,
-    DLGBTN_CANCEL,
-    DLGBTN_OK,
-    HORIZONTAL,
-    ITEM_FLAG_CHECKABLE,
-    SPSZ_EXPANDING,
-    SPSZ_MINIMUM,
-    TOOL_BTN_INSTANT_POPUP,
-    UNCHECKED,
-    USER_ROLE,
-)
+from ...compat import CHECKED, DLG_ACCEPTED, DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, ITEM_FLAG_CHECKABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_WARNING, SPSZ_EXPANDING, SPSZ_MINIMUM, TOOL_BTN_INSTANT_POPUP, UNCHECKED, USER_ROLE
 from ...lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.project import Project
 from ...model.sample_frame import SampleFrame
+from ...QRiS.settings import Settings
 from ..frm_settings import get_default_chart_font
 from .export_chart_widget import ChartExportWidget
 
@@ -338,7 +327,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                         features.append((row[0], row[1]))
 
             except Exception as e:
-                QgsMessageLog.logMessage(f"Error loading scope features: {e}", "QRiS", Qgis.Warning)
+                Settings.log(f"Error loading scope features: {e}", "QRiS", MESSAGE_LEVEL_WARNING)
 
         return features
 
@@ -839,7 +828,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                     parse_rules(rules_el)
 
         except Exception as e:
-            QgsMessageLog.logMessage(f"Error parsing QML style '{qml_path}': {e}", "QRiS", Qgis.Warning)
+            Settings.log(f"Error parsing QML style '{qml_path}': {e}", "QRiS", MESSAGE_LEVEL_WARNING)
 
         return colors
 
@@ -950,10 +939,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         e_id = event.id if event else "None"
         l_id = event_layer.layer.id if event_layer else "None"
         m_f = metric_field if metric_field else "None"
-        QgsMessageLog.logMessage(f"Calculating Distribution: Scope={s_id}, Feature={scope_feature_id}, Event={e_id}, Layer={l_id}, Metric={m_f}", "QRiS", Qgis.Info)
-
+        Settings().log(f"Calculating Distribution: Scope={s_id}, Feature={scope_feature_id}, Event={e_id}, Layer={l_id}, Metric={m_f}")
         if not (scope and event and event_layer and metric_field):
-            QgsMessageLog.logMessage("Missing required inputs.", "QRiS", Qgis.Warning)
+            Settings().log("Missing required inputs.", "QRiS", MESSAGE_LEVEL_WARNING)
             return
 
         # Initialize distribution with known categories (values/lookup)
@@ -994,7 +982,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         scope_layer = QgsVectorLayer(scope_uri, "scope", "ogr")
 
         if not scope_layer.isValid():
-            QgsMessageLog.logMessage("Scope layer invalid.", "QRiS", Qgis.Critical)
+            Settings().log("Scope layer invalid.", "QRiS", MESSAGE_LEVEL_CRITICAL)
             return
 
         scope_geom = None
@@ -1013,10 +1001,10 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 if geoms:
                     scope_geom = QgsGeometry.unaryUnion(geoms)
             except Exception as e:
-                QgsMessageLog.logMessage(f"Error merging scope geometries: {e}", "QRiS", Qgis.Warning)
+                Settings().log(f"Error merging scope geometries: {e}", "QRiS", MESSAGE_LEVEL_WARNING)
 
         if not scope_geom or scope_geom.isEmpty():
-            QgsMessageLog.logMessage("No scope geometry found.", "QRiS", Qgis.Warning)
+            Settings().log("No scope geometry found.", "QRiS", MESSAGE_LEVEL_WARNING)
             self.figure.text(0.5, 0.5, "No geometric scope found (Sample Frame/AOI empty).", ha="center", va="center")
             self.canvas.draw()
             return
@@ -1030,7 +1018,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         data_layer = QgsVectorLayer(data_uri, "data", "ogr")
 
         if not data_layer.isValid():
-            QgsMessageLog.logMessage(f"Data layer invalid: {table_name}", "QRiS", Qgis.Critical)
+            Settings().log(f"Data layer invalid: {table_name}", "QRiS", MESSAGE_LEVEL_CRITICAL)
             return
 
         subset_string = f"event_id = {event.id} AND event_layer_id = {event_layer.layer.id}"
@@ -1058,7 +1046,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             if scope_geom and not scope_geom.isEmpty():
                 scope_measure = da.measureArea(scope_geom)
         except Exception as e:
-            QgsMessageLog.logMessage(f"Error measuring scope area: {e}", "QRiS", Qgis.Warning)
+            Settings().log(f"Error measuring scope area: {e}", "QRiS", MESSAGE_LEVEL_WARNING)
 
         req = QgsFeatureRequest().setFilterRect(scope_geom.boundingBox())
 

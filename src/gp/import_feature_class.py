@@ -3,13 +3,12 @@ import os
 from typing import Optional
 
 from osgeo import ogr, osr
-from qgis.core import Qgis, QgsMessageLog, QgsTask
+from qgis.core import QgsTask
 from qgis.PyQt.QtCore import QVariant, pyqtSignal
 
-from ..compat import QGSTASK_CAN_CANCEL
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
 from ..gp.feature_class_functions import layer_path_parser
-
-MESSAGE_CATEGORY = "QRiS_ImportFeatureClassTask"
+from ..QRiS.settings import Settings
 
 
 # create a data class to store 'src_field', 'dest_field', and optional 'map' values
@@ -273,19 +272,19 @@ class ImportFeatureClass(QgsTask):
         """
 
         if result:
-            QgsMessageLog.logMessage("Import Feature Class completed", MESSAGE_CATEGORY, Qgis.Success)
+            Settings.log("Import Feature Class completed", MESSAGE_LEVEL_SUCCESS)
         else:
             if self.exception is None:
                 if self.message is not None:
-                    QgsMessageLog.logMessage(self.message, MESSAGE_CATEGORY, Qgis.Warning)
+                    Settings.log(self.message, MESSAGE_LEVEL_WARNING)
                 else:
-                    QgsMessageLog.logMessage("Feature Class Import not successful but without exception (probably the task was canceled by the user)", MESSAGE_CATEGORY, Qgis.Warning)
+                    Settings.log("Feature Class Import not successful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
             else:
-                QgsMessageLog.logMessage(f"Feature Class Import exception: {self.exception}", MESSAGE_CATEGORY, Qgis.Critical)
+                Settings.log(f"Feature Class Import exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
                 raise self.exception
 
         self.import_complete.emit(result, self.in_feats, self.out_feats, self.skipped_feats)
 
     def cancel(self):
-        QgsMessageLog.logMessage("Feature Class Import was canceled", MESSAGE_CATEGORY, Qgis.Info)
+        Settings.log("Feature Class Import was canceled", MESSAGE_LEVEL_WARNING)
         super().cancel()

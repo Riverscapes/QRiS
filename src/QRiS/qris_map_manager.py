@@ -4,7 +4,6 @@ from textwrap import dedent
 from typing import Optional
 
 from qgis.core import (
-    Qgis,
     QgsAction,
     QgsAttributeEditorAction,
     QgsAttributeEditorContainer,
@@ -13,14 +12,13 @@ from qgis.core import (
     QgsExpressionContextUtils,
     QgsMapLayer,
     QgsMarkerSymbol,
-    QgsMessageLog,
     QgsProject,
     QgsSingleSymbolRenderer,
     QgsVectorLayer,
     qgsfunction,
 )
-from qgis.utils import iface
 
+from ..compat import MESSAGE_LEVEL_WARNING
 from ..gp.map_centroid import build_aoi_centroids_layer
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
 from ..model.cross_sections import CrossSections
@@ -34,6 +32,7 @@ from ..model.raster import BASEMAP_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SL
 from ..model.sample_frame import AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, SampleFrame
 from ..model.scratch_vector import ScratchVector
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
+from ..QRiS.settings import Settings
 from .path_utilities import parse_posix_path
 from .riverscapes_map_manager import RiverscapesMapManager
 
@@ -369,7 +368,7 @@ class QRisMapManager(RiverscapesMapManager):
         path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
         if not os.path.exists(path):
             # Warn user that the raster file is missing
-            iface.messageBar().pushMessage("Missing QRiS Raster File", f"The raster file {path} referenced in the QRiS project is missing.", level=Qgis.Warning)
+            Settings().msg_bar("Missing QRiS Raster File", f"The raster file {path} referenced in the QRiS project is missing.", MESSAGE_LEVEL_WARNING)
             return None
 
         if raster.is_context is False:
@@ -531,7 +530,7 @@ class QRisMapManager(RiverscapesMapManager):
             layer_attr_table_config.setColumnHidden(column_index, True)
             feature_layer.setAttributeTableConfig(layer_attr_table_config)
         else:
-            QgsMessageLog.logMessage(f"'metadata' field not found in layer '{feature_layer.name()}'. Skipping column hide.", "QRiS", Qgis.Warning)
+            Settings().log(f"'metadata' field not found in layer '{feature_layer.name()}'. Skipping column hide.", "QRiS", MESSAGE_LEVEL_WARNING)
 
     def add_brat_cis(self, feature_layer: QgsVectorLayer) -> None:
         # first read and set the lookup tables

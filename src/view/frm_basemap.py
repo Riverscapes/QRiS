@@ -1,19 +1,20 @@
 import json
 import os
 
-from qgis.core import Qgis, QgsApplication, QgsMessageLog, QgsTask
+from qgis.core import QgsApplication, QgsTask
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 
-from ..compat import DISPLAY_ROLE, SPSZ_EXPANDING, SPSZ_MAXIMUM, SPSZ_MINIMUM, UNCHECKED, USER_ROLE
+from ..compat import DISPLAY_ROLE, MESSAGE_LEVEL_CRITICAL, SPSZ_EXPANDING, SPSZ_MAXIMUM, SPSZ_MINIMUM, UNCHECKED, USER_ROLE
 from ..gp.copy_raster import CopyRaster
 from ..gp.create_hillshade import Hillshade
 from ..model.db_item import DBItem, DBItemModel
 from ..model.project import Project
 from ..model.raster import CONTEXT_PARENT_FOLDER, SURFACES_PARENT_FOLDER, Raster, insert_raster
 from ..QRiS.path_utilities import parse_posix_path
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons, validate_name, validate_name_unique
 from .widgets.metadata import MetadataWidget
 
@@ -201,7 +202,7 @@ class FrmRaster(QtWidgets.QDialog):
                 try:
                     self.raster.delete(self.qris_project.project_file)
                 except Exception as ex2:
-                    QgsMessageLog.logMessage(f"Error attempting to delete raster after the importing raster failed.\n{ex2}", "Copy Raster", Qgis.Critical)
+                    Settings().log(f"Error attempting to delete raster after the importing raster failed.\n{ex2}", MESSAGE_LEVEL_CRITICAL)
                 self.raster = None
                 QtWidgets.QMessageBox.warning(self, "Error Importing raster", str(ex))
                 return
@@ -210,7 +211,7 @@ class FrmRaster(QtWidgets.QDialog):
     def on_raster_copy_complete(self, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage("Raster Copy Complete.", f"Raster {self.txtName.text()} added to project", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Raster Copy Complete.", f"Raster {self.txtName.text()} added to project")
 
             try:
                 raster_type = self.cboRasterType.currentData(USER_ROLE).id
@@ -239,11 +240,11 @@ class FrmRaster(QtWidgets.QDialog):
 
             super().accept()
         else:
-            self.iface.messageBar().pushMessage("Raster Copy Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
+            Settings().msg_bar("Raster Copy Error", "Review the QGIS log.", MESSAGE_LEVEL_CRITICAL)
             try:
                 self.raster.delete(self.qris_project.project_file)
             except Exception as ex:
-                QgsMessageLog.logMessage(f"Error attempting to delete raster after the importing raster failed.: {ex}", "QRiS_CopyRaster Task", Qgis.Critical)
+                Settings().log(f"Error attempting to delete raster after the importing raster failed.: {ex}", MESSAGE_LEVEL_CRITICAL)
             self.raster = None
 
             self.buttonBox.setEnabled(True)
@@ -390,4 +391,3 @@ class ClickableDateEdit(QtWidgets.QDateEdit):
         super().focusInEvent(event)
         if self.specialValueText() == self.text():
             self.setDate(QtCore.QDate.currentDate())
-

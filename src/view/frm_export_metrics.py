@@ -2,14 +2,15 @@ import os
 
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtWidgets
-from qgis.utils import Qgis
 
+from ..compat import MESSAGE_LEVEL_SUCCESS
 from ..lib.unit_conversion import short_unit_name
 from ..model.analysis import Analysis
 from ..model.metric import Metric
 from ..model.metric_value import MetricValue, load_metric_values
 from ..model.project import Project
 from ..model.sample_frame import get_sample_frame_ids
+from ..QRiS.settings import Settings
 from .frm_export_base import get_unique_export_path, sanitize_file_base_name
 from .frm_export_table import FrmTableExport
 from .utilities import add_standard_form_buttons
@@ -174,7 +175,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
             return
 
         note = " including uncertainty columns" if self.chkIncludeUncertainty.isChecked() else ""
-        self.iface.messageBar().pushMessage("Export Metrics", f"Exported metrics{note} to {self.txtOutpath.text()}", level=Qgis.Success)
+        Settings().msg_bar("Export Metrics", f"Exported metrics{note} to {self.txtOutpath.text()}", MESSAGE_LEVEL_SUCCESS)
 
         out_file = self.txtOutpath.text()
         super().accept()

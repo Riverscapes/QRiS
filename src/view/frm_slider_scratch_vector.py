@@ -1,25 +1,23 @@
 import os
 import re
 
-from qgis.core import Qgis, QgsApplication
-from qgis.gui import QgisInterface
+from qgis.core import QgsApplication
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
-from qgis.utils import iface
 
-from ..compat import USER_ROLE
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, USER_ROLE
 from ..gp.vectorize_task import VectorizeTask
 from ..model.db_item import DBItemModel
 from ..model.project import Project
 from ..model.scratch_vector import get_unique_scratch_fc_name, insert_scratch_vector, scratch_gpkg_path
 from ..QRiS.path_utilities import parse_posix_path
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons, validate_name, validate_name_unique
 
 
 class FrmSliderScratchVector(QtWidgets.QDialog):
     def __init__(self, parent, qris_project: Project, raster_path: str, threshold_value: float, inverse: bool = False) -> None:
         super().__init__(parent)
-        self.iface: QgisInterface = iface
 
         self.setupUi()
 
@@ -92,7 +90,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
                 gpkg = os.path.dirname(self.txtProjectPath.text())
                 self.scratch_vector = insert_scratch_vector(self.qris_project.project_file, self.txtName.text(), self.fc_name, gpkg, self.cboVectorType.currentData(USER_ROLE).id, self.txtDescription.toPlainText())
                 self.qris_project.add_db_item(self.scratch_vector)
-                self.iface.messageBar().pushMessage("Vectorize Raster Complete", f"{self.txtName.text()} saved successfully.", level=Qgis.Info, duration=5)
+                Settings().msg_bar("Vectorize Raster Complete", f"{self.txtName.text()} saved successfully.", MESSAGE_LEVEL_SUCCESS)
             except Exception as ex:
                 if "unique" in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"A scratch vector with the name '{self.txtName.text()}' already exists. Please choose a unique name.")
@@ -103,7 +101,7 @@ class FrmSliderScratchVector(QtWidgets.QDialog):
 
             super().accept()
         else:
-            self.iface.messageBar().pushMessage("Vectorize Raster Error", "Review the QGIS log.", level=Qgis.Critical, duration=5)
+            Settings().msg_bar("Vectorize Raster Error", "Review the QGIS log.", MESSAGE_LEVEL_CRITICAL)
             # self.buttonBox.setEnabled(True)
 
     def on_name_changed(self, new_name):

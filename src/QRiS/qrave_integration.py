@@ -2,13 +2,12 @@ import importlib
 import os
 import traceback
 
-from qgis.core import Qgis
 from qgis.PyQt.QtCore import QObject, pyqtSignal
 from qgis.PyQt.QtGui import QIcon, QStandardItem
 from qgis.PyQt.QtWidgets import QMenu
 from qgis.utils import plugins
 
-from ..compat import USER_ROLE
+from ..compat import MESSAGE_LEVEL_CRITICAL, USER_ROLE
 from .path_utilities import parse_posix_path
 from .settings import Settings
 
@@ -76,7 +75,7 @@ class QRaveIntegration(QObject):
                 self.ProjectUploadDialog = self.project_upload_module.ProjectUploadDialog
 
                 # Successfully loaded the plugin, log a message
-                Settings().log(f"Riverscapes Viewer plugin '{self.name}' loaded successfully.", Qgis.Info)
+                Settings().log(f"Riverscapes Viewer plugin '{self.name}' loaded successfully.")
 
                 if self.plugin_instance.dockwidget:
                     # Check if the signal is already connected
@@ -85,7 +84,7 @@ class QRaveIntegration(QObject):
                     self.plugin_instance.dockwidget.layerMenuOpen.connect(self.qrave_add_to_map_menu_item)
 
         except Exception as ex:
-            Settings().log(f"Error initializing QRaveIntegration: {ex!s}\n{traceback.format_exc()}", Qgis.Critical)
+            Settings().log(f"Error initializing QRaveIntegration: {ex!s}\n{traceback.format_exc()}", MESSAGE_LEVEL_CRITICAL)
             self.name = None
             self.plugin_instance = None
             self.symbology_folders = None

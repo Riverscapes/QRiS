@@ -35,7 +35,6 @@ from qgis.core import (
     QgsLayerTreeLayer,
     QgsLayerTreeNode,
     QgsMapLayer,
-    QgsMessageLog,
     QgsProject,
     QgsRasterLayer,
     QgsVectorFileWriter,
@@ -57,6 +56,9 @@ from ..compat import (
     DLG_REJECTED,
     LEFT_DOCK,
     MAPLAYER_VECTOR,
+    MESSAGE_LEVEL_CRITICAL,
+    MESSAGE_LEVEL_SUCCESS,
+    MESSAGE_LEVEL_WARNING,
     MSGBOX_NO,
     MSGBOX_OK,
     QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS,
@@ -227,10 +229,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             ltv.contextMenuAboutToShow.connect(self.add_context_batch_edit_attributes)
         else:
             version = Qgis.QGIS_VERSION
-            QgsMessageLog().logMessage(
+            Settings().log(
                 f"The Batch QGiS Attribute Editor Tool has been disabled because QGIS version {version} does not support the contextMenuAboutToShow method. Upgrade to QGIS Version 3.32 or greater to enable this tool.",
-                "QRiS",
-                level=Qgis.Warning,
+                MESSAGE_LEVEL_WARNING,
             )
 
     def build_tree_view(self, qris_project: Project, new_item=None):
@@ -1056,7 +1057,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             # this is a group node, do nothing
             pass
         else:
-            self.iface.messageBar().pushMessage("Error", f"Unable to load qris data type: {type(db_item)} to the map", level=Qgis.Warning)
+            Settings().msg_bar("Error", f"Unable to load qris data type: {type(db_item)} to the map", MESSAGE_LEVEL_WARNING)
 
     def add_basemap_to_map(self, model_item, trigger_repaint=False):
         basemap_name = model_item.data.label
@@ -1098,7 +1099,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.qris_project is None:
             return False
 
-        map_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        map_crs = Settings().iface.mapCanvas().mapSettings().destinationCrs()
         map_crs_id = map_crs.authid()
         if map_crs_id is None or map_crs_id == "":
             if show_feedback:
@@ -1658,7 +1659,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         result = frm.exec()
 
         if result == DLG_ACCEPTED:
-            self.iface.messageBar().pushMessage("Export Project", "Export Complete", level=Qgis.Success, duration=5)
+            Settings().msg_bar("Export Project", "Export Complete", MESSAGE_LEVEL_SUCCESS)
 
     def create_vicinity_map(self, db_item: DBItem):
         # Open the map export dialog and run async vicinity map export task
@@ -1667,9 +1668,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
             def on_complete(success, out_path, error):
                 if success:
-                    self.iface.messageBar().pushMessage("Vicinity Map", f"Map image saved to {out_path}", level=Qgis.Success, duration=5)
+                    Settings().msg_bar("Vicinity Map", f"Map image saved to {out_path}", MESSAGE_LEVEL_SUCCESS)
                 else:
-                    self.iface.messageBar().pushMessage("Vicinity Map", f"Failed to export map image: {error}", level=Qgis.Critical, duration=8)
+                    Settings().msg_bar("Vicinity Map", f"Failed to export map image: {error}", MESSAGE_LEVEL_CRITICAL)
 
             task.on_complete.connect(on_complete)
             QgsApplication.taskManager().addTask(task)
@@ -1681,8 +1682,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def import_dce_complete(self, db_item: DBItem, result: bool):
 
         if result is True:
-            self.iface.messageBar().pushMessage("Import DCE", "Import Complete", level=Qgis.Success, duration=5)
-            QgsMessageLog.logMessage(f"Import DCE completed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}", "QRiS", Qgis.Info)
+            Settings().msg_bar("Import DCE", "Import Complete", MESSAGE_LEVEL_SUCCESS)
+            Settings().log(f"Import DCE completed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}")
             layer = self.map_manager.get_db_item_layer(self.qris_project.map_guid, db_item, None)
             if layer is not None:
                 self.map_manager.metadata_field(layer.layer(), db_item, "metadata")
@@ -1692,8 +1693,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.iface.mapCanvas().refresh()
             self.traverse_tree(self.model.invisibleRootItem(), self.set_node_text)
         else:
-            self.iface.messageBar().pushMessage("Import DCE", "Import Failed", level=Qgis.Warning, duration=5)
-            QgsMessageLog.logMessage(f"Import DCE failed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}", "QRiS", Qgis.Warning)
+            Settings().msg_bar("Import DCE", "Import Failed", MESSAGE_LEVEL_WARNING)
+            Settings().log(f"Import DCE failed for layer {db_item.layer.layer_id} in event ID {db_item.event_id}", MESSAGE_LEVEL_WARNING)
 
     def validate_brat_cis(self, db_item: DBItem):
 
@@ -2331,7 +2332,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def stream_stats_complete(self, pour_point: PourPoint, add_to_map: bool):
 
         if isinstance(pour_point, PourPoint):
-            self.iface.messageBar().pushMessage("Stream Stats Complete", f"Catchment delineation successful for {pour_point.name}.", level=Qgis.Info, duration=5)
+            Settings().msg_bar("Stream Stats Complete", f"Catchment delineation successful for {pour_point.name}.")
             # Registering via project API emits project_changed, which triggers RS project write and gpkg flush.
             self.qris_project.add_db_item(pour_point)
 
@@ -2342,7 +2343,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             catchments_node = self.add_child_to_project_tree(context_node, CATCHMENTS_MACHINE_CODE)
             self.add_child_to_project_tree(catchments_node, pour_point, add_to_map)
         else:
-            self.iface.messageBar().pushMessage("Stream Stats Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Stream Stats Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_WARNING)
 
     @pyqtSlot(ScratchVector, bool)
     def raster_slider_export_complete(self, scratch_vector: ScratchVector, add_to_map: bool):
@@ -2354,7 +2355,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             context_node = self.add_child_to_project_tree(inputs_node, CONTEXT_NODE_TAG)
             self.add_child_to_project_tree(context_node, scratch_vector, add_to_map)
         else:
-            self.iface.messageBar().pushMessage("Export Polygon Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Export Polygon Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_WARNING)
 
     @pyqtSlot(Profile, bool)
     def centerline_save_complete(self, centerline: Profile, add_to_map: bool):
@@ -2366,7 +2367,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             profile_node = self.add_child_to_project_tree(inputs_node, Profile.PROFILE_MACHINE_CODE)
             self.add_child_to_project_tree(profile_node, centerline, add_to_map)
         else:
-            self.iface.messageBar().pushMessage("Add Centerline to Map Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Add Centerline to Map Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_WARNING)
 
     @pyqtSlot(DBItem, str, bool, bool)
     def save_complete(self, item: DBItem, machine_code: str, is_input_node: bool, add_to_map: bool):
@@ -2378,7 +2379,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             out_node = self.add_child_to_project_tree(inputs_node, machine_code)
             self.add_child_to_project_tree(out_node, item, add_to_map)
         else:
-            self.iface.messageBar().pushMessage("Add to Map Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Add to Map Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_WARNING)
 
     def edit_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
@@ -2450,9 +2451,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
     def add_all_aoi_centroids_to_map(self):
         layer = self.map_manager.build_aoi_centroids_layer()
         if layer is None:
-            self.iface.messageBar().pushMessage("AOI Centroids", "No AOI features were available to centroid.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("AOI Centroids", "No AOI features were available to centroid.", MESSAGE_LEVEL_WARNING)
             return
-        self.iface.messageBar().pushMessage("AOI Centroids", "Temporary centroid layer added to map.", level=Qgis.Info, duration=5)
+        Settings().msg_bar("AOI Centroids", "Temporary centroid layer added to map.")
 
     def traverse_tree(self, node: QtGui.QStandardItem, func: callable):
         func(node)
@@ -2674,9 +2675,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     layer.dataProvider().reloadData()
                     layer.triggerRepaint()
             self.qris_project.project_changed.emit()
-            self.iface.messageBar().pushMessage("Order by Centerline", f'Feature order updated for "{db_item.name}".', level=Qgis.Success, duration=5)
+            Settings().msg_bar("Order by Centerline", f'Feature order updated for "{db_item.name}".', MESSAGE_LEVEL_SUCCESS)
         else:
-            self.iface.messageBar().pushMessage("Order by Centerline Error", f'Failed to update order for "{db_item.name}". Check the QGIS log.', level=Qgis.Critical, duration=5)
+            Settings().msg_bar("Order by Centerline Error", f'Failed to update order for "{db_item.name}". Check the QGIS log.', MESSAGE_LEVEL_CRITICAL)
 
     def reconnect_layer_edits(self, node: QtGui.QStandardItem, mode=None):
 
@@ -2731,7 +2732,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             frm = FrmGeospatialMetrics(self, self.qris_project, model_data, polygons, data)
             frm.exec()
         else:
-            self.iface.messageBar().pushMessage("Zonal Statistics Error", "Check the QGIS Log for details.", level=Qgis.Warning, duration=5)
+            Settings().msg_bar("Zonal Statistics Error", "Check the QGIS Log for details.", MESSAGE_LEVEL_WARNING)
 
     def delete_item(self, model_item: QtGui.QStandardItem, db_item: DBItem):
 
@@ -2884,7 +2885,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.rs_project.write()
             project.flush(vacuum=False)
         except Exception as ex:
-            Settings().log(f"Unable to complete final project sync before upload: {ex!s}", level=Qgis.Critical)
+            Settings().log(f"Unable to complete final project sync before upload: {ex!s}", level=MESSAGE_LEVEL_CRITICAL)
             QtWidgets.QMessageBox.warning(self, "Data Exchange Upload Blocked", "Unable to finalize local project files before upload. Check QRiS logs and try again.")
             return
 
@@ -2892,7 +2893,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         rs_project.load()
 
         if not rs_project.loadable or rs_project.project is None:
-            Settings().log("Unable to load the Riverscapes project metadata required for upload.", level=Qgis.Critical)
+            Settings().log("Unable to load the Riverscapes project metadata required for upload.", level=MESSAGE_LEVEL_CRITICAL)
             QtWidgets.QMessageBox.warning(self, "Data Exchange Upload Blocked", "Unable to load the Riverscapes project metadata required for upload. Check QRave logs for details.")
             return
 

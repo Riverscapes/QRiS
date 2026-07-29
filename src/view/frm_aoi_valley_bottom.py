@@ -1,11 +1,9 @@
 import json
 
-from qgis.core import Qgis, QgsApplication, QgsVectorLayer
-from qgis.gui import QgisInterface
+from qgis.core import QgsApplication, QgsVectorLayer
 from qgis.PyQt import QtWidgets
-from qgis.utils import iface
 
-from ..compat import CHECKED, UNCHECKED, USER_ROLE
+from ..compat import CHECKED, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -14,6 +12,7 @@ from ..model.pour_point import PourPoint
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame, insert_sample_frame
 from ..model.scratch_vector import ScratchVector
+from ..QRiS.settings import Settings
 from .utilities import add_standard_form_buttons, validate_name
 from .widgets.metadata import MetadataWidget
 from .widgets.stats_widget import StatsWidget
@@ -22,7 +21,6 @@ from .widgets.stats_widget import StatsWidget
 class FrmAOIValleyBottom(QtWidgets.QDialog):
     def __init__(self, parent, qris_project: Project, import_source_path: str, sample_frame: SampleFrame = None, sample_frame_type: int = SampleFrame.AOI_SAMPLE_FRAME_TYPE):
 
-        self.iface: QgisInterface = iface
         self.qris_project = qris_project
         self.sample_frame = sample_frame
         self.import_source_path = import_source_path
@@ -231,16 +229,15 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
             self.finalize_accept()
 
     def rollback_creation(self, ex):
-        QgsApplication.messageLog().logMessage(f"Error Importing {self.type_name}: {ex!s}", "QRIS", level=Qgis.Critical)
-        self.iface.messageBar().pushMessage(f"Error Importing {self.type_name}", str(ex), level=Qgis.Critical, duration=5)
+        Settings().msg_bar(f"Error Importing {self.type_name}", str(ex), MESSAGE_LEVEL_CRITICAL)
         try:
             self.sample_frame.delete(self.qris_project.project_file)
         except Exception as ex_delete:
-            QgsApplication.messageLog().logMessage(f"Error Deleting {self.type_name}: {ex_delete!s}", "QRIS", level=Qgis.Critical)
+            Settings().msg_bar(f"Error Deleting {self.type_name}", str(ex_delete), MESSAGE_LEVEL_CRITICAL)
 
     def on_import_complete(self, result: bool):
         if result is True:
-            self.iface.messageBar().pushMessage(f"{self.type_name} Imported", f'{self.type_name} "{self.txtName.text()}" has been imported successfully.', level=Qgis.Success, duration=5)
+            Settings().msg_bar(f"{self.type_name} Imported", f'{self.type_name} "{self.txtName.text()}" has been imported successfully.', MESSAGE_LEVEL_SUCCESS)
             self.finalize_accept()
         else:
             self.rollback_creation("Import Task Failed")
@@ -347,5 +344,3 @@ class FrmAOIValleyBottom(QtWidgets.QDialog):
 
         help_slug = "inputs/aoi" if self.is_aoi else "inputs/valley-bottoms"
         self.vert.addLayout(add_standard_form_buttons(self, help_slug))
-
-

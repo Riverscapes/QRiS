@@ -29,8 +29,9 @@ class FrmMetricAvailabilityMatrix(QtWidgets.QDialog):
         self.selected_analysis_metrics = selected_analysis_metrics
 
         # DEBUG
-        # from qgis.core import QgsMessageLog, Qgis
-        # QgsMessageLog.logMessage(f"Matrix Init - Metadata: {self.analysis_metadata}", "QRiS", Qgis.Warning)
+        # Use Settings for logging instead
+        # from ..compat import MESSAGE_LEVEL_WARNING
+        # Settings().log(f"Matrix Init - Metadata: {self.analysis_metadata}", MESSAGE_LEVEL_WARNING)
 
         self.setWindowTitle(f"Availability Matrix - {self.metric.name}")
         self.resize(800, 500)

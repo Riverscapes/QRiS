@@ -5,7 +5,6 @@ from textwrap import dedent
 from typing import Optional
 
 from qgis.core import (
-    Qgis,
     QgsAction,
     QgsAttributeEditorAction,
     QgsAttributeEditorContainer,
@@ -31,14 +30,7 @@ from qgis.PyQt.QtCore import QObject, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.utils import iface
 
-from ..compat import (
-    MAPLAYER_VECTOR,
-    QMETATYPE_BOOL,
-    QMETATYPE_DOUBLE,
-    QMETATYPE_INT,
-    QMETATYPE_QURL,
-    QMETATYPE_STRING,
-)
+from ..compat import MAPLAYER_VECTOR, MESSAGE_LEVEL_WARNING, QMETATYPE_BOOL, QMETATYPE_DOUBLE, QMETATYPE_INT, QMETATYPE_QURL, QMETATYPE_STRING
 from ..model.db_item import DBItem
 from ..model.raster import BASEMAP_MACHINE_CODE
 from ..view.metadata_field_editor_widget import initialize_metadata_widget
@@ -275,7 +267,7 @@ class RiverscapesMapManager(QObject):
         override_color = QColor(selection_color_hex)
         if not override_color.isValid():
             override_color = QColor(default_selection_color_hex)
-            Settings().log(f'Invalid selection color "{selection_color_hex}". Falling back to {default_selection_color_hex}.', level=Qgis.Warning)
+            Settings().log(f'Invalid selection color "{selection_color_hex}". Falling back to {default_selection_color_hex}.', MESSAGE_LEVEL_WARNING)
 
         transparency = max(0, min(100, selection_transparency))
         opacity = round(255 * ((100 - transparency) / 100.0))

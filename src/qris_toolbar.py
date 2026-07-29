@@ -24,7 +24,6 @@
 import os.path
 
 from qgis.core import (
-    Qgis,
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
@@ -38,6 +37,8 @@ from qgis.PyQt.QtCore import QSettings, pyqtSlot
 from . import resources  # noqa: F401  # side-effect import: registers Qt resource paths
 from .compat import (
     LEFT_DOCK,
+    MESSAGE_LEVEL_CRITICAL,
+    MESSAGE_LEVEL_WARNING,
     MSGBOX_BTN_NO,
     MSGBOX_BTN_YES,
     MSGBOX_ICON_WARNING,
@@ -284,7 +285,7 @@ class QRiSToolbar:
 
             self.pluginIsActive = False
         except Exception as ex:
-            Settings().log(f"Error in onClosePlugin: {ex!s}", Qgis.Critical)
+            Settings().log(f"Error in onClosePlugin: {ex!s}", MESSAGE_LEVEL_CRITICAL)
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -345,15 +346,9 @@ class QRiSToolbar:
             try:
                 self.qrave = QRaveIntegration(self.toolbar)
             except Exception as ex:
-                Settings().log(
-                    f"Error initializing QRaveIntegration: {ex!s}",
-                    Qgis.Critical,
-                )
+                Settings().log(f"Error initializing QRaveIntegration: {ex!s}", MESSAGE_LEVEL_CRITICAL)
         else:
-            Settings().log(
-                "QRiS toolbar is not valid when initializing QRaveIntegration.",
-                Qgis.Critical,
-            )
+            Settings().log("QRiS toolbar is not valid when initializing QRaveIntegration.", MESSAGE_LEVEL_CRITICAL)
 
         if self.qrave.name is not None:
             Settings().setValue("symbologyDir", self.qrave.symbology_folders)
@@ -361,15 +356,9 @@ class QRiSToolbar:
             Settings().setValue("climateEngineJson", self.qrave.climate_engine_json)
             Settings().setValue("lookupsJson", self.qrave.lookups_json)
         else:
-            Settings().log(
+            Settings().msg_bar(
                 "Unable to load Required Riverscapes Viewer plugin. Some functions in QRiS may be disabled, including layer symbology and basemaps.",
-                Qgis.Critical,
-            )
-            self.iface.messageBar().pushMessage(
-                "QRiS Plugin Load Error",
-                "Unable to load Riverscapes Viewer plugin.",
-                level=Qgis.Critical,
-                duration=5,
+                MESSAGE_LEVEL_CRITICAL,
             )
             self.iface.mainWindow().repaint()
 
@@ -452,7 +441,7 @@ class QRiSToolbar:
                 project_file = None
 
         except Exception as e:
-            Settings().log(f"Error loading project settings: {e}", Qgis.Warning)
+            Settings().log(f"Error loading project settings: {e}", MESSAGE_LEVEL_WARNING)
 
         qgs_project_path = self.qproject.absoluteFilePath()
         if os.path.isfile(qgs_project_path):
@@ -522,10 +511,7 @@ class QRiSToolbar:
             try:
                 self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
             except Exception as ex:
-                Settings().log(
-                    f"Error sending telemetry event for Load_Project: {ex!s}",
-                    Qgis.Warning,
-                )
+                Settings().log(f"Error sending telemetry event for Load_Project: {ex!s}", MESSAGE_LEVEL_WARNING)
 
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)
@@ -561,15 +547,11 @@ class QRiSToolbar:
                     Settings().msg_bar(
                         "Map CRS set",
                         f"Map CRS set to {crs.description()}",
-                        level=Qgis.Info,
                         duration=5,
                     )
                     trigger_repaint = True
                 elif not crs.isValid():
-                    Settings().log(
-                        f'Unable to resolve project_srs "{project_srs}" from project system metadata.',
-                        Qgis.Warning,
-                    )
+                    Settings().log(f'Unable to resolve project_srs "{project_srs}" from project system metadata.', MESSAGE_LEVEL_WARNING)
 
             # Add basemap to ToC if empty
             if len(QgsProject.instance().mapLayers().values()) == 0:
@@ -676,19 +658,9 @@ class QRiSToolbar:
     def on_watershed_attributes_complete(self, output_path: str, result: bool) -> None:
 
         if result:
-            Settings().msg_bar(
-                "Watershed Attributes Complete.",
-                f"Outputs at {output_path}",
-                level=Qgis.Info,
-                duration=5,
-            )
+            Settings().msg_bar("Watershed Attributes Complete.", f"Outputs at {output_path}")
         else:
-            Settings().msg_bar(
-                "Watershed Attributes Error.",
-                "Check the QGIS log for details.",
-                level=Qgis.Critical,
-                duration=5,
-            )
+            Settings().msg_bar("Watershed Attributes Error.", "Check the QGIS log for details.", MESSAGE_LEVEL_CRITICAL)
 
     def configure_watershed_attribute_menu(self):
 

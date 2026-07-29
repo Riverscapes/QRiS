@@ -4,11 +4,11 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 import numpy as np
-from qgis.core import Qgis, QgsCoordinateTransform, QgsMessageLog, QgsProject
+from qgis.core import QgsCoordinateTransform, QgsProject
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..compat import BOTTOM_DOCK, CHECKED, HORIZONTAL, LEFT_DOCK, RIGHT_DOCK, SPSZ_EXPANDING, SPSZ_MINIMUM, TOP_DOCK, USER_ROLE
+from ..compat import BOTTOM_DOCK, CHECKED, HORIZONTAL, LEFT_DOCK, MESSAGE_LEVEL_WARNING, RIGHT_DOCK, SPSZ_EXPANDING, SPSZ_MINIMUM, TOP_DOCK, USER_ROLE
 from ..lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ..lib.unit_conversion import area_units, distance_units, ratio_units, short_unit_name
 from ..model.analysis import Analysis
@@ -16,6 +16,7 @@ from ..model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVEN
 from ..model.metric_value import load_metric_values
 from ..model.project import Project
 from ..model.sample_frame import SampleFrame, get_sample_frame_sequence
+from ..QRiS.settings import Settings
 from .frm_metric_value import FrmMetricValue
 from .frm_settings import get_default_chart_font
 from .widgets.event_library import EventLibraryWidget
@@ -163,7 +164,7 @@ class FrmAnalysisOverTime(QtWidgets.QDockWidget):
                     display_name = str(feature.name) if feature.name is not None else str(feature.id)
                     self.sample_frame_combo.addItem(display_name, feature.id)
             except Exception as e:
-                QgsMessageLog.logMessage(f"Error loading sample frame features: {e}", "QRiS", Qgis.Warning)
+                Settings().log(f"Error loading sample frame features: {e}", MESSAGE_LEVEL_WARNING)
 
         self.sample_frame_combo.blockSignals(False)
 
