@@ -259,7 +259,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
 
     def init_as_intrinsic(self):
         """Configure this form for a new Simple (intrinsic) analysis.
-        Call BEFORE exec_() to hide the event tab, filter to system protocol, and default to intrinsic mode."""
+        Call BEFORE exec() to hide the event tab, filter to system protocol, and default to intrinsic mode."""
         self._intrinsic = True
         self.metric_selector.set_intrinsic_mode(True)
         self.metric_selector.set_filter_tools_visible(False)
@@ -396,5 +396,3 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
                 return
 
         super().accept()
-
-

@@ -206,7 +206,7 @@ class StatsWidget(QWidget):
         menu = QMenu(self)
         copy_value = menu.addAction("Copy Value")
         copy_with_units = menu.addAction("Copy Value with Units")
-        action = menu.exec_(self.stats_table.viewport().mapToGlobal(pos))
+        action = menu.exec(self.stats_table.viewport().mapToGlobal(pos))
         if action == copy_value:
             QApplication.clipboard().setText(numeric_str)
         elif action == copy_with_units:

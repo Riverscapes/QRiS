@@ -11,7 +11,7 @@ class FrmOrderByCenterline(QtWidgets.QDialog):
     """
     Minimal dialog that lets the user choose a centerline profile before
     the calling code runs OrderByLineTask.  The dialog only handles UI;
-    the task is launched by the caller after exec_() returns Accepted.
+    the task is launched by the caller after exec() returns Accepted.
     """
 
     def __init__(self, parent, qris_project: Project):

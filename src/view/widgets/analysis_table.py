@@ -692,7 +692,7 @@ class AnalysisTable(QtWidgets.QWidget):
                 clipboard_text = value_text.strip()
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/copy_content"), "Copy Value", lambda: QtWidgets.QApplication.clipboard().setText(value_text.strip()))
             menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/copy_content_units"), "Copy Value with Units", lambda: QtWidgets.QApplication.clipboard().setText(clipboard_text))
-        menu.exec_(self.table.viewport().mapToGlobal(position))
+        menu.exec(self.table.viewport().mapToGlobal(position))
 
     def _handle_edit(self, row):
         metric_value = self.table.item(row, self.column["value"]).data(USER_ROLE)

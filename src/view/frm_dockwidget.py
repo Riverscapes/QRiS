@@ -828,7 +828,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                         if not model_data.locked:
                             self.add_context_menu_item(self.menu, "Delete", "delete", lambda: self.delete_item(model_item, model_data))
 
-        self.menu.exec_(self.treeView.viewport().mapToGlobal(position))
+        self.menu.exec(self.treeView.viewport().mapToGlobal(position))
 
     def add_context_menu_item(self, menu: QtWidgets.QMenu, menu_item_text: str, icon_file_name, slot: pyqtSlot = None, enabled=True):
         action = menu.addAction(QtGui.QIcon(f":/plugins/qris_toolbar/{icon_file_name}"), menu_item_text)
@@ -1217,7 +1217,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         items created as side-effects inside other forms (e.g. an Attachment added
         from the References tab of an event form).  add_child_to_project_tree
         deduplicates by UserRole data, so the explicit add_*_to_project_tree calls
-        that follow exec_() (needed for chkAddToMap) remain safe.
+        that follow exec() (needed for chkAddToMap) remain safe.
         """
         root = self.model.invisibleRootItem()
 
