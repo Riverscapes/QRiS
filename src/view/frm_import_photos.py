@@ -8,7 +8,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QDateTime, Qt
 from qgis.PyQt.QtGui import QPixmap
 
-from ..compat import MESSAGE_LEVEL_WARNING
+from ..compat import ALIGN_CENTER, MESSAGE_LEVEL_WARNING
 from ..model.event_layer import EventLayer
 from ..model.project import Project
 from ..QRiS.settings import Settings
@@ -167,7 +167,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
         horiz_folder.addWidget(self.btn_browse)
 
         self.lbl_preview = QtWidgets.QLabel()
-        self.lbl_preview.setAlignment(Qt.AlignCenter)
+        self.lbl_preview.setAlignment(ALIGN_CENTER)
         self.grid.addWidget(self.lbl_preview, 1, 1, 1, 2)
 
         self.vert.addLayout(add_standard_form_buttons(self, "photos"))

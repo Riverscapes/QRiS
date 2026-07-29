@@ -3,6 +3,7 @@ from typing import Optional
 from qgis.PyQt.QtCore import QSize, Qt
 from qgis.PyQt.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QVBoxLayout
 
+from ..compat import ITEM_FLAG_CHECKABLE
 from .utilities import add_standard_form_buttons
 
 
@@ -26,7 +27,7 @@ class FrmNewAttribute(QDialog):
         if self.attributes is not None:
             for attribute in self.attributes:
                 item = QListWidgetItem(attribute)
-                item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                item.setFlags(item.flags() | ITEM_FLAG_CHECKABLE)
                 item.setCheckState(Qt.Checked)
                 self.lstAttributes.addItem(item)
 

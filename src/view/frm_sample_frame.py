@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import QMetaType, QSize, Qt, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTabWidget, QTextEdit, QTreeView, QVBoxLayout, QWidget
 
-from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, USER_ROLE
+from ..compat import ALIGN_TOP, DLG_ACCEPTED, ITEM_FLAG_EDITABLE, ITEM_FLAG_SELECTABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -210,10 +210,7 @@ class FrmSampleFrame(QDialog):
                     self.buttonBox.setEnabled(True)
                 Settings().msg_bar("Error Importing Sample Frame Features", str(ex), MESSAGE_LEVEL_CRITICAL)
                 return
-            # finally:
-            # # enable the buttons
-            # self.buttonBox.button(QMessageBox.Ok).setEnabled(True)
-            # self.buttonBox.button(QMessageBox.Cancel).setEnabled(True)
+
         if self.create_sample_frame is True:
             try:
                 db_item_polygon = self.tab_inputs.cboFramePolygon.currentData(USER_ROLE)
@@ -687,7 +684,7 @@ class SampleFrameAttributes(QWidget):
         frm = FrmNewAttribute(self, self.sample_frame, existing_fields=existing_fields)
         frm.exec()
 
-        if frm.result() == QDialog.Accepted:
+        if frm.result() == DLG_ACCEPTED:
             if frm.name is not None:
                 self.add_attribute(frm.name, frm.attributes)
 
@@ -707,7 +704,7 @@ class SampleFrameAttributes(QWidget):
         frm = FrmNewAttribute(self, field_name, attributes, existing_fields)
         frm.exec()
 
-        if frm.result() == QDialog.Accepted:
+        if frm.result() == DLG_ACCEPTED:
             if frm.name is not None:
                 # remove existing item
                 self.model.removeRow(index.row())
@@ -833,7 +830,7 @@ class SampleFrameAttributesAddFields(QWidget):
 
         self.box = QGroupBox()
         self.box_layout = QVBoxLayout()
-        self.box_layout.setAlignment(Qt.AlignTop)
+        self.box_layout.setAlignment(ALIGN_TOP)
         self.box.setLayout(self.box_layout)
 
         for field in self.fields:
@@ -852,6 +849,6 @@ class EditableTreeModel(QStandardItemModel):
         default_flags = super().flags(index)
 
         if index.parent().isValid():  # If the item has a parent, it's not a top-level item
-            return default_flags & ~Qt.ItemIsSelectable  # Remove the selectable flag
+            return default_flags & ~ITEM_FLAG_SELECTABLE  # Remove the selectable flag
         else:
-            return default_flags | Qt.ItemIsEditable  # Add the editable flag for top-level items
+            return default_flags | ITEM_FLAG_EDITABLE  # Add the editable flag for top-level items

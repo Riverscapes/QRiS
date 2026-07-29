@@ -7,7 +7,7 @@ from qgis.core import QgsGeometry
 from qgis.PyQt.QtWidgets import QMessageBox
 import requests
 
-from ..compat import PLAIN_TEXT
+from ..compat import MSGBOX_CANCEL, MSGBOX_ICON_INFORMATION, MSGBOX_ROLE_ACTION, PLAIN_TEXT
 from ..QRiS.settings import Settings
 
 # Global timeout for all requests
@@ -43,10 +43,10 @@ def require_api_key(parent=None, open_settings_callback=None) -> bool:
     msg.setWindowTitle("Climate Engine API Key Required")
     msg.setTextFormat(PLAIN_TEXT)
     msg.setText("A Climate Engine API key has not been configured.\n\nPlease set your Climate Engine API key in the QRiS Settings")
-    msg.setIcon(QMessageBox.Information)
+    msg.setIcon(MSGBOX_ICON_INFORMATION)
     if open_settings_callback:
-        btn_settings = msg.addButton("Open Settings", QMessageBox.ActionRole)
-    msg.addButton(QMessageBox.Cancel)
+        btn_settings = msg.addButton("Open Settings", MSGBOX_ROLE_ACTION)
+    msg.addButton(MSGBOX_CANCEL)
     msg.exec()
     if open_settings_callback and msg.clickedButton() == btn_settings:
         open_settings_callback()

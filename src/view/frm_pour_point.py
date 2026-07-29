@@ -3,7 +3,7 @@ import json
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..compat import CUSTOM_CONTEXT_MENU, DISPLAY_ROLE, DLGBTN_OK, HEADER_INTERACTIVE, HORIZONTAL, USER_ROLE, WAIT_CURSOR
+from ..compat import CUSTOM_CONTEXT_MENU, DISPLAY_ROLE, DLGBTN_OK, HEADER_INTERACTIVE, HEADER_STRETCH, HORIZONTAL, USER_ROLE, WAIT_CURSOR
 from ..gp.stream_stats import calculate_flow_statistics, delineate_watershed, get_state_from_coordinates, retrieve_basin_characteristics, retrieve_flow_scenarios
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.pour_point import PourPoint
@@ -481,8 +481,8 @@ class FrmPourPoint(QtWidgets.QDialog):
             header.setSectionResizeMode(HEADER_INTERACTIVE)
 
             # Stretch the last two columns so they fill the remaining space
-            header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-            header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+            header.setSectionResizeMode(2, HEADER_STRETCH)
+            header.setSectionResizeMode(3, HEADER_STRETCH)
 
             self.tabFlow.resizeColumnToContents(0)
             if self.tabFlow.columnWidth(0) > 300:

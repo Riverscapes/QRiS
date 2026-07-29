@@ -1,8 +1,7 @@
 from qgis.gui import QgsPasswordLineEdit
-from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
-from ..compat import PLAIN_TEXT
+from ..compat import DLGBTN_CANCEL, DLGBTN_OK, PLAIN_TEXT, RICH_TEXT
 from ..lib.climate_engine import CLIMATE_ENGINE_CREDENTIAL_SETTING, check_climate_engine_api_key
 from ..QRiS.settings import Settings
 
@@ -29,23 +28,23 @@ class FrmApiKey(QDialog):
         layout.addWidget(self.txt_api_key)
 
         self.lbl_status = QLabel()
-        self.lbl_status.setTextFormat(Qt.RichText)
+        self.lbl_status.setTextFormat(RICH_TEXT)
         self.lbl_status.setMinimumHeight(self.lbl_status.sizeHint().height())
         layout.addWidget(self.lbl_status)
 
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box = QDialogButtonBox(DLGBTN_OK | DLGBTN_CANCEL)
         self.button_box.accepted.connect(self._on_accept)
         self.button_box.rejected.connect(self.reject)
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.button_box.button(DLGBTN_OK).setEnabled(False)
         layout.addWidget(self.button_box)
 
     def _on_text_changed(self):
         self.lbl_status.setText("")
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(bool(self.txt_api_key.text().strip()))
+        self.button_box.button(DLGBTN_OK).setEnabled(bool(self.txt_api_key.text().strip()))
 
     def _on_accept(self):
         api_key = self.txt_api_key.text().strip()
-        self.button_box.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.button_box.button(DLGBTN_OK).setEnabled(False)
         self.lbl_status.setText("Validating\u2026")
         QApplication.processEvents()
 
@@ -56,4 +55,4 @@ class FrmApiKey(QDialog):
             super().accept()
         else:
             self.lbl_status.setText('<span style="color:red; font-size:14px;">&#10008; Invalid key. Please check and try again.</span>')
-            self.button_box.button(QDialogButtonBox.Ok).setEnabled(True)
+            self.button_box.button(DLGBTN_OK).setEnabled(True)
