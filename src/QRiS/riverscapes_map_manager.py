@@ -586,7 +586,7 @@ class RiverscapesMapManager(QObject):
                 if upper_key == "attributes":
                     field_name = field_labels.get(key, field_name)
 
-                virtual_field = QgsField(field_name, int(field_type))
+                virtual_field = QgsField(field_name, field_type)
                 feature_layer.addExpressionField(f"""map_get(map_get(json_to_map("metadata"), '{upper_key}'), '{key}')""", virtual_field)
 
                 if key == "photo_path":
@@ -689,7 +689,7 @@ class RiverscapesMapManager(QObject):
         field_index = fields.indexFromName(field_name)
         if expression is not None:
             # Set field to display vegetation dam density based on values in other fields
-            virtual_field = QgsField(field_name, int(QMETATYPE_INT))
+            virtual_field = QgsField(field_name, QMETATYPE_INT)
             feature_layer.addExpressionField(expression, virtual_field)
             feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue(expression))
         widget_setup = QgsEditorWidgetSetup("ValueMap", lookup_config)
@@ -745,8 +745,8 @@ class RiverscapesMapManager(QObject):
         else:
             raise ValueError("Dimension must be 'area' or 'length'")
 
-        field_type = int(QMETATYPE_DOUBLE)
-        virtual_field = QgsField(field_name, int(field_type))
+        field_type = QMETATYPE_DOUBLE
+        virtual_field = QgsField(field_name, field_type)
         feature_layer.addExpressionField(field_expression, virtual_field)
         fields = feature_layer.fields()
         field_index = fields.indexFromName(field_name)

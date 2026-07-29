@@ -87,7 +87,7 @@ class ImportMapLayer(QgsTask):
             if self.attributes is not None:
                 fields = []
                 for field_name in self.attributes.keys():
-                    field = QgsField(field_name, int(QMETATYPE_INT))
+                    field = QgsField(field_name, QMETATYPE_INT)
                     fields.append(field)
                 self.source_layer.dataProvider().addAttributes(fields)
                 self.source_layer.updateFields()
@@ -109,7 +109,7 @@ class ImportMapLayer(QgsTask):
             # add the metadata field to the source layer
             # Check first
             if self.source_layer.fields().lookupField("metadata") == -1:
-                field = QgsField("metadata", int(QMETATYPE_STRING))
+                field = QgsField("metadata", QMETATYPE_STRING)
                 self.source_layer.dataProvider().addAttributes([field])
                 self.source_layer.updateFields()
 
@@ -118,7 +118,7 @@ class ImportMapLayer(QgsTask):
                 for field_map in self.field_map:
                     if field_map.direct_copy is True:
                         if self.source_layer.fields().lookupField(field_map.dest_field) == -1:
-                            field = QgsField(field_map.dest_field, int(QMETATYPE_STRING))
+                            field = QgsField(field_map.dest_field, QMETATYPE_STRING)
                             self.source_layer.dataProvider().addAttributes([field])
                             self.source_layer.updateFields()
 

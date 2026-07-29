@@ -70,7 +70,7 @@ class VectorizeTask(QgsTask):
             pv = raw_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField("raw_area_m", int(QMETATYPE_DOUBLE)), QgsField("max_elev_m", int(QMETATYPE_DOUBLE)), QgsField("surface_name", int(QMETATYPE_STRING))])
+            pv.addAttributes([QgsField("raw_area_m", QMETATYPE_DOUBLE), QgsField("max_elev_m", QMETATYPE_DOUBLE), QgsField("surface_name", QMETATYPE_STRING)])
             raw_vector.updateFields()
 
             # Create a context and scope
@@ -124,7 +124,7 @@ class VectorizeTask(QgsTask):
             pv = final_vector.dataProvider()
 
             # add the attribute and update
-            pv.addAttributes([QgsField("area_m", int(QMETATYPE_INT))])
+            pv.addAttributes([QgsField("area_m", QMETATYPE_INT)])
             final_vector.updateFields()
 
             # Loop through and add the areas
