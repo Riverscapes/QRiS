@@ -9,6 +9,7 @@ other guards in individual source files — import from this module instead.
 """
 
 from qgis.PyQt.QtCore import QEvent, QMetaType, Qt, QVariant
+from qgis.PyQt.QtGui import QImage
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QAbstractScrollArea,
@@ -125,6 +126,13 @@ except AttributeError:
     MOUSE_BUTTON_RELEASE = QEvent.MouseButtonRelease  # type: ignore[attr-defined]
 
 
+# ── QImage format ─────────────────────────────────────────────────────────────
+try:
+    QIMAGE_FORMAT_ARGB32_PREMULTIPLIED = QImage.Format.Format_ARGB32_Premultiplied
+except AttributeError:
+    QIMAGE_FORMAT_ARGB32_PREMULTIPLIED = QImage.Format_ARGB32_Premultiplied  # type: ignore[attr-defined]
+
+
 # ── Dock widget areas ─────────────────────────────────────────────────────────
 # Qt.DockWidgetArea may not be on QtCore.Qt in all QGIS PyQt6 wrappers,
 # so these are split into their own try/except block.
@@ -149,26 +157,30 @@ except AttributeError:
 
 
 # ── QVariant / QMetaType field type compatibility ───────────────────────────
-try:
-    # Qt 6 / PyQt6 — QVariant enum was moved under QMetaType.Type
+# In PyQt5, QVariant.String etc. exist and QgsField expects those (plain ints).
+# In PyQt6, QVariant enums were removed; use QMetaType.Type instead.
+if hasattr(QVariant, "String"):
+    # Qt 5 / PyQt5 — flat QVariant enum (plain ints, what QgsField expects)
+    QMETATYPE_STRING = QVariant.String  # type: ignore[attr-defined]
+    QMETATYPE_INT = QVariant.Int  # type: ignore[attr-defined]
+    QMETATYPE_DOUBLE = QVariant.Double  # type: ignore[attr-defined]
+    QMETATYPE_BOOL = QVariant.Bool  # type: ignore[attr-defined]
+    QMETATYPE_QURL = getattr(QMetaType, 'QUrl', 17)  # type: ignore[attr-defined]
+    QMETATYPE_LONGLONG = QVariant.LongLong  # type: ignore[attr-defined]
+    QMETATYPE_UINT = QVariant.UInt  # type: ignore[attr-defined]
+    QMETATYPE_ULONGLONG = QVariant.ULongLong  # type: ignore[attr-defined]
+else:
+    # Qt 6 / PyQt6 — QVariant enum was moved under QMetaType.Type.
+    # Some members (e.g. QUrl) may not exist in all PyQt6 builds;
+    # fall back to QString when missing (QUrl fields are string-like).
     QMETATYPE_STRING = QMetaType.Type.QString
     QMETATYPE_INT = QMetaType.Type.Int
     QMETATYPE_DOUBLE = QMetaType.Type.Double
     QMETATYPE_BOOL = QMetaType.Type.Bool
-    QMETATYPE_QURL = QMetaType.Type.QUrl
+    QMETATYPE_QURL = getattr(QMetaType.Type, 'QUrl', QMetaType.Type.QString)
     QMETATYPE_LONGLONG = QMetaType.Type.LongLong
     QMETATYPE_UINT = QMetaType.Type.UInt
     QMETATYPE_ULONGLONG = QMetaType.Type.ULongLong
-except AttributeError:
-    # Qt 5 / PyQt5 — flat QVariant enum
-    QMETATYPE_STRING = QVariant.String  # type: ignore[attr-defined]
-    QMETATYPE_INT = QMetaType.Int  # type: ignore[attr-defined]
-    QMETATYPE_DOUBLE = QMetaType.Double  # type: ignore[attr-defined]
-    QMETATYPE_BOOL = QMetaType.Bool  # type: ignore[attr-defined]
-    QMETATYPE_QURL = QMetaType.QUrl  # type: ignore[attr-defined]
-    QMETATYPE_LONGLONG = QMetaType.LongLong  # type: ignore[attr-defined]
-    QMETATYPE_UINT = QMetaType.UInt  # type: ignore[attr-defined]
-    QMETATYPE_ULONGLONG = QMetaType.ULongLong  # type: ignore[attr-defined]
 
 
 # ── QFrame shape / shadow ────────────────────────────────────────────────────
