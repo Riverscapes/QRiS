@@ -714,7 +714,7 @@ class QRiSToolbar:
 
     def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
 
-        source_crs = QgsCoordinateReferenceSystem(map_epsg)
-        dest_crs = QgsCoordinateReferenceSystem(output_epsg)
+        source_crs = QgsCoordinateReferenceSystem.fromEpsgId(map_epsg)
+        dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(output_epsg)
         transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
         return transform.transform(geometry)
