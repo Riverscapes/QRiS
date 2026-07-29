@@ -22,6 +22,7 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QSlider,
     QStyle,
+    QToolButton,
 )
 
 try:
@@ -109,8 +110,8 @@ except AttributeError:
     TOOL_BTN_TEXT_BESIDE = Qt.ToolButtonTextBesideIcon  # type: ignore[attr-defined]
     TOOL_BTN_TEXT_ONLY = Qt.ToolButtonTextOnly  # type: ignore[attr-defined]
     TOOL_BTN_ICON_ONLY = Qt.ToolButtonIconOnly  # type: ignore[attr-defined]
-    TOOL_BTN_INSTANT_POPUP = Qt.InstantPopup  # type: ignore[attr-defined]
-    TOOL_BTN_MENU_POPUP = Qt.MenuButtonPopup  # type: ignore[attr-defined]
+    TOOL_BTN_INSTANT_POPUP = QToolButton.InstantPopup  # type: ignore[attr-defined]
+    TOOL_BTN_MENU_POPUP = QToolButton.MenuButtonPopup  # type: ignore[attr-defined]
     SLIDER_TICKS_BELOW = QSlider.TicksBelow  # type: ignore[attr-defined]
     SCROLL_BAR_ALWAYS_OFF = Qt.ScrollBarAlwaysOff  # type: ignore[attr-defined]
     WAIT_CURSOR = Qt.WaitCursor  # type: ignore[attr-defined]

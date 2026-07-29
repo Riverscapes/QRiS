@@ -74,7 +74,8 @@ class Settings(SettingsBorg):
             # Must be the last thing we do in init
             self._initdone = True
 
-    def log(self, msg: str, level: Qgis.MessageLevel = MESSAGE_LEVEL_INFO):
+    @staticmethod
+    def log(msg: str, level: Qgis.MessageLevel = MESSAGE_LEVEL_INFO):
         QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=level)
 
     def msg_bar(self, title: str, msg: str, level: Qgis.MessageLevel = MESSAGE_LEVEL_INFO, duration: int = 5):
