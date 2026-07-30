@@ -43,7 +43,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface, QgsLayerTreeView, QgsMapToolEmitPoint
 from qgis.PyQt import QtGui, QtWidgets
-from qgis.PyQt.QtCore import QDate, QModelIndex, QRect, QSettings, QUrl, pyqtSignal, pyqtSlot
+from qgis.PyQt.QtCore import QDate, QModelIndex, QRect, QUrl, pyqtSignal, pyqtSlot
 
 from ..compat import (
     ASCENDING_ORDER,
@@ -137,8 +137,6 @@ from .frm_stream_gage_docwidget import FrmStreamGageDocWidget
 from .frm_toc_layer_picker import FrmTOCLayerPicker
 from .widgets.export_map_widget import MapExportWidget
 
-ORGANIZATION = "Riverscapes"
-APPNAME = "QRiS"
 LAST_PROJECT_FOLDER = "last_project_folder"
 CONTEXT_NODE_TAG = "CONTEXT"
 INPUTS_NODE_TAG = "INPUTS"
@@ -422,8 +420,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         event.accept()
 
     def destroy_docwidget(self):
-        settings = QSettings(ORGANIZATION, APPNAME)
-        remove_layers = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
+        remove_layers = Settings().getValue(REMOVE_LAYERS_ON_CLOSE)
+        if remove_layers is None:
+            remove_layers = True
         if remove_layers is True:
             if self.map_manager is not None and self.qris_project is not None:
                 self.map_manager.remove_all_layers(self.qris_project.map_guid)
@@ -1329,8 +1328,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
     def _open_settings_climate_engine_tab(self):
 
-        settings = QSettings(ORGANIZATION, APPNAME)
-        frm = FrmSettings(settings, self.qris_project)
+        frm = FrmSettings(self.qris_project)
         frm.tabs.setCurrentWidget(frm.tabClimateEngine)
         result = frm.exec()
         if result == DLG_ACCEPTED and self.map_manager is not None:
@@ -1406,8 +1404,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     return value
 
         # Select output csv file
-        settings = QSettings(ORGANIZATION, APPNAME)
-        last_project_folder = settings.value(LAST_PROJECT_FOLDER)  # TODO where is the export folder?
+        last_project_folder = Settings().getValue(LAST_PROJECT_FOLDER)
         out_csv = QtWidgets.QFileDialog.getSaveFileName(self, "Open Existing QRiS Project", last_project_folder, self.tr("Comma Separated Values(*.csv)"))[0]
 
         # TODO delete file if already exists, or handle with vector file writer options...

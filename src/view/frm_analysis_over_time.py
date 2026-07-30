@@ -410,7 +410,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         super().__init__(parent)
         self.project = project
         self.analysis = analysis
-        self.chart_font = get_default_chart_font(QtCore.QSettings("Riverscapes", "QRiS"))
+        self.chart_font = get_default_chart_font()
         self.setup_ui()
         if self.analysis:
             self.setup_units_menu()
@@ -513,7 +513,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
             self.chart_needs_update.emit()
 
     def refresh_default_chart_font(self):
-        self.chart_font = get_default_chart_font(QtCore.QSettings("Riverscapes", "QRiS"))
+        self.chart_font = get_default_chart_font()
 
     def setup_units_menu(self):
         self.units_menu = QtWidgets.QMenu(self)

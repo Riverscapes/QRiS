@@ -69,8 +69,6 @@ from .view.frm_settings import (
 )
 from .view.metadata_field_editor_widget import initialize_metadata_widget
 
-ORGANIZATION = "Riverscapes"
-APPNAME = "QRiS"
 LAST_PROJECT_FOLDER = "last_project_folder"
 RECENT_PROJECT_LIST = "recent_projects"
 
@@ -324,8 +322,7 @@ class QRiSToolbar:
         # Only attempt to load the last used project for developers when the special text file is present.
         load_last_project_key = os.path.join(os.path.dirname(__file__), "..", "load_last_project.txt")
         if os.path.isfile(load_last_project_key):
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            last_project_folder = settings.value(LAST_PROJECT_FOLDER)
+            last_project_folder = Settings().getValue(LAST_PROJECT_FOLDER)
             if last_project_folder is not None and os.path.isdir(last_project_folder):
                 # find the project gpkg file in the last project folder only
                 project_file = None
@@ -363,8 +360,7 @@ class QRiSToolbar:
             self.iface.mainWindow().repaint()
 
         # Get the dockwidget location from the settings
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
+        dock_location = Settings().getValue(DOCK_WIDGET_LOCATION) or default_dock_widget_location
         dock_area = dock_widget_locations[dock_location]
 
         # Create the dockwidget (after translation) and keep reference
@@ -457,8 +453,7 @@ class QRiSToolbar:
         :return:
         """
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        last_project_folder = settings.value(LAST_PROJECT_FOLDER)
+        last_project_folder = Settings().getValue(LAST_PROJECT_FOLDER)
 
         dialog_return = QtWidgets.QFileDialog.getOpenFileName(
             self.dockwidget,
@@ -505,9 +500,7 @@ class QRiSToolbar:
             self.add_project_to_mru_list(db_path)
             self.set_map_srs()
 
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            settings.setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
-            settings.sync()
+            Settings().setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
             try:
                 self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
             except Exception as ex:
@@ -563,8 +556,7 @@ class QRiSToolbar:
 
     def load_mru_projects(self):
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        mrus = settings.value(RECENT_PROJECT_LIST, [])
+        mrus = Settings().getValue(RECENT_PROJECT_LIST) or []
         self.mru_menu.clear()
         self.mru_actions = []
         for mru in mrus:
@@ -580,19 +572,17 @@ class QRiSToolbar:
 
     def add_project_to_mru_list(self, db_path: str):
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        mrus = settings.value(RECENT_PROJECT_LIST, [])
+        mrus = Settings().getValue(RECENT_PROJECT_LIST) or []
         if db_path in mrus:
             mrus.remove(db_path)
         if os.path.exists(db_path):
             mrus.insert(0, db_path)
-        settings.setValue(RECENT_PROJECT_LIST, mrus[:10])
+        Settings().setValue(RECENT_PROJECT_LIST, mrus[:10])
         self.load_mru_projects()
 
     def create_new_project_dialog(self):
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        last_parent_folder = os.path.dirname(settings.value(LAST_PROJECT_FOLDER)) if settings.value(LAST_PROJECT_FOLDER) is not None else None
+        last_parent_folder = os.path.dirname(Settings().getValue(LAST_PROJECT_FOLDER)) if Settings().getValue(LAST_PROJECT_FOLDER) is not None else None
 
         self.frm_new_project = FrmNewProject(self.iface.mainWindow(), last_parent_folder)
         self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
@@ -703,12 +693,11 @@ class QRiSToolbar:
 
     def show_settings(self):
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         qris_project = None
         if self.dockwidget is not None:
             qris_project = self.dockwidget.qris_project
 
-        self.settings_dialog = FrmSettings(settings, qris_project)
+        self.settings_dialog = FrmSettings(qris_project)
         self.settings_dialog.exec()
         self.settings_dialog = None
 

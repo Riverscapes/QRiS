@@ -1,7 +1,6 @@
 import os
 
 from qgis.PyQt import QtGui, QtWidgets
-from qgis.PyQt.QtCore import QSettings
 
 from ...compat import (
     CHECKED,
@@ -13,14 +12,11 @@ from ...model.event import AS_BUILT_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.layer import Layer
 from ...model.project import Project
 from ...QRiS.protocol_parser import LayerDefinition, ProtocolDefinition, load_protocol_definitions
+from ...QRiS.settings import Settings
 from ..frm_event_picker import FrmEventPicker
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 
 DATA_CAPTURE_EVENT_TYPE_ID = 1
-
-ORGANIZATION = "Riverscapes"
-APPNAME = "QRiS"
-SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
 
 
 class LayerTreeWidget(QtWidgets.QWidget):
@@ -32,8 +28,7 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.mandatory_layers = mandatory_layers
         self.tree_model = QtGui.QStandardItemModel(self)
 
-        settings = QSettings(ORGANIZATION, APPNAME)
-        self.show_experimental = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, bool)
+        self.show_experimental = Settings().getValue("show_experimental_protocols") or False
 
         self.setupUi()
 

@@ -5,6 +5,7 @@ import os
 from typing import ClassVar
 
 from qgis.core import Qgis, QgsMessageLog, QgsProject, QgsSettings
+from qgis.PyQt.QtCore import QSettings as _LegacyQSettings
 
 from ...__version__ import __version__
 from ..compat import MESSAGE_LEVEL_INFO, MESSAGE_LEVEL_WARNING
@@ -73,6 +74,62 @@ class Settings(SettingsBorg):
 
             # Must be the last thing we do in init
             self._initdone = True
+
+        # ── One-time migration from legacy QSettings("Riverscapes", "QRiS") ──
+        if not self.getValue("_migrated_from_legacy"):
+            self._migrate_legacy_settings()
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Legacy migration shim
+    # ─────────────────────────────────────────────────────────────────────
+    _LEGACY_ORGANIZATION = "Riverscapes"
+    _LEGACY_APPNAME = "QRiS"
+
+    # Mapping: legacy key → our key (same name in most cases)
+    _LEGACY_KEY_MAP = {
+        "dock_widget_location": "dock_widget_location",
+        "remove_layers_on_close": "remove_layers_on_close",
+        "default_export_path": "default_export_path",
+        "local_protocol_folder": "local_protocol_folder",
+        "show_experimental_protocols": "show_experimental_protocols",
+        "default_chart_font": "default_chart_font",
+        "last_project_folder": "last_project_folder",
+        "recent_projects": "recent_projects",
+    }
+
+    def _migrate_legacy_settings(self):
+        """
+        One-time copy of settings from the old QSettings("Riverscapes", "QRiS")
+        store (Windows registry) into the QgsSettings-backed Borg store.
+        After copying, the legacy keys are cleared so they are never re-read.
+        """
+        try:
+            legacy = _LegacyQSettings(self._LEGACY_ORGANIZATION, self._LEGACY_APPNAME)
+            migrated_count = 0
+
+            for legacy_key, our_key in self._LEGACY_KEY_MAP.items():
+                # Read the legacy value (use None as default so we can detect absence)
+                value = legacy.value(legacy_key, None)
+                if value is not None:
+                    # Write into our store
+                    self.setValue(our_key, value)
+                    # Clear the legacy key
+                    legacy.remove(legacy_key)
+                    migrated_count += 1
+
+            # Mark migration as done (even if nothing was migrated, so we don't
+            # keep checking on every init)
+            self.setValue("_migrated_from_legacy", True)
+            legacy.sync()
+
+            if migrated_count > 0:
+                self.log(
+                    f"Migrated {migrated_count} legacy setting(s) from QSettings('{self._LEGACY_ORGANIZATION}', '{self._LEGACY_APPNAME}').",
+                    level=MESSAGE_LEVEL_INFO,
+                )
+        except Exception as e:
+            self.log(f"Legacy settings migration failed: {e}", level=MESSAGE_LEVEL_WARNING)
+            # Don't re-raise — the plugin should still work with defaults
 
     @staticmethod
     def log(msg: str, level: Qgis.MessageLevel = MESSAGE_LEVEL_INFO):

@@ -21,6 +21,7 @@ from ...model.analysis import Analysis
 from ...model.analysis_metric import AnalysisMetric
 from ...model.metric import Metric
 from ...model.project import Project
+from ...QRiS.settings import Settings
 from ..frm_custom_metric_library import FrmCustomMetricLibrary
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from ..frm_metric_availability_matrix import FrmMetricAvailabilityMatrix
@@ -465,8 +466,7 @@ class MetricLibrary(QtWidgets.QWidget):
         self.build_metrics_table()
 
         # Apply Logic from User Settings (Must be after views are built because toggling triggers update_visibility)
-        settings = QtCore.QSettings("Riverscapes", "QRiS")
-        show_experimental = settings.value("show_experimental_protocols", False, bool)
+        show_experimental = Settings().getValue("show_experimental_protocols") or False
 
         if show_experimental:
             self.act_include_experimental.setChecked(True)

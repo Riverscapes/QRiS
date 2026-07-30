@@ -1,4 +1,3 @@
-from qgis.PyQt.QtCore import QSettings
 from qgis.PyQt.QtGui import QFont
 from qgis.PyQt.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QSpacerItem, QTabWidget, QVBoxLayout, QWidget
 
@@ -33,8 +32,8 @@ SELECTION_COLOR_OVERRIDE_ENABLED = "selectionColorOverrideEnabled"
 default_dock_widget_location = "right"
 
 
-def get_default_chart_font(settings: QSettings) -> QFont:
-    font_text = settings.value(DEFAULT_CHART_FONT, "", type=str)
+def get_default_chart_font() -> QFont:
+    font_text = Settings().getValue(DEFAULT_CHART_FONT)
 
     if font_text:
         font = QFont()
@@ -46,16 +45,16 @@ def get_default_chart_font(settings: QSettings) -> QFont:
     return sanitize_chart_font(QFont("Sans Serif", 10))
 
 
-def set_default_chart_font(font: QFont, settings: QSettings):
+def set_default_chart_font(font: QFont):
     if font:
-        settings.setValue(DEFAULT_CHART_FONT, font.toString())
+        Settings().setValue(DEFAULT_CHART_FONT, font.toString())
 
 
 class FrmSettings(QDialog):
-    def __init__(self, settings: QSettings, qris_project: Project):
+    def __init__(self, qris_project: Project):
         super().__init__()
 
-        self.settings = settings
+        self.s = Settings()
         self.qris_project = qris_project
         self.levels = {}
         self.units = {}
@@ -64,30 +63,32 @@ class FrmSettings(QDialog):
         self.setup_ui()
 
         # Get the dockwidget location from the settings
-        dock_location = settings.value(DOCK_WIDGET_LOCATION, default_dock_widget_location)
+        dock_location = self.s.getValue(DOCK_WIDGET_LOCATION) or default_dock_widget_location
         self.left_radio.setChecked(dock_location == "left")
         self.right_radio.setChecked(dock_location == "right")
 
         # Get the remove layers on close setting
-        remove_layers_on_close = settings.value(REMOVE_LAYERS_ON_CLOSE, True, type=bool)
+        remove_layers_on_close = self.s.getValue(REMOVE_LAYERS_ON_CLOSE)
+        if remove_layers_on_close is None:
+            remove_layers_on_close = True
         self.chk_remove_layers_on_close.setChecked(remove_layers_on_close)
 
         # Get the default export path
-        default_export_path = settings.value(DEFAULT_EXPORT_PATH, "")
+        default_export_path = self.s.getValue(DEFAULT_EXPORT_PATH) or ""
         self.txt_path_export.setText(default_export_path)
 
         # Get the local protocol folder
-        protocol_folder = settings.value(LOCAL_PROTOCOL_FOLDER, "")
+        protocol_folder = self.s.getValue(LOCAL_PROTOCOL_FOLDER) or ""
         self.txt_protocol_folder.setText(protocol_folder)
 
-        show_experimental_protocols = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, type=bool)
+        show_experimental_protocols = self.s.getValue(SHOW_EXPERIMENTAL_PROTOCOLS) or False
         self.chkShowExperimentalProtocols.setChecked(show_experimental_protocols)
         self.chkShowExperimentalProtocols.stateChanged.connect(self.on_show_experimental_changed)
 
-        self.chk_telemetry.setChecked(Settings().getValue(TELEMETRY_ENABLED_KEY))
-        self.chk_selection_color_override.setChecked(Settings().getValue(SELECTION_COLOR_OVERRIDE_ENABLED))
+        self.chk_telemetry.setChecked(self.s.getValue(TELEMETRY_ENABLED_KEY))
+        self.chk_selection_color_override.setChecked(self.s.getValue(SELECTION_COLOR_OVERRIDE_ENABLED))
 
-        self.default_chart_font = get_default_chart_font(self.settings)
+        self.default_chart_font = get_default_chart_font()
         self.update_chart_font_button_text()
 
         self._refresh_api_key_status()
@@ -95,30 +96,27 @@ class FrmSettings(QDialog):
     def accept(self):
 
         if self.left_radio.isChecked():
-            self.settings.setValue(DOCK_WIDGET_LOCATION, "left")
+            self.s.setValue(DOCK_WIDGET_LOCATION, "left")
         else:
-            self.settings.setValue(DOCK_WIDGET_LOCATION, "right")
+            self.s.setValue(DOCK_WIDGET_LOCATION, "right")
 
-        if self.chk_remove_layers_on_close.isChecked():
-            self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, True)
-        else:
-            self.settings.setValue(REMOVE_LAYERS_ON_CLOSE, False)
+        self.s.setValue(REMOVE_LAYERS_ON_CLOSE, self.chk_remove_layers_on_close.isChecked())
 
         if self.txt_path_export.text() != "":
-            self.settings.setValue(DEFAULT_EXPORT_PATH, self.txt_path_export.text())
+            self.s.setValue(DEFAULT_EXPORT_PATH, self.txt_path_export.text())
         else:
-            self.settings.setValue(DEFAULT_EXPORT_PATH, "")
+            self.s.setValue(DEFAULT_EXPORT_PATH, "")
 
         if self.txt_protocol_folder.text() != "":
-            self.settings.setValue(LOCAL_PROTOCOL_FOLDER, self.txt_protocol_folder.text())
+            self.s.setValue(LOCAL_PROTOCOL_FOLDER, self.txt_protocol_folder.text())
         else:
-            self.settings.setValue(LOCAL_PROTOCOL_FOLDER, "")
+            self.s.setValue(LOCAL_PROTOCOL_FOLDER, "")
 
-        self.settings.setValue(SHOW_EXPERIMENTAL_PROTOCOLS, self.chkShowExperimentalProtocols.isChecked())
-        set_default_chart_font(self.default_chart_font, self.settings)
+        self.s.setValue(SHOW_EXPERIMENTAL_PROTOCOLS, self.chkShowExperimentalProtocols.isChecked())
+        set_default_chart_font(self.default_chart_font)
 
-        Settings().setValue(TELEMETRY_ENABLED_KEY, self.chk_telemetry.isChecked())
-        Settings().setValue(SELECTION_COLOR_OVERRIDE_ENABLED, self.chk_selection_color_override.isChecked())
+        self.s.setValue(TELEMETRY_ENABLED_KEY, self.chk_telemetry.isChecked())
+        self.s.setValue(SELECTION_COLOR_OVERRIDE_ENABLED, self.chk_selection_color_override.isChecked())
 
         super().accept()
 

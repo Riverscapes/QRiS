@@ -7,7 +7,6 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from qgis.core import QgsCoordinateTransform, QgsDistanceArea, QgsFeatureRequest, QgsGeometry, QgsProject, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
-from qgis.PyQt.QtCore import QSettings
 
 from ...compat import CHECKED, DLG_ACCEPTED, DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, ITEM_FLAG_CHECKABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_WARNING, SPSZ_EXPANDING, SPSZ_MINIMUM, TOOL_BTN_INSTANT_POPUP, UNCHECKED, USER_ROLE
 from ...lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
@@ -42,7 +41,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.attribute_sort_mode = "alpha"
 
         # Chart Settings
-        self.chart_font = get_default_chart_font(QSettings("Riverscapes", "QRiS"))
+        self.chart_font = get_default_chart_font()
         self.chart_font_family = self.chart_font.family()
         self.chart_font_size = self.chart_font.pointSize()
 
@@ -57,7 +56,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             self.populate_dce()
 
     def refresh_default_chart_font(self):
-        self.chart_font = get_default_chart_font(QSettings("Riverscapes", "QRiS"))
+        self.chart_font = get_default_chart_font()
         self.chart_font_family = self.chart_font.family()
         self.chart_font_size = self.chart_font.pointSize()
 
