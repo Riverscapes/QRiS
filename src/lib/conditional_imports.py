@@ -52,6 +52,16 @@ except Exception:  # nosec B110
     pass
 
 try:
+    from matplotlib import dates as mdates
+except Exception:  # nosec B110
+    pass
+
+try:
+    import matplotlib.ticker as ticker
+except Exception:  # nosec B110
+    pass
+
+try:
     from matplotlib import patches as mpl_patches
 except Exception:  # nosec B110
     pass
