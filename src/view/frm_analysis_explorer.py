@@ -102,11 +102,15 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
     def on_sample_frame_feature_changed(self, index):
 
         metric = self.cmbMetric.currentData(USER_ROLE)
+        if metric is None:
+            return
         self.plot_metric_over_time(metric.id)
 
     def on_metric_changed(self, index):
 
         metric: Metric = self.cmbMetric.currentData(USER_ROLE)
+        if metric is None:
+            return
         if self.cmbAnalysisType.currentIndex() == 0:
             self.plot_metric_over_time(metric.id)
         else:
@@ -115,6 +119,8 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
     def on_event_changed(self, index):
 
         metric = self.cmbMetric.currentData(USER_ROLE)
+        if metric is None:
+            return
         self.plot_metric_over_riverscape(metric.id)
 
     def metric_over_riverscape(self):
@@ -126,7 +132,8 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbEvent.currentIndexChanged.connect(self.on_event_changed)
         self.cmbMetric.currentIndexChanged.connect(self.on_metric_changed)
 
-        self.plot_metric_over_riverscape(self.cmbMetric.currentData(USER_ROLE).id)
+        if self.cmbMetric.count() > 0:
+            self.plot_metric_over_riverscape(self.cmbMetric.currentData(USER_ROLE).id)
 
     def get_metric_values(self, analysis_id, metric_id):
 
