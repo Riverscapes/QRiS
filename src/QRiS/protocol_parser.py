@@ -3,12 +3,8 @@ import os
 from typing import Any, Optional, Union
 import xml.etree.ElementTree as ET  # nosec
 
-from qgis.PyQt.QtCore import QSettings
-
 from .settings import Settings
 
-ORGANIZATION = "Riverscapes"
-APPNAME = "QRiS"
 SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
 LOCAL_PROTOCOL_FOLDER = "local_protocol_folder"
 
@@ -125,14 +121,13 @@ class ProtocolDefinition:
 def load_protocol_definitions(project_directory: str, show_experimental: Optional[bool] = None, show_deprecated: bool = False) -> list[ProtocolDefinition]:
     """Load protocol from xml"""
 
+    settings = Settings()
+
     if show_experimental is None:
-        settings = QSettings(ORGANIZATION, APPNAME)
-        show_experimental = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, type=bool)
+        show_experimental = settings.getValue(SHOW_EXPERIMENTAL_PROTOCOLS) or False
 
     directories = [project_directory]
-    q_settings = QSettings(ORGANIZATION, APPNAME)
-    directories.append(q_settings.value(LOCAL_PROTOCOL_FOLDER, "", type=str))
-    settings = Settings()
+    directories.append(settings.getValue(LOCAL_PROTOCOL_FOLDER) or "")
     directories.append(settings.getValue("protocolsDir"))
 
     protocols = list()

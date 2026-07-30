@@ -1,7 +1,6 @@
 import os
 
 from qgis.PyQt import QtGui, QtWidgets
-from qgis.PyQt.QtCore import QSettings
 
 from ...compat import (
     ALIGN_CENTER,
@@ -20,12 +19,9 @@ from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVE
 from ...model.layer import Layer
 from ...model.project import Project
 from ...QRiS.protocol_parser import LayerDefinition, ProtocolDefinition, load_protocol_definitions
+from ...QRiS.settings import Settings
 from ..frm_layer_metric_details import FrmLayerMetricDetails
 from .checkable_combo_box import CheckableComboBox
-
-ORGANIZATION = "Riverscapes"
-APPNAME = "QRiS"
-SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
 
 
 class LayerLibraryWidget(QtWidgets.QWidget):
@@ -37,8 +33,7 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.dce_event = dce_event
         self.is_tree_view = True
 
-        settings = QSettings(ORGANIZATION, APPNAME)
-        self.show_experimental = settings.value(SHOW_EXPERIMENTAL_PROTOCOLS, False, bool)
+        self.show_experimental = Settings().getValue("show_experimental_protocols") or False
 
         # Map unique_key -> inclusion status (bool)
         # Unique key structure: "ProtocolMachineCode::ProtocolVersion::LayerID::LayerVersion"

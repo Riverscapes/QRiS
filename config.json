@@ -12,7 +12,16 @@
         "telemetryEnabled": true,
         "selectionColorOverrideEnabled": true,
         "selectionColorOverrideHex": "#ffffff",
-        "selectionColorOverrideTransparencyPercent": 70
+        "selectionColorOverrideTransparencyPercent": 70,
+        "_migrated_from_legacy": false,
+        "dock_widget_location": "right",
+        "remove_layers_on_close": true,
+        "default_export_path": null,
+        "local_protocol_folder": null,
+        "show_experimental_protocols": false,
+        "default_chart_font": null,
+        "last_project_folder": null,
+        "recent_projects": []
     },
     "constants": {
         "logCategory": "QRiS",
