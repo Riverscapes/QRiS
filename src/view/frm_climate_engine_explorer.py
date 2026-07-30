@@ -495,9 +495,6 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.vert_right.addWidget(self.lbl_initial_text)
         self.lbl_initial_text.setAlignment(ALIGN_CENTER)
 
-        self.chart_canvas = FigureCanvas(Figure())
-        self._static_ax = self.chart_canvas.figure.subplots()
-
         self.table_metadata = QtWidgets.QTableView(self)
         self.table_metadata.verticalHeader().hide()
 

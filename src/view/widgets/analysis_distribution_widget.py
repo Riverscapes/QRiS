@@ -923,6 +923,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.lstAttributes.blockSignals(False)
 
     def calculate_distribution(self):
+        if not require_matplotlib(self):
+            return
+
         self.figure.clear()
 
         if not self.qris_project:
