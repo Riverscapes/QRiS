@@ -1,0 +1,135 @@
+---
+title: Installing Optional Python Packages
+sidebar_position: 99
+description: How to install matplotlib, xlwt, and other optional Python dependencies for QRiS on Windows, macOS, and Linux
+---
+
+QRiS uses a few Python packages that may not be installed by default with your QGIS install. If you try to use a feature that needs a missing package, QRiS will show a dialog explaining what to install.
+
+This page lists those packages and gives platform-specific install instructions.
+
+## Optional Packages
+
+| Package     | Required For                          | Install Command          |
+|-------------|---------------------------------------|--------------------------|
+| `matplotlib`| Charts, graphs, and plotting features | `pip install matplotlib` |
+| `xlwt`      | Legacy Excel (.xls) export            | `pip install xlwt`       |
+
+## Finding the Right Python (Critical)
+
+QGIS ships with its own Python interpreter. You **must** install packages into QGIS's Python, not your system Python. The exact command depends on your operating system and QGIS version.
+
+### QGIS 3 (Windows)
+
+Use the **OSGeo4W Shell** (Start Menu → OSGeo4W → OSGeo4W Shell):
+
+```batch
+pip3 install matplotlib
+pip3 install xlwt
+```
+
+If that fails, try the advanced install:
+
+```batch
+python3 -m pip install matplotlib
+python3 -m pip install xlwt
+```
+
+If you still get a "pip not found" error, bootstrap pip first:
+
+```batch
+python3 -m ensurepip
+python3 -m pip install matplotlib
+python3 -m pip install xlwt
+```
+
+### QGIS 3 (macOS)
+
+QGIS for macOS bundles its own Python framework. Use the pip that ships inside the app bundle:
+
+```bash
+/Applications/QGIS.app/Contents/MacOS/bin/pip3 install matplotlib
+/Applications/QGIS.app/Contents/MacOS/bin/pip3 install xlwt
+```
+
+If that path doesn't exist (different QGIS build), locate the correct pip:
+
+```bash
+# Find the QGIS Python executable
+find /Applications -name "python3" -path "*/QGIS*" 2>/dev/null
+# Then use python3 -m pip, e.g.
+/Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install matplotlib
+```
+
+### QGIS 3 (Linux)
+
+Most Linux distributions install QGIS from packages or Flatpak. The approach depends on the installation method.
+
+**Debian / Ubuntu (apt):**
+```bash
+sudo apt install python3-matplotlib
+sudo apt install python3-xlwt
+```
+
+**Fedora / RHEL (dnf):**
+```bash
+sudo dnf install python3-matplotlib
+sudo dnf install python3-xlwt
+```
+
+**Arch Linux (pacman):**
+```bash
+sudo pacman -S python-matplotlib
+# xlwt is typically available via pip on Arch
+python3 -m pip install xlwt --user
+```
+
+**Flatpak install:**
+```bash
+flatpak run --command=pip3 org.qgis.qgis install matplotlib
+flatpak run --command=pip3 org.qgis.qgis install xlwt
+```
+
+**Generic pip (if QGIS uses system Python):**
+```bash
+python3 -m pip install matplotlib xlwt --user
+```
+
+---
+
+### QGIS 4 (All Platforms)
+
+QGIS 4 uses **PyQt6** and may use a different Python environment. Check the QGIS 4 documentation for the correct pip path for your platform — it is typically one of:
+
+- **Windows**: Still the OSGeo4W Shell, same as QGIS 3.
+- **macOS**: `/Applications/QGIS.app/Contents/MacOS/bin/pip3 install matplotlib xlwt`
+- **Linux**: System package manager or the same pip path as QGIS 3.
+
+## Verifying the Installation
+
+After installing, restart QGIS entirely (not just the plugin). Open QRiS and try the feature that prompted the dialog. If the dialog no longer appears, the package was installed correctly.
+
+To verify from the QGIS Python console (Plugins → Python Console):
+
+```python
+import matplotlib
+print(matplotlib.__version__)
+```
+
+```python
+import xlwt
+print(xlwt.__version__)
+```
+
+If these commands run without error, the packages are ready to use.
+
+## Troubleshooting
+
+| Symptom                                         | Likely Cause                                 | Fix                                                                          |
+|-------------------------------------------------|----------------------------------------------|------------------------------------------------------------------------------|
+| Dialog still appears after installing           | Package installed in the wrong Python        | Re-run the command using the QGIS‑bundled pip (see platform instructions above) |
+| `pip: command not found`                        | pip not installed in QGIS's Python           | Run `python3 -m ensurepip` first                                             |
+| `Permission denied`                             | Installing system-wide without admin rights  | Add `--user` to the pip command                                              |
+| `externally-managed-environment` error (Linux)  | Linux distro managing packages via apt/dnf   | Install via system package manager (apt/dnf/pacman) or use `pipx` / `--break-system-packages` |
+
+If you continue to see the dialog after following the instructions, contact the QRiS support team with your QGIS version and operating system.

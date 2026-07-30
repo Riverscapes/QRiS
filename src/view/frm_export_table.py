@@ -2,8 +2,8 @@ import csv
 import json
 
 from qgis.PyQt import QtWidgets
-import xlwt
 
+from ..lib.conditional_imports import require_xlwt, xlwt
 from .frm_export_base import FrmBaseExport
 
 
@@ -51,6 +51,9 @@ class FrmTableExport(FrmBaseExport):
             return True, ""
 
         if lower.endswith(".xlsx") or lower.endswith(".xls"):
+            if not require_xlwt(self):
+                return False, "Excel export requires the xlwt library."
+
             workbook = xlwt.Workbook()
             worksheet = workbook.add_sheet("Export")
 

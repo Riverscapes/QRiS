@@ -1,11 +1,9 @@
 import sqlite3
 
-from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 from qgis.PyQt import QtWidgets
 
-from ..compat import USER_ROLE
+from ..compat import ALIGN_CENTER, USER_ROLE
+from ..lib.conditional_imports import MATPLOTLIB_AVAILABLE, Figure, FigureCanvas, plt, require_matplotlib
 from ..model.analysis import Analysis
 from ..model.db_item import DBItemModel
 from ..model.event import DCE_EVENT_TYPE_ID
@@ -166,6 +164,9 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
 
     def plot_metric_over_time(self, metric_id):
 
+        if not require_matplotlib(self):
+            return
+
         analysis_id = self.cmbAnalysis.currentData(USER_ROLE).id
         metric_name = self.cmbMetric.currentData(USER_ROLE).name
         sample_frame_feature_id = self.cmbSampleFrameFeature.currentData(USER_ROLE).id
@@ -186,7 +187,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
                         x.append(date)
                         y.append(m["automated_value"] if m["is_manual"] == 0 else m["manual_value"])
 
-        ax: plt = self.plot.figure.add_subplot(111)
+        ax = self.plot.figure.add_subplot(111)
         ax.bar(x, y)
         ax.set_ylabel(metric_name)
         ax.set_xlabel("Time")
@@ -195,6 +196,9 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.plot.draw()
 
     def plot_metric_over_riverscape(self, metric_id):
+
+        if not require_matplotlib(self):
+            return
 
         analysis_id = self.cmbAnalysis.currentData(USER_ROLE).id
 
@@ -259,7 +263,7 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
             ordered_x_label = x_label
             ordered_y = y
 
-        ax: plt = self.plot.figure.add_subplot(111)
+        ax = self.plot.figure.add_subplot(111)
         ax.plot(ordered_y)
         ax.set_xlabel("Sample Frame Feature")
         ax.set_xticks(range(len(ordered_x_label)))
@@ -317,7 +321,11 @@ class QWidgetAnalysisExplorer(QtWidgets.QWidget):
         self.cmbSampleFrameFeature.setToolTip("Select the sample frame feature to display")
         self.grid.addWidget(self.cmbSampleFrameFeature, 5, 1)
 
-        self.plot = FigureCanvas(Figure())
+        if MATPLOTLIB_AVAILABLE:
+            self.plot = FigureCanvas(Figure())
+        else:
+            self.plot = QtWidgets.QLabel("Matplotlib is not available. Install matplotlib to enable graphing.")
+            self.plot.setAlignment(ALIGN_CENTER)
         self.vlayout.addWidget(self.plot)
 
 

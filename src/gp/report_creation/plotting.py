@@ -9,12 +9,21 @@
 # -------------------------------------------------------------------------------
 import os
 
-from matplotlib.patches import Patch
-import matplotlib.pyplot as plt
 from scipy import stats
+
+from ...lib.conditional_imports import MATPLOTLIB_AVAILABLE, plt
+
+_matplotlib_missing_msg = "Matplotlib is required for chart generation. Install it with: pip install matplotlib"
+
+
+def _require_matplotlib():
+    if not MATPLOTLIB_AVAILABLE:
+        raise ImportError(_matplotlib_missing_msg)
 
 
 def validation_chart(values, chart_title):
+
+    _require_matplotlib()
 
     if len(values) < 1:
         raise Exception("No data values to chart.")
@@ -24,6 +33,9 @@ def validation_chart(values, chart_title):
 
 
 def xyscatter(values, xlabel, ylabel, chart_title, file_path, one2one=False):
+
+    _require_matplotlib()
+
     """
     Generate an XY scatter plot
     :param values: List of tuples containing the pairs of X and Y values
@@ -66,6 +78,8 @@ def xyscatter(values, xlabel, ylabel, chart_title, file_path, one2one=False):
 
 def box_plot(values, ylabel, chart_title, file_path):
 
+    _require_matplotlib()
+
     _fig1, ax1 = plt.subplots()
     ax1.set_title(chart_title)
     ax1.boxplot(values)
@@ -77,6 +91,8 @@ def box_plot(values, ylabel, chart_title, file_path):
 
 
 def pie_chart(values, labels, file_path, title=None):
+    _require_matplotlib()
+
     _fig1, ax1 = plt.subplots()
 
     ax1.pie(values, autopct="%1.1f%%")
@@ -92,6 +108,8 @@ def pie_chart(values, labels, file_path, title=None):
 
 def histogram(values, bins, file_path):
 
+    _require_matplotlib()
+
     plt.clf()
     plt.hist(values, bins)
 
@@ -102,6 +120,8 @@ def histogram(values, bins, file_path):
 
 
 def line(x_values, y_values, xlabel, ylabel, chart_title, file_path):
+
+    _require_matplotlib()
 
     plt.clf()
     plt.plot(x_values, y_values)
@@ -117,6 +137,9 @@ def line(x_values, y_values, xlabel, ylabel, chart_title, file_path):
 
 
 def bar_chart(y_values, x_values, file_path, x_label, y_label, title=None):
+    _require_matplotlib()
+    from matplotlib.patches import Patch
+
     _fig1, ax1 = plt.subplots()
     color_map = plt.get_cmap("tab10").colors
     x = []

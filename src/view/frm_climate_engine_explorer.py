@@ -2,15 +2,13 @@ from datetime import datetime
 import json
 import sqlite3
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.dates as mdates
-from matplotlib.figure import Figure
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import QSize
 from qgis.PyQt.QtGui import QCursor, QIcon, QStandardItem, QStandardItemModel
 
 from ..compat import ALIGN_CENTER, CUSTOM_CONTEXT_MENU, MSGBOX_NO, MSGBOX_YES, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_SINGLE_SELECTION, USER_ROLE
 from ..lib.climate_engine import get_datasets, open_climate_engine_website
+from ..lib.conditional_imports import MATPLOTLIB_AVAILABLE, Figure, FigureCanvas, mdates, require_matplotlib
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.db_item import dict_factory
 from ..model.project import Project
@@ -110,6 +108,9 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
         self.lst_climate_engine.update()
 
     def create_plot(self):
+
+        if not require_matplotlib(self):
+            return
 
         if self.lst_climate_engine.model() is None:
             return
@@ -502,6 +503,14 @@ class FrmClimateEngineExplorer(QtWidgets.QDockWidget):
 
         self.tab_widget_right = QtWidgets.QTabWidget(self)
         self.vert_right.addWidget(self.tab_widget_right)
+
+        if MATPLOTLIB_AVAILABLE:
+            self.chart_canvas = FigureCanvas(Figure())
+            self._static_ax = self.chart_canvas.figure.subplots()
+        else:
+            self.chart_canvas = QtWidgets.QLabel("Matplotlib is not available. Install matplotlib to enable graphing.")
+            self.chart_canvas.setAlignment(ALIGN_CENTER)
+            self._static_ax = None
 
         chart_widget = QtWidgets.QWidget(self)
         chart_widget.setLayout(QtWidgets.QVBoxLayout())
