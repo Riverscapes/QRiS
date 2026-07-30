@@ -3,12 +3,11 @@ import re
 import sqlite3
 import xml.etree.ElementTree as ET  # nosec B405
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 from qgis.core import QgsCoordinateTransform, QgsDistanceArea, QgsFeatureRequest, QgsGeometry, QgsProject, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ...compat import CHECKED, DLG_ACCEPTED, DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, ITEM_FLAG_CHECKABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_WARNING, SPSZ_EXPANDING, SPSZ_MINIMUM, TOOL_BTN_INSTANT_POPUP, UNCHECKED, USER_ROLE
+from ...compat import ALIGN_CENTER, CHECKED, DLG_ACCEPTED, DLGBTN_CANCEL, DLGBTN_OK, HORIZONTAL, ITEM_FLAG_CHECKABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_WARNING, SPSZ_EXPANDING, SPSZ_MINIMUM, TOOL_BTN_INSTANT_POPUP, UNCHECKED, USER_ROLE
+from ...lib.conditional_imports import MATPLOTLIB_AVAILABLE, Figure, FigureCanvas, require_matplotlib
 from ...lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ...model.event import AS_BUILT_EVENT_TYPE_ID, DCE_EVENT_TYPE_ID, DESIGN_EVENT_TYPE_ID
 from ...model.project import Project
@@ -201,8 +200,13 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.chart_layout.addWidget(self.chart_label)
 
         # Matplotlib Figure and Canvas
-        self.figure = Figure(figsize=(5, 4), dpi=100)
-        self.canvas = FigureCanvas(self.figure)
+        if MATPLOTLIB_AVAILABLE:
+            self.figure = Figure(figsize=(5, 4), dpi=100)
+            self.canvas = FigureCanvas(self.figure)
+        else:
+            self.canvas = QtWidgets.QLabel("Matplotlib is not available. Install matplotlib to enable graphing.")
+            self.canvas.setAlignment(ALIGN_CENTER)
+            self.figure = None
         self.canvas.setMinimumHeight(200)
         self.chart_layout.addWidget(self.canvas)
 
@@ -1123,6 +1127,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         return f"{value:.1f}"
 
     def draw_chart(self):
+        if not require_matplotlib(self):
+            return
+
         if not self.current_distribution_data:
             return
 

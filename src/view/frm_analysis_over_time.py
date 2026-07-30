@@ -1,14 +1,12 @@
 import textwrap
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.ticker import MaxNLocator
 import numpy as np
 from qgis.core import QgsCoordinateTransform, QgsProject
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
-from ..compat import BOTTOM_DOCK, CHECKED, HORIZONTAL, LEFT_DOCK, MESSAGE_LEVEL_WARNING, RIGHT_DOCK, SPSZ_EXPANDING, SPSZ_MINIMUM, TOP_DOCK, USER_ROLE
+from ..compat import ALIGN_CENTER, BOTTOM_DOCK, CHECKED, HORIZONTAL, LEFT_DOCK, MESSAGE_LEVEL_WARNING, RIGHT_DOCK, SPSZ_EXPANDING, SPSZ_MINIMUM, TOP_DOCK, USER_ROLE
+from ..lib.conditional_imports import MATPLOTLIB_AVAILABLE, Figure, FigureCanvas, MaxNLocator, require_matplotlib
 from ..lib.font_tools import apply_qfont_to_mpl_text, apply_qfont_to_mpl_texts, select_chart_font
 from ..lib.unit_conversion import area_units, distance_units, ratio_units, short_unit_name
 from ..model.analysis import Analysis
@@ -415,18 +413,26 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         if self.analysis:
             self.setup_units_menu()
 
-        self.canvas.mpl_connect("button_press_event", self.on_click)
+        if MATPLOTLIB_AVAILABLE:
+            self.canvas.mpl_connect("button_press_event", self.on_click)
 
     def setup_ui(self):
         vbox = QtWidgets.QVBoxLayout()
         self.setLayout(vbox)
 
         # 1. Chart (Top)
-        self.fig = Figure(figsize=(5, 4), dpi=100)
-        self.ax = self.fig.add_subplot(111)
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)
-        self.canvas.updateGeometry()
+        if MATPLOTLIB_AVAILABLE:
+            self.fig = Figure(figsize=(5, 4), dpi=100)
+            self.ax = self.fig.add_subplot(111)
+            self.canvas = FigureCanvas(self.fig)
+            self.canvas.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)
+            self.canvas.updateGeometry()
+        else:
+            self.canvas = QtWidgets.QLabel("Matplotlib is not available. Install matplotlib to enable graphing.")
+            self.canvas.setAlignment(ALIGN_CENTER)
+            self.canvas.setSizePolicy(SPSZ_EXPANDING, SPSZ_EXPANDING)
+            self.fig = None
+            self.ax = None
         vbox.addWidget(self.canvas)
 
         # 2. Controls (Bottom)
@@ -579,6 +585,8 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
             self.chart_needs_update.emit()
 
     def render_plot(self, x_labels, y_values, y_err, ylabel, val_type, metric_name=None, metric_values=None):
+        if not require_matplotlib(self):
+            return
         self.ax.clear()
 
         # Set font properties
@@ -650,7 +658,6 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         # Store data for export (all items)
         self.last_plot_data = {"x": x_labels, "y": y_plot, "err": y_err, "ylabel": ylabel}
 
-        # Store for picking
         self.metric_points = []  # Store tuples of (x_idx, y_val, metric_data)
         if metric_values and len(metric_values) == len(y_plot):
             for i, y in enumerate(y_plot):
@@ -710,7 +717,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         self.canvas.draw()
 
     def on_click(self, event):
-        if not event.dblclick or event.inaxes != self.ax:
+        if not MATPLOTLIB_AVAILABLE or not event.dblclick or event.inaxes != self.ax:
             return
 
         if not hasattr(self, "metric_points") or not self.metric_points:

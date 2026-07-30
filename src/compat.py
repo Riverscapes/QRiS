@@ -165,7 +165,7 @@ if hasattr(QVariant, "String"):
     QMETATYPE_INT = QVariant.Int  # type: ignore[attr-defined]
     QMETATYPE_DOUBLE = QVariant.Double  # type: ignore[attr-defined]
     QMETATYPE_BOOL = QVariant.Bool  # type: ignore[attr-defined]
-    QMETATYPE_QURL = getattr(QMetaType, 'QUrl', 17)  # type: ignore[attr-defined]
+    QMETATYPE_QURL = getattr(QMetaType, "QUrl", 17)  # type: ignore[attr-defined]
     QMETATYPE_LONGLONG = QVariant.LongLong  # type: ignore[attr-defined]
     QMETATYPE_UINT = QVariant.UInt  # type: ignore[attr-defined]
     QMETATYPE_ULONGLONG = QVariant.ULongLong  # type: ignore[attr-defined]
@@ -177,7 +177,7 @@ else:
     QMETATYPE_INT = QMetaType.Type.Int
     QMETATYPE_DOUBLE = QMetaType.Type.Double
     QMETATYPE_BOOL = QMetaType.Type.Bool
-    QMETATYPE_QURL = getattr(QMetaType.Type, 'QUrl', QMetaType.Type.QString)
+    QMETATYPE_QURL = getattr(QMetaType.Type, "QUrl", QMetaType.Type.QString)
     QMETATYPE_LONGLONG = QMetaType.Type.LongLong
     QMETATYPE_UINT = QMetaType.Type.UInt
     QMETATYPE_ULONGLONG = QMetaType.Type.ULongLong
@@ -258,6 +258,7 @@ try:
     MSGBOX_NO = QMessageBox.StandardButton.No
     MSGBOX_ROLE_ACTION = QMessageBox.ButtonRole.ActionRole
     MSGBOX_ROLE_REJECT = QMessageBox.ButtonRole.RejectRole
+    MSGBOX_ROLE_HELP = QMessageBox.ButtonRole.HelpRole
     MSGBOX_CANCEL = QMessageBox.StandardButton.Cancel
     MSGBOX_OK = QMessageBox.StandardButton.Ok
     MSGBOX_ICON_QUESTION = QMessageBox.Icon.Question
@@ -269,6 +270,7 @@ except AttributeError:
     MSGBOX_NO = QMessageBox.No  # type: ignore[attr-defined]
     MSGBOX_ROLE_ACTION = QMessageBox.ActionRole  # type: ignore[attr-defined]
     MSGBOX_ROLE_REJECT = QMessageBox.RejectRole  # type: ignore[attr-defined]
+    MSGBOX_ROLE_HELP = QMessageBox.HelpRole  # type: ignore[attr-defined]
     MSGBOX_CANCEL = QMessageBox.Cancel  # type: ignore[attr-defined]
     MSGBOX_OK = QMessageBox.Ok  # type: ignore[attr-defined]
     MSGBOX_ICON_QUESTION = QMessageBox.Question  # type: ignore[attr-defined]

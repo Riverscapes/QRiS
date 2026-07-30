@@ -5,6 +5,7 @@
 [general]
 name=QRiS DEV_COPY
 qgisMinimumVersion=3.28
+qgisMaximumVersion=4.99
 description=QGIS Riverscapes Studio (QRiS)
 version=0.0.0dev
 author=North Arrow Research
@@ -45,4 +46,3 @@ Category of the plugin: Raster, Vector, Database or Web
 
 # If the plugin can run on QGIS Server.
 server=False
-

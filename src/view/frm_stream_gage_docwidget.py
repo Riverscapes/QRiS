@@ -1,14 +1,14 @@
 from datetime import date, datetime
-import importlib
 import sqlite3
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject, QgsRectangle, QgsVectorLayer
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 from qgis.PyQt.QtCore import pyqtSlot
 
-from ..compat import ALIGN_CENTER, CUSTOM_CONTEXT_MENU, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, MSGBOX_NO, MSGBOX_YES, USER_ROLE
+from ..compat import ALIGN_CENTER, CUSTOM_CONTEXT_MENU, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MSGBOX_NO, MSGBOX_YES, USER_ROLE
 from ..gp.stream_gage_discharge_task import StreamGageDischargeTask
 from ..gp.stream_gage_task import StreamGageTask
+from ..lib.conditional_imports import MATPLOTLIB_AVAILABLE, Figure, FigureCanvas, mdates, require_matplotlib, ticker
 from ..model.basin_characteristics_table_view import BasinCharsTableModel
 from ..model.db_item import dict_factory
 from ..model.project import Project
@@ -17,22 +17,6 @@ from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.settings import Settings
 from .utilities import add_help_button
 from .widgets.export_chart_widget import ChartExportWidget
-
-FigureCanvas = None
-Figure = None
-mdates = None
-ticker = None
-MATPLOTLIB_AVAILABLE = False
-try:
-    backend_module = importlib.import_module("matplotlib.backends.backend_qtagg")
-    FigureCanvas = getattr(backend_module, "FigureCanvasQTAgg", None)
-    mdates = importlib.import_module("matplotlib.dates")
-    figure_module = importlib.import_module("matplotlib.figure")
-    Figure = getattr(figure_module, "Figure", None)
-    ticker = importlib.import_module("matplotlib.ticker")
-    MATPLOTLIB_AVAILABLE = FigureCanvas is not None and Figure is not None
-except ImportError:
-    Settings.log("Matplotlib is not available. Stream gage graphing is disabled.", MESSAGE_LEVEL_WARNING)
 
 # Help on selection changed event
 # https://stackoverflow.com/questions/10156842/howto-get-the-selectionchanged-signal
@@ -144,7 +128,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         return data
 
     def load_discharge_plot(self, data=None):
-        if not MATPLOTLIB_AVAILABLE or self._static_ax is None or self.static_canvas is None:
+        if not require_matplotlib(self):
             return
 
         if data is None:

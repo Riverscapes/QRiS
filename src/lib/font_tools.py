@@ -4,12 +4,7 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtGui import QFont
 
 from ..compat import DLG_ACCEPTED, DLGBTN_CANCEL, DLGBTN_OK
-
-try:
-    from matplotlib import font_manager as mpl_font_manager
-except Exception:  # nosec B110 - matplotlib may not be available in limited environments
-    mpl_font_manager = None
-
+from .conditional_imports import mpl_font_manager
 
 _MPL_FAMILIES_CACHE = None
 
