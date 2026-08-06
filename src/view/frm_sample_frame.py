@@ -3,11 +3,11 @@ import sqlite3
 from typing import Optional
 
 from qgis.core import QgsApplication, QgsFeature, QgsVectorLayer
-from qgis.PyQt.QtCore import QMetaType, QSize, Qt, QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QMetaType, QSize, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTabWidget, QTextEdit, QTreeView, QVBoxLayout, QWidget
 
-from ..compat import ALIGN_TOP, DLG_ACCEPTED, ITEM_FLAG_EDITABLE, ITEM_FLAG_SELECTABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, USER_ROLE
+from ..compat import ALIGN_TOP, CHECKED, DLG_ACCEPTED, ITEM_FLAG_EDITABLE, ITEM_FLAG_SELECTABLE, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, USER_ROLE
 from ..gp.feature_class_functions import layer_path_parser
 from ..gp.import_feature_class import ImportFeatureClass, ImportFieldMap
 from ..gp.import_temp_layer import ImportMapLayer
@@ -79,7 +79,7 @@ class FrmSampleFrame(QDialog):
         if sample_frame is not None:
             self.setWindowTitle("Sample Frame Properties")
             self.txtName.setText(self.sample_frame.name)
-            self.chkAddToMap.setCheckState(Qt.Unchecked)
+            self.chkAddToMap.setCheckState(CHECKED)
             self.chkAddToMap.setVisible(False)
             self.chkStartEditSession.setVisible(False)
         else:
@@ -385,7 +385,7 @@ class FrmSampleFrame(QDialog):
 
         self.chkStartEditSession = QCheckBox("Start Edit Session")
         self.chkStartEditSession.setChecked(False)
-        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == Qt.Checked), self.chkStartEditSession.setChecked(False) if state != Qt.Checked else None))
+        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == CHECKED), self.chkStartEditSession.setChecked(False) if state != CHECKED else None))
 
         add_to_map_row = QHBoxLayout()
         add_to_map_row.addWidget(self.chkAddToMap)

@@ -1,9 +1,9 @@
 from typing import Optional
 
-from qgis.PyQt.QtCore import QSize, Qt
+from qgis.PyQt.QtCore import QSize
 from qgis.PyQt.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QVBoxLayout
 
-from ..compat import ITEM_FLAG_CHECKABLE
+from ..compat import CHECKED, ITEM_FLAG_CHECKABLE
 from .utilities import add_standard_form_buttons
 
 
@@ -28,7 +28,7 @@ class FrmNewAttribute(QDialog):
             for attribute in self.attributes:
                 item = QListWidgetItem(attribute)
                 item.setFlags(item.flags() | ITEM_FLAG_CHECKABLE)
-                item.setCheckState(Qt.Checked)
+                item.setCheckState(CHECKED)
                 self.lstAttributes.addItem(item)
 
     def addItem(self):
@@ -42,7 +42,7 @@ class FrmNewAttribute(QDialog):
                 return
 
         item = QListWidgetItem(self.newItemEdit.text())
-        item.setCheckState(Qt.Checked)
+        item.setCheckState(CHECKED)
         self.lstAttributes.addItem(item)
         self.newItemEdit.clear()  # Clear the line edit
 
@@ -103,6 +103,6 @@ class FrmNewAttribute(QDialog):
         # attributes are the checked items in the list
         self.attributes = []
         for i in range(self.lstAttributes.count()):
-            if self.lstAttributes.item(i).checkState() == Qt.Checked:
+            if self.lstAttributes.item(i).checkState() == CHECKED:
                 self.attributes.append(self.lstAttributes.item(i).text())
         super().accept()

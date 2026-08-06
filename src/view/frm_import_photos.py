@@ -5,10 +5,10 @@ import shutil
 from qgis import processing
 from qgis.core import QgsProcessingContext, QgsVectorLayer, QgsVectorLayerUtils
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import QDateTime, Qt
+from qgis.PyQt.QtCore import QDateTime
 from qgis.PyQt.QtGui import QPixmap
 
-from ..compat import ALIGN_CENTER, MESSAGE_LEVEL_WARNING
+from ..compat import ALIGN_CENTER, ISO_DATE_FORMAT, KEEP_ASPECT_RATIO, MESSAGE_LEVEL_WARNING
 from ..model.event_layer import EventLayer
 from ..model.project import Project
 from ..QRiS.settings import Settings
@@ -49,7 +49,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
             if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
                 file_path = os.path.join(folder_path, file)
                 pixmap = QPixmap(file_path)
-                self.lbl_preview.setPixmap(pixmap.scaled(300, 300, Qt.KeepAspectRatio))
+                self.lbl_preview.setPixmap(pixmap.scaled(300, 300, KEEP_ASPECT_RATIO))
                 break
 
     def accept(self) -> None:
@@ -123,7 +123,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
                     if data is not None:
                         name = field.name()
                         if isinstance(data, QDateTime):
-                            data = data.toString(Qt.ISODate)
+                            data = data.toString(ISO_DATE_FORMAT)
                         if name == "photo":
                             metadata["Photo Path"] = os.path.basename(data)
                             # data = data.replace('\\', '/')
