@@ -3,7 +3,7 @@ import os
 from typing import Any, Optional, Union
 import xml.etree.ElementTree as ET  # nosec
 
-from .settings import Settings
+from .settings import Settings, as_bool
 
 SHOW_EXPERIMENTAL_PROTOCOLS = "show_experimental_protocols"
 LOCAL_PROTOCOL_FOLDER = "local_protocol_folder"
@@ -124,7 +124,7 @@ def load_protocol_definitions(project_directory: str, show_experimental: Optiona
     settings = Settings()
 
     if show_experimental is None:
-        show_experimental = settings.getValue(SHOW_EXPERIMENTAL_PROTOCOLS) or False
+        show_experimental = as_bool(settings.getValue(SHOW_EXPERIMENTAL_PROTOCOLS), default=False)
 
     directories = [project_directory]
     directories.append(settings.getValue(LOCAL_PROTOCOL_FOLDER) or "")

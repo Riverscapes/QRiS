@@ -30,6 +30,16 @@ CONSTANTS = cfg_json["constants"]
 MESSAGE_CATEGORY = CONSTANTS["logCategory"]
 
 
+def as_bool(value, default=False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
 class SettingsBorg:
     _shared_state: ClassVar[dict] = {}
     _initdone = False
