@@ -33,7 +33,13 @@ class LayerLibraryWidget(QtWidgets.QWidget):
         self.dce_event = dce_event
         self.is_tree_view = True
 
-        self.show_experimental = Settings().getValue("show_experimental_protocols") or False
+        raw_show_experimental = Settings().getValue("show_experimental_protocols")
+        if isinstance(raw_show_experimental, bool):
+            self.show_experimental = raw_show_experimental
+        elif isinstance(raw_show_experimental, str):
+            self.show_experimental = raw_show_experimental.strip().lower() in {"1", "true", "yes", "on"}
+        else:
+            self.show_experimental = bool(raw_show_experimental)
 
         # Map unique_key -> inclusion status (bool)
         # Unique key structure: "ProtocolMachineCode::ProtocolVersion::LayerID::LayerVersion"

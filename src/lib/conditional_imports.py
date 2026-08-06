@@ -38,7 +38,7 @@ MATPLOTLIB_AVAILABLE = False
 
 try:
     from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-except Exception:  # nosec B110 – optional dependency
+except Exception:  # nosec B110 - optional dependency
     pass
 
 try:
@@ -52,12 +52,17 @@ except Exception:  # nosec B110
     pass
 
 try:
-    from matplotlib import dates as mdates
+    from matplotlib import dates as mdates  # noqa: F401 - re-exported optional import
 except Exception:  # nosec B110
     pass
 
 try:
-    import matplotlib.ticker as ticker
+    import matplotlib.ticker as ticker  # noqa: F401 - re-exported optional import
+except Exception:  # nosec B110
+    pass
+
+try:
+    from matplotlib.ticker import MaxNLocator  # noqa: F401 - re-exported optional import
 except Exception:  # nosec B110
     pass
 
@@ -92,7 +97,7 @@ def require_matplotlib(parent: Optional[QWidget] = None) -> bool:
     msg.setIcon(MSGBOX_ICON_INFORMATION)
     msg.setWindowTitle("Matplotlib Required")
     msg.setText("This feature requires the Matplotlib plotting library.\n\nPlease install Matplotlib and restart QGIS:\n\n    pip install matplotlib\n\nOr use the OSGeo4W shell (Windows) / system package manager.\n")
-    help_btn = QPushButton("Help – Platform-specific Instructions")
+    help_btn = QPushButton("Help - Platform-specific Instructions")
     help_btn.clicked.connect(_open_help)
     msg.addButton(help_btn, MSGBOX_ROLE_HELP)
     msg.addButton(MSGBOX_OK)
@@ -106,7 +111,7 @@ xlwt = None
 XLWT_AVAILABLE = False
 
 try:
-    pass  # nosec B110 – optional dependency
+    pass  # nosec B110 - optional dependency
 except Exception:  # nosec B110
     pass
 else:
@@ -128,7 +133,7 @@ def require_xlwt(parent: Optional[QWidget] = None) -> bool:
     msg.setIcon(MSGBOX_ICON_INFORMATION)
     msg.setWindowTitle("Excel Export Requires xlwt")
     msg.setText("Exporting to the legacy Excel (.xls) format requires the xlwt library.\n\nPlease install xlwt and restart QGIS:\n\n    pip install xlwt\n\nAlternatively, use CSV or JSON export formats which have no extra dependencies.\n")
-    help_btn = QPushButton("Help – Platform-specific Instructions")
+    help_btn = QPushButton("Help - Platform-specific Instructions")
     help_btn.clicked.connect(_open_help)
     msg.addButton(help_btn, MSGBOX_ROLE_HELP)
     msg.addButton(MSGBOX_OK)

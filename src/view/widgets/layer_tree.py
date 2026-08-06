@@ -28,7 +28,13 @@ class LayerTreeWidget(QtWidgets.QWidget):
         self.mandatory_layers = mandatory_layers
         self.tree_model = QtGui.QStandardItemModel(self)
 
-        self.show_experimental = Settings().getValue("show_experimental_protocols") or False
+        raw_show_experimental = Settings().getValue("show_experimental_protocols")
+        if isinstance(raw_show_experimental, bool):
+            self.show_experimental = raw_show_experimental
+        elif isinstance(raw_show_experimental, str):
+            self.show_experimental = raw_show_experimental.strip().lower() in {"1", "true", "yes", "on"}
+        else:
+            self.show_experimental = bool(raw_show_experimental)
 
         self.setupUi()
 

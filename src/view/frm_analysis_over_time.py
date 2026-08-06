@@ -689,7 +689,8 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
                 self.ax.set_yticks([-1.0, 0.0, 1.0])
             else:
                 self.ax.set_ylim(center - half_range, center + half_range)
-                self.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
+                if MaxNLocator is not None:
+                    self.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
 
         # Trendline - only use valid points
         if getattr(self, "action_chk_trendline", None) and self.action_chk_trendline.isChecked():
