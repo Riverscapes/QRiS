@@ -9,6 +9,7 @@ from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
 from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..lib.map import normalize_epsg_id
 from ..QRiS.settings import Settings
 
 DOWNLOAD_TIMEOUT = 120  # seconds (2 minutes)
@@ -166,8 +167,8 @@ class StreamGageTask(QgsTask):
 
 def transform_geometry(geometry, map_epsg: int, output_epsg: int):
 
-    source_crs = QgsCoordinateReferenceSystem.fromEpsgId(map_epsg)
-    dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(output_epsg)
+    source_crs = QgsCoordinateReferenceSystem.fromEpsgId(normalize_epsg_id(map_epsg))
+    dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(normalize_epsg_id(output_epsg))
     transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
     return transform.transform(geometry)
 
