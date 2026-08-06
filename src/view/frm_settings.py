@@ -32,6 +32,16 @@ SELECTION_COLOR_OVERRIDE_ENABLED = "selectionColorOverrideEnabled"
 default_dock_widget_location = "right"
 
 
+def _as_bool(value, default=False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
 def get_default_chart_font() -> QFont:
     font_text = Settings().getValue(DEFAULT_CHART_FONT)
 
@@ -68,9 +78,7 @@ class FrmSettings(QDialog):
         self.right_radio.setChecked(dock_location == "right")
 
         # Get the remove layers on close setting
-        remove_layers_on_close = self.s.getValue(REMOVE_LAYERS_ON_CLOSE)
-        if remove_layers_on_close is None:
-            remove_layers_on_close = True
+        remove_layers_on_close = _as_bool(self.s.getValue(REMOVE_LAYERS_ON_CLOSE), default=True)
         self.chk_remove_layers_on_close.setChecked(remove_layers_on_close)
 
         # Get the default export path
@@ -81,12 +89,12 @@ class FrmSettings(QDialog):
         protocol_folder = self.s.getValue(LOCAL_PROTOCOL_FOLDER) or ""
         self.txt_protocol_folder.setText(protocol_folder)
 
-        show_experimental_protocols = self.s.getValue(SHOW_EXPERIMENTAL_PROTOCOLS) or False
+        show_experimental_protocols = _as_bool(self.s.getValue(SHOW_EXPERIMENTAL_PROTOCOLS), default=False)
         self.chkShowExperimentalProtocols.setChecked(show_experimental_protocols)
         self.chkShowExperimentalProtocols.stateChanged.connect(self.on_show_experimental_changed)
 
-        self.chk_telemetry.setChecked(self.s.getValue(TELEMETRY_ENABLED_KEY))
-        self.chk_selection_color_override.setChecked(self.s.getValue(SELECTION_COLOR_OVERRIDE_ENABLED))
+        self.chk_telemetry.setChecked(_as_bool(self.s.getValue(TELEMETRY_ENABLED_KEY), default=False))
+        self.chk_selection_color_override.setChecked(_as_bool(self.s.getValue(SELECTION_COLOR_OVERRIDE_ENABLED), default=False))
 
         self.default_chart_font = get_default_chart_font()
         self.update_chart_font_button_text()
