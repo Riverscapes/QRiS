@@ -53,7 +53,6 @@ from .gp.load_project_task import LoadProjectTask
 from .gp.update_metadata import check_metadata, update_metadata
 from .gp.watershed_attributes import WatershedAttributes
 from .lib.data_exchange import browse_data_exchange as open_data_exchange
-from .lib.map import normalize_epsg_id
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.settings import CONSTANTS, Settings
@@ -702,9 +701,9 @@ class QRiSToolbar:
         self.settings_dialog.exec()
         self.settings_dialog = None
 
-    def transform_geometry(self, geometry, map_epsg: int, output_epsg: int):
+    def transform_geometry(self, geometry, output_epsg: int):
 
-        source_crs = QgsCoordinateReferenceSystem.fromEpsgId(normalize_epsg_id(map_epsg))
-        dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(normalize_epsg_id(output_epsg))
+        source_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(output_epsg)
         transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
         return transform.transform(geometry)

@@ -7,7 +7,6 @@ from qgis.PyQt.QtCore import pyqtSignal
 import requests
 
 from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
-from ..lib.map import normalize_epsg_id
 from ..model.pour_point import PourPoint, save_pour_point
 from ..QRiS.settings import Settings
 
@@ -126,10 +125,8 @@ class StreamStats(QgsTask):
         super().cancel()
 
 
-def transform_geometry(geometry, map_epsg: int, output_epsg: int):
+def transform_geometry(geometry, source_crs: QgsCoordinateReferenceSystem, dest_crs: QgsCoordinateReferenceSystem):
 
-    source_crs = QgsCoordinateReferenceSystem.fromEpsgId(normalize_epsg_id(map_epsg))
-    dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(normalize_epsg_id(output_epsg))
     transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance().transformContext())
     return transform.transform(geometry)
 

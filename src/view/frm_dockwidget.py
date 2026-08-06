@@ -28,6 +28,7 @@ from typing import Optional
 from qgis.core import (
     Qgis,
     QgsApplication,
+    QgsCoordinateReferenceSystem,
     QgsCoordinateTransformContext,
     QgsFeature,
     QgsField,
@@ -2285,7 +2286,9 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Revert the default tool so the user doesn't accidentally click again
         self.iface.actionPan().trigger()
 
-        transformed_point = transform_geometry(raw_map_point, self.iface.mapCanvas().mapSettings().destinationCrs().authid(), 4326)
+        source_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
+        dest_crs = QgsCoordinateReferenceSystem.fromEpsgId(4326)
+        transformed_point = transform_geometry(raw_map_point, source_crs, dest_crs)
 
         try:
             state_code, status = get_state_from_coordinates(transformed_point.y(), transformed_point.x())
