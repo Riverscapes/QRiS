@@ -72,6 +72,8 @@ try:
     DIALOG_BTN_CLOSE = QDialogButtonBox.StandardButton.Close
     CUSTOM_CONTEXT_MENU = Qt.ContextMenuPolicy.CustomContextMenu
     USER_ROLE = Qt.ItemDataRole.UserRole
+    KEEP_ASPECT_RATIO = Qt.AspectRatioMode.KeepAspectRatio
+    ISO_DATE_FORMAT = Qt.DateFormat.ISODate
 except AttributeError:
     # ── Qt 5 / PyQt5 ──────────────────────────────────────────────────────
     ALIGN_CENTER = Qt.AlignCenter  # type: ignore[attr-defined]
@@ -117,8 +119,8 @@ except AttributeError:
     MATCH_WRAP = Qt.MatchWrap  # type: ignore[attr-defined]
     CUSTOM_CONTEXT_MENU = Qt.CustomContextMenu  # type: ignore[attr-defined]
     USER_ROLE = Qt.UserRole  # type: ignore[attr-defined]
-
-
+    KEEP_ASPECT_RATIO = Qt.KeepAspectRatio  # type: ignore[attr-defined]
+    ISO_DATE_FORMAT = Qt.ISODate  # type: ignore[attr-defined]
 # ── QEvent types ──────────────────────────────────────────────────────────────
 try:
     MOUSE_BUTTON_RELEASE = QEvent.Type.MouseButtonRelease

@@ -2,9 +2,9 @@ import json
 from typing import Optional
 
 from qgis.core import QgsApplication, QgsVectorLayer
-from qgis.PyQt import QtCore, QtWidgets
+from qgis.PyQt import QtWidgets
 
-from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, UNCHECKED, USER_ROLE
+from ..compat import CHECKED, MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, UNCHECKED, USER_ROLE
 from ..gp.feature_class_functions import import_existing, layer_path_parser
 from ..gp.import_temp_layer import ImportMapLayer
 from ..model.db_item import DBItem, DBItemModel
@@ -236,7 +236,7 @@ class FrmProfile(QtWidgets.QDialog):
         # Add to Map and Start Edit Session checkboxes
         self.chkStartEditSession = QtWidgets.QCheckBox("Start Edit Session")
         self.chkStartEditSession.setChecked(False)
-        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == QtCore.Qt.Checked), self.chkStartEditSession.setChecked(False) if state != QtCore.Qt.Checked else None))
+        self.chkAddToMap.stateChanged.connect(lambda state: (self.chkStartEditSession.setEnabled(state == CHECKED), self.chkStartEditSession.setChecked(False) if state != CHECKED else None))
 
         add_to_map_row = QtWidgets.QHBoxLayout()
         add_to_map_row.addWidget(self.chkAddToMap)
