@@ -1,5 +1,13 @@
 # QRiS Plugin
 
+## [1.2.5.4] Aug 10 2026
+
+### Changed
+- Refactored using Ruff Linter
+- Refactored plugin to use QGIS 4 and maintain compatibility with QGIS 3
+- Migrate user settings to QgsSettings
+
+
 ## [1.2.5.3] Jul 20 2026
 
 ### Fixed
@@ -167,7 +175,7 @@
 
 ## [1.2.3.2] Mar 12 2026
 
-### Fixed 
+### Fixed
 - Bug fixes for analysis distribution not loading
 
 ### Changed
@@ -181,7 +189,7 @@
 
 ## [1.2.3.1] Mar 10 2026
 
-### Fixed 
+### Fixed
 - Update USGS API changes to download Stream Gage Data #982
 - Bring back StreamStats Flow Statistics #546
 
@@ -208,7 +216,7 @@
 - Layers from experimental protocols not showing up in layer picker in new DCE form #971
 - Missing basin characteristics in Catchment Delineations #966
 - Fix error if no events to use as template for design or asbuilt
-- Add date label to event library, fix sorting bug 
+- Add date label to event library, fix sorting bug
 
 ### Changed
 - Changes to Create New Analysis/Analysis Properties Form #933
@@ -354,7 +362,7 @@
 ### Fixed
 - Duplicate Batch Edit QRiS Attributes When Selecting QRiS Layer #842
 - Can't Delete Metdata Rows in QRiS Properties When Creating New Project #841
-- Changing Raster Type When Importing Hillshade into QRiS 
+- Changing Raster Type When Importing Hillshade into QRiS
 
 ### Added
 - Add option to direct RS Viewer layers into specific  QRiS nodes.
@@ -541,7 +549,7 @@
 - Add Logical Attribute Fields to Metadata Widget #285
 - Slider Widget for DCE Layer Attributes #571
 - Allow mulitple values for list fields (as checkbox) and support for field visibility #572
-- Re-added Brat CIS Protocol #569 
+- Re-added Brat CIS Protocol #569
 - Beaver Census Protocol #551
 - Added Climate Engine XYZ Map Tiles
 - DCE Layer Details
@@ -1147,7 +1155,7 @@
 - Help page updates
 
 ### Added
-- Setup hierarchy for project tree and layer TOC 
+- Setup hierarchy for project tree and layer TOC
 
 ## [0.3.4] 2023 DEC 08
 
@@ -1311,7 +1319,7 @@
 - Tolerance and display settings for metric values
 - Brat CIS schema and model
 - Import Riverscapes Metadata from QRave
-- Documentation buttons added to Metric selection from 
+- Documentation buttons added to Metric selection from
 - metadata field added to all tables in gpkg
 - QRIS project Database migration versioning
 - Raster Symbology added to qris
@@ -1331,7 +1339,7 @@
 ### Fixed
 - Clip raster to AOI when importing
 - Analysis Frame and event fixes
-- Clear metic values when sample frame is changed 
+- Clear metic values when sample frame is changed
 - Gradient metric bug with spatial reference
 - Bug when importing sampling frame with aoi mask
 - Saving and Loading metric value uncertainty
@@ -1405,7 +1413,7 @@
 - method_to_map.py
 - vectorize.py
 
-## [0.1.11] 09 FEB 2023 
+## [0.1.11] 09 FEB 2023
 
 ### Fixed
 - Desgin Form bug fixed
@@ -1413,7 +1421,7 @@
 ### Changed
 - Schema updated to support design layers
 
-## [0.1.10] 
+## [0.1.10]
 
 ### Added
 - Most Recently Used (MRU) Project Menu
