@@ -8,6 +8,7 @@ All shared enum shims live here.  **Do not** duplicate ``USER_ROLE`` or
 other guards in individual source files — import from this module instead.
 """
 
+from qgis.gui import QgsEditorWidgetWrapper
 from qgis.PyQt.QtCore import QEvent, QMetaType, Qt, QVariant
 from qgis.PyQt.QtGui import QImage
 from qgis.PyQt.QtWidgets import (
@@ -126,6 +127,17 @@ try:
     MOUSE_BUTTON_RELEASE = QEvent.Type.MouseButtonRelease
 except AttributeError:
     MOUSE_BUTTON_RELEASE = QEvent.MouseButtonRelease  # type: ignore[attr-defined]
+
+
+# ── QgsEditorWidgetWrapper constraint result compatibility ───────────────────
+try:
+    # QGIS 4 / PyQt6 — typed enum values required by signal signature
+    CONSTRAINT_SUCCESS = QgsEditorWidgetWrapper.ConstraintResult.ConstraintSuccess
+    CONSTRAINT_FAILURE_HARD = QgsEditorWidgetWrapper.ConstraintResult.ConstraintFailureHard
+except AttributeError:
+    # QGIS 3 / PyQt5 — legacy integer codes
+    CONSTRAINT_SUCCESS = 0
+    CONSTRAINT_FAILURE_HARD = 2
 
 
 # ── QImage format ─────────────────────────────────────────────────────────────
