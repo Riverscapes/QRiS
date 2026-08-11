@@ -7,7 +7,7 @@ from qgis.PyQt.QtCore import QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QStandardItem, QStandardItemModel
 from qgis.PyQt.QtWidgets import QCheckBox, QComboBox, QDoubleSpinBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSlider, QTextEdit, QVBoxLayout, QWidget
 
-from ..compat import CHECKED, HORIZONTAL, SLIDER_TICKS_BELOW
+from ..compat import CHECKED, CONSTRAINT_FAILURE_HARD, CONSTRAINT_SUCCESS, HORIZONTAL, SLIDER_TICKS_BELOW
 
 
 class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
@@ -276,12 +276,20 @@ class MetadataFieldEditWidget(QgsEditorWidgetWrapper):
             # Join errors for the tooltip/message
             error_message = "\n".join(errors)
             self.constraintResultVisibleChanged.emit(True)
-            # 2 = ConstraintFailureHard
-            self.constraintStatusChanged.emit("Required Fields", "Required fields missing", error_message, 2)
+            self.constraintStatusChanged.emit(
+                "Required Fields",
+                "Required fields missing",
+                error_message,
+                CONSTRAINT_FAILURE_HARD,
+            )
         else:
             self.constraintResultVisibleChanged.emit(False)
-            # 0 = ConstraintSuccess
-            self.constraintStatusChanged.emit("Required Fields", "All required fields filled", "", 0)
+            self.constraintStatusChanged.emit(
+                "Required Fields",
+                "All required fields filled",
+                "",
+                CONSTRAINT_SUCCESS,
+            )
 
     def set_widget_style(self, widget, style):
         # Apply style to relevant input component
