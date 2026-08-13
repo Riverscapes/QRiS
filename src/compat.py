@@ -131,9 +131,11 @@ except AttributeError:
 
 # ── QgsEditorWidgetWrapper constraint result compatibility ───────────────────
 try:
-    # QGIS 4 / PyQt6 — typed enum values required by signal signature
-    CONSTRAINT_SUCCESS = QgsEditorWidgetWrapper.ConstraintResult.ConstraintSuccess
-    CONSTRAINT_FAILURE_HARD = QgsEditorWidgetWrapper.ConstraintResult.ConstraintFailureHard
+    # QGIS 4 / PyQt6 — typed enum values required by signal signature.
+    # Construct from numeric values to avoid build-specific enum member names.
+    _constraint_enum = QgsEditorWidgetWrapper.ConstraintResult
+    CONSTRAINT_SUCCESS = _constraint_enum(0)
+    CONSTRAINT_FAILURE_HARD = _constraint_enum(2)
 except AttributeError:
     # QGIS 3 / PyQt5 — legacy integer codes
     CONSTRAINT_SUCCESS = 0
@@ -171,9 +173,22 @@ except AttributeError:
 
 
 # ── QVariant / QMetaType field type compatibility ───────────────────────────
-# In PyQt5, QVariant.String etc. exist and QgsField expects those (plain ints).
-# In PyQt6, QVariant enums were removed; use QMetaType.Type instead.
-if hasattr(QVariant, "String"):
+# Use a strict Qt6 probe first. Some builds expose QVariant.String shims,
+# which can make capability checks choose the wrong enum family.
+try:
+    # Qt 6 / PyQt6 — QVariant enums were moved under QMetaType.Type.
+    # Some members (e.g. QUrl) may not exist in all PyQt6 builds;
+    # fall back to QString when missing (QUrl fields are string-like).
+    _qt6_type_enum = QMetaType.Type
+    QMETATYPE_STRING = _qt6_type_enum.QString
+    QMETATYPE_INT = _qt6_type_enum.Int
+    QMETATYPE_DOUBLE = _qt6_type_enum.Double
+    QMETATYPE_BOOL = _qt6_type_enum.Bool
+    QMETATYPE_QURL = getattr(_qt6_type_enum, "QUrl", _qt6_type_enum.QString)
+    QMETATYPE_LONGLONG = _qt6_type_enum.LongLong
+    QMETATYPE_UINT = _qt6_type_enum.UInt
+    QMETATYPE_ULONGLONG = _qt6_type_enum.ULongLong
+except AttributeError:
     # Qt 5 / PyQt5 — flat QVariant enum (plain ints, what QgsField expects)
     QMETATYPE_STRING = QVariant.String  # type: ignore[attr-defined]
     QMETATYPE_INT = QVariant.Int  # type: ignore[attr-defined]
@@ -183,18 +198,6 @@ if hasattr(QVariant, "String"):
     QMETATYPE_LONGLONG = QVariant.LongLong  # type: ignore[attr-defined]
     QMETATYPE_UINT = QVariant.UInt  # type: ignore[attr-defined]
     QMETATYPE_ULONGLONG = QVariant.ULongLong  # type: ignore[attr-defined]
-else:
-    # Qt 6 / PyQt6 — QVariant enum was moved under QMetaType.Type.
-    # Some members (e.g. QUrl) may not exist in all PyQt6 builds;
-    # fall back to QString when missing (QUrl fields are string-like).
-    QMETATYPE_STRING = QMetaType.Type.QString
-    QMETATYPE_INT = QMetaType.Type.Int
-    QMETATYPE_DOUBLE = QMetaType.Type.Double
-    QMETATYPE_BOOL = QMetaType.Type.Bool
-    QMETATYPE_QURL = getattr(QMetaType.Type, "QUrl", QMetaType.Type.QString)
-    QMETATYPE_LONGLONG = QMetaType.Type.LongLong
-    QMETATYPE_UINT = QMetaType.Type.UInt
-    QMETATYPE_ULONGLONG = QMetaType.Type.ULongLong
 
 
 # ── QFrame shape / shadow ────────────────────────────────────────────────────

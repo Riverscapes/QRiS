@@ -72,18 +72,19 @@ def validate_protocol_metric_dependencies(protocol_definitions) -> list:
     """
 
     errors = []
-    system_protocols = []
+    system_protocols = set()
     for p in protocol_definitions:
         protocol_type = str(getattr(p, "protocol_type", "")).strip().lower()
         protocol_status = str(getattr(p, "status", "")).strip().lower()
         # Backward compatibility for drafts that still mark status=system.
         if protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE:
-            system_protocols.append(p.machine_code)
+            system_protocols.add(p.machine_code)
 
-    if len(system_protocols) > 1:
-        errors.append(f"Only one system protocol is supported, found: {', '.join(system_protocols)}")
-    elif len(system_protocols) == 1 and system_protocols[0] != INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
-        errors.append(f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols[0]}'")
+    system_protocols_list = sorted(system_protocols)
+    if len(system_protocols_list) > 1:
+        errors.append(f"Only one system protocol is supported, found: {', '.join(system_protocols_list)}")
+    elif len(system_protocols_list) == 1 and system_protocols_list[0] != INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
+        errors.append(f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols_list[0]}'")
 
     for protocol in protocol_definitions:
         protocol_machine_code = protocol.machine_code
