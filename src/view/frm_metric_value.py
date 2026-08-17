@@ -413,7 +413,7 @@ class FrmMetricValue(QtWidgets.QDialog):
         self.actionCalculate.setEnabled(True)
 
         for message in summary.get("messages", []):
-            Settings().log(message["text"], "QRiS_Metrics", message["level"])
+            Settings().log(message["text"], message["level"])
 
         if summary.get("canceled", False):
             self.txtAutomated.setText("")

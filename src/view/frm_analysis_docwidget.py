@@ -158,7 +158,7 @@ class FrmAnalysisDocWidget(QtWidgets.QDockWidget):
     def on_metrics_task_complete(self, summary: dict):
 
         for message in summary.get("messages", []):
-            Settings().log(message["text"], "QRiS_Metrics", message["level"])
+            Settings().log(message["text"], message["level"])
 
         task_context = self.metrics_task_context or {"mode": "bulk"}
         self.metrics_task_context = None

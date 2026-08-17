@@ -101,7 +101,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
 
     def task_finished(self, context: QgsProcessingContext, successful, results):
         if not successful:
-            Settings().log("Task finished unsucessfully", "Import Photos Qgis Processing", MESSAGE_LEVEL_WARNING)
+            Settings().log("Task finished unsucessfully", MESSAGE_LEVEL_WARNING)
         output_layer = results["OUTPUT"]
 
         if output_layer.isValid():
