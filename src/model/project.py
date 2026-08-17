@@ -27,8 +27,8 @@ from .planning_container import PlanningContainer
 from .planning_container import load as load_planning_containers
 from .pour_point import PourPoint, load_pour_points
 from .profile import Profile, load_profiles
-from .protocol import insert_protocol, update_protocol
 from .protocol import load as load_protocols
+from .protocol import update_protocol
 from .raster import Raster, load_rasters
 from .sample_frame import SampleFrame, load_sample_frames
 from .scratch_vector import ScratchVector, load_scratch_vectors
@@ -202,10 +202,10 @@ class Project(DBItem, QObject):
                                         break
                                     # Try float comparison if strings don't match exactly (e.g. "1.0" vs "1")
                                     try:
-                                        if float(protocol_layer.layer_version) == float(layer_def.version):
+                                        if protocol_layer.layer_version is not None and layer_def.version is not None and float(protocol_layer.layer_version) == float(layer_def.version):
                                             existing_layer = protocol_layer
                                             break
-                                    except ValueError:
+                                    except (ValueError, TypeError):
                                         pass
 
                             if existing_layer:
@@ -381,12 +381,8 @@ class Project(DBItem, QObject):
                                     )
                         if updated:
                             Settings().log(f"Protocol '{current_protocol.machine_code}' updated.")
-                    else:
-                        protocol_writes_on_open = True
-                        protocol_obj, new_metrics = insert_protocol(self.project_file, current_protocol)
-                        self.protocols[protocol_obj.id] = protocol_obj
-                        self.metrics.update(new_metrics)
-                        Settings().log(f"Protocol '{current_protocol.machine_code}' inserted from protocol definitions.")
+                    # Protocols are not inserted here — they are added to the project
+                    # when the user adds a layer via the create/edit DCE form.
         except Exception as e:
             Settings().log(f"Error updating protocols: {e}", MESSAGE_LEVEL_WARNING)
 
