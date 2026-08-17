@@ -588,11 +588,11 @@ class Project(DBItem, QObject):
                     time.sleep(0.15)
 
                 if busy != 0:
-                    Settings().log("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", "QRiS", MESSAGE_LEVEL_WARNING)
+                    Settings().log("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", MESSAGE_LEVEL_WARNING)
 
             # Settings().log(f"Project flushed successfully (Vacuum={vacuum}).")
         except Exception as e:
-            Settings().log(f"Failed to flush changes to QRiS project: {e!s}", "QRiS", MESSAGE_LEVEL_WARNING)
+            Settings().log(f"Failed to flush changes to QRiS project: {e!s}", MESSAGE_LEVEL_WARNING)
 
     def request_flush(self) -> None:
         """Request a two-pass flush to improve WAL truncation when short-lived write handles are still active."""
