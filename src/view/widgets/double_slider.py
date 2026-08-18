@@ -21,13 +21,13 @@ class DoubleSlider(QtWidgets.QSlider):
         return float(super().value()) / self._multi
 
     def setMinimum(self, value):
-        return super().setMinimum(value * self._multi)
+        return super().setMinimum(int(value * self._multi))
 
     def setMaximum(self, value):
-        return super().setMaximum(value * self._multi)
+        return super().setMaximum(int(value * self._multi))
 
     def setSingleStep(self, value):
-        return super().setSingleStep(round(value) * self._multi)
+        return super().setSingleStep(int(round(value) * self._multi))
 
     def singleStep(self):
         return float(super().singleStep()) / self._multi
