@@ -52,7 +52,7 @@ class FrmDesign(FrmEvent):
         init_value = self.sliderPercentComplete.value()
         self.lblPercentCompleteValue = QtWidgets.QLabel(f"{init_value}%", self)
         font_metrics = QtGui.QFontMetrics(self.lblPercentCompleteValue.font())
-        text_width = font_metrics.width("100%  ")
+        text_width = font_metrics.horizontalAdvance("100%  ")
         text_height = font_metrics.height()
         self.lblPercentCompleteValue.setMinimumSize(text_width, text_height)
         self.lblPercentCompleteValue.setMaximumSize(text_width, text_height)
