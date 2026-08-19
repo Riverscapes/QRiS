@@ -111,11 +111,10 @@ class FrmAboutDialog(QtWidgets.QDialog):
         self.lblChangelog.setTextFormat(RICH_TEXT)
         self.grid.addWidget(self.lblChangelog, 3, 1, 1, 1)
 
-        self.grpAcknowledgements = QtWidgets.QGroupBox()
-        self.grpAcknowledgements.setTitle("Acknowledgements")
-        self.vert.addWidget(self.grpAcknowledgements)
+        self.lblAcknowledgementsHeader = QtWidgets.QLabel("Acknowledgements")
+        self.vert.addWidget(self.lblAcknowledgementsHeader)
 
-        self.lblAcknowledgements = QtWidgets.QTextBrowser(self.grpAcknowledgements)
+        self.lblAcknowledgements = QtWidgets.QTextBrowser()
         self.lblAcknowledgements.setEnabled(True)
         self.lblAcknowledgements.setReadOnly(True)
         self.lblAcknowledgements.setCursorWidth(0)
