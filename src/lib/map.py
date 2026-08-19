@@ -1,6 +1,6 @@
 import math
 
-from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsGeometry, QgsProject
 
 
 def get_zoom_level(canvas):
@@ -33,3 +33,17 @@ def get_map_center(canvas):
 
     center = extent.center()
     return center
+
+
+def get_utm_crs(centerline_geom: QgsGeometry) -> QgsCoordinateReferenceSystem:
+    """Determine the appropriate UTM CRS for the centerline's centroid location."""
+    centroid = centerline_geom.centroid().asPoint()
+    lon = centroid.x()
+    lat = centroid.y()
+
+    utm_zone = math.floor((lon + 180) / 6) + 1
+
+    if lat >= 0:
+        return QgsCoordinateReferenceSystem(f"EPSG:326{utm_zone:02d}")
+    else:
+        return QgsCoordinateReferenceSystem(f"EPSG:327{utm_zone:02d}")

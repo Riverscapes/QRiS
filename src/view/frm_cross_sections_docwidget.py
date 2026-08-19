@@ -3,7 +3,7 @@ Doc Widget for building x-sections from centerlines
 
 """
 
-from qgis.core import QgsApplication, QgsCoordinateTransform, QgsDistanceArea, QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
 from qgis.utils import iface
@@ -34,9 +34,6 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.project = project
         self.profile = profile
         self.map_manager = map_manager
-
-        self.d = QgsDistanceArea()
-        self.d.setEllipsoid("WGS84")
 
         self.cross_sections_setup(profile)
 
@@ -115,11 +112,11 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, "Cross Sections Error", "Load centerline before generating cross sections.")
             return
 
-        offset = (self.dblOffset.value() / self.d.measureLength(self.geom_centerline)) * self.geom_centerline.length()
-        spacing = (self.dblSpacing.value() / self.d.measureLength(self.geom_centerline)) * self.geom_centerline.length()
-        extension = ((self.dblExtension.value() / 2) / self.d.measureLength(self.geom_centerline)) * self.geom_centerline.length()
+        offset = self.dblOffset.value()
+        spacing = self.dblSpacing.value()
+        extension = self.dblExtension.value() / 2
 
-        cross_sections_task = CrossSectionsTask(self.geom_centerline, offset, spacing, extension, self.d)
+        cross_sections_task = CrossSectionsTask(self.geom_centerline, offset, spacing, extension, self.layer_centerlines.crs())
         # -- DEBUG --
         # xsections_task.run()
         # self.cross_sections_complete(xsections_task.xsections)
