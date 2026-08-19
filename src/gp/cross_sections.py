@@ -1,19 +1,20 @@
 import math
 
-from qgis.core import QgsFeature, QgsGeometry, QgsLineString, QgsPointXY, QgsTask
+from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsLineString, QgsPointXY, QgsProject, QgsTask
 from qgis.PyQt.QtCore import pyqtSignal
 
 from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL
+from ..lib.map import get_utm_crs
 from ..QRiS.settings import Settings
 
 
 class CrossSectionsTask(QgsTask):
     cross_sections_complete = pyqtSignal(dict)
 
-    def __init__(self, in_centerline: QgsLineString, offset: float, spacing: float, extension: float, in_polygon: QgsGeometry = None) -> None:
+    def __init__(self, in_centerline: QgsLineString, offset: float, spacing: float, extension: float, source_crs: QgsCoordinateReferenceSystem = None) -> None:
         super().__init__("Generate Cross Sections Task", QGSTASK_CAN_CANCEL)
 
-        self.polygon = in_polygon
+        self.source_crs = source_crs
         self.centerline = in_centerline
         self.offset = offset
         self.spacing = spacing
@@ -30,34 +31,51 @@ class CrossSectionsTask(QgsTask):
         internally and raise them in self.finished
         """
 
-        # Lay out points along line
-        # methodology based on https://gis.stackexchange.com/questions/302802/create-points-along-line-and-apply-a-90-offset-to-them-pyqgis
-
         self.xsections = {}
-        dist = self.spacing  # intial distance from start of line
+
+        # If source CRS is geographic (lat/lon), transform to a projected CRS (UTM)
+        # so that Cartesian math (cos/sin) works correctly in meters.
+        if self.source_crs and self.source_crs.isGeographic():
+            utm_crs = get_utm_crs(QgsGeometry(self.centerline))
+            transform = QgsCoordinateTransform(self.source_crs, utm_crs, QgsProject.instance())
+            centerline_geom = QgsGeometry(self.centerline)
+            centerline_geom.transform(transform)
+        else:
+            centerline_geom = QgsGeometry(self.centerline)
+            utm_crs = None
+
+        dist = self.spacing  # initial distance from start of line
         sequence = 0
 
-        while dist < self.centerline.length():
-            pt = self.centerline.interpolate(dist).asPoint()
-            alpha = math.degrees(self.centerline.interpolateAngle(dist)) - 90  # return in degree
+        while dist < centerline_geom.length():
+            pt = centerline_geom.interpolate(dist).asPoint()
+            # interpolateAngle returns radians clockwise from north (bearing convention).
+            # Negate to convert to math convention (CCW from east) for cos/sin.
+            alpha = -math.degrees(centerline_geom.interpolateAngle(dist))  # perpendicular angle in degrees
             # create delta x and y via triangulating
-            delY = math.cos(math.radians(alpha)) * self.extension
-            delX = math.sin(math.radians(alpha)) * self.extension
+            delX = math.cos(math.radians(alpha)) * self.extension
+            delY = math.sin(math.radians(alpha)) * self.extension
 
-            pointX = pt[0] + delX
-            pointY = pt[1] + delY
+            pointX = pt.x() + delX
+            pointY = pt.y() + delY
 
             pt1 = QgsPointXY(pointX, pointY)
-            feat = QgsFeature()
-            geom = QgsLineString([pt, pt1])
-
+            geom = QgsLineString([QgsPointXY(pt.x(), pt.y()), pt1])
             geom.extend(self.extension, 0.0)
-            # clipped_geom = self.polygon.intersection(geom)
 
-            feat.setGeometry(geom)
+            feat = QgsFeature()
+            feat.setGeometry(QgsGeometry(geom))
             self.xsections[sequence] = feat
             sequence += 1
             dist += self.spacing
+
+        # Transform cross sections back to the source CRS if we projected them
+        if utm_crs is not None:
+            back_transform = QgsCoordinateTransform(utm_crs, self.source_crs, QgsProject.instance())
+            for seq in self.xsections:
+                geom = self.xsections[seq].geometry()
+                geom.transform(back_transform)
+                self.xsections[seq].setGeometry(geom)
 
         return True
 
