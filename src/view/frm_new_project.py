@@ -193,6 +193,7 @@ class FrmNewProject(QtWidgets.QDialog):
         horiz_path.addWidget(self.txtPath)
 
         self.btnBrowse = QtWidgets.QPushButton("...")
+        self.btnBrowse.setFixedWidth(30)
         self.btnBrowse.clicked.connect(self.browse_root_folder)
         horiz_path.addWidget(self.btnBrowse)
 

@@ -163,6 +163,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
         horiz_folder.addWidget(self.txt_folder)
 
         self.btn_browse = QtWidgets.QPushButton("...")
+        self.btn_browse.setFixedWidth(30)
         self.btn_browse.clicked.connect(self.browse_folder)
         horiz_folder.addWidget(self.btn_browse)
 
