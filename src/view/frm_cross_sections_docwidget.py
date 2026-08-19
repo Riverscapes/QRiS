@@ -178,8 +178,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
         self.groupbox = QtWidgets.QGroupBox()
-        self.groupbox.setTitle("Cross Section Inputs")
-        self.groupbox.setStyleSheet("QGroupBox { border: 1px solid black;} QGroupBox::title {subcontrol-origin: margin; left: 10px; top: 10px;}")
+        self.groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
         self.vert.addWidget(self.groupbox)
 
         self.grid = QtWidgets.QGridLayout(self.groupbox)
@@ -241,21 +240,21 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.cmdReset.clicked.connect(self.cmdReset_click)
         self.grid.addWidget(self.cmdReset, 7, 0, 1, 1)
 
+        self.cmdGenerateXS = QtWidgets.QPushButton("Generate Cross Sections")
+        self.cmdGenerateXS.setToolTip("Generate a preview of the cross sections")
+        self.cmdGenerateXS.clicked.connect(self.cmdGenerateXS_click)
+        self.grid.addWidget(self.cmdGenerateXS, 7, 1, 1, 1)
+
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
         self.gridButtons.addWidget(add_help_button(self, "inputs/cross-sections"), 0, 0, 1, 1)
-
-        self.cmdGenerateXS = QtWidgets.QPushButton("Generate Cross Sections")
-        self.cmdGenerateXS.setToolTip("Generate a preview of the cross sections")
-        self.cmdGenerateXS.clicked.connect(self.cmdGenerateXS_click)
-        self.gridButtons.addWidget(self.cmdGenerateXS, 0, 2, 1, 1)
 
         self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, SPSZ_EXPANDING, SPSZ_MINIMUM), 0, 1, 1, 1)
 
         self.cmdExportXS = QtWidgets.QPushButton("Save Cross Sections")
         self.cmdExportXS.setToolTip("Save cross sections to the project, with an option to clip to a polygon mask")
         self.cmdExportXS.clicked.connect(self.cmdExportXS_click)
-        self.gridButtons.addWidget(self.cmdExportXS, 1, 2, 1, 1)
+        self.gridButtons.addWidget(self.cmdExportXS, 0, 2, 1, 1)
 
         self.setWidget(self.dockWidgetContents)
