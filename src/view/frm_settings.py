@@ -199,6 +199,7 @@ class FrmSettings(QDialog):
         horiz_export_path.addWidget(self.txt_path_export)
 
         btn_path_export = QPushButton("...")
+        btn_path_export.setFixedWidth(30)
         btn_path_export.clicked.connect(self.select_export_path)
         horiz_export_path.addWidget(btn_path_export)
 
@@ -270,6 +271,7 @@ class FrmSettings(QDialog):
         self.txt_protocol_folder.setToolTip("Select an optional folder to store custom protocols.")
         self.horiz_protocol_folder.addWidget(self.txt_protocol_folder)
         btn_protocol_folder = QPushButton("...")
+        btn_protocol_folder.setFixedWidth(40)
         btn_protocol_folder.clicked.connect(self.select_protocol_folder)
         self.horiz_protocol_folder.addWidget(btn_protocol_folder)
 

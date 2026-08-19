@@ -52,6 +52,7 @@ class FrmExportLayer(QtWidgets.QDialog):
         self.leFile.setReadOnly(True)
         self.leFile.setPlaceholderText("Select output file...")
         self.btnBrowse = QtWidgets.QPushButton("...")
+        self.btnBrowse.setFixedWidth(30)
         self.btnBrowse.clicked.connect(self.browse_file)
 
         path_layout = QtWidgets.QHBoxLayout()

@@ -344,6 +344,7 @@ class FileBrowseWidget(QtWidgets.QWidget):
         layout.addWidget(self.lineEdit)
 
         self.browseButton = QtWidgets.QPushButton("...", self)
+        self.browseButton.setFixedWidth(30)
         self.browseButton.setSizePolicy(SPSZ_MINIMUM, SPSZ_PREFERRED)
         self.browseButton.clicked.connect(self.browse)
         layout.addWidget(self.browseButton)

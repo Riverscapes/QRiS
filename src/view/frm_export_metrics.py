@@ -260,6 +260,7 @@ class FrmExportMetrics(QtWidgets.QDialog):
 
         # button for export location
         self.btn_location = QtWidgets.QPushButton("...")
+        self.btn_location.setFixedWidth(30)
         self.btn_location.setToolTip("Browse to the directory to save the exported metrics table")
         self.btn_location.clicked.connect(self.browse_path)
         self.horizOutput.addWidget(self.btn_location)

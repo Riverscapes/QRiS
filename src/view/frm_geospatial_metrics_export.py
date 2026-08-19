@@ -189,6 +189,7 @@ class FrmGeospatialMetricsExport(QtWidgets.QDialog):
         self.txtOutpath.setReadOnly(True)
         horizontalLayout.addWidget(self.txtOutpath)
         self.btnBrowse = QtWidgets.QPushButton("...")
+        self.btnBrowse.setFixedWidth(30)
         self.btnBrowse.clicked.connect(self.browse_path)
         horizontalLayout.addWidget(self.btnBrowse)
         layout.addLayout(horizontalLayout)
