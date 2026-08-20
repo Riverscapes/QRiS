@@ -517,42 +517,106 @@ class QRiSToolbar:
         system_metadata = metadata.get("system", {}) if isinstance(metadata.get("system", {}), dict) else {}
         project_srs = system_metadata.get("project_srs", None)
 
-        trigger_repaint = False
-        try:
-            if project_srs is not None:
-                project_srs = str(project_srs).strip()
-                current_crs = self.iface.mapCanvas().mapSettings().destinationCrs()
-                current_srs = current_crs.authid()
+        # Parse the project CRS first, if available
+        crs = None
+        if project_srs is not None:
+            project_srs = str(project_srs).strip()
+            crs = QgsCoordinateReferenceSystem.fromOgcWmsCrs(project_srs)
+            if not crs.isValid():
+                crs = QgsCoordinateReferenceSystem()
+                crs.createFromUserInput(project_srs)
+            if not crs.isValid():
+                Settings().log(f'Unable to resolve project_srs "{project_srs}" from project system metadata.', MESSAGE_LEVEL_WARNING)
+                crs = None
 
-                # Use robust CRS parsing for AUTHID strings like EPSG:xxxx and ESRI:xxxx.
-                crs = QgsCoordinateReferenceSystem.fromOgcWmsCrs(project_srs)
-                if not crs.isValid():
-                    crs = QgsCoordinateReferenceSystem()
-                    crs.createFromUserInput(project_srs)
+        # Override QSettings so QGIS's auto-CRS behavior (triggered when the first
+        # layer is added to an empty project) does NOT hijack the CRS.  The
+        # QgsLayerTreeMapCanvasBridge defers the first-layer CRS matching to run
+        # when the event loop next runs, so we must keep these overrides in place
+        # until AFTER that deferred logic has fired.
+        if crs is not None:
+            QSettings().setValue("Projections/layerDefaultCrs", project_srs)
+            QSettings().setValue("app/projections/newProjectCrsBehavior", "usePresetCrs")
+            self.qproject.setCrs(crs)
+            Settings().iface.mapCanvas().setDestinationCrs(crs)
 
-                if crs.isValid() and current_srs != crs.authid():
-                    QSettings().setValue("Projections/layerDefaultCrs", project_srs)
-                    QSettings().setValue("app/projections/newProjectCrsBehavior", "usePresetCrs")
-                    self.qproject.setCrs(crs)
-                    self.iface.mapCanvas().setDestinationCrs(crs)
-                    self.iface.mapCanvas().refresh()
-                    self.iface.mapCanvas().refreshAllLayers()
-                    Settings().msg_bar(
-                        "Map CRS set",
-                        f"Map CRS set to {crs.description()}",
-                        duration=5,
-                    )
-                    trigger_repaint = True
-                elif not crs.isValid():
-                    Settings().log(f'Unable to resolve project_srs "{project_srs}" from project system metadata.', MESSAGE_LEVEL_WARNING)
+        # Add basemap to ToC if empty
+        if len(QgsProject.instance().mapLayers().values()) == 0:
+            self.dockwidget.setup_blank_map(trigger_repaint=False)
 
-            # Add basemap to ToC if empty
-            if len(QgsProject.instance().mapLayers().values()) == 0:
-                self.dockwidget.setup_blank_map(trigger_repaint=trigger_repaint)
-        finally:
-            # restore default crs
-            QSettings().setValue("Projections/layerDefaultCrs", default_crs)
-            QSettings().setValue("app/projections/newProjectCrsBehavior", default_crs_behavior)
+        # Re-apply the project CRS after the basemap is added, in case auto-CRS
+        # still fired despite the pre-set above.
+        if crs is not None:
+            current_crs = Settings().iface.mapCanvas().mapSettings().destinationCrs()
+            if current_crs.authid() != crs.authid():
+                self.qproject.setCrs(crs)
+                Settings().iface.mapCanvas().setDestinationCrs(crs)
+            Settings().iface.mapCanvas().refresh()
+            Settings().iface.mapCanvas().refreshAllLayers()
+            Settings().msg_bar(
+                "Map CRS set",
+                f"Map CRS set to {crs.description()}",
+                duration=5,
+            )
+
+        # Defer QSettings restoration and project bounds zoom to after the event
+        # loop has run, so QGIS's deferred first-layer CRS matching and
+        # zoomToProjectExtent logic reads "usePresetCrs" and doesn't override
+        # our extent.
+        QtCore.QTimer.singleShot(0, lambda: self._restore_crs_settings(default_crs, default_crs_behavior, crs))
+        QtCore.QTimer.singleShot(0, lambda: self.zoom_to_project_bounds())
+
+    def _restore_crs_settings(self, default_crs, default_crs_behavior, project_crs):
+        """Restore QSettings and re-apply project CRS if needed."""
+        QSettings().setValue("Projections/layerDefaultCrs", default_crs)
+        QSettings().setValue("app/projections/newProjectCrsBehavior", default_crs_behavior)
+        if project_crs is not None:
+            current_crs = Settings().iface.mapCanvas().mapSettings().destinationCrs()
+            if current_crs.authid() != project_crs.authid():
+                self.qproject.setCrs(project_crs)
+                Settings().iface.mapCanvas().setDestinationCrs(project_crs)
+                Settings().iface.mapCanvas().refresh()
+                Settings().iface.mapCanvas().refreshAllLayers()
+
+    def zoom_to_project_bounds(self):
+        """Zoom to the extent of the project bounds AOI/Sample Frame, if one is set."""
+        project = self.dockwidget.qris_project
+        if project is None:
+            return
+
+        # Search all AOIs, sample frames, and valley bottoms for one with project_bounds=True
+        bounds_item = None
+        for item in list(project.aois.values()) + list(project.sample_frames.values()) + list(project.valley_bottoms.values()):
+            if item.system_metadata.get("project_bounds", False) is True:
+                bounds_item = item
+                break
+
+        if bounds_item is None:
+            return
+
+        # Load a temporary layer from the project GeoPackage to get the extent
+        temp_layer = bounds_item.get_temp_layer(project.project_file)
+        if temp_layer is None or not temp_layer.isValid() or temp_layer.featureCount() == 0:
+            return
+
+        extent = temp_layer.extent()
+        if extent.isNull():
+            return
+
+        # Transform extent to the canvas CRS if needed
+        canvas_crs = Settings().iface.mapCanvas().mapSettings().destinationCrs()
+        layer_crs = temp_layer.crs()
+        if layer_crs.authid() != canvas_crs.authid():
+            transform = QgsCoordinateTransform(layer_crs, canvas_crs, QgsProject.instance())
+            try:
+                extent = transform.transformBoundingBox(extent)
+            except Exception:
+                pass
+
+        # Buffer by 10% so the bounds aren't right at the edge
+        extent = extent.buffered(extent.width() * 0.1)
+        Settings().iface.mapCanvas().setExtent(extent)
+        Settings().iface.mapCanvas().refresh()
 
     def load_mru_projects(self):
 
