@@ -4,17 +4,20 @@ sidebar_position: 3
 description: QRiS Installation process
 ---
 
-QRiS runs as a plugin within [QGIS](https://qgis.org/), so you’ll need to install QGIS first.
-
-[QGIS](https://qgis.org/) is free, open-source, and available on Windows, macOS, Linux, and Android. Two release types are available:
+QRiS runs as a plugin within [QGIS](https://qgis.org/), so you will need to install QGIS first. [QGIS](https://qgis.org/) is free, open-source, and available on Windows, macOS, Linux, and Android. Two release types are available:
 - Long Term Release (LTR): more stable, recommended for most users
 - Experimental: newer features, less tested (Don't use these!)
 
-:::tip
-Do not use the latest QGIS releases, nor QGIS 4.0. QRiS is currently compatible with QGIS versions 3.34.0–3.40.0. Please install one of these versions from the downloads page below. If a specific version is required for a QRiS release, it will be noted in the release notes or within the QGIS Plugin Manager. Note, you can have multiple versions of QGIS installed on your machine.
+:::info
+Starting with QRiS version 1.3 (August 2026), QRiS is now compatible with both QGIS 3 and QGIS 4! The planned schedule is to make QGIS 4 the LTR release at the end of October 2026. At that time, we will make QGIS 4 the recommended version for QRiS.
 :::
 
-#### Recommended downloads (For Windows):
+QGIS releases can vary significantly between versions and operating systems. We recommend using the following versions of QGIS for QRiS:
+
+## Recommended downloads for Windows
+
+On Windows we recommend using one of the following releases. Note that the current QGIS LTR is 3.44, but this is not one of the recommended versions for QRiS.
+
 <ToolsWrapper
     cardsize="sm"
     cards={[
@@ -39,27 +42,21 @@ Do not use the latest QGIS releases, nor QGIS 4.0. QRiS is currently compatible 
     ]}
     />
 
-#### Recommended downloads (For macOS):
+## Recommended downloads for macOS
 
+Several QGIS releases on MacOS have omitted certain Python packages that are used by QRiS. Notably, MatPlotLib was missing from QGIS 4.0 on MacOS. QGIS version 4.2.1 fixes this issue and is the recommended version for QRiS on MacOS.
 
 <ToolsWrapper
     cardsize="lg"
     cards={[
         {
-        title: "QGIS 3.42.1",
+        title: "QGIS 4.2.1",
         description: "macOS version to use",
         logoUrl: "https://docs.riverscapes.net/img/tools/qgis-icon_anita02.png",
-        toolUrl: "https://www.qgis.org/downloads/macos/pr/qgis_pr_final-3_42_1_20250324_153321.dmg",
+        toolUrl: "https://qgis.org/downloads/macos/pr/qgis_pr_final-4_2_1.dmg",
        },
     ]}
     />
-
-
-:::warning
-**MacOS Users:** We recommend installing [this version of QGIS 3.42.1 instead](https://www.qgis.org/downloads/macos/pr/qgis_pr_final-3_42_1_20250324_153321.dmg). 
-:::
-
-There are lots of resources on QGIS if you are new to GIS or QGIS. We have some Knowledge Base articles and tutorials available [here](https://riverscapes.freshdesk.com/support/solutions/folders/153000173894) to help you get started.
 
 
 ## How to Install QRiS
