@@ -57,8 +57,11 @@ class ZonalMetricsTask(QgsTask):
         But ended up using this ogr method
         https://subscription.packtpub.com/book/application-development/9781787124837/3/ch03lvl1sec58/exporting-a-layer-to-the-geopackage-format
         """
+        if self.isCanceled():
+            return False
+
         try:
-            self.data = self.metrics.run()
+            self.data = self.metrics.run(cancel_check=lambda: self.isCanceled())
             self.polygons = self.metrics.polygons
 
         except Exception as ex:
@@ -75,21 +78,13 @@ class ZonalMetricsTask(QgsTask):
         result is the return value from self.run.
         """
 
-        if result:
-            Settings().log("Metrics Complete", MESSAGE_LEVEL_SUCCESS)
-
-            # base_name = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            # output_json = os.path.join(os.path.dirname(self.project.project_file), SURFACES_PARENT_FOLDER, f'geospatial_metric_summary_{base_name}.json')
-            # with open(output_json, 'w') as f:
-            #     json.dump(self.data, f, indent=4)
-            # webbrowser.open('file://' + output_json)
-
-        else:
+        if not result:
             if self.exception is None:
-                Settings().log("Geospatial Metrics unsuccessful but without exception (probably the task was canceled by the user)", MESSAGE_LEVEL_WARNING)
+                Settings().log("Geospatial Metrics was canceled by the user", MESSAGE_LEVEL_WARNING)
             else:
                 Settings().log(f"Geospatial metrics exception: {self.exception}", MESSAGE_LEVEL_CRITICAL)
-                # raise self.exception
+        else:
+            Settings().log("Metrics Complete", MESSAGE_LEVEL_SUCCESS)
 
         self.on_complete.emit(result, self.mask, self.polygons, self.data)
 

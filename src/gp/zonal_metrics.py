@@ -78,10 +78,12 @@ class ZonalMetrics:
         epsg = 26901 + zone_number
         return epsg
 
-    def run(self) -> dict:
+    def run(self, cancel_check=None) -> dict:
 
         metrics = {}
         for layer in self.layers:
+            if cancel_check is not None and cancel_check():
+                break
             if layer["type"] == "vector":
                 metric = self.process_vector(layer)
                 if metric is not None:
