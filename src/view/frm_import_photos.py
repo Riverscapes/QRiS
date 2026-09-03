@@ -101,7 +101,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
 
     def task_finished(self, context: QgsProcessingContext, successful, results):
         if not successful:
-            Settings().log("Task finished unsucessfully", "Import Photos Qgis Processing", MESSAGE_LEVEL_WARNING)
+            Settings().log("Task finished unsucessfully", MESSAGE_LEVEL_WARNING)
         output_layer = results["OUTPUT"]
 
         if output_layer.isValid():
@@ -163,6 +163,7 @@ class FrmImportPhotos(QtWidgets.QDialog):
         horiz_folder.addWidget(self.txt_folder)
 
         self.btn_browse = QtWidgets.QPushButton("...")
+        self.btn_browse.setFixedWidth(30)
         self.btn_browse.clicked.connect(self.browse_folder)
         horiz_folder.addWidget(self.btn_browse)
 

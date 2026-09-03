@@ -27,8 +27,8 @@ from .planning_container import PlanningContainer
 from .planning_container import load as load_planning_containers
 from .pour_point import PourPoint, load_pour_points
 from .profile import Profile, load_profiles
-from .protocol import insert_protocol, update_protocol
 from .protocol import load as load_protocols
+from .protocol import update_protocol
 from .raster import Raster, load_rasters
 from .sample_frame import SampleFrame, load_sample_frames
 from .scratch_vector import ScratchVector, load_scratch_vectors
@@ -72,18 +72,19 @@ def validate_protocol_metric_dependencies(protocol_definitions) -> list:
     """
 
     errors = []
-    system_protocols = []
+    system_protocols = set()
     for p in protocol_definitions:
         protocol_type = str(getattr(p, "protocol_type", "")).strip().lower()
         protocol_status = str(getattr(p, "status", "")).strip().lower()
         # Backward compatibility for drafts that still mark status=system.
         if protocol_type == SYSTEM_PROTOCOL_TYPE or protocol_status == SYSTEM_PROTOCOL_TYPE:
-            system_protocols.append(p.machine_code)
+            system_protocols.add(p.machine_code)
 
-    if len(system_protocols) > 1:
-        errors.append(f"Only one system protocol is supported, found: {', '.join(system_protocols)}")
-    elif len(system_protocols) == 1 and system_protocols[0] != INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
-        errors.append(f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols[0]}'")
+    system_protocols_list = sorted(system_protocols)
+    if len(system_protocols_list) > 1:
+        errors.append(f"Only one system protocol is supported, found: {', '.join(system_protocols_list)}")
+    elif len(system_protocols_list) == 1 and system_protocols_list[0] != INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
+        errors.append(f"System protocol must use machine_code '{INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE}', found '{system_protocols_list[0]}'")
 
     for protocol in protocol_definitions:
         protocol_machine_code = protocol.machine_code
@@ -201,10 +202,10 @@ class Project(DBItem, QObject):
                                         break
                                     # Try float comparison if strings don't match exactly (e.g. "1.0" vs "1")
                                     try:
-                                        if float(protocol_layer.layer_version) == float(layer_def.version):
+                                        if protocol_layer.layer_version is not None and layer_def.version is not None and float(protocol_layer.layer_version) == float(layer_def.version):
                                             existing_layer = protocol_layer
                                             break
-                                    except ValueError:
+                                    except (ValueError, TypeError):
                                         pass
 
                             if existing_layer:
@@ -380,12 +381,8 @@ class Project(DBItem, QObject):
                                     )
                         if updated:
                             Settings().log(f"Protocol '{current_protocol.machine_code}' updated.")
-                    else:
-                        protocol_writes_on_open = True
-                        protocol_obj, new_metrics = insert_protocol(self.project_file, current_protocol)
-                        self.protocols[protocol_obj.id] = protocol_obj
-                        self.metrics.update(new_metrics)
-                        Settings().log(f"Protocol '{current_protocol.machine_code}' inserted from protocol definitions.")
+                    # Protocols are not inserted here — they are added to the project
+                    # when the user adds a layer via the create/edit DCE form.
         except Exception as e:
             Settings().log(f"Error updating protocols: {e}", MESSAGE_LEVEL_WARNING)
 
@@ -591,11 +588,11 @@ class Project(DBItem, QObject):
                     time.sleep(0.15)
 
                 if busy != 0:
-                    Settings().log("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", "QRiS", MESSAGE_LEVEL_WARNING)
+                    Settings().log("Project flush checkpoint remained busy after retries; WAL may stay non-zero until handles are released.", MESSAGE_LEVEL_WARNING)
 
             # Settings().log(f"Project flushed successfully (Vacuum={vacuum}).")
         except Exception as e:
-            Settings().log(f"Failed to flush changes to QRiS project: {e!s}", "QRiS", MESSAGE_LEVEL_WARNING)
+            Settings().log(f"Failed to flush changes to QRiS project: {e!s}", MESSAGE_LEVEL_WARNING)
 
     def request_flush(self) -> None:
         """Request a two-pass flush to improve WAL truncation when short-lived write handles are still active."""

@@ -130,7 +130,8 @@ def load_protocol_definitions(project_directory: str, show_experimental: Optiona
     directories.append(settings.getValue(LOCAL_PROTOCOL_FOLDER) or "")
     directories.append(settings.getValue("protocolsDir"))
 
-    protocols = list()
+    protocols = []
+    seen_keys: set[tuple[str, str]] = set()
     for protocol_directory in directories:
         if protocol_directory is None or not os.path.isdir(protocol_directory):
             continue
@@ -142,6 +143,12 @@ def load_protocol_definitions(project_directory: str, show_experimental: Optiona
                         continue
                     if protocol.status == "deprecated" and not show_deprecated:
                         continue
+                    # Preserve directory precedence (project -> local custom -> bundled)
+                    # by keeping the first machine_code/version pair encountered.
+                    key = ((protocol.machine_code or "").strip().upper(), str(protocol.version or "").strip())
+                    if key in seen_keys:
+                        continue
+                    seen_keys.add(key)
                     protocols.append(protocol)
 
     return protocols

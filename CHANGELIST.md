@@ -1,5 +1,22 @@
 # QRiS Plugin
 
+## [1.3] Aug 20 2026
+
+### Fixed
+- Bug with virtual field enum
+- Bug when multiple system protocols exist
+- Bug when inserting protocols on project load
+- Bug with log messages
+- Bug when loading fonts from settings
+- Bug with integer conversion for DoubleSlider Widget
+- Bug with cross section angles #1100
+- Cross Section Dockable Panel UI improvements #1101
+- Groupbox issue on About form for MacOS #1094
+- Fix button width for "..." buttons #1095
+- Failing to restore project SRS, zoom to project bounds on project load #1096
+- Bug with AOI Zonal Statistics cancel #1097
+
+
 ## [1.2.5.4] Aug 10 2026
 
 ### Changed

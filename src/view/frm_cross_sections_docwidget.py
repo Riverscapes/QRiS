@@ -3,7 +3,7 @@ Doc Widget for building x-sections from centerlines
 
 """
 
-from qgis.core import QgsApplication, QgsCoordinateTransform, QgsDistanceArea, QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer
+from qgis.core import QgsApplication, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer
 from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
 from qgis.utils import iface
@@ -34,9 +34,6 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.project = project
         self.profile = profile
         self.map_manager = map_manager
-
-        self.d = QgsDistanceArea()
-        self.d.setEllipsoid("WGS84")
 
         self.cross_sections_setup(profile)
 
@@ -115,11 +112,11 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.information(self, "Cross Sections Error", "Load centerline before generating cross sections.")
             return
 
-        offset = (self.dblOffset.value() / self.d.measureLength(self.geom_centerline)) * self.geom_centerline.length()
-        spacing = (self.dblSpacing.value() / self.d.measureLength(self.geom_centerline)) * self.geom_centerline.length()
-        extension = ((self.dblExtension.value() / 2) / self.d.measureLength(self.geom_centerline)) * self.geom_centerline.length()
+        offset = self.dblOffset.value()
+        spacing = self.dblSpacing.value()
+        extension = self.dblExtension.value() / 2
 
-        cross_sections_task = CrossSectionsTask(self.geom_centerline, offset, spacing, extension, self.d)
+        cross_sections_task = CrossSectionsTask(self.geom_centerline, offset, spacing, extension, self.layer_centerlines.crs())
         # -- DEBUG --
         # xsections_task.run()
         # self.cross_sections_complete(xsections_task.xsections)
@@ -181,8 +178,7 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
         self.groupbox = QtWidgets.QGroupBox()
-        self.groupbox.setTitle("Cross Section Inputs")
-        self.groupbox.setStyleSheet("QGroupBox { border: 1px solid black;} QGroupBox::title {subcontrol-origin: margin; left: 10px; top: 10px;}")
+        self.groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
         self.vert.addWidget(self.groupbox)
 
         self.grid = QtWidgets.QGridLayout(self.groupbox)
@@ -244,21 +240,21 @@ class FrmCrossSectionsDocWidget(QtWidgets.QDockWidget):
         self.cmdReset.clicked.connect(self.cmdReset_click)
         self.grid.addWidget(self.cmdReset, 7, 0, 1, 1)
 
+        self.cmdGenerateXS = QtWidgets.QPushButton("Generate Cross Sections")
+        self.cmdGenerateXS.setToolTip("Generate a preview of the cross sections")
+        self.cmdGenerateXS.clicked.connect(self.cmdGenerateXS_click)
+        self.grid.addWidget(self.cmdGenerateXS, 7, 1, 1, 1)
+
         self.gridButtons = QtWidgets.QGridLayout()
         self.vert.addLayout(self.gridButtons)
 
         self.gridButtons.addWidget(add_help_button(self, "inputs/cross-sections"), 0, 0, 1, 1)
-
-        self.cmdGenerateXS = QtWidgets.QPushButton("Generate Cross Sections")
-        self.cmdGenerateXS.setToolTip("Generate a preview of the cross sections")
-        self.cmdGenerateXS.clicked.connect(self.cmdGenerateXS_click)
-        self.gridButtons.addWidget(self.cmdGenerateXS, 0, 2, 1, 1)
 
         self.gridButtons.addItem(QtWidgets.QSpacerItem(0, 0, SPSZ_EXPANDING, SPSZ_MINIMUM), 0, 1, 1, 1)
 
         self.cmdExportXS = QtWidgets.QPushButton("Save Cross Sections")
         self.cmdExportXS.setToolTip("Save cross sections to the project, with an option to clip to a polygon mask")
         self.cmdExportXS.clicked.connect(self.cmdExportXS_click)
-        self.gridButtons.addWidget(self.cmdExportXS, 1, 2, 1, 1)
+        self.gridButtons.addWidget(self.cmdExportXS, 0, 2, 1, 1)
 
         self.setWidget(self.dockWidgetContents)
