@@ -1,0 +1,91 @@
+---
+title: "Step 4: Create and Calculate an Analysis"
+sidebar_position: 5
+description: Create a QRiS analysis using the Bailey Flat sample frames and calculate Dam Density across monitoring events.
+---
+
+# Step 4: Create and Calculate an Analysis
+
+**Time: ~5 minutes**
+
+Now you'll use the DCEs and sample frames to create something new: an analysis calculating **Dam Density**.
+
+
+## Create the analysis
+
+1. In the QRiS Project Explorer, right-click **Analyses**.
+2. Choose **Create New Analysis**.
+3. Enter the settings below.
+
+| Setting | Choose |
+| --- | --- |
+| **Name** | `Quickstart Analysis` |
+| **Analysis Mask / Sample Frame** | `SF` |
+| **Valley Bottom** | `Valley Bottom` |
+| **Centerline** | `CL` |
+| **DEM** | Leave blank |
+
+
+## Choose one metric
+
+QRiS can calculate many different riverscape metrics. For this quickstart, you'll use just one.
+
+Under the **Metrics and Indicators** tab, expand the **LTPBR Protocol** metric list:
+
+1. Leave the metrics set to **None** by default.
+2. Find **Dam Density**.
+3. Under **Usage**, change **None** to **Metric**.
+
+**Dam Density** measures the number of dams per unit length of riverscape.
+
+
+## Choose your data capture events
+
+By default, all available data capture events are included. We will limit our analysis to the two DCEs we already explored.
+
+Under the **Data Capture Events** tab:
+1. Click **Select None**.
+2. Select only **October 2021 Pre Project** and **November 2021 Implementation**.
+3. Click **OK** to create the analysis.
+
+
+
+## Calculate the metric
+
+Your new **Quickstart Analysis** should now be open.
+
+1. Click **Calculate...**.
+2. For **Data Capture Events**, choose **All data capture events**.
+3. For **Sample Frames**, choose **All Sample Frames**.
+4. Leave the remaining options as-is.
+5. Click **OK**.
+
+QRiS will calculate Dam Density for each sample frame and data capture event that contains observations applicable to the chosen metric, Dam Density.
+
+
+
+
+## Compare the two DCEs
+
+Let's return to the two data capture events you looked at in Step 2.
+Use the dropdowns in the analysis window to:
+
+1. Set **Mask Polygon:** to `2`
+2. Set **Data Capture Event:** to `October 2021 Pre Project`
+3. Note the **Dam Density** value.
+4. Change only the Data Capture Event to **November 2021 Implementation**.
+
+Watch the **Dam Density** value change.
+
+Earlier you saw the observations change on the map. Now QRiS has turned that difference into a comparable metric.
+
+
+
+## What to know
+
+An **analysis** connects three pieces of the project:
+- observations through time (DCEs),
+- a defined measurement area (sample frame),
+- a defined metric (Dam Density).
+
+QRiS calculates the metric consistently across the monitoring record.
