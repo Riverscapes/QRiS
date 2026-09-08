@@ -34,22 +34,20 @@ class CenterlineTask(QgsTask):
         internally and raise them in self.finished
         """
 
-        start_clipline = self.start_clipline
-        end_clipline = self.end_clipline
-
-        g_startline = QgsGeometry(start_clipline.clone())
-        g_endline = QgsGeometry(end_clipline.clone())
+        g_startline = QgsGeometry(self.start_clipline.clone())
+        g_endline = QgsGeometry(self.end_clipline.clone())
+        g_in_polygon = QgsGeometry(self.in_polygon)
 
         try:
             # Get one and only one polygon if multipolygon.
-            if self.in_polygon.get().wkbType() == QgsWkbTypes.MultiPolygon:
-                for part in self.in_polygon.get().parts():  # what if more than one part intersects both cliplines??
+            if g_in_polygon.get().wkbType() == QgsWkbTypes.MultiPolygon:
+                for part in g_in_polygon.get().parts():  # what if more than one part intersects both cliplines??
                     g_part = QgsGeometry(part.clone())
                     if g_part.intersects(g_endline) and g_part.intersects(g_startline):
                         g_single_main_poly = g_part
                         break
             else:
-                g_single_main_poly = QgsGeometry(self.in_polygon)
+                g_single_main_poly = QgsGeometry(g_in_polygon)
 
             # Get perimeter only
             g_single_main_poly = g_single_main_poly.removeInteriorRings()
@@ -62,8 +60,8 @@ class CenterlineTask(QgsTask):
 
             midpoint_start = QgsGeometry(g_inner_startline.get().interpolatePoint(g_inner_startline.get().length() / 2))
             midpoint_end = QgsGeometry(g_inner_endline.get().interpolatePoint(g_inner_endline.get().length() / 2))
-            midpoint_start_buffer = QgsGeometry(midpoint_start.buffer(0.00001, 4))
-            midpoint_end_buffer = QgsGeometry(midpoint_end.buffer(0.00001, 4))
+            midpoint_start_buffer = QgsGeometry(midpoint_start.buffer(1.0, 4))
+            midpoint_end_buffer = QgsGeometry(midpoint_end.buffer(1.0, 4))
 
             g_inner_startline = None
             g_inner_endline = None
@@ -75,13 +73,15 @@ class CenterlineTask(QgsTask):
                 g_clipping_poly = QgsGeometry(g_single_main_poly)
 
             # Find the central polygon by clipping the start and end lines
-            _result0, l_clippedpolys0, _l_test0 = g_clipping_poly.splitGeometry([QgsPointXY(start_clipline.startPoint()), QgsPointXY(start_clipline.endPoint())], True)
+            start_line_pts = g_startline.asPolyline()
+            end_line_pts = g_endline.asPolyline()
+            _result0, l_clippedpolys0, _l_test0 = g_clipping_poly.splitGeometry([start_line_pts[0], start_line_pts[1]], True)
             g_clipped_poly0 = QgsGeometry(l_clippedpolys0[0])
             if g_clipping_poly.intersects(g_endline):
-                _result1, l_clippedpolys1, _l_test1 = g_clipping_poly.splitGeometry([QgsPointXY(end_clipline.startPoint()), QgsPointXY(end_clipline.endPoint())], True)
+                _result1, l_clippedpolys1, _l_test1 = g_clipping_poly.splitGeometry([end_line_pts[0], end_line_pts[1]], True)
                 g_clipped_poly1 = QgsGeometry(l_clippedpolys1[0])
             else:
-                _result1, l_clippedpolys1, _l_test1 = g_clipped_poly0.splitGeometry([QgsPointXY(end_clipline.startPoint()), QgsPointXY(end_clipline.endPoint())], True)
+                _result1, l_clippedpolys1, _l_test1 = g_clipped_poly0.splitGeometry([end_line_pts[0], end_line_pts[1]], True)
                 g_clipped_poly1 = QgsGeometry(l_clippedpolys1[0])
 
             test_polygons = [g_clipped_poly0, g_clipped_poly1, g_clipping_poly]
@@ -131,12 +131,22 @@ class CenterlineTask(QgsTask):
                     if g_line.intersects(g_startline) and g_line.intersects(g_endline):
                         g_centerline_out = QgsGeometry(g_line)
                         break
+                # If no single part spans both clip lines, union all fragments
+                # back into one continuous line. All parts are legitimate pieces
+                # of the same centerline, just fragmented by the polygon boundary
+                # clip — no extra junk in the intersection result.
+                if g_centerline_out is None:
+                    combined = QgsGeometry.unaryUnion([QgsGeometry(p.clone()) for p in g_centerline_intersected.parts()])
+                    if combined and not combined.isEmpty():
+                        g_centerline_out = QgsGeometry(combined.mergeLines())
             else:
                 g_centerline_out = QgsGeometry(g_centerline_intersected)
 
             if g_centerline_out is None or g_centerline_out.isEmpty():
                 raise Exception("Centerline task has produced empty centerline polygon.")
 
+            # Keep the result in the projected UTM CRS (meters). The view applies
+            # smoothing in meters and transforms to EPSG:4326 only at save time.
             self.centerline = QgsGeometry(g_centerline_out)
 
             return True

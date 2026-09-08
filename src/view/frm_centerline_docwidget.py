@@ -8,8 +8,9 @@ from qgis.PyQt import QtWidgets
 from qgis.PyQt.QtCore import pyqtSignal, pyqtSlot
 from qgis.PyQt.QtGui import QColor
 
-from ..compat import DLG_ACCEPTED, SPSZ_EXPANDING, SPSZ_MINIMUM, WA_QUIT_ON_CLOSE
+from ..compat import DLG_ACCEPTED, MESSAGE_LEVEL_CRITICAL, SPSZ_EXPANDING, SPSZ_MINIMUM, WA_QUIT_ON_CLOSE
 from ..gp.centerlines import CenterlineTask
+from ..lib.map import get_utm_crs
 from ..model.db_item import DBItem
 from ..model.layer import Layer
 from ..model.profile import Profile
@@ -48,11 +49,11 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
     def centerline_setup(self, polygon_source: DBItem):
 
-        self.feat_centerline = None
-        self.geom_centerline = None
-        self.geom_polygon = None
-        self.geom_start = None
-        self.geom_end = None
+        self.feat_centerline: QgsFeature = None
+        self.geom_centerline: QgsGeometry = None
+        self.geom_polygon: QgsGeometry = None
+        self.geom_start: QgsGeometry = None
+        self.geom_end: QgsGeometry = None
         self.densify_distance = None
         self.fields = None
         self.transform = None
@@ -68,11 +69,13 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         self.polygon_crs = self.polygon_layer.crs()
         canvas_crs = QgsCoordinateReferenceSystem(Settings().iface.mapCanvas().mapSettings().destinationCrs().authid())
-        self.transform = QgsCoordinateTransform(canvas_crs, self.polygon_crs, QgsProject.instance())
+        self.transform = QgsCoordinateTransform(canvas_crs, self.polygon_crs, QgsProject.instance().transformContext())
 
         self.d.setSourceCrs(self.polygon_crs, QgsProject.instance().transformContext())
 
-        # Set up the Preview Layers
+        # Set up the Preview Layers in the polygon CRS. The start/end lines
+        # are stored in polygon_crs, and QGIS on-the-fly reprojection handles
+        # the UTM centerline display when we transform it for preview.
         self.remove_preview_layers()
         Settings().iface.mapCanvas().refresh()
         layer_uri = f"linestring?crs={self.polygon_crs.authid()}"
@@ -153,9 +156,16 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         geom_start = self.geom_start.clone()
         geom_end = self.geom_end.clone()
 
-        length = geom_polygon.get().perimeter()
-        length_measure = self.d.measurePerimeter(geom_polygon)
-        self.densify_distance = (self.dblDensity.value() / length_measure) * length
+        # The dial value is in meters. If the source CRS is geographic, transform
+        # the inputs to UTM on the main thread so the task can use meter math.
+        if self.polygon_crs.isGeographic():
+            utm_crs = get_utm_crs(geom_polygon)
+            xform = QgsCoordinateTransform(self.polygon_crs, utm_crs, QgsProject.instance().transformContext())
+            geom_polygon.transform(xform)
+            geom_start.transform(xform)
+            geom_end.transform(xform)
+
+        self.densify_distance = self.dblDensity.value()
 
         centerline_task = CenterlineTask(geom_polygon, geom_start, geom_end, self.densify_distance)
         # DEBUG
@@ -174,12 +184,20 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         if self.feat_centerline is None:
             QtWidgets.QMessageBox.information(self, "Centerlines Error", "Generate the centerline before saving.")
             return
-        geom_centerline = self.feat_centerline.geometry()
+
+        # Use the original centerline geometry (in UTM for geographic sources,
+        # or polygon CRS for already-projected sources).
+        geom_centerline = QgsGeometry(self.geom_centerline)
         if geom_centerline.isMultipart():
             QtWidgets.QMessageBox.information(self, "Centerlines Error", "Unable to save a multipart centerline.")
             return
 
-        transform = QgsCoordinateTransform(self.polygon_crs, QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance())
+        # Transform to EPSG:4326 (the QRiS storage CRS) before saving to the GPKG.
+        if self.polygon_crs.isGeographic():
+            src_crs = get_utm_crs(self.geom_polygon)
+        else:
+            src_crs = self.polygon_crs
+        transform = QgsCoordinateTransform(src_crs, QgsCoordinateReferenceSystem("EPSG:4326"), QgsProject.instance().transformContext())
         geom_centerline.transform(transform)
 
         sline_length = self.d.measureLine(QgsPointXY(geom_centerline.get().points()[0]), QgsPointXY(geom_centerline.get().points()[-1]))
@@ -255,9 +273,9 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
 
         geom_centerline_raw = QgsGeometry(centerline)
         smoothing_iter = self.dblSmoothingIter.value()
-        length = geom_centerline_raw.length()
-        length_measure = self.d.measureLength(geom_centerline_raw)
-        smoothing_dist = (self.dblSmoothingMin.value() / length_measure) * length
+        # The centerline is in a projected CRS (UTM if the polygon CRS was
+        # geographic), so distances are in meters and the dial is used directly.
+        smoothing_dist = self.dblSmoothingMin.value()
         smoothing_offset = self.dblSmoothingOffset.value()
         smoothing_angle = self.dblSmoothingAngle.value()
 
@@ -266,16 +284,47 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         else:
             self.geom_centerline = QgsGeometry(geom_centerline_raw.smooth(smoothing_iter, smoothing_offset, smoothing_dist, smoothing_angle))
 
-        # Orient so vertex[0] is at the start clip line (upstream end)
+        # The merged centerline can still be multi-part (disconnected fragments
+        # from the boundary clip). Concatenate all parts into one polyline so
+        # orientation works and the preview/save see a single line.
+        cl_pts = []
+        for part in self.geom_centerline.get().parts():
+            cl_pts.extend(part.points())
+        if not cl_pts:
+            Settings.log("Centerline task produced an empty centerline", MESSAGE_LEVEL_CRITICAL)
+            return
+        self.geom_centerline = QgsGeometry(QgsLineString(cl_pts))
+
+        # Orient so vertex[0] is at the start clip line (upstream end).
+        # The returned centerline is in UTM (if the polygon CRS was geographic)
+        # or the polygon CRS if it was already projected, so transform the start
+        # clip line into that same CRS for the comparison.
+        if self.polygon_crs.isGeographic():
+            out_crs = get_utm_crs(self.geom_polygon)
+        else:
+            out_crs = self.polygon_crs
+        transform = QgsCoordinateTransform(self.polygon_crs, out_crs, QgsProject.instance().transformContext())
+
         start_pts = self.geom_start.points()
         start_mid = QgsGeometry.fromPointXY(QgsPointXY((start_pts[0].x() + start_pts[-1].x()) / 2.0, (start_pts[0].y() + start_pts[-1].y()) / 2.0))
+        start_mid.transform(transform)
+
         cl_pts = self.geom_centerline.get().points()
         if QgsGeometry.fromPointXY(QgsPointXY(cl_pts[-1])).distance(start_mid) < QgsGeometry.fromPointXY(QgsPointXY(cl_pts[0])).distance(start_mid):
             self.geom_centerline = QgsGeometry(QgsLineString(list(reversed(cl_pts))))
 
         self.feat_centerline = QgsFeature()
-        geom = QgsGeometry(self.geom_centerline)
-        self.feat_centerline.setGeometry(geom)
+
+        # The centerline is in UTM for geographic sources, but the preview
+        # layer is in polygon_crs. Transform a copy for display.
+        if self.polygon_crs.isGeographic():
+            out_crs = get_utm_crs(self.geom_polygon)
+            preview_transform = QgsCoordinateTransform(out_crs, self.polygon_crs, QgsProject.instance().transformContext())
+            geom_preview = QgsGeometry(self.geom_centerline)
+            geom_preview.transform(preview_transform)
+        else:
+            geom_preview = QgsGeometry(self.geom_centerline)
+        self.feat_centerline.setGeometry(geom_preview)
 
         self.fields = {
             "parent_polygon_type": self.polygon_source.db_table_name,
@@ -388,7 +437,7 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridSmoothing = QtWidgets.QGridLayout()
         self.tabSmoothing.setLayout(self.gridSmoothing)
 
-        self.lblDensity = QtWidgets.QLabel("Densify Distance")
+        self.lblDensity = QtWidgets.QLabel("Polygon Densify Dist.")
         self.lblDensity.setToolTip("Densify the polygon by adding regularly placed extra nodes inside each segment so that the maximum distance between any two nodes does not exceed the specified distance")
         self.gridSmoothing.addWidget(self.lblDensity, 0, 0, 1, 1)
 
@@ -399,24 +448,24 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.gridSmoothing.addWidget(self.dblDensity, 0, 1, 1, 1)
 
         self.lblSmoothingIter = QtWidgets.QLabel("Smoothing Iterations")
-        self.lblSmoothingIter.setToolTip("number of smoothing iterations to run. More iterations results in a smoother geometry. Set to 0 for no smoothing.")
+        self.lblSmoothingIter.setToolTip("number of smoothing iterations to run. More iterations results in a smoother geometry, but produces more vertices. Set to 0 for no smoothing.")
         self.gridSmoothing.addWidget(self.lblSmoothingIter, 1, 0, 1, 1)
 
         self.dblSmoothingIter = QtWidgets.QSpinBox()
-        self.dblSmoothingIter.setValue(10)
-        self.dblSmoothingIter.setRange(0, 10)
+        self.dblSmoothingIter.setValue(1)
+        self.dblSmoothingIter.setRange(0, 5)
         self.gridSmoothing.addWidget(self.dblSmoothingIter, 1, 1, 1, 1)
 
         self.lblSmoothingOffset = QtWidgets.QLabel("Smoothing Offset")
         self.lblSmoothingOffset.setToolTip(
-            r"fraction of line to create new vertices along, between 0 and 1.0, e.g., the default value of 0.25 will create new vertices 25% and 75% along each line segment of the geometry for each iteration."
+            r"fraction of line to create new vertices along, between 0 and 1.0, e.g., the default value of 0.5 will create new vertices 50% along the distance of each line segment of the geometry for each iteration."
             "Smaller values result in “tighter” smoothing."
         )
         self.gridSmoothing.addWidget(self.lblSmoothingOffset, 2, 0, 1, 1)
 
         self.dblSmoothingOffset = QtWidgets.QDoubleSpinBox()
         self.dblSmoothingOffset.setDecimals(2)
-        self.dblSmoothingOffset.setValue(0.25)
+        self.dblSmoothingOffset.setValue(0.5)
         self.dblSmoothingOffset.setSingleStep(0.05)
         self.dblSmoothingOffset.setRange(0, 1)
         self.gridSmoothing.addWidget(self.dblSmoothingOffset, 2, 1, 1, 1)
@@ -443,6 +492,10 @@ class FrmCenterlineDocWidget(QtWidgets.QDockWidget):
         self.dblSmoothingAngle.setRange(0, 180)
         self.dblSmoothingAngle.setValue(180.0)
         self.gridSmoothing.addWidget(self.dblSmoothingAngle, 4, 1, 1, 1)
+
+        # Turn off the smoothing angle for now, as it is not currently used in the smoothing algorithm
+        self.lblSmoothingAngle.setVisible(False)
+        self.dblSmoothingAngle.setVisible(False)
 
         # add grid for the buttons
         self.gridButtons = QtWidgets.QGridLayout()
