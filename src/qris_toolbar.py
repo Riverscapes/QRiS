@@ -21,6 +21,7 @@
  ***************************************************************************/
 """
 
+import json
 import os.path
 import socket
 
@@ -28,6 +29,9 @@ from qgis.core import (
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
+    QgsLayoutFrame,
+    QgsLayoutItemManualTable,
+    QgsLayoutItemTextTable,
     QgsProject,
 )
 from qgis.gui import QgisInterface, QgsMapToolEmitPoint
@@ -37,6 +41,9 @@ from qgis.PyQt.QtCore import QSettings, pyqtSlot
 # Initialize Qt resources from file resources.py
 from . import resources  # noqa: F401  # side-effect import: registers Qt resource paths
 from .compat import (
+    DIALOG_BTN_CANCEL,
+    DIALOG_BTN_OK,
+    DLG_ACCEPTED,
     LEFT_DOCK,
     MESSAGE_LEVEL_CRITICAL,
     MESSAGE_LEVEL_WARNING,
@@ -54,6 +61,7 @@ from .gp.load_project_task import LoadProjectTask
 from .gp.update_metadata import check_metadata, update_metadata
 from .gp.watershed_attributes import WatershedAttributes
 from .lib.data_exchange import browse_data_exchange as open_data_exchange
+from .lib.layout_tools import open_layout, print_layout, serialize_layout, set_layout_table, set_layout_text
 from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.settings import CONSTANTS, Settings
@@ -61,6 +69,7 @@ from .view.frm_about import FrmAboutDialog
 
 # Import the code for the DockWidget
 from .view.frm_dockwidget import QRiSDockWidget
+from .view.frm_map_template_picker import FrmMapTemplatePicker
 from .view.frm_new_project import FrmNewProject
 from .view.frm_settings import (
     DOCK_WIDGET_LOCATION,
@@ -315,12 +324,234 @@ class QRiSToolbar:
 
         self.toolbar.addWidget(self.qris_button)
 
+        self.layout_button = QtWidgets.QToolButton(self.toolbar)
+        self.layout_button.setText("Load Layout")
+        self.layout_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/layout"))
+        self.layout_button.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
+        self.layout_button.clicked.connect(self.test_layout)
+        self.toolbar.addWidget(self.layout_button)
+
+        self.layout_stringify_button = QtWidgets.QToolButton(self.toolbar)
+        self.layout_stringify_button.setText("Stringify Layout")
+        self.layout_stringify_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/layout"))
+        self.layout_stringify_button.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
+        self.layout_stringify_button.clicked.connect(self.stringify_layout)
+        self.toolbar.addWidget(self.layout_stringify_button)
+
+        self.layout_pdf_button = QtWidgets.QToolButton(self.toolbar)
+        self.layout_pdf_button.setText("PDF Layout")
+        self.layout_pdf_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/layout"))
+        self.layout_pdf_button.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
+        self.layout_pdf_button.clicked.connect(self.pdf_layout)
+        self.toolbar.addWidget(self.layout_pdf_button)
+
+        self.layout_text_button = QtWidgets.QToolButton(self.toolbar)
+        self.layout_text_button.setText("Set Layout Text")
+        self.layout_text_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/layout"))
+        self.layout_text_button.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
+        self.layout_text_button.clicked.connect(self.set_layout_text)
+        self.toolbar.addWidget(self.layout_text_button)
+
+        self.layout_table_button = QtWidgets.QToolButton(self.toolbar)
+        self.layout_table_button.setText("Set Layout Table")
+        self.layout_table_button.setIcon(QtGui.QIcon(":/plugins/qris_toolbar/table"))
+        self.layout_table_button.setToolButtonStyle(TOOL_BTN_TEXT_BESIDE)
+        self.layout_table_button.clicked.connect(self.set_layout_table)
+        self.toolbar.addWidget(self.layout_table_button)
+
         canvas = self.iface.mapCanvas()
         self.watershed_html_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_html_tool.canvasClicked.connect(self.html_watershed_metrics)
 
         self.watershed_json_tool = QgsMapToolEmitPoint(canvas)
         self.watershed_json_tool.canvasClicked.connect(self.json_watershed_metrics)
+
+    def test_layout(self):
+
+        frm = FrmMapTemplatePicker(self.iface.mainWindow())
+        if frm.exec() == DLG_ACCEPTED:
+            template_type, template_content = frm.get_template()
+            if template_type and template_content:
+                open_layout(template_content)
+
+    def stringify_layout(self):
+        # Need to open a dialog that has a cbo with the current list of map layouts in qgis
+
+        qgis_project = QgsProject.instance()
+        layout_names = [layout.name() for layout in qgis_project.layoutManager().layouts()]
+
+        if not layout_names:
+            QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", "No layouts available to stringify.")
+            return
+
+        layout_name, ok = QtWidgets.QInputDialog.getItem(
+            self.iface.mainWindow(),
+            "Select Layout",
+            "Layout:",
+            layout_names,
+            0,
+            False,
+        )
+
+        if ok and layout_name:
+            layout_xml = serialize_layout(layout_name)
+            if layout_xml:
+                dlg = QtWidgets.QDialog(self.iface.mainWindow())
+                dlg.setWindowTitle(f"Layout XML - {layout_name}")
+                layout = QtWidgets.QVBoxLayout(dlg)
+                text_edit = QtWidgets.QTextEdit(dlg)
+                text_edit.setPlainText(layout_xml)
+                layout.addWidget(text_edit)
+                dlg.setLayout(layout)
+                dlg.resize(800, 600)
+                dlg.exec()
+
+    def pdf_layout(self):
+
+        qgis_project = QgsProject.instance()
+        layout_names = [layout.name() for layout in qgis_project.layoutManager().layouts()]
+
+        if not layout_names:
+            QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", "No layouts available to print.")
+            return
+
+        layout_name, ok = QtWidgets.QInputDialog.getItem(
+            self.iface.mainWindow(),
+            "Select Layout",
+            "Layout:",
+            layout_names,
+            0,
+            False,
+        )
+
+        if ok and layout_name:
+            out_pdf_path, _ = QtWidgets.QFileDialog.getSaveFileName(
+                self.iface.mainWindow(),
+                "Save PDF",
+                "",
+                "PDF Files (*.pdf)",
+            )
+            if out_pdf_path:
+                print_layout(layout_name, out_pdf_path)
+
+    def set_layout_text(self):
+        # add a form that
+        # 1) choose a layout
+        # 2) textbox that to enter the "slug"
+        # 3) textbox to enter the "text" that replaces the slug in the layout
+        # 4) OK/Cancel buttons to apply or discard changes using funciton in layout_tools.py
+
+        dlg = QtWidgets.QDialog(self.iface.mainWindow())
+        dlg.setWindowTitle("Set Layout Text")
+        layout = QtWidgets.QVBoxLayout(dlg)
+
+        qgis_project = QgsProject.instance()
+        layout_names = [layout.name() for layout in qgis_project.layoutManager().layouts()]
+
+        if not layout_names:
+            QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", "No layouts available.")
+            return
+
+        layout_combo = QtWidgets.QComboBox(dlg)
+        layout_combo.addItems(layout_names)
+        layout.addWidget(QtWidgets.QLabel("Select Layout:", dlg))
+        layout.addWidget(layout_combo)
+
+        slug_edit = QtWidgets.QLineEdit(dlg)
+        layout.addWidget(QtWidgets.QLabel("Slug:", dlg))
+        layout.addWidget(slug_edit)
+
+        text_edit = QtWidgets.QLineEdit(dlg)
+        layout.addWidget(QtWidgets.QLabel("Text:", dlg))
+        layout.addWidget(text_edit)
+
+        button_box = QtWidgets.QDialogButtonBox(DIALOG_BTN_OK | DIALOG_BTN_CANCEL, dlg)
+        layout.addWidget(button_box)
+
+        button_box.accepted.connect(dlg.accept)
+        button_box.rejected.connect(dlg.reject)
+
+        if dlg.exec() == DLG_ACCEPTED:
+            layout_name = layout_combo.currentText()
+            slug = slug_edit.text()
+            text = text_edit.text()
+
+            set_layout_text(layout_name, slug, text)
+
+    def set_layout_table(self):
+        """
+        Test dialog for set_layout_table:
+        1) Choose a layout
+        2) Enter the table item ID
+        3) Enter JSON data (2D array)
+        4) OK/Cancel to apply
+        """
+        dlg = QtWidgets.QDialog(self.iface.mainWindow())
+        dlg.setWindowTitle("Set Layout Table")
+        layout = QtWidgets.QVBoxLayout(dlg)
+
+        qgis_project = QgsProject.instance()
+        layout_names = [layout.name() for layout in qgis_project.layoutManager().layouts()]
+
+        if not layout_names:
+            QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", "No layouts available.")
+            return
+
+        layout_combo = QtWidgets.QComboBox(dlg)
+        layout_combo.addItems(layout_names)
+        layout.addWidget(QtWidgets.QLabel("Select Layout:", dlg))
+        layout.addWidget(layout_combo)
+
+        table_combo = QtWidgets.QComboBox(dlg)
+        layout.addWidget(QtWidgets.QLabel("Table Item:", dlg))
+        layout.addWidget(table_combo)
+
+        def populate_table_combo():
+            table_combo.clear()
+            qgis_project = QgsProject.instance()
+            selected_layout = qgis_project.layoutManager().layoutByName(layout_combo.currentText())
+            if selected_layout:
+                for item in selected_layout.items():
+                    if isinstance(item, QgsLayoutFrame):
+                        mf = item.multiFrame()
+                        if mf and isinstance(mf, (QgsLayoutItemTextTable, QgsLayoutItemManualTable)):
+                            table_combo.addItem(item.id())
+
+        layout_combo.currentIndexChanged.connect(populate_table_combo)
+        populate_table_combo()
+
+        json_edit = QtWidgets.QPlainTextEdit(dlg)
+        json_edit.setPlaceholderText('[\n  ["Header1", "Header2", "Header3"],\n  ["row1col1", "row1col2", "row1col3"],\n  ["row2col1", "row2col2", "row2col3"]\n]')
+        json_edit.setMinimumHeight(200)
+        layout.addWidget(QtWidgets.QLabel("Table Data (JSON):", dlg))
+        layout.addWidget(json_edit)
+
+        button_box = QtWidgets.QDialogButtonBox(DIALOG_BTN_OK | DIALOG_BTN_CANCEL, dlg)
+        layout.addWidget(button_box)
+
+        button_box.accepted.connect(dlg.accept)
+        button_box.rejected.connect(dlg.reject)
+
+        if dlg.exec() == DLG_ACCEPTED:
+            layout_name = layout_combo.currentText()
+            table_name = table_combo.currentText()
+            json_text = json_edit.toPlainText()
+
+            if not table_name or not json_text.strip():
+                QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", "Select a table item and provide JSON data.")
+                return
+
+            try:
+                data = json.loads(json_text)
+            except json.JSONDecodeError as e:
+                QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", f"Invalid JSON: {e}")
+                return
+
+            if not isinstance(data, list) or not all(isinstance(row, list) for row in data):
+                QtWidgets.QMessageBox.warning(self.iface.mainWindow(), "QRiS", "JSON must be a 2D array (list of lists).")
+                return
+
+            set_layout_table(layout_name, table_name, data)
 
     def add_menu_action(
         self,
