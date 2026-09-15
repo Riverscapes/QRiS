@@ -94,7 +94,7 @@ def open_layout(layout_template_path):
 
 def serialize_layout(layout_id: str) -> str:
     """
-    Serialize a QGIS layout to an XML string.
+    Serialize a QGIS layout to an XML string. This includes graphics rendered as part of the layout.
 
     Parameters:
     layout_id (str): The ID (name) of the layout to serialize.
@@ -155,7 +155,7 @@ def print_layout(layout_id: str, out_pdf_path: str) -> None:
 
 def set_layout_text(layout_id: str, slug: str, text: str) -> None:
     """
-    Set dynamic text in a QGIS layout.
+    Set dynamic text in a QGIS layout. This is basically a find-and-replace operation for all text within the layout.
 
     Parameters:
     layout_id (str): The ID (name) of the layout to modify.
@@ -184,6 +184,17 @@ def set_layout_table(layout_id: str, table_name: str, data: list[list[str]]) -> 
     The first row of *data* is treated as column headers; subsequent rows
     are the table body.  The table is found by its item ID (display name)
     in the layout.
+
+    The text/formatting of the table will honor the existing styles and
+    formatting set in the table layout, but not the individual cell/text
+    contents. DO NOT USE the "Edit Table..." button to set the font properties.
+    Use the Fonts and Text Styling options of the table itself.
+
+    This function will add as many rows as needed to accomodate the table,
+    but sizing of the table may prevent all rows from being visible within
+    the layout and may need to be adjusted manually.
+
+    Make sure to include the expected number of columns for the table layout.
 
     Parameters:
     layout_id (str): The ID (name) of the layout to modify.
