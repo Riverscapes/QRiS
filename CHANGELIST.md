@@ -1,5 +1,16 @@
 # QRiS Plugin
 
+## [1.3.1] Sept 16 2026
+
+## Fixed
+- Missing intrinsic analysis protocol
+- Centerline output with too many verticies #1093
+- Fix transformation on 'import context vector from' 'layer in map' #1104
+
+## Changed
+- Streamlined some smoothing parameters for centerline tool
+
+
 ## [1.3] Aug 20 2026
 
 ### Fixed
