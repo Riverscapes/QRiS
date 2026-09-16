@@ -27,8 +27,8 @@ from .planning_container import PlanningContainer
 from .planning_container import load as load_planning_containers
 from .pour_point import PourPoint, load_pour_points
 from .profile import Profile, load_profiles
+from .protocol import insert_protocol, update_protocol
 from .protocol import load as load_protocols
-from .protocol import update_protocol
 from .raster import Raster, load_rasters
 from .sample_frame import SampleFrame, load_sample_frames
 from .scratch_vector import ScratchVector, load_scratch_vectors
@@ -381,8 +381,20 @@ class Project(DBItem, QObject):
                                     )
                         if updated:
                             Settings().log(f"Protocol '{current_protocol.machine_code}' updated.")
-                    # Protocols are not inserted here — they are added to the project
-                    # when the user adds a layer via the create/edit DCE form.
+                    else:
+                        # The system protocol has no DCE layers and is never added via the
+                        # event form, so auto-insert it when it is missing from the project DB.
+                        if current_protocol.machine_code == INTRINSIC_SYSTEM_PROTOCOL_MACHINE_CODE:
+                            try:
+                                protocol_obj, new_metrics = insert_protocol(self.project_file, current_protocol)
+                                self.protocols[protocol_obj.id] = protocol_obj
+                                self.metrics.update(new_metrics)
+                                protocol_writes_on_open = True
+                                Settings().log(f"System protocol '{current_protocol.machine_code}' auto-inserted into project.")
+                            except Exception as insert_ex:
+                                Settings().log(f"Error auto-inserting system protocol: {insert_ex}", MESSAGE_LEVEL_WARNING)
+                        # All other protocols are added to the project
+                        # when the user adds a layer via the create/edit DCE form.
         except Exception as e:
             Settings().log(f"Error updating protocols: {e}", MESSAGE_LEVEL_WARNING)
 
