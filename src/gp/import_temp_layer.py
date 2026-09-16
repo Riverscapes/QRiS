@@ -2,7 +2,7 @@ import json
 import os
 from typing import Optional
 
-from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsDataProvider, QgsFeatureRequest, QgsField, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsCoordinateTransform, QgsDataProvider, QgsFeatureRequest, QgsField, QgsProject, QgsTask, QgsVectorFileWriter, QgsVectorLayer, QgsWkbTypes
 from qgis.PyQt.QtCore import QVariant, pyqtSignal
 
 from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_SUCCESS, MESSAGE_LEVEL_WARNING, QGSTASK_CAN_CANCEL, QMETATYPE_INT, QMETATYPE_STRING, VFW_NO_ERROR
@@ -68,8 +68,9 @@ class ImportMapLayer(QgsTask):
             options.driverName = "GPKG"
             options.layerName = dst_layer_name
 
-            epgs_4326 = QgsCoordinateReferenceSystem("EPSG:4326")
-            out_transform = QgsCoordinateTransform(self.source_layer.sourceCrs(), epgs_4326, QgsProject.instance().transformContext())
+            # Determine destination CRS: use the existing layer's CRS if it exists,
+            # otherwise fall back to the project CRS. Never hardcode EPSG:4326.
+            dest_crs = None
 
             # Logic to set the write/update mode depending on if data source and/or layers are present
             options.actionOnExistingFile = QgsVectorFileWriter.AppendToLayerNoNewFields
@@ -77,11 +78,22 @@ class ImportMapLayer(QgsTask):
                 if os.path.exists(dst_path):
                     output_layer = QgsVectorLayer(dst_path)
                     sublayers = [subLayer.split(QgsDataProvider.SUBLAYER_SEPARATOR)[1] for subLayer in output_layer.dataProvider().subLayers()]
-                    if options.layerName not in sublayers:
+                    if options.layerName in sublayers:
+                        # Read CRS from the existing destination layer
+                        existing_layer = QgsVectorLayer(f"{dst_path}|layername={dst_layer_name}")
+                        if existing_layer.isValid():
+                            dest_crs = existing_layer.crs()
+                    else:
                         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteLayer
                 else:
                     # If the file does not exist, we need to create it
                     options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
+
+            if dest_crs is None or not dest_crs.isValid():
+                dest_crs = QgsProject.instance().crs()
+
+            out_transform = QgsCoordinateTransform(self.source_layer.sourceCrs(), dest_crs, QgsProject.instance().transformContext())
+            options.destinationCrs = dest_crs
 
             # add the event_id field to the source layer
             if self.attributes is not None:
