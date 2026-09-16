@@ -271,9 +271,13 @@ class FrmSettings(QDialog):
         self.txt_protocol_folder.setToolTip("Select an optional folder to store custom protocols.")
         self.horiz_protocol_folder.addWidget(self.txt_protocol_folder)
         btn_protocol_folder = QPushButton("...")
-        btn_protocol_folder.setFixedWidth(40)
+        btn_protocol_folder.setFixedWidth(30)
         btn_protocol_folder.clicked.connect(self.select_protocol_folder)
         self.horiz_protocol_folder.addWidget(btn_protocol_folder)
+
+        btn_clear_protocol_folder = QPushButton("Clear")
+        btn_clear_protocol_folder.clicked.connect(lambda: self.txt_protocol_folder.setText(""))
+        self.horiz_protocol_folder.addWidget(btn_clear_protocol_folder)
 
         self.chkShowExperimentalProtocols = QCheckBox("Show experimental protocols")
         self.chkShowExperimentalProtocols.setToolTip("Check this box to show experimental protocols in the protocol list. Experimental protocols are protocols that are still under development and testing.")
