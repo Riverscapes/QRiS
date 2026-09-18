@@ -22,6 +22,7 @@
 """
 
 import os.path
+import socket
 
 from qgis.core import (
     QgsApplication,
@@ -77,6 +78,26 @@ dock_widget_locations = {
     "right": RIGHT_DOCK,
 }
 
+# debugpy's in-process adapter accepts connections on these loopback hosts. Used by
+# _debugpy_already_listening() to distinguish "our debugger is up" from "some other
+# process is squatting on the port".
+_DEBUGPY_LISTENER_HOSTS = ("localhost", "127.0.0.1")
+
+
+def _debugpy_already_listening(host: str, port: int) -> bool:
+    """Return True if something is accepting connections on host:port.
+
+    A refused connection means nothing is listening on that loopback address, so the
+    port holder from our pre-flight probe is not a debugpy adapter.
+    """
+    for probe_host in _DEBUGPY_LISTENER_HOSTS:
+        try:
+            with socket.create_connection((probe_host, port), timeout=0.5):
+                return True
+        except OSError:
+            continue
+    return False
+
 
 class QRiSToolbar:
     """QGIS Plugin Implementation."""
@@ -110,6 +131,8 @@ class QRiSToolbar:
             self.translator.load(locale_path)
             QtCore.QCoreApplication.installTranslator(self.translator)
 
+        Settings().setValue("DEBUG", os.environ.get("RS_DEBUG", "False").lower() == "true")
+
         # Declare instance attributes
         self.actions = []
         self.menus = []
@@ -124,8 +147,69 @@ class QRiSToolbar:
 
         self.pluginIsActive = False
         self.dockwidget = None
+        self.debugpy = None
+        self._enable_debug()
 
-    # noinspection PyMethodMayBeStatic
+    def _enable_debug(self) -> None:
+        """
+        Attach the debugpy debugger when RS_DEBUG is set to "true", so the QRiS plugin can
+        be debugged remotely inside QGIS.
+
+        Never raises: this is called from __init__, and a debugger failure must never
+        prevent the plugin from loading.
+        """
+
+        if not Settings().getValue("DEBUG"):
+            return
+
+        self.debugpy = None
+        try:
+            import debugpy
+        except ImportError:
+            Settings().log("⚠️ debugpy not installed. Run: pip3 install debugpy", MESSAGE_LEVEL_WARNING)
+            return
+        except Exception as e:
+            Settings().log(f"⚠️ Could not import debugpy: {e}", MESSAGE_LEVEL_WARNING)
+            return
+        self.debugpy = debugpy
+
+        try:
+            debug_port = int(os.environ.get("RS_DEBUG_PORT", "5678"))
+        except ValueError:
+            debug_port = 5678
+        debug_host = "localhost"
+
+        # Pre-flight: can we bind the port ourselves? If not, someone else is already
+        # listening on it. This covers both plugin reloads (debugpy is already active in
+        # this process) and foreign collisions (another process/instance), without
+        # relying on reload-vulnerable module state.
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            probe.bind((debug_host, debug_port))
+        except OSError:
+            if self.debugpy.is_client_connected():
+                Settings().log(f"🐞 Debugger already active and attached on {debug_host}:{debug_port}")
+            elif _debugpy_already_listening(debug_host, debug_port):
+                Settings().log(f"🐞 Debugger already listening on {debug_host}:{debug_port} (plugin reload?). Attach from VS Code.")
+            else:
+                Settings().log(f"⚠️ Port {debug_port} is in use by another process. Set RS_DEBUG_PORT to a free port.", MESSAGE_LEVEL_WARNING)
+            return
+        else:
+            probe.close()
+
+        try:
+            # in_process_debug_adapter runs the adapter inside QGIS's Python process, so
+            # there is no interpreter to discover and nothing to wait 30s on.
+            _, new_port = self.debugpy.listen((debug_host, debug_port), in_process_debug_adapter=True)
+        except RuntimeError as e:
+            # debugpy.listen() can only succeed once per process (debugpy/server/api.py)
+            Settings().log(f"🐞 Debugger already running in this process ({e}); attach from VS Code.")
+            return
+        except Exception as e:
+            Settings().log(f"⚠️ Failed to start debugger on {debug_host}:{debug_port}: {e}", MESSAGE_LEVEL_WARNING)
+            return
+
+        Settings().log(f"🐞 Debugpy listening on {debug_host}:{new_port} — attach from VS Code")
 
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
