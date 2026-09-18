@@ -125,6 +125,7 @@ from .frm_layer_metric_details import FrmLayerMetricDetails
 from .frm_layer_picker import FrmLayerPicker
 from .frm_layer_type import FrmLayerTypeDialog
 from .frm_new_project import FrmNewProject
+from .frm_nwp_docwidget import FrmNwpDocWidget
 from .frm_order_by_centerline import FrmOrderByCenterline
 from .frm_planning_container import FrmPlanningContainer
 from .frm_pour_point import FrmPourPoint
@@ -212,6 +213,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         self.centerline_doc_widget = None
         self.cross_sections_doc_widget = None
         self.distribution_dock_widget = None
+        self.nwp_doc_widget = None
 
         self.stream_stats_tool = QgsMapToolEmitPoint(self.iface.mapCanvas())
         self.stream_stats_tool.canvasClicked.connect(self.stream_stats_action)
@@ -474,6 +476,12 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.distribution_dock_widget.deleteLater()
             self.distribution_dock_widget = None
 
+        if self.nwp_doc_widget is not None:
+            self.iface.removeDockWidget(self.nwp_doc_widget)
+            self.nwp_doc_widget.close()
+            self.nwp_doc_widget.deleteLater()
+            self.nwp_doc_widget = None
+
         # Disconnect signals
         if self.map_manager is not None:
             if self.map_manager.receivers(self.map_manager.edit_mode_changed) > 0:
@@ -491,6 +499,13 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.analysis_doc_widget is not None:
             widget = self.analysis_doc_widget
             self.analysis_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+
+    def destroy_nwp_doc_widget(self):
+        if self.nwp_doc_widget is not None:
+            widget = self.nwp_doc_widget
+            self.nwp_doc_widget = None
             self.iface.removeDockWidget(widget)
             widget.close()
             widget.deleteLater()
@@ -720,6 +735,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                                 self.add_context_menu_item(self.menu, "Lock All Layers in DCE", "lock", lambda: self.set_group_lock_state(model_data, True, model_item))
                                 self.add_context_menu_item(self.menu, "Unlock All Layers in DCE", "lock_open_right", lambda: self.set_group_lock_state(model_data, False, model_item))
                                 self.menu.addSeparator()
+                                if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:
+                                    self.add_context_menu_item(self.menu, "Open NWP Package", "new", lambda checked=False, evt=model_data: self.open_nwp_dock(evt))
                         else:
                             self.add_context_menu_item(self.menu, "Add To Map", "add_to_map", lambda: self.add_db_item_to_map(model_item, model_data))
                 else:
@@ -1285,6 +1302,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         else:
             self.analysis_doc_widget.configure_analysis(self.qris_project, analysis, None)
             self.analysis_doc_widget.show()
+
+    def open_nwp_dock(self, event: Event):
+        if self.nwp_doc_widget is None:
+            self.nwp_doc_widget = FrmNwpDocWidget(self, self.iface)
+            self.nwp_doc_widget.configure(self.qris_project, event)
+            self.iface.addDockWidget(RIGHT_DOCK, self.nwp_doc_widget)
+            self.nwp_doc_widget.closing.connect(self.destroy_nwp_doc_widget)
+        else:
+            self.nwp_doc_widget.configure(self.qris_project, event)
+            self.nwp_doc_widget.show()
 
     def open_analysis_over_time_dock(self, analysis: Analysis = None):
         if self.analysis_over_time_dock_widget is None:
