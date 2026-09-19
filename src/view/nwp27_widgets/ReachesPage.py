@@ -17,8 +17,8 @@ from .WizardStatus import STEP_COMPLETE, STEP_INCOMPLETE
 
 
 class ReachesPage(BaseWidget):
-    def __init__(self, db_path: str, design_id: str, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         # Keep track of the inputs for each reach. The keys are FID from sample_frame_features feature class.
         # The values are dictionaries containing the treatments, conditions, and objectives for each reach.

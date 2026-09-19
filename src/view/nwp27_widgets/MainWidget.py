@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QComboBox, QStackedWidget, QVBoxLayout, QWidget
 
@@ -74,9 +76,22 @@ class MainWidget(QWidget):
         # Push all widgets to the top, leaving extra space at the bottom
         self.layout().addStretch()
 
-        # Eagerly create all pages so every get_status() is available at startup
+        # Eagerly create all pages so every get_status() is available at startup.
+        # Data-dependent operations (refresh_data, configure pages, update icons)
+        # happen in configure() once db_path and design_id are known.
         for i in range(len(STEPS)):
             self._create_page(i)
+
+        self.dropdown.currentIndexChanged.connect(self.on_step_changed)
+
+    def configure(self, db_path: str, design_id: int) -> None:
+        self.db_path = db_path
+        self.design_id = design_id
+
+        # Now that we have real data, configure each page
+        for page in self._pages.values():
+            if hasattr(page, "configure"):
+                page.configure(db_path, design_id)
 
         # Refresh data on all pages so statuses are computed from real DB state
         for page in self._pages.values():
@@ -84,23 +99,17 @@ class MainWidget(QWidget):
                 page.refresh_data()
 
         self.update_step_icons()
-
-        self.dropdown.currentIndexChanged.connect(self.on_step_changed)
         self.on_step_changed(0)
-
-    def configure(self, db_path: str, design_id: int) -> None:
-        self.db_path = db_path
-        self.design_id = design_id
 
     def _create_page(self, index: int) -> QWidget:
         """Create the page widget for the given step index, add it to the stack, and connect signals."""
         step = STEPS[index]
         class_name = step["class"]
-        page_class = getattr(__import__(class_name), class_name)
+        page_class = getattr(import_module(f"..{class_name}", __name__), class_name)
         if class_name == "GeneralConditionPage":
-            page = page_class(self.db_path, self.design_id, key=step["key"], title=step["title"], description=step["description"])
+            page = page_class(key=step["key"], title=step["title"], description=step["description"])
         else:
-            page = page_class(self.db_path, self.design_id)
+            page = page_class()
         self._pages[index] = page
         self.stack.addWidget(page)
         if hasattr(page, "contentChanged"):

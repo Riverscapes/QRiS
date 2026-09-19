@@ -13,8 +13,8 @@ from .WizardStatus import STEP_COMPLETE, STEP_INCOMPLETE
 
 
 class GeneralConditionPage(BaseWidget):
-    def __init__(self, db_path: str, design_id: str, key: str, title: str, description: str, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, key: str, title: str, description: str, parent=None):
+        super().__init__(parent)
         self.key = key
         self.title = title
         self.description = description

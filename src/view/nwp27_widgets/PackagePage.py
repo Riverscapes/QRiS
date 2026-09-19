@@ -28,10 +28,10 @@ PRODUCTS = [
 
 
 class PackagePage(BaseWidget):
-    def __init__(self, db_path: str, design_id: str, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
-        self.export_folder = os.path.join(os.path.dirname(self.db_path), "exports", "nwp27_package")
+        self.export_folder = None
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -88,6 +88,10 @@ class PackagePage(BaseWidget):
         produce_btn = QPushButton("Produce Checked Products")
         produce_btn.clicked.connect(self.produce_products)
         layout.addWidget(produce_btn)
+
+    def configure(self, db_path: str, design_id: int) -> None:
+        super().configure(db_path, design_id)
+        self.export_folder = os.path.join(os.path.dirname(self.db_path), "exports", "nwp27_package")
 
     def get_status(self) -> int:
         # Packaging has no logic. Simply show grey icon

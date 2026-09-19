@@ -12,8 +12,8 @@ MAXIMUM_DATE = datetime.date(_TODAY.year + 30, 12, 31)
 
 
 class ProjectTitlePage(BaseWidget):
-    def __init__(self, db_path: str, design_id: int, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         # self.setWindowTitle("Project Title")
         # self.setSubTitle("Please provide the project title and relevant dates.")
 

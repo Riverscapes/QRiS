@@ -17,8 +17,8 @@ from .WizardStatus import STEP_UNKNOWN
 class AttachmentsPage(BaseWidget):
     contentChanged = pyqtSignal()
 
-    def __init__(self, db_path: str, design_id: str, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         # self.setTitle("Attachments")
         # self.setSubTitle("Please upload any relevant attachments for your project.")

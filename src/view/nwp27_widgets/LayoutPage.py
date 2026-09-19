@@ -18,8 +18,8 @@ LAYOUTS = [
 
 
 class LayoutPage(BaseWidget):
-    def __init__(self, db_path: str, design_id: str, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         # self.setTitle("Project Location")
 
         layout = QVBoxLayout()

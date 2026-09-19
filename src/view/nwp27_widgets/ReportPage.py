@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 class ReportPage(BaseWidget):
     contentChanged = pyqtSignal()
 
-    def __init__(self, db_path: str, design_id: int, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         # self.polygon_path = polygon_path
         # self.setTitle("Rapid Assessment Report")

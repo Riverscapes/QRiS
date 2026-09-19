@@ -1,8 +1,8 @@
 import logging
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from qgis.PyQt.QtCore import QObject, pyqtSignal
 
-from reports.RSReportsAPI import RSReportsAPI
+from .RSReportsAPI import RSReportsAPI
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +11,8 @@ class ReportWorker(QObject):
     """Runs the report-generation flow in a background thread."""
 
     progress = pyqtSignal(str, int, str)  # status, progress%, message
-    finished = pyqtSignal(dict)           # final report object
-    error = pyqtSignal(str)               # error message
+    finished = pyqtSignal(dict)  # final report object
+    error = pyqtSignal(str)  # error message
 
     def __init__(self, polygon_path: str, report_type_id: str | None = None):
         super().__init__()

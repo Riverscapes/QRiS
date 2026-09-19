@@ -7,8 +7,8 @@ from .WizardStatus import STEP_COMPLETE, STEP_INCOMPLETE
 
 
 class LocationPage(BaseWidget):
-    def __init__(self, db_path: str, design_id: str, parent=None):
-        super().__init__(db_path, design_id, parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         # self.setTitle("Project Location")
 
         layout = QVBoxLayout()
@@ -27,12 +27,12 @@ class LocationPage(BaseWidget):
         self.project_extent = LocationWidget()
         self.project_extent.cbo_layers.currentIndexChanged.connect(self.on_text_changed)
         form_layout.addRow("Project extent", self.project_extent)
-        self.load_sample_frame_layers(self.project_extent.cbo_layers, [3])
+        # self.load_sample_frame_layers(self.project_extent.cbo_layers, [3])
 
         self.reaches_input = LocationWidget()
         self.reaches_input.cbo_layers.currentIndexChanged.connect(self.on_text_changed)
         form_layout.addRow("Reaches", self.reaches_input)
-        self.load_sample_frame_layers(self.reaches_input.cbo_layers, [1])
+        # self.load_sample_frame_layers(self.reaches_input.cbo_layers, [1])
 
         self.disturbance_input = LocationWidget(is_mandatory=False)
         self.disturbance_input.cbo_layers.currentIndexChanged.connect(self.on_text_changed)
@@ -45,23 +45,21 @@ class LocationPage(BaseWidget):
         self.imagery = LocationWidget(is_mandatory=False)
         self.imagery.cbo_layers.currentIndexChanged.connect(self.on_text_changed)
         form_layout.addRow("Imagery", self.imagery)
-        self.load_rasters(self.imagery.cbo_layers)
+        # self.load_rasters(self.imagery.cbo_layers)
 
         self.catchment = LocationWidget()
         self.catchment.cbo_layers.currentIndexChanged.connect(self.on_text_changed)
         form_layout.addRow("Catchment Area", self.catchment)
-        self.load_catchments(self.catchment.cbo_layers)
-        # self.load_sample_frame_layers(self.catchment.cbo_layers, [2])
-
-        # self.registerField("project_extent", self.project_extent.cbo_layers)
-        # self.registerField("reaches", self.reaches_input.cbo_layers)
-        # self.registerField("disturbance", self.disturbance_input.cbo_layers)
-        # self.registerField("structures", self.structures_input.cbo_layers)
-        # self.registerField("imagery", self.imagery.cbo_layers)
-        # self.registerField("catchment", self.catchment.cbo_layers)
 
         # Push all content to the top, leaving extra space at the bottom
         layout.addStretch()
+
+    def configure(self, db_path: str, design_id: int) -> None:
+        super().configure(db_path, design_id)
+        self.load_sample_frame_layers(self.project_extent.cbo_layers, [3])
+        self.load_sample_frame_layers(self.reaches_input.cbo_layers, [1])
+        self.load_rasters(self.imagery.cbo_layers)
+        self.load_catchments(self.catchment.cbo_layers)
 
     def get_status(self) -> int:
 

@@ -15,10 +15,10 @@ class BaseWidget(QWidget):
 
     BUTTON_WIDTH = 32
 
-    def __init__(self, db_path: str, design_id: int, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.db_path = db_path
-        self.design_id = design_id
+        self.db_path = None
+        self.design_id = None
 
         # Give QLineEdit a visible border (QTextEdit has one by default)
         self.setStyleSheet("""
@@ -27,6 +27,15 @@ class BaseWidget(QWidget):
                 padding: 2px 4px;
             }
         """)
+
+    def configure(self, db_path: str, design_id: int) -> None:
+        """
+        Store the QRiS GeoPackage path and the design ID.
+        Note that this can't happen as part of the constructor because
+        dockable windows get constructed at different time to the widgets.
+        """
+        self.db_path = db_path
+        self.design_id = design_id
 
     def load_data(self, key: str) -> dict:
 
