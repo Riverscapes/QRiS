@@ -150,11 +150,11 @@ class MainWidget(QWidget):
             if page is not None and hasattr(page, "get_status"):
                 status = page.get_status()
                 if status == STEP_COMPLETE:
-                    icon_path = "assets/check.svg"
+                    icon_path = ":/plugins/qris_toolbar/check"
                 elif status == STEP_UNKNOWN:
-                    icon_path = "assets/none.svg"
+                    icon_path = ":/plugins/qris_toolbar/none"
                 elif status == STEP_INCOMPLETE:
-                    icon_path = "assets/cancel.svg"
+                    icon_path = ":/plugins/qris_toolbar/cancel"
 
                 self.dropdown.setItemIcon(idx, QIcon(icon_path))
 
