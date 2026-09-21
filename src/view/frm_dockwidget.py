@@ -477,10 +477,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.distribution_dock_widget = None
 
         if self.nwp_doc_widget is not None:
-            self.iface.removeDockWidget(self.nwp_doc_widget)
-            self.nwp_doc_widget.close()
-            self.nwp_doc_widget.deleteLater()
+            widget = self.nwp_doc_widget
             self.nwp_doc_widget = None
+            self.iface.removeDockWidget(widget)
+            widget.close()
+            widget.deleteLater()
 
         # Disconnect signals
         if self.map_manager is not None:

@@ -1,3 +1,5 @@
+import os
+
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
@@ -6,11 +8,12 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...lib.layout_tools import open_layout
 from .BaseWidget import BaseWidget
 from .WizardStatus import STEP_UNKNOWN
 
 LAYOUTS = [
-    ("Project Elements Layout", "Description for Layout 1", "machine1"),
+    ("Project Elements Layout", "Description for Layout 1", "Design Template (Kelly)"),
     ("Habitat Zones & Conditions", "Description for Layout 2", "machine2"),
     ("Project Summary", "Description for Layout 3", "machine3"),
     ("Reach Elements & Expected Outcomes", "Description for Layout 3", "machine4"),
@@ -22,10 +25,20 @@ class LayoutPage(BaseWidget):
         super().__init__(parent)
         # self.setTitle("Project Location")
 
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        plugin_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+        self.layouts_dir = os.path.join(plugin_root, "resources", "map_templates")
+
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        label = QLabel("layout explanation")
+        label = QLabel(
+            "This step builds several maps that support your NWP27 application."
+            + " Each map is generated based on a specific layout template."
+            + " Click the open buttons to view each of the layouts and manipulate them using QGIS native layout tools."
+            + " When you are finished you must click the save button to preserve your changes."
+            + " You can print the layouts at this step, or wait and print them during the final package step at the end of the NWP27 process.\n"
+        )
         label.setWordWrap(True)
         layout.addWidget(label)
 
@@ -78,7 +91,10 @@ class LayoutPage(BaseWidget):
         pass
 
     def open_layout(self, name: str, machine_code: str) -> None:
-        pass
+        layout_path = os.path.join(self.layouts_dir, f"{machine_code}.qpt")
+        if os.path.exists(layout_path):
+            # Implement the logic to open the layout file
+            open_layout(layout_path)
 
     def save_layout(self, name: str, machine_code: str) -> None:
         pass
