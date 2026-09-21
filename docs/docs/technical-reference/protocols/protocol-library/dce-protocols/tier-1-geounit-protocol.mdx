@@ -44,8 +44,8 @@ Author|Zach Burgert
 
 Attribute|Type|Metrics|Description
 ---|---|---|---
-*Tier 1 Gemorphic Units*|Polygon|`Active Channel Ratio`, `Active Floodplain Ratio`, `Inactive Floodplain Ratio`|landforms shaped and distinguished by vertical flood stage height 
-*Margins*|Linestring|NA|abutment of channel against valley bottom, valley, or anthropogenic feature. 
+*Tier 1 Gemorphic Units*|Polygon|`Active Channel Proportion`, `Active Channel Area`, `Active Floodplain Proportion`, `Active Floodplain Area`, `Inactive Floodplain Proportion`, `Inactive Floodplain Area`|landforms shaped and distinguished by vertical flood stage height 
+*Margins*|Linestring|`Total Margin Length`, `Margin Length (left)`, `Margin Length (right)`, `Proportion of Margin that is a Sediment Source`, `Proportion of Margin that is a Wood Source`|abutment of channel against valley bottom, valley, or anthropogenic feature. 
 
 <details open>
 <summary>*How to Use This Protocol*</summary>
@@ -56,11 +56,7 @@ The following step-by-step guide will show you how to map your riverscape using 
 - Next, digitize the remaining Tier 1 geomorphic units to identify the landforms that fundamentally shape the valley bottom. 
 - Finally, digitize the margins of the active channel(s). This will identify the confining features that constrain a channel's form or function and identify potential risks for LTPBR.  
 
-Once those layers are digitized, you can calculate metrics to assess the valley bottom’s condition and its restoration potential. These include: 
- 
-- **Active Channel Ratio**: The ratio of active channel area to valley bottom area.  
-- **Active Floodplain Ratio**: The ratio of active floodplain area to valley bottom area.
-- **Inactive Floodplain Ratio**: The ratio of inactive floodplain area to valley bottom area.
+Once those layers are digitized, you can calculate metrics to assess the valley bottom’s condition and its restoration potential.
 </details>
 
 ![Geomorphic-Mapping-Example](/images/technical-reference/metrics/geomorphic-mapping-protocol.png)
@@ -74,9 +70,9 @@ Once those layers are digitized, you can calculate metrics to assess the valley 
 
 <Tabs>
   <TabItem value="Tier 1 Geomorphic Units" label="Tier 1 Geomorphic Units" default>
-    Geomorphic Unit Type|Description
+Geomorphic Unit Type|Description
 ---|---
-*Channel*|Portion of valley bottom that is inundated by bankfull flow.
+*Active Channel*|Portion of valley bottom that is inundated by bankfull flow.
 *Active Floodplain*|Portion of valley bottom that is frequently flooded by the contemporary flood regime. Evidence of active floodplain can include active riparian vegetation, alluvial flood deposits, wood deposition, etc. 
 *Inactive Floodplain*|Portion of valley bottom that is not flooded or rarely flooded by  the contemporary flood regime. Evidence of inactive floodplain can include relic riparian vegetation, upload vegetation encroachment, remnant alluvial and wood deposits, etc.  
 *Terrace*|Relic floodplain that is no longer flooded by the maximum contemporary flood regime. This includes floodplains that were once inundated by historic flood regimes before channel downcutting and resulting incision disconnected the channel from these floodplains and created new ones at lower elevations.  
@@ -101,6 +97,16 @@ Anthropogenic Margin Type|Description
 *Railroad*|network or series of tracks used to transport trains. 
 *Road*|leveled pathway typically made of asphalt, concrete, or dirt designed to transport vehicles 
 *Wall*|upright structure typically made of concrete that serves to enclose, divide, or protect an area. 
+
+Potential Sediment Source|Description
+---|---
+*Yes*|Margin can be a potential source of sediment to the active channel. LTPBR can target these areas through lateral erosion to provide sediment for the channel to rework downstream and enhance geomorphic diversity. For example, an alluvial fan or tributary fan are potential sediment sources. 
+*No*|Margin is unlikely to be a source of sediment for the active channel. 
+
+Potential Wood Source|Description
+---|---
+*Yes*|Margin can be a potential source of wood to the active channel. LTPBR can target these areas through lateral erosion to provide wood for the channel to rework at the source site or downstream and address structural starvation. For example, an alluvial fan or tributary fan are potential sediment sources. 
+*No*|Margin is unlikely to be a source of wood for the active channel. 
   </TabItem>
 </Tabs>
 
@@ -111,7 +117,7 @@ Anthropogenic Margin Type|Description
 | Metric ID | Label | Precision | Description | Calculation |
 | :--- | :--- | :--- | :--- | :--- |
 | `active_channel_proportion` | Active Channel Proportion | 2 | Proportion of Active Channel(s) within Valley Bottom of Each Sample Frame| `Sum (Active Channel Area) / Valley Bottom Area` |
-| `active_channel_area` | Area of Active Channel(s) within Valley Bottom of Each Sample Frame | 2 | Area of Active Channel within Valley Bottom of Each Sample Frame | `Sum (Active Channel Area)` |
+| `active_channel_area` | Active Channel Area | 2 | Area of Active Channel within Valley Bottom of Each Sample Frame | `Sum (Active Channel Area)` |
 | `active_floodplain_proportion` | Active Floodplain Proportion | 2 | Proportion of Active Floodplain within Valley Bottom of Each Sample Frame | `Sum (Active Floodplain Area) / Valley Bottom Area` |
 | `active_floodplain_area` | Active Floodplain Area | 2 | Area of Active Floodplain within Valley Bottom of Each Sample Frame | `Sum (Active Floodplain Area)` |
 | `inactive_floodplain_proportion` | Inactive Floodplain Proportion | 2 | Proportion of Inactive Floodplain within Valley Bottom of Each Sample Frame | `Sum (Inactive Floodplain Area) / Valley Bottom Area` |

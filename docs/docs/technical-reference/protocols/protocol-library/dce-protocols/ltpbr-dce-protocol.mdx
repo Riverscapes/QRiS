@@ -40,12 +40,12 @@ Author|Nick Weber
   <TabItem value="active channel extents" label="Active Channel Extents">
 Type|Metrics|Description
 ---|---|---
-Polygon|`% Inundated`|*Mapping of the active channel extent*
+Polygon|NA|*Mapping of the active channel extent*
   </TabItem>
 <TabItem value="active channel lines" label="Active Channel Lines">
 Type|Metrics|Description
 ---|---|---
-Line|`Channel Sinuosity`,`Channel Length`, `Primary Channel Length`, `Secondary Channel Length`, `Relative Flow Length`|*Mapping of the active channel planform as primary and non-primary channels*
+Line|`Active Channel Count`, `Channel Sinuosity`,`Channel Length`, `Primary Channel Length`, `Secondary Channel Length`, `Relative Flow Length`|*Mapping of the active channel planform as primary and non-primary channels*
   </TabItem>
   <TabItem value="active extents" label="Active Extents">
 Type|Metrics|Description
@@ -70,12 +70,12 @@ Polygon|`SEM Stage 0 Area`, `SEM Stage 1 Area`, `SEM Stage 2 Area`, `SEM Stage 3
   <TabItem value="geomorphic units" label="Geomorphic Units">
 Type|Metrics|Description
 ---|---|---
-Point, Polygon|`Mid Channel Bar Count`, `Mid Channel Bar Density`, `Mid Channel Bar Area`, `Riffle Count`, `Riffle Density`, `Riffle Area`, `Pool Count`, `Pool Density`, `Pool Area`|*Representation of the distribution and characteristics of geomorphic features within the active channel. Used to produce estimates of habitat complexity and quantity*
+Point, Polygon|`Bank Attached Bar Count`, `Bank Attached Bar Density`, `Bank Attached Bar Area`, `Mid Channel Bar Count`, `Mid Channel Bar Density`, `Mid Channel Bar Area`, `Riffle Count`, `Riffle Density`, `Riffle Area`, `Pool Count`, `Pool Density`, `Pool Area`|*Representation of the distribution and characteristics of geomorphic features within the active channel. Used to produce estimates of habitat complexity and quantity*
   </TabItem>
   <TabItem value="inundation extents" label="Inundation Extents">
 Type|Metrics|Description
 ---|---|---
-Polygon|`% Free Flowing`, `% Overflow`, `% Backwater/Ponded`, `Free Flowing Area`, `Overflow Area`, `Ponded Area`|*Mapping the distribution of simple surface-flow types such as ponded, free-flowing, and overflowing. Used to generate metrics of increasing habitat complexity, quantity, and floodplain connectivity (from Bartelt et al. 2021)*
+Polygon|`% Inundated`, `Total Inundated Area`, `% Free Flowing`, `% Overflow`, `% Backwater/Ponded`, `Free Flowing Area`, `Overflow Area`, `Ponded Area`|*Mapping the distribution of simple surface-flow types such as ponded, free-flowing, and overflowing. Used to generate metrics of increasing habitat complexity, quantity, and floodplain connectivity (from Bartelt et al. 2021)*
   </TabItem>
   <TabItem value="observations" label="Observations" default>
 Type|Metrics|Description
@@ -85,7 +85,7 @@ Point, Line, Polygon|NA|*A flexible set of layers used to document practical, lo
   <TabItem value="recovery space" label="Recovery Space">
 Type|Metrics|Description
 ---|---|---
-Polygon|`Percent Recovery Space`|*Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes*
+Polygon|`Proportion of Riverscape with Recovery Space`|*Mapping the extent of the valley bottom over which aquatic processes might be invoked given restoration or management changes*
   </TabItem>
   <TabItem value="risk potential" label="Risk Potential">
 Type|Metrics|Description
@@ -248,6 +248,7 @@ All metrics in LTPBR V2 DCE are calculated within the sample frames polygon laye
   <TabItem value="channel" label="Channel Metrics" default>
 Metric|Description|Calculation
 ---|---|---|
+*Active Channel Count*|Count of all primary and non-primary channels |`Count(Primary Channel(s)) + Count (Non-Primary Channel(s))`
 *Channel Length*|Sum of all primary and non-primary channel lengths|`Sum(Primary Channel Length + Non-Primary Channel Length(s))`
 *Channel Sinuosity*|Sinuosity of the primary channel|`Sinuosity(Primary Channel)`
 *Primary Channel Length*|Sum of primary channel length|`Sum(Primary Channel Length)`
@@ -280,7 +281,10 @@ Metric|Description|Calculation
   <TabItem value="geomorphic units" label="Geomorphic Metrics" default>
 Metric|Description|Calculation
 ---|---|---|
-*Mid Channel Area*|Summed area of all mid channel bars|`Sum[Mid Channel Bar Area]`
+*Bank Attached Bar Area*|Summed area of all bank attached channel bars|`Sum[Bank Attached Bar Area]`
+*Bank Attached Bar Count*|Count of all bank attached bars|`Count(Bank Attached Bars)`
+*Bank Attached Bar Density*|Number of bank attached bars per unit length of riverscape|`Count(Bank Attached Bars) / Valley Bottom Length`
+*Mid Channel Bar Area*|Summed area of all mid channel bars|`Sum[Mid Channel Bar Area]`
 *Mid Channel Bar Count*|Count of all mid channel bars|`Count(Mid Channel Bars)`
 *Mid Channel Bar Density*|Number of mid channel bars per unit length of riverscape|`Count(Mid Channel Bars) / Valley Bottom Length`
 *Pool Area*|Summed area of all pools|`Sum[Pool Area]`
@@ -312,10 +316,11 @@ Metric|Description|Calculation
   <TabItem value="valley bottom" label="Valley Bottom Metrics" default>
 Metric|Description|Calculation
 ---|---|---|
+*Total Inundated Area*|The area of total inundation in each sample frame|`Sum(Inundation Extent Area)`
 *% Inundated*|Percent of valley bottom inundated by active channel(s)|`Active Channel Area / Valley Bottom Area`
 *% Riparian Vegetation*|Percent of valley bottom covered by riparian vegetation|`Riparian Vegetation Area / Valley Bottom Area`
 *Proportion of Active Valley Bottom*|Percent of valley bottom classified as 'active' (e.g., riparian vegetation, active channel, etc)|`Active Valley Bottom Area / Valley Bottom Area`
-*Percent Recovery Space*|Percent of valley bottom that is avaiable for restoration or recovery of aquatic/riparian processes|`Recovery Space Area / Valley Bottom Area`
+*Proportion of Riverscape with Recovery Space*|Percent of valley bottom that is avaiable for restoration or recovery of aquatic/riparian processes|`Recovery Space Area / Valley Bottom Area`
   </TabItem>
     </Tabs>
 
