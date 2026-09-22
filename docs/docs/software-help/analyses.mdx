@@ -7,7 +7,7 @@ description: Calculating river health metrics over time
 QRiS analyses help track river health over time. Before you can perform an analysis you need to have a project with the following:
 
 - One or more [data capture events](/software-help/dce) that represent the points in time for which you want to measure riverscape health. These events represent past, present or future representations of your riverscape captured as assessments, designs, plans or monitoring events. Each event must have geospatial features digitized (for automatic metric calculations). Manual entry of metric values do not require features to be digitized. 
-- A [sample frame](/software-help/sample-frames) that subdivides your riverscape into the spatial units for which you want to report river health. Typically these are polygons that span valley wall to valley wall and represent the river reaches or sub-reaches. 
+- A [sample frame](/software-help/sample-frames), [valley bottom](/software-help/inputs/valley-bottoms), or [AOI](/software-help/inputs/aoi) that subdivides your riverscape into the spatial units for which you want to report river health. Typically these are polygons that span valley wall to valley wall and represent the river reaches or sub-reaches. However, they can also represent other spatial units such as reach typing or geomorphic setting depending on your desired analysis.  
 
 :::note
  If multiple, spatially separate, reaches exist in a project multiple analyses will need to be done. Each reach will have its own distinct centerline which is used for calculating metrics, so it is necessary that they be analyzed separately.
@@ -17,114 +17,83 @@ QRiS analyses help track river health over time. Before you can perform an analy
 
 ## Creating an analysis
 
-Right click on the **Analyses** folder in the QRiS project tree and select **New Analysis**. This will open the analysis properties form. Provide a name and description for the analysis. Select the Analysis Masks (sample frame), valley bottom, centerline, and DEM (optional) you want to use for the analysis. You cannot change this once the analysis has been created. If you make a mistake you will need to delete the analysis and start again.
+Right click on the **Analyses** folder in the QRiS project tree and select `Create New Analysis`. This will open the analysis properties form. Provide a name and description for the analysis. Select the Analysis Masks (sample frame), valley bottom, centerline, and DEM (optional) you want to use for the analysis. You cannot change this once the analysis has been created. If you make a mistake you will need to delete the analysis and start again.
 
 :::note
 It is possible to choose an AOI or Riverscapes polygon as your Analysis Mask (sample frame).
 :::
 
-Pick from the list of available [metrics](/software-help/metrics) that you want to include in your analysis. You can always add or remove metrics later. Each of the available metrics can have one of three states:
+Next, pick from the list of available [metrics](/software-help/metrics) for production grade and experimental protocols that you want to include in your analysis. These can be found under the `Metrics and Indicators` tab. You can always add or remove metrics later after the analysis is created. 
 
-- **Exclude** - the metric will not be included in the analysis
+Each metric will show its version number, availability, usage, and description. The availability shows how many DCEs have layers populated with data to calculate a numeric value for the metric. The usage can be populated as one of three states:
+
+- **None** - the metric will not be included in the analysis
 - **Metric** - the metric will be included and treated as detailed metric when users want to dig into the full details of the analysis.
 - **Indicator** - the metric will be included and treated as an indicator. Indicators are considered summary values, or shortlisted metrics for overall reporting.
 
+Once a metric is selected as a metric or indicator, the version column will be bolded to show it as being active in the analysis. 
+
+There are also multiple filters and menubars the user can utilize to refine their search and selection of metrics. In the bottom left hand corner, users can change the main window from tree view to table view or vice versa. The tree view shows metrics organized by dropdowns for each listed protocol, while the table view shows all metrics in a single, tabular list. In the bottom right hand corner, users can set all visible metrics as *None*, *Metric*, *Indicator*, or *Default Usage* (defined in protocol xml) using the buttons provided.
+
+In the upper left hand corner, users can filter the metrics by the specific protocol or associated group. On the right, users can use the search bar to locate metrics by typing the metric name or key words. In the upper right hand corner, users can filter metrics by ones currently in use, whether they are automated or manual, or display metrics included in experimental protocols or have been deprecated by protocol authors. 
+
+In addition, users can also set custom metrics to be included in the analysis. This can be done by clicking on the `Custom Metrics` tab. Custom metrics are simple, user defined metrics that are manually populated in the analysis. 
+
+![analysis properties form](/images/software-help/analyses/Create-Analysis2.png)
+
+Once you have selected the metrics and indicators to be included in your analysis, click on the `Data Capture Events` tab to select the DCEs, designs, and/or as-builts you want to include in your analysis. This can be done by checking the box next to each DCE you want to include. You can also select all or none of the DCEs using the buttons in the bottom right hand corner. 
+
+![DCE tab example](/images/software-help/analyses/Analysis-Data-Capture-Events.png)
+
+Finally, you can populate the `Description` tab with any additional information you want to include about the analysis. This is optional and can be left blank.
+
 Click **OK** to create the analysis.
 
-![analysis properties form](/images/software-help/analyses/create-analysis.png)
+## Calculating Values for an Analysis 
 
-:::tip
-The question mark button next to each metric will pull up metadata associated with that metric. This is important if you are using multiple protocols in a given project, as this will indicate which protocol that metric belongs to.
-:::
+![analysis calculation form](/images/software-help/analyses/Calculate-Analysis.png)
 
-![metric details](/images/software-help/analyses/metric-info.png)
+Once you are done finalizing the the analysis properties form by clicking **OK**, the metric table window will appear showing the list of metrics you have included in your analysis. This is where you will view calculated metric values for associated data capture events and sample frames. To calculate numeric values for these metrics, simply click on the `Calculate` tab in the upper right hand corner. 
 
-## Open An Analysis
-
-Right click on an analysis in the QRiS project tree and select **Open**. This will open the analysis dockable window. You can reposition this window by dragging the title bar to suite your needs.
-
-The analysis dockable window has the following features:
-
-### Analysis Name
-
-The analysis name is shown at the top and can be edited by clicking the **Properties** button.
-
-### Data Capture Event
-
-The currently selected data capture event can be changed using the dropdown list. The metric table below will update to show the metric values for the currently selected event.
-
-### Mask Polygon
-
-The currently selected sample frame polygon can be changed using the dropdown list. The metric table below will update to show the metric values for the currently selected polygon.
-
-### Display Values 
-
-Switch between showing just indicators (summary metrics) or all metrics using the two radio buttons.
-
-### Units
-
-Clicking this will open a window where you can change the units that calculations are displayed in.
-
-### Metric Table
-
-The metric table always reflects the currently selected data capture event and sample frame polygon. The table shows the metric values for each [metric](/software-help/metrics). The table can be sorted by clicking on the column headers. Click **Properties** to change which metrics and indicators are displayed.
-
-The value column shows each individual metric value. The status column indicates whether the value displayed is a manually entered value or one that was calculated by QRiS by analysing the data capture event geospatial data within the current sample frame polygon. The status column can have one of the following values:
-
-- Solid blue circle - a manual value exists for this metric.
-- Solid blue square - a manual value exists and is the active value for this metric.
-- hollow blue circle - no manual value exists for this metric.
-- solid organge circle - an automated value exists for this metric.
-- solid orange square - an automated value exists and is the active value for this metric.
-- hollow orange circle - no automated value exists for this metric.
-
-The uncertainty column shows the uncertainty associated with the current value. This is never automated and can only be entered manually. Uncertainty may be applicable when entering manual values based on ocular estimates within the sample frame.  
-
-![analysis dockable window](/images/software-help/analyses/analysis-dockable-window.png)
-
-### Calculate Metric Values
-
-Click the calculate button to open a new window with the following options:
-
-#### Data Capture Events
-
-- **Just the currently active DCE** - only calculate values for the DCE selected in the anlalysis window
-- **All data capture events** - calculate values for all DCEs, not just the one selected in the analysis window
-
-#### Sample Frames
-
-- **Just the currently active SF** - only calculate values for the sample frame selected in the analysis window
-- **All Sample Frames** - Calculate values for all sample frames, not just the one selected in the analysis window
+A seperate form will appear allowing the user to calculate values for the currently active DCE or Sample Frame (selected in the analysis window), or for all Data Capture Events and Sample Frames denoted in the analysis properties form. Optionally, you can also overwrite existing values by clicking on the *Overwrite any existing automated values* box (ideal for changes to spatial data), or force values to be active by clicking on the *Force automated values to be the active values*. Once the user is satisfied with their selected options, click **Ok** to start metric calculation. A progress bar will display at the bottom of the QGIS UI showing progress towards completion. 
 
 :::tip
 Selecting all in both cases is an easy way to calculate all metrics across all sample frames and DCEs. Calculating just the currently active is a good way to run calculations to test output values and troubleshoot possible failed calculations.
 :::
 
-#### Metric Values
+![analysis calculation button](/images/software-help/analyses/Calculate-Button.png)
 
-- **Overwrite any existing automated values** - selecting this will overwrite and automated values that already exist. This may be necessary if you made changes to your spatial data.
-- **Force automated values to be active values** - selecting this makes the automated value the displayed/active value in the metirc table if you also entered in a manual value.
+### Metric Table 
 
-Click **OK** to calculate metrics.
+Once an analysis is complete, metric values will populate under the `Value` column. Values will populate for the currently selected DCE & sample frame. Users can view metrics for different DCEs & sample frame polygons by using the `Data Capture Event` and `Mask Polygon` tabs respectively to change the selection. Furthermore, users can view metrics by protocol using the dropdown menu, search for specific metric(s) in the search bar, filter metrics under the `Advanced Filters` tab, or change the display units using the `Display Units` tab. To review the properties of the analysis form, select the `Properties` tab in the upper right hand corner.
 
-![calculate window](/images/software-help/analyses/calculate.png)
+### Availability Matrix
 
-### Manually Entering Metric Values
+A yellow warning sign may appear next to a metric once the analysis is complete. This is to denote that the metric was not calculated. This can be due to layers containing no features, or the metric missing one or more required layers to calculate properly. Click on the warning sign to see the avaiability matrix window for diagnosis. 
 
-Double clicking a metric value cell or clicking the pencil logo in the analysis dockable window opens a form for entering the value.
+![qa-qc window](/images/software-help/analyses/QA-QC Window.png)
 
-- Click the Help icon to get information about currently selected metric. This is the same info that is accessible from the metric table when creating an analysis or editing the properties of an analysis.
-- Enter the metric value in the text box.
-- Pick how you want to define the uncertainty associated with the value you have chosen and provide the associated value, or range of values.
-- Clicking the **Calculate** button will attempt to automate the calculation of the metric value using the geospatial data associated with the current data capture event and sample frame polygon. If the calculation is successful the value will be shown in the text box.
-- Provide any contextual information about the metric value in the description text box.
-- Add any metadata key/value pairs if there are any pertinent data regarding the metric value.
+### Metric Properties
 
-Click **OK** to save the metric value and return to the analysis dockable window.
+Users have flexibility to change metric values, units, and uncertainty under the metric properties denoted by the blue pen on the left. In the properties window, users have the option to change metric values from their automated calulation to a manual entry, add uncertainty values (entered manually), or change the display units under the `Value` tab. Users can optionally add more information about the metric under the `Notes` and `Metadata` tabs. To view metric information as defined in the protocol xml, click on the blue question mark in the upper right hand corner. 
 
-![metric value form](/images/software-help/analyses/metric-value.png)
+![metric properties](/images/software-help/analyses/Metric-Properties.png)
 
-## Analysis Summary
+### Export an Analysis
+
+Finally, users can export their analysis table by clicking on the `Export Metric Table` in the bottom right hand corner. This can be done for one or all DCEs and sample frames. The default location will be the *Exports* folder in the QRiS project, but the user can specificy any file location if desired. 
+
+![metric properties](/images/software-help/analyses/Metric-Export.png)
+
+### Open An Existing Analysis
+
+To view an existing analysis in the QRiS project tree, right click on an existing analysis under the *Analysis* bin and select **Open**. This will open the analysis dockable window. You can reposition this window by dragging the title bar to suite your needs. 
+
+### Analysis Summary
+
+:::warning
+Currently being reworked. 
+:::
 
 Clicking the blue logo next to properties will open a new window where you can see your calculated metrics displayed as a graph. This is also accessible by right clicking on the analysis folder in the main QRIS project tree.
 
@@ -139,10 +108,6 @@ Clicking the blue logo next to properties will open a new window where you can s
 ![metric over time](/images/software-help/analyses/metric-over-time.png)
 
 ![metric over riverscape](/images/software-help/analyses/metric-over-riverscape.png)
-
-## Export an Analysis
-
-Right click on an analysis in the QRiS project tree and select **Export Metrics Table**. Pick the desired file format and then specify a file location. Click **OK** to export the analysis. All metric values for all data capture events and sample frame polygons will be exported to the specified format.
 
 ## Delete an Analysis
 
