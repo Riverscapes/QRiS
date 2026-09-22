@@ -1,47 +1,40 @@
 # QGIS Riverscapes Studio (QRiS)
 
-Users, please visit [QRiS website](https://qris.riverscapes.net) for help, documentation and installation instructions. QRiS is installed from the QGIS Plugins Library.  
+Users, please visit [QRiS website](https://qris.riverscapes.net) for help, documentation and installation instructions. QRiS is installed from the QGIS Plugins Library.
 
 # Developers
-***NB: Be sure to develop in VSCode by opening the relevant Workspace***
 
-* `Workspaces\RIPTOSXDev copy.code-workspace`
-* `Workspaces\RIPTWindowsDev.code-workspace`
+Be sure to develop in VSCode by opening the relevant version of QGIS.
 
-## Local Docs Dev Server (Docusaurus)
+* `Workspaces/QRiS_DEV_4.code-workspace`
+* `Workspaces/QRiS_DEV_3.code-workspace`
 
-Run these commands from the `docs` folder:
+## Documentation
 
-```powershell
-npm run start:local
-```
-
-The `start:local` command handles the local setup steps needed for this repo and then starts the docs site on port 3000.
-
-In VS Code you can also use tasks:
-
-* `Docs: Start Local Server`
-* `Docs: Stop Local Server`
-
-## Development resources
-
-* [PyQGIS Developer Cookbook](https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/index.html) - This should be the go-to for all your basic plugin development needs
-* [QGIS API Documentation](https://qgis.org/api/) - Here you'll find Qgis-specific information for the API, endpoints, signals, slots etc.
-* [Qt for Python](https://doc.qt.io/qtforpython-5/) - Qt is a C++ library so you need to specify the Python docs. This is where you find help with things like QtGui and QtWidgets
-
-## Both windows and OSX:
-
-In order to develop this module live in QGIS you need to clone this repo to the folder where QGIS Stores its plugins. 
-
-* On windows it's something like: `C:\Users\USERNAME\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins`
-* On OSX it's something like: `/Users/USERNAME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins`
-
-## On OSX
-
-You actually have two options when cloning the repo; You can clone the repo directly into you QGIS plugins folder, as described above, or you can clone it anywhere you want and put a ssym link to the repo in your plugins folder. The latter approach gives you more control. The command to create the sym link is:
+Use the dedicated VSCode workspace for documentation. Make sure your terminal is in the `docs` folder and then type the command:
 
 ```bash
-ln -s /PATH_TO_CLONED_REPO/QRiS /Users/USER_NAME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/
+yarn start
+```
+## Development
+
+* [PyQGIS Developer Cookbook](https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/index.html) - This should be the go-to for all your basic plugin development needs
+* [QGIS API Documentation](https://qgis.org/api/) - Here you'll find QGIS-specific information for the API, endpoints, signals, slots etc.
+* [Qt for Python](https://doc.qt.io/qtforpython-5/) - Qt is a C++ library so you need to specify the Python docs. This is where you find help with things like QtGui and QtWidgets.
+
+### Both Windows and OSX:
+
+In order to develop this module live in QGIS you need to clone this repo to the folder where QGIS Stores its plugins. Both paths below show the folder `default`, but in reality you will want to use a separate `development`QGIS profile.
+
+* On windows it's something like: `C:\Users\USERNAME\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins`
+* On OSX it's something like: `/Users/USERNAME/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins`
+
+### On OSX
+
+You actually have two options when cloning the repo; You can clone the repo directly into you QGIS plugins folder, as described above, or you can clone it anywhere you want and put a sym link to the repo in your plugins folder. The latter approach gives you more control. The command to create the sym link is:
+
+```bash
+ln -s /PATH_TO_CLONED_REPO/QRiS /Users/USER_NAME/Library/Application Support/QGIS/QGIS4/profiles/development/python/plugins/
 ```
 
 Note the absence of a trailing slash on the first path and the presence of one on the latter. You know the sym link is working if you can click the symb link in Finder and get redirected to the cloned repo.
