@@ -28,7 +28,7 @@ def _get_layout_by_id(layout_id: str, warn_if_missing: bool = True) -> QgsPrintL
     return layout
 
 
-def open_layout(layout_template_path, layout_name=None):
+def open_layout(layout_template_path, layout_name=None, show_designer=True):
     """
     Open a QGIS layout from a template file or XML string.
 
@@ -36,14 +36,15 @@ def open_layout(layout_template_path, layout_name=None):
     layout_template_path (str): Path to the layout template file (.qpt) or an XML string.
     layout_name (str, optional): Name to use for the layout. If None, the name is derived
         from the template file name.
+    show_designer (bool): If True, open the QGIS layout designer UI. Default True.
 
     Returns:
-    None
+    QgsPrintLayout: The layout that was loaded/opened, or None on failure.
     """
 
     if layout_template_path is None:
         QtWidgets.QMessageBox.warning(Settings().iface.mainWindow(), "QRiS", "Template selection invalid.")
-        return
+        return None
 
     qgis_project = QgsProject.instance()
     layout = QgsPrintLayout(qgis_project)
@@ -75,9 +76,9 @@ def open_layout(layout_template_path, layout_name=None):
     # Check if layout already exists in QGIS project
     existing_layout = qgis_project.layoutManager().layoutByName(layout_name)
     if existing_layout:
-        # If it exists, open it instead of creating a new one
-        Settings().iface.openLayoutDesigner(existing_layout)
-        return
+        if show_designer:
+            Settings().iface.openLayoutDesigner(existing_layout)
+        return existing_layout
 
     counter = 1
     while qgis_project.layoutManager().layoutByName(layout_name):
@@ -94,7 +95,10 @@ def open_layout(layout_template_path, layout_name=None):
             item.zoomToExtent(canvas_extent)
             item.refresh()
 
-    Settings().iface.openLayoutDesigner(layout)
+    if show_designer:
+        Settings().iface.openLayoutDesigner(layout)
+
+    return layout
 
 
 def serialize_layout(layout_id: str) -> str:

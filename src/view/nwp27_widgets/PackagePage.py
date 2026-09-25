@@ -13,18 +13,10 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...lib.layout_tools import _get_layout_by_id, open_layout, print_layout
 from .BaseWidget import BaseWidget
 from .DBCon import DBCon
-from .WizardStatus import STEP_UNKNOWN
-
-PRODUCTS = [
-    "JSON Export",
-    "json_export",
-    "product B name",
-    "callback_B",
-    "product C name",
-    "callback_C",
-]
+from .WizardStatus import PRODUCTS, STEP_UNKNOWN
 
 
 class PackagePage(BaseWidget):
@@ -65,9 +57,11 @@ class PackagePage(BaseWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
 
         # Populate table with default-checked product items
-        product_pairs = list(zip(PRODUCTS[0::2], PRODUCTS[1::2]))
         self._product_callbacks = {}
-        for name, callback in product_pairs:
+        for product in PRODUCTS:
+            # if product["is_layout"]:
+            #     continue
+
             row = self.table.rowCount()
             self.table.insertRow(row)
 
@@ -76,10 +70,10 @@ class PackagePage(BaseWidget):
             chk.setChecked(True)
             chk.stateChanged.connect(self.on_text_changed)
             self.table.setCellWidget(row, 0, chk)
-            self._product_callbacks[row] = callback
+            self._product_callbacks[row] = product
 
             # Product name in 2nd column
-            name_item = QTableWidgetItem(name)
+            name_item = QTableWidgetItem(product["name"])
             self.table.setItem(row, 1, name_item)
 
         layout.addWidget(self.table)
@@ -122,6 +116,34 @@ class PackagePage(BaseWidget):
                 chk.setChecked(False)
         self.on_text_changed()
 
+    def _export_layout(self, product: dict) -> None:
+        """Ensure the layout is in the project (without opening the designer), then print it to PDF."""
+        machine_code = product["machine_code"]
+        name = product["name"]
+
+        # Ensure the layout is loaded into the project silently
+        layout = _get_layout_by_id(machine_code, False)
+        if not layout:
+            existing_layouts = self.load_data("mapLayouts")
+            if existing_layouts and machine_code in existing_layouts:
+                layout_xml = existing_layouts[machine_code]
+                open_layout(layout_xml, layout_name=machine_code, show_designer=False)
+            else:
+                # Load from template
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                plugin_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+                layout_path = os.path.join(plugin_root, "resources", "map_templates", f"{machine_code}.qpt")
+                if os.path.exists(layout_path):
+                    open_layout(layout_path, show_designer=False)
+                else:
+                    print(f"Layout template not found for '{name}'")
+                    return
+
+        # Print to PDF
+        safe_name = machine_code.replace(" ", "_").replace("(", "").replace(")", "")
+        out_pdf_path = os.path.join(self.export_folder, f"{safe_name}.pdf")
+        print_layout(machine_code, out_pdf_path)
+
     def produce_products(self) -> None:
         """Calls all the callback functions associated with each checked product."""
 
@@ -129,13 +151,20 @@ class PackagePage(BaseWidget):
         for row in range(self.table.rowCount()):
             chk = self.table.cellWidget(row, 0)
             if isinstance(chk, QCheckBox) and chk.isChecked():
-                callback_name = self._product_callbacks[row]
-                callback_func = getattr(self, callback_name, None)
-                if callback_func and callable(callback_func):
-                    callback_func()
+                product = self._product_callbacks[row]
+
+                if product["is_layout"]:
+                    # Print the layout to a PDF
+                    self._export_layout(product)
                     export_count += 1
                 else:
-                    print(f"Callback {callback_name} is not implemented or not callable.")
+                    callback_name = product["machine_code"]
+                    callback_func = getattr(self, callback_name, None)
+                    if callback_func and callable(callback_func):
+                        callback_func()
+                        export_count += 1
+                    else:
+                        print(f"Callback {callback_name} is not implemented or not callable.")
 
         if export_count > 0:
             # Show a message box offering to browse the folder
@@ -178,9 +207,3 @@ class PackagePage(BaseWidget):
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 with open(output_path, "w") as f:
                     json.dump(nwp_data, f, indent=4)
-
-    def callback_B(self) -> None:
-        print("callback_B called")
-
-    def callback_C(self) -> None:
-        print("callback_C called")
