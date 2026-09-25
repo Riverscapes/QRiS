@@ -737,7 +737,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                                 self.add_context_menu_item(self.menu, "Unlock All Layers in DCE", "lock_open_right", lambda: self.set_group_lock_state(model_data, False, model_item))
                                 self.menu.addSeparator()
                                 if model_data.event_type.id == DESIGN_EVENT_TYPE_ID:
-                                    self.add_context_menu_item(self.menu, "Open NWP Package", "new", lambda checked=False, evt=model_data: self.open_nwp_dock(evt))
+                                    self.add_context_menu_item(self.menu, "Open NWP Package", "folder", lambda checked=False, evt=model_data: self.open_nwp_dock(evt))
                         else:
                             self.add_context_menu_item(self.menu, "Add To Map", "add_to_map", lambda: self.add_db_item_to_map(model_item, model_data))
                 else:

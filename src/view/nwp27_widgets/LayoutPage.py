@@ -12,6 +12,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from ...lib.layout_tools import _get_layout_by_id, open_layout, serialize_layout
+from ...QRiS.settings import Settings
 from .BaseWidget import BaseWidget
 from .WizardStatus import PRODUCTS, STEP_UNKNOWN
 
@@ -106,23 +107,37 @@ class LayoutPage(BaseWidget):
 
     def open_layout(self, name: str, machine_code: str) -> None:
 
-        layout = _get_layout_by_id(machine_code)
+        # Check if layout already exists in the QGIS project (e.g. was already opened this session)
+        layout = _get_layout_by_id(machine_code, False)
         if layout:
-            # Layout already exists in the project; focus its designer
-            QgsProject.instance().layoutManager().openDesigner(layout)
+            Settings().iface.openLayoutDesigner(layout)
             return
 
+        # Check the database for an existing serialized layout
+        existing_layouts = self.load_data("mapLayouts")
+        if existing_layouts and machine_code in existing_layouts:
+            # Load from saved XML
+            layout_xml = existing_layouts[machine_code]
+            open_layout(layout_xml, layout_name=machine_code)
+            return
+
+        # No saved layout exists; open fresh from the QPT template
         layout_path = os.path.join(self.layouts_dir, f"{machine_code}.qpt")
         if os.path.exists(layout_path):
             open_layout(layout_path)
 
     def save_layout(self, name: str, machine_code: str) -> None:
 
-        layout = _get_layout_by_id(machine_code)
+        # Get the layout from the QGIS project by its machine code name
+        layout = _get_layout_by_id(machine_code, False)
         if not layout:
             return
 
-        current_layout_str = serialize_layout(layout)
+        # Serialize the current state of the layout in the designer to XML
+        current_layout_str = serialize_layout(machine_code)
+        if not current_layout_str:
+            return
+
         existing_layouts = self.load_data("mapLayouts")
         if existing_layouts is None:
             existing_layouts = {}

@@ -19,21 +19,23 @@ from qgis.PyQt.QtXml import QDomDocument
 from ..QRiS.settings import Settings
 
 
-def _get_layout_by_id(layout_id: str) -> QgsPrintLayout:
+def _get_layout_by_id(layout_id: str, warn_if_missing: bool = True) -> QgsPrintLayout:
     qgis_project = QgsProject.instance()
     layout = qgis_project.layoutManager().layoutByName(layout_id)
-    if not layout:
+    if not layout and warn_if_missing is True:
         QtWidgets.QMessageBox.warning(Settings().iface.mainWindow(), "QRiS", f"Layout '{layout_id}' does not exist.")
         return None
     return layout
 
 
-def open_layout(layout_template_path):
+def open_layout(layout_template_path, layout_name=None):
     """
     Open a QGIS layout from a template file or XML string.
 
     Parameters:
     layout_template_path (str): Path to the layout template file (.qpt) or an XML string.
+    layout_name (str, optional): Name to use for the layout. If None, the name is derived
+        from the template file name.
 
     Returns:
     None
@@ -48,7 +50,10 @@ def open_layout(layout_template_path):
     layout.initializeDefaults()
     doc = QDomDocument()
 
-    base_name = os.path.splitext(os.path.basename(layout_template_path))[0]
+    if layout_name:
+        base_name = layout_name
+    else:
+        base_name = os.path.splitext(os.path.basename(layout_template_path))[0]
 
     if layout_template_path.lower().endswith(".qpt"):
         template_type = "file"
@@ -103,7 +108,7 @@ def serialize_layout(layout_id: str) -> str:
     str: The XML string representation of the layout, or an empty string if the layout does not exist.
     """
 
-    layout = _get_layout_by_id(layout_id)
+    layout = _get_layout_by_id(layout_id, False)
     if not layout:
         return ""
 
@@ -165,7 +170,7 @@ def set_layout_text(layout_id: str, slug: str, text: str) -> None:
     Returns:
     None
     """
-    layout = _get_layout_by_id(layout_id)
+    layout = _get_layout_by_id(layout_id, False)
     if not layout:
         return
 

@@ -171,6 +171,9 @@ class PackagePage(BaseWidget):
                 metadata = json.loads(metadata)
                 nwp_data = metadata.get("nwp27", {})
 
+                # Remove any keys called 'mapLayouts'
+                nwp_data.pop("mapLayouts", None)
+
                 # Write the metadata to the output path
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 with open(output_path, "w") as f:
