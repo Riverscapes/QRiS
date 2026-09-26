@@ -87,6 +87,13 @@ This course will be focused on how we quanatitative use mapping and analysis in 
 - Install QGiS and the [QRiS](https://qris.riverscapes.net/download) and [Riverscapes Viewer](https://viewer.riverscapes.net/Deploy/install-qgis/) Plugins (see [here](https://qris.riverscapes.net/download)).
 
 ----
+## Introduction & Background
+<GoogleSlides
+  src="https://docs.google.com/presentation/d/e/2PACX-1vSS5pGD8l_w7TJI3kYYQiObHnwYhJ4S2vlz7_7SCiTIR4ZKAIPY6DisUdodrCsf4FXx8rOli9drjTGb/pubembed?start=false&loop=false&delayms=3000"
+  width={800}
+  height={600}
+/>
+----
 ## Main Assignment
 The main outcome of this workshop is to complete a LTPBR Planning Analysis for a project reach of your choosing using QRiS.
 
@@ -137,16 +144,7 @@ Today we covered how to create your own QRiS project, how to create an area of i
 
 -----
 ## Resources
-### Class Recordings
 
-<details closed>
-<summary>Our meetings were recorded for your reference.</summary>
-
-The [playlist](https://youtube.com/playlist?list=PL0ZiZg4rilzISfj4HwzCE0afp1gkncCOP&si=EanpCjcKbGsl_ush) is organized by day. We missed a few bits here and there where we forgot to start recording, but the vast majority is there.
-
-
-<YouTubeEmbed videoId="videoseries?si=ShLyh1OooBaksIn1&amp;list=PL0ZiZg4rilzISfj4HwzCE0afp1gkncCOP&si=D4lxz2xObqXKOCep" />
-</details>
 ----
 ## Community Resources
     These communities from the [Riverscapes Consortium](https://www.riverscapes.net) are great places to ask questions, connect with colleagues and share your work.
@@ -183,9 +181,7 @@ The [playlist](https://youtube.com/playlist?list=PL0ZiZg4rilzISfj4HwzCE0afp1gknc
 ## Assignment Resources
 This section elaborates on some of the questions you engage with in the Conservation Planning Process (CPP) adapted from Bennett et al. (2019) and outlined in Chapter 3 of the LTPBR Design Manual. There are many ways to answer these questions. Here we focus on some workflows that still emphasize engagement with the questions, using QRiS to document what you are determining or mesuring, and leveraging (if appropriate) outputs from some of our nationally available datasets. You may be surprised for how many riverscapes you can do a decent job of this from the desktop.
 
-:::tip
-If this class was in person, we would use Monday to approximate answers to these questions at the desktop and with freely available data. We would use Tuesday to get out in the field, see how good our desktop assessment was, fill in gaps of our ounderstanding from the desktop, and record new obeservations. Then we would use Wednesday to pull together both field and desktop evidence, and havea revised planning assesssment. You can do this on your own with the riverscapes you work in.
-:::
+
 
 ### Report Template
 
@@ -259,18 +255,36 @@ For this course, our in class exercise covers [proportion active mapping](#map-g
 See page 9-13 of Chapter 3
 
 #### Valley Bottom Mapping
-Choose your riverscape extent (upstream and downstream) and map your valley bottom (laterally) as a [riverscape in QRiS](https://qris.riverscapes.net/software-help/inputs/valley-bottoms/). If you are including multiple reaches on the same riverscape that are seperated, keep these as separate riverscapes. If you are including tributary riverscapes, also keep these as separate riversccapes in QRiS.
+:::info Key Planning Question
+>What part of **valley bottom** is available?
+
+To answer this, you need to map your valley bottom(s) and then evaluate risks adjacent and therin.
+:::
+
+
+
+Choose your riverscape extent (upstream and downstream) and map your valley bottom (laterally) as a [riverscape in QRiS](https://qris.riverscapes.net/software-help/inputs/valley-bottoms/).  If you are including multiple reaches on the same riverscape that are seperated, keep these as separate riverscapes. If you are including tributary riverscapes, also keep these as separate riversccapes in QRiS.
 
 We recommend typically classifying and mapping your riverscape into active channel, active floodplain and inactive floodplain components.  This begins with reading it and mapping it. We start this by [mapping valley geomorphic units](#f-map-valley-bottom-and-compare-to-vbet) and then allowing the delineation of valley bottom to fall out of that mapping of channels, floodplains, terraces, fans and hillslopes.
 
 We can use multiple lines of evidence, including seeing if what [VBET estimates for our site](#f-map-valley-bottom-and-compare-to-vbet) is reasonable and confirms our mapping.
 
 #### Identified Risks within & Adjacent to Riverscape
-Map all infrastructure and land use within and adjacent to your riverscape of interest, as well as immediately downstream; use the risk matrix to evaluate).
+Map all infrastructure and land use within and adjacent to your riverscape of interest, as well as immediately downstream; (use the risk matrix to evaluate). Ultimately, you will need decide what areas are *inaccessible*. This is a value judgement and management decision.
 
 
 #### Recovery Space
 Synthesis for each project reach of proportion of valley bottom available as/for recovery space. This should reflect the stakeholder/landowner’s current values.
+
+```math
+RecoverySpace = ValleyBottom - InaccessibleAreas
+```
+One simple way of thinking about *uplift potential* is the gap between what is currently *active* (active channels and floodplains) and this *recovery space* is the overall area in which you have the opporitunity to activate and improve conditions. This is often the conversion of inactive floodplain and/or channel(s) into active floodplain and/or channel(s).
+```math
+UpliftPotential = RecoverySpace - Active
+```
+
+
 
 ### 4. Resource Analysis
 #### Assessment of Current Conditions and Recovery Space
@@ -436,7 +450,41 @@ In class, we will work through exercises to practice the steps of LTPBR Planning
 In general, you will be expected to apply what we cover in exercises to your own project for the [assignment](#main-assignment).
 :::
 
-### A. Install and Open Project
+
+
+### A. From Nothing to Something in 15 minutes
+:::tip Key Assessment
+One of the most important outcomes in the planning process to preapre for design is to identify the space within the riverscape that could be improved.
+>What part of **valley bottom** is available?
+:::
+
+We're going to do that very rapidly here, without digrssing into the why and how to do it better. We will just work quickly through the mechanics to the finish. By the end of this week, you will have done the same for your own site, but you will have iterated on that mutliple times and supported your answer more rigorously. For now, lets see what the whole process looks like without getting loss in weeds.
+
+1. Open QGIS and start a `New` map.
+2. *We will all work on same parcel*. Download this [`property_boundary.zip`](/files/property_boundary.zip) to a place on your computer you will work from (e.g `c:\0_RS\CEWA_6626` folder), and unzip it. Add the `property_boundary.geojson` to the map (drag and drop works).
+3. *Get Oriented*. Notice where in the world this is, by adding a Basemap (e.g. Google Imagery or Terrain) from the Riverscapes Viewer panel 'Basemaps' → 'Google'.
+:::tip
+If you don't like the look of a geographic projection, you can click on the `EPSG:4326` Coordinate Reference System in lower right and filter for one you like (e.g. UTM Zone 12N) and select EPSG:3742 instead.
+:::
+4. *Make a new QRiS Project to work in*. Create a new QRiS Project from QRiS menu - `Project` → `New Project` and Give it a name of something and store in a Project Path you can find again (e.g `c:\0_RS\CEWA_6626` folder). An empty project container will appear in a new QRiS panel docked on the right.
+5. *Use Property as an Area of Interest*. Expand the Inputs, and right click on `AOIs` and select `Import AOI from` → `+ Layer in the map`, and select the `property_boundary` and click `OK`. You can rename it to "Project Property" if you like, and click on `OK`.
+6. *Clean up*. Remove the `property_boundary` (now redundant) from the `Layers` manager by right clicking on it and clicking `Remove Layer`. Zoom into the polygon, and if you don't already have Google Imagery loaded, load it now from Basemaps.
+7. *Make a new Riverscape*. Right-click on `Riverscapes` and select `+ Create New`. Give it a name of Coburn Creek Valley Bottom. Select `Start Edit Session` before clicking `OK`.
+8. *Draw your riverscape*. Using the `Add Polygon Feature` button in editing toolbar, digitize an approximate valley bottom extending just upstream (west) and downstream (east) of Property. Left click to add new verticies, right click to complete and click `OK`. Finish edit session, by toggling the `Toggle Edit` pencil button and `Save` your changes.
+9. *How big is this riverscape?*  In QRiS project, right click on your riverscape, view `Propeties` and switch to the Geometry tab. Toggle units to acres.
+10. *How long is this riverscape?* To find out, right click on your riverscape, and `Generate a Centerline`. A `Generate Centerlines` dockable window will appear. Click `Select` for Polygon Feature and select your valley bottom in the map. Then click `Capture` Start of Centerline and draw a cross section (by clicking the right button and keeping it compressed until you drag it to end point) that starts outside the riverscape and extends across it to outside on the other end near the top of the reach. Repeat near downstream end for End of Centerline. Click `Generate Centerline`. If acceptable, click `Save Centerline`. Click `OK`. Close the dockable window. To see length, find your centerline under `Profiles` and right click on it and view `Properties` and switch to `Geometry` tab. How long is this in miles?
+11. *Make a new Data Capture Event for mapping recovery space*. Right Click on `Data Capture Events` and `+ Add a New Data Capture Event`, and give it a name of `Some Mapping`. Under Layers, expand out the "Anabranch Planning Protocol" and check the "Recovery Space - Minimum" and "Recovery Space - Maximum" layers. Toggle the option to `Add New Layers to Map`. Click `OK`.
+12. *Estimate the currently active riverscape as a minimum for recovery space.* Right click in the `Layers` panel the "Recovery Space - Minimum" layer and `Toggle Editing`. Using the `Add Polygon Feature` tool, digitize a polygon for what you estimate the current active area of riverscape to be (active channel and active floodplain). `Toggle Editing` when done off, and save your changes.
+13. *Estimate maximum recovery space*. Right click in QRiS Project Tree on "Recovery Space - Maximum (empty)" and `Imprort Features From` → `Riverscape` and select your valley bottom, and click `OK`. Toggle editing for this layer and use the `Reshape Feature` command to cut out what part of the riverscape you don't think can be recovered. Toggle editing off when done and save changes.
+14. *Report what the Uplift Potential is*. Right click on `Analyses` and `Create New Analysis`. Give it a name (e.g. "Uplift"). Toggle on the following metrics:
+- Riverscape Length
+- Riverscape Area
+- Riverscape Integrated Width
+- Minimum Potential Uplift Area
+- Maximum Potential Uplift Area
+If you mapped Minimum potential uplift as currently ative, and maximum as what you think could be done, the difference in area is your uplift potential.
+
+### B. Open Demo Project
 
 QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install them directly in QGIS.
 
@@ -505,6 +553,11 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 <YouTubeEmbed videoId="9D53qm6BZvE" />
 ### F. Map Valley Bottom and Compare to VBET
 
+:::info Key Planning Question
+>What part of **valley bottom** is available?
+
+:::
+
 #### Manually Map the Valley Bottom
 1. Right-click Riverscapes node -> Create New (Manually Digitized) Valley Bottom. Name and describe the layer in the pop-up window.
 2. With the new valley bottom layer selected -> toggle editing.
@@ -551,6 +604,8 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 ![Active Confining Margins](/images/tutorials/margins.png)
 <YouTubeEmbed videoId="z8ob8Ypg6j8" />
 ### H. Map Risk
+
+
 
 1. Open the Anthro Riverscapes project that we downloaded earlier through the Riverscapes Viewer by browsing to and selecting the project.rs.xml
 2. In the Riverscapes Viewer panel, add potential risk layers to the map (layers such as roads, canals, land ownership, etc). We’ll use these as the basis for delineating your risk layers next.
@@ -682,3 +737,16 @@ Run the Analysis three times:
 
 Metrics can be recalculated at any time and values can be overridden with manual values if necessary. More help can be found on the [Analyses](/software-help/analyses) help page.
 <YouTubeEmbed videoId="a1Im3NP8MZE" />
+
+
+
+### Class Recordings
+
+<details closed>
+<summary>Our 2025 meetings were recorded for your reference.</summary>
+
+The [playlist](https://youtube.com/playlist?list=PL0ZiZg4rilzISfj4HwzCE0afp1gkncCOP&si=EanpCjcKbGsl_ush) is organized by day from first year in 2025. We missed a few bits here and there where we forgot to start recording, but the vast majority is there. 2026 recordings can be found on the Canvas page under Zoom for registered students.
+
+
+<YouTubeEmbed videoId="videoseries?si=ShLyh1OooBaksIn1&amp;list=PL0ZiZg4rilzISfj4HwzCE0afp1gkncCOP&si=D4lxz2xObqXKOCep" />
+</details>
