@@ -1,8 +1,10 @@
 from importlib import import_module
 
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QComboBox, QStackedWidget, QVBoxLayout, QWidget
 
+from ...model.project import Project
 from .BaseWidget import BaseWidget
 from .WizardStatus import STEP_COMPLETE, STEP_INCOMPLETE, STEP_UNKNOWN
 
@@ -56,6 +58,8 @@ STEPS = [
 
 
 class MainWidget(QWidget):
+    attachments_changed = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setLayout(QVBoxLayout())
@@ -84,13 +88,15 @@ class MainWidget(QWidget):
 
         self.dropdown.currentIndexChanged.connect(self.on_step_changed)
 
-    def configure(self, db_path: str, design_id: int) -> None:
+    def configure(self, db_path: str, design_id: int, project: Project = None) -> None:
         self.db_path = db_path
         self.design_id = design_id
 
         # Now that we have real data, configure each page
         for page in self._pages.values():
             if hasattr(page, "configure"):
+                if project and hasattr(page, "set_project"):
+                    page.set_project(project)
                 page.configure(db_path, design_id)
 
         # Refresh data on all pages so statuses are computed from real DB state
@@ -114,6 +120,8 @@ class MainWidget(QWidget):
         self.stack.addWidget(page)
         if hasattr(page, "contentChanged"):
             page.contentChanged.connect(lambda idx=index: self.update_step_icons())
+        if hasattr(page, "attachments_changed"):
+            page.attachments_changed.connect(self.attachments_changed.emit)
         return page
 
     def on_step_changed(self, index: int) -> None:

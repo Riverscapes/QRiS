@@ -45,7 +45,7 @@ class FrmNwpDocWidget(QtWidgets.QDockWidget):
         self.qris_project = project
         self.event = event
         self.setWindowTitle(f"NWP Package - {event.name}")
-        self.nwp_widget.configure(project.project_file, event.id)
+        self.nwp_widget.configure(project.project_file, event.id, project=project)
 
     def setupUi(self):
 

@@ -1229,6 +1229,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 return found
         return None
 
+    def refresh_attachments_tree(self):
+        """Rebuild the attachments node in the project tree to reflect adds/deletes."""
+        root = self.model.invisibleRootItem()
+        node = self._find_tree_node(root, ATTACHMENT_MACHINE_CODE)
+        if node is None:
+            return
+        # Remove all child nodes and repopulate
+        while node.rowCount() > 0:
+            node.removeRow(0)
+        for attachment in self.qris_project.attachments.values():
+            self.add_child_to_project_tree(node, attachment, False)
+
     def on_item_added(self, db_item) -> None:
         """Route a newly created DBItem to the correct project tree node.
 
@@ -1310,6 +1322,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             self.nwp_doc_widget.configure(self.qris_project, event)
             self.iface.addDockWidget(RIGHT_DOCK, self.nwp_doc_widget)
             self.nwp_doc_widget.closing.connect(self.destroy_nwp_doc_widget)
+            self.nwp_doc_widget.nwp_widget.attachments_changed.connect(self.refresh_attachments_tree)
         else:
             self.nwp_doc_widget.configure(self.qris_project, event)
             self.nwp_doc_widget.show()

@@ -38,7 +38,7 @@ class ClickableDateEdit(QtWidgets.QDateEdit):
 
 
 class FrmAttachment(QtWidgets.QDialog):
-    def __init__(self, parent, qris_project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE):
+    def __init__(self, parent, qris_project: Project, attachment: Attachment = None, attachment_type: str = Attachment.TYPE_FILE, initial_metadata: dict = None):
 
         self.qris_project = qris_project
         self.metadata = None
@@ -48,7 +48,12 @@ class FrmAttachment(QtWidgets.QDialog):
         self.extension = None
 
         super().__init__(parent)
-        metadata_json = json.dumps(attachment.metadata) if attachment is not None else None
+        if attachment is not None:
+            metadata_json = json.dumps(attachment.metadata)
+        elif initial_metadata is not None:
+            metadata_json = json.dumps(initial_metadata)
+        else:
+            metadata_json = None
         self.metadata_widget = MetadataWidget(self, metadata_json)
         self.setupUi()
 
