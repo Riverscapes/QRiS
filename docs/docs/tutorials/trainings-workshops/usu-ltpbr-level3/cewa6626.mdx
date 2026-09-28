@@ -532,13 +532,13 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 3. Install the QRiS plugin next. Follow the same steps to Plugins > Manage and Install Plugins and search for QRiS. Click the Install button.
 4. Create a new project, or open the [one provided](https://data.riverscapes.net/p/e1969064-3661-4ef2-8e43-586aaeac4a18/) after downloading
 <YouTubeEmbed videoId="JSspKEaYn4s" />
-### B. Download Riverscapes Projects and Explore Context layers
+### C. Download Riverscapes Projects and Explore Context layers
 
 1. Under the QRiS Plugin pane, right click on your project name, and select Browse Data Exchange Projects. This will open a Data Exchange window in your web browser, zoomed to the map area open in QGIS.
 2. In the Data Exchange, you can zoom out as needed to be sure you select the HUC 10 you’re working within. Click your HUC 10 and find a Valley Bottom (VBET) project. Click the project. A banner at the top of the project page will alert you if there is a newer version of the Valley Bottom project run. Download your Valley Bottom project.
 3. Follow the same steps to find and download the Riverscapes Context and Anthro Projects as well.
 <YouTubeEmbed videoId="hLWqKnW1Q0c" />
-### C. Populate Project with Context layers
+### D. Populate Project with Context layers
 
 1. Open your Riverscapes Context Project throught the Riverscapes Viewer Plugin by browsing to and selecting the project.rs.xml
 
@@ -553,19 +553,18 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 ![Import Layers](/images/webinars/import-layers.png)
 
 <YouTubeEmbed videoId="HX5Mum-rI4o" />
-### D. Delineate a Catchment and Export Watershed Statistics
+### E. Delineate a Catchment and Export Watershed Statistics
 
+1. Expand the `Context` node and right click `Catchment Delineations` then click `+ Run USGS Streamstats (US Only)`. Click `OK` on the pop up.
+2. Now navigate on your map to the area where you want delineate upstream from, likely the bottom of your reach. Make sure a basemap is turned on so you can see where your stream is, click on the map on the stream to delineate the basin upstream from that point. 
+3. In the dialog that comes up, give your catchment a name, and select the option for `Catchment with Basin Charcterisics and Flow Statistics`, then click `OK`. 
+:::tip
+Things will run in the background for a minute, if successful a delineation point and an upstream catchment will be added to the map. If that doesn't happen you will need to try again and slightly adjust where you click to delineate. Having the NHD Streamlines on the map is useful for finding the right place to click if you are having issues. 
+:::
+4. Back in the QRIS plugin you will see that you can now expand out `Catchment Delineations` and see the basin name you just delineated. Right click your delineation and select `Properties`. A pop up will open that shows the Basin Charcterisics as well as Flow Statistics if available. 
+5. CLick `Export Table` and change the file name/type if desired and click `OK`. This will export directly into a subfloder within your QRIS project. That file can be accessed by right clicking your project name and then selectinng `Browse Containing Folder`. There you will see an exports folder, where all future exports from your project will be stored. 
 
-
-
-
-
-
-
-
-
-
-### D. Create a Data Capture Event
+### F. Create a Data Capture Event
 
 1. Right-click Data Capture Events node -> Add New Data Capture Event
 2. Select Geomorphic Mapping of Riverscapes in the pop-up window. Click Add.
@@ -579,7 +578,7 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 
 ![Create DCE](/images/tutorials/DCE-example.png)
 <YouTubeEmbed videoId="q6zT7PAgSBQ" />
-### E. Map Geomorphic Units
+### G. Map Geomorphic Units
 
 1. Add the Geomorphic Units layer to the map (either by double-clicking, or right-click -> add to map)
 2. With the Geomorphic Units layer selected, toggle editing.
@@ -590,7 +589,7 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 
 ![Geomorphic Units](/images/tutorials/geomorphic-units.png)
 <YouTubeEmbed videoId="9D53qm6BZvE" />
-### F. Map Valley Bottom and Compare to VBET
+### H. Map Valley Bottom and Compare to VBET
 
 :::info Key Planning Question
 >What part of **valley bottom** is available?
@@ -622,18 +621,18 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 ![VBET Compare](/images/webinars/VBETcompare.png)
 
 <YouTubeEmbed videoId="VlCkXB07jUk" />
-### Move enerating sample frames
+### I. Move enerating sample frames
 
 
-### Create Intrinsic Analysis and Export
-
-
-
+### J. Create Intrinsic Analysis and Export
 
 
 
 
-### G. Map Active Confining Margins
+
+
+
+### K. Map Active Confining Margins
 
 1. In your DCE -> Active Confining Margins layer -> double-click or right-click -> add to map
 2. With the Active Confining Margins layer selected, toggle editing.
@@ -642,7 +641,7 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 
 ![Active Confining Margins](/images/tutorials/margins.png)
 <YouTubeEmbed videoId="z8ob8Ypg6j8" />
-### H. Map Risk
+### L. Map Risk
 
 
 
@@ -657,7 +656,7 @@ QRiS and Riverscapes Viewer are plugins to QGIS. You will download and install t
 
 ![Potential Risk](/images/tutorials/risk.png)
 <YouTubeEmbed videoId="EYvnCeAcvH4" />
-### I. Map Recovery Space
+### M. Map Recovery Space
 
 The riverscape valley bottom is the baseline for recovery space, so we’ll start with that previously-digitized information. This step will duplicate the Valley Bottom geometry into the recovery space layer where we can make necessary edits without having to start from scratch.
 
@@ -669,7 +668,7 @@ Here, we can look at the risk layers we digitized and determine what we can actu
 
 ![recovery space](/images/tutorials/recovery-potential.png)
 <YouTubeEmbed videoId="uT277glRfYI" />
-### J. Carol vs Pops, Differing Ideas on Recovery Space
+### N. Carol vs Pops, Differing Ideas on Recovery Space
 
 In Our [Module 4](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://s3-us-west-2.amazonaws.com/etalweb.joewheaton.org/RestorationConsortium/Workshops/2020/SGI/Materials/Module4/04_C_DesignRecoveryPotential.pdf) example Carol and Pops have differing ideas on what recovery space should look like. If we compare what we digitized it matches pops, so we need a way to create another recovery space for Carol to compare against.
 
@@ -685,7 +684,7 @@ This will be addressed when we generate sampe frames.
 
 ![recovery space Carol](/images/webinars/RecoveryPotential.png)
 
-### K. Assess the Riverscape Potential to Support Wood Accumulation and Beaver Activity
+### O. Assess the Riverscape Potential to Support Wood Accumulation and Beaver Activity
 
 1. Right-click on your main DCE and add the BRAT CIS Reaches layer from the BRAT CIS Protocol. Add the Structural Elements Points and Inundation Extents layers from the LTPBR Protocol. Click Ok to add them to your DCE.
 2. Use the Structural Elements layer to digitize dams and jams.
@@ -695,7 +694,7 @@ This will be addressed when we generate sampe frames.
 
 <YouTubeEmbed videoId="pSy2hoXzwrw" />
 
-### L. Create a Planning Container
+### P. Create a Planning Container
 
 1. Right-click Data Capture Events Folder -> +Low Tech Process Based Restoration -> Add New Planning Container
 2. In the pop-up, name it something useful, like 2025 LTPBR Planning. Click add -> select 2025 Assessment DCE. It will now populate the table. Change its representation to Contemporary.
@@ -704,7 +703,7 @@ Ideally, a planning container would also have both a Historic and Predicted DCE.
 
 ![Planning Container](/images/tutorials/planning-container.png)
 <YouTubeEmbed videoId="4uUUn3rx9mE" />
-### M. Generating Sample Frames
+### Generating Sample Frames
 
 [Sample Frames](https://qris.riverscapes.net/software-help/inputs/sample-frames/) are what QRIS uses to calcualte [metrics](https://qris.riverscapes.net/technical-reference/metric_calculations/)(i.e. zonal statistics) within as part of [analyses](https://qris.riverscapes.net/software-help/analyses/). Sample Frames can be any polygon, but here we’ll consider two specific ways QRIS supports to create sample frames of riverscapes: i) using derived cross sections and ii) manually digitized cross sections (or reach breaks). If you want standardized reach lengths use derived cross sections. If you want to be in control of reach breaks then manually digitize cross sections. You may want to do this if there is a change in land ownership or a change in riverscape characteristics.
 
