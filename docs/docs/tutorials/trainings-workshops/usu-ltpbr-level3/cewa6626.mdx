@@ -563,12 +563,18 @@ Things will run in the background for a minute, if successful a delineation poin
 :::
 4. Back in the QRIS plugin you will see that you can now expand out `Catchment Delineations` and see the basin name you just delineated. Right click your delineation and select `Properties`. A pop up will open that shows the Basin Charcterisics as well as Flow Statistics if available. 
 5. CLick `Export Table` and change the file name/type if desired and click `OK`. This will export directly into a subfloder within your QRIS project. That file can be accessed by right clicking your project name and then selectinng `Browse Containing Folder`. There you will see an exports folder, where all future exports from your project will be stored. 
+:::tip
+Also notice when right clicking your delineation that there is an option to `Promote to AOI`, this will duplicate the polygon into your AOIs. This is useful for clipping data on importing, and making project area maps.
+:::
 
 ### F. Create a Data Capture Event
 
 1. Right-click Data Capture Events node -> Add New Data Capture Event
-2. Select Geomorphic Mapping of Riverscapes in the pop-up window. Click Add.
-3. Under LTPBR Protocol, add layers:
+2. Expand out the Geomorphic Mapping of Riverscapes protocol until you can select the following layers
+    1. Geomorphic Units
+    2. Active Confining Margins
+    3. Project Reaches
+3. Under LTPBR Protocol, Assessments, add the layers:
     1. Risk Potential (points, lines, polygons)
     2. Recovery Space
 4. Name the DCE something useful, like 2025 Assessment
@@ -621,18 +627,7 @@ Things will run in the background for a minute, if successful a delineation poin
 ![VBET Compare](/images/webinars/VBETcompare.png)
 
 <YouTubeEmbed videoId="VlCkXB07jUk" />
-### I. Move enerating sample frames
-
-
-### J. Create Intrinsic Analysis and Export
-
-
-
-
-
-
-
-### K. Map Active Confining Margins
+### I. Map Active Confining Margins
 
 1. In your DCE -> Active Confining Margins layer -> double-click or right-click -> add to map
 2. With the Active Confining Margins layer selected, toggle editing.
@@ -641,7 +636,7 @@ Things will run in the background for a minute, if successful a delineation poin
 
 ![Active Confining Margins](/images/tutorials/margins.png)
 <YouTubeEmbed videoId="z8ob8Ypg6j8" />
-### L. Map Risk
+### J. Map Risk
 
 
 
@@ -656,6 +651,11 @@ Things will run in the background for a minute, if successful a delineation poin
 
 ![Potential Risk](/images/tutorials/risk.png)
 <YouTubeEmbed videoId="EYvnCeAcvH4" />
+### K. Map Project Reaches
+
+
+### L. Create Intrinsic Analysis and Export
+
 ### M. Map Recovery Space
 
 The riverscape valley bottom is the baseline for recovery space, so we’ll start with that previously-digitized information. This step will duplicate the Valley Bottom geometry into the recovery space layer where we can make necessary edits without having to start from scratch.
