@@ -38,6 +38,7 @@ class ImportMapLayer(QgsTask):
         self.in_feats = 0
         self.out_feats = 0
         self.skipped_feats = 0
+        self.exception = None
 
     def _make_memory_copy(self, layer: QgsVectorLayer) -> QgsVectorLayer:
         """Create a true in-memory copy of the input layer."""

@@ -148,6 +148,7 @@ class FrmProfile(QtWidgets.QDialog):
                     if self.layer_id == "memory":
                         task = ImportMapLayer(self.import_source_path, fc_path, {"profile_id": self.profile.id}, clip_mask=clip_mask, proj_gpkg=self.qris_project.project_file)
                         # DEBUG task.run()
+                        self.import_task = task
                         task.import_complete.connect(self.on_import_complete)
                         QgsApplication.taskManager().addTask(task)
                     else:
@@ -167,7 +168,10 @@ class FrmProfile(QtWidgets.QDialog):
     def on_import_complete(self, result: bool):
 
         if not result:
-            Settings().msg_bar("Error Importing Profile Features", str(self.exception), MESSAGE_LEVEL_CRITICAL)
+            task = getattr(self, "import_task", None)
+            exception = getattr(task, "exception", None) if task is not None else None
+            error_message = str(exception) if exception is not None else "The import was canceled or failed without a reported error."
+            Settings().msg_bar("Error Importing Profile Features", error_message, MESSAGE_LEVEL_CRITICAL)
             try:
                 self.profile.delete(self.qris_project.project_file)
             except Exception as ex:
