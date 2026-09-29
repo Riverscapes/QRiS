@@ -651,10 +651,58 @@ Also notice when right clicking your delineation that there is an option to `Pro
 
 ![Potential Risk](/images/tutorials/risk.png)
 <YouTubeEmbed videoId="EYvnCeAcvH4" />
-### K. Map Project Reaches
+### K. Map Project Reaches with Sample Frames
 
+[Sample Frames](https://qris.riverscapes.net/software-help/inputs/sample-frames/) are what QRIS uses to calcualte [metrics](https://qris.riverscapes.net/technical-reference/metric_calculations/)(i.e. zonal statistics) within as part of [analyses](https://qris.riverscapes.net/software-help/analyses/). Sample Frames can be any polygon, but here we’ll consider two specific ways QRIS supports to create sample frames of riverscapes: i) using derived cross sections and ii) manually digitized cross sections (or reach breaks). If you want standardized reach lengths use derived cross sections. If you want to be in control of reach breaks then manually digitize cross sections. You may want to do this if there is a change in land ownership or a change in riverscape characteristics.
+
+#### Derived Sample Frames
+::: Note
+If you have already generated and saved a centerline, skip steps 1 and 2.
+:::
+
+1. Right-click one of the Valley Bottom VBET layers -> Generate Centerline
+2. Use the [centerline tool](/software-help/inputs/valley-bottoms) to create and save a centerline to your project
+
+![Generate Centerline](/images/tutorials/centerline.png)
+
+3. Right-click the Centerline layer -> Generate Cross Sections
+4. Use the [cross section tool](/software-help/inputs/profiles) to create and save cross sections to your project
+
+![Generate Cross Sections](/images/tutorials/cross-sections.png)
+
+5. Now, we have the building blocks to create a sample frame. Right-click the Sample Frames folder -> Create New Sample Frame -> From QRiS Features
+6. In the pop-up window, select the input layers to build a sample frame from(this will autopopulate with the layers you just created). Give it a helpful name. Check Infer Topology from Centerline.
+7. Do this for both of your VBET riverscape layers
+
+#### Manually Created Sample Frames
+
+1. Right-click `Cross Sections` node → + `Create New (Manually Digitized) Cross Sections`
+2. Add that layer to the map and begin editing that layer
+3. Digitize cross sections where you have deemed reach breaks to be appropriate given reach objectives, risk constraints, and geomorphic characteristics
+4. Save edits and toggle editing
+5. Right click your cross sections layer in the QRIS panel and select Generate Sample Frames
+    1. In the pop-up give the sample frames a unique name and select the appropriate valley bottom, centerline, and cross sections to derive the sample frames from, click `OK`
+
+![Cross Sections](/images/webinars/cross_sections.png)
+
+#### Demo Video
+<YouTubeEmbed videoId="IrTjFTUKI20" />
 
 ### L. Create Intrinsic Analysis and Export
+
+An intrinsic analysis calculates metrics associated with our input layers from our project. These metrics help us better understand our riverscape and can help distguish differences between our project reaches. 
+
+1. Right-Click a valley bottom or sample frame that you want to create an intrinsic analysis from, think of this as the space in which the metrics are calculating. Select `Analysis...` and then `+ Create Intrinsic Analysis`.
+2. In the window that pops up ypu will need to give the analysis a name (something like Fall Creek Intrinsic Metrics). You will also select Analysis Masks, Valley Bottom, Centerline, and a DEM if you have one.
+
+:::Tip
+Your analysis mask can be a valley bottom. This is basically saying you want the metrics calcualted across your entire valley bottom, not split up by reach breaks, which a a different input for analysis maks would achieve. There is also flexibility in the centerline input. You could input a river centerline and get stream gradient and sinuoisity if desired. Just be aware that a valley centerline will give you valley gradient and sinuosity. Just think about the inputs and how they may affect the calculated metrics chosen.
+
+3. Select all the metrics from the Riverscape System Metrics Protocol and click `OK`.
+4. In the Analysis window that pops up click `Calculate`. If appropriate in the pop-up window change the settings to All Data Capture Events and All Sample Frames, click `OK`.
+5. You can run this analysis for multiple reaches if necessary and within any analysis you can choose to export the metrics table. 
+6. An optional step if you have multiple analysis is to right click on the Analysis node in the QRIS plugin and select `Export all Analyses to Table`. This allows you to open all the metrics in one table at the same time which can be helpful in comparing reaches to each other. 
+
 
 ### M. Map Recovery Space
 
@@ -703,27 +751,9 @@ Ideally, a planning container would also have both a Historic and Predicted DCE.
 
 ![Planning Container](/images/tutorials/planning-container.png)
 <YouTubeEmbed videoId="4uUUn3rx9mE" />
-### Generating Sample Frames
 
-[Sample Frames](https://qris.riverscapes.net/software-help/inputs/sample-frames/) are what QRIS uses to calcualte [metrics](https://qris.riverscapes.net/technical-reference/metric_calculations/)(i.e. zonal statistics) within as part of [analyses](https://qris.riverscapes.net/software-help/analyses/). Sample Frames can be any polygon, but here we’ll consider two specific ways QRIS supports to create sample frames of riverscapes: i) using derived cross sections and ii) manually digitized cross sections (or reach breaks). If you want standardized reach lengths use derived cross sections. If you want to be in control of reach breaks then manually digitize cross sections. You may want to do this if there is a change in land ownership or a change in riverscape characteristics.
 
-1. Right-click one of the Valley Bottom VBET layers -> Generate Centerline
-2. Use the [centerline tool](/software-help/inputs/valley-bottoms) to create and save a centerline to your project
-
-![Generate Centerline](/images/tutorials/centerline.png)
-
-3. Right-click the Centerline layer -> Generate Cross Sections
-4. Use the [cross section tool](/software-help/inputs/profiles) to create and save cross sections to your project
-
-![Generate Cross Sections](/images/tutorials/cross-sections.png)
-
-5. Now, we have the building blocks to create a sample frame. Right-click the Sample Frames folder -> Create New Sample Frame -> From QRiS Features
-6. In the pop-up window, select the input layers to build a sample frame from(this will autopopulate with the layers you just created). Give it a helpful name. Check Infer Topology from Centerline.
-7. Do this for both of your VBET riverscape layers
-
-![Sample Frames](/images/tutorials/sample-frames.png)
-
-#### Create a Sample Frame to Compare Carol and Pops Recovery Space
+### Q. Create a Sample Frame to Compare Carol and Pops Recovery Space
 
 There are different ways to do this but the easiest uses a tool outside of QRIS to create a temporary layer to then import into the project
 
@@ -737,7 +767,7 @@ There are different ways to do this but the easiest uses a tool outside of QRIS 
 5. Leave all other fields as none and click ok
 
 <YouTubeEmbed videoId="4ZSVIPAE_cU" />
-### N. Analyses
+### R. Analyses
 
 Now that we have created sample frames we can use those to create an analysis and calculate metric values derived from features we digitized.
 
