@@ -6,12 +6,14 @@ import threading
 
 from osgeo import ogr
 from qgis.PyQt.QtCore import QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices
+from qgis.PyQt.QtGui import QDesktopServices, QIcon
 from qgis.PyQt.QtWidgets import (
+    QHBoxLayout,
     QLabel,
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
 )
 import requests
@@ -22,6 +24,27 @@ from .reports.RSReportsAPI import RSReportsAPI
 from .WizardStatus import STEP_UNKNOWN
 
 logger = logging.getLogger(__name__)
+
+REPORTS = [
+    {
+        "name": "Project Context Report",
+        "id": "project_context",
+        "description": "Provides context for the project area.",
+        "layer_key": "projectExtent",
+        "layer_name": "sample_frame_features",
+        "layer_id_field": "sample_frame_id",
+        "output_folder_name": "project_context_report",
+    },
+    {
+        "name": "Watershed Catchment Report",
+        "id": "watershed_catchment",
+        "description": "Provides context for the project catchment area.",
+        "layer_key": "catchment",
+        "layer_name": "catchments",
+        "layer_id_field": "fid",
+        "output_folder_name": "watershed_catchment_report",
+    },
+]
 
 
 class ReportPage(BaseWidget):
@@ -35,27 +58,65 @@ class ReportPage(BaseWidget):
 
         self._report_type_id = None  # optional override
         self._worker_thread: threading.Thread | None = None
+        self._current_report: dict | None = None
+        self._report_buttons: dict[str, QPushButton] = {}
 
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         self._label = QLabel(
-            "The Rapid Assessment Report brings together disparate and relevant "
-            "information that can help you complete your NWP 27 permit application.\n\n"
-            "Clicking the button below will launch a web browser where you need to sign "
-            "in to the Riverscapes Reporting platform. Once signed in, your project "
-            "extent will automatically be uploaded and a new Rapid Assessment Report "
-            "will be generated for you. The report takes a few minutes to generate, "
-            "so please be patient. Once the report is generated, you will be able to "
-            "download it as a PDF and upload it to your NWP 27 permit application.\n\n"
-            "Existing reports are available in the Riverscapes Reporting platform, so "
-            "if you have already generated a report for this project, you can download "
-            "it from there instead of generating a new one.\n\n"
-            "Reports are retained on the reporting platform for 7 days, so be sure to "
-            "download it before it expires or you will need to generate a new one."
+            "The following reports provide insights into your project area. "
+            "Click the Generate button to initiate a report. "
+            "A web browser will open where you need to sign in to the Riverscapes Reporting platform. "
+            "Reports take several minutes to generate, so please be patient.\n\n"
+            "Once a report is complete, it will open in a web browser. "
+            "Completed reports, including all the associated files, are automatically downloaded"
+            "and placed in the NWP27 package folder. Click the folder icon to browse them."
         )
         self._label.setWordWrap(True)
         layout.addWidget(self._label)
+
+        layout.addSpacing(20)
+
+        for report in REPORTS:
+            name = report["name"]
+            description = report["description"]
+            report_id = report["id"]
+
+            h_layout = QHBoxLayout()
+            layout.addLayout(h_layout)
+
+            name_label = QLabel(name)
+            h_layout.addWidget(name_label)
+
+            description_label = QLabel(description)
+            description_label.setWordWrap(True)
+            h_layout.addWidget(description_label)
+
+            generate_button = QPushButton("Generate")
+            generate_button.setMaximumWidth(75)
+            generate_button.setToolTip(f"Generate the {name}")
+            generate_button.clicked.connect(lambda _, report_id=report_id: self.generate_report_by_id(report_id))
+            h_layout.addWidget(generate_button)
+
+            open_button = QPushButton()
+            open_button.setMaximumWidth(self.BUTTON_WIDTH)
+            open_button.setToolTip(f"Open the {name}")
+            open_button.setIcon(QIcon(":plugins/qris_toolbar/open"))
+            open_button.clicked.connect(lambda _, report_id=report_id: self.open_report_by_id(report_id))
+            h_layout.addWidget(open_button)
+
+            browse_button = QPushButton()
+            browse_button.setMaximumWidth(self.BUTTON_WIDTH)
+            browse_button.setIcon(QIcon(":plugins/qris_toolbar/folder"))
+            browse_button.setToolTip(f"Browse the {name} folder")
+            browse_button.clicked.connect(lambda _, report_id=report_id: self.browse_report_by_id(report_id))
+            h_layout.addWidget(browse_button)
+
+            self._report_buttons[f"browse_{report_id}"] = browse_button
+
+            self._report_buttons[report_id] = generate_button
+            self._report_buttons[f"open_{report_id}"] = open_button
 
         self._progress_bar = QProgressBar()
         self._progress_bar.setVisible(False)
@@ -65,13 +126,16 @@ class ReportPage(BaseWidget):
         self._status_label.setVisible(False)
         layout.addWidget(self._status_label)
 
-        self.project_report_button = QPushButton("Generate Project Context Report")
-        self.project_report_button.clicked.connect(self.generate_project_context_report)
-        layout.addWidget(self.project_report_button)
+        layout.addSpacing(20)
+        self.report_platform_label = QLabel("Completed reports are also retained on the Riverscapes Reports platform for 7 days, so be sure to verify the downloaded files before they expire or you will need to generate a new copy.")
+        self.report_platform_label.setWordWrap(True)
+        layout.addWidget(self.report_platform_label)
 
-        self.watershed_report_button = QPushButton("Generate Watershed Catchment Report")
-        self.watershed_report_button.clicked.connect(self.generate_watershed_catchment_report)
-        layout.addWidget(self.watershed_report_button)
+        reports_platform_button = QPushButton("Riverscapes Reports Platform")
+        reports_platform_button.setToolTip("Open the Riverscapes Reports platform")
+        reports_platform_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        reports_platform_button.clicked.connect(lambda _: QDesktopServices.openUrl(QUrl("https://reports.riverscapes.net")))
+        layout.addWidget(reports_platform_button)
 
         layout.addStretch()
 
@@ -82,43 +146,55 @@ class ReportPage(BaseWidget):
         pass
 
     def get_status(self) -> int:
-        if self.project_report_button.text() == "Report Complete":
-            return STEP_UNKNOWN
+
         return STEP_UNKNOWN
 
     def on_text_changed(self):
         self.contentChanged.emit()
 
-    def generate_project_context_report(self):
-
-        project_extent_id = self.get_layer_id("projectExtent")
-        if project_extent_id is None:
-            QMessageBox.warning(self, "Missing Project Extent", "You must specify a project extent polygon on the Locations step before generating this report.")
+    def generate_report_by_id(self, report_id: str):
+        report = next((r for r in REPORTS if r["id"] == report_id), None)
+        if report is None:
+            logger.error("Unknown report id: %s", report_id)
             return
 
-        # projectExtent stores a sample_frames.id; the geometry lives in sample_frame_features
-        polygon = self.load_polygon_from_db("sample_frame_features", "sample_frame_id", project_extent_id)
+        layer_id = self.get_layer_id(report["layer_key"])
+        if layer_id is None:
+            QMessageBox.warning(self, "Missing Layer", f"You must specify a {report['name'].lower()} polygon on the Locations step before generating this report.")
+            return
 
+        polygon = self.load_polygon_from_db(report["layer_name"], report["layer_id_field"], layer_id)
         if polygon is None:
-            QMessageBox.warning(self, "Missing Project Extent Polygon", "You must specify a project extent polygon on the Locations step before generating this report.")
+            QMessageBox.warning(self, "Missing Polygon", f"Could not find the polygon for the {report['name'].lower()}. Check your selections on the Locations step.")
             return
 
-        self.generate_report("Project Context Report", polygon)
+        self.generate_report(report, polygon)
 
-    def generate_watershed_catchment_report(self):
-
-        catchment_id = self.get_layer_id("catchment")
-        if catchment_id is None:
-            QMessageBox.warning(self, "Missing Catchment", "You must specify a catchment polygon on the Locations step before generating this report.")
+    def open_report_by_id(self, report_id: str):
+        report = next((r for r in REPORTS if r["id"] == report_id), None)
+        if report is None:
+            logger.error("Unknown report id: %s", report_id)
             return
 
-        # catchment stores a catchments.fid
-        polygon = self.load_polygon_from_db("catchments", "fid", catchment_id)
-        if polygon is None:
-            QMessageBox.warning(self, "Missing Catchment Polygon", "You must generate a QRiS pour point analysis and then specify the catchment polygon on the Locations step before generating this report.")
+        report_html_path = os.path.join(self.get_package_folder(), report["output_folder_name"], "report.html")
+        if not os.path.exists(report_html_path):
+            QMessageBox.information(self, "Report Not Found", f"The {report['name']} has not been generated yet. Click Generate first.")
             return
 
-        self.generate_report("Watershed Catchment Report", polygon)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(report_html_path))
+
+    def browse_report_by_id(self, report_id: str):
+        report = next((r for r in REPORTS if r["id"] == report_id), None)
+        if report is None:
+            logger.error("Unknown report id: %s", report_id)
+            return
+
+        output_folder = os.path.join(self.get_package_folder(), report["output_folder_name"])
+        if not os.path.isdir(output_folder):
+            QMessageBox.information(self, "Report Not Found", f"The {report['name']} has not been generated yet. Click Generate first.")
+            return
+
+        QDesktopServices.openUrl(QUrl.fromLocalFile(output_folder))
 
     def load_polygon_from_db(self, layer_name: str, id_column: str, polygon_id) -> str | None:
         """Load a feature geometry from the project GPKG and return it as a GeoJSON geometry string.
@@ -143,13 +219,14 @@ class ReportPage(BaseWidget):
         geom: ogr.Geometry = feature.GetGeometryRef().Clone()
         return geom.ExportToJson()
 
-    def generate_report(self, title: str, polygon: str):
+    def generate_report(self, report: dict, polygon: str):
         if self._worker_thread and self._worker_thread.is_alive():
             return  # already running
 
-        self.project_report_button.setEnabled(False)
-        self.watershed_report_button.setEnabled(False)
-        # self.project_report_button.setText("Generating...")
+        self._current_report = report
+
+        for button in self._report_buttons.values():
+            button.setEnabled(False)
         self._progress_bar.setVisible(True)
         self._progress_bar.setValue(0)
         self._status_label.setVisible(True)
@@ -193,16 +270,15 @@ class ReportPage(BaseWidget):
     def _on_worker_finished(self, report: dict):
         self._progress_bar.setValue(100)
         self._status_label.setText("Report generated successfully!")
-        self.project_report_button.setText("Report Complete")
-        self.project_report_button.setEnabled(False)
         self.on_text_changed()
 
         creator_id = report.get("_creator_id")
         report_id = report["id"]
         urls = RSReportsAPI.get_report_view_urls(creator_id, report_id)
         zip_url = urls.get("zip")
-        local_path = os.path.join(self.get_package_folder(), "report.zip")
-        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        output_folder = os.path.join(self.get_package_folder(), self._current_report.get("output_folder_name", "report"))
+        os.makedirs(output_folder, exist_ok=True)
+        local_path = os.path.join(output_folder, "report.zip")
 
         if zip_url:
             # Download the zip file to the local path
@@ -226,28 +302,29 @@ class ReportPage(BaseWidget):
                 QMessageBox.critical(self, "Download Failed", "Failed to download the report zip file.")
                 return
 
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("Report Generated")
-        msg_box.setText(
-            f"Your report has been generated successfully!\n\n"
-            f"Status: {report['status']}\n"
-            f"Progress: {report.get('progress', 100)}%\n\n"
-            f"View your report:\n{urls['html']}\n\n"
-            f"PDF download:\n{urls['pdf']}\n\n"
-            f"Would you like to open the report in your browser?"
-        )
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-        if msg_box.exec() == QMessageBox.StandardButton.Yes:
-            QDesktopServices.openUrl(QUrl(urls["html"]))
+        self._reset_ui()
+
+        # msg_box = QMessageBox(self)
+        # msg_box.setWindowTitle("Report Generated")
+        # msg_box.setText(
+        #     f"Your report has been generated successfully!\n\n"
+        #     f"Status: {report['status']}\n"
+        #     f"Progress: {report.get('progress', 100)}%\n\n"
+        #     f"View your report:\n{urls['html']}\n\n"
+        #     f"PDF download:\n{urls['pdf']}\n\n"
+        #     f"Would you like to open the report in your browser?"
+        # )
+        # msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        # if msg_box.exec() == QMessageBox.StandardButton.Yes:
+        #     QDesktopServices.openUrl(QUrl(urls["html"]))
 
     def _on_worker_error(self, error_msg: str):
         QMessageBox.critical(self, "Report Generation Failed", f"An error occurred while generating the report:\n\n{error_msg}")
         self._reset_ui()
 
     def _reset_ui(self):
-        self.project_report_button.setEnabled(True)
-        self.watershed_report_button.setEnabled(True)
-        # self.project_report_button.setText("Generate Report")
+        for button in self._report_buttons.values():
+            button.setEnabled(True)
         self._progress_bar.setVisible(False)
         self._status_label.setVisible(False)
 

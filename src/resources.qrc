@@ -37,6 +37,7 @@
         <file alias="lock">../Images/lock.svg</file>
         <file alias="lock_open">../Images/lock_open.svg</file>
         <file alias="lock_open_right">../Images/lock_open_right.svg</file>
+        <file alias="open">../Images/open.svg</file>
         <file alias="open_external">../Images/open_external.svg</file>
         <file alias="map_search">../Images/map_search.svg</file>
         <file alias="vicinity_map">../Images/vicinity_map.svg</file>
@@ -67,6 +68,11 @@
         <file alias="check">../Images/check.svg</file>
         <file alias="cancel">../Images/cancel.svg</file>
         <file alias="none">../Images/none.svg</file>
+        <file alias="print">../Images/print.svg</file>
+        <file alias="about">../Images/about.svg</file>
+        <file alias="arrow-back">../Images/arrow-back.svg</file>
+        <file alias="arrow-forward">../Images/arrow-forward.svg</file>
+        <file alias="zoom-in">../Images/zoom-in.svg</file>
 
         <!-- Node Icons -->
         <file alias="analysis">../Images/analysis.png</file>

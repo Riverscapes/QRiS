@@ -22,13 +22,13 @@ class LocationWidget(QWidget):
             self.cbo_layers.addItem("--- Select ---")
 
         self.cmd_add_layer = QPushButton()
-        self.cmd_add_layer.setIcon(QIcon("/Users/philipbailey/code/riverscapes/nwp27-wizard/assets/add.svg"))
+        self.cmd_add_layer.setIcon(QIcon(":plugins/qris_toolbar/new"))
         self.cmd_add_layer.setToolTip("Add New")
         self.cmd_add_layer.clicked.connect(self.on_add_layer_clicked)
         layout.addWidget(self.cmd_add_layer)
 
         self.cmd_layer_info = QPushButton()
-        self.cmd_layer_info.setIcon(QIcon("/Users/philipbailey/code/riverscapes/nwp27-wizard/assets/about.svg"))
+        self.cmd_layer_info.setIcon(QIcon(":plugins/qris_toolbar/about"))
         self.cmd_layer_info.setToolTip("Info")
         self.cmd_layer_info.clicked.connect(self.on_layer_info_clicked)
         layout.addWidget(self.cmd_layer_info)

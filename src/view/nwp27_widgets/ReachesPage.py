@@ -48,7 +48,7 @@ class ReachesPage(BaseWidget):
         h_layout = QHBoxLayout()
         previous_button = QPushButton()
         previous_button.setFixedWidth(self.BUTTON_WIDTH)
-        previous_button.setIcon(QIcon("/Users/philipbailey/code/riverscapes/nwp27-wizard/assets/arrow-back.svg"))
+        previous_button.setIcon(QIcon(":plugins/qris_toolbar/arrow-back"))
 
         previous_button.clicked.connect(self.on_previous_clicked)
         h_layout.addWidget(previous_button)
@@ -59,13 +59,13 @@ class ReachesPage(BaseWidget):
 
         zoom_button = QPushButton()
         zoom_button.setFixedWidth(self.BUTTON_WIDTH)
-        zoom_button.setIcon(QIcon("/Users/philipbailey/code/riverscapes/nwp27-wizard/assets/zoom-in.svg"))
+        zoom_button.setIcon(QIcon(":plugins/qris_toolbar/zoom-in"))
         zoom_button.clicked.connect(self.on_zoom_clicked)
         h_layout.addWidget(zoom_button)
 
         next_button = QPushButton()
         next_button.setFixedWidth(self.BUTTON_WIDTH)
-        next_button.setIcon(QIcon("/Users/philipbailey/code/riverscapes/nwp27-wizard/assets/arrow-forward.svg"))
+        next_button.setIcon(QIcon(":plugins/qris_toolbar/arrow-forward"))
 
         next_button.clicked.connect(self.on_next_clicked)
         h_layout.addWidget(next_button)
