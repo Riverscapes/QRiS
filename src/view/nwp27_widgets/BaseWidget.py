@@ -1,5 +1,6 @@
 from abc import abstractmethod
 import json
+import os
 
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import QPlainTextEdit, QWidget
@@ -124,3 +125,9 @@ class BaseWidget(QWidget):
     def get_data_to_save(self) -> dict:
         """Return the data to be saved. Override this method in subclasses."""
         return {}
+
+    def get_package_folder(self) -> str:
+        """
+        This is the folder inside of which all package files and reports for this design are stored.
+        """
+        return os.path.join(os.path.dirname(self.db_path), "exports", f"nwp27_package_design_id_{self.design_id}")

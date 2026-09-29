@@ -8,15 +8,15 @@ but without any QGIS dependency.  Uses only the standard library + requests.
 from __future__ import annotations
 
 import base64
+from collections.abc import Callable
 import hashlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import logging
 import os
 import socket
 import threading
 import time
-from collections.abc import Callable
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
@@ -63,8 +63,7 @@ class RSReportsAPI:
         # Try to reuse a shared token
         if RSReportsAPI._shared_access_token and RSReportsAPI._shared_token_expires and float(RSReportsAPI._shared_token_expires) > time.time() + 300:
             self.access_token = RSReportsAPI._shared_access_token
-            logger.info("Using shared in-memory token (expires in %ds)",
-                        int(float(RSReportsAPI._shared_token_expires) - time.time()))
+            logger.info("Using shared in-memory token (expires in %ds)", int(float(RSReportsAPI._shared_token_expires) - time.time()))
 
     # ------------------------------------------------------------------
     # Public API
@@ -97,9 +96,7 @@ class RSReportsAPI:
 
         resp = requests.post(self.graphql_url, json=payload, headers=headers, timeout=30)
         if resp.status_code != 200:
-            raise RSReportsAPIError(
-                f"GraphQL request failed (HTTP {resp.status_code}): {resp.text}"
-            )
+            raise RSReportsAPIError(f"GraphQL request failed (HTTP {resp.status_code}): {resp.text}")
 
         body = resp.json()
         if body.get("errors"):
@@ -111,14 +108,10 @@ class RSReportsAPI:
                 headers["authorization"] = f"Bearer {self.access_token}"
                 resp = requests.post(self.graphql_url, json=payload, headers=headers, timeout=30)
                 if resp.status_code != 200:
-                    raise RSReportsAPIError(
-                        f"GraphQL retry failed (HTTP {resp.status_code}): {resp.text}"
-                    )
+                    raise RSReportsAPIError(f"GraphQL retry failed (HTTP {resp.status_code}): {resp.text}")
                 body = resp.json()
                 if body.get("errors"):
-                    raise RSReportsAPIError(
-                        f"GraphQL errors after re-auth: {body['errors']}"
-                    )
+                    raise RSReportsAPIError(f"GraphQL errors after re-auth: {body['errors']}")
             else:
                 raise RSReportsAPIError(f"GraphQL errors: {body['errors']}")
 
@@ -187,9 +180,7 @@ class RSReportsAPI:
         }
         return self.gql(query, variables)["createReport"]
 
-    def get_upload_urls(
-        self, report_id: str, file_paths: list[str], file_type: str = "INPUTS"
-    ) -> list[dict]:
+    def get_upload_urls(self, report_id: str, file_paths: list[str], file_type: str = "INPUTS") -> list[dict]:
         """Get pre-signed S3 upload URLs for input files."""
         query = """
         query GetUploadUrls($reportId: ID!, $filePaths: [String!]!, $fileType: FileTypeEnum!) {
@@ -200,18 +191,19 @@ class RSReportsAPI:
           }
         }
         """
-        data = self.gql(query, {
-            "reportId": report_id,
-            "filePaths": file_paths,
-            "fileType": file_type,
-        })
+        data = self.gql(
+            query,
+            {
+                "reportId": report_id,
+                "filePaths": file_paths,
+                "fileType": file_type,
+            },
+        )
         return data["uploadUrls"]
 
-    def upload_geojson_file(
-        self, upload_url: str, upload_fields: dict, geojson_path: str
-    ) -> None:
+    def upload_geojson_file(self, upload_url: str, upload_fields: dict, geojson_path: str) -> None:
         """Upload a GeoJSON file to S3 using the pre-signed URL and form fields."""
-        with open(geojson_path, "r", encoding="utf-8") as f:
+        with open(geojson_path, encoding="utf-8") as f:
             geojson_data = json.load(f)
 
         geojson_bytes = json.dumps(geojson_data).encode("utf-8")
@@ -281,8 +273,7 @@ class RSReportsAPI:
             msg = report.get("statusMessage") or ""
 
             elapsed = time.time() - start
-            logger.info("[%4.0fs] Status: %-10s Progress: %3d%%  %s",
-                        elapsed, status, progress, msg)
+            logger.info("[%4.0fs] Status: %-10s Progress: %3d%%  %s", elapsed, status, progress, msg)
 
             if progress_callback:
                 progress_callback(status, progress, msg)
@@ -291,22 +282,18 @@ class RSReportsAPI:
                 return report
 
             if elapsed > timeout_sec:
-                raise RSReportsAPIError(
-                    f"Report {report_id} did not complete within {timeout_sec}s"
-                )
+                raise RSReportsAPIError(f"Report {report_id} did not complete within {timeout_sec}s")
 
             time.sleep(interval_sec)
 
-    def get_download_urls(
-        self, report_id: str, file_types: list[str] | None = None
-    ) -> list[dict]:
+    def get_download_urls(self, report_id: str, file_types: list[str] | None = None) -> list[dict]:
         """Get signed download URLs for report outputs."""
-        if file_types is None:
-            file_types = ["HTML", "PDF", "ZIP", "LOG"]
+        # if file_types is None:
+        #     file_types = ["OUTPUTS", "ZIP", "LOG"]
 
         query = """
-        query GetDownloadUrls($reportId: ID!, $fileTypes: [FileTypeEnum!]) {
-          downloadUrls(reportId: $reportId, fileTypes: $fileTypes) {
+        query GetDownloadUrls($reportId: ID!) {
+          downloadUrls(reportId: $reportId) {
             fileType
             url
             fields
@@ -321,7 +308,6 @@ class RSReportsAPI:
         """Return human-readable URLs for the report outputs."""
         base = f"https://reports.riverscapes.net/reports/{creator_id}/{report_id}"
         return {
-            "view": f"https://reports.riverscapes.net/report/{report_id}",
             "html": f"{base}/report.html",
             "pdf": f"{base}/report_static.pdf",
             "zip": f"{base}/report.zip",
@@ -369,6 +355,7 @@ class RSReportsAPI:
 
             # Open the browser
             import webbrowser
+
             webbrowser.open(urlunparse(login_url))
 
             auth_code = self._wait_for_auth_code()
@@ -415,11 +402,7 @@ class RSReportsAPI:
                 self.server.query_resp = params
                 success = "code" in self.server.query_resp and "error" not in self.server.query_resp
 
-                body = (
-                    "<html><body><p>Authentication successful. You may close this window.</p></body></html>"
-                    if success
-                    else f"<html><body><p>Authentication failed: {params}</p></body></html>"
-                )
+                body = "<html><body><p>Authentication successful. You may close this window.</p></body></html>" if success else f"<html><body><p>Authentication failed: {params}</p></body></html>"
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
@@ -431,10 +414,7 @@ class RSReportsAPI:
             try:
                 probe.bind(("", self.auth_port))
             except OSError:
-                raise RSReportsAPIError(
-                    f"Port {self.auth_port} is unavailable for the auth callback. "
-                    "A VPN or firewall may be blocking it."
-                )
+                raise RSReportsAPIError(f"Port {self.auth_port} is unavailable for the auth callback. A VPN or firewall may be blocking it.")
 
         server = ThreadingHTTPServer(
             ("localhost", self.auth_port),
@@ -455,9 +435,7 @@ class RSReportsAPI:
             raise RSReportsAPIError("Authentication timed out or was cancelled.")
 
         if "error" in server.query_resp or "code" not in server.query_resp:
-            raise RSReportsAPIError(
-                f"Authentication failed: {json.dumps(server.query_resp)}"
-            )
+            raise RSReportsAPIError(f"Authentication failed: {json.dumps(server.query_resp)}")
 
         return server.query_resp["code"]
 
@@ -467,19 +445,11 @@ class RSReportsAPI:
 
     @staticmethod
     def _generate_challenge(code: str) -> str:
-        return RSReportsAPI._base64_url(
-            hashlib.sha256(code.encode("utf-8")).digest()
-        )
+        return RSReportsAPI._base64_url(hashlib.sha256(code.encode("utf-8")).digest())
 
     @staticmethod
     def _base64_url(data: bytes) -> str:
-        return (
-            base64.urlsafe_b64encode(data)
-            .decode("utf-8")
-            .replace("=", "")
-            .replace("+", "-")
-            .replace("/", "_")
-        )
+        return base64.urlsafe_b64encode(data).decode("utf-8").replace("=", "").replace("+", "-").replace("/", "_")
 
     @staticmethod
     def _generate_random(size: int) -> str:

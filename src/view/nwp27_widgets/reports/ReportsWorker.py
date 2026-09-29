@@ -62,7 +62,8 @@ class ReportWorker(QObject):
             self.progress.emit("UPLOADING", 40, "Uploading project extent...")
             api.upload_geojson_file(upload_info["url"], upload_info["fields"], self.polygon_path)
 
-            # Step 5: Start the report
+            # Step 5:qgi
+            #  Start the report
             self.progress.emit("STARTING", 50, "Starting report generation...")
             api.start_report(report_id)
 
@@ -74,6 +75,21 @@ class ReportWorker(QObject):
                 self.progress.emit(status, min(mapped, 95), msg)
 
             final = api.poll_until_complete(report_id, progress_callback=on_progress)
+
+            # poll_until_complete returns on any terminal status, not just COMPLETE
+            if final.get("status") != "COMPLETE":
+                raise RuntimeError(f"Report did not complete successfully. Status: {final.get('status')}. {final.get('statusMessage') or ''}")
+
+            # # Attach download URLs so the UI can fetch outputs without needing the API instance
+            # try:
+            #     raw_urls = api.get_download_urls(report_id)
+            #     logger.info("Download URLs for report %s: %s", report_id, raw_urls)
+            #     final["_download_urls"] = {u["fileType"].lower(): u["url"] for u in raw_urls}
+            #     if not final["_download_urls"]:
+            #         logger.warning("No download URLs returned for report %s (status=%s)", report_id, final.get("status"))
+            # except Exception:
+            #     logger.exception("Failed to fetch download URLs for report %s", report_id)
+            #     final["_download_urls"] = {}
 
             self.progress.emit("COMPLETE", 100, "Report generation complete!")
             final["_creator_id"] = creator_id

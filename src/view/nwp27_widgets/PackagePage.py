@@ -85,7 +85,7 @@ class PackagePage(BaseWidget):
 
     def configure(self, db_path: str, design_id: int) -> None:
         super().configure(db_path, design_id)
-        self.export_folder = os.path.join(os.path.dirname(self.db_path), "exports", "nwp27_package")
+        self.export_folder = self.get_package_folder()
 
     def get_status(self) -> int:
         # Packaging has no logic. Simply show grey icon
