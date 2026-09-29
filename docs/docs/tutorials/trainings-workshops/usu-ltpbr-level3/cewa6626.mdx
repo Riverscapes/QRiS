@@ -656,7 +656,7 @@ Also notice when right clicking your delineation that there is an option to `Pro
 [Sample Frames](https://qris.riverscapes.net/software-help/inputs/sample-frames/) are what QRIS uses to calcualte [metrics](https://qris.riverscapes.net/technical-reference/metric_calculations/)(i.e. zonal statistics) within as part of [analyses](https://qris.riverscapes.net/software-help/analyses/). Sample Frames can be any polygon, but here we’ll consider two specific ways QRIS supports to create sample frames of riverscapes: i) using derived cross sections and ii) manually digitized cross sections (or reach breaks). If you want standardized reach lengths use derived cross sections. If you want to be in control of reach breaks then manually digitize cross sections. You may want to do this if there is a change in land ownership or a change in riverscape characteristics.
 
 #### Derived Sample Frames
-::: Note
+:::note
 If you have already generated and saved a centerline, skip steps 1 and 2.
 :::
 
@@ -695,8 +695,9 @@ An intrinsic analysis calculates metrics associated with our input layers from o
 1. Right-Click a valley bottom or sample frame that you want to create an intrinsic analysis from, think of this as the space in which the metrics are calculating. Select `Analysis...` and then `+ Create Intrinsic Analysis`.
 2. In the window that pops up ypu will need to give the analysis a name (something like Fall Creek Intrinsic Metrics). You will also select Analysis Masks, Valley Bottom, Centerline, and a DEM if you have one.
 
-:::Tip
+:::tip
 Your analysis mask can be a valley bottom. This is basically saying you want the metrics calcualted across your entire valley bottom, not split up by reach breaks, which a a different input for analysis maks would achieve. There is also flexibility in the centerline input. You could input a river centerline and get stream gradient and sinuoisity if desired. Just be aware that a valley centerline will give you valley gradient and sinuosity. Just think about the inputs and how they may affect the calculated metrics chosen.
+:::
 
 3. Select all the metrics from the Riverscape System Metrics Protocol and click `OK`.
 4. In the Analysis window that pops up click `Calculate`. If appropriate in the pop-up window change the settings to All Data Capture Events and All Sample Frames, click `OK`.
@@ -767,6 +768,7 @@ There are different ways to do this but the easiest uses a tool outside of QRIS 
 5. Leave all other fields as none and click ok
 
 <YouTubeEmbed videoId="4ZSVIPAE_cU" />
+
 ### R. Analyses
 
 Now that we have created sample frames we can use those to create an analysis and calculate metric values derived from features we digitized.
