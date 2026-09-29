@@ -651,7 +651,73 @@ Also notice when right clicking your delineation that there is an option to `Pro
 
 ![Potential Risk](/images/tutorials/risk.png)
 <YouTubeEmbed videoId="EYvnCeAcvH4" />
-### K. Map Project Reaches with Sample Frames
+
+### K. Map Recovery Space
+
+The riverscape valley bottom is the baseline for recovery space, so we’ll start with that previously-digitized information. This step will duplicate the Valley Bottom geometry into the recovery space layer where we can make necessary edits without having to start from scratch.
+
+1. Right-click on the recovery space layer -> Import Features from Riverscapes Valley Bottom
+2. Toggle editing on the layer. Use the Reshape Features digitizing tool to make edits where necessary.
+3. You will have to do this twice for your two different VBET riverscapes we created earlier.
+
+Here, we can look at the risk layers we digitized and determine what we can actually recover in the riverscape. Consider what portions of the active floodplain are recoverable, versus parts separated by a berm, levee, or other limiting factor not involved in risk mapping.
+
+![recovery space](/images/tutorials/recovery-potential.png)
+<YouTubeEmbed videoId="uT277glRfYI" />
+
+### L. Carol vs Pops, Differing Ideas on Recovery Space
+
+In Our [Module 4](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://s3-us-west-2.amazonaws.com/etalweb.joewheaton.org/RestorationConsortium/Workshops/2020/SGI/Materials/Module4/04_C_DesignRecoveryPotential.pdf) example Carol and Pops have differing ideas on what recovery space should look like. If we compare what we digitized it matches pops, so we need a way to create another recovery space for Carol to compare against.
+
+1. Create a New DCE and call it "2025 Assessment Carol"
+2. Follow the same steps we did earlier for creating a DCE but only select the recovery space layer from the LTPBR Procotol
+3. Rather than digitizing a new layer we can import from a previous DCE. Right-click the recovery space layer in the new DCE and select "+ Copy from Data Capture Event" -> Select the appropriate DCE.
+4. Add that layer to the map and toggle editing
+5. Delete the feature that corresponds to the Fall Creek Riverscape and edit the remaining feature to the extents that Carol drew as well as to the Property AOI
+6. Saved edits
+
+We now have 2 DCEs with different recovery space layers that we can compare in Analyses. However, we need a corresponding Sample Frame for that Analysis.
+This will be addressed when we generate sampe frames.
+
+![recovery space Carol](/images/webinars/RecoveryPotential.png)
+
+### M. Assess the Riverscape Potential to Support Wood Accumulation and Beaver Activity
+
+1. Right-click on your main DCE and add the BRAT CIS Reaches layer from the BRAT CIS Protocol. Add the Structural Elements Points and Inundation Extents layers from the LTPBR Protocol. Click Ok to add them to your DCE.
+2. Use the Structural Elements layer to digitize dams and jams.
+3. Use the BRAT CIS layer to assess beaver activity capacity at a reach scale.
+4. Map the Inundation Extents layer.
+5. Using these layers as well as model outputs from BRAT and RCAT assess whether or not there is structural starvation in your riverscape and whether or not the riverscape has the ability to support beaver activity.
+
+<YouTubeEmbed videoId="pSy2hoXzwrw" />
+
+### N. Create a Planning Container
+
+1. Right-click Data Capture Events Folder -> +Low Tech Process Based Restoration -> Add New Planning Container
+2. In the pop-up, name it something useful, like 2025 LTPBR Planning. Click add -> select 2025 Assessment DCE. It will now populate the table. Change its representation to Contemporary.
+
+Ideally, a planning container would also have both a Historic and Predicted DCE. A planning container simply copies DCEs into a new parent folder, which you’ll reference as the basis for LTPBR Design, when we get there.
+
+![Planning Container](/images/tutorials/planning-container.png)
+<YouTubeEmbed videoId="4uUUn3rx9mE" />
+
+
+### O. Create a Sample Frame to Compare Carol and Pops Recovery Space
+
+There are different ways to do this but the easiest uses a tool outside of QRIS to create a temporary layer to then import into the project
+
+1. Add your Coburn Creek Valley Bottom VBET layer to the map -> use the selection tool to select the feature -> search the processing toolbox for 'Select Extracted Features' tool.
+2. Make sure the correct layer is selected in the tool and click run (no need to save to a location, we just want a temporary layer)
+
+![Temporary Layer](/images/webinars/temporary-layer.png)
+
+3. Right-click the Sample Frames node -> Import Sample Frame from... -> select "Layer in Map"
+4. Choose the Temporary Layer in the dropdown, Give it a name like "SF Property", and select the "Property AOI" in the 'Clip to AOI' dropdown
+5. Leave all other fields as none and click ok
+
+<YouTubeEmbed videoId="4ZSVIPAE_cU" />
+
+### P. Map Project Reaches with Sample Frames
 
 [Sample Frames](https://qris.riverscapes.net/software-help/inputs/sample-frames/) are what QRIS uses to calcualte [metrics](https://qris.riverscapes.net/technical-reference/metric_calculations/)(i.e. zonal statistics) within as part of [analyses](https://qris.riverscapes.net/software-help/analyses/). Sample Frames can be any polygon, but here we’ll consider two specific ways QRIS supports to create sample frames of riverscapes: i) using derived cross sections and ii) manually digitized cross sections (or reach breaks). If you want standardized reach lengths use derived cross sections. If you want to be in control of reach breaks then manually digitize cross sections. You may want to do this if there is a change in land ownership or a change in riverscape characteristics.
 
@@ -688,7 +754,7 @@ If you have already generated and saved a centerline, skip steps 1 and 2.
 #### Demo Video
 <YouTubeEmbed videoId="IrTjFTUKI20" />
 
-### L. Create Intrinsic Analysis and Export
+### Q. Create Intrinsic Analysis and Export
 
 An intrinsic analysis calculates metrics associated with our input layers from our project. These metrics help us better understand our riverscape and can help distguish differences between our project reaches. 
 
@@ -702,72 +768,7 @@ Your analysis mask can be a valley bottom. This is basically saying you want the
 3. Select all the metrics from the Riverscape System Metrics Protocol and click `OK`.
 4. In the Analysis window that pops up click `Calculate`. If appropriate in the pop-up window change the settings to All Data Capture Events and All Sample Frames, click `OK`.
 5. You can run this analysis for multiple reaches if necessary and within any analysis you can choose to export the metrics table. 
-6. An optional step if you have multiple analysis is to right click on the Analysis node in the QRIS plugin and select `Export all Analyses to Table`. This allows you to open all the metrics in one table at the same time which can be helpful in comparing reaches to each other. 
-
-
-### M. Map Recovery Space
-
-The riverscape valley bottom is the baseline for recovery space, so we’ll start with that previously-digitized information. This step will duplicate the Valley Bottom geometry into the recovery space layer where we can make necessary edits without having to start from scratch.
-
-1. Right-click on the recovery space layer -> Import Features from Riverscapes Valley Bottom
-2. Toggle editing on the layer. Use the Reshape Features digitizing tool to make edits where necessary.
-3. You will have to do this twice for your two different VBET riverscapes we created earlier.
-
-Here, we can look at the risk layers we digitized and determine what we can actually recover in the riverscape. Consider what portions of the active floodplain are recoverable, versus parts separated by a berm, levee, or other limiting factor not involved in risk mapping.
-
-![recovery space](/images/tutorials/recovery-potential.png)
-<YouTubeEmbed videoId="uT277glRfYI" />
-### N. Carol vs Pops, Differing Ideas on Recovery Space
-
-In Our [Module 4](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://s3-us-west-2.amazonaws.com/etalweb.joewheaton.org/RestorationConsortium/Workshops/2020/SGI/Materials/Module4/04_C_DesignRecoveryPotential.pdf) example Carol and Pops have differing ideas on what recovery space should look like. If we compare what we digitized it matches pops, so we need a way to create another recovery space for Carol to compare against.
-
-1. Create a New DCE and call it "2025 Assessment Carol"
-2. Follow the same steps we did earlier for creating a DCE but only select the recovery space layer from the LTPBR Procotol
-3. Rather than digitizing a new layer we can import from a previous DCE. Right-click the recovery space layer in the new DCE and select "+ Copy from Data Capture Event" -> Select the appropriate DCE.
-4. Add that layer to the map and toggle editing
-5. Delete the feature that corresponds to the Fall Creek Riverscape and edit the remaining feature to the extents that Carol drew as well as to the Property AOI
-6. Saved edits
-
-We now have 2 DCEs with different recovery space layers that we can compare in Analyses. However, we need a corresponding Sample Frame for that Analysis.
-This will be addressed when we generate sampe frames.
-
-![recovery space Carol](/images/webinars/RecoveryPotential.png)
-
-### O. Assess the Riverscape Potential to Support Wood Accumulation and Beaver Activity
-
-1. Right-click on your main DCE and add the BRAT CIS Reaches layer from the BRAT CIS Protocol. Add the Structural Elements Points and Inundation Extents layers from the LTPBR Protocol. Click Ok to add them to your DCE.
-2. Use the Structural Elements layer to digitize dams and jams.
-3. Use the BRAT CIS layer to assess beaver activity capacity at a reach scale.
-4. Map the Inundation Extents layer.
-5. Using these layers as well as model outputs from BRAT and RCAT assess whether or not there is structural starvation in your riverscape and whether or not the riverscape has the ability to support beaver activity.
-
-<YouTubeEmbed videoId="pSy2hoXzwrw" />
-
-### P. Create a Planning Container
-
-1. Right-click Data Capture Events Folder -> +Low Tech Process Based Restoration -> Add New Planning Container
-2. In the pop-up, name it something useful, like 2025 LTPBR Planning. Click add -> select 2025 Assessment DCE. It will now populate the table. Change its representation to Contemporary.
-
-Ideally, a planning container would also have both a Historic and Predicted DCE. A planning container simply copies DCEs into a new parent folder, which you’ll reference as the basis for LTPBR Design, when we get there.
-
-![Planning Container](/images/tutorials/planning-container.png)
-<YouTubeEmbed videoId="4uUUn3rx9mE" />
-
-
-### Q. Create a Sample Frame to Compare Carol and Pops Recovery Space
-
-There are different ways to do this but the easiest uses a tool outside of QRIS to create a temporary layer to then import into the project
-
-1. Add your Coburn Creek Valley Bottom VBET layer to the map -> use the selection tool to select the feature -> search the processing toolbox for 'Select Extracted Features' tool.
-2. Make sure the correct layer is selected in the tool and click run (no need to save to a location, we just want a temporary layer)
-
-![Temporary Layer](/images/webinars/temporary-layer.png)
-
-3. Right-click the Sample Frames node -> Import Sample Frame from... -> select "Layer in Map"
-4. Choose the Temporary Layer in the dropdown, Give it a name like "SF Property", and select the "Property AOI" in the 'Clip to AOI' dropdown
-5. Leave all other fields as none and click ok
-
-<YouTubeEmbed videoId="4ZSVIPAE_cU" />
+6. An optional step if you have multiple analysis is to right click on the Analysis node in the QRIS plugin and select `Export all Analyses to Table`. This allows you to open all the metrics in one table at the same time which can be helpful in comparing reaches to each other.
 
 ### R. Analyses
 
