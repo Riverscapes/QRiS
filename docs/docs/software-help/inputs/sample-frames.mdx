@@ -6,20 +6,36 @@ description: Riverscapes polygons for calculating metrics
 
 Sample frames are polygon feature classes that divide up your riverscapes into smaller units. Typically these individual polygons span valley wall to valley wall and longitudinally represent coherent geomorphic units, or uniform sections of river.
 
-Sample frames are used to define the spatial extent of your [analysis](/software-help/analyses), and to define the spatial units for which you will calculate [metrics](/software-help/metrics).
+Sample frames are used to define the spatial extent of your [analysis](/software-help/analyses) and the spatial units to calculate [metrics](/software-help/metrics).
 
 Sample frames are stored within QRiS as a polygon feature class. One string attribute column can be specified as the column to be used for labels when the sample frame is added to the map. This is useful for displaying the name of each polygon on the map. These labels can be brief names or text representations of the polygon ID etc.
 
-In addition to the display label column, there are several fields related to topology included in the sample frame feature class. "flow_path" is used to specify and differentiate between polygons that are connected to each other. "flow_path" is a string field that can be used to specify a unique identifier for each connected set of polygons, similar to NHD level path or stream name. For most cases of a simple stream, one flow_path is used and a default value can be specified. The "flows_into" field is used to specify the flow direction of the sample frame. This field simply references the fid of the downstream polgyon. 
-
 ![sample frame overview](/images/software-help/sample-frame-overview.png)
+
+## Sample Frames Menu
+
+Right clicking on an existing sample frame layer in the QRiS project tree allows users to add the layer to the map, view layer properties, set the numeric order of polygon labels, calculate zonal statistics from other layers, and conduct analyses. 
+
+Setting the order by the centerline updates the order and numeric label of sample frame layers with multiple polygon features. This is important for gradient calculations to ensure metrics are calculated from upstream to downstream (rather than inversely). When using this option, select the centerline that intersects you sample frames and click the box to update display labels (unless the user has unique label values they want to adhere to). After clicking `Ok`, you will notice that labels for the polygons should update with lower numbers correlating to upstream polygons and higher numbers correlating to downstream polygons. If you open the attribute table, you will see that the *flow_into* field should update with numeric values associated with other polygons that are directly downstream of the current selection. If the polygon is at the downstream extent of the reach, the value should remain *Null*.   
+
+Zonal statistics will populate with statistical information correlated to layers added to the QGIS map panel. These can include input layers such as centerlines, cross sections, AOIs, etc., DCE layers such as data capture events, designs, and/or as-builts, or even other contextual raster/vector data that has been imported into the QRiS project by the user. You can also cusotmize and export the data by selecting the `Export Data` tab. 
+
+Finally, you can create an analysis using a sample frame layer by selecting the `Create Analysis` option. This will open the *Analysis Properties window* with the sample frame already selected as the mask polygon. You can then select the type of analysis you want to run and provide the necessary parameters to run the analysis.
+
+![sample frame menu](/images/software-help/Sample-Frames-Menu.png)
+
+## Sample Frame Properties 
+
+Under the sample frame properties, users can assign the "flow_path" name under the `Basic Properties` tab. This is used to specify and differentiate between polygons that are connected to each other. "flow_path" is a string field that can be used to specify a unique identifier for each connected set of polygons, similar to NHD level path or stream name. For most cases of a simple stream, one flow_path is used and a default value can be specified. 
+
+Users can also add additional information about their sample frames, such as goals & objectives, under the `Description` tab. The `Categories` tab allows users to build unique ListFields with categorical, user-defined attribute values. Simply type in the text value under the the **Attributes** button and click `Add` to populate the list with attribute values restricted by those defined by the user. The `Geometry` tab contains statistical information about feature count, total area, average area per frame, minimum area, and maximum area of sample frame polygons. Finally, the `Metadata` tab allows users to populate additional metadata about their sample frames.  
+
+![sample frame properties](/images/software-help/Sample-Frames-Properties.png)
 
 ## Adding a New Sample Frame
 ### Create a New Sample Frame from Scratch
 
 You can create a new sample frame by drawing a polygon on the map. To do this, right click on the **Sample Frames** folder within the QRiS [project](/software-help/projects) and select the **Create New Sample Frame** menu option, then **Empty Sample Frame (Manual)**. Provide a name and optional Default Flow Path Name and/or description. You may also specify Categorical Fields and attributes on the Categories Tab and Metadata on the Metadata Tab. When you have prepared the Sample Frame properties click **OK**. Add the Sample Frame to the map by clicking the **Add to Map** button. You can now use the standard QGIS editing tools to digitize the sample frame on the map. Remember to stop editing and save your changes before the sample frame is available for use when importing other data.
-
-![create sample frame](/images/software-help/create-sample-frame.png)
 
 ### Create a New Sample Frame from Existing QRiS Layers
 

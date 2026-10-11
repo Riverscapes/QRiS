@@ -33,11 +33,15 @@ Each metric will show its version number, availability, usage, and description. 
 
 Once a metric is selected as a metric or indicator, the version column will be bolded to show it as being active in the analysis. 
 
-There are also multiple filters and menubars the user can utilize to refine their search and selection of metrics. In the bottom left hand corner, users can change the main window from tree view to table view or vice versa. The tree view shows metrics organized by dropdowns for each listed protocol, while the table view shows all metrics in a single, tabular list. In the bottom right hand corner, users can set all visible metrics as *None*, *Metric*, *Indicator*, or *Default Usage* (defined in protocol xml) using the buttons provided.
+<details open>
+<summary>*Additional Information*</summary>
 
-In the upper left hand corner, users can filter the metrics by the specific protocol or associated group. On the right, users can use the search bar to locate metrics by typing the metric name or key words. In the upper right hand corner, users can filter metrics by ones currently in use, whether they are automated or manual, or display metrics included in experimental protocols or have been deprecated by protocol authors. 
+There are also multiple filters and menubars the user can utilize to refine their search and selection of metrics. In the bottom left hand corner (1), users can change the main window from tree view to table view or vice versa. The tree view shows metrics organized by dropdowns for each listed protocol, while the table view shows all metrics in a single, tabular list. In the bottom right hand corner (2), users can set all visible metrics as *None*, *Metric*, *Indicator*, or *Default Usage* (defined in protocol xml) using the buttons provided.
 
-In addition, users can also set custom metrics to be included in the analysis. This can be done by clicking on the `Custom Metrics` tab. Custom metrics are simple, user defined metrics that are manually populated in the analysis. 
+Users can also filter the metrics by the specific protocol (3), associated group (4), or search for specific metric names/keywords in the search bar (5). Advanced filters (6) can be used to further refine metric selection by ones currently in use, whether they are automated or manual, or display metrics included in experimental protocols or have been deprecated by protocol authors. 
+
+Finally, users can also set custom metrics to be included in the analysis. This can be done by clicking on the `Custom Metrics` tab (7) where users can define the parameters of the custom metric to be included in the analysis. *Note: Custom metric values have to be manually populated by the user*. 
+</details>
 
 ![analysis properties form](/images/software-help/analyses/Create-Analysis2.png)
 
@@ -49,13 +53,13 @@ Finally, you can populate the `Description` tab with any additional information 
 
 Click **OK** to create the analysis.
 
-## Calculating Values for an Analysis 
+## Calculating Metric Values 
 
 ![analysis calculation form](/images/software-help/analyses/Calculate-Analysis.png)
 
-Once you are done finalizing the the analysis properties form by clicking **OK**, the metric table window will appear showing the list of metrics you have included in your analysis. This is where you will view calculated metric values for associated data capture events and sample frames. To calculate numeric values for these metrics, simply click on the `Calculate` tab in the upper right hand corner. 
+Once you are done finalizing the the analysis properties form, the metric table window will appear showing the list of metric included in your analysis. This is where you will view calculated values for associated data capture events and sample frames. To calculate numeric values for these metrics, simply click on the `Calculate` tab (1) in the upper right hand corner. 
 
-A seperate form will appear allowing the user to calculate values for the currently active DCE or Sample Frame (selected in the analysis window), or for all Data Capture Events and Sample Frames denoted in the analysis properties form. Optionally, you can also overwrite existing values by clicking on the *Overwrite any existing automated values* box (ideal for changes to spatial data), or force values to be active by clicking on the *Force automated values to be the active values*. Once the user is satisfied with their selected options, click **Ok** to start metric calculation. A progress bar will display at the bottom of the QGIS UI showing progress towards completion. 
+A separate window will appear allowing the user to calculate metric values for the currently selected DCE and Sample Frame, or for all Data Capture Events and Sample Frames denoted in the analysis properties form. Optionally, you can also overwrite existing values by clicking on the *Overwrite any existing automated values* box (ideal for changes to spatial data), or force values to be active by clicking on the *Force automated values to be the active values*. Once the user is satisfied with their selected options, click **Ok** to start metric calculation. A progress bar will display at the bottom of the QGIS UI showing progress towards completion. 
 
 :::tip
 Selecting all in both cases is an easy way to calculate all metrics across all sample frames and DCEs. Calculating just the currently active is a good way to run calculations to test output values and troubleshoot possible failed calculations.
@@ -65,23 +69,23 @@ Selecting all in both cases is an easy way to calculate all metrics across all s
 
 ### Metric Table 
 
-Once an analysis is complete, metric values will populate under the `Value` column. Values will populate for the currently selected DCE & sample frame. Users can view metrics for different DCEs & sample frame polygons by using the `Data Capture Event` and `Mask Polygon` tabs respectively to change the selection. Furthermore, users can view metrics by protocol using the dropdown menu, search for specific metric(s) in the search bar, filter metrics under the `Advanced Filters` tab, or change the display units using the `Display Units` tab. To review the properties of the analysis form, select the `Properties` tab in the upper right hand corner.
+Once an analysis is complete, metric values will populate under the `Value` column (2). Values will populate for the currently selected DCE & sample frame. Users can view metrics for different DCEs & sample frame polygons by using the `Data Capture Event` (3) and `Mask Polygon` (4) tabs respectively to change the selection. Furthermore, users can view metrics by protocol using the dropdown menu (5), search for specific metric(s) in the search bar (6), filter metrics under the `Advanced Filters` tab (7), or change the display units using the `Display Units` tab (8). To review the properties of the analysis form, select the `Properties` tab in the upper right hand corner (9).
 
 ### Availability Matrix
 
-A yellow warning sign may appear next to a metric once the analysis is complete. This is to denote that the metric was not calculated. This can be due to layers containing no features, or the metric missing one or more required layers to calculate properly. Click on the warning sign to see the avaiability matrix window for diagnosis. 
+A yellow warning sign may appear next to a metric once the analysis is complete. This is to denote that the metric was not calculated. This can be due to layers containing no features, or the metric missing one or more required layers to calculate properly. Click on the warning sign to see the availability matrix window for diagnosis. 
 
-![qa-qc window](/images/software-help/analyses/QA-QC Window.png)
+![availability matrix](/images/software-help/analyses/Availability-Matrix.png)
 
 ### Metric Properties
 
-Users have flexibility to change metric values, units, and uncertainty under the metric properties denoted by the blue pen on the left. In the properties window, users have the option to change metric values from their automated calulation to a manual entry, add uncertainty values (entered manually), or change the display units under the `Value` tab. Users can optionally add more information about the metric under the `Notes` and `Metadata` tabs. To view metric information as defined in the protocol xml, click on the blue question mark in the upper right hand corner. 
+Users have flexibility to change metric values, units, and uncertainty under the metric properties denoted by the blue pen symbol (10). In the properties window, users have the option to change metric values from their automated calculation to a manual entry, add uncertainty values (entered manually), or change the display units under the `Value` tab. Users can (optionally) add more information about the metric under the `Notes` and `Metadata` tabs. To view metric information as defined in the protocol xml, click on the blue question mark in the upper right hand corner. 
 
 ![metric properties](/images/software-help/analyses/Metric-Properties.png)
 
 ### Export an Analysis
 
-Finally, users can export their analysis table by clicking on the `Export Metric Table` in the bottom right hand corner. This can be done for one or all DCEs and sample frames. The default location will be the *Exports* folder in the QRiS project, but the user can specificy any file location if desired. 
+Finally, users can export their analysis table by clicking on the `Export Metric Table` (11) in the bottom right hand corner. This can be done for one or all DCEs and sample frames. The default location will be the *Exports* folder in the QRiS project, but the user can specify any file location if desired. 
 
 ![metric properties](/images/software-help/analyses/Metric-Export.png)
 
