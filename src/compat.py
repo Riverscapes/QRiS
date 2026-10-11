@@ -71,6 +71,8 @@ try:
     MATCH_EXACTLY = Qt.MatchFlag.MatchExactly
     MATCH_WRAP = Qt.MatchFlag.MatchWrap
     DIALOG_BTN_CLOSE = QDialogButtonBox.StandardButton.Close
+    DIALOG_BTN_OK = QDialogButtonBox.StandardButton.Ok
+    DIALOG_BTN_CANCEL = QDialogButtonBox.StandardButton.Cancel
     CUSTOM_CONTEXT_MENU = Qt.ContextMenuPolicy.CustomContextMenu
     USER_ROLE = Qt.ItemDataRole.UserRole
     KEEP_ASPECT_RATIO = Qt.AspectRatioMode.KeepAspectRatio
@@ -119,6 +121,8 @@ except AttributeError:
     MATCH_EXACTLY = Qt.MatchExactly  # type: ignore[attr-defined]
     MATCH_WRAP = Qt.MatchWrap  # type: ignore[attr-defined]
     CUSTOM_CONTEXT_MENU = Qt.CustomContextMenu  # type: ignore[attr-defined]
+    DIALOG_BTN_OK = QDialogButtonBox.Ok  # type: ignore[attr-defined]
+    DIALOG_BTN_CANCEL = QDialogButtonBox.Cancel  # type: ignore[attr-defined]
     USER_ROLE = Qt.UserRole  # type: ignore[attr-defined]
     KEEP_ASPECT_RATIO = Qt.KeepAspectRatio  # type: ignore[attr-defined]
     ISO_DATE_FORMAT = Qt.ISODate  # type: ignore[attr-defined]

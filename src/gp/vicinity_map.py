@@ -45,13 +45,19 @@ class VicinityMapExportTask(QgsTask):
         self.render_params = render_params or {}
         self.exception = None
 
+        # Results exposed to the caller once the task has completed
+        self.region_label = None
+        self.centroid = None  # EPSG:4326 point; .y() is latitude, .x() is longitude
+
     def run(self):
         """
         Perform the map rendering and export.
         """
         try:
             centroid_point = self._resolve_centroid_point_wgs84()
+            self.centroid = centroid_point
             region_label, region_geometry = self._resolve_intersecting_state(centroid_point)
+            self.region_label = region_label
             if region_geometry is None:
                 return False
 

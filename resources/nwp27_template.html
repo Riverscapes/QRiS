@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ data.projectTitle.title or "NWP 27 Application" }}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 2rem auto; max-width: 900px; color: #222; line-height: 1.5; }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 0.3rem; }
+        h2 { margin-top: 1.8rem; color: #1a4d80; }
+        h3 { margin-top: 1.2rem; color: #333; }
+        table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
+        th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+        th { background: #f0f4f8; width: 32%; }
+        .section { margin-bottom: 1.5rem; }
+        .muted { color: #777; font-style: italic; }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; background: #f7f7f7; padding: 0.5rem; border: 1px solid #eee; margin: 0; }
+        .layout-image { max-width: 1000px; height: auto; }
+        .vicinity-map-image { max-width: 200px; height: auto; }
+        .side-by-side { display: flex; gap: 2rem; align-items: flex-start; }
+        .side-by-side > div { flex: 1; min-width: 0; }
+    </style>
+</head>
+<body>
+    <h1>NWP 27 Summary Notice Report</h1>
+
+    <div class="section">
+        <h2>Project Information</h2>
+        <table>
+            <tr><th>Project Title</th><td>{{ data.projectTitle.title or "" }}</td></tr>
+            <tr><th>Application Date</th><td>{{ data.projectTitle.applicationDate or "" }}</td></tr>
+            <tr><th>Implementation Start</th><td>{{ data.projectTitle.implementationStart or "" }}</td></tr>
+            <tr><th>Implementation End</th><td>{{ data.projectTitle.implementationEnd or "" }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Prospective Permittee Contact Information</h2>
+        <table>
+            <tr><th>Name</th><td>{{ data.permittee.permitteeName or "" }}</td></tr>
+            <tr><th>Organization</th><td>{{ data.permittee.organization or "" }}</td></tr>
+            <tr><th>Address</th><td>{{ data.permittee.address or "" }}</td></tr>
+            <tr><th>Telephone</th><td>{{ data.permittee.telephone or "" }}</td></tr>
+            <tr><th>Email</th><td>{{ data.permittee.email or "" }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Location of Proposed Activity</h2>
+        {% if data.vicinityMapLayout %}
+        <div class="side-by-side">
+            <div>
+                <table>
+                    <tr><th>Stream/River</th><td>{{ data.projectTitle.streamName or "" }}</td></tr>
+                    <tr><th>Region</th><td>{{ data.vicinityRegionLabel or "" }}</td></tr>
+                    <tr><th>Latitude</th><td>{{ data.vicinityLatitude or "" }}</td></tr>
+                    <tr><th>Longitude</th><td>{{ data.vicinityLongitude or "" }}</td></tr>
+                </table>
+            </div>
+            <div>
+                <img class="vicinity-map-image" src="{{ data.vicinityMapLayout }}" alt="Vicinity Map"/>
+            </div>
+        </div>
+        {% else %}
+        <p class="muted">Vicinity Map not produced.</p>
+        {% endif %}
+
+        {% if data.projectElementsLayout %}
+        <img class="layout-image" src="{{ data.projectElementsLayout }}" alt="Project Elements Layout"/>
+        {% else %}
+        <p class="muted">Project Elements Layout not produced.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Project Conditions</h2>
+        <table>
+            <tr><th>Conditions</th><td>{{ data.projectConditions.conditions or "" }}</td></tr>
+            <tr><th>Objectives</th><td>{{ data.projectConditions.objectives or "" }}</td></tr>
+        </table>
+    </div>
+
+    {% for key, label in [("esaRelevance", "Endangered Species Act (ESA) Relevance"), ("historicProperties", "Historic Properties or Tribal Cultural Artifacts"), ("waterQuality", "Water Quality Certification (WQC)"), ("wildScenicRivers", "Wild and Scenic Rivers"), ("monitoringAndReporting", "Monitoring and Reporting")] %}
+    <div class="section">
+        <h2>{{ label }}</h2>
+        {% set cond = data.get(key, {}) %}
+        <table>
+            <tr><th>Relevant</th><td>{{ "Yes" if cond.relevant else "No" }}</td></tr>
+            <tr><th>Status</th><td>{{ cond.status or "" }}</td></tr>
+            <tr><th>Notes</th><td>{{ cond.notes or "" }}</td></tr>
+        </table>
+    </div>
+    {% endfor %}
+
+    <div class="section">
+        <h2>Adaptive Management Plan</h2>
+        {{ data.adaptiveManagementPlan.adaptiveInput or "" }}
+    </div>
+
+    <div class="section">
+        <h2>Reaches</h2>
+        {% if data.reaches %}
+            {% for fid, reach in data.reaches.items() %}
+            <h3>Reach {{ reach.display_label or fid or "" }}</h3>
+            <table>
+                <tr><th>Treatments</th><td>{{ reach.treatments or "" }}</td></tr>
+                <tr><th>Conditions</th><td>{{ reach.conditions or "" }}</td></tr>
+                <tr><th>Objectives</th><td>{{ reach.objectives or "" }}</td></tr>
+            </table>
+            {% endfor %}
+        {% else %}
+            <p class="muted">No reaches recorded.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
