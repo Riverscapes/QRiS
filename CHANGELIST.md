@@ -1,5 +1,9 @@
 # QRiS Plugin
 
+## [1.3.2] Oct 11 2026
+
+- First version of the NWP27 wizard
+
 ## [1.3.1] Sept 16 2026
 
 ## Fixed
