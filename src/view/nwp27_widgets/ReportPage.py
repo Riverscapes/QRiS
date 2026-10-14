@@ -237,7 +237,8 @@ class ReportPage(BaseWidget):
             self._reset_ui()
             return
 
-        worker = ReportWorker(polygon_path, self._report_type_id)
+        project_title = self.get_project_title()
+        worker = ReportWorker(polygon_path, project_title, "Automatically generated from the NWP 27 Wizard inside Riverscapes Studio", self._report_type_id)
         worker.progress.connect(self._on_worker_progress)
         worker.finished.connect(self._on_worker_finished)
         worker.error.connect(self._on_worker_error)

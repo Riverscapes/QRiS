@@ -215,6 +215,24 @@ class BaseWidget(QWidget):
                 con.rollback()
                 raise
 
+    def get_project_title(self) -> str:
+        """Return the title of the project. Override this method in subclasses."""
+
+        data = self.load_data("projectTitle")
+        title = data.get("title", "")
+        if title is None or len(title) < 1:
+            with DBCon(self.db_path) as con:
+                curs = con.cursor()
+                curs.execute("SELECT name FROM Events where id = ?", (self.design_id,))
+                row = curs.fetchone()
+                if row:
+                    title = row["name"]
+
+        if title is None or len(title) < 1:
+            title = "NWP27 Based on a Riverscapes Studio Design"
+
+        return title
+
     def get_data_to_save(self) -> dict:
         """Return the data to be saved. Override this method in subclasses."""
         return {}

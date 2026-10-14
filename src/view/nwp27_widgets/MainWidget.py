@@ -113,7 +113,7 @@ class MainWidget(QWidget):
         help_button.setToolTip("Click for help")
         help_button.setFixedWidth(30)
         help_button.setIcon(QIcon(":/plugins/qris_toolbar/help"))
-        help_url = CONSTANTS["webUrl"].rstrip("/") + "/software-help/software-help/dce/nwp"
+        help_url = CONSTANTS["webUrl"].rstrip("/") + "/software-help/dce/nwp"
         help_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(help_url)))
         hbox_layout.addWidget(help_button)
 
