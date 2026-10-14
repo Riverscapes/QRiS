@@ -174,8 +174,8 @@ class ReportPage(BaseWidget):
             logger.error("Unknown report id: %s", report_id)
             return
 
-        report_html_path = os.path.join(self.get_package_folder(), report["output_folder_name"], "report.html")
-        if not os.path.exists(report_html_path):
+        report_html_path = os.path.join(self.get_reports_folder(), report["output_folder_name"], "report.html")
+        if not os.path.isfile(report_html_path):
             QMessageBox.information(self, "Report Not Found", f"The {report['name']} has not been generated yet. Click Generate first.")
             return
 
