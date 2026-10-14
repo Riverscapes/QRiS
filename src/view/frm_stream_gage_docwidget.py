@@ -157,12 +157,16 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self._static_ax.set_ylabel("Discharge (CFS)")
         self._static_ax.set_xlabel("Date")
         if station_name and station_code:
-            self._static_ax.set_title(f"{station_name} ({station_code})")
+            self._static_ax.set_title(f"{station_name} ({station_code})", fontsize=10)
         elif station_name:
-            self._static_ax.set_title(station_name)
+            self._static_ax.set_title(station_name, fontsize=10)
 
         self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%b"))
-        self._static_ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+        # Cap the number of x-axis labels so multi-year plots don't get crowded.
+        max_labels = 12
+        span_days = (dates[-1] - dates[0]).days if len(dates) > 1 else 365
+        step = max(1, (span_days + max_labels - 1) // max_labels)
+        self._static_ax.xaxis.set_major_locator(ticker.MultipleLocator(step))
         self._static_ax.tick_params(axis="x", rotation=45)
 
         # Match climate engine chart grid styling (major + minor grids).
