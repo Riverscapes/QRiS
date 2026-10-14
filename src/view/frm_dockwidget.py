@@ -1320,12 +1320,18 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         if self.nwp_doc_widget is None:
             self.nwp_doc_widget = FrmNwpDocWidget(self, self.iface)
             self.nwp_doc_widget.configure(self.qris_project, event)
+            self.nwp_doc_widget.products_exported.connect(self.on_products_exported)
             self.iface.addDockWidget(RIGHT_DOCK, self.nwp_doc_widget)
             self.nwp_doc_widget.closing.connect(self.destroy_nwp_doc_widget)
             self.nwp_doc_widget.nwp_widget.attachments_changed.connect(self.refresh_attachments_tree)
         else:
             self.nwp_doc_widget.configure(self.qris_project, event)
             self.nwp_doc_widget.show()
+
+    def on_products_exported(self):
+        "This method is called when products have been exported. Call the QRiS toolbar function to handle the event and fire off a telemetry call."
+        if hasattr(self.iface, "qris_toolbar"):
+            self.iface.qris_toolbar.on_products_exported()
 
     def open_analysis_over_time_dock(self, analysis: Analysis = None):
         if self.analysis_over_time_dock_widget is None:

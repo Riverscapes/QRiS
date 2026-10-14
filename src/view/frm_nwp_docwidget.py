@@ -29,6 +29,7 @@ from ..view.nwp27_widgets.MainWidget import MainWidget
 
 class FrmNwpDocWidget(QtWidgets.QDockWidget):
     closing = QtCore.pyqtSignal()
+    products_exported = QtCore.pyqtSignal()
 
     def __init__(self, parent, iface):
 
@@ -56,6 +57,7 @@ class FrmNwpDocWidget(QtWidgets.QDockWidget):
         self.vert = QtWidgets.QVBoxLayout(self.dockWidgetContents)
 
         self.nwp_widget = MainWidget()
+        self.nwp_widget.products_exported.connect(self.products_exported.emit)
         self.vert.addWidget(self.nwp_widget)
 
         # self.lblTitle = QtWidgets.QLabel("NWP Package")

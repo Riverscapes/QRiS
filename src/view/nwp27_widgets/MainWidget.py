@@ -95,6 +95,7 @@ STEPS = [
 
 class MainWidget(QWidget):
     attachments_changed = pyqtSignal()
+    products_exported = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -169,6 +170,8 @@ class MainWidget(QWidget):
             page.contentChanged.connect(lambda idx=index: self.update_step_icons())
         if hasattr(page, "attachments_changed"):
             page.attachments_changed.connect(self.attachments_changed.emit)
+        if hasattr(page, "productsExportedSignal"):
+            page.productsExportedSignal.connect(self.products_exported.emit)
         return page
 
     def on_step_changed(self, index: int) -> None:

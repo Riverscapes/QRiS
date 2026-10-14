@@ -5,6 +5,7 @@ import sys
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from qgis.core import QgsApplication
+from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -23,6 +24,8 @@ from .WizardStatus import PRODUCTS, STEP_UNKNOWN
 
 
 class PackagePage(BaseWidget):
+    productsExportedSignal = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -62,7 +65,7 @@ class PackagePage(BaseWidget):
 
         # Produce Products button below the table
         produce_btn = QPushButton("Generate Products")
-        produce_btn.clicked.connect(self.produce_products)
+        produce_btn.clicked.connect(self.generate_products)
         hbox.addWidget(produce_btn)
 
         browse_btn = QPushButton("Browse Package Folder")
@@ -117,7 +120,7 @@ class PackagePage(BaseWidget):
         output_path = os.path.join(self.get_map_layouts_folder(), f"{safe_name}.png")
         print_layout_to_image(machine_code, output_path)
 
-    def produce_products(self) -> None:
+    def generate_products(self) -> None:
         """Produce all the products."""
 
         export_count = 0
@@ -136,6 +139,7 @@ class PackagePage(BaseWidget):
                     print(f"Callback {callback_name} is not implemented or not callable.")
 
         if export_count > 0:
+            self.productsExportedSignal.emit()
             # Show a message box offering to browse the folder
 
             msg_box = QMessageBox()
