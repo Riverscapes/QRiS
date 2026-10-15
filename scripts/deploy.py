@@ -49,6 +49,8 @@ def copy_plugin():
         ["resources", "**", "*.json"],
         ["resources", "**", "*.geojson"],
         ["resources", "**", "*.qpt"],
+        ["resources", "**", "nwp27_template.html"],
+        ["resources", "**", "acknowledgements.html"],
     ]
     files = []
     for p in keep_patterns:
