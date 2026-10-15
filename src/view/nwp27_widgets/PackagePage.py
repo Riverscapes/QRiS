@@ -22,6 +22,39 @@ from .BaseWidget import BaseWidget
 from .DBCon import DBCon
 from .WizardStatus import PRODUCTS, STEP_UNKNOWN
 
+"""Default keys and helper functions for NWP 27 data.
+If these are missing then Jinja substitution will raise an UndefinedError.
+The following will fail because the "or" check only looks at the last element.
+
+<tr><th>Project Title</th><td>{{ data.projectTitle.title or "" }}</td></tr>
+"""
+_NWP_DEFAULT_KEYS = {
+    "projectTitle",
+    "permittee",
+    "projectConditions",
+    "esaRelevance",
+    "historicProperties",
+    "waterQuality",
+    "wildScenicRivers",
+    "adaptiveManagementPlan",
+    "monitoringAndReporting",
+    "reaches",
+}
+
+
+def _ensure_nwp_defaults(nwp_data: dict) -> None:
+    """Fill in any top-level keys the template expects that are missing from nwp_data.
+
+    Jinja2 raises ``UndefinedError`` when you access ``data.missingKey`` on a dict
+    even if the expression has an ``or ""`` fallback, because ``getattr`` is called
+    before the ``or`` is evaluated.  This helper ensures every expected key exists
+    (defaulting to an empty dict or list as appropriate) so the template renders
+    without error.
+    """
+    for key in _NWP_DEFAULT_KEYS:
+        if key not in nwp_data:
+            nwp_data[key] = {}
+
 
 class PackagePage(BaseWidget):
     productsExportedSignal = pyqtSignal()
@@ -220,6 +253,10 @@ class PackagePage(BaseWidget):
             png_name = f"{safe_name}.png"
             if os.path.exists(os.path.join(self.export_folder, png_name)):
                 nwp_data["projectElementsLayout"] = png_name
+
+        # Ensure all top-level keys the template expects exist, so Jinja2
+        # doesn't raise UndefinedError when a key is missing from the dict.
+        _ensure_nwp_defaults(nwp_data)
 
         # Locate the Jinja2 template in the plugin's resources folder
         current_dir = os.path.dirname(os.path.abspath(__file__))
