@@ -182,13 +182,10 @@ class PackagePage(BaseWidget):
             msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             ret = msg_box.exec()
             if ret == QMessageBox.StandardButton.Yes:
-                import subprocess
-                import sys
-
                 if sys.platform == "darwin":
                     subprocess.Popen(["open", self.export_folder])
                 elif sys.platform == "win32":
-                    subprocess.Popen(["explorer", self.export_folder])
+                    os.startfile(os.path.normpath(self.export_folder))
                 else:
                     subprocess.Popen(["xdg-open", self.export_folder])
 
@@ -310,14 +307,18 @@ class PackagePage(BaseWidget):
         return os.path.basename(output_path)
 
     def browse_export_folder(self) -> None:
-        """Open finder or Windows explorer at the export/package folder. Ensure it exists before doing so."""
+        """Open Finder / Windows Explorer at the export/package folder."""
 
+        if not self.export_folder:
+            return
         if not os.path.exists(self.export_folder):
             os.makedirs(self.export_folder, exist_ok=True)
 
         if sys.platform == "darwin":
-            subprocess.call(["open", self.export_folder])
+            subprocess.Popen(["open", self.export_folder])
         elif sys.platform == "win32":
-            subprocess.call(["explorer", self.export_folder])
+            # Use os.startfile on Windows — it handles spaces and mixed slashes
+            # without blocking, and doesn't depend on explorer.exe being in PATH.
+            os.startfile(os.path.normpath(self.export_folder))
         else:
-            subprocess.call(["xdg-open", self.export_folder])
+            subprocess.Popen(["xdg-open", self.export_folder])
