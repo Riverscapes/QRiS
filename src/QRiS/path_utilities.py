@@ -1,5 +1,7 @@
 import os
 from pathlib import PurePosixPath
+import subprocess
+import sys
 from urllib.parse import urlparse
 
 
@@ -95,3 +97,27 @@ def is_url(value):
         return False
     result = urlparse(value)
     return all([result.scheme, result.netloc])
+
+
+def explore_folder(folder: str, create_if_missing: bool = False) -> None:
+    """Generic method for opening finder or file explorer to a specific folder.
+
+    Args:
+        folder (str): The folder path to open.
+        create_if_missing (bool, optional): Whether to create the folder if it doesn't exist. Defaults to False.
+    """
+
+    if not folder:
+        return
+
+    if create_if_missing and not os.path.exists(folder):
+        os.makedirs(folder, exist_ok=True)
+
+    if sys.platform == "darwin":
+        subprocess.Popen(["open", folder])
+    elif sys.platform == "win32":
+        # Use os.startfile on Windows — it handles spaces and mixed slashes
+        # without blocking, and doesn't depend on explorer.exe being in PATH.
+        os.startfile(os.path.normpath(folder))
+    else:
+        subprocess.Popen(["xdg-open", folder])

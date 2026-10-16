@@ -100,8 +100,11 @@
     <div class="section">
         <h2>Reaches</h2>
         {% if data.reaches %}
-            {% for fid, reach in data.reaches.items() %}
-            <h3>Reach {{ reach.display_label or fid or "" }}</h3>
+            {% for reach in data.reaches %}
+            <a href="#reach-{{ reach.fid }}"><h3>Reach {{ reach.displayLabel or reach.fid or "" }}</h3></a>
+            {% if reach.layoutPNG %}
+            <img class="layout-image" src="{{ reach.layoutPNG }}" alt="Reach Layout"/>
+            {% endif %}
             <table>
                 <tr><th>Treatments</th><td>{{ reach.treatments or "" }}</td></tr>
                 <tr><th>Conditions</th><td>{{ reach.conditions or "" }}</td></tr>

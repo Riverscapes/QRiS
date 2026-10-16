@@ -16,10 +16,49 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from ...gp.vicinity_map import VicinityMapExportTask
-from ...lib.layout_tools import _get_layout_by_id, open_layout, print_layout, print_layout_to_image
+from ...QRiS.path_utilities import explore_folder
 from .BaseWidget import BaseWidget
 from .DBCon import DBCon
 from .WizardStatus import PRODUCTS, STEP_UNKNOWN
+
+"""Default keys and helper functions for NWP 27 data.
+If these are missing then Jinja substitution will raise an UndefinedError.
+The following will fail because the "or" check only looks at the last element.
+
+<tr><th>Project Title</th><td>{{ data.projectTitle.title or "" }}</td></tr>
+"""
+_NWP_DEFAULT_KEYS = {
+    "projectTitle",
+    "permittee",
+    "projectConditions",
+    "esaRelevance",
+    "historicProperties",
+    "waterQuality",
+    "wildScenicRivers",
+    "adaptiveManagementPlan",
+    "monitoringAndReporting",
+}
+
+_NWP_DEFAULT_LISTS = {
+    "reaches",
+}
+
+
+def _ensure_nwp_defaults(nwp_data: dict) -> None:
+    """Fill in any top-level keys the template expects that are missing from nwp_data.
+
+    Jinja2 raises ``UndefinedError`` when you access ``data.missingKey`` on a dict
+    even if the expression has an ``or ""`` fallback, because ``getattr`` is called
+    before the ``or`` is evaluated.  This helper ensures every expected key exists
+    (defaulting to an empty dict or list as appropriate) so the template renders
+    without error.
+    """
+    for key in _NWP_DEFAULT_KEYS:
+        if key not in nwp_data:
+            nwp_data[key] = {}
+    for key in _NWP_DEFAULT_LISTS:
+        if key not in nwp_data:
+            nwp_data[key] = []
 
 
 class PackagePage(BaseWidget):
@@ -66,7 +105,7 @@ class PackagePage(BaseWidget):
         hbox.addWidget(produce_btn)
 
         browse_btn = QPushButton("Browse Package Folder")
-        browse_btn.clicked.connect(self.browse_export_folder)
+        browse_btn.clicked.connect(lambda: explore_folder(self.export_folder, create_if_missing=True))
         hbox.addWidget(browse_btn)
 
     def set_project(self, project) -> None:
@@ -86,36 +125,40 @@ class PackagePage(BaseWidget):
     def serialize(self) -> None:
         pass
 
-    def _export_layout(self, product: dict) -> None:
-        """Ensure the layout is in the project (without opening the designer), then print it to PDF."""
-        machine_code = product["machine_code"]
-        name = product["name"]
+    # def _export_layout(self, product: dict, fid: int | None = None) -> None:
+    #     """Ensure the layout is in the project (without opening the designer), then print it to PDF."""
+    #     machine_code = product["machine_code"]
+    #     name = product["name"]
+    #     storage_key = f"{machine_code}_{fid}" if fid is not None else machine_code
 
-        # Ensure the layout is loaded into the project silently
-        layout = _get_layout_by_id(machine_code, False)
-        if not layout:
-            existing_layouts = self.load_data("mapLayouts")
-            if existing_layouts and machine_code in existing_layouts:
-                layout_xml = existing_layouts[machine_code]
-                open_layout(layout_xml, layout_name=machine_code, show_designer=False)
-            else:
-                # Load from template
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                plugin_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
-                layout_path = os.path.join(plugin_root, "resources", "map_templates", f"{machine_code}.qpt")
-                if os.path.exists(layout_path):
-                    open_layout(layout_path, show_designer=False)
-                else:
-                    print(f"Layout template not found for '{name}'")
-                    return
+    #     # Ensure the layout is loaded into the project silently
+    #     layout = _get_layout_by_id(machine_code, False)
+    #     if not layout:
+    #         existing_layouts = self.load_data("mapLayouts")
+    #         if existing_layouts and storage_key in existing_layouts:
+    #             open_layout(existing_layouts[storage_key], layout_name=machine_code, show_designer=False)
+    #         elif existing_layouts and machine_code in existing_layouts:
+    #             open_layout(existing_layouts[machine_code], layout_name=machine_code, show_designer=False)
+    #         else:
+    #             # Load from template
+    #             current_dir = os.path.dirname(os.path.abspath(__file__))
+    #             plugin_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+    #             layout_path = os.path.join(plugin_root, "resources", "map_templates", f"{machine_code}.qpt")
+    #             if os.path.exists(layout_path):
+    #                 open_layout(layout_path, show_designer=False)
+    #             else:
+    #                 print(f"Layout template not found for '{name}'")
+    #                 return
 
-        # Print to PDF
-        safe_name = machine_code.replace(" ", "_").replace("(", "").replace(")", "")
-        out_path = os.path.join(self.get_map_layouts_folder(), f"{safe_name}.pdf")
-        print_layout(machine_code, out_path)
+    #     # Print to PDF and PNG
+    #     safe_name = machine_code.replace(" ", "_").replace("(", "").replace(")", "")
+    #     if fid is not None:
+    #         safe_name = f"{safe_name}_reach_{fid}"
+    #     out_path = os.path.join(self.get_map_layouts_folder(), f"{safe_name}.pdf")
+    #     print_layout(machine_code, out_path)
 
-        output_path = os.path.join(self.get_map_layouts_folder(), f"{safe_name}.png")
-        print_layout_to_image(machine_code, output_path)
+    #     output_path = os.path.join(self.get_map_layouts_folder(), f"{safe_name}.png")
+    #     print_layout_to_image(machine_code, output_path)
 
     def produce_products(self) -> None:
         """Produce all the products."""
@@ -123,9 +166,16 @@ class PackagePage(BaseWidget):
         export_count = 0
         for product in PRODUCTS:
             if product["is_layout"]:
-                # Print the layout to a PDF
-                self._export_layout(product)
-                export_count += 1
+                continue
+                if product["machine_code"].lower() == "nwp_reaches":
+                    # Print one layout per reach
+                    reach_info = self.load_reach_info()
+                    for fid in reach_info:
+                        self._export_layout(product, fid=fid)
+                        export_count += 1
+                else:
+                    self._export_layout(product)
+                    export_count += 1
             else:
                 callback_name = product["machine_code"]
                 callback_func = getattr(self, callback_name, None)
@@ -157,44 +207,73 @@ class PackagePage(BaseWidget):
 
     # Stub callbacks associated with each product
 
-    def json_export(self) -> None:
+    def load_and_prepare_json(self) -> dict:
+        """Load and prepare the NWP 27 JSON data from the database.
+        This is used by the json_export and html_export methods.
+        """
 
-        output_path = os.path.join(self.export_folder, "project.json")
-
-        with DBCon(self.db_path) as con:
-            curs = con.cursor()
-            curs.execute("SELECT metadata FROM events WHERE id = ?", (self.design_id,))
-            metadata = curs.fetchone()["metadata"]
-            if metadata:
-                metadata = json.loads(metadata)
-                nwp_data = metadata.get("nwp27", {})
-
-                # Remove any keys called 'mapLayouts'
-                nwp_data.pop("mapLayouts", None)
-
-                # Write the metadata to the output path
-                os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                with open(output_path, "w") as f:
-                    json.dump(nwp_data, f, indent=4)
-
-    def html_export(self) -> None:
-        """Render the NWP 27 project data to an HTML file using the Jinja2 template."""
-        output_path = os.path.join(self.export_folder, "nwp27_document.html")
+        # Load the superset of reach IDs from the sample frame feature class
+        fc_reaches = self.load_reach_info()
 
         with DBCon(self.db_path) as con:
             curs = con.cursor()
             curs.execute("SELECT metadata FROM events WHERE id = ?", (self.design_id,))
             metadata = curs.fetchone()["metadata"]
             if not metadata:
-                return
+                return {}
             metadata = json.loads(metadata)
             nwp_data = metadata.get("nwp27", {})
 
-            # Remove any keys called 'mapLayouts'
+            # Remove any keys called 'mapLayouts' that refers to layout QML
             nwp_data.pop("mapLayouts", None)
+
+            reach_answers_raw = nwp_data.get("reaches", [])
+            # Normalize to a dict keyed by FID for the merge logic below
+            if isinstance(reach_answers_raw, list):
+                reach_answers = {str(item["fid"]): item for item in reach_answers_raw if "fid" in item}
+            elif isinstance(reach_answers_raw, dict):
+                reach_answers = reach_answers_raw
+            else:
+                reach_answers = {}
+
+            for fid, reach in fc_reaches.items():
+                # Handle when the user has not provided answers for this reach in the NWP data
+                if fid not in reach_answers:
+                    reach_answers[fid] = {
+                        "fid": fid,
+                        "displayLabel": reach.get("displayLabel", f"Polygon {fid}"),
+                        "treatments": "",
+                        "conditions": "",
+                        "objectives": "",
+                    }
+
+                png_path = self.get_layout_path("nwp_reaches", "png", fid=fid)
+                if os.path.exists(png_path):
+                    reach_answers[fid]["layoutPNG"] = os.path.relpath(png_path, self.export_folder)
+
+            # Convert back to a list for storage/output
+            nwp_data["reaches"] = list(reach_answers.values())
 
             # Ensure the stream name is included in the NWP data
             nwp_data["streamName"] = nwp_data.get("streamName", "")
+
+            return nwp_data
+
+    def json_export(self) -> None:
+        """Export the NWP 27 project data to a JSON file."""
+
+        output_path = os.path.join(self.export_folder, "project.json")
+
+        nwp_data = self.load_and_prepare_json()
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(nwp_data, f, indent=4)
+
+    def html_export(self) -> None:
+        """Render the NWP 27 project data to an HTML file using the Jinja2 template."""
+        output_path = os.path.join(self.export_folder, "nwp27_document.html")
+
+        nwp_data = self.load_and_prepare_json()
 
         # Reference the Vicinity Map PNG if it was produced
         vicinity_map = next((p for p in PRODUCTS if p["name"] == "Vicinity Map"), None)

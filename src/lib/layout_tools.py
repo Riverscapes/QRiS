@@ -139,6 +139,16 @@ def serialize_layout(layout_id: str) -> str:
     return ""
 
 
+def _sync_layout_to_canvas(layout: QgsPrintLayout) -> None:
+    """Update every map item in *layout* to match the current QGIS map canvas extent."""
+    canvas_extent = Settings().iface.mapCanvas().extent()
+    for item in layout.items():
+        if isinstance(item, QgsLayoutItemMap):
+            item.zoomToExtent(canvas_extent)
+            item.refresh()
+    layout.refresh()
+
+
 def print_layout(layout_id: str, out_pdf_path: str) -> None:
     """
     Print a QGIS layout to a PDF file.
@@ -155,6 +165,8 @@ def print_layout(layout_id: str, out_pdf_path: str) -> None:
     if not layout:
         QtWidgets.QMessageBox.warning(Settings().iface.mainWindow(), "QRiS", f"Layout '{layout_id}' does not exist.")
         return
+
+    _sync_layout_to_canvas(layout)
 
     exporter = QgsLayoutExporter(layout)
     result = exporter.exportToPdf(out_pdf_path, QgsLayoutExporter.PdfExportSettings())
@@ -180,6 +192,8 @@ def print_layout_to_image(layout_id: str, out_image_path: str) -> None:
     if not layout:
         QtWidgets.QMessageBox.warning(Settings().iface.mainWindow(), "QRiS", f"Layout '{layout_id}' does not exist.")
         return
+
+    _sync_layout_to_canvas(layout)
 
     exporter = QgsLayoutExporter(layout)
     result = exporter.exportToImage(out_image_path, QgsLayoutExporter.ImageExportSettings())

@@ -2,6 +2,7 @@ from abc import abstractmethod
 import json
 import os
 
+from qgis.core import QgsCoordinateTransform, QgsProject
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import QMessageBox, QPlainTextEdit, QWidget
 
@@ -236,3 +237,64 @@ class BaseWidget(QWidget):
         This is the folder inside the package folder where reports are stored.
         """
         return os.path.join(self.get_package_folder(), "reports")
+
+    def get_reaches_layer(self) -> int:
+        layer_data = self.load_data("locations")
+        if layer_data:
+            reaches_data = layer_data.get("reaches")
+            if reaches_data:
+                # Return the first reach as a placeholder
+                return reaches_data
+        return 0
+
+    def load_reach_info(self) -> dict:
+
+        reaches_id = self.get_reaches_layer()
+        if reaches_id < 1:
+            return
+
+        reach_info = {}
+        with DBCon(self.db_path) as con:
+            curs = con.cursor()
+            curs.execute("SELECT fid, coalesce(display_label, fid) as label FROM sample_frame_features WHERE sample_frame_id = ?", (reaches_id,))
+            for row in curs.fetchall():
+                reach_info[row["fid"]] = {"fid": row["fid"], "label": row["label"]}
+
+        return reach_info
+
+    def zoom_to_reach(self, fid: int) -> None:
+        """Zoom to the specified reach feature in the map."""
+
+        reaches_id = self.get_reaches_layer()
+        if reaches_id < 1:
+            return
+
+        # Add the reaches sample frame layer to the map if it is not already there
+        layer = self.add_to_map("reaches")
+        if layer is None:
+            return
+
+        # Zoom to the reach feature
+        feature = layer.getFeature(fid)
+        if not feature.isValid() or feature.geometry().isEmpty():
+            return
+
+        canvas = Settings().iface.mapCanvas()
+        if layer.crs() != canvas.mapSettings().destinationCrs():
+            transform = QgsCoordinateTransform(layer.crs(), canvas.mapSettings().destinationCrs(), QgsProject.instance())
+            extent = transform.transformBoundingBox(feature.geometry().boundingBox())
+        else:
+            extent = feature.geometry().boundingBox()
+
+        # Expand slightly to prevent a tight fit
+        extent.scale(1.1)
+        canvas.setExtent(extent)
+        canvas.refresh()
+
+    def get_layout_path(self, machine_code: str, extension: str, fid: int | None = None) -> str:
+        """Return the file path for the layout PDF based on machine_code and optional fid."""
+        safe_name = machine_code.replace(" ", "_").replace("(", "").replace(")", "")
+        if fid is not None:
+            safe_name = f"{safe_name}_reach_{fid}"
+        export_folder = self.get_map_layouts_folder()
+        return os.path.join(export_folder, f"{safe_name}.{extension}")

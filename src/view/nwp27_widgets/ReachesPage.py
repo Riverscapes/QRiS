@@ -1,11 +1,9 @@
-from qgis.core import QgsCoordinateTransform, QgsProject
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QComboBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QStackedWidget,
@@ -13,10 +11,7 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from ...model.sample_frame import SampleFrame
-from ...QRiS.settings import Settings
 from .BaseWidget import BaseWidget
-from .DBCon import DBCon
 from .WizardStatus import STEP_COMPLETE, STEP_INCOMPLETE
 
 
@@ -133,7 +128,7 @@ class ReachesPage(BaseWidget):
         if fid is not None:
             self.reach_data[str(fid)] = {
                 "fid": fid,
-                "display_label": self.cbo_reaches.currentText(),
+                "displayLabel": self.cbo_reaches.currentText(),
                 "treatments": self.treatment_temp.toPlainText(),
                 "conditions": self.reach_conditions_input.toPlainText(),
                 "objectives": self.reach_objectives_input.toPlainText(),
@@ -149,7 +144,7 @@ class ReachesPage(BaseWidget):
         fid = self.cbo_reaches.currentData()
         reach_info = self.reach_data.get(str(fid)) if fid is not None else None
         if isinstance(reach_info, dict):
-            # self.display_label_temp.setPlainText(reach_info.get("display_label", ""))
+            # self.display_label_temp.setPlainText(reach_info.get("displayLabel", ""))
             self.treatment_temp.setPlainText(reach_info.get("treatments", ""))
             self.reach_conditions_input.setPlainText(reach_info.get("conditions", ""))
             self.reach_objectives_input.setPlainText(reach_info.get("objectives", ""))
@@ -159,41 +154,40 @@ class ReachesPage(BaseWidget):
             self.reach_conditions_input.clear()
             self.reach_objectives_input.clear()
 
-    def get_reaches_layer(self) -> int:
-        layer_data = self.load_data("locations")
-        if layer_data:
-            reaches_data = layer_data.get("reaches")
-            if reaches_data:
-                # Return the first reach as a placeholder
-                return reaches_data
-        return 0
-
     def load_reach_polygons(self):
 
         reaches_id = self.get_reaches_layer()
         if reaches_id < 1:
             return
 
-        with DBCon(self.db_path) as con:
-            curs = con.cursor()
-            curs.execute("SELECT fid, coalesce(display_label, fid) as label FROM sample_frame_features WHERE sample_frame_id = ?", (reaches_id,))
-            self.cbo_reaches.clear()
-            for row in curs.fetchall():
-                self.cbo_reaches.addItem(row["label"], row["fid"])
+        self.reach_info = self.load_reach_info()
+        self.cbo_reaches.clear()
+        if self.reach_info:
+            for fid, info in self.reach_info.items():
+                self.cbo_reaches.addItem(info["label"], fid)
 
     def refresh_data(self):
         """Switch between the no-layer message and the form, then load data if available."""
         has_layer = self.get_reaches_layer() >= 1
         self.stack.setCurrentIndex(1 if has_layer else 0)
         if has_layer:
-            self.reach_data = self.load_data("reaches")
+            raw = self.load_data("reaches")
+            # Data is stored as a list; convert back to a dict keyed by FID for in-memory use.
+            if isinstance(raw, list):
+                self.reach_data = {str(item["fid"]): item for item in raw if "fid" in item}
+            elif isinstance(raw, dict):
+                self.reach_data = raw
+            else:
+                self.reach_data = {}
             self.load_reach_polygons()
 
     def serialize(self) -> None:
-        """Persist the current widget values to the database."""
+        """Persist the current widget values to the database as a list of reach dicts."""
         if self.stack.currentIndex() == 0:
             return
-        super()._save_data("reaches", self.reach_data)
+        # Convert the in-memory dict (keyed by FID) to a list for storage
+        reach_list = list(self.reach_data.values())
+        super()._save_data("reaches", reach_list)
 
     def on_zoom_clicked(self):
         """Handle the zoom button click event."""
@@ -205,24 +199,4 @@ class ReachesPage(BaseWidget):
         if fid is None:
             return
 
-        # Add the reaches sample frame layer to the map if it is not already there
-        layer = self.add_to_map("reaches")
-        if layer is None:
-            return
-
-        # Zoom to the reach feature
-        feature = layer.getFeature(fid)
-        if not feature.isValid() or feature.geometry().isEmpty():
-            return
-
-        canvas = Settings().iface.mapCanvas()
-        if layer.crs() != canvas.mapSettings().destinationCrs():
-            transform = QgsCoordinateTransform(layer.crs(), canvas.mapSettings().destinationCrs(), QgsProject.instance())
-            extent = transform.transformBoundingBox(feature.geometry().boundingBox())
-        else:
-            extent = feature.geometry().boundingBox()
-
-        # Expand slightly to prevent a tight fit
-        extent.scale(1.1)
-        canvas.setExtent(extent)
-        canvas.refresh()
+        self.zoom_to_reach(fid)
