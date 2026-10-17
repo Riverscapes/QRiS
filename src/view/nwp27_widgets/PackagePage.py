@@ -5,7 +5,6 @@ import sys
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from qgis.core import QgsApplication
-from qgis.PyQt.QtCore import pyqtSignal
 from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -22,43 +21,8 @@ from .BaseWidget import BaseWidget
 from .DBCon import DBCon
 from .WizardStatus import PRODUCTS, STEP_UNKNOWN
 
-"""Default keys and helper functions for NWP 27 data.
-If these are missing then Jinja substitution will raise an UndefinedError.
-The following will fail because the "or" check only looks at the last element.
-
-<tr><th>Project Title</th><td>{{ data.projectTitle.title or "" }}</td></tr>
-"""
-_NWP_DEFAULT_KEYS = {
-    "projectTitle",
-    "permittee",
-    "projectConditions",
-    "esaRelevance",
-    "historicProperties",
-    "waterQuality",
-    "wildScenicRivers",
-    "adaptiveManagementPlan",
-    "monitoringAndReporting",
-    "reaches",
-}
-
-
-def _ensure_nwp_defaults(nwp_data: dict) -> None:
-    """Fill in any top-level keys the template expects that are missing from nwp_data.
-
-    Jinja2 raises ``UndefinedError`` when you access ``data.missingKey`` on a dict
-    even if the expression has an ``or ""`` fallback, because ``getattr`` is called
-    before the ``or`` is evaluated.  This helper ensures every expected key exists
-    (defaulting to an empty dict or list as appropriate) so the template renders
-    without error.
-    """
-    for key in _NWP_DEFAULT_KEYS:
-        if key not in nwp_data:
-            nwp_data[key] = {}
-
 
 class PackagePage(BaseWidget):
-    productsExportedSignal = pyqtSignal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -98,7 +62,7 @@ class PackagePage(BaseWidget):
 
         # Produce Products button below the table
         produce_btn = QPushButton("Generate Products")
-        produce_btn.clicked.connect(self.generate_products)
+        produce_btn.clicked.connect(self.produce_products)
         hbox.addWidget(produce_btn)
 
         browse_btn = QPushButton("Browse Package Folder")
@@ -153,7 +117,7 @@ class PackagePage(BaseWidget):
         output_path = os.path.join(self.get_map_layouts_folder(), f"{safe_name}.png")
         print_layout_to_image(machine_code, output_path)
 
-    def generate_products(self) -> None:
+    def produce_products(self) -> None:
         """Produce all the products."""
 
         export_count = 0
@@ -172,7 +136,6 @@ class PackagePage(BaseWidget):
                     print(f"Callback {callback_name} is not implemented or not callable.")
 
         if export_count > 0:
-            self.productsExportedSignal.emit()
             # Show a message box offering to browse the folder
 
             msg_box = QMessageBox()
@@ -182,10 +145,13 @@ class PackagePage(BaseWidget):
             msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             ret = msg_box.exec()
             if ret == QMessageBox.StandardButton.Yes:
+                import subprocess
+                import sys
+
                 if sys.platform == "darwin":
                     subprocess.Popen(["open", self.export_folder])
                 elif sys.platform == "win32":
-                    os.startfile(os.path.normpath(self.export_folder))
+                    subprocess.Popen(["explorer", self.export_folder])
                 else:
                     subprocess.Popen(["xdg-open", self.export_folder])
 
@@ -251,10 +217,6 @@ class PackagePage(BaseWidget):
             if os.path.exists(os.path.join(self.export_folder, png_name)):
                 nwp_data["projectElementsLayout"] = png_name
 
-        # Ensure all top-level keys the template expects exist, so Jinja2
-        # doesn't raise UndefinedError when a key is missing from the dict.
-        _ensure_nwp_defaults(nwp_data)
-
         # Locate the Jinja2 template in the plugin's resources folder
         current_dir = os.path.dirname(os.path.abspath(__file__))
         plugin_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
@@ -307,18 +269,14 @@ class PackagePage(BaseWidget):
         return os.path.basename(output_path)
 
     def browse_export_folder(self) -> None:
-        """Open Finder / Windows Explorer at the export/package folder."""
+        """Open finder or Windows explorer at the export/package folder. Ensure it exists before doing so."""
 
-        if not self.export_folder:
-            return
         if not os.path.exists(self.export_folder):
             os.makedirs(self.export_folder, exist_ok=True)
 
         if sys.platform == "darwin":
-            subprocess.Popen(["open", self.export_folder])
+            subprocess.call(["open", self.export_folder])
         elif sys.platform == "win32":
-            # Use os.startfile on Windows — it handles spaces and mixed slashes
-            # without blocking, and doesn't depend on explorer.exe being in PATH.
-            os.startfile(os.path.normpath(self.export_folder))
+            subprocess.call(["explorer", self.export_folder])
         else:
-            subprocess.Popen(["xdg-open", self.export_folder])
+            subprocess.call(["xdg-open", self.export_folder])

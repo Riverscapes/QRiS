@@ -14,11 +14,9 @@ class ReportWorker(QObject):
     finished = pyqtSignal(dict)  # final report object
     error = pyqtSignal(str)  # error message
 
-    def __init__(self, polygon_path: str, report_name: str, report_description: str, report_type_id: str | None = None):
+    def __init__(self, polygon_path: str, report_type_id: str | None = None):
         super().__init__()
         self.polygon_path = polygon_path
-        self.report_name = report_name
-        self.report_description = report_description
         self.report_type_id = report_type_id
 
     def run(self):
@@ -45,8 +43,8 @@ class ReportWorker(QObject):
             # Step 2: Create the report
             self.progress.emit("CREATING", 10, "Creating report record...")
             report = api.create_report(
-                name=self.report_name,
-                description=self.report_description,
+                name="NWP 27 Rapid Assessment Report",
+                description="Automatically generated from the NWP 27 Wizard",
                 report_type_id=report_type_id,
             )
             report_id = report["id"]

@@ -3,6 +3,7 @@ import datetime
 from qgis.PyQt.QtWidgets import QDateEdit, QFormLayout, QLineEdit
 
 from .BaseWidget import BaseWidget
+from .DBCon import DBCon
 from .WizardStatus import STEP_COMPLETE, STEP_INCOMPLETE
 
 _TODAY = datetime.datetime.now(datetime.timezone.utc).date()
@@ -66,10 +67,15 @@ class ProjectTitlePage(BaseWidget):
     def refresh_data(self):
         """Attempt to load the project title from the database. Default to the DCE name if there is no title already."""
 
-        # The base class handles retrieving the project title from the database if it is not already set.
-        title = self.get_project_title()
-
         data = self.load_data("projectTitle")
+        title = data.get("title", "")
+        if title is None or len(title) < 1:
+            with DBCon(self.db_path) as con:
+                curs = con.cursor()
+                curs.execute("SELECT name FROM Events where id = ?", (self.design_id,))
+                row = curs.fetchone()
+                if row:
+                    title = row["name"]
 
         self.title_input.setText(title if title is not None else "")
         self.stream_name.setText(data.get("streamName", "") if data.get("streamName", None) is not None else "")

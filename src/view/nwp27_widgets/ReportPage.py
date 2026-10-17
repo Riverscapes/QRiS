@@ -174,8 +174,8 @@ class ReportPage(BaseWidget):
             logger.error("Unknown report id: %s", report_id)
             return
 
-        report_html_path = os.path.join(self.get_reports_folder(), report["output_folder_name"], "report.html")
-        if not os.path.isfile(report_html_path):
+        report_html_path = os.path.join(self.get_package_folder(), report["output_folder_name"], "report.html")
+        if not os.path.exists(report_html_path):
             QMessageBox.information(self, "Report Not Found", f"The {report['name']} has not been generated yet. Click Generate first.")
             return
 
@@ -237,8 +237,7 @@ class ReportPage(BaseWidget):
             self._reset_ui()
             return
 
-        project_title = self.get_project_title()
-        worker = ReportWorker(polygon_path, project_title, "Automatically generated from the NWP 27 Wizard inside Riverscapes Studio", self._report_type_id)
+        worker = ReportWorker(polygon_path, self._report_type_id)
         worker.progress.connect(self._on_worker_progress)
         worker.finished.connect(self._on_worker_finished)
         worker.error.connect(self._on_worker_error)

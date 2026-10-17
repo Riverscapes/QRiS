@@ -121,9 +121,6 @@ class QRiSToolbar:
         """
         # Save reference to the QGIS interface
         self.iface = iface
-        # Expose the toolbar on the interface so other widgets (e.g. the dock
-        # widget) can reach back into it, e.g. iface.qris_toolbar.on_products_exported()
-        self.iface.qris_toolbar = self
         self.qrave = None
 
         # initialize plugin directory
@@ -624,10 +621,6 @@ class QRiSToolbar:
             self.iface.removePluginMenu(self.tr("&QGIS Riverscapes Studio (QRiS)"), action)
             self.iface.removeToolBarIcon(action)
 
-        # Clear the back-reference so a stale toolbar isn't left on the interface
-        if getattr(self.iface, "qris_toolbar", None) is self:
-            del self.iface.qris_toolbar
-
         self.dockwidget = None
 
         # remove the toolbar
@@ -823,20 +816,13 @@ class QRiSToolbar:
             self.set_map_srs()
 
             Settings().setValue(LAST_PROJECT_FOLDER, os.path.dirname(db_path))
-
-            self.send_telemetry_event("Open_Project")
+            try:
+                self.qrave.telemetry.send("Load_Project", Settings().getValue(TELEMETRY_ENABLED_KEY))
+            except Exception as ex:
+                Settings().log(f"Error sending telemetry event for Load_Project: {ex!s}", MESSAGE_LEVEL_WARNING)
 
         task = LoadProjectTask(db_path, on_project_loaded)
         QgsApplication.taskManager().addTask(task)
-
-    def on_products_exported(self):
-        self.send_telemetry_event("Products_Exported")
-
-    def send_telemetry_event(self, event_name: str):
-        try:
-            self.qrave.telemetry.send(event_name, Settings().getValue(TELEMETRY_ENABLED_KEY))
-        except Exception as ex:
-            Settings().log(f"Error sending telemetry event for {event_name}: {ex!s}", MESSAGE_LEVEL_WARNING)
 
     def set_map_srs(self):
         # Set the map canvas to the project SRS
