@@ -19,6 +19,11 @@ class BaseWidget(QWidget):
 
     BUTTON_WIDTH = 32
 
+    # Cache the parsed NWP27 metadata dict so that all pages share a single
+    # DB round-trip + JSON parse during initialization.  Keyed by
+    # (db_path, design_id); invalidated on _save_data().
+    _nwp_metadata_cache: dict[tuple[str, int], dict] = {}
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.db_path = None
@@ -132,24 +137,36 @@ class BaseWidget(QWidget):
 
         return map_manager.build_pour_point_map_layer(pour_point)
 
+    def _load_nwp_metadata(self) -> dict:
+        """Return the parsed ``nwp27`` dict from the event metadata, using a class-level cache.
+
+        The cache key is ``(db_path, design_id)`` so that switching between
+        projects or events invalidates automatically.  Callers that mutate the
+        metadata must call :meth:`_invalidate_nwp_cache` afterwards.
+        """
+        key = (self.db_path, self.design_id)
+        if key not in self._nwp_metadata_cache:
+            with DBCon(self.db_path) as con:
+                curs = con.cursor()
+                curs.execute("SELECT metadata as info FROM events WHERE id = ?", (self.design_id,))
+                row = curs.fetchone()
+                if not row:
+                    return {}
+                raw = row.get("info")
+                if isinstance(raw, str):
+                    parsed = json.loads(raw)
+                    self._nwp_metadata_cache[key] = parsed.get("nwp27") if isinstance(parsed, dict) else {}
+                else:
+                    self._nwp_metadata_cache[key] = {}
+        return self._nwp_metadata_cache[key]
+
+    def _invalidate_nwp_cache(self) -> None:
+        """Remove the cached NWP27 metadata for this widget's project/event."""
+        self._nwp_metadata_cache.pop((self.db_path, self.design_id), None)
+
     def load_data(self, key: str) -> dict:
-
-        with DBCon(self.db_path) as con:
-            curs = con.cursor()
-            curs.execute("SELECT metadata as info FROM events WHERE id = ?", (self.design_id,))
-            row = curs.fetchone()
-            if not row:
-                return {}
-
-            metadata = row.get("info")
-            if isinstance(metadata, str):
-                metadata = json.loads(metadata)
-
-                nwp27 = metadata.get("nwp27") if isinstance(metadata, dict) else {}
-                if isinstance(nwp27, dict):
-                    return nwp27.get(key, {})
-
-            return {}
+        nwp27 = self._load_nwp_metadata()
+        return nwp27.get(key, {}) if isinstance(nwp27, dict) else {}
 
     @abstractmethod
     def deserialize(self, data: dict) -> None:
@@ -215,6 +232,9 @@ class BaseWidget(QWidget):
             except Exception:
                 con.rollback()
                 raise
+
+        # Invalidate the cache so subsequent reads pick up the new data
+        self._invalidate_nwp_cache()
 
     def get_data_to_save(self) -> dict:
         """Return the data to be saved. Override this method in subclasses."""

@@ -5,6 +5,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -36,9 +37,11 @@ class LayoutPage(BaseWidget):
 
         label = QLabel(
             "This step produce several maps to support your NWP27 application."
-            + " Each map is generated based on a layout template that you can customize around your data."
-            + " Click the open buttons beside each map layout below to view and manipulate the layouts using QGIS built-in tools."
-            + " When you are finished you must click the print button to preserve your layout changes and also print each layout to PDF and PNG."
+            " Each map is generated based on a layout template that you can customize to work with your data."
+            " Layouts are used in the final packaging step as part of the HTML report.\n\n"
+            "Click the open buttons to view and manipulate each layout using the QGIS built-in tools. Use the zoom button to pan the map to the relevant feature."
+            " When you are finished you must click the print button to preserve your layout changes and also print each layout to PNG."
+            " The reset button discards any changes and reverts to the template layout configuration."
         )
         label.setWordWrap(True)
         layout.addWidget(label)
@@ -155,7 +158,7 @@ class LayoutPage(BaseWidget):
             reset_button.setToolTip("Reset the layout to its original state")
             reset_button.setFixedWidth(self.BUTTON_WIDTH)
             reset_button.setIcon(QIcon(":plugins/qris_toolbar/refresh"))
-            reset_button.clicked.connect(lambda _, n=name, c=machine_code, f=fid, icon=icon_label: self.reset_layout(n, c, f, icon))
+            reset_button.clicked.connect(lambda _, c=machine_code, f=fid: self.reset_layout_to_template(c, f))
             h_layout.addWidget(reset_button)
 
         self.scroll_layout.addStretch()
@@ -300,3 +303,24 @@ class LayoutPage(BaseWidget):
             return
         else:
             self.zoom_to_reach(fid)
+
+    def reset_layout_to_template(self, machine_code: str, fid: int | None = None) -> None:
+        """Reset the layout to the template configuration, discarding any changes."""
+
+        layout = _get_layout_by_id(machine_code, True)
+        if not layout:
+            return
+
+        # Delete the existing layout from QGIS
+        QgsProject.instance().layoutManager().removeLayout(layout)
+
+        storage_key = f"{machine_code}_{fid}" if fid is not None else machine_code
+        existing_layouts = self.load_data("mapLayouts")
+        if existing_layouts is not None:
+            existing_layouts.pop(storage_key, None)
+            self._save_data("mapLayouts", existing_layouts)
+        # Optionally, update the row icon to reflect the reset status
+        # self._update_row_layout_status(None, machine_code, fid=fid)
+
+        # Show a message box confirming the reset
+        QMessageBox.information(self, "Layout Reset", "The layout has been reset to the template configuration.")
