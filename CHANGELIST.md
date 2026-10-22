@@ -1,5 +1,11 @@
 # QRiS Plugin
 
+## [1.3.5] 22 Oct 2026
+
+- Fixed issue where intrinsic protocol does not appear in new projects
+- Fixed acknowledgements on about screen.
+- Miscellaneous NWP wizard improvements
+
 ## [1.3.2] Oct 11 2026
 
 - First version of the NWP27 wizard
