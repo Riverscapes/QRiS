@@ -216,6 +216,7 @@ class FrmCustomMetricLibrary(QtWidgets.QDialog):
                 (CUSTOM_PROTOCOL_LABEL, CUSTOM_PROTOCOL_MACHINE_CODE, False, CUSTOM_PROTOCOL_DESCRIPTION, CUSTOM_PROTOCOL_VERSION, json.dumps(metadata)),
             )
             protocol_id = curs.lastrowid
+            conn.commit()
 
         protocol = Protocol(
             protocol_id,

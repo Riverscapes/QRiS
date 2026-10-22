@@ -94,6 +94,7 @@ def insert_protocol(project_file: str, protocol_definition: ProtocolDefinition) 
             (protocol_definition.label, protocol_definition.machine_code, has_custom_ui, protocol_definition.description, protocol_definition.version, json.dumps(out_metadata)),
         )
         protocol_id = curs.lastrowid
+        conn.commit()
 
     protocol = Protocol(protocol_id, protocol_definition.label, protocol_definition.machine_code, has_custom_ui, protocol_definition.description, protocol_definition.version, out_metadata)
 
