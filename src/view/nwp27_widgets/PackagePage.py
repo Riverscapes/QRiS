@@ -84,9 +84,13 @@ class PackagePage(BaseWidget):
         self.table.horizontalHeader().setVisible(False)
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.setShowGrid(False)
 
         # Populate table with the product items
         for product in PRODUCTS:
+            if product["is_layout"] is True:
+                continue
+
             row = self.table.rowCount()
             self.table.insertRow(row)
 
