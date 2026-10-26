@@ -8,7 +8,7 @@ from typing import Optional
 from osgeo import ogr
 from qgis.PyQt import QtGui, QtWidgets
 
-from ..compat import ALIGN_TOP, CHECKED, MESSAGE_LEVEL_WARNING, MSGBOX_CANCEL, MSGBOX_YES, PARTIALLY_CHECKED, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, UNCHECKED, USER_ROLE
+from ..compat import ALIGN_TOP, CHECKED, FILE_DIALOG_SHOW_DIRS_ONLY, MESSAGE_LEVEL_WARNING, MSGBOX_CANCEL, MSGBOX_YES, PARTIALLY_CHECKED, QABSTRACTITEMVIEW_NO_EDIT_TRIGGERS, QABSTRACTITEMVIEW_NO_SELECTION, UNCHECKED, USER_ROLE
 from ..lib.rs_project import RSProject
 from ..model.analysis import Analysis
 from ..model.attachment import Attachment
@@ -669,7 +669,7 @@ class FrmExportProject(QtWidgets.QDialog):
             basepath = self.txt_outpath.text()
         else:
             basepath = os.path.dirname(self.qris_project.project_file)
-        path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder", basepath, QtWidgets.QFileDialog.ShowDirsOnly)
+        path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Folder", basepath, FILE_DIALOG_SHOW_DIRS_ONLY)
         if path:
             # check if a project.rs.xml file already exists in the selected folder
             if os.path.exists(path):

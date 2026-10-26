@@ -17,6 +17,7 @@ from qgis.PyQt.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QDockWidget,
+    QFileDialog,
     QFrame,
     QHeaderView,
     QLineEdit,
@@ -248,6 +249,15 @@ except AttributeError:
     SPSZ_EXPANDING = QSizePolicy.Expanding  # type: ignore[attr-defined]
     SPSZ_MINIMUM_EXPANDING = QSizePolicy.MinimumExpanding  # type: ignore[attr-defined]
     SPSZ_IGNORED = QSizePolicy.Ignored  # type: ignore[attr-defined]
+
+
+# ── QFileDialog options ────────────────────────────────────────────────────────
+try:
+    # Qt 6 / PyQt6 — scoped enum under QFileDialog.Option
+    FILE_DIALOG_SHOW_DIRS_ONLY = QFileDialog.Option.ShowDirsOnly
+except AttributeError:
+    # Qt 5 / PyQt5 — flat attribute on QFileDialog
+    FILE_DIALOG_SHOW_DIRS_ONLY = QFileDialog.ShowDirsOnly  # type: ignore[attr-defined]
 
 
 # ── QDialogButtonBox standard buttons and roles ───────────────────────────────
