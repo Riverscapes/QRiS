@@ -26,7 +26,7 @@ def get_matplotlib_font_families(current_family: Optional[str] = None):
                     families.add(name)
 
         if not families:
-            families.update(["Sans Serif", "DejaVu Sans"])
+            families.update(["Karla", "Sans Serif", "DejaVu Sans"])
 
         _MPL_FAMILIES_CACHE = sorted(families, key=str.casefold)
 

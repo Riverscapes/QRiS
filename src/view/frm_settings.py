@@ -52,7 +52,7 @@ def get_default_chart_font() -> QFont:
                 font.setPointSize(10)
             return sanitize_chart_font(font)
 
-    return sanitize_chart_font(QFont("Sans Serif", 10))
+    return sanitize_chart_font(QFont("Karla", 10))
 
 
 def set_default_chart_font(font: QFont):

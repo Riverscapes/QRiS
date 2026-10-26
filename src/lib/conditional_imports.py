@@ -48,6 +48,9 @@ except Exception:  # nosec B110
 
 try:
     import matplotlib.pyplot as plt
+
+    # Set default font for all matplotlib charts to Karla
+    plt.rcParams["font.family"] = "Karla"
 except Exception:  # nosec B110
     pass
 

@@ -590,7 +590,7 @@ class AnalysisOverTimeChart(QtWidgets.QWidget):
         self.ax.clear()
 
         # Set font properties
-        font_family = self.chart_font.family() if self.chart_font else "Sans Serif"
+        font_family = self.chart_font.family() if self.chart_font else "Karla"
         font_size = self.chart_font.pointSize() if self.chart_font else 10
 
         if metric_name:
