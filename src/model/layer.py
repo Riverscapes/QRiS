@@ -254,6 +254,10 @@ def check_and_remove_unused_layers(qris_project):
         # now clear any protocols that are no longer used
         protocols = {key: protocol for key, protocol in qris_project.protocols.items()}
         for key, protocol in protocols.items():
+            # Skip the intrinsic system protocol — it has no DCE layers by design
+            # and should only be managed via auto-insert on project open.
+            if protocol.machine_code == "RIVERSCAPE_SYSTEM_PROTOCOL":
+                continue
             protocol_layers = [layer_id for layer_id in protocol.protocol_layers.keys()]
             for layer_id in protocol_layers:
                 if layer_id not in qris_project.layers.keys():
