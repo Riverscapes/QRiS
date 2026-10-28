@@ -698,7 +698,7 @@ class FrmPourPoint(QtWidgets.QDialog):
                 data=data,
                 base_name="basin_characteristics",
                 project_path=self.qris_project.project_file if self.qris_project else None,
-                export_type="basin_characteristics",
+                export_type="pour_point",
             )
             frm.exec()
 
@@ -716,7 +716,7 @@ class FrmPourPoint(QtWidgets.QDialog):
                 data=data,
                 base_name="flow_statistics",
                 project_path=self.qris_project.project_file if self.qris_project else None,
-                export_type="flow_statistics",
+                export_type="pour_point",
             )
             frm.exec()
 
