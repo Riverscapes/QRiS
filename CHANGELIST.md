@@ -1,5 +1,11 @@
 # QRiS Plugin
 
+## [1.3.6] 28 Oct 2026
+
+- Avoiding removing intrinsic protocol during layer cleanup [#1149](https://github.com/Riverscapes/QRiS/issues/1149)
+- Trying to use Karla font for MatPlotlib charts
+- Fixing Open file dialog in export screen.
+
 ## [1.3.5] 22 Oct 2026
 
 - Fixed issue where intrinsic protocol does not appear in new projects
