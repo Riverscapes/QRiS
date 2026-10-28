@@ -302,6 +302,13 @@ Also, the cards below generally link to collections of Riverscape Studio Project
       toolUrl: "https://data.riverscapes.net/c/4adb302c-dd6b-4f35-8b3e-0dd49f393c4b/",
       imageUrl: "images/tutorials/upper-bear-card.jpg",
     },
+    {
+      title: "Henry's Fork",
+      logoUrl: "https://cdn.riverscapes.net/icons/products/qris/qris.svg",
+      description: "Demo project on Henry's Fork watershed in Utah/Wyoming. This demo is designed to illustrate the difference between intrinsic metrics and metrics related to condition, and the two types of analysis that can be performed in QRiS.",
+      toolUrl: "https://data.riverscapes.net/p/52aa9d96-f23a-4a9e-aabc-155407b4a9c2/",
+      imageUrl: "images/tutorials/henrys_card.png"
+    }
   ]}
 />
 
@@ -401,6 +408,22 @@ Of course the real stories of Brich Creek our best told by [Jay Wilde](https://l
 9. Now you can select Calculate and redo the calculation to calculate the metrics associated with the new layers you just digitized.
 
 <YouTubeEmbed videoId="iich4Q3x_Rs" />
+-----
+
+#### C. Intrinsic Versus Condition-related Metrics
+
+In QRiS, metrics can be categorized as either intrinsic or condition-related. Intrinsic metrics are those that describe the inherent characteristics of the riverscape, or the boundary conditions within which distinct river types form. These include things like valley width, area, and length. Condition-related metrics, on the other hand, describe the current state or condition of the riverscape. Many of these types of metrics use intrinsic metrics as a basis for normalization or comparison, allowing for a more accurate assessment of the riverscape's condition.
+
+Understanding the distinction between these types of metrics is crucial for effective riverscape monitoring and assessment. Understanding the intrinsic metrics of the riverscape can help inform which metrics are appropriate for use as indicators of condition, the expected range of those metrics, and how they should be monitored through time.
+
+1. Download the demo [Henry's Fork QRiS Project](https://data.riverscapes.net/p/52aa9d96-f23a-4a9e-aabc-155407b4a9c2/). Open the project in QRiS. The project contains several surfaces: NAIP imagery from 2009, 2019, and 2024, and a 10 m digital elevation model (and associated hillshade); these will be the basis for the digitization you will do.
+2. Using the combination of imagery and DEM, digitize a riverscape extent within the Area of Interest (AOI) polygon in the project. Right click on the `Riverscapes` node and click `Create new manually digitized valley bottom`. Give it a name and check the box for 'Start Edit Session'. Draw what you assess to be the full extent of the valley bottom. Save your edits and stop editing when you are done.
+3. Right click on the valley bottom node in the QRiS tree and click on `Generate Centerline`. Select the riverscape polygon feature you drew to populate the 'Polygon Layer' and 'Polygon Feature' fields. Then, click the `Capture` button for the 'Start of Centerline', click and drag to draw a cross section at the upstream end of your valley bottom polygon (making sure to cross the valley bottom extent on both sides). Repeat for the downstream end. Then, click `Generate Centerline` and save the centerline.
+4. Right click on the riverscape node you created again, and this time go to `Analyses` and click on `Create Intrinsic Analysis`. Give it a name (e.g., Intrinsic Metrics), and make sure the valley bottom (riverscape), centerline, and DEM are correctly selected. Click `OK`. Then in the QRiS Analysis window that pops up, you can click `Calculate...` to calculate all of the metrics selected on the prior screen. 
+5. Now we will create three data capture events and map some riverscape elements that will allow us to calculate some metrics that are relevant to condition of the riverscape. The first DCE will be based on the 2009 NAIP imagery, the second will be based on the 2019 NAIP imagery, and the third on the 2024. In all three, you will digitize channel centerlines and active floodplain extents. Right click the `Data Capture Events` node and select `Add New Data Capture Event`. Give it a name and select two layers from LTPBR Protocol > LTPBR Protocol Layers > Observations > Geomorphic Mapping: 1) Channel > Active Channel Lines, 2) Floodplain > Active Extents. In the `surfaces` tab, associate the data capture event with the correct NAIP image by checking the box for that image, then click `OK` (you can also add a description, metadata etc.). Add the newly created layers to the map and digitize them using the associated NAIP image. Map each distinct channel centerline, attributing it as primary or non-primary, and then digitize the extents of what you estimate to be active floodplain. Repeat for the 2019 imagery and then for the 2024 imagery.
+6. After completing the DCEs, create a new analysis to calculate condition-related metrics. Right click on the `Analyses` node and choose `Create a New Analysis`. Then choose these metrics: 'LTPBR Protocol' > 'Geomorphic': Relative Flow Length, Proportion Active Valley Bottom, Primary Channel Length, Number of Active Channels, Channel Sinuosity, Channel Length. 
+Calculate the metrics for all three years. You can then alternate back and forth to see how the riverscape has changed in that time period. Has the active channel changed, and if so how? Has the area you estimate to be active floodplain changed and if so how? Note that these metrics use intrinsic metrics of the riverscape as a basis for normalization (i.e., they're the denomator in calculations). For example proportion active floodplain divides the mapped active floodplain by the total riverscape area, and relative flow lenght divides the total mapped channel length by the riverscape length. The intrinsic metrics are stable over long time periods and govern the range of CONDITION metrics that are possible (i.e., in a narrow confined valley, the total possible range for relative channel length is much narrower than in a broad, unconfined valley). The intrinsic metrics can help to understand the riverscape and set the basis for what metrics makes sense to monitor, and what expected ranges of those metrics could be. 
+7. After completing the Analysis, you can also right click on it in the QRiS tree and select `Analysis over Time` to graphically investigate how the chosen metrics have changed across the three data capture events. 
 
 ------
 ### 5.Concept of Protocols in QRiS
