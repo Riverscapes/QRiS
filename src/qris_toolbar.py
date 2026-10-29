@@ -822,7 +822,9 @@ class QRiSToolbar:
                 Settings().log(f"Error sending telemetry event for Load_Project: {ex!s}", MESSAGE_LEVEL_WARNING)
 
         task = LoadProjectTask(db_path, on_project_loaded)
-        QgsApplication.taskManager().addTask(task)
+        task.run()
+        on_project_loaded(task.qris_project)
+        # QgsApplication.taskManager().addTask(task)
 
     def set_map_srs(self):
         # Set the map canvas to the project SRS
@@ -966,6 +968,8 @@ class QRiSToolbar:
         self.frm_new_project = FrmNewProject(self.iface.mainWindow(), last_parent_folder)
         self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
         self.frm_new_project.exec()
+        self.open_qris_project(self.frm_new_project.project_folder)
+        
 
     def on_new_project_complete(self, project_dir: str, db_path: str):
 

@@ -4,7 +4,6 @@ import sqlite3
 from typing import Optional
 import uuid
 
-from qgis.core import QgsApplication
 from qgis.gui import QgisInterface
 from qgis.PyQt import QtCore, QtWidgets
 from qgis.utils import iface
@@ -139,7 +138,9 @@ class FrmNewProject(QtWidgets.QDialog):
             new_project_task.project_create_layers.connect(self.on_creating_layers)
             new_project_task.project_create_schema.connect(self.on_creating_schema)
 
-            QgsApplication.taskManager().addTask(new_project_task)
+            # QgsApplication.taskManager().addTask(new_project_task)
+            new_project_task.run()
+            self.on_complete(True)
         super().accept()
 
     def on_complete(self, result):
