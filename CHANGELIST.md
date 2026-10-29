@@ -1,5 +1,9 @@
 # QRiS Plugin
 
+## [1.3.7] 29 Oct 2026
+
+- Removed asynchronous tasks from creating and loading projects to avoid race condition that affects loading intrinsic metrics.
+
 ## [1.3.6] 28 Oct 2026
 
 - Avoiding removing intrinsic protocol during layer cleanup [#1149](https://github.com/Riverscapes/QRiS/issues/1149)
