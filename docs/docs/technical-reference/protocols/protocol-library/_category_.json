@@ -1,5 +1,6 @@
 {
   "label": "Protocol Library",
+  "sidebar_position": 1,
   "link": {
     "type": "generated-index",
     "slug": "protocols/protocol-library",
