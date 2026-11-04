@@ -645,7 +645,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         factor = self.unit_factor
 
         if measure_type == "count":
-            unit = "Features"
+            unit = ""
             factor = 1.0
         elif "percent" in measure_type:
             unit = "%"
@@ -1124,7 +1124,9 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         self.populate_attributes_list(distribution.keys())
         self.draw_chart()
 
-    def format_value(self, value):
+    def format_value(self, value, measure_type=None):
+        if measure_type == "count":
+            return f"{value:,.0f}"
         if value >= 1000:
             return f"{value:,.1f}"
         return f"{value:.1f}"
@@ -1155,7 +1157,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
         factor = self.unit_factor
 
         if measure_type == "count":
-            unit = " Features"
+            unit = ""  # Features
             factor = 1.0
         elif "percent" in measure_type:
             unit = "%"
@@ -1222,12 +1224,12 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
             left = 0
             for k, v, c in zip(sorted_keys, values, mpl_colors):
                 pct = v / display_total if display_total > 0 else 0
-                label = f"{k}: {self.format_value(v)} {unit} ({pct * 100:.1f}%)"
+                label = f"{k}: {self.format_value(v, measure_type)} {unit} ({pct * 100:.1f}%)"
                 ax.barh(0, v, left=left, color=c, label=label, height=0.6)
                 left += v
 
             ax.set_yticks([])
-            x_label_text = ax.set_xlabel(f"Total: {self.format_value(display_total)} {unit}", **font_settings)  # Use display_total
+            x_label_text = ax.set_xlabel(f"Total: {self.format_value(display_total, measure_type)} {unit}", **font_settings)  # Use display_total
             apply_qfont_to_mpl_text(x_label_text, self.chart_font)
 
             # Legend below x-axis label. x-label is roughly at y=-0.1 relative to axes.
@@ -1256,7 +1258,7 @@ class DistributionAnalysisWidget(QtWidgets.QWidget):
                 ax.set_xlim(0, max_val * 1.35)
 
             for i, v in enumerate(values):
-                label = f" {self.format_value(v)} {unit}"
+                label = f" {self.format_value(v, measure_type)} {unit}"
                 value_text = ax.text(v, i, label, va="center", rotation=0, **font_settings)
                 apply_qfont_to_mpl_text(value_text, self.chart_font)
 
