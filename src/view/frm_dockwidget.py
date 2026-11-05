@@ -1682,7 +1682,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # check if there is an open edit session on any layers in the map
         for layer in self.iface.mapCanvas().layers():
             if layer.isEditable():
-                QtWidgets.QMessageBox.warning(self, "Export Project", f'Please save or discard your edits on layer "{layer.name()}" before exporting the project.')
+                QtWidgets.QMessageBox.warning(self, "Export Project", f'Please save or discard your edits on layer "{layer.name()}" before exporting.')
                 return
 
         # Refrfesh the map canvas to ensure all layers are flushed to disk before copying

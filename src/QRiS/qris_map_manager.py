@@ -1,6 +1,8 @@
+import importlib
 import json
 import os
 from textwrap import dedent
+from types import SimpleNamespace
 from typing import Optional
 
 from qgis.core import (
@@ -17,10 +19,13 @@ from qgis.core import (
     QgsVectorLayer,
     qgsfunction,
 )
+from qgis.PyQt.QtGui import QStandardItem
+from qgis.utils import plugins
 
-from ..compat import MESSAGE_LEVEL_WARNING
+from ..compat import MESSAGE_LEVEL_CRITICAL, MESSAGE_LEVEL_WARNING, USER_ROLE
 from ..gp.map_centroid import build_aoi_centroids_layer
 from ..lib.climate_engine import CLIMATE_ENGINE_MACHINE_CODE
+from ..lib.rs_project import PROJECT_MACHINE_NAME, RSProject
 from ..model.cross_sections import CrossSections
 from ..model.db_item import DBItem
 from ..model.event import AS_BUILT_EVENT_TYPE_ID, AS_BUILT_MACHINE_CODE, DESIGN_EVENT_TYPE_ID, DESIGN_MACHINE_CODE, EVENT_MACHINE_CODE, Event
@@ -32,6 +37,7 @@ from ..model.raster import BASEMAP_MACHINE_CODE, CONTEXT_MACHINE_CODE, RASTER_SL
 from ..model.sample_frame import AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, SampleFrame
 from ..model.scratch_vector import ScratchVector
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE
+from ..QRiS.qrave_integration import NAMES as QRAVE_PLUGIN_NAMES
 from ..QRiS.settings import Settings
 from .path_utilities import parse_posix_path
 from .riverscapes_map_manager import RiverscapesMapManager
@@ -367,9 +373,10 @@ class QRisMapManager(RiverscapesMapManager):
         # check if raster file exists on disk
         path = parse_posix_path(os.path.join(os.path.dirname(self.project.project_file), raster.path))
         if not os.path.exists(path):
-            # Warn user that the raster file is missing
-            Settings().msg_bar("Missing QRiS Raster File", f"The raster file {path} referenced in the QRiS project is missing.", MESSAGE_LEVEL_WARNING)
-            return None
+            # The raster file is missing. Warn, then try to load the layer from
+            # the Riverscapes Data Exchange web tile service via the QViewer plugin.
+            Settings().msg_bar("Missing QRiS Raster File", f"The raster file {path} referenced in the QRiS project is missing. Attempting to load web tiles from the Riverscapes Data Exchange instead.", MESSAGE_LEVEL_WARNING)
+            return self._build_remote_web_tile_layer(raster)
 
         if raster.is_context is False:
             raster_machine_code = SURFACE_MACHINE_CODE
@@ -402,6 +409,132 @@ class QRisMapManager(RiverscapesMapManager):
         raster_layer = self.create_db_item_raster_layer(self.project.map_guid, group_layer, raster_path, raster, symbology)
 
         return raster_layer
+
+    def _build_remote_web_tile_layer(self, raster: Raster) -> Optional[QgsMapLayer]:
+        """Load a raster from the Riverscapes Data Exchange web tile service.
+
+        This is the fallback used when a surface/context raster file is missing
+        from disk.  It reuses the Riverscapes Viewer (QViewer) plugin's
+        ``fetch_and_add_remote_layer()`` so the tile metadata is fetched from
+        the Data Exchange and the web tile layer is added to the QRiS map group.
+
+        The fetch is asynchronous: the tile layer appears on the map once the
+        Data Exchange responds.  This method returns ``None`` immediately.
+
+        Returns:
+            ``None`` (the layer is added asynchronously), or ``None`` with a
+            logged reason when web tiles cannot be attempted (no QViewer
+            plugin, no warehouse project id, etc.).
+        """
+
+        # 1) The QRiS project must be registered with a Riverscapes Data
+        #    Exchange warehouse so we have a project id to query tiles for.
+        rsxml_path = os.path.join(os.path.dirname(self.project.project_file), "project.rs.xml")
+        warehouse_attrs = RSProject._read_existing_warehouse_attrs(rsxml_path)
+        project_id = (warehouse_attrs or {}).get("id", None)
+        if not project_id:
+            Settings().log(
+                "The QRiS project has no Data Exchange warehouse id, so the missing raster cannot be loaded from web tiles.",
+                MESSAGE_LEVEL_WARNING,
+            )
+            return None
+
+        # 2) Locate the QViewer plugin instance (already loaded as a QRiS dependency)
+        try:
+            plugins_lower_case = {k.lower(): k for k in plugins.keys()}
+            matched_name = next((pname for pname in QRAVE_PLUGIN_NAMES if pname in plugins_lower_case), None)
+            if matched_name is None:
+                Settings().log("The Riverscapes Viewer plugin is not loaded, so the missing raster cannot be loaded from web tiles.", MESSAGE_LEVEL_WARNING)
+                return None
+            plugin_instance = plugins[plugins_lower_case[matched_name]]
+            dockwidget = plugin_instance.dockwidget
+            if dockwidget is None or not hasattr(dockwidget, "fetch_and_add_remote_layer"):
+                Settings().log("The Riverscapes Viewer plugin does not expose fetch_and_add_remote_layer(); cannot load the missing raster from web tiles.", MESSAGE_LEVEL_WARNING)
+                return None
+        except Exception as ex:
+            Settings().log(f"Unable to access the Riverscapes Viewer plugin: {ex!s}", MESSAGE_LEVEL_CRITICAL)
+            return None
+
+        # 3) Build the stub ProjectTreeData/QRaveMapLayer objects the QViewer
+        #    code expects so it can construct the rsXPath and fetch tile metadata.
+        try:
+            qrave_map_layer = importlib.import_module(f"{plugins_lower_case[matched_name]}.src.classes.qrave_map_layer")
+            ProjectTreeData = qrave_map_layer.ProjectTreeData
+            QRaveMapLayer = qrave_map_layer.QRaveMapLayer
+            QRaveTreeTypes = qrave_map_layer.QRaveTreeTypes
+
+            # The QRiS project type on the Data Exchange.
+            project_type = PROJECT_MACHINE_NAME
+
+            # The rsXPath mirrors the XML structure RSProject.build_rasters()
+            # writes: surfaces are Datasets/Raster id="surface_{id}", contexts
+            # are id="context_{id}", under Realizations/Realization#inputs.
+            # This is exactly the xpath get_xml_xpath() in the QViewer plugin
+            # constructs for a raster leaf of a local QRiS project.
+            raster_xml_id = f"context_{raster.id}" if raster.is_context else f"surface_{raster.id}"
+            rs_xpath = f"Project/Realizations/Realization#inputs/Datasets/Raster#{raster_xml_id}"
+
+            # Symbology hint.  The QRiS RiverscapesStudio business logic does
+            # NOT assign a symbology to surface/context rasters, so QViewer
+            # renders remote tiles with its default "raster" symbology key.
+            # Pass None so the exact same default is used here.  (The QRiS
+            # raster-type symbology keys are local QML names — using them here
+            # would produce an invalid tile URL.)
+            bl_attr = {
+                "nodeId": None,
+                "type": "raster",
+                "symbology": None,
+                "transparency": "0",
+                "rsXPath": rs_xpath,
+            }
+
+            # A QRaveMapLayer stub — QViewer uses label/layer_type/bl_attr and
+            # the tiles_label for naming/dedup.  The layer_uri is irrelevant
+            # for the remote tile path.
+            map_layer = QRaveMapLayer(
+                label=raster.name,
+                layer_type=QRaveMapLayer.LayerTypes.RASTER,
+                layer_uri=raster.path,
+                bl_attr=bl_attr,
+            )
+
+            # A minimal project stub carrying the fields fetch_and_add_remote_layer
+            # reads: id, project_type and bounds (a dict of min/max lat/lng).
+            project_stub = SimpleNamespace(
+                id=project_id,
+                project_type=project_type,
+                name=self.project.name,
+                bounds=None,
+            )
+
+            item_data = ProjectTreeData(QRaveTreeTypes.LEAF, project=project_stub, data=map_layer)
+
+            # Build a QStandardItem whose parent chain mirrors the QRiS map
+            # layer tree (project name -> "Surfaces"/"Context") so QViewer's
+            # _prepare_parent_group() resolves and reuses the existing QRiS
+            # layer-tree groups.  Parents are set via appendRow on the parent.
+            group_label = "Surfaces" if not raster.is_context else "Context"
+            project_item = QStandardItem(self.project.name)  # root group: <project name>
+            group_item = QStandardItem(group_label)  # sub-group: Surfaces / Context
+            leaf_item = QStandardItem(raster.name)  # the leaf (map layer)
+
+            project_item.appendRow(group_item)
+            group_item.appendRow(leaf_item)
+            leaf_item.setData(item_data, USER_ROLE)
+
+            Settings().log(
+                f"Raster file {raster.path} is missing. Fetching web tiles from the Data Exchange (project {project_id}, xpath {rs_xpath})...",
+                MESSAGE_LEVEL_WARNING,
+            )
+
+            # 4) Fire-and-forget: QViewer fetches tile metadata asynchronously
+            #    and adds the web tile layer to the map when done.
+            dockwidget.fetch_and_add_remote_layer(leaf_item, item_data)
+        except Exception as ex:
+            Settings().log(f"Unable to load web tiles for the missing raster {raster.path}: {ex!s}", MESSAGE_LEVEL_CRITICAL)
+            return None
+
+        return None
 
     def build_raster_slider_layer(self, raster: Raster) -> QgsMapLayer:
 
