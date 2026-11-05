@@ -384,6 +384,10 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 self.climate_engine_explorer()
             if model_data == STREAM_GAGE_MACHINE_CODE:
                 self.stream_gage_explorer()
+        # Basemap leaf nodes: double-click adds to map
+        if self.qrave is not None and isinstance(model_data, self.qrave.ProjectTreeData):
+            if model_item.rowCount() == 0:
+                self.add_basemap_to_map(model_data)
 
     def expand_tree_item(self, idx: QModelIndex):
         item = self.model.itemFromIndex(idx)
