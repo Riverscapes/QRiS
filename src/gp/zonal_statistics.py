@@ -87,7 +87,15 @@ def zonal_statistics(raster_path: str, geom: ogr.Geometry) -> dict:
     if r_array is not None:
         maskarray = np.ma.MaskedArray(r_array, mask=np.logical_or(r_array == raster_nd, np.logical_not(tr_array)))
         if maskarray is not None:
-            results = {"minimum": maskarray.min(), "maximum": maskarray.max(), "mean": maskarray.mean(), "median": np.ma.median(maskarray), "std": maskarray.std(), "sum": maskarray.sum(), "count": maskarray.count()}
+            results = {
+                "minimum": float(maskarray.min()), 
+                "maximum": float(maskarray.max()), 
+                "mean": float(maskarray.mean()), 
+                "median": float(np.ma.median(maskarray)), 
+                "std": float(maskarray.std()), 
+                "sum": float(maskarray.sum()), 
+                "count": int(maskarray.count())
+            }
 
     # Discard the in-memory datasets
     tr_ds = None
