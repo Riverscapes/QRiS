@@ -259,13 +259,27 @@ RME has *a lot* of attributes in the output feature class. Descriptions of each 
 
 Now lets do the same thing but using SQL queries instead of GIS operations.
 
-1. Open SQLite Studio, and click on the 'Add a database' button on the top left.
+**In Letos:**
+1. Open Letos, and click on the 'Add a database' button on the top left.
 2. When navigating to a file, make sure that the extension option (Save as type) is changed to 'all file types' on the bottom of th window (rather than just .db type files) and then navigate to the rme output geopackage (riverscapes_metrics.gpkg) and select it.
 3. This will add the geopackage to the 'Databases' panel on the left. Once it is there click on it to highlight it, then press the 'Connect to the database' button to connect to the geopackage as a database (this should expand the database so you can see all of the tables inside).
 4. Push the 'Open SQL editor' button on the top, and in the editor panel type the command: `SELECT ownership AS owner, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY owner ORDER BY km2 DESC` then execute the command (blue play button). This one SQL command will provide all of the information you manually retrieved in QGIS.
 5. Try another command where we get the same information but by stream instead of owner: `SELECT stream_name AS stream, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY stream ORDER BY km2 DESC`. (Imagine how long it would have taken to manually do each individual stream using the QGIS method.) You could also create a table that shows each stream name and its area in each land ownership class by changing the query to `SELECT stream_name AS stream, ownership AS owner, SUM(segment_area)*0.000247105 AS acres FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY stream, owner`. Note that in this example area is converted directly to acres in the query.
 
 <YouTubeEmbed videoId="-WrrCOiTLWY" />
+
+**In QGIS:**
+1. Open the RME project in QGIS using the Viewer plugin.
+2. Bring in the All Metrics > All Metrics (DGOs) layer.
+3. Search for the GDAL 'Execute SQL' Tool in the Processing Toolbox.
+4. Make sure the correct layer is selected, the enter the query `SELECT ownership AS owner, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY owner ORDER BY km2 DESC`.
+:::tip
+This query is automatically converting the units of area to square kilometer; you could use any conversion factor and associated label that you want
+:::
+5. Select 'SQLite' as the 'SQL dialect' and alow it to save as a temporary file.
+6. Click 'Run'. The query will execute and produce a temporary table that will be added to your Layers panel in QGIS. You can open this table, view the results, and compare then with what you got using the other method(s).
+
+<YouTubeEmbed videoId="" />
 
 Often times, this type of tabular analysis is a useful first step for identifying areas where further spatial analysis can then be performed. Leveraging the capabilities of SQL by performing queries on the geopackage layers is an extremely useful and efficient way to perfrom this type of analysis.
 
