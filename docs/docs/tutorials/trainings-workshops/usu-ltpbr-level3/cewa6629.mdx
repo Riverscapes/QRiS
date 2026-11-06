@@ -39,10 +39,10 @@ This page appears here on the QRiS documentation site as QRiS users may find it 
         toolUrl: "https://www.riverscapes.net/topics/45485/feed",
         },
         {
-        title: "Event Page for 2025 Course",
+        title: "Event Page for 2026 Course",
         description: "Event Page with Meeting Joining Details",
         logoUrl: "/images/icons/webinar.png",
-        toolUrl: "https://www.riverscapes.net/networks/events/127681",
+        toolUrl: "https://www.riverscapes.net/networks/events/283036",
         },
     ]}
 />
@@ -87,7 +87,7 @@ This page appears here on the QRiS documentation site as QRiS users may find it 
 
 ### Software Requirements
 - Install QGiS and the [QRiS](https://qris.riverscapes.net/download) and [Riverscapes Viewer](https://viewer.riverscapes.net/Deploy/install-qgis/) Plugins (see [here](https://qris.riverscapes.net/download)).
-- Install [LETOS](https://letos.org/) to perform SQL queries on model outputs in a non-geospatial environment. (Not required; these SQL queries can be performed in QGIS as well).
+- Install [LETOS](https://letos.org/) to perform SQL queries on model outputs in a non-geospatial environment. (**Not required**; these SQL queries can be performed in QGIS as well).
 
 :::warning
 If you did not take the [planning course](/tutorials/trainings-workshops/usu-ltpbr-level3/cewa6626), please review the [software installation instructions](/tutorials/trainings-workshops/usu-ltpbr-level3/cewa6626#a-install-and-open-project) and ensure you have QGiS, the QRiS plugin, and the Riverscapes Viewer plugin installed and working before the first day of class. If you need help with this, please show up on Monday morning at 8:45 AM instead of 9:00 AM.
@@ -100,7 +100,7 @@ The video below demonstrates how to download riverscapes projects to your local 
 <YouTubeEmbed videoId="fgYhJ_rTWAc" />
 
 :::info
-While we actively maintain the curation of these projects (project structure and layer symbology), occasionally changes/updates cause issues. If a layer is not showing up when you pull it into the map, the symbology likely needs updated. If you wish to file an issue for the team to respond to, you can do so in [GitHub](https://github.com/Riverscapes/RiverscapesXML/issues) (requires a GitHub account), or our [Help Desk](https://riverscapes.freshdesk.com/support/home)(does not require an account).
+While we actively maintain the curation of these projects (project structure and layer symbology), occasionally changes/updates cause issues. If a layer is not showing up when you pull it into the map, the symbology likely needs updated. If you wish to file an issue for the team to respond to, you can do so in [GitHub](https://github.com/Riverscapes/RiverscapesXML/issues) (requires a GitHub account), or our [Help Desk](https://riverscapes.freshdesk.com/support/home) (does not require an account).
 :::
 
 :::tip
@@ -243,7 +243,7 @@ RME has *a lot* of attributes in the output feature class. Descriptions of each 
 
 #### b. Inventory of Opportunities
 
-**Exercise**: Across the Ogden River HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
+**Exercise**: Across one of your selected HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
 
 1. Open the RME project in QGIS using the Viewer plugin.
 2. Bring in the Dominant Land Ownership (DGO) layer (Outputs > DGO Descriptive Metrics > Dominant Land Ownership (DGO)).
@@ -287,14 +287,48 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 
 **Exercise**: For a given stream in the HUC10 watershed (e.g., Middle Fork Ogden River), visualize the distribution of values for a continuous metric (e.g., valley bottom width (`integrated_width`)) using a histogram.
 
-1. Open the Ogden River RME project in QGIS using the Viewer plugin.
+1. Open your RME project in QGIS using the Viewer plugin.
 2. Choose a metric with a continuous value (e.g., valley bottom width (`integrated_width`)) and bring it into the map (Outputs > Geomorphic Metrics > IGO Geomorphic Metrics > Integrated Width (IGO)).
 3. Filter the output to a specific stream (e.g., Middle Fork Ogden River). Right click on the layer in the table of contents, choose 'Filter...', then type the expression `"stream_name" = 'Middle Fork Ogden River'` and pressing OK (NOTE: you could also copy the level path value for a given stream and use `"level_path" = '<some level path value>'` to filter).
 4. Note how, because of the binning of values, the variation in the metric may not be well captured at the scale of a single stream. In this case, we will use a histogram to visualize the distribution of values for the entire stream, which will provide more context than the bins in the symbology. Find the 'Vector layer histogram' tool in the Processing Toolbox (you can search for it in the search bar at the top of the toolbox). Set the input layer to be the filtered, set the 'Attribute' to be `integrated_width`, increase the number of bins to 15, and press 'Run'. This will generate a histogram of all of the values for that stream.
 
 <YouTubeEmbed videoId="SLRdBm9paYo" />
+-----
 
----
+Now, we will retrieve some data for external analysis (e.g., in Excel or Python).
+
+1. Choose an individual stream (level_path) and copy that level_path value to your clip board to paste into a SQL query (you can click on any DGO or IGO in that level_path with the identify tool to obtain the value).
+2. Open the OGR 'Execute SQL' tool. Choose an input layer. Then enter the query `SELECT seg_distance, elevation, prim_channel_gradient, integrated_width FROM vw_dgo_metrics WHERE level_path = '<paste level_path value>' ORDER BY seg_distance ASC`. Select 'SQLite' as the SQL dialect and allow it to save as a temporary file.
+3. Right click on the table that was created, and select 'Open Attribute Table' to see it. 
+4. Then right click on it again and click 'Export' > 'Save Features As'. For the Format, choose 'Comma Separated Value [CSV]' and give it a file name and location to save to. 
+5. To open it outside of QGIS, right click on the table it created in your layers panel and remove it. Then, navigate to where you saved the .csv file and open it. Now, as tabular data you can perform statistical analyses or make charts in excel. In this case, because one of the fields you exported was the 'seg_distance' you can perform downstream pattern analysis by plotting the other variables on the y-axis, and the 'seg_distance' (distance downstream from headwater) as the x-axis.
+
+<YouTubeEmbed videoId="" />
+-----
+
+#### d. Downstream Pattern analysis
+
+**Exercise**: Generate a downstream pattern analysis report for a selected riverscape.
+
+1. Go to the [Riverscapes Reporting site](https://staging.reports.riverscapes.net)
+:::warning
+This link takes you to our 'staging' site, where we test reports before fully releasing them. As such the reports here may not have receive full QA/QC and you may encounter bugs. The production site for tested reports is [https://reports.riverscapes.net](https://reports.riverscapes.net). (We will return to the production site for another exercise).
+:::
+2. Select the 'Downstream Geomorphic Pattern Analysis' report, and push the `CREATE` button.
+3. In the map, zoom into the area you have been analyzing and select a DGO within the level_path you have been working in. Ensure that the resulting seletion (highlighted DGOs) correctly represents the level_path, then click `SUBMIT SELECTION`
+:::note
+The DGO selection is based on fairly complicated topology, and at this point tends to work better in relatively small streams than large ones.
+:::
+4. Give the report a Name, and select the unit system, then click `START`. The report will generate (takes a few minutes to complete). When it's done, it can be found in the 'My Reports' tab. Here it can be downloaded as a zipped directory, or opened as a local html page.
+
+<YouTubeEmbed videoId="" />
+
+-----
+### 3. Spatial Scales of Analysis
+
+So far, all of the analysis we've done has been within a single HUC10 watershed, the scale at which Riverscapes projects are packaged. But in many cases at the screening and prioritization phase, we are considering much larger areas. 
+
+-----
 
 ### 3. Riverscape Network Models
 
