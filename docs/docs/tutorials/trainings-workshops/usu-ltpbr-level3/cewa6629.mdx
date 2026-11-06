@@ -255,7 +255,7 @@ RME has *a lot* of attributes in the output feature class. Descriptions of each 
 
 <YouTubeEmbed videoId="OwbGHrt87Ns" />
 
----
+-----
 
 Now lets do the same thing but using SQL queries instead of GIS operations.
 
@@ -267,6 +267,8 @@ Now lets do the same thing but using SQL queries instead of GIS operations.
 5. Try another command where we get the same information but by stream instead of owner: `SELECT stream_name AS stream, SUM(segment_area)/1000000 AS km2 FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY stream ORDER BY km2 DESC`. (Imagine how long it would have taken to manually do each individual stream using the QGIS method.) You could also create a table that shows each stream name and its area in each land ownership class by changing the query to `SELECT stream_name AS stream, ownership AS owner, SUM(segment_area)*0.000247105 AS acres FROM vw_dgo_metrics WHERE FCode IN (46006, 55800) GROUP BY stream, owner`. Note that in this example area is converted directly to acres in the query.
 
 <YouTubeEmbed videoId="-WrrCOiTLWY" />
+
+-----
 
 **In QGIS:**
 1. Open the RME project in QGIS using the Viewer plugin.
@@ -282,6 +284,8 @@ This query is automatically converting the units of area to square kilometer; yo
 <YouTubeEmbed videoId="" />
 
 Often times, this type of tabular analysis is a useful first step for identifying areas where further spatial analysis can then be performed. Leveraging the capabilities of SQL by performing queries on the geopackage layers is an extremely useful and efficient way to perfrom this type of analysis.
+
+-----
 
 #### c. Statistical analysis of metrics
 
@@ -324,13 +328,27 @@ The DGO selection is based on fairly complicated topology, and at this point ten
 <YouTubeEmbed videoId="" />
 
 -----
+
 ### 3. Spatial Scales of Analysis
 
-So far, all of the analysis we've done has been within a single HUC10 watershed, the scale at which Riverscapes projects are packaged. But in many cases at the screening and prioritization phase, we are considering much larger areas. 
+So far, all of the analysis we've done has been within a single HUC10 watershed, the scale at which Riverscapes projects are packaged. But in many cases at the screening and prioritization phase, we are considering much larger areas, for example a management unit, ecoregion, or larger watershed. So what do we do in that case..? <sup>*</sup>Download a bunch of individual projects and open them together in the Viewer? As you can imagine, this can quickly become an organizational and logistial mess. Fortunately, we've made it easy to retrieve data and create a riverscapes project for large areas back in the [Riverscapes Reporting Platform](https://reports.riverscapes.net). RME has been run for (almost) all of CONUS under a 2025 initiative to get CONUS-wide model coverage. Those outputs have been merged into an Amazon Athena database that serves as the back end of the reporting platform. The '[Custom Riverscapes Metrics Dataset](https://staging.reports.riverscapes.net/report/custom-rs-metrics)' report generates a riverscape project that can be opened using the Viewers. Essentially, it is an RME project merged for the area provided as an input to the report. To save space, and avoid extremely large projects, the attributes of the DGOs are attributed to the IGO points in these reports/projects. The [Bear River IGOs (Metric Engine)](https://data.riverscapes.net/p/9fe297a0-8900-4d64-9c8d-c2fdc904985d) in the exercise datasets is one of these projects. Riverscape Metrics for the entire Bear River HUC4 watershed. Later, you will generate one of these projects for your own area of interest.
+
+*
+:::info 
+There is a command line tool that makes the process of downloading multiple riverscapes projects faster and simpler. Documentation, including instructions on downloading the tool are found [here](https://docs.riverscapes.net/products/rscli).
+:::
+
+#### a. Performing the same analysis at varying spatial scales
+
+When considering a large area, it is often helpful to assess metrics that can inform restoration opportunities at the watershed/sub-watershed scale to help narrow down specific watersheds within the larger region it may make sense to work in. From there, you may want to do the same analysis across the individual streams _within_ one of the watersheds that was highlighted at the previous step to assess opportunities across streams in the watershed. Finally, if the analysis helps you identify specific streams, you can look at the same (or other additional) metrics across the DGOs within that stream. This can be an effective process for starting with a large area and honing in on specific opportunties.
+
+**Excercise**: Assess restoration potential within the Bear River using area of riverscape that has not been fragmented by human infrastructure or land use as a proxy for overall restoration potential.
+
+
 
 -----
 
-### 3. Riverscape Network Models
+### 4. Riverscape Network Models
 
 #### a. The Model Waterfall
 
@@ -351,10 +369,6 @@ height={600}
 <YouTubeEmbed videoId="j4wwlcYL8Ho" />
 
 ---
-
-#### b. RSCLI
-
-When you need to download more than a couple of projects from the Data Exchange, clicking on the download link, waiting for the file to zip, extracting it and saving it locally becomes time consuming and tedious. A command line tool exists to make this process faster and simpler. Documentation, including instructions on downloading the tool are found [here](https://docs.riverscapes.net/products/rscli).
 
 #### c. Some exercize(s) using specific model types
 
@@ -416,9 +430,9 @@ The primary assignment for this course will be to use the techniques learned her
 
 **Exercise**: Generate a custom project
 
-1. Go to [https://reports.riverscapes.net](https://staging.reports.riverscapes.net).
-2. Choose the 'IGO Scraper' option. After clicking, there is some general information that is worth reading through to understand the project that will be created.
-3. Click on 'CREATE THIS REPORT'.
+1. Go to [https://reports.riverscapes.net](https://reports.riverscapes.net).
+2. Choose the 'Custom Riverscapes Metrics Dataset' option. After clicking, there is some general information that is worth reading through to understand the project that will be created.
+3. Click on `CREATE`.
 4. For the 'Select Area' option, choose 'UPLOAD', then click 'UPLOAD GEOPACKAGE OR GEOJSON FILE' and navigate to the GeoJSON layer you created.
 5. Verify the extent looks correct and click 'SUBMIT'.
 6. Give the project a name, and optionally a memo, then click 'START'. You will be returned to the 'MY REPORTS' tab of the page, which will show the project you have requested and its status (which will be 'queued' then 'running' at first).
