@@ -48,7 +48,24 @@ This page appears here on the QRiS documentation site as QRiS users may find it 
 />
 
 ## Prerequisites and Preparing for Class
-### Background or Catch-Up Reading
+
+See [syllabus for prerequisites](https://lowtechpbr.restoration.usu.edu/workshops/2026/Advanced/WATS-6629#prerequisites).
+
+### Background on Riverscape Network Models
+
+The [riverscape network models](https://tools.riverscapes.net) we will be using in this class are all based on newer versions of models then those originally published below. The papers below describe the conceptual vetting of earlier versions of these models. However, these newer versions of the models.
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/rnm/rnm.svg",
+      name: "Riverscapes Network Models",
+      url: "https://tools.riverscapes.net"
+    },
+
+  ]}
+/>
+The papers below provide some background and conceptual basis of some of the riverscape network models.
 
 <ToolsWrapper
     cardsize="md"
@@ -84,32 +101,88 @@ This page appears here on the QRiS documentation site as QRiS users may find it 
     ]}
     />
 
+#### The Waterfall of Riverscape Network Models
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/consortium/consortium.svg",
+      name: "Riverscapes Context",
+      url: "https://tools.riverscapes.net/rscontext/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/channel-area/channel-area.svg",
+      name: "Channel Area",
+      url: "https://tools.riverscapes.net/channelarea/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/taudem/taudem.svg",
+      name: "TauDEM",
+      url: "https://tools.riverscapes.net/taudem/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/vbet/vbet.svg",
+      name: "VBET",
+      url: "https://tools.riverscapes.net/vbet/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/anthro/anthro.svg",
+      name: "Anthropogenic Context",
+      url: "https://tools.riverscapes.net/anthro/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/hydro/hydro.svg",
+      name: "Hydrologic Context",
+      url: "https://tools.riverscapes.net/hydro/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/brat/brat.svg",
+      name: "BRAT",
+      url: "https://tools.riverscapes.net/brat/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/confinement/confinement.svg",
+      name: "Confinement Tool",
+      url: "https://tools.riverscapes.net/confinement/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/rcat/rcat.svg",
+      name: "RCAT",
+      url: "https://tools.riverscapes.net/rcat/"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/rme/rme.svg",
+      name: "Metric Engine",
+      url: "https://tools.riverscapes.net/rme/"
+    },
 
+  ]}
+/>
 ### Software Requirements
 - Install QGiS and the [QRiS](https://qris.riverscapes.net/download) and [Riverscapes Viewer](https://viewer.riverscapes.net/Deploy/install-qgis/) Plugins (see [here](https://qris.riverscapes.net/download)).
+
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/qris/qris.svg",
+      name: "QRiS - Riverscapes Studio",
+      url: "https://qris.riverscapes.net"
+    },
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/viewer/viewer.svg",
+      name: "Riverscapes Viewer",
+      url: "https://viewer.riverscapes.net"
+    },
+
+    ]}
+/>
 - Install [LETOS](https://letos.org/) to perform SQL queries on model outputs in a non-geospatial environment. (**Not required**; these SQL queries can be performed in QGIS as well).
 
 :::warning
 If you did not take the [planning course](/tutorials/trainings-workshops/usu-ltpbr-level3/cewa6626), please review the [software installation instructions](/tutorials/trainings-workshops/usu-ltpbr-level3/cewa6626#a-install-and-open-project) and ensure you have QGiS, the QRiS plugin, and the Riverscapes Viewer plugin installed and working before the first day of class. If you need help with this, please show up on Monday morning at 8:45 AM instead of 9:00 AM.
 :::
 
-#### Viewing, Downloading, and Opening Riverscapes Projects
-Because this course will involve retrieving data from the data exchange and opening it in the Riverscapes Viewer in QGIS, participants should review the process(es) for [downloading riverscapes projects](https://docs.riverscapes.net/products/data-exchange/#downloading).
-The video below demonstrates how to download riverscapes projects to your local machine.
-
-<YouTubeEmbed videoId="fgYhJ_rTWAc" />
-
-:::info
-While we actively maintain the curation of these projects (project structure and layer symbology), occasionally changes/updates cause issues. If a layer is not showing up when you pull it into the map, the symbology likely needs updated. If you wish to file an issue for the team to respond to, you can do so in [GitHub](https://github.com/Riverscapes/RiverscapesXML/issues) (requires a GitHub account), or our [Help Desk](https://riverscapes.freshdesk.com/support/home) (does not require an account).
-:::
-
-:::tip
-For more info on the functionality of the Viewer, see the [documenation](https://viewer.riverscapes.net/software-help/help-qgis)
-:::
-
-:::tip
-For an overview of the Data Exchange and its functionality, see the [Data Exchange documentation](https://docs.riverscapes.net/products/data-exchange/#overview).
-:::
 
 ----
 ## Main Assignment
@@ -143,7 +216,8 @@ To complete the course, participants will:
 ----
 ## Resources
 ### Class Recordings
-Class recordings can be found on [Canvas under the Zoom link - Cloud Recordings](https://usu.instructure.com/courses/819546). They post about 2-4 hours after class. 
+Class recordings can be found on [Canvas under the Zoom link - Cloud Recordings](https://usu.instructure.com/courses/819546). They post about 2-4 hours after class.
+
 
 ----
 ### Community Resources
@@ -178,12 +252,56 @@ Class recordings can be found on [Canvas under the Zoom link - Cloud Recordings]
     />
 
 ----
-### Assignment Resources
+
+### Viewing, Downloading, and Opening Riverscapes Projects
+Because this course will involve retrieving data from the data exchange and opening it in the Riverscapes Viewer in QGIS, participants should review the process(es) for [downloading riverscapes projects](https://docs.riverscapes.net/products/data-exchange/#downloading).
+The video below demonstrates how to download riverscapes projects to your local machine.
+
+<YouTubeEmbed videoId="fgYhJ_rTWAc" />
+
+:::info
+While we actively maintain the curation of these projects (project structure and layer symbology), occasionally changes/updates cause issues. If a layer is not showing up when you pull it into the map, the symbology likely needs updated. If you wish to file an issue for the team to respond to, you can do so in [GitHub](https://github.com/Riverscapes/RiverscapesXML/issues) (requires a GitHub account), or our [Help Desk](https://riverscapes.freshdesk.com/support/home) (does not require an account).
+:::
+
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/viewer/viewer.svg",
+      name: "Riverscapes Viewers",
+      url: "https://viewer.riverscapes.net"
+    },
+
+  ]}
+/>
+
+
+:::tip
+For more info on the functionality of the Viewer, see the [documenation](https://viewer.riverscapes.net/software-help/help-qgis)
+:::
+
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/data-exchange/data-exchange.svg",
+      name: "Data Exchange",
+      url: "https://data.riverscapes.net"
+    },
+
+  ]}
+/>
+
+
+
+:::tip
+For an overview of the Data Exchange and its functionality, see the [Data Exchange documentation](https://docs.riverscapes.net/products/data-exchange/#overview).
+:::
 
 ----
-## In Class Exercises
+# In Class Exercises
 
-### Data for Exercises
+## Data for Exercises
 
 - Download one or two [Riverscape Metric Engine](https://data.riverscapes.net/s?type=Project&tags=2025CONUS&projectTypeId=rs_metric_engine&view=map) projects for an area of your choosing (e.g., somewhere you work or are familiar with.
 - Download a [BRAT](https://data.riverscapes.net/s?type=Project&tags=2025CONUS&projectTypeId=riverscapes_brat&view=map) project for the same watershed.
@@ -211,7 +329,7 @@ sectionTitle="Riverscapes Projects"
 You are welcome to download these projects as we use them in class, or download them all ahead of time. We suggest downloading them somewhere easy to navigate to (and making a favorite shortcut to that folder in QGIS) such as `c:/0_RS/CEWA6629/`.
 :::
 
-### 1. Overview of Screening & Prioritization
+## 1. Discussion of Screening & Prioritization
 
 Using large-scale GIS datasets and geospatial models to plan and prioritize is particularly useful in the case where you have a large geographic extent across which you could work,
 and a limited budget for restoration. In such cases, you need to narrow down your extent to specific locations where it makes sense to work, and then prioritize them (e.g., based on
@@ -226,24 +344,37 @@ and filter down to potential restoration sites. After this first step, visiting 
 remotely. Often times, seeing and thinking about riverscapes in person also helps to assess what additional information (beyond what you had gathered in your initial assessment) may be useful
 for decision making.
 
-Slides
+
 
 ---
 
-### 2. Riverscapes Metric Engine
+## 2. Riverscapes Metric Engine
 
-#### a. RME Overview
+### a. RME Overview
 
 <GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vTtjfQ1QImK6Wi-g8BDMclGi3D_AZbcB1bYiCgUytSLE7yRvT8jSck_RaCA_4oJavObloKVsBrg2elY/pubembed?start=false&loop=false&delayms=5000"
 width={800}
 height={600}
 />
 
+<LogoWrapper
+  size="sm"
+  logos={[
+
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/rme/rme.svg",
+      name: "Metric Engine",
+      url: "https://tools.riverscapes.net/rme/"
+    },
+
+  ]}
+/>
+
 RME has *a lot* of attributes in the output feature class. Descriptions of each field can be found [here](https://tools.riverscapes.net/rme/data).
 
-#### b. Inventory of Opportunities
+### b. Inventory of Opportunities
 
-**Exercise**: Across one of your selected HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
+> **Exercise**: Across one of your selected HUC10 watershed, determine the area of perennial riverscape (km<sup>2</sup>) that falls into each ownership category present (e.g., Private, State, USFS, etc.)
 
 1. Open the RME project in QGIS using the Viewer plugin.
 2. Bring in the Dominant Land Ownership (DGO) layer (Outputs > DGO Descriptive Metrics > Dominant Land Ownership (DGO)).
@@ -287,9 +418,9 @@ Often times, this type of tabular analysis is a useful first step for identifyin
 
 -----
 
-#### c. Statistical analysis of metrics
+### c. Statistical analysis of metrics
 
-**Exercise**: For a given stream in the HUC10 watershed (e.g., Middle Fork Ogden River), visualize the distribution of values for a continuous metric (e.g., valley bottom width (`integrated_width`)) using a histogram.
+> **Exercise**: For a given stream in the HUC10 watershed (e.g., Middle Fork Ogden River), visualize the distribution of values for a continuous metric (e.g., valley bottom width (`integrated_width`)) using a histogram.
 
 1. Open your RME project in QGIS using the Viewer plugin.
 2. Choose a metric with a continuous value (e.g., valley bottom width (`integrated_width`)) and bring it into the map (Outputs > Geomorphic Metrics > IGO Geomorphic Metrics > Integrated Width (IGO)).
@@ -303,16 +434,29 @@ Now, we will retrieve some data for external analysis (e.g., in Excel or Python)
 
 1. Choose an individual stream (level_path) and copy that level_path value to your clip board to paste into a SQL query (you can click on any DGO or IGO in that level_path with the identify tool to obtain the value).
 2. Open the OGR 'Execute SQL' tool. Choose an input layer. Then enter the query `SELECT seg_distance, elevation, prim_channel_gradient, integrated_width FROM vw_dgo_metrics WHERE level_path = '<paste level_path value>' ORDER BY seg_distance ASC`. Select 'SQLite' as the SQL dialect and allow it to save as a temporary file.
-3. Right click on the table that was created, and select 'Open Attribute Table' to see it. 
-4. Then right click on it again and click 'Export' > 'Save Features As'. For the Format, choose 'Comma Separated Value [CSV]' and give it a file name and location to save to. 
+3. Right click on the table that was created, and select 'Open Attribute Table' to see it.
+4. Then right click on it again and click 'Export' > 'Save Features As'. For the Format, choose 'Comma Separated Value [CSV]' and give it a file name and location to save to.
 5. To open it outside of QGIS, right click on the table it created in your layers panel and remove it. Then, navigate to where you saved the .csv file and open it. Now, as tabular data you can perform statistical analyses or make charts in excel. In this case, because one of the fields you exported was the 'seg_distance' you can perform downstream pattern analysis by plotting the other variables on the y-axis, and the 'seg_distance' (distance downstream from headwater) as the x-axis.
 
 <YouTubeEmbed videoId="WIq4S7oYVfE" />
 -----
 
-#### d. Downstream Pattern analysis
+### d. Downstream Pattern analysis
 
-**Exercise**: Generate a downstream pattern analysis report for a selected riverscape.
+> **Exercise**: Generate a downstream pattern analysis report for a selected riverscape.
+
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/reports/reports.svg",
+      name: "Reporting Platform",
+      url: "https://reports.riverscapes.net"
+    },
+
+  ]}
+/>
+
 
 1. Go to the [Riverscapes Reporting site](https://staging.reports.riverscapes.net)
 :::warning
@@ -329,20 +473,20 @@ The DGO selection is based on fairly complicated topology, and at this point ten
 
 -----
 
-### 3. Spatial Scales of Analysis
+## 3. Spatial Scales of Analysis
 
 So far, all of the analysis we've done has been within a single HUC10 watershed, the scale at which Riverscapes projects are packaged. But in many cases at the screening and prioritization phase, we are considering much larger areas, for example a management unit, ecoregion, or larger watershed. So what do we do in that case..? <sup>*</sup>Download a bunch of individual projects and open them together in the Viewer? As you can imagine, this can quickly become an organizational and logistial mess. Fortunately, we've made it easy to retrieve data and create a riverscapes project for large areas back in the [Riverscapes Reporting Platform](https://reports.riverscapes.net). RME has been run for (almost) all of CONUS under a 2025 initiative to get CONUS-wide model coverage. Those outputs have been merged into an Amazon Athena database that serves as the back end of the reporting platform. The '[Custom Riverscapes Metrics Dataset](https://staging.reports.riverscapes.net/report/custom-rs-metrics)' report generates a riverscape project that can be opened using the Viewers. Essentially, it is an RME project merged for the area provided as an input to the report. To save space, and avoid extremely large projects, the attributes of the DGOs are attributed to the IGO points in these reports/projects. The [Bear River IGOs (Metric Engine)](https://data.riverscapes.net/p/9fe297a0-8900-4d64-9c8d-c2fdc904985d) in the exercise datasets is one of these projects. Riverscape Metrics for the entire Bear River HUC4 watershed. Later, you will generate one of these projects for your own area of interest.
 
 <sup>*</sup>
-:::info 
+:::info
 There is a command line tool that makes the process of downloading multiple riverscapes projects faster and simpler. Documentation, including instructions on downloading the tool are found [here](https://docs.riverscapes.net/products/rscli).
 :::
 
-#### a. Performing the same analysis at varying spatial scales
+### a. Performing the same analysis at varying spatial scales
 
 When considering a large area, it is often helpful to assess metrics that can inform restoration opportunities at the watershed/sub-watershed scale to help narrow down specific watersheds within the larger region it may make sense to work in. From there, you may want to do the same analysis across the individual streams _within_ one of the watersheds that was highlighted at the previous step to assess opportunities across streams in the watershed. Finally, if the analysis helps you identify specific streams, you can look at the same (or other additional) metrics across the DGOs within that stream. This can be an effective process for starting with a large area and honing in on specific opportunties.
 
-**Excercise**: Assess restoration potential within the Bear River using area of riverscape that has not been fragmented by human infrastructure or land use as a proxy for overall restoration potential.
+> **Excercise**: Assess restoration potential within the Bear River using area of riverscape that has not been fragmented by human infrastructure or land use as a proxy for overall restoration potential.
 
 This exercise demonstrates a couple of concepts: 1) using SQL to perform analyses at different spatial scales, and 2) combining metrics available in RME to get at a concept or idea (i.e. a new, derivative metric). In this case, we will use three metrics (floodplain accessibility (fldpln_access), agricultural land use (lf_agriculture_prop), and urban land use (lf_developed_prop)) to come up with a new metric 'potentially connected riverscape' which will serve as a proxy for overall restoration potential. When planning for restoration, conceptually the difference between active and total riverscape area represents the restoration potential; in practice, however, there are often constraints that limit that space, such as infrastructure and land use. This metric accounts for those limitations to quantify potential restoration space.
 
@@ -350,9 +494,9 @@ This exercise demonstrates a couple of concepts: 1) using SQL to perform analyse
 2. This project includes a feature class of the HUC10 watershed boundaries that we added (this layer isn't typically part of the project when you generate it in the reporting platform). However, it is not exposed in the Business Logic that defines the project tree in the viewer. So, to bring it into the map, you can navigate to the project folder on disc in the 'Browser' panel in QGIS. Inside the project folder there is a geopackage called 'huc10s.gpkg' with a layer called 'bear_huc10s'. Bring that layer into the map.
 3. In the processing toolbox, find the OGR 'Execute SQL' tool and open it. Select the IGO layer active in the map, then paste in the following SQL query: `SELECT watershed_id as huc10, SUM(segment_area * MIN(fldpln_access, 1 - (lf_agriculture_prop + lf_developed_prop))) / 10000.0 AS potential_area_hectares FROM vw_dgo_metrics WHERE fcode = 46006 AND stream_order < 6 GROUP BY huc10 ORDER BY potential_area_hectares DESC`. What this is doing is calculating the riverscape area that is not fragmented by transportation infrastructure or in human land use, subset to perennial riverscapes with stream order less than six (~wadeable streams) and summarizing it at the HUC10 level. Select 'SQLite' as the dialect and hit 'Run'. This will produce a table in your layers panel with the information returned from the query.
 4. Now we can join the tabular data we just produced to the spatial data for the HUC10 watersheds. Search for the 'Join attributes by field value' tool in the 'Processing Toolbox'. For the 'Input layer' select the huc10 watersheds. For the 'Table field' choose 'HUC10'. Then for the 'Table field 2, choose the new SQL output table, and for the 'Table field 2' choose 'huc10'. Then select the 'potential_area_hectares' field from the table in 'Layer 2 fields to copy' as the attribute to join to the HUC10 polygons. Choose a path to save the output too (or let it just produce a temporary layer) and hit 'Run'.
-5. Update symbology of the HUC10 polygons to a graduated symbology based on the new 'potential_area_hectares' field to visually assess the differences across the watersheds. One of the watersheds that stands out as having a relatively large values is HUC 1601010202 the Thomas Fork. So, now we'll zoom into that watershed to summarize the same metric at the level_path scale. 
+5. Update symbology of the HUC10 polygons to a graduated symbology based on the new 'potential_area_hectares' field to visually assess the differences across the watersheds. One of the watersheds that stands out as having a relatively large values is HUC 1601010202 the Thomas Fork. So, now we'll zoom into that watershed to summarize the same metric at the level_path scale.
 6. Open the 'Execute SQL' tool again, and select the IGO layer again. This time enter the query `SELECT level_path, stream_name, SUM(segment_area * MIN(fldpln_access, 1 - (lf_agriculture_prop + lf_developed_prop))) / 10000.0 AS potential_area_hectares, SUM(centerline_length) / 1000.0 as riverscape_length FROM vw_dgo_metrics WHERE watershed_id = '1601010202' AND fcode = 46006 AND stream_order < 6 GROUP BY level_path, stream_name ORDER BY potential_area_hectares DESC`. This is similar to the previous query, but summarizes by level_path, and narrows the selection down to that single HUC10 watershed.
-7. Open the [VBET for Thomas Fork](https://data.riverscapes.net/p/f66ab4a1-8f15-473e-9f98-41038aca873c/) project and bring in one of the full valley bottom output layers (Outputs > Valley Bottom Extent). 
+7. Open the [VBET for Thomas Fork](https://data.riverscapes.net/p/f66ab4a1-8f15-473e-9f98-41038aca873c/) project and bring in one of the full valley bottom output layers (Outputs > Valley Bottom Extent).
 8. Use the 'Join attributes by field value' again to join the 'stream_name', 'potential_area_hectares' and 'riverscape_length' fields to the valley bottom output based on the field 'level_path'. (In this case switch join type to 'one to many' as sometimes valley bottoms are multipart features.)
 9. Update the symbology similar to before using a graduated symbology based on the 'potential_area_hectares' field. Notice that, logically, the primary level path has the most area. In this case, a normalized metric may be more informative. So, open the attribute table of the feature class and create a new field called 'ha_km_potential' and populate using "potential_area_hectares"/"riverscape_length" to produce a new derivative metric of hectares per kilometer of potentially connected riverscape. Then, update the symbology to use this field. The main Thomas Fork still stands out, because the rivescape of its lower reaches is so large, but a couple of other riverscapes jump out too (Coal Creek, Huff Creek, and Little Muddy Creek).
 10. Now lets look at the reach-scale variability for one of these highlighted riverscapes. From the Viewer, bring in the 'All Metrics' layer in the Bear River project. IGOs layer (you can right click and rename it if you want, e.g., 'Potential Restoration Area'). Open the attribute table and create a new field, selecting decimal as the field type (e.g., 'ha_km_potential' like the last example). The calculation to populate this field is the same as what is in the SQL query to calculate this metric: ("segment_area" * min("fldpln_access", 1-("lf_agriculture_prop" + "lf_developed_prop")) / 10000) / ("centerline_length" / 1000). Symbolize the points by this field to examine the reach-scale variability.
@@ -364,11 +508,11 @@ If QGIS is slow operating on the full IGO dataset in the last step, you can sele
 
 ---
 
-#### b. Generate a Custom Metrics project for your area of interest
+### b. Generate a Custom Metrics project for your area of interest
 
 The primary assignment for this course will be to use the techniques learned here to select some specific reaches within a large area where it makes sense to plan restoration/conservation actions. To do so, you will need a Riverscapes IGOs project for your area of interest (~HUC8 extent or larger).
 
-**Exercise**: Generate a GeoJSON feature class of the extent that you want to create a project for.
+> **Exercise**: Generate a GeoJSON feature class of the extent that you want to create a project for.
 
 1. In QGIS, click on the 'New Temporary Scratch Layer' to create a new feature class.
 2. Name the layer and select 'Polygon' as the geometry type. Make sure the projection is set to EPSG:4326 WGS 84 (the default projection for riverscapes network models), and click 'OK'. The new layer will be added to your table of contents with editing already toggled on.
@@ -380,7 +524,7 @@ The primary assignment for this course will be to use the techniques learned her
 
 ---
 
-**Exercise**: Generate a custom project
+> **Exercise**: Generate a custom project
 
 1. Go to [https://reports.riverscapes.net](https://reports.riverscapes.net).
 2. Choose the 'Custom Riverscapes Metrics Dataset' option. After clicking, there is some general information that is worth reading through to understand the project that will be created.
@@ -390,13 +534,25 @@ The primary assignment for this course will be to use the techniques learned her
 6. Give the project a name, and optionally a memo, then click 'START'. You will be returned to the 'MY REPORTS' tab of the page, which will show the project you have requested and its status (which will be 'queued' then 'running' at first).
 7. When the project is finished generating, click on the blue folder icon on the right to download a zipped file of the project.
 
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/reports/reports.svg",
+      name: "Custom Riverscapes Metrics Dataset",
+      url: "https://reports.riverscapes.net/report/custom-rs-metrics"
+    },
+
+  ]}
+/>
+
 ---
 
 **Exercise**: Create a Watershed Context Report for your your project extent.
 
-### 4. Riverscape Network Models
+## 4. Riverscape Network Models
 
-#### a. The Model Waterfall
+### a. The Model Waterfall
 
 RME is primarily a compilation of metrics from upstream models. To help screen and prioritize, these models provide three different types of information: 1) descriptive information that is useful for high level screening/filtering (e.g., land ownership, flow type, etc. as in the earlier exercises), 2) intentory information as in the earlier exercises where we quantified the area of riverscape or length of channel wihtin a watershed that meet a certain criteria, like we used above, and 3) some information to get at condition to help assess where needs restoration and where there is the greatest potential for uplift.
 
@@ -405,7 +561,18 @@ width={800}
 height={600}
 />
 
-##### VBET Webinar
+<LogoWrapper
+  size="sm"
+  logos={[
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/vbet/vbet.svg",
+      name: "VBET",
+      url: "https://tools.riverscapes.net/vbet/"
+    },
+
+  ]}
+/>
+#### VBET Webinar
 
 <GoogleSlides src="https://docs.google.com/presentation/d/e/2PACX-1vR9yjK7wGkJe8g8y_jbSFY_2m_BFdYZsbD1Tym4JBhfXIFpTi7xToWx_58hOE1wLQ/pubembed?start=false&loop=false&delayms=5000"
 width={800}
@@ -416,18 +583,40 @@ height={600}
 
 ---
 
-#### b. Tracing RME Outputs to Source Models
+### b. Tracing RME Outputs to Source Models
 
 
+<LogoWrapper
+  size="sm"
+  logos={[
 
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/rme/rme.svg",
+      name: "Metric Engine",
+      url: "https://tools.riverscapes.net/rme/"
+    },
+
+  ]}
+/>
 ---
 
-#### c. Some exercize(s) using specific model types
+### c. Some exercise(s) using specific model types
 
 Information from the network models is resolved at the reach scale (channel reach or riverscape reach; ~100s of meters), but it's time consuming and potentially impractical to look at values for every reach across a watershed. For this reason, it's often useful to roll-up or summarize the information at larger spatial scales. This allows for simple comparision between, e.g., sub-watersheds or individual streams. Comparisons that this scale can then inform what streams you zoom in on to assess the information at the reach scale, helping your efforts to stay targeted and efficient. These exercises use simple examples of summarization of outputs at the watershed scale and individual stream scale to assess potential for beaver-based restoration.
+#### BRAT
+> **Demo (BRAT)**: Assessing restoration and conservation opportunities in one stream, contextualized by the rest of the basin.
 
-**Demo (BRAT)**: Assessing restoration and conservation opportunities in one stream, contextualized by the rest of the basin.
+<LogoWrapper
+  size="sm"
+  logos={[
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/brat/brat.svg",
+      name: "BRAT",
+      url: "https://tools.riverscapes.net/brat/"
+    },
 
+  ]}
+/>
 <YouTubeEmbed videoId="Xk2w_XN0P08" />
 
 <YouTubeEmbed videoId="c4dvcSLDoQQ" />
@@ -435,9 +624,22 @@ Information from the network models is resolved at the reach scale (channel reac
 <YouTubeEmbed videoId="XQXlRHQtuXg" />
 
 ---
+#### VBET
+> **Exercise (VBET)**: Compare the average low-lying proportion of valley bottom across two different streams.
 
-**Exercise (VBET)**: Compare the average low-lying proportion of valley bottom across two different streams.
+<LogoWrapper
+  size="sm"
+  logos={[
 
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/vbet/vbet.svg",
+      name: "VBET",
+      url: "https://tools.riverscapes.net/vbet/"
+    },
+
+
+  ]}
+/>
 This exercise demonstrates how a metric calculated by VBET (proportion of the floodplain that is low-lying) can be summarized along a given stream and the value compared to another stream.
 
 <YouTubeEmbed videoId="Vk_oUCI6AAw" />
@@ -445,21 +647,46 @@ This exercise demonstrates how a metric calculated by VBET (proportion of the fl
 <YouTubeEmbed videoId="ZG5djuMY-2Y" />
 
 ---
+#### RCAT
+> **Demo (RCAT)**: Investigating RCAT outputs and intermediates along a stream to assess opportunity
 
-**Demo (RCAT)**: Investigating RCAT outputs and intermediates along a stream to assess opportunity
+<LogoWrapper
+  size="sm"
+  logos={[
 
+     {
+      imageUrl: "https://cdn.riverscapes.net/icons/network-models/rcat/rcat.svg",
+      name: "RCAT",
+      url: "https://tools.riverscapes.net/rcat/"
+    },
+
+
+  ]}
+/>
 <YouTubeEmbed videoId="hbFscVHlHpc" />
 
 ---
+#### IGOs
+> **Exercise (Riverscapes IGOs)**: Using Riverscapes IGOs to filter down to a subset of streams across a large area
 
-**Exercise (Riverscapes IGOs)**: Using Riverscapes IGOs to filter down to a subset of streams across a large area
 
-In this exercise, we will open a Riverscapes IGOs project together and come up with screening criteria to filter down our results to something more manageable.
+<LogoWrapper
+  size="sm"
+  logos={[
+    {
+      imageUrl: "https://cdn.riverscapes.net/icons/products/reports/reports.svg",
+      name: "Custom Riverscapes Metrics Dataset",
+      url: "https://reports.riverscapes.net/report/custom-rs-metrics"
+    },
+
+  ]}
+/>
+In this exercise, we will open a custom [Riverscapes Metrics Dataset](https://reports.riverscapes.net/report/custom-rs-metrics) project together and come up with screening criteria to filter down our results to something more manageable.
 
 ---
 
 
-### 5. Reach Typing
+## 5. Reach Typing
 
 Reach typing serves two primary purposes in the context of screening and prioritization: 1) It helps inform which metrics from the models may be relevant to condition in different settings, based on the natural regimes of those settings. 2) When you are working in a given reach type, it helps find 'control' or similar reaches with varying condition to contextualize the site and its restoration potential.
 
@@ -470,7 +697,7 @@ height={600}
 
 **Exercise**: Come up with some criteria for a specific reach type based on a reach you are interested in, and apply it to the Riverscapes IGOs project you created. Describe the reach type, and report on the riverscape area and length of that reach type across the project extent.
 
-### 6. Bringing it all together
+## 6. Bringing it all together
 
 To complete the assignment, use the Riverscapes IGOs project you created to select some areas for potential restoration/conservation work. This involves the three 'steps' we've discussed in the class:
 
