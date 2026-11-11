@@ -707,15 +707,23 @@ width={800}
 height={600}
 />
 
+---
+
 **Exercise**: Come up with some criteria for a specific reach type based on a reach you are interested in, and apply it to the Riverscapes IGOs project you created. Describe the reach type, and report on the riverscape area and length of that reach type across the project extent.
+
+1. Select a reach within your Riverscape Metrics project extent. It can be a reach you're familiar with, a reach that represents a specific condition variant of a reach type you're interested in (e.g., a reach in good condition that can inform targets for restoration elsewhere), or a reach that you think may be a good candidate for restoration. Select the IGOs that make up that reach defining a reach break based on the reach typing discussion.
+2. Use the statistical tools in QGIS (e.g., 'Show Statistical Summary') OR SQL queries applied to the selected DGOs to determine the range of the metrics that describe your reach (e.g., confinement, slope, etc.). 
+3. Build a filter query based on these values (e.g. "prim_Channel_gradient" > 0.005 AND "prim_channel_gradient" < 0.05)
+4. Apply that filter to the entire IGO dataset to identify reaches similar the the reach you selected. 
+5. Use the statistical tools or queries to sum up the riverscape area and lenght of that reach type within the project extent.
 
 ## 6. Bringing it all together
 
-To complete the assignment, use the Riverscapes IGOs project you created to select some areas for potential restoration/conservation work. This involves the three 'steps' we've discussed in the class:
+At this point, you have all the tools you need to perform screening to identify a set of candidate reaches for restoration within a larger area, and to prioritize those reaches based on metrics that relate to criteria and objectives specific to your restoration goals. You know how to apply filters with screening criteria to narrow down from all reaches in an area to a subset of candidate reaches. You know how to calculate summary stats for those reaches to compare opportunties. And you know how to select metrics that are relevant to condition and restoration objectives for those reaches to develop a prioritization framework. To complete your final report/assignment, use the Riverscapes IGOs project you created to select some areas for potential restoration/conservation work. This involves the three 'steps' we've discussed in the class:
 
-1. Apply any relevant filtering criteria to the IGOs to narrow down the project to places you could potentially work (e.g., by ownership, state, flow type (FCode)) etc.
+1. Apply any relevant screening/filtering criteria to the IGOs to narrow down the project to places you could potentially work (e.g., by ownership, state, flow type (FCode)) etc.
 2. After applying the filtering criteria, calculate some inventory statistics to compare opportunities (e.g., what is the riverscape area, of some/all of the unique streams remaining after filtering? What is the riverscape length split up by ecoregion of the riverscapes that meet your criteria?)
-3. Using this inventory information further narrow down your selection. To a few streams/reaches/subwatersheds. Based on the reach types of your selection, choose some of the metrics that are relevant to condition and summarize them at the riverscape/level path scale. Finally, look at the variability in these metrics at the reach scale to assess variability in condition and where opportunities may exist.
+3. Using this inventory information further narrow down your selection. To a few streams/reaches. Based on the reach types of your selection and your potential project objectives, choose some of the metrics that are relevant to condition and summarize them at that reach scale. Develop a prioritization framework (it doesn't have to be overly complicated!) using the selected metrics to prioritize the selected opportunities. This step can involve bringing in other external data and information sources (e.g., species range mapping, critical habatat, etc.), and can involve social and institutional factors. However you decide to do it, just be transparent and explain the factors that influenced the ranking/prioritization.
 
 
 :::tip
