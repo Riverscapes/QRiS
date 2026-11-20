@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 
 from qgis.PyQt import QtCore, QtGui, QtWidgets
 
@@ -11,6 +12,60 @@ from ..model.project import Project
 from .frm_export_table import FrmTableExport
 from .utilities import add_standard_form_buttons, format_superscript, validate_name
 from .widgets.metadata import MetadataWidget
+
+
+# Matches a leading numeric token (sign, decimal point, optional scientific exponent)
+# and captures any trailing text as the unit, e.g. "91.1 ft3/s" -> ("91.1", "ft3/s").
+_FLOW_VALUE_PATTERN = re.compile(r"^\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*(.*)$")
+
+
+def _unit_abbr(unit):
+    """Return a readable unit string from the various shapes the API uses.
+
+    The StreamStats API may return the unit as a dict ({"abbr": "ft3/s"}), a
+    plain string ("cfs"), or not at all, so this helper never raises.
+    """
+    if isinstance(unit, dict):
+        return str(unit.get("abbr", "") or "")
+    if isinstance(unit, str):
+        return unit
+    return ""
+
+
+def split_value_and_unit(value, fallback_unit=""):
+    """Split a StreamStats value that may embed its unit, e.g. "91.1 ft3/s".
+
+    Returns a ``(value_str, unit_str)`` tuple. It never raises and never turns
+    unparseable text into 0/blank: if the value cannot be parsed the original
+    text is returned unchanged in the value slot. A missing unit in the value
+    string falls back to ``fallback_unit`` (blank is acceptable, not an error).
+    """
+    fallback_unit = _unit_abbr(fallback_unit)
+
+    if value is None:
+        return "", fallback_unit
+
+    # bool is a subclass of int, but is not a meaningful flow value
+    if isinstance(value, bool):
+        return str(value), fallback_unit
+
+    if isinstance(value, (int, float)):
+        return str(value), fallback_unit
+
+    text = str(value).strip()
+    if not text:
+        return "", fallback_unit
+
+    match = _FLOW_VALUE_PATTERN.match(text)
+    if not match:
+        # Not parseable (e.g. "abc"): keep the original text so nothing is lost.
+        return text, ""
+
+    numeric_token = match.group(1)
+    unit = match.group(2).strip()
+    if not unit:
+        unit = fallback_unit
+    return numeric_token, unit
 
 
 class FrmPourPoint(QtWidgets.QDialog):
@@ -99,11 +154,13 @@ class FrmPourPoint(QtWidgets.QDialog):
         menu = QtWidgets.QMenu()
         details_action = menu.addAction(QtGui.QIcon(":/plugins/qris_toolbar/details"), "Details")
 
-        # Get the item in column 1 (Value) for the clicked row
+        # Get the items in column 1 (Value) and column 2 (Units) for the clicked row
         val_item = self.tabFlow.item(item.row(), 1)
+        unit_item = self.tabFlow.item(item.row(), 2)
         if val_item:
             raw_val = val_item.data(USER_ROLE)
-            full_text = val_item.text()
+            unit_text = unit_item.text() if unit_item else ""
+            full_text = f"{val_item.text()} {unit_text}".strip()
 
             if raw_val:
                 menu.addSeparator()
@@ -304,8 +361,12 @@ class FrmPourPoint(QtWidgets.QDialog):
         row = item.row()
         stat_name = self.tabFlow.item(row, 0).text()
         val_str = self.tabFlow.item(row, 1).text()
-        scenario_name = self.tabFlow.item(row, 2).text()
-        region_name = self.tabFlow.item(row, 3).text()
+        unit_str = self.tabFlow.item(row, 2).text()
+        scenario_name = self.tabFlow.item(row, 3).text()
+        region_name = self.tabFlow.item(row, 4).text()
+
+        # Preserve the unit in the fallback "Table Value" line
+        val_str = f"{val_str} {unit_str}".strip()
 
         if not self.pour_point.flow_stats:
             return
@@ -357,9 +418,9 @@ class FrmPourPoint(QtWidgets.QDialog):
                     break
 
         if result_obj:
-            val = result_obj.get("value", "N/A")
-            unit = format_superscript(result_obj.get("unit", {}).get("abbr", ""))
-            details += f"Result Value: {val} {unit}\n"
+            result_value, result_unit = split_value_and_unit(result_obj.get("value", "N/A"), result_obj.get("unit", {}))
+            result_unit = format_superscript(result_unit)
+            details += f"Result Value: {result_value} {result_unit}".rstrip() + "\n"
 
             if "equation" in result_obj:
                 details += f"Equation: {result_obj.get('equation')}\n"
@@ -424,8 +485,8 @@ class FrmPourPoint(QtWidgets.QDialog):
 
     def load_flow_statistics(self):
         flow_stats = self.pour_point.flow_stats
-        self.tabFlow.setColumnCount(4)
-        self.tabFlow.setHorizontalHeaderLabels(["Statistic", "Value", "Scenario", "Region"])
+        self.tabFlow.setColumnCount(5)
+        self.tabFlow.setHorizontalHeaderLabels(["Statistic", "Value", "Units", "Scenario", "Region"])
         self.tabFlow.verticalHeader().setVisible(False)
         if flow_stats:
             rows = []
@@ -435,31 +496,30 @@ class FrmPourPoint(QtWidgets.QDialog):
 
                 if "error" in entry:
                     # In case of error, we try to preserve the scenario name and region if possible, though the API might have failed before the region was clear.
-                    rows.append([scenario_name, "Error", scenario_name, ""])
+                    rows.append([scenario_name, "Error", "", scenario_name, ""])
                 else:
                     estimate = entry.get("estimate", {})
                     if isinstance(estimate, dict):
                         # The API returns results inside regressionRegions
                         regions = estimate.get("regressionRegions", [])
                         if not regions:
-                            rows.append(["No calculations", "N/A", scenario_name, ""])
+                            rows.append(["No calculations", "N/A", "", scenario_name, ""])
                         for region in regions:
                             region_name = region.get("name", "Unknown Region")
                             results = region.get("results", [])
                             if not results:
-                                rows.append(["No results", "", scenario_name, region_name])
+                                rows.append(["No results", "", "", scenario_name, region_name])
                             for res in results:
                                 stat_name = res.get("name", res.get("code", "Unknown"))
-                                stat_value = str(res.get("value", "N/A"))
-                                stat_unit = res.get("unit", {}).get("abbr", "")
+                                # The StreamStats value may embed its unit (e.g. "91.1 ft3/s"); split it out.
+                                stat_value, stat_unit = split_value_and_unit(res.get("value", "N/A"), res.get("unit", {}))
 
                                 # Nice unit formatting
                                 stat_unit = format_superscript(stat_unit)
 
-                                val_str = f"{stat_value} {stat_unit}".strip()
-                                rows.append([stat_name, (val_str, stat_value), scenario_name, region_name])
+                                rows.append([stat_name, (stat_value, stat_value), stat_unit, scenario_name, region_name])
                     else:
-                        rows.append(["Invalid Estimate format", "", scenario_name, ""])
+                        rows.append(["Invalid Estimate format", "", "", scenario_name, ""])
 
             # Update columns to match new format
             self.tabFlow.setRowCount(len(rows))
@@ -481,19 +541,22 @@ class FrmPourPoint(QtWidgets.QDialog):
             header.setSectionResizeMode(HEADER_INTERACTIVE)
 
             # Stretch the last two columns so they fill the remaining space
-            header.setSectionResizeMode(2, HEADER_STRETCH)
             header.setSectionResizeMode(3, HEADER_STRETCH)
+            header.setSectionResizeMode(4, HEADER_STRETCH)
 
             self.tabFlow.resizeColumnToContents(0)
             if self.tabFlow.columnWidth(0) > 300:
                 self.tabFlow.setColumnWidth(0, 300)
 
             self.tabFlow.resizeColumnToContents(1)
+            self.tabFlow.resizeColumnToContents(2)
         else:
             self.tabFlow.setRowCount(1)
             self.tabFlow.setItem(0, 0, QtWidgets.QTableWidgetItem("No flow statistics available"))
             self.tabFlow.setItem(0, 1, QtWidgets.QTableWidgetItem(""))
             self.tabFlow.setItem(0, 2, QtWidgets.QTableWidgetItem(""))
+            self.tabFlow.setItem(0, 3, QtWidgets.QTableWidgetItem(""))
+            self.tabFlow.setItem(0, 4, QtWidgets.QTableWidgetItem(""))
 
     def download_basin_characteristics(self):
         self.lblBasinStatus.setText(" Starting Basin Characteristics download...")
