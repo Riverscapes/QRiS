@@ -62,7 +62,7 @@ from .gp.update_metadata import check_metadata, update_metadata
 from .gp.watershed_attributes import WatershedAttributes
 from .lib.data_exchange import browse_data_exchange as open_data_exchange
 from .lib.layout_tools import open_layout, print_layout, serialize_layout, set_layout_table, set_layout_text
-from .QRiS.path_utilities import safe_make_abspath, safe_make_relpath
+from .QRiS.path_utilities import find_lock_files, safe_make_abspath, safe_make_relpath
 from .QRiS.qrave_integration import QRaveIntegration
 from .QRiS.settings import CONSTANTS, Settings
 from .view.frm_about import FrmAboutDialog
@@ -779,7 +779,32 @@ class QRiSToolbar:
         if dialog_return is not None and dialog_return[0] != "" and os.path.isfile(dialog_return[0]):
             self.open_qris_project(dialog_return[0])
 
-    def open_qris_project(self, db_path: str):
+    def confirm_project_lock_files(self, db_path: str) -> bool:
+        """Warn about leftover SQLite lock files before opening a project (GitHub #1160).
+
+        Returns True when it is OK to continue opening the project.
+        """
+        lock_files = find_lock_files(db_path)
+        if len(lock_files) == 0:
+            return True
+
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(MSGBOX_ICON_WARNING)
+        msg.setWindowTitle("Project Lock Files Detected")
+        msg.setText("This QRiS project may not have been closed properly.")
+        msg.setInformativeText(
+            "Lock files were found next to the project GeoPackage:\n\n" + "\n".join(lock_files) + "\n\n"
+            "This usually means the project was not closed cleanly, or that it is stored in a shared or cloud-synced folder. "
+            "Opening it could show stale data. Do you want to open the project anyway?"
+        )
+        msg.setStandardButtons(MSGBOX_YES | MSGBOX_NO)
+        msg.setDefaultButton(MSGBOX_NO)
+        return msg.exec() == MSGBOX_YES
+
+    def open_qris_project(self, db_path: str, warn_lock_files: bool = True):
+
+        if warn_lock_files and not self.confirm_project_lock_files(db_path):
+            return
 
         if self.dockwidget is not None:
             self.close_project()
@@ -968,12 +993,11 @@ class QRiSToolbar:
         self.frm_new_project = FrmNewProject(self.iface.mainWindow(), last_parent_folder)
         self.frm_new_project.newProjectComplete.connect(self.on_new_project_complete)
         self.frm_new_project.exec()
-        self.open_qris_project(self.frm_new_project.project_folder)
-        
+        self.open_qris_project(self.frm_new_project.project_folder, warn_lock_files=False)
 
     def on_new_project_complete(self, project_dir: str, db_path: str):
 
-        self.open_qris_project(db_path)
+        self.open_qris_project(db_path, warn_lock_files=False)
 
     def activate_html_watershed_attributes(self):
 

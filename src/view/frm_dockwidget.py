@@ -95,6 +95,7 @@ from ..model.raster import BASEMAP_MACHINE_CODE, PROTOCOL_BASEMAP_MACHINE_CODE, 
 from ..model.sample_frame import AOI_MACHINE_CODE, SAMPLE_FRAME_MACHINE_CODE, VALLEY_BOTTOM_MACHINE_CODE, SampleFrame
 from ..model.scratch_vector import ScratchVector, scratch_gpkg_path
 from ..model.stream_gage import STREAM_GAGE_MACHINE_CODE, STREAM_GAGE_NODE_TAG, StreamGage
+from ..QRiS.path_utilities import find_lock_files
 from ..QRiS.qrave_integration import QRaveIntegration
 from ..QRiS.qris_map_manager import QRisMapManager
 from ..QRiS.riverscapes_map_manager import RiverscapesMapManager
@@ -1750,8 +1751,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         # Ensure that no SQLite lock files exist adjacent to the project GeoPackage
         gpkg_path = str(project.project_file)
-        lock_files = [f"{gpkg_path}{suffix}" for suffix in ("-wal", "-shm")]
-        existing_lock_files = [lock_file for lock_file in lock_files if os.path.exists(lock_file)]
+        existing_lock_files = find_lock_files(gpkg_path)
         if len(existing_lock_files) > 0:
             QtWidgets.QMessageBox.warning(
                 self,

@@ -4,6 +4,18 @@ import subprocess
 import sys
 from urllib.parse import urlparse
 
+# SQLite sidecar files that linger next to a GeoPackage when it is not closed cleanly.
+LOCK_FILE_SUFFIXES = ("-wal", "-shm")
+
+
+def find_lock_files(db_path: str) -> list[str]:
+    """Return any SQLite lock files lingering next to a GeoPackage.
+
+    A leftover ``-wal``/``-shm`` pair means the database was not closed cleanly
+    (or a cloud sync service interfered), so the project may be corrupted.
+    """
+    return [f"{db_path}{suffix}" for suffix in LOCK_FILE_SUFFIXES if os.path.exists(f"{db_path}{suffix}")]
+
 
 def get_unique_file_path(folder: str, root_name: str, extension: str) -> str:
     """
