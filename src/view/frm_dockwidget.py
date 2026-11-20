@@ -1171,7 +1171,8 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         result = self.frm_event.exec()
         if result is not None and result != 0:
-            self.add_event_to_project_tree(parent_node, self.frm_event.dce_event, self.frm_event.chkAddToMap.isChecked())
+            # No layers existed before the form opened, so reveal every layer of the new event
+            self.add_event_to_project_tree(parent_node, self.frm_event.dce_event, self.frm_event.chkAddToMap.isChecked(), known_event_layer_ids=[])
 
     def add_planning_container(self, parent_node):
         """Initiates adding a new planning container"""
@@ -2027,10 +2028,14 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             if child_node.data(USER_ROLE).id not in planning_container.planning_events.keys():
                 planning_container_node.removeRow(row)
 
-    def add_event_to_project_tree(self, parent_node: QtGui.QStandardItem, event: Event, add_to_map: bool = False):
+    def add_event_to_project_tree(self, parent_node: QtGui.QStandardItem, event: Event, add_to_map: bool = False, known_event_layer_ids: Optional[list] = None):
         """
         Most project data types can be added to the project tree using add_child_to_project_tree()
         but data capture events have child nodes so they need this special method.
+
+        When known_event_layer_ids is supplied (the event layer ids that already existed before an
+        event form was opened), any layer added since is revealed: only the parents required to make
+        it visible are expanded, and the first newly added layer is selected and focused.
         """
 
         # Event, protocols and layers
@@ -2046,6 +2051,44 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     for level in event_layer.layer.hierarchy:
                         node = self.add_child_to_project_tree(node, level, add_to_map, collapsed=True)
                 self.add_child_to_project_tree(node, event_layer, add_to_map, collapsed=True)
+
+        if known_event_layer_ids is not None:
+            newly_added_ids = {event_layer.id for event_layer in event.event_layers if event_layer.id not in known_event_layer_ids}
+            self.reveal_tree_nodes(self.find_event_layer_nodes(event_node, newly_added_ids))
+
+    def find_event_layer_nodes(self, node: QtGui.QStandardItem, event_layer_ids: set, found: Optional[list] = None) -> list:
+        """Return the EventLayer nodes under node whose ids are in event_layer_ids, in tree order."""
+
+        if found is None:
+            found = []
+        for row in range(0, node.rowCount()):
+            child_node = node.child(row)
+            data = child_node.data(USER_ROLE)
+            if isinstance(data, EventLayer):
+                if data.id in event_layer_ids:
+                    found.append(child_node)
+            else:
+                self.find_event_layer_nodes(child_node, event_layer_ids, found)
+        return found
+
+    def reveal_tree_nodes(self, nodes: list) -> None:
+        """Expand only the nodes needed to make the given nodes visible, then select and focus the
+        first one. Every other node keeps its current expanded or collapsed state."""
+
+        if len(nodes) == 0:
+            return
+
+        for node in nodes:
+            # Expand the node and each of its parents, and nothing else
+            index = node.index()
+            while index.isValid():
+                self.treeView.expand(index)
+                index = index.parent()
+
+        first_index = nodes[0].index()
+        self.treeView.setCurrentIndex(first_index)
+        self.treeView.scrollTo(first_index)
+        self.treeView.setFocus()
 
     def add_raster(self, parent_node: QtGui.QStandardItem, is_context: bool, import_source_path: Optional[str] = None, meta: Optional[dict] = None):
         """Initiates adding a new base map to the project"""
@@ -2555,6 +2598,11 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.warning(self, "Edit Item", "Editing items is not yet implemented.")
 
         if frm is not None:
+            # Snapshot the event layers that already exist so that, once the form closes, only the
+            # layers added during this edit are revealed in the project tree.
+            known_event_layer_ids = None
+            if isinstance(db_item, Event):
+                known_event_layer_ids = [event_layer.id for event_layer in db_item.event_layers]
             result = frm.exec()
             if result is not None and result != 0:
                 # Adding the item into the tree again will ensure that it's name is up to date
@@ -2565,7 +2613,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                 elif any(isinstance(db_item, data_class) for data_class in [Analysis, Attachment]):
                     self.add_child_to_project_tree(model_item.parent(), db_item, False)
                 elif isinstance(db_item, Event):
-                    self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked())
+                    self.add_event_to_project_tree(model_item.parent(), db_item, frm.chkAddToMap.isChecked(), known_event_layer_ids=known_event_layer_ids)
                 elif isinstance(db_item, PlanningContainer):
                     self.add_planning_container_to_project_tree(model_item.parent(), db_item)
                 else:
