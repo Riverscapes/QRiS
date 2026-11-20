@@ -282,7 +282,7 @@ class QRisMapManager(RiverscapesMapManager):
         feature_layer = self.create_machine_code_feature_layer(self.project.map_guid, project_group, fc_path, STREAM_GAGE_MACHINE_CODE, "Stream Gages", "stream_gages")
 
         # Apply labels
-        self.set_label(feature_layer, "site_code")
+        self.set_label(feature_layer, "site_name")
 
         return feature_layer
 

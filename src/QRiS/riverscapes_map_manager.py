@@ -23,6 +23,8 @@ from qgis.core import (
     QgsRasterLayer,
     QgsRasterShader,
     QgsSingleBandPseudoColorRenderer,
+    QgsTextBufferSettings,
+    QgsTextFormat,
     QgsVectorLayer,
     QgsVectorLayerSimpleLabeling,
 )
@@ -773,6 +775,17 @@ class RiverscapesMapManager(QObject):
         """
         layer_settings = QgsPalLayerSettings()
         layer_settings.fieldName = label_field
+
+        # Black text with a white halo so labels stay readable over satellite imagery
+        text_format = QgsTextFormat()
+        text_format.setColor(QColor(0, 0, 0))
+        text_buffer = QgsTextBufferSettings()
+        text_buffer.setEnabled(True)
+        text_buffer.setSize(0.8)
+        text_buffer.setColor(QColor(255, 255, 255))
+        text_format.setBuffer(text_buffer)
+        layer_settings.setFormat(text_format)
+
         layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
         feature_layer.setLabelsEnabled(True)
         feature_layer.setLabeling(layer_settings)
