@@ -166,15 +166,6 @@ class FrmAsBuilt(FrmEvent):
                     associatedDCE_index = self.associated_dce_model.getItemIndexById(associatedDCE_Id)
                     self.cboAssociatedDCE.setCurrentIndex(associatedDCE_index)
 
-        else:
-            # iterate through available layers to find the first 'structure_points' layer
-            for p, layer in self.layer_widget.available_layers:
-                if "structure_points" in layer.id:
-                    key = self.layer_widget.get_layer_unique_key(p, layer)
-                    self.layer_widget.current_layers_state[key] = True
-
-            self.layer_widget.full_refresh_ui()
-
     def pick_dce_by_date(self):
         # TODO: This is tricky, because parts of the dates may be None
 

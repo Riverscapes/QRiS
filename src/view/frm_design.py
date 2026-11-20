@@ -18,7 +18,6 @@ class FrmDesign(FrmEvent):
         event_type = "Design" if event_type_id == DESIGN_EVENT_TYPE_ID else "As-Built Survey"
         self.setWindowTitle(f"Create New {event_type}" if event is None else f"Edit {event_type}")
 
-        self.mandatory_layers = ["complexes"]
         self.event_library = PlanningEventLibraryWidget(self, qris_project, [DCE_EVENT_TYPE_ID])
 
         self.lblPhase.setVisible(True)
@@ -219,15 +218,6 @@ class FrmDesign(FrmEvent):
                     self.event_library.setEnabled(True)
                 else:
                     self.event_library.setEnabled(True)
-
-        else:
-            # iterate through available layers to find the first 'complexes' layer
-            for p, layer in self.layer_widget.available_layers:
-                if "complexes" in layer.id:
-                    key = self.layer_widget.get_layer_unique_key(p, layer)
-                    self.layer_widget.current_layers_state[key] = True
-
-            self.layer_widget.full_refresh_ui()
 
     def on_rdo_toggled(self, checked):
         if not checked:
