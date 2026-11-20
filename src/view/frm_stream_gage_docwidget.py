@@ -29,6 +29,8 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
 
         self.project = project
         self.map_manager = map_manager
+        self._gage_layer = None
+        self._syncing = False
         self.setupUi()
         self.load_stream_gages()
 
@@ -36,7 +38,7 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.dtEnd.setDate(date.today())
 
         self.map_manager.build_stream_gage_layer()
-        # map_layer.selectionChanged.connect(self.on_map_selection_changed)
+        self._connect_gage_layer()
 
     def load_stream_gages(self):
 
@@ -55,8 +57,67 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.lst_gages.setModel(self.stream_gage_model)
         self.lst_gages.selectionModel().selectionChanged.connect(self.on_site_changed)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._connect_gage_layer()
+
+    def _connect_gage_layer(self) -> None:
+
+        layer_tree_node = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
+        map_layer = layer_tree_node.layer() if hasattr(layer_tree_node, "layer") else layer_tree_node
+        if not isinstance(map_layer, QgsVectorLayer):
+            # Layer not built yet (e.g. removed from the layer tree); nothing to hook.
+            return
+        if map_layer is self._gage_layer:
+            # Already connected to this exact layer object; do not connect twice.
+            return
+        if self._gage_layer is not None and self._gage_layer.receivers(self._gage_layer.selectionChanged) > 0:
+            self._gage_layer.selectionChanged.disconnect(self.on_map_selection_changed)
+        map_layer.selectionChanged.connect(self.on_map_selection_changed)
+        self._gage_layer = map_layer
+
     def on_map_selection_changed(self, selected, deselected, clearAndSelect: bool):
-        print("here")
+
+        if self._syncing:
+            # We are applying a map selection to the list; ignore the echo.
+            return
+
+        map_layer = self._gage_layer
+        if map_layer is None:
+            return
+
+        # QgsFeatureIds is an unordered set and does not preserve click order.
+        # Use the lowest fid as the deterministic "first feature" of the selection.
+        feature_ids = sorted(map_layer.selectedFeatureIds())
+        if len(feature_ids) == 0:
+            # Empty selection (deselect): leave the last shown gage in place.
+            return
+        site_id = feature_ids[0]
+
+        if site_id == self.selected_stream_gage():
+            # Already the current row; avoids a redundant refresh and breaks the row->map echo.
+            return
+
+        row = self._find_row_for_site_id(site_id)
+        if row < 0:
+            # Selected feature has no row in the list (e.g. a newly downloaded gage not yet in the model).
+            return
+
+        index = self.stream_gage_model.index(row, 0)
+        self._syncing = True
+        try:
+            self.lst_gages.setCurrentIndex(index)
+            self.lst_gages.scrollTo(index)
+        finally:
+            self._syncing = False
+
+    def _find_row_for_site_id(self, site_id: int) -> int:
+
+        for row in range(self.stream_gage_model.rowCount()):
+            item = self.stream_gage_model.item(row)
+            if item is not None and item.data(USER_ROLE)[0] == site_id:
+                return row
+        return -1
 
     def on_site_changed(self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection):
 
@@ -68,6 +129,11 @@ class FrmStreamGageDocWidget(QtWidgets.QDockWidget):
         self.load_discharge_plot(data)
         self.load_discharge_table(data)
         self.load_metadata()
+
+        if self._syncing:
+            # Map-originated change: the map already reflects the user's selection.
+            # Skip re-select/zoom so multi-selection is preserved and the canvas does not jump.
+            return
 
         map_layer_tree = self.map_manager.get_machine_code_layer(self.project.map_guid, STREAM_GAGE_MACHINE_CODE, None)
         if map_layer_tree is None:
