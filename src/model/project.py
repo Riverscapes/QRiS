@@ -123,6 +123,7 @@ def validate_protocol_metric_dependencies(protocol_definitions) -> list:
 class Project(DBItem, QObject):
     project_changed = pyqtSignal()
     item_added = pyqtSignal(object)  # emits the newly added DBItem
+    item_updated = pyqtSignal(object)  # emits an existing DBItem whose name or properties changed
 
     def __init__(self, project_file: str):
         DBItem.__init__(self, "projects", 1, "Placeholder")

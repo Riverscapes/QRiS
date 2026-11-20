@@ -376,6 +376,7 @@ class FrmAnalysisProperties(QtWidgets.QDialog):
             try:
                 self.analysis.update(self.qris_project.project_file, self.txtName.text(), self.txtDescription.toPlainText(), analysis_metrics, metadata)
                 self.qris_project.project_changed.emit()
+                self.qris_project.item_updated.emit(self.analysis)
             except Exception as ex:
                 if "unique" in str(ex).lower():
                     QtWidgets.QMessageBox.warning(self, "Duplicate Name", f"An analysis with the name '{self.txtName.text()}' already exists. Please choose a unique name.")

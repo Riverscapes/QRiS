@@ -248,6 +248,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
         # Keep the .gpkg main file in sync (not just WAL) so external copy/upload while QGIS is open includes recent edits.
         self.qris_project.project_changed.connect(self.qris_project.request_flush)
         self.qris_project.item_added.connect(self.on_item_added)
+        self.qris_project.item_updated.connect(self.on_item_updated)
         self.rs_project.write()  # Ensure the RS project file is created if missing, or update it on opening the project.
 
         # Map Manager
@@ -1301,6 +1302,16 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
             node = self._find_tree_node(root, CATCHMENTS_MACHINE_CODE)
             if node is not None:
                 self.add_child_to_project_tree(node, db_item, False)
+
+    def on_item_updated(self, db_item) -> None:
+        """Refresh the project tree entry for an existing DBItem whose name or properties changed.
+
+        Fired by Project.item_updated whenever an already-created item is edited (e.g. renaming
+        an Analysis from the properties form).  Routing mirrors on_item_added();
+        add_child_to_project_tree finds the existing node and re-applies set_node_text(),
+        so it is a no-op when no node exists for the item.
+        """
+        self.on_item_added(db_item)
 
     def open_analysis(self, analysis: Analysis):
 
