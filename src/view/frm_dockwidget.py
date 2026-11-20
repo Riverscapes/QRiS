@@ -21,9 +21,12 @@
  ***************************************************************************/
 """
 
+from datetime import datetime
 from functools import partial
 import os
+import re
 from typing import Optional
+import zipfile
 
 from qgis.core import (
     Qgis,
@@ -66,6 +69,7 @@ from ..compat import (
     QMETATYPE_STRING,
     RIGHT_DOCK,
     USER_ROLE,
+    WAIT_CURSOR,
 )
 from ..gp.feature_class_functions import browse_raster, browse_vector, flip_line_geometry, import_existing
 from ..gp.order_by_line_task import OrderByLineTask
@@ -809,6 +813,7 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
                     self.add_context_menu_item(self.menu, "Unlock All Layers in Project", "lock_open_right", lambda: self.set_group_lock_state(model_data, False, model_item))
                     self.menu.addSeparator()
                     self.add_context_menu_item(self.menu, "Export as a New Project", "project_export", lambda: self.export_project(model_data))
+                    self.add_context_menu_item(self.menu, "Export Project as a Zip File", "zip-folder", lambda: self.zip_project(model_data))
                     self.add_context_menu_item(self.menu, "Create Vicinity Map", "vicinity_map", lambda: self.create_vicinity_map(model_data))
                     self.add_context_menu_item(self.menu, "Save Current SRS to Project", "globe", lambda: self.save_project_srs(show_feedback=True))
                     self.add_context_menu_item(self.menu, "Close Project", "close", lambda: self.destroy_docwidget())
@@ -1715,6 +1720,76 @@ class QRiSDockWidget(QtWidgets.QDockWidget):
 
         if result == DLG_ACCEPTED:
             Settings().msg_bar("Export Project", "Export Complete", MESSAGE_LEVEL_SUCCESS)
+
+    def zip_project(self, project: Project):
+        """Zip the entire QRiS project folder into a timestamped archive beside it.
+
+        Refuses to run while a layer has an active edit session or while a SQLite
+        write-ahead log (*-wal) or shared memory (*-shm) lock file is still
+        present next to the project GeoPackage.
+        """
+
+        # Ensure that no edit session is active
+        if self.map_manager is not None and self.map_manager.get_edit_mode():
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Zip Project",
+                "One or more QRiS layers are currently in edit mode. Please save or stop editing before zipping the project.",
+            )
+            return
+
+        for layer in self.iface.mapCanvas().layers():
+            if layer.isEditable():
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Zip Project",
+                    f'Please save or discard your edits on layer "{layer.name()}" before zipping the project.',
+                )
+                return
+
+        # Ensure that no SQLite lock files exist adjacent to the project GeoPackage
+        gpkg_path = str(project.project_file)
+        lock_files = [f"{gpkg_path}{suffix}" for suffix in ("-wal", "-shm")]
+        existing_lock_files = [lock_file for lock_file in lock_files if os.path.exists(lock_file)]
+        if len(existing_lock_files) > 0:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Zip Project",
+                "The QRiS project database is still locked:\n\n" + "\n".join(existing_lock_files) + "\n\nPlease close the project (or restart QGIS) and try again.",
+            )
+            return
+
+        # Save the archive adjacent to the folder that contains the QRiS project
+        project_folder = os.path.dirname(gpkg_path)
+        output_folder = os.path.dirname(project_folder)
+        safe_project_name = re.sub(r"[^A-Za-z0-9]+", "_", project.name).strip("_") or "qris_project"
+        timestamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+        zip_path = os.path.join(output_folder, f"{timestamp}_{safe_project_name}.zip")
+
+        error = None
+        QtWidgets.QApplication.setOverrideCursor(WAIT_CURSOR)
+        try:
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for root, dir_names, file_names in os.walk(project_folder):
+                    for dir_name in dir_names:
+                        dir_path = os.path.join(root, dir_name)
+                        zip_file.write(dir_path, os.path.relpath(dir_path, project_folder).replace(os.sep, "/"))
+                    for file_name in file_names:
+                        file_path = os.path.join(root, file_name)
+                        zip_file.write(file_path, os.path.relpath(file_path, project_folder).replace(os.sep, "/"))
+        except Exception as e:
+            error = e
+        finally:
+            QtWidgets.QApplication.restoreOverrideCursor()
+
+        if error is not None:
+            # Do not leave a partial archive behind that could be mistaken for a complete backup
+            if os.path.exists(zip_path):
+                os.remove(zip_path)
+            QtWidgets.QMessageBox.critical(self, "Zip Project", f"Failed to zip the QRiS project:\n{error}")
+            return
+
+        QtWidgets.QMessageBox.information(self, "Zip Project", f"QRiS project successfully zipped to {zip_path}")
 
     def create_vicinity_map(self, db_item: DBItem):
         # Open the map export dialog and run async vicinity map export task

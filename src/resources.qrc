@@ -72,6 +72,7 @@
         <file alias="about">../Images/about.svg</file>
         <file alias="arrow-back">../Images/arrow-back.svg</file>
         <file alias="arrow-forward">../Images/arrow-forward.svg</file>
+        <file alias="zip-folder">../Images/folder-zip.svg</file>
         <file alias="zoom-in">../Images/zoom-in.svg</file>
         <file alias="usace">../Images/usace.svg</file>
 
