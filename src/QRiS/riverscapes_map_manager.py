@@ -1,3 +1,4 @@
+from functools import partial
 import json
 import os
 import sqlite3
@@ -28,7 +29,7 @@ from qgis.core import (
     QgsVectorLayer,
     QgsVectorLayerSimpleLabeling,
 )
-from qgis.PyQt.QtCore import QObject, QVariant, pyqtSignal
+from qgis.PyQt.QtCore import QObject, QTimer, QVariant, pyqtSignal
 from qgis.PyQt.QtGui import QColor
 from qgis.utils import iface
 
@@ -43,6 +44,7 @@ from .sql_utilities import validate_sql_identifier
 SELECTION_COLOR_OVERRIDE_ENABLED = "selectionColorOverrideEnabled"
 SELECTION_COLOR_OVERRIDE_HEX = "selectionColorOverrideHex"
 SELECTION_COLOR_OVERRIDE_TRANSPARENCY_PERCENT = "selectionColorOverrideTransparencyPercent"
+METADATA_REFRESH_HOOK = "qris_metadata_refresh_hook"
 
 
 class RiverscapesMapManager(QObject):
@@ -614,6 +616,38 @@ class RiverscapesMapManager(QObject):
 
             # set the default value for the metadata field
         feature_layer.setDefaultValueDefinition(field_index, QgsDefaultValue("'{}'"))
+
+        # Keep open attribute tables in sync when the metadata JSON is edited.
+        # Metadata values are exposed as expression (virtual) fields, which QGIS only
+        # evaluates when a feature is fetched. QgsVectorLayerCache patches just the single
+        # attribute that changed, so the virtual columns keep stale values after a save in
+        # the attribute table's form view until the user presses Refresh (GitHub #1141).
+        # Emitting dataChanged is the documented way to make QGIS invalidate those caches.
+        if feature_layer.customProperty(METADATA_REFRESH_HOOK) is None:
+            feature_layer.setCustomProperty(METADATA_REFRESH_HOOK, "1")
+            feature_layer.attributeValueChanged.connect(partial(self.refresh_attribute_table_cache, feature_layer, field_index))
+
+    def refresh_attribute_table_cache(self, feature_layer: QgsVectorLayer, metadata_field_index: int, fid: int, field_index: int, value) -> None:
+        """Force QGIS to throw away cached features when the metadata JSON changes.
+
+        Attribute table models cache features in a QgsVectorLayerCache and only patch the
+        attribute that changed, so the expression (virtual) fields derived from the metadata
+        JSON keep their stale values (GitHub #1141). QGIS invalidates that cache on
+        QgsMapLayer::dataChanged, so emit it - but deferred, because this slot is called from
+        inside QgsAttributeForm::saveEdits() and a full model reset there would reset the
+        form while it is still saving.
+        """
+        if field_index != metadata_field_index:
+            return
+
+        def emit_data_changed() -> None:
+            try:
+                feature_layer.dataChanged.emit()
+            except RuntimeError:
+                # The layer was deleted before the deferred call ran.
+                pass
+
+        QTimer.singleShot(0, emit_data_changed)
 
     def set_multiline(self, feature_layer: QgsVectorLayer, field_name: str, field_alias: str) -> None:
         fields = feature_layer.fields()
