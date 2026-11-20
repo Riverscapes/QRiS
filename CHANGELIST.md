@@ -1,5 +1,19 @@
 # QRiS Plugin
 
+## [1.3.8] 20 Nov 2026
+
+- Export a whole project as a zip file from the project right-click menu [#1139](https://github.com/Riverscapes/QRiS/issues/1139)
+- Stream gages are now labelled with their name on the map, and clicking a gage selects it in the Stream Gages panel [#1126](https://github.com/Riverscapes/QRiS/issues/1126)
+- When you add or edit a DCE, the project tree now expands to and selects the new layer instead of leaving it hidden [#1161](https://github.com/Riverscapes/QRiS/issues/1161)
+- New Design DCEs and As-Builts no longer start with a layer pre-selected, so you only get the layers you choose [#1136](https://github.com/Riverscapes/QRiS/issues/1136)
+- Warn before opening a project if `qris.gpkg-wal` or `qris.gpkg-shm` lock files were left behind, which usually means the project was not closed properly or was shared through a cloud sync folder [#1160](https://github.com/Riverscapes/QRiS/issues/1160)
+- Saving a feature in the attribute table's form view now refreshes the table so the new values appear straight away [#1141](https://github.com/Riverscapes/QRiS/issues/1141)
+- StreamStats results keep their units (e.g. "91.1 ft3/s") instead of showing the number on its own [#1146](https://github.com/Riverscapes/QRiS/issues/1146)
+- Renaming an analysis now updates the name in the project tree [#1154](https://github.com/Riverscapes/QRiS/issues/1154)
+- Fixed analysis values not displaying or calculating correctly in QGIS 4, where zonal statistics returned NumPy values instead of plain numbers [#1121](https://github.com/Riverscapes/QRiS/issues/1121)
+- Distribution analysis counts are shown as whole numbers instead of long decimals [#1144](https://github.com/Riverscapes/QRiS/issues/1144)
+- Double-clicking a basemap in the tree adds it to the map [#1140](https://github.com/Riverscapes/QRiS/issues/1140)
+
 ## [1.3.7] 29 Oct 2026
 
 - Removed asynchronous tasks from creating and loading projects to avoid race condition that affects loading intrinsic metrics.
